@@ -18,13 +18,18 @@ import type { RunProcess } from "../../ports/process.ts";
 /** Ten seconds: an index lookup takes milliseconds; a hung git must not hang a lint. */
 const TIMEOUT_MS = 10_000;
 
-/** The variables of an environment that are set: a child's whole environment is strings. */
+/**
+ * The variables of an environment that are set, without git's own: a git hook runs with `GIT_DIR=.git`
+ * (relative to the repository's root), and `git -C <paper dir>` would then look for `.git` inside the
+ * paper and exit 128 — every file would count as committed (design doc §9, note 14).
+ */
 const setOnly = (
   env: Readonly<Record<string, string | undefined>>,
 ): Readonly<Record<string, string>> =>
   Object.fromEntries(
     Object.entries(env).filter(
-      (e): e is [string, string] => typeof e[1] === "string",
+      (e): e is [string, string] =>
+        typeof e[1] === "string" && !e[0].startsWith("GIT_"),
     ),
   );
 

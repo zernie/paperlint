@@ -9,7 +9,7 @@
  * paper or of this machine). `sourcesOf` takes the main file's text from the caller — a lint rule
  * hands the editor's buffer — and reads the rest from disk.
  */
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import type { PaperSource } from "./domain/paper-source.ts";
 import {
@@ -89,10 +89,13 @@ export function paperFiles(
   return { dir, main, includes, assembled };
 }
 
-/** The `.bib` files of the paper's directory, and git's index, as the bibliography decision asks. */
+/**
+ * The `.bib` files as bibtex opens them from the paper's directory — a relative name there, an
+ * absolute one as it is — and git's index, as the bibliography decision asks.
+ */
 const bibDisk = (dir: AbsolutePath, deps: SourcesDeps): BibDisk => ({
   bib: (name) => {
-    const path = callerPath(join(dir, name));
+    const path = callerPath(resolve(dir, name));
     const b = deps.files.readBytes(path);
     return b === null ? null : { path, text: decoded(b) };
   },
@@ -107,7 +110,7 @@ export function sourcesOf(
 ): PaperSources {
   const f = paperFiles(main, text, deps);
   const own = f.includes.filter((i) => i.role !== "package-input");
-  const bibliography = deps.latex.bibliography(
+  const { bibliography, blocks } = deps.latex.bibliography(
     [{ path: main, text }, ...own.map((i) => ({ path: i.path, text: i.text }))],
     bibDisk(f.dir, deps),
   );
@@ -117,6 +120,7 @@ export function sourcesOf(
     includes: f.includes,
     assembled: f.assembled,
     bibliography,
+    blocks,
   };
 }
 

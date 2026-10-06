@@ -53,9 +53,10 @@ export interface BibEntry {
   /** In the text of the file that holds the entry. */
   readonly span: Span;
   /**
-   * The `%` signs before the `@` on its line, when the line holds nothing else before it. bibtex has
-   * no comment character, so such an entry is READ — measured: `% @misc{dead2020,…}` is in the
-   * `.bbl` (fixtures/paper-sources/v5-percent-entry). Null for an entry with no `%` before it.
+   * From a `%` before the `@` on its line to the `@` (`% `, `% see `): LaTeX reads the line as a
+   * comment, bibtex has no comment character and READS the entry — measured: `% @misc{dead2020,…}`
+   * and `% see @misc{pt1,…}` are in the `.bbl` (fixtures/paper-sources/v5, v13). Null for an entry with
+   * no `%` before it on its line.
    */
   readonly percent: Span | null;
 }
@@ -69,6 +70,8 @@ export interface BibText {
   /** The database inside `text`: all of it for a `.bib`, the body for a block. */
   readonly body: Span;
   readonly entries: readonly BibEntry[];
+  /** The `@comment` words in it: bibtex skips the word and reads what follows as junk, entries too. */
+  readonly comments: readonly Span[];
 }
 
 /** A `filecontents` block writing a `.bib`, as the parse tree gives it. */
@@ -129,6 +132,15 @@ export type Database =
       readonly kind: "remote";
       readonly name: string;
       readonly declared: Declared;
+    }
+  /**
+   * A name built by a macro this reader does not expand (`\bibliography{\bibfile}`), as written.
+   * Never silence: the bibliography it is in is `undecided`.
+   */
+  | {
+      readonly kind: "unresolved";
+      readonly name: string;
+      readonly declared: Declared;
     };
 
 type NonEmpty<T> = readonly [T, ...T[]];
@@ -156,7 +168,25 @@ export interface PaperSources {
   /** The whole paper as one text with the map back to its files, and the includes not found. */
   readonly assembled: PaperSource;
   readonly bibliography: Bibliography;
+  /**
+   * Every live `filecontents` block writing a `.bib` in the main file and its own includes, declared
+   * or not, in TeX's order — what `bib/filecontents-overwrite` judges.
+   */
+  readonly blocks: readonly EmbeddedBib[];
 }
+
+/** An entry's identity for comparing two texts: its bytes, whitespace runs folded (TeX drops trailing spaces). */
+const identities = (b: BibText): readonly string[] =>
+  b.entries.map((e) =>
+    b.text.slice(e.span.start, e.span.end).replace(/\s+/g, " "),
+  );
+
+/** Whether two texts hold the same entries, as TeX's own copy of a block holds the block's. */
+export const sameEntries = (a: BibText, b: BibText): boolean => {
+  const x = identities(a);
+  const y = identities(b);
+  return x.length === y.length && x.every((v, i) => v === y[i]);
+};
 
 /** The bytes TeX reads for one database, or null when there are none on disk. */
 export function texReads(db: Database): BibText | null {
@@ -169,6 +199,7 @@ export function texReads(db: Database): BibText | null {
       return db.block.overwrite ? db.block.bib : db.file;
     case "missing":
     case "remote":
+    case "unresolved":
       return null;
   }
 }
@@ -200,14 +231,16 @@ export const bibTexts = (b: Bibliography): readonly BibText[] =>
     );
 
 /**
- * A database's bytes as bibtex reads them, for a parser that treats `%` as a comment: the body, with
- * every `%` that stands before an entry's `@` blanked, so the parser sees the entry bibtex reads.
- * Length-preserving: an offset into the body is an offset into this text.
+ * A database's bytes as bibtex reads them, for a parser that treats `%` as a comment and skips the
+ * braces of `@comment`: the body, with what stands between a `%` and an entry's `@` blanked, and every
+ * `@comment` word blanked, so the parser sees the entries bibtex reads. Length-preserving: an offset
+ * into the body is an offset into this text.
  */
 export function bibtexView(bib: BibText): string {
-  const blanks = bib.entries.flatMap((e) =>
-    e.percent === null ? [] : [e.percent],
-  );
+  const blanks = [
+    ...bib.entries.flatMap((e) => (e.percent === null ? [] : [e.percent])),
+    ...bib.comments,
+  ];
   const body = bib.text.slice(bib.body.start, bib.body.end);
   return blanks.reduce(
     (t, s) =>

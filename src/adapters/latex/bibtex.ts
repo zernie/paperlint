@@ -7,8 +7,17 @@
  *   - `@type{key, …}` and `@type(key, …)` end at the matching brace or parenthesis; an `@` inside
  *     an entry is text;
  *   - `@string` and `@preamble` are commands, not entries; `@comment` is skipped as a WORD, so its
- *     braces are junk and an entry written inside them is read;
- *   - an entry that is never closed is not read.
+ *     braces are junk and an entry written inside them is read (the word is named, `comments`, so a
+ *     parser that would skip the braces can be shown what bibtex reads);
+ *   - an entry left open — never closed, or a field whose brace is never closed — is read with what
+ *     it has, and the next `@` at brace depth 0 starts the next entry; an `@` inside a field, at any
+ *     depth above 0, is text, even at the start of a line;
+ *   - an `@` right after a comma, where bibtex expects a field name, is an error that bibtex skips
+ *     together with the entry it would start, reading on from the next `@`.
+ *
+ * Measured and NOT modelled: an entry bibtex reaches by recovering at such an `@` is dropped when
+ * nothing follows it in the file (design doc §9). This reader keeps it — one entry too many,
+ * never one too few.
  *
  * Only where entries are, their type and key: the fields are read by the consumers that need them
  * (`@retorquere/bibtex-parser` in extract-ref-facts, bib-authors' own reader).
@@ -40,81 +49,125 @@ type Mode =
 interface Scan {
   readonly mode: Mode;
   readonly found: readonly Omit<BibEntry, "percent">[];
+  /** The `@comment` words bibtex skips. */
+  readonly comments: readonly Span[];
 }
 
 const JUNK: Mode = { kind: "junk", skipTo: 0 };
+const NONE: Scan["found"] = [];
 
 /** An `@` in junk: the entry it opens, or junk again when nothing an entry needs follows. */
-function opened(text: string, at: number): Mode {
+function opened(text: string, at: number): Omit<Scan, "found"> {
   const m = HEAD.exec(text.slice(at, at + HEAD_WINDOW));
   const [whole = "", raw = "", delim = "{", key = ""] = m ?? [];
   const type = raw.toLowerCase();
-  if (m === null || type === "comment")
-    return { kind: "junk", skipTo: at + 1 + raw.length };
+  const word = { start: at, end: at + whole.indexOf(raw) + raw.length };
+  if (m === null)
+    return { mode: { kind: "junk", skipTo: at + 1 }, comments: [] };
+  if (type === "comment")
+    return { mode: { kind: "junk", skipTo: word.end }, comments: [word] };
   return {
-    kind: "entry",
-    at,
-    type,
-    key,
-    close: delim === "{" ? "}" : ")",
-    depth: 0,
-    record: type !== "string" && type !== "preamble",
-    // Past the opening delimiter, which the scan must not count as a brace of the entry's own.
-    skipTo: at + whole.length - key.length,
+    mode: {
+      kind: "entry",
+      at,
+      type,
+      key,
+      close: delim === "{" ? "}" : ")",
+      depth: 0,
+      record: type !== "string" && type !== "preamble",
+      // Past the opening delimiter, which the scan must not count as a brace of the entry's own.
+      skipTo: at + whole.length - key.length,
+    },
+    comments: [],
   };
 }
 
-/** One delimiter inside an entry: deeper, shallower, or the close that ends it. */
-function inEntry(
-  e: Extract<Mode, { kind: "entry" }>,
-  c: string,
-  i: number,
-): Scan {
-  const none: Scan["found"] = [];
-  if (c === "{") return { mode: { ...e, depth: e.depth + 1 }, found: none };
-  if (c === "}" && e.depth > 0)
-    return { mode: { ...e, depth: e.depth - 1 }, found: none };
-  if (c !== e.close || e.depth > 0) return { mode: e, found: none };
-  const span = { start: e.at, end: i + 1 };
+type Entry = Extract<Mode, { kind: "entry" }>;
+
+/** The entry as read so far, ending at `end`. */
+const recorded = (e: Entry, end: number): Scan["found"] =>
+  e.record ? [{ type: e.type, key: e.key, span: { start: e.at, end } }] : NONE;
+
+/** The last character before `i` that is not white space. */
+const before = (text: string, i: number): string =>
+  text.slice(0, i).trimEnd().slice(-1);
+
+/**
+ * An `@` at depth 0 inside an open entry: bibtex reports the entry, keeps what it read, and starts
+ * the next one there — unless it was expecting a field name (after a comma), when the `@` and what it
+ * starts are skipped.
+ */
+function resync(text: string, e: Entry, i: number): Scan {
+  const found = recorded(e, i);
+  if (before(text, i) === ",")
+    return { mode: { kind: "junk", skipTo: i + 1 }, found, comments: [] };
+  return { ...opened(text, i), found };
+}
+
+/** One delimiter inside an entry: deeper, shallower, the close that ends it, or an `@`. */
+function inEntry(text: string, e: Entry, c: string, i: number): Scan {
+  const same = (mode: Mode): Scan => ({ mode, found: NONE, comments: [] });
+  if (c === "@") return e.depth === 0 ? resync(text, e, i) : same(e);
+  if (c === "{") return same({ ...e, depth: e.depth + 1 });
+  if (c === "}" && e.depth > 0) return same({ ...e, depth: e.depth - 1 });
+  if (c !== e.close || e.depth > 0) return same(e);
   return {
     mode: { kind: "junk", skipTo: i + 1 },
-    found: e.record ? [{ type: e.type, key: e.key, span }] : none,
+    found: recorded(e, i + 1),
+    comments: [],
   };
 }
 
-/** The `%` run alone before `at` on its line, inside `body` — or null. */
+/**
+ * The `%` before `at` on its line, and everything from it to the `@` — what LaTeX hides and bibtex
+ * reads past (`% @misc{…}`, `% see @misc{…}`) — or null when the line has no `%` before the entry.
+ */
 function percentBefore(text: string, at: number, body: Span): Span | null {
   const lineStart = Math.max(text.lastIndexOf("\n", at - 1) + 1, body.start);
-  const m = /^([ \t]*)(%[% \t]*?)[ \t]*$/.exec(text.slice(lineStart, at));
-  if (m === null) return null;
-  const [, lead = "", run = ""] = m;
-  const start = lineStart + lead.length;
-  return { start, end: start + run.length };
+  const pct = text.indexOf("%", lineStart);
+  return pct < 0 || pct >= at ? null : { start: pct, end: at };
 }
 
-/** The entries of `text` within `body`, in order. */
-export function bibEntries(text: string, body: Span): readonly BibEntry[] {
+/** What a scan of `text` within `body` found: the entries in order, and the `@comment` words. */
+function scanned(text: string, body: Span): Omit<Scan, "mode"> {
   const marks = [...text.slice(body.start, body.end).matchAll(/[@{}()]/g)];
-  const { found } = marks.reduce<Scan>(
+  const end = marks.reduce<Scan>(
     (s, m) => {
       const i = body.start + m.index;
       if (i < s.mode.skipTo) return s;
-      const step: Scan =
+      const step =
         s.mode.kind === "junk"
-          ? { mode: m[0] === "@" ? opened(text, i) : s.mode, found: [] }
-          : inEntry(s.mode, m[0], i);
-      return { mode: step.mode, found: [...s.found, ...step.found] };
+          ? m[0] === "@"
+            ? { ...opened(text, i), found: NONE }
+            : { mode: s.mode, found: NONE, comments: [] }
+          : inEntry(text, s.mode, m[0], i);
+      return {
+        mode: step.mode,
+        found: [...s.found, ...step.found],
+        comments: [...s.comments, ...step.comments],
+      };
     },
-    { mode: JUNK, found: [] },
+    { mode: JUNK, found: [], comments: [] },
   );
-  return found.map((e) => ({
+  // An entry still open at the end of the text is read with what it has.
+  const last = end.mode.kind === "entry" ? recorded(end.mode, body.end) : NONE;
+  return { found: [...end.found, ...last], comments: end.comments };
+}
+
+/** A database's bytes, `body` of `text` in the file at `path`, as bibtex reads them. */
+export function bibText(path: AbsolutePath, text: string, body: Span): BibText {
+  const { found, comments } = scanned(text, body);
+  // A `%` counts only after the entry before it on the same line: `title={50%}} @misc{…}` is no comment.
+  const entries = found.map((e, i) => ({
     ...e,
-    percent: percentBefore(text, e.span.start, body),
+    percent: percentBefore(text, e.span.start, {
+      start: Math.max(body.start, found[i - 1]?.span.end ?? body.start),
+      end: body.end,
+    }),
   }));
+  return { path, text, body, entries, comments };
 }
 
 /** A whole `.bib` file as a `BibText`. */
-export const bibFileText = (path: AbsolutePath, text: string): BibText => {
-  const body = { start: 0, end: text.length };
-  return { path, text, body, entries: bibEntries(text, body) };
-};
+export const bibFileText = (path: AbsolutePath, text: string): BibText =>
+  bibText(path, text, { start: 0, end: text.length });

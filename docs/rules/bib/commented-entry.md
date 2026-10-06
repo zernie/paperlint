@@ -5,10 +5,12 @@
 
 ## What it catches
 
-A bibliography entry written behind `%`, as if commented out:
+A bibliography entry written behind `%`, as if commented out — the `%` at the start of the line, or
+with text between it and the `@`:
 
 ```bibtex
 % @misc{dead2020, title = {An Old Entry}}
+% see @misc{old2019, title = {Another}}
 ```
 
 ## Why
@@ -49,6 +51,8 @@ None.
   the field.
 - `@comment{…}`: bibtex skips the word `comment` and reads what follows as junk, so an entry inside
   its braces is read too — not reported.
+- With `eslint --cache`, a change to a `.bib` alone does not re-run the rule: its findings depend on
+  files other than `paper.tex`. `paperlint lint` does not cache.
 
 ## How to fix
 

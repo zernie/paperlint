@@ -1,11 +1,12 @@
 # bib/filecontents-overwrite
 
-**Level:** error · **Reads:** `paper.tex`; for the message, the `.bib` of the same name and whether
-it is committed · **Fixable:** `--fix`
+**Level:** error · **Reads:** `paper.tex` and the files it includes; the `.bib` of the same name,
+and whether it is committed · **Fixable:** `--fix` when it loses nothing, else a suggestion
 
 ## What it catches
 
-A `filecontents` block in `paper.tex` that writes a `.bib` without `[overwrite]` (or `[force]`):
+A `filecontents` block in `paper.tex`, or in a file it includes, that writes a `.bib` without
+`[overwrite]` (or `[force]`):
 
 ```latex
 \begin{filecontents*}{refs.bib}
@@ -14,7 +15,8 @@ A `filecontents` block in `paper.tex` that writes a `.bib` without `[overwrite]`
 ```
 
 Only a live block counts: one in a comment or inside `\iffalse … \fi` is not a block. A block that
-writes anything other than a `.bib` is not judged.
+writes anything other than a `.bib` is not judged. A block in an included file is reported at the
+`\input` that brings it in, with its file and line first (`bibblock.tex:1:1: …`).
 
 ## Why
 
@@ -68,13 +70,24 @@ None.
 
 - Whether the paper declares the database the block writes (`\bibliography{refs}`): a block nothing
   declares is written and never read.
-- A `refs.bib` left on this machine by an earlier build is not judged: the finding is about the
-  committed bytes of `paper.tex`, the same on every machine. Whether the PDF of one build used the
-  block is a fact of that build.
-- A block in a file `paper.tex` includes: only `paper.tex` is read.
+- A `refs.bib` left on this machine by an earlier build does not change the finding: it is about the
+  committed bytes, the same on every machine. Whether the PDF of one build used the block is a fact
+  of that build. The file only decides whether the fix is safe (below).
+- With `eslint --cache`, a change to an included file alone does not re-run the rule; `paperlint
+lint` does not cache.
 
 ## How to fix
 
 `paperlint lint --fix` adds `[overwrite]` (into the option list when there is one:
-`[overwrite,nosearch]`). Then delete a `refs.bib` committed beside the block, or stop editing the
-block and keep the file — one of the two is the bibliography, not both.
+`[overwrite,nosearch]`) — but only when that loses nothing: no file of the block's name exists in the
+paper's directory, or the file holds the block's entries (TeX's own copy from an earlier build).
+
+When the file holds OTHER entries — committed, or a local file such as a reference manager's
+export — adding `[overwrite]` would write the block over it on the next build, so `--fix` leaves it
+and the finding carries a suggestion instead, which your editor applies on request:
+
+> Add `[overwrite]`: the next build writes this block over refs.bib, which holds other entries
+
+Decide which one is the bibliography: keep the block and apply the suggestion (after saving the
+file's entries you want into the block), or keep the file and delete the block. For a block in an
+included file, add `[overwrite]` there.

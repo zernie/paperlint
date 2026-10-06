@@ -1,256 +1,42 @@
 /**
- * WHERE A PAPER'S BIBLIOGRAPHY IS — read from the parse tree, decided by TeX's and bibtex's rules.
- * The decision is here, in the latex adapter, because it is TeX's knowledge (finding 9 of the design's
- * refutation, docs/design/paper-sources.md §7); the states it returns are the domain's
- * (`src/domain/paper-sources.ts`).
+ * WHERE A PAPER'S BIBLIOGRAPHY IS — decided by TeX's and bibtex's rules from what each source
+ * declares (`declarations.ts`). The decision is here, in the latex adapter, because it is TeX's
+ * knowledge (finding 9 of the design's refutation, docs/design/paper-sources.md §7); the states it
+ * returns are the domain's (`src/domain/paper-sources.ts`).
  *
- *   filecontentsOf     every live `filecontents` block: what it writes, with `[overwrite]` or not
- *   declarationsOf     every live `\bibliography{a,b}` and `\addbibresource[…]{…}`, and whether it
- *                      sits where TeX may not read it (a switch, a macro's body)
- *   decideBibliography the `Bibliography` those make, from committed bytes
+ * The rules, each measured on the planted papers of fixtures/paper-sources (tex-truth.json):
  *
- * "Live" comes from the tree: a comment is a node of its own and `\iffalse … \fi` is cut at parse
- * (`conditionals.ts`), so a commented-out block or declaration is none (variant v4 of the design).
- * unified-latex reads a `filecontents` environment as verbatim; its option and file name are the first
- * characters of that node, and its body starts on the next line, as LaTeX's own reader starts it.
+ *   - bibtex reads the databases of the FIRST `\bibliography` (`\nobibliography`); a second one is an
+ *     error it reports and ignores (v9);
+ *   - blocks writing one file run in order: a block writes when it has `[overwrite]` or no file of that
+ *     name exists yet, so the last such block wins over every earlier one (v11), and a committed file
+ *     wins over blocks without `[overwrite]` (v1);
+ *   - a block behind a switch may or may not run: its database is both candidates (v12);
+ *   - `\jobname` is the main file's name (v8); a name built by another macro is `unresolved`.
+ *
+ * Anything TeX may or may not read makes the bibliography `undecided`, with every candidate listed.
  */
-import { normalize } from "node:path";
-import type * as Ast from "@unified-latex/unified-latex-types";
-import type {
-  BibText,
-  Bibliography,
-  Database,
-  Declared,
-  EmbeddedBib,
-} from "../../domain/paper-sources.ts";
-import type { AbsolutePath } from "../../domain/paths.ts";
-import type { Span } from "../../domain/tex-document.ts";
-import type { BibDisk, BibSource, Filecontents } from "../../ports/latex.ts";
-import { bibEntries, bibFileText } from "./bibtex.ts";
+import { basename, extname, normalize } from "node:path";
 import {
-  inPlace,
-  isNode,
-  mandatory,
-  optional,
-  placeOf,
-  visited,
-  type Node,
-} from "./nodes.ts";
-import { DEFINITION_MACROS, parseLatex, type ParsedTex } from "./parse.ts";
-
-const FILECONTENTS: ReadonlySet<string> = new Set([
-  "filecontents",
-  "filecontents*",
-]);
-
-/** `[options]{name}` at the start of a `filecontents` node, and the rest of its first line. */
-const BLOCK_HEAD = /^\s*(?:\[([^\]]*)\])?\s*\{([^}]*)\}[^\n]*\n?/;
-
-/** One verbatim `filecontents` node as a block: its name, option, and body. */
-function blockOf(
-  src: string,
-  n: Readonly<Ast.VerbatimEnvironment>,
-): readonly Filecontents[] {
-  return inPlace(placeOf(n), (span) => {
-    // The node runs from `\begin{env}` to past `\end{env}`.
-    const headAt = span.start + `\\begin{${n.env}}`.length;
-    const end = span.end - `\\end{${n.env}}`.length;
-    const head = BLOCK_HEAD.exec(src.slice(headAt, end));
-    if (head === null) return [];
-    const [line, options = "", writes] = head;
-    const opts = options.split(",").map((o) => o.trim());
-    return [
-      {
-        writes: String(writes).trim(),
-        overwrite: opts.includes("overwrite") || opts.includes("force"),
-        span,
-        body: { start: headAt + line.length, end },
-      },
-    ];
-  });
-}
-
-/** Every live `filecontents` block of a source, in source order. */
-export const filecontentsOf = (t: ParsedTex): readonly Filecontents[] =>
-  visited(t.root, () => false)
-    .filter(isNode)
-    .flatMap((n) =>
-      n.type === "verbatim" && FILECONTENTS.has(n.env) ? blockOf(t.src, n) : [],
-    );
-
-/** A declaration of databases, where it stands, and whether TeX surely reads it. */
-interface Declaration {
-  readonly names: readonly string[];
-  readonly remote: boolean;
-  readonly span: Span;
-  /** Behind a switch, or in a macro's body: TeX may or may not read it. */
-  readonly conditional: boolean;
-}
-
-const DECLARING: ReadonlySet<string> = new Set([
-  "bibliography",
-  "addbibresource",
-]);
-
-/**
- * The names a declaration's `{…}` holds, or null when it is not a declaration: an empty argument,
- * or one holding a macro or a parameter (`\bibliography{#1}` in a redefinition of `\bibliography`,
- * or the next token `\let\x\bibliography` hands it).
- */
-function namesOf(
-  src: string,
-  m: Readonly<Ast.Macro>,
-): readonly string[] | null {
-  const text = plainText(src, mandatory(m)[0]?.content ?? []);
-  const names = (text ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s !== "");
-  return names.length > 0 ? names : null;
-}
-
-/** The source text of an argument made only of strings and spaces, or null (a macro, a parameter). */
-function plainText(src: string, content: readonly Node[]): string | null {
-  const plain = content.every(
-    (c) => c.type === "string" || c.type === "whitespace",
-  );
-  const first = content[0]?.position?.start.offset;
-  const last = content.at(-1)?.position?.end.offset;
-  return plain && first !== undefined && last !== undefined
-    ? src.slice(first, last)
-    : null;
-}
-
-/** `\addbibresource[location=remote]{…}`: a URL biber fetches. */
-const isRemote = (src: string, m: Readonly<Ast.Macro>): boolean => {
-  const o = optional(m)?.content ?? [];
-  const from = o[0]?.position?.start.offset;
-  const to = o.at(-1)?.position?.end.offset;
-  return (
-    from !== undefined &&
-    to !== undefined &&
-    /\blocation\s*=\s*remote\b/.test(src.slice(from, to))
-  );
-};
-
-/** A macro that opens a TeX conditional closed by `\fi` (`\ifthenelse` takes arguments instead). */
-const opensConditional = (n: Node): boolean =>
-  n.type === "macro" &&
-  n.content.startsWith("if") &&
-  n.content !== "ifthenelse";
-
-/** How many following macros a macro makes NAMES, not commands: `\newif\ifx`, `\let\a\b`. */
-const NAMING: ReadonlyMap<string, number> = new Map([
-  ["newif", 1],
-  ["let", 2],
-]);
-
-/** Where a scan of one node list stands: open conditionals, and macros still to read as names. */
-interface ListScan {
-  readonly depth: number;
-  readonly names: number;
-  readonly found: readonly Declaration[];
-}
-
-/** `s` with what `lists` declare added, read as conditional when `s` is inside a conditional. */
-const adding = (
-  src: string,
-  conditional: boolean,
-  s: ListScan,
-  lists: readonly (readonly Node[])[],
-): ListScan => ({
-  ...s,
-  found: [
-    ...s.found,
-    ...declarationsIn(src, lists, conditional || s.depth > 0),
-  ],
-});
-
-/** One node of a list: what it declares, given the conditionals open around it. */
-function stepList(
-  src: string,
-  conditional: boolean,
-  s: ListScan,
-  n: Node,
-): ListScan {
-  if (n.type !== "macro") return adding(src, conditional, s, inner(n));
-  // A name is not a command; the parser may still have handed it the next token as an argument.
-  const args = (n.args ?? []).map((a) => a.content);
-  if (s.names > 0)
-    return { ...adding(src, conditional, s, args), names: s.names - 1 };
-  const named = NAMING.get(n.content);
-  if (named !== undefined) return { ...s, names: named };
-  if (opensConditional(n)) return { ...s, depth: s.depth + 1 };
-  if (n.content === "fi") return { ...s, depth: Math.max(0, s.depth - 1) };
-  return {
-    ...s,
-    found: [
-      ...s.found,
-      ...macroDeclarations(src, n, conditional || s.depth > 0),
-    ],
-  };
-}
-
-/** The node lists inside a node that is not a macro: an environment's or a group's content. */
-const inner = (n: Node): readonly (readonly Node[])[] =>
-  n.type === "environment" || n.type === "mathenv"
-    ? [n.content, ...(n.args ?? []).map((a) => a.content)]
-    : n.type === "group"
-      ? [n.content]
-      : [];
-
-/** A macro: a declaration itself, and whatever its arguments declare (a definition's: conditionally). */
-function macroDeclarations(
-  src: string,
-  m: Readonly<Ast.Macro>,
-  conditional: boolean,
-): readonly Declaration[] {
-  const names = DECLARING.has(m.content) ? namesOf(src, m) : null;
-  const pos = m.position;
-  const own: readonly Declaration[] =
-    names === null || pos === undefined
-      ? []
-      : [
-          {
-            names,
-            remote: m.content === "addbibresource" && isRemote(src, m),
-            span: { start: pos.start.offset, end: pos.end.offset },
-            conditional,
-          },
-        ];
-  const inBody = conditional || DEFINITION_MACROS.has(m.content);
-  return [
-    ...own,
-    ...declarationsIn(
-      src,
-      (m.args ?? []).map((a) => a.content),
-      inBody,
-    ),
-  ];
-}
-
-/** The declarations in some node lists, each list scanned for its own conditionals. */
-function declarationsIn(
-  src: string,
-  lists: readonly (readonly Node[])[],
-  conditional: boolean,
-): readonly Declaration[] {
-  return lists.flatMap(
-    (list) =>
-      list.reduce<ListScan>((s, n) => stepList(src, conditional, s, n), {
-        depth: 0,
-        names: 0,
-        found: [],
-      }).found,
-  );
-}
-
-/** Every live declaration of databases in a source, in source order. */
-export const declarationsOf = (t: ParsedTex): readonly Declaration[] =>
-  declarationsIn(t.src, [t.root.content], false);
+  sameEntries,
+  type BibText,
+  type Bibliography,
+  type Database,
+  type Declared,
+  type EmbeddedBib,
+} from "../../domain/paper-sources.ts";
+import type {
+  BibDisk,
+  BibliographyReading,
+  BibSource,
+} from "../../ports/latex.ts";
+import { bibFileText, bibText } from "./bibtex.ts";
+import { scanSource, type Declaration } from "./declarations.ts";
+import { isNode, visited } from "./nodes.ts";
+import { parseLatex, type ParsedTex } from "./parse.ts";
 
 /** The first live `thebibliography` environment's span, or null. */
-const theBibliographyOf = (t: ParsedTex): Span | null => {
+const theBibliographyOf = (t: ParsedTex): Declared["span"] | null => {
   const env = visited(t.root, () => false)
     .filter(isNode)
     .find((n) => n.type === "environment" && n.env === "thebibliography");
@@ -266,105 +52,193 @@ const fileNameOf = (name: string): string =>
 const shownName = (name: string): string =>
   name.endsWith(".bib") ? name.slice(0, -".bib".length) : name;
 
-/** An entry's identity for comparing two texts: key and bytes, whitespace runs folded (TeX drops trailing spaces). */
-const identities = (b: BibText): readonly string[] =>
-  b.entries.map((e) =>
-    b.text.slice(e.span.start, e.span.end).replace(/\s+/g, " "),
-  );
-
-const sameEntries = (a: BibText, b: BibText): boolean => {
-  const x = identities(a);
-  const y = identities(b);
-  return x.length === y.length && x.every((v, i) => v === y[i]);
-};
+/** A block of one source, as the decision reads it. */
+interface Block {
+  readonly bib: EmbeddedBib;
+  readonly conditional: boolean;
+}
 
 /** What one source of the paper holds for the decision. */
 interface Parsed {
-  readonly path: AbsolutePath;
+  readonly path: BibSource["path"];
   readonly declarations: readonly Declaration[];
-  readonly blocks: readonly EmbeddedBib[];
-  readonly theBibliography: Span | null;
+  readonly blocks: readonly Block[];
+  readonly theBibliography: Declared["span"] | null;
 }
 
-function parsedSource(s: BibSource): Parsed {
+function parsedSource(s: BibSource, jobname: string): Parsed {
   const t = parseLatex(s.text);
+  const scan = scanSource(t, jobname);
   return {
     path: s.path,
-    declarations: declarationsOf(t),
-    blocks: filecontentsOf(t)
-      .filter((b) => b.writes.endsWith(".bib"))
-      .map((b) => ({
-        writes: b.writes,
-        overwrite: b.overwrite,
-        span: b.span,
+    declarations: scan.declarations,
+    blocks: scan.blocks
+      .filter(({ block }) => block.writes.endsWith(".bib"))
+      .map(({ block, conditional }) => ({
+        conditional,
         bib: {
-          path: s.path,
-          text: s.text,
-          body: b.body,
-          entries: bibEntries(s.text, b.body),
+          writes: block.writes,
+          overwrite: block.overwrite,
+          span: block.span,
+          bib: bibText(s.path, s.text, block.body),
         },
       })),
     theBibliography: theBibliographyOf(t),
   };
 }
 
-/** One declared name, decided. */
+/** What deciding one name needs. */
+interface Decide {
+  readonly name: string;
+  readonly declared: Declared;
+  readonly file: BibText | null;
+  readonly committed: BibText | null;
+}
+
+/**
+ * The database a run of `blocks` (in TeX's order) leaves: each writes when it has `[overwrite]` or no
+ * file exists yet; TeX reads what was written last, or the committed file when no block wrote.
+ */
+function afterBlocks(d: Decide, blocks: readonly EmbeddedBib[]): Database {
+  const shown = shownName(d.name);
+  const [first] = blocks;
+  if (first === undefined)
+    return d.file === null
+      ? { kind: "missing", name: shown, declared: d.declared }
+      : { kind: "file", name: shown, declared: d.declared, file: d.file };
+  const winner = blocks.reduce<EmbeddedBib | null>(
+    (w, b) => (b.overwrite || (w === null && d.committed === null) ? b : w),
+    null,
+  );
+  const block = winner ?? first;
+  return d.committed !== null && !sameEntries(block.bib, d.committed)
+    ? {
+        kind: "conflict",
+        name: shown,
+        declared: d.declared,
+        block,
+        file: d.committed,
+      }
+    : { kind: "embedded", name: shown, declared: d.declared, block };
+}
+
+/** One declared name: its database, and — when a block for it sits behind a switch — the other candidate. */
 function decided(
-  name: string,
-  declared: Declared,
-  blocks: readonly EmbeddedBib[],
+  d: Pick<Decide, "name" | "declared">,
+  blocks: readonly Block[],
   disk: BibDisk,
-): Database {
-  const fileName = fileNameOf(name);
-  const shown = shownName(name);
-  const block = blocks.find((b) => normalize(b.writes) === fileName);
+): readonly Database[] {
+  const fileName = fileNameOf(d.name);
   const found = disk.bib(fileName);
   const file = found === null ? null : bibFileText(found.path, found.text);
-  if (
-    block !== undefined &&
-    file !== null &&
-    disk.committed(file.path) &&
-    !sameEntries(block.bib, file)
-  )
-    return { kind: "conflict", name: shown, declared, block, file };
-  if (block !== undefined)
-    return { kind: "embedded", name: shown, declared, block };
-  if (file !== null) return { kind: "file", name: shown, declared, file };
-  return { kind: "missing", name: shown, declared };
+  const at: Decide = {
+    ...d,
+    file,
+    committed: file !== null && disk.committed(file.path) ? file : null,
+  };
+  const mine = blocks.filter((b) => normalize(b.bib.writes) === fileName);
+  const sure = afterBlocks(
+    at,
+    mine.filter((b) => !b.conditional).map((b) => b.bib),
+  );
+  return mine.some((b) => b.conditional)
+    ? [
+        sure,
+        afterBlocks(
+          at,
+          mine.map((b) => b.bib),
+        ),
+      ]
+    : [sure];
+}
+
+interface At {
+  readonly d: Declaration;
+  readonly at: Declared;
+}
+
+/** Every declaration bibtex reads: all but a `\bibliography` after an unconditional first one (v9). */
+const readByBibtex = (declared: readonly At[]): readonly At[] => {
+  const writesBibdata = (d: Declaration) =>
+    d.macro === "bibliography" || d.macro === "nobibliography";
+  const first = declared.findIndex(
+    ({ d }) => writesBibdata(d) && !d.conditional,
+  );
+  return declared.filter(
+    ({ d }, i) => first < 0 || i <= first || !writesBibdata(d),
+  );
+};
+
+/** The candidates of one declared name. */
+const candidates = (
+  { d, at }: At,
+  blocks: readonly Block[],
+  disk: BibDisk,
+): readonly (readonly Database[])[] =>
+  d.names.map((n): readonly Database[] => {
+    if (n.kind === "unresolved")
+      return [{ kind: "unresolved", name: n.written, declared: at }];
+    return d.remote
+      ? [{ kind: "remote", name: n.name, declared: at }]
+      : decided({ name: n.name, declared: at }, blocks, disk);
+  });
+
+/** The databases of the declarations, and whether any of them may or may not be what TeX reads. */
+function databasesFrom(
+  parsed: readonly Parsed[],
+  disk: BibDisk,
+): { readonly databases: readonly Database[]; readonly undecided: boolean } {
+  const blocks = parsed.flatMap((p) => p.blocks);
+  const declared = readByBibtex(
+    parsed.flatMap((p) =>
+      p.declarations.map((d) => ({ d, at: { file: p.path, span: d.span } })),
+    ),
+  );
+  const perName = declared.flatMap((a) => candidates(a, blocks, disk));
+  return {
+    databases: perName.flat(),
+    undecided:
+      declared.some(({ d }) => d.conditional) ||
+      perName.some(
+        (c) => c.length > 1 || c.some((d) => d.kind === "unresolved"),
+      ),
+  };
 }
 
 /**
  * The bibliography of a paper whose sources (the main file first, then its own includes) are
- * `sources`. A `.bib` is looked up in the paper's directory, where bibtex runs (`disk.bib`); a file
- * there counts against a block only when it is committed (`disk.committed`) — see the domain module.
+ * `sources`, and every block they hold that writes a `.bib`. A `.bib` is looked up where bibtex runs,
+ * the paper's directory (`disk.bib`); a file there counts against a block only when it is committed
+ * (`disk.committed`) — see the domain module.
  */
 export function decideBibliography(
   sources: readonly BibSource[],
   disk: BibDisk,
-): Bibliography {
-  const parsed = sources.map(parsedSource);
-  const blocks = parsed.flatMap((p) => p.blocks);
-  const declared = parsed.flatMap((p) =>
-    p.declarations.map((d) => ({ d, at: { file: p.path, span: d.span } })),
-  );
-  const databases = declared.flatMap(({ d, at }) =>
-    d.names.map((name): Database =>
-      d.remote
-        ? { kind: "remote", name, declared: at }
-        : decided(name, at, blocks, disk),
-    ),
-  );
+): BibliographyReading {
+  // The main file comes first: `\jobname` is its name.
+  const jobname = sources
+    .slice(0, 1)
+    .map((s) => basename(s.path, extname(s.path)))
+    .join("");
+  const parsed = sources.map((s) => parsedSource(s, jobname));
+  const blocks = parsed.flatMap((p) => p.blocks.map((b) => b.bib));
+  const { databases, undecided } = databasesFrom(parsed, disk);
   const [first, ...rest] = databases;
   if (first !== undefined)
     return {
-      kind: declared.some(({ d }) => d.conditional) ? "undecided" : "databases",
-      databases: [first, ...rest],
+      bibliography: {
+        kind: undecided ? "undecided" : "databases",
+        databases: [first, ...rest],
+      },
+      blocks,
     };
   const thb = parsed.find((p) => p.theBibliography !== null);
-  return thb?.theBibliography == null
-    ? { kind: "none" }
-    : {
-        kind: "thebibliography",
-        declared: { file: thb.path, span: thb.theBibliography },
-      };
+  const bibliography: Bibliography =
+    thb?.theBibliography == null
+      ? { kind: "none" }
+      : {
+          kind: "thebibliography",
+          declared: { file: thb.path, span: thb.theBibliography },
+        };
+  return { bibliography, blocks };
 }

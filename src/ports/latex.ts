@@ -3,7 +3,11 @@
  * parser. The one implementation is `src/adapters/latex/` (unified-latex); `src/cli.ts` wires it.
  */
 import type { Include } from "../domain/paper-source.ts";
-import type { BibText, Bibliography } from "../domain/paper-sources.ts";
+import type {
+  BibText,
+  Bibliography,
+  EmbeddedBib,
+} from "../domain/paper-sources.ts";
 import type { AbsolutePath } from "../domain/paths.ts";
 import type {
   ClassLine,
@@ -39,6 +43,12 @@ export interface BibDisk {
   readonly bib: (name: string) => BibSource | null;
   /** Whether a file is committed — what a fresh checkout of the paper holds. */
   readonly committed: (p: AbsolutePath) => boolean;
+}
+
+/** The bibliography of a paper, and every block its sources hold that writes a `.bib`. */
+export interface BibliographyReading {
+  readonly bibliography: Bibliography;
+  readonly blocks: readonly EmbeddedBib[];
 }
 
 export interface LatexReader {
@@ -92,5 +102,5 @@ export interface LatexReader {
   readonly bibliography: (
     sources: readonly BibSource[],
     disk: BibDisk,
-  ) => Bibliography;
+  ) => BibliographyReading;
 }

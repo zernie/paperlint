@@ -16,15 +16,17 @@
  * The main file is read from the editor's buffer (`sourcesOf`), so a finding in `paper.tex` points at
  * the text being edited; the `.bib` files and the includes are read from disk.
  */
-import { basename, relative } from "node:path";
+import { basename, relative, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
   databasesOf,
   MAIN_FILE,
+  sameEntries,
   texReads,
   type BibEntry,
   type BibText,
   type Database,
+  type EmbeddedBib,
   type PaperSources,
 } from "./domain/paper-sources.ts";
 import type { Span } from "./domain/tex-document.ts";
@@ -117,6 +119,11 @@ interface Loc {
   readonly column: number;
 }
 
+/** ESLint's fixer, as far as the `bib` rules use it. */
+interface Fixer {
+  replaceTextRange(range: readonly [number, number], text: string): unknown;
+}
+
 /** The slice of ESLint's rule API the `bib` rules use. */
 export interface BibRuleContext {
   readonly filename: string;
@@ -129,9 +136,12 @@ export interface BibRuleContext {
     readonly loc: { readonly start: Loc; readonly end: Loc };
     readonly messageId: string;
     readonly data?: Readonly<Record<string, string>>;
-    readonly fix?: (fixer: {
-      replaceTextRange(range: readonly [number, number], text: string): unknown;
-    }) => unknown;
+    readonly fix?: (fixer: Fixer) => unknown;
+    readonly suggest?: readonly {
+      readonly messageId: string;
+      readonly data?: Readonly<Record<string, string>>;
+      readonly fix: (fixer: Fixer) => unknown;
+    }[];
   }): void;
 }
 
@@ -139,6 +149,7 @@ export interface BibRuleModule {
   readonly meta: {
     readonly type: "problem" | "suggestion";
     readonly fixable?: "code";
+    readonly hasSuggestions?: true;
     readonly docs: { readonly description: string; readonly url: string };
     readonly schema: readonly object[];
     readonly messages: Readonly<Record<string, string>>;
@@ -278,9 +289,16 @@ const COMMENTED_META: BibRuleModule["meta"] = {
 };
 
 /** `bib/filecontents-overwrite`: a block writing a `.bib` overwrites it, so it is what TeX reads. */
+const NO_OVERWRITE =
+  "`{{begin}}` has no `[overwrite]`: TeX writes {{file}} only when no file of that name exists, so once one does — from an earlier build, or committed — edits to this block stop reaching the PDF";
+const WOULD_OVERWRITE =
+  "`{{begin}}` has no `[overwrite]`, and the {{file}} beside it holds other entries: TeX reads that file, not this block. Adding `[overwrite]` would write the block over it on the next build, so `--fix` does not — decide which one is the bibliography";
+const SHADOWED =
+  "TeX reads the committed {{file}}, not this block: the two hold different entries, and without `[overwrite]` TeX never writes the block over the file. Adding `[overwrite]` makes the block what TeX reads and rewrites the committed file on the next build, so `--fix` does not — decide which one is the bibliography";
 const OVERWRITE_META: BibRuleModule["meta"] = {
   type: "problem",
   fixable: "code",
+  hasSuggestions: true,
   docs: {
     description:
       "a filecontents block that writes a .bib has [overwrite], so the block is what TeX reads on every machine",
@@ -288,10 +306,14 @@ const OVERWRITE_META: BibRuleModule["meta"] = {
   },
   schema: [],
   messages: {
-    noOverwrite:
-      "`{{begin}}` has no `[overwrite]`: TeX writes {{file}} only when no file of that name exists, so once one does — from an earlier build, or committed — edits to this block stop reaching the PDF. `--fix` adds `[overwrite]`",
-    shadowed:
-      "TeX reads the committed {{file}}, not this block: the two hold different entries, and without `[overwrite]` TeX never writes the block over the file. `--fix` adds `[overwrite]`, which makes the block what TeX reads",
+    noOverwrite: `${NO_OVERWRITE}. \`--fix\` adds \`[overwrite]\``,
+    noOverwriteIn: `{{where}}: ${NO_OVERWRITE}. Add \`[overwrite]\` there`,
+    wouldOverwrite: WOULD_OVERWRITE,
+    wouldOverwriteIn: `{{where}}: ${WOULD_OVERWRITE}`,
+    shadowed: SHADOWED,
+    shadowedIn: `{{where}}: ${SHADOWED}`,
+    addOverwrite:
+      "Add `[overwrite]`: the next build writes this block over {{file}}, which holds other entries",
   },
 };
 
@@ -307,44 +329,102 @@ function overwriteFix(
     : { at: at + options[0].length, text: "overwrite," };
 }
 
-/** Whether the paper's committed `.bib` of that name holds other entries than the block at `start`. */
-const shadowedAt = (s: PaperSources, start: number): boolean =>
-  databasesOf(s.bibliography).some(
-    (d) =>
-      d.kind === "conflict" &&
-      d.block.bib.path === s.main.path &&
-      d.block.span.start === start,
-  );
-
-/** One block without `[overwrite]`: its `\\begin` line, which message, and the fix. */
-interface OpenBlock {
-  readonly head: Span;
-  readonly messageId: "noOverwrite" | "shadowed";
-  readonly data: Readonly<Record<string, string>>;
-  readonly fix: { readonly at: number; readonly text: string };
+/**
+ * What adding `[overwrite]` to `b` loses on the next build: nothing when no file of that name exists
+ * or it holds the block's entries (TeX's own copy); else the file's entries — committed, or this
+ * machine's only copy (a reference manager's export).
+ */
+function loss(
+  s: PaperSources,
+  b: EmbeddedBib,
+  deps: SourcesDeps,
+): "none" | "committed" | "local" {
+  const path = callerPath(resolve(s.dir, b.writes));
+  const bytes = deps.files.readBytes(path);
+  if (bytes === null) return "none";
+  const file = deps.latex.bibText(path, new TextDecoder().decode(bytes));
+  if (sameEntries(b.bib, file)) return "none";
+  return deps.committed.isCommitted(path) ? "committed" : "local";
 }
 
-/** The blocks of the linted `raw` that write a `.bib` without `[overwrite]`. */
-function openBlocks(
-  filename: string,
-  raw: string,
-  deps: SourcesDeps,
-): readonly OpenBlock[] {
-  const open = deps.latex
-    .filecontents(raw)
-    .filter((b) => b.writes.endsWith(".bib") && !b.overwrite);
-  // The paper's sources are read only when there is a block to judge: they ask git.
-  if (open.length === 0) return [];
-  const s = lintedSources(filename, raw, deps);
-  return open.map((b) => {
-    const first = raw.slice(b.span.start, b.span.end).split("\n", 1).join("");
-    const head = { start: b.span.start, end: b.span.start + first.length };
-    return {
-      head,
-      messageId: shadowedAt(s, b.span.start) ? "shadowed" : "noOverwrite",
-      data: { begin: raw.slice(head.start, head.end).trim(), file: b.writes },
-      fix: overwriteFix(raw, b.span.start),
-    };
+const MESSAGE = {
+  none: "noOverwrite",
+  committed: "shadowed",
+  local: "wouldOverwrite",
+} as const;
+
+/** One block without `[overwrite]`: its `\\begin` line, what adding it loses, where it is reported. */
+interface OpenBlock {
+  readonly block: EmbeddedBib;
+  readonly head: Span;
+  readonly loss: "none" | "committed" | "local";
+  readonly data: Readonly<Record<string, string>>;
+}
+
+/** Every block the paper's sources hold that writes a `.bib` without `[overwrite]`. */
+const openBlocks = (s: PaperSources, deps: SourcesDeps): readonly OpenBlock[] =>
+  s.blocks
+    .filter((b) => !b.overwrite)
+    .map((block) => {
+      const text = block.bib.text;
+      const first = text
+        .slice(block.span.start, block.span.end)
+        .split("\n", 1)
+        .join("");
+      const head = {
+        start: block.span.start,
+        end: block.span.start + first.length,
+      };
+      return {
+        block,
+        head,
+        loss: loss(s, block, deps),
+        data: { begin: first.trim(), file: block.writes },
+      };
+    });
+
+/** Where, in paper.tex, the include that brought the file at `path` in stands (its start, if none). */
+const includeOf = (s: PaperSources, path: string): Span => {
+  const rel = s.includes.filter((i) => i.path === path).map((i) => i.rel);
+  return s.assembled.segments
+    .filter((seg) => rel.includes(seg.file))
+    .map((seg) => seg.via)
+    .filter((via): via is Span => via !== null)
+    .slice(0, 1)
+    .reduce((_, via) => via, { start: 0, end: 0 });
+};
+
+/** A block in paper.tex: on its line, fixed when nothing is lost, else a suggestion that names the file. */
+function reportHere(context: BibRuleContext, b: OpenBlock): void {
+  const loc = (i: number) => context.sourceCode.getLocFromIndex(i);
+  const fix = overwriteFix(context.sourceCode.raw, b.block.span.start);
+  const insert = (fixer: Fixer) =>
+    fixer.replaceTextRange([fix.at, fix.at], fix.text);
+  context.report({
+    loc: { start: loc(b.head.start), end: loc(b.head.end) },
+    messageId: MESSAGE[b.loss],
+    data: b.data,
+    ...(b.loss === "none"
+      ? { fix: insert }
+      : {
+          suggest: [{ messageId: "addOverwrite", data: b.data, fix: insert }],
+        }),
+  });
+}
+
+/** A block in an included file: at its include, the file and line first; the fix is that file's. */
+function reportElsewhere(
+  context: BibRuleContext,
+  s: PaperSources,
+  b: OpenBlock,
+): void {
+  const loc = (i: number) => context.sourceCode.getLocFromIndex(i);
+  const at = includeOf(s, b.block.bib.path);
+  const where = `${relative(s.dir, b.block.bib.path)}:${lineColumn(b.block.bib.text, b.head.start)}`;
+  context.report({
+    loc: { start: loc(at.start), end: loc(at.end) },
+    messageId: `${MESSAGE[b.loss]}In`,
+    data: { ...b.data, where },
   });
 }
 
@@ -352,17 +432,11 @@ const filecontentsOverwrite = (deps: SourcesDeps): BibRuleModule => ({
   meta: OVERWRITE_META,
   create: (context) => ({
     "root:exit": () => {
-      if (!isMain(context.filename)) return;
-      const raw = context.sourceCode.raw;
-      const loc = (i: number) => context.sourceCode.getLocFromIndex(i);
-      openBlocks(context.filename, raw, deps).forEach((b) => {
-        context.report({
-          loc: { start: loc(b.head.start), end: loc(b.head.end) },
-          messageId: b.messageId,
-          data: b.data,
-          fix: (fixer) =>
-            fixer.replaceTextRange([b.fix.at, b.fix.at], b.fix.text),
-        });
+      const s = linted(context, deps);
+      if (s === null) return;
+      openBlocks(s, deps).forEach((b) => {
+        if (b.block.bib.path === s.main.path) reportHere(context, b);
+        else reportElsewhere(context, s, b);
       });
     },
   }),

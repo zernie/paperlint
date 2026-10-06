@@ -62,8 +62,10 @@ export const KEY_SIGNATURES: Readonly<
     ],
     "m",
   ),
-  // biblatex's resource takes options (`[location=remote]`) before the name.
-  ...signed(["addbibresource"], "o m"),
+  // biblatex's resources take options (`[location=remote]`) before the name.
+  ...signed(["addbibresource", "addglobalbib", "addsectionbib"], "o m"),
+  // bibentry's: writes `\bibdata` as `\bibliography` does, and typesets nothing.
+  ...signed(["nobibliography"], "m"),
   ...signed(["includegraphics"], "s o o m"),
   ...signed(["usepackage", "RequirePackage", "documentclass"], "o m o"),
 ]);
@@ -136,26 +138,51 @@ const parser = once(() =>
 );
 
 /**
- * The trees parsed last, by their source. A tree is a pure function of its text, and one lint of a
- * paper asks for the same texts many times: every rule that reads the paper (`readPaper`,
- * `paperSources`) parses `paper.tex` and its includes again — measured 2026-10-06 on the accepted ACM
- * paper of the corpus, 0.9 s per `paperSources`, seven of them per lint. Bounded: past `MEMO_SIZE`
- * sources it starts over, so a long editor session holds a paper's worth of trees, not every version.
+ * The trees parsed last, by their source: a tree is a pure function of its text, and one lint of a
+ * paper asks for the same texts many times — every rule that reads the paper (`readPaper`,
+ * `paperSources`) parses `paper.tex`, its includes and the assembled whole again. Measured 2026-10-06
+ * on the accepted ACM paper of the corpus: 0.9 s per `paperSources`, seven of them per lint,
+ * 50–76 ms with the memo.
+ *
+ * Bounded by the SOURCE TEXT it holds (UTF-16 units, about bytes for TeX), least recently used out. A count bound is wrong both ways:
+ * 64 trees held 64 versions of one file in an editor (186 MiB for a 48 KiB paper, design doc §9,
+ * finding 5), and 8 trees thrashed on a paper with ten includes — the rules read them in a cycle, so
+ * every read missed and the corpus lint timed out. `MEMO_BYTES` holds the largest paper of the corpus
+ * (150 KB of sources, and the assembled whole) and about ten versions of a 48 KiB file.
  */
-const MEMO_SIZE = 64;
+const MEMO_BYTES = 512 * 1024;
 const memo = new Map<string, ParsedTex>();
+
+/** The texts to evict, least recent first, so that `adding` more fits under `MEMO_BYTES`. */
+const evicted = (adding: number): readonly string[] => {
+  const keys = [...memo.keys()];
+  const total = keys.reduce((n, k) => n + k.length, adding);
+  const { out } = keys.reduce<{
+    readonly left: number;
+    readonly out: readonly string[];
+  }>(
+    (acc, k) =>
+      acc.left > MEMO_BYTES
+        ? { left: acc.left - k.length, out: [...acc.out, k] }
+        : acc,
+    { left: total, out: [] },
+  );
+  return out;
+};
 
 /** A LaTeX source → its tree, without the branches `\iffalse … \fi` hides (`conditionals.ts`). */
 export function parseLatex(src: string): ParsedTex {
   const hit = memo.get(src);
-  if (hit !== undefined) return hit;
-  const parsed: ParsedTex = {
+  const parsed: ParsedTex = hit ?? {
     src,
     root: withoutFalseBranches(src, parser().parse(src)),
     [PARSED]: true,
   };
+  // Most recent last: a hit moves to the end, and the first keys are the ones used least recently.
   // eslint-disable-next-line functional/immutable-data -- the bounded memo, see above
-  if (memo.size >= MEMO_SIZE) memo.clear();
+  memo.delete(src);
+  // eslint-disable-next-line functional/immutable-data -- the bounded memo, see above
+  evicted(src.length).forEach((k) => memo.delete(k));
   // eslint-disable-next-line functional/immutable-data -- the bounded memo, see above
   memo.set(src, parsed);
   return parsed;

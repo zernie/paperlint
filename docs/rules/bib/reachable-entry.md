@@ -44,6 +44,8 @@ None.
 - `@string` and `@preamble`, which are not entries.
 - When which databases TeX reads depends on a switch (`\ifanon\bibliography{anon}\else…`) or a
   macro, every candidate is judged.
+- With `eslint --cache`, a change to a `.bib` alone does not re-run the rule: its findings depend on
+  files other than `paper.tex`. `paperlint lint` does not cache.
 
 ## How to fix
 
