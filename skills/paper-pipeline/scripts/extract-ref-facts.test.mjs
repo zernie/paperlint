@@ -454,6 +454,10 @@ test.each([
   ["v3-declared", "", "paper.bib", ["declared2023"]],
   ["v4-commented", "", "refs.bib", ["stale2020"]],
   ["v5-percent-entry", "", "paper.tex", ["inline2024", "dead2020"]],
+  // An unclosed entry, then more: bibtex reads them all (v6); `% see @…` and `@comment{ @… }` (v13).
+  ["v6-unclosed", "", "refs.bib", ["a1", "a2unclosed", "a3", "a4"]],
+  ["v13-percent-text", "", "refs.bib", ["pt1", "k2inComment", "ok1"]],
+  ["v8-jobname", "", "paper.tex", ["jkey", "jdead"]],
 ])("%s: the bibliography TeX reads", (paper, stderr, file, keys) => {
   const out = join(root, "planted", `${paper}.json`);
   const r = cli([

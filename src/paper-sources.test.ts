@@ -64,35 +64,62 @@ const databasesOf = (b: Bibliography): readonly Database[] => {
   }
 };
 
-/** The module's answer in the shape of `tex-truth.json`. */
+/** Sorted and distinct, so two answers compare as sets. */
+const set = (xs: readonly string[]): readonly string[] =>
+  [...new Set(xs)].sort();
+
+/**
+ * The module's answer in the shape of `tex-truth.json`: the files TeX opens, the files each
+ * database is read from (a block TeX wrote: the file that holds it, in these papers paper.tex), and
+ * the cited keys it finds — every key, for a paper that cites `\nocite{*}`.
+ */
 function answerOf(p: PaperSources, citations: readonly string[]) {
-  const reads = databasesOf(p.bibliography).map((d) => texReads(d));
-  const keys = new Set(
-    reads.flatMap((r) => (r === null ? [] : r.entries.map((e) => e.key))),
-  );
+  const reads = databasesOf(p.bibliography).flatMap((d) => {
+    const r = texReads(d);
+    return r === null ? [] : [r];
+  });
+  const keys = reads.flatMap((r) => r.entries.map((e) => e.key));
   return {
     inputs: [p.main, ...p.includes]
       .filter((f) => f.rel.endsWith(".tex"))
       .map((f) => f.rel),
-    // A block TeX wrote is read from the file that holds it: in these papers, paper.tex.
-    reads: reads.map((r) => (r === null ? null : relative(p.dir, r.path))),
-    found: citations.filter((c) => keys.has(c)),
+    reads: set(reads.map((r) => relative(p.dir, r.path))),
+    found: set(
+      citations.includes("*")
+        ? keys
+        : citations.filter((c) => keys.includes(c)),
+    ),
   };
 }
+
+/** TeX's answer in the same shape. */
+const truthOf = (t: z.infer<typeof Truth>) => ({
+  inputs: t.inputs,
+  reads: set(t.databases.map((d) => (t.written.includes(d) ? "paper.tex" : d))),
+  found: set(
+    t.citations.includes("*")
+      ? t.bibitems
+      : t.citations.filter((c) => t.bibitems.includes(c)),
+  ),
+});
 
 describe("paperSources agrees with TeX on the planted papers", () => {
   const papers = readdirSync(FIXTURES);
   it.each(papers)("%s", (paper) => {
-    const truth = Truth.parse(
+    const recorded = Truth.parse(
       JSON.parse(readFileSync(join(FIXTURES, paper, "tex-truth.json"), "utf8")),
     );
-    expect(answerOf(sourcesIn(paper), truth.citations)).toEqual({
-      inputs: truth.inputs,
-      reads: truth.databases.map((d) =>
-        truth.written.includes(d) ? "paper.tex" : d,
-      ),
-      found: truth.citations.filter((c) => truth.bibitems.includes(c)),
-    });
+    const truth = truthOf(recorded);
+    const p = sourcesIn(paper);
+    const got = answerOf(p, recorded.citations);
+    if (p.bibliography.kind !== "undecided") {
+      expect(got).toEqual(truth);
+      return;
+    }
+    // Undecided: what TeX chose is among the candidates the module names.
+    expect(got.inputs).toEqual(truth.inputs);
+    expect(got.reads).toEqual(expect.arrayContaining([...truth.reads]));
+    expect(got.found).toEqual(expect.arrayContaining([...truth.found]));
   });
 });
 
@@ -186,13 +213,14 @@ const BLOCK = (opt: string, entry: string): string =>
 const A = "@misc{a2024, title={A}}";
 const B = "@misc{b2020, title={B}}";
 
-describe("the bibliography is decided from committed bytes (§7.2)", () => {
-  const stateOf = (b: Bibliography) =>
-    databasesOf(b).map((d) => {
-      const r = texReads(d);
-      return [d.kind, d.name, r === null ? null : r.entries.map((e) => e.key)];
-    });
+/** Each database: its state, its name, and the keys TeX reads from it. */
+const stateOf = (b: Bibliography) =>
+  databasesOf(b).map((d) => {
+    const r = texReads(d);
+    return [d.kind, d.name, r === null ? null : r.entries.map((e) => e.key)];
+  });
 
+describe("the bibliography is decided from committed bytes (§7.2)", () => {
   it("a block and NO file on disk: embedded", () => {
     expect(stateOf(bibOf(doc(BLOCK("", A), "\\bibliography{refs}")))).toEqual([
       ["embedded", "refs", ["a2024"]],
@@ -228,12 +256,6 @@ describe("the bibliography is decided from committed bytes (§7.2)", () => {
 });
 
 describe("the bibliography's other states", () => {
-  const stateOf = (b: Bibliography) =>
-    databasesOf(b).map((d) => {
-      const r = texReads(d);
-      return [d.kind, d.name, r === null ? null : r.entries.map((e) => e.key)];
-    });
-
   it("several names, a file, a missing one, and biblatex's resources — local, with `.bib`, and remote", () => {
     const b = bibOf(
       doc(
@@ -317,5 +339,66 @@ describe("a declaration the module cannot decide is `undecided`, never silence (
       "databases",
       ["refs"],
     ]);
+  });
+});
+
+describe("names TeX builds from macros, and where bibtex looks (design §9)", () => {
+  it("\\jobname is the main file's name: a block writing \\jobname.bib and \\bibliography{\\jobname}", () => {
+    const b = bibOf(
+      doc(
+        "\\begin{filecontents*}[overwrite]{\\jobname.bib}\n@misc{jkey, title={J}}\n\\end{filecontents*}",
+        "\\bibliography{\\jobname}",
+      ),
+    );
+    expect([b.kind, stateOf(b)]).toEqual([
+      "databases",
+      [["embedded", "paper", ["jkey"]]],
+    ]);
+  });
+
+  it("any other macro in a name is a name this reader cannot compute: undecided, never dropped", () => {
+    const b = bibOf(
+      doc("\\newcommand{\\bibfile}{refs}", "\\bibliography{\\bibfile,other}"),
+      {
+        "/p/other.bib": B,
+      },
+    );
+    expect([b.kind, stateOf(b)]).toEqual([
+      "undecided",
+      [
+        ["unresolved", "\\bibfile", null],
+        ["file", "other", ["b2020"]],
+      ],
+    ]);
+  });
+
+  it("a parameter (`\\bibliography{#1}` in a definition) declares nothing where it is written", () => {
+    expect(
+      bibOf(doc("\\newcommand{\\refs}[1]{\\bibliography{#1}}", "x")).kind,
+    ).toBe("none");
+  });
+
+  it("biblatex's other resources declare databases too: \\addglobalbib, \\addsectionbib", () => {
+    const b = bibOf(
+      doc(
+        "\\addglobalbib{a.bib}\n\\addsectionbib[location=remote]{https://e.org/s.bib}",
+        "x",
+      ),
+      {
+        "/p/a.bib": A,
+      },
+    );
+    expect(stateOf(b)).toEqual([
+      ["file", "a", ["a2024"]],
+      ["remote", "https://e.org/s.bib", null],
+    ]);
+  });
+
+  it("an absolute path is that file, as bibtex opens it", () => {
+    expect(
+      stateOf(
+        bibOf(doc("", "\\bibliography{/shared/lib}"), { "/shared/lib.bib": A }),
+      ),
+    ).toEqual([["file", "/shared/lib", ["a2024"]]]);
   });
 });

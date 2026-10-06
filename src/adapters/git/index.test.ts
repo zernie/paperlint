@@ -37,6 +37,16 @@ describe("gitCommitted — scripted", () => {
     ]);
   });
 
+  it("git's own variables are not passed on: GIT_DIR=.git (a git hook's) would point git elsewhere", () => {
+    const run = scriptedProcess(() => exitedWith(""));
+    gitCommitted(run, {
+      ...ENV,
+      GIT_DIR: ".git",
+      GIT_WORK_TREE: "/x",
+    }).isCommitted(FILE);
+    expect(run.calls.map((c) => c.env)).toEqual([ENV]);
+  });
+
   it("untracked (exit 1) is not committed: a fresh checkout would not have it", () => {
     const run = scriptedProcess(() => exitedWith("", 1));
     expect(gitCommitted(run, ENV).isCommitted(FILE)).toBe(false);

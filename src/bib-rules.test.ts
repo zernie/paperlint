@@ -268,22 +268,72 @@ describe("bib/filecontents-overwrite", () => {
         found((await lint(tex)).messages, "filecontents-overwrite"),
       ).toEqual([]);
   });
+});
 
-  it("beside a COMMITTED refs.bib that differs, the message says TeX reads the file; an uncommitted one is this machine's", async () => {
+describe("bib/filecontents-overwrite — what the fix may overwrite, and blocks elsewhere", () => {
+  // The fix makes the NEXT build write the block over the file: offered only when that loses nothing.
+  it("🔴 a refs.bib that holds other entries is never overwritten by --fix: a suggestion names the file", async () => {
     const tex = inline("@misc{ok, url = {u}}", "");
     const stale = { [`${PAPER}/refs.bib`]: "@misc{stale, url = {u}}\n" };
-    const committed = await lint(tex, stale);
-    expect(
-      found(committed.messages, "filecontents-overwrite").map((m) => m[2]),
-    ).toEqual([
-      expect.stringMatching(
-        /^TeX reads the committed refs\.bib, not this block/,
-      ),
+    const shown = async (committed: (p: string) => boolean) => {
+      const { messages } = await lint(tex, stale, { committed });
+      const m = messages.find((x) => x.ruleId === "bib/filecontents-overwrite");
+      return {
+        message: m?.message.slice(0, 40),
+        fix: m?.fix,
+        suggestions: m?.suggestions?.map((x) => x.desc),
+      };
+    };
+    expect(await shown(() => true)).toEqual({
+      message: "TeX reads the committed refs.bib, not th",
+      fix: undefined,
+      suggestions: [
+        "Add `[overwrite]`: the next build writes this block over refs.bib, which holds other entries",
+      ],
+    });
+    expect(await shown(() => false)).toEqual({
+      message: "`\\begin{filecontents*}{refs.bib}` has no",
+      fix: undefined,
+      suggestions: [
+        "Add `[overwrite]`: the next build writes this block over refs.bib, which holds other entries",
+      ],
+    });
+    expect((await lint(tex, stale, { fix: true })).output).toBe(tex);
+  });
+});
+
+describe("bib/filecontents-overwrite — when the fix is safe, and blocks in included files", () => {
+  it("a refs.bib that equals the block (TeX's own copy) is no loss: --fix applies", async () => {
+    const tex = inline("@misc{ok, url = {u}}", "");
+    const { output } = await lint(
+      tex,
+      { [`${PAPER}/refs.bib`]: "@misc{ok, url = {u}}\n" },
+      { fix: true },
+    );
+    expect(output).toBe(inline("@misc{ok, url = {u}}"));
+  });
+
+  it("🔴 a block in an included file is reported at its \\input, with the file and line in front — no fix from paper.tex", async () => {
+    const tex =
+      "\\documentclass{article}\n\\input{bibblock}\n\\begin{document}\nx\\bibliography{refs}\n\\end{document}\n";
+    const { messages, output } = await lint(
+      tex,
+      {
+        [`${PAPER}/bibblock.tex`]:
+          "\\begin{filecontents*}{refs.bib}\n@misc{fresh, url = {u}}\n\\end{filecontents*}\n",
+      },
+      { fix: true },
+    );
+    expect(found(messages, "filecontents-overwrite")).toEqual([
+      [
+        2,
+        1,
+        expect.stringMatching(
+          /^bibblock\.tex:1:1: `\\begin\{filecontents\*\}\{refs\.bib\}` has no/,
+        ),
+      ],
     ]);
-    const local = await lint(tex, stale, { committed: () => false });
-    expect(
-      found(local.messages, "filecontents-overwrite").map((m) => m[2]),
-    ).toEqual([expect.stringMatching(/has no `\[overwrite\]`/)]);
+    expect(output).toBe(tex);
   });
 });
 
@@ -315,10 +365,17 @@ describe("on the planted papers (fixtures/paper-sources, TeX's answer in tex-tru
     ["v3-declared", []],
     ["v4-commented", []],
     ["v5-percent-entry", ["commented-entry"]],
+    // a3 has no link and a4 is behind `%`: both after an unclosed entry, both read by bibtex.
+    ["v6-unclosed", ["commented-entry", "reachable-entry", "reachable-entry"]],
+    ["v8-jobname", ["commented-entry", "reachable-entry", "reachable-entry"]],
+    // The block in bibblock.tex has no [overwrite]; TeX reads the committed refs.bib (no link).
+    ["v16-included-block", ["filecontents-overwrite", "reachable-entry"]],
   ])("%s: %j", async (paper, rules) => {
     const { tex, others } = planted(paper);
     const { messages } = await lint(tex, others);
-    expect(messages.map((m) => m.ruleId)).toEqual(rules.map((r) => `bib/${r}`));
+    expect(messages.map((m) => m.ruleId).sort()).toEqual(
+      rules.map((r) => `bib/${r}`),
+    );
   });
 });
 
