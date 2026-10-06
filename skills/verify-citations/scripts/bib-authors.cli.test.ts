@@ -1,7 +1,7 @@
 /**
  * bib-authors.mjs as a process: which file it picks from a paper directory, the bibliography
- * sources it reads (.bib, a .tex's filecontents or its sibling refs.bib), the Markdown file it
- * refuses, and the report and exit code for each outcome. DBLP is a preload that answers
+ * sources it reads (.bib, a .tex's filecontents or its sibling refs.bib), the file it refuses, and
+ * the report and exit code for each outcome. DBLP is a preload that answers
  * by title from a table (the documented `result.hits.hit[].info` shape) — no network.
  */
 import assert from "node:assert/strict";
@@ -58,9 +58,8 @@ writeTree(root, {
   "sibling/paper.tex": "\\documentclass{article}\n",
   "sibling/refs.bib": bib("good", "Ada Lovelace", "All Good"),
   "nobib/paper.tex": "\\documentclass{article}\n",
-  "md/paper.md":
-    "# P\n\n## References\n\n1. A. Lovelace. *All Good.* Proc. X, 2024.\n",
-  "md/refs.bib":
+  "etal/notes.txt": "not a bibliography\n",
+  "etal/refs.bib":
     bib("good", "Ada Lovelace", "All Good") +
     bib("etal", "Ada Lovelace and others", "Truncated"),
   "down/refs.bib": bib("down", "Ada Lovelace", "Service Down"),
@@ -165,25 +164,23 @@ test("a .tex with no filecontents reads the refs.bib beside it — PASS, exit 0"
   });
 });
 
-test("a Markdown paper is refused by name, not read — not even for the refs.bib beside it", () => {
-  // Guards: a paper's bibliography is BibTeX; a reference list in paper.md is not a source, and a
-  // Markdown file named on the command line must not quietly stand in for its sibling .bib.
-  const r = run(join(root, "md", "paper.md"));
+test("a file that is neither a .bib nor a .tex is refused — not swapped for the refs.bib beside it", () => {
+  const r = run(join(root, "etal", "notes.txt"));
   assert.deepEqual(r, {
     status: 2,
     stdout: "",
     stderr:
-      "bib-authors: <root>/md/paper.md is Markdown — give the paper's .bib or paper.tex\n",
+      "bib-authors: <root>/etal/notes.txt is not a .bib or a .tex — give the paper's .bib or paper.tex\n",
   });
 });
 
-test("a directory holding a stray paper.md reads its .bib; an `and others` entry is printed as not applicable", () => {
-  const r = run(join(root, "md"));
+test("an `and others` entry is printed as not applicable, not dropped", () => {
+  const r = run(join(root, "etal"));
   assert.deepEqual(r, {
     status: 0,
     stderr: "",
     stdout:
-      "== bib-authors: <root>/md/refs.bib ==\n" +
+      "== bib-authors: <root>/etal/refs.bib ==\n" +
       "  · n/a etal — author list ends in `and others` — completeness not checkable\n\n" +
       "-- 2 entries · 0 difference(s) · 1 not applicable · 0 NOT CHECKED\nPASS: no author-list disagreement.\n",
   });

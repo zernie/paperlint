@@ -142,24 +142,6 @@ test("build refuses with no target, and --all over no papers", async () => {
   );
 });
 
-test("🔴 `--format` is refused with what a paper's source is, by every command and in both spellings", async () => {
-  const dir = writeTree(join(root, "format-refused"), { "package.json": "{}" });
-  const results = [
-    await cli(["new", "p", "--format", "md"], dir),
-    await cli(["new", "p", "--format=tex"], dir),
-    await cli(["init", "--yes", "--paper", "p", "--format", "md"], dir),
-    await cli(["lint", "--format", "md"], dir),
-  ];
-  const refusal =
-    "`--format` is not a flag: a paper's source is `paper.tex` (LaTeX); paperlint does not read Markdown papers";
-  assert.deepEqual(
-    results.map((r) => ({ code: r.code, out: r.out, err: r.err })),
-    Array.from(results, () => ({ code: 2, out: "", err: refusal })),
-  );
-  // Guards: nothing was created on the way to the refusal.
-  assert.equal(existsSync(join(dir, "papers")), false);
-});
-
 test("new refuses a broken config, and a config that names no papers directory", async () => {
   const broken = join(root, "new-broken");
   writeTree(broken, { "paperlint.json": "{ not json" });
@@ -290,20 +272,20 @@ async function withoutTex<T>(dir: string, fn: () => Promise<T>): Promise<T> {
 const noTexDir = join(root, "build-notex");
 writeTree(noTexDir, {
   "package.json": "{}",
-  "papers/md/paper.md": "# P\n\nx\n",
+  "papers/nosource/notes.txt": "x\n",
   "papers/tex/paper.tex":
     "\\documentclass{article}\\begin{document}x\\end{document}\n",
 });
 const venues = texInputsDir();
 
-test("build: a paper whose only source is paper.md is refused, naming paper.tex", async () => {
-  const md = await withoutTex(noTexDir, () =>
-    cli(["build", "papers/md"], noTexDir),
+test("build: a paper with no paper.tex is refused, naming paper.tex", async () => {
+  const none = await withoutTex(noTexDir, () =>
+    cli(["build", "papers/nosource"], noTexDir),
   );
-  assert.deepEqual(md, {
+  assert.deepEqual(none, {
     code: 1,
     out: [
-      "papers/md",
+      "papers/nosource",
       `  inputs: TEXINPUTS += the paper's directory, then ${venues}`,
       "  compile: refused — no paper.tex; paperlint compiles LaTeX, and this paper has none",
       "  measure: skipped — nothing is compiled",
@@ -311,7 +293,7 @@ test("build: a paper whose only source is paper.md is refused, naming paper.tex"
       "  ✗ nothing to compile: no paper.tex",
     ].join("\n"),
     err:
-      "\nNo paper.tex in: papers/md.\n" +
+      "\nNo paper.tex in: papers/nosource.\n" +
       'This is NOT "nothing to build" — paperlint compiles LaTeX, and these papers have no LaTeX source.\n' +
       "Write the paper in paper.tex; `paperlint new <name>` creates one.",
   });
@@ -592,13 +574,11 @@ function newAtTerminal(cwd: string, answers: Record<string, string>) {
   });
 }
 
-test("new at a terminal asks for the venue, and only for it; the paper is paper.tex", async () => {
+test("new at a terminal asks for the venue; the answer picks it", async () => {
   const dir = writeTree(join(root, "new-tty"), { "package.json": "{}" });
   const r = await newAtTerminal(dir, { "venue:": "none\n" });
   assert.equal(r.status, 0, r.out);
   assert.equal(existsSync(join(dir, "papers", "first", "paper.tex")), true);
-  // Guards: the question that once offered a Markdown source.
-  assert.doesNotMatch(r.out, /format:/);
 });
 
 test("chooseVenue: a question that fails (the stream ended) takes the default, no venue", async () => {
@@ -652,35 +632,6 @@ test("lint with its LaTeX language missing from the install still lints the scor
   // A scorecard needs no LaTeX language: the same report, the same code.
   assert.deepEqual(without, whole);
   assert.match(whole.stdout, /missing all of `paper\.tex`/);
-});
-
-test("🔴 lint: a paper.md or draft.md named on the command line is refused as a Markdown paper, naming paper.tex", async () => {
-  const dir = writeTree(join(root, "lint-markdown"), {
-    "papers/p/PIPELINE-STATUS.md": "---\nstages: []\n---\n# S\n",
-    "papers/p/paper.md": "# P\n",
-    "papers/p/draft.md": "# P\n",
-    "papers/p/notes.md": "# N\n",
-  });
-  const r = await Promise.all(
-    ["paper.md", "draft.md", "notes.md"].map((f) =>
-      cli(["lint", join("papers", "p", f)], dir),
-    ),
-  );
-  assert.deepEqual(
-    r.map((x) => [x.code, x.err.split(" — ")[0]]),
-    [
-      [
-        2,
-        "papers/p/paper.md is a Markdown paper: a paper's source is `paper.tex` (LaTeX); paperlint does not read Markdown papers",
-      ],
-      [
-        2,
-        "papers/p/draft.md is a Markdown paper: a paper's source is `paper.tex` (LaTeX); paperlint does not read Markdown papers",
-      ],
-      [2, "papers/p/notes.md is not a file paperlint lints"],
-    ],
-  );
-  assert.match(r[0]?.err ?? "", / — port it to `paper\.tex`$/);
 });
 
 test("`paperlint hook` with no name: exit 2, and the usage names an example", async () => {

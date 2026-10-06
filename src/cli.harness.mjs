@@ -1292,11 +1292,6 @@ console.log(
     "🔴 --hooks=local is NOT implemented, and it is refused by name rather than read as a path",
     r.code === 2 && /--hooks=local is not implemented/.test(r.out),
   );
-  const f = await cli(["init", "--format", "md"]);
-  check(
-    "`--format` is refused before anything is written, naming the one source a paper has",
-    f.code === 2 && /`--format` is not a flag: .*`paper\.tex`/.test(f.out),
-  );
 }
 
 // ── init wires the hooks, and a human can say no ─────────────────────────────────────────

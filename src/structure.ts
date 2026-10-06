@@ -28,12 +28,6 @@ import type { StructureConfig, StructureFinding } from "./types.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { SOURCE_FILE } from "./new-paper.ts";
 
-/** Why a Markdown paper is refused — one wording for the flag, the file named to lint, the folder. */
-export const LATEX_ONLY = `a paper's source is \`${SOURCE_FILE}\` (LaTeX); paperlint does not read Markdown papers`;
-
-/** The files a Markdown paper was kept in: named when they are found, never linted. */
-export const MARKDOWN_SOURCES: readonly string[] = ["paper.md", "draft.md"];
-
 /** The requirements after the consumer's config is laid over the defaults. */
 type Rules = Required<StructureConfig>;
 
@@ -114,22 +108,11 @@ export function checkStructure(
         if (!group.some((f: string) => existsSync(join(dir, f))))
           findings.push({
             file: say(dir),
-            message: `missing all of ${group.map((f: string) => `\`${f}\``).join(", ")} — ${whySourceMatters(dir)}`,
+            message: `missing all of ${group.map((f: string) => `\`${f}\``).join(", ")} — a paper directory with no source is not something the rules can check`,
           });
     }
   }
   return findings;
-}
-
-/**
- * A folder without its source: a Markdown one beside it is named, since that is the paper the
- * author thinks is being linted.
- */
-function whySourceMatters(dir: string): string {
-  const markdown = MARKDOWN_SOURCES.find((f) => existsSync(join(dir, f)));
-  return markdown === undefined
-    ? `a paper directory with no source is not something the rules can check`
-    : `\`${markdown}\` is a Markdown paper: ${LATEX_ONLY} — port it to \`${SOURCE_FILE}\``;
 }
 
 /**

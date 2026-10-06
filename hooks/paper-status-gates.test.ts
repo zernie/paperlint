@@ -37,13 +37,13 @@ test("a paperlint.json that does not parse: silent, exit 0", () => {
   assert.deepEqual([r.exitCode, r.stdout, r.stderr], [0, "", ""]);
 });
 
-test("an edit to papers/<p>/paper.md is not a paper edit: no gates run", () => {
-  const dir = hookConsumer(join(root, "markdown"), {
+test("an edit to a file of the paper other than its source: no gates run", () => {
+  const dir = hookConsumer(join(root, "not-a-source"), {
     "papers/alpha/PIPELINE-STATUS.md": STATUS,
   });
   const r = runShippedHook(
     "paper-status-gates",
-    onEdit("papers/alpha/paper.md"),
+    onEdit("papers/alpha/notes.txt"),
     dir,
   );
   assert.deepEqual([r.exitCode, r.stdout, r.stderr], [0, "", ""]);

@@ -40,8 +40,6 @@ import {
   checkStructure,
   formatStructure,
   asEslintResults,
-  LATEX_ONLY,
-  MARKDOWN_SOURCES,
 } from "./structure.ts";
 import { buildPapers, papersIn, anyFailed, remedyFor, MAIN } from "./build.ts";
 import {
@@ -134,12 +132,7 @@ import {
   init,
   processInteractivity,
 } from "./init.ts";
-import {
-  newPaper,
-  reportNewPaper,
-  SOURCE_FILE,
-  type VenueSetting,
-} from "./new-paper.ts";
+import { newPaper, reportNewPaper, type VenueSetting } from "./new-paper.ts";
 // The one source for the consumer's config key lives in lib/ (the ESLint rules and the skill scripts
 // import it too). It is imported compiled, from dist/, the one path that resolves the same from src/
 // and from dist/ — see CONTRIBUTING.md.
@@ -861,16 +854,6 @@ const commonDir = (paths: readonly string[]): string => {
   );
   return first.slice(0, end === -1 ? undefined : end).join(sep) || sep;
 };
-
-/**
- * The refusal of an unknown flag. `--format` chose a Markdown source once, so it is answered with
- * what a paper's source is rather than with the generic line.
- */
-export function unknownFlagMessage(flag: string): string {
-  return flag === "--format" || flag.startsWith("--format=")
-    ? `\`--format\` is not a flag: ${LATEX_ONLY}`
-    : `unknown flag \`${flag}\` — \`paperlint --help\` lists every flag`;
-}
 
 export function parseArgs(argv: readonly string[]): Args {
   // `--help` is parsed BEFORE argv[0] becomes the command: otherwise `paperlint --help` answers
@@ -1697,7 +1680,9 @@ export async function run(
     return 2;
   }
   if (a.unknownFlag !== undefined) {
-    err(unknownFlagMessage(a.unknownFlag));
+    err(
+      `unknown flag \`${a.unknownFlag}\` — \`paperlint --help\` lists every flag`,
+    );
     return 2;
   }
   if (a.help || !a.cmd) {
@@ -1819,9 +1804,7 @@ export async function run(
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
     err(
-      MARKDOWN_SOURCES.includes(basename(unowned))
-        ? `${shown(cwd, unowned)} is a Markdown paper: ${LATEX_ONLY} — port it to \`${SOURCE_FILE}\``
-        : `${shown(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
+      `${shown(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
     );
     return 2;
   }

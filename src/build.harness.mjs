@@ -653,12 +653,11 @@ try {
 
   // ── walking the corpus ────────────────────────────────────────────────────────────────
   paper("not-a-paper", { "NOTES.md": "x" });
-  paper("markdown-only", { "paper.md": "x", "draft.md": "x" });
   paper(".hidden-paper", { "PIPELINE-STATUS.md": "x" });
   const found = papersIn(join(root, "papers")).map((d) => d.split("/").pop());
   check(
-    "a directory with no markers is not a paper — a Markdown paper is none",
-    !found.includes("not-a-paper") && !found.includes("markdown-only"),
+    "a directory with no markers is not a paper",
+    !found.includes("not-a-paper"),
   );
   check(
     "the real ones are",

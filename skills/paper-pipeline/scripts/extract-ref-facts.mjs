@@ -464,8 +464,8 @@ async function main(argv) {
     );
     return 1;
   }
-  // A paper's references are read from its `.bib` only: a Markdown paper's reference list is not
-  // a source, and parsing it as BibTeX would report zero entries for the wrong reason.
+  // A paper's references are read from its `.bib` only: any other file parsed as BibTeX would
+  // report zero entries for the wrong reason.
   if (!src.endsWith(".bib")) {
     console.error(
       `🛑 ${rel(src)} is not a .bib — the bibliography is read from ${SOURCE_ORDER.join(" or ")}.`,

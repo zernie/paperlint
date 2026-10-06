@@ -518,22 +518,6 @@ describe("paperlint init — a first paper", () => {
   });
 });
 
-describe("paperlint init — a first paper is a LaTeX paper", () => {
-  it("a name typed at the prompt is created as it is: no source format is asked", async () => {
-    const made: string[] = [];
-    const asked: string[] = [];
-    await initRun(tree({}), {
-      interactive: true,
-      ask: (q) =>
-        Promise.resolve((asked.push(q), /first paper/.test(q) ? "demo" : "")),
-      createPaper: (_root, name) => Promise.resolve((made.push(name), 0)),
-    });
-    expect(made).toEqual(["demo"]);
-    // Guards: the question that once offered a Markdown source.
-    expect(asked.filter((q) => /format|tex|md/.test(q))).toEqual([]);
-  });
-});
-
 describe("paperlint init — a first paper named after a venue", () => {
   it("--paper aisec-2026 is refused before anything is asked, and createPaper is not called", async () => {
     const made: string[] = [];

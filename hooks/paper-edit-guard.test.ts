@@ -56,16 +56,11 @@ test("a command cut off right after a backslash still names its target, quoted o
   );
 });
 
-test("a Markdown file under a paper is not a paper source: copying over it is let through", () => {
-  // Guards: a paper's source is `paper.tex`; `paper.md` and `draft.md` are notes like any other.
-  // (A redirection is refused for ANY file under the papers root, so the argv leg is the one
-  // that says which files are sources.)
+test("only paper.tex is a paper source: copying over another file of the paper is let through", () => {
+  // Guards: the extension filter of the argv leg. (A redirection is refused for ANY file under the
+  // papers root, so the argv leg is the one that says which files are sources.)
   assert.deepEqual(
-    [
-      guard("cp /tmp/x papers/alpha/paper.md"),
-      guard("cp /tmp/x papers/alpha/draft.md"),
-      guard(`cp /tmp/x ${P}`),
-    ],
-    [0, 0, 2],
+    [guard("cp /tmp/x papers/alpha/notes.txt"), guard(`cp /tmp/x ${P}`)],
+    [0, 2],
   );
 });

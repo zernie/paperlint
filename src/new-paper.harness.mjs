@@ -136,16 +136,6 @@ try {
       read(papers, "demo", STATUS_FILE) === "mine\n" &&
       again.files.every((f) => f.status === "kept"),
   );
-  mkdirSync(join(papers, "old"), { recursive: true });
-  writeFileSync(join(papers, "old", "paper.md"), "# Old\n");
-  const old = newPaper(papers, "old", { venues: [] });
-  check(
-    "🔴 a folder holding only a Markdown paper gets a paper.tex: Markdown is not a source, and it is left as it was",
-    old.ok &&
-      old.files.map((f) => `${f.file}:${f.status}`).join(" ") ===
-        "PIPELINE-STATUS.md:created paper.tex:created paperlint.json:created" &&
-      read(papers, "old", "paper.md") === "# Old\n",
-  );
   writeFileSync(join(papers, "afile"), "x");
   check(
     "a name taken by a FILE is refused, not written through",

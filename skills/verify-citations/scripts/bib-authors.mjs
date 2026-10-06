@@ -88,10 +88,11 @@ function bibTextFrom(target) {
     file = join(file, found);
   }
   const text = readFileSync(file, "utf-8");
-  // A paper's bibliography is BibTeX: a Markdown paper's reference list is not read.
-  if (file.endsWith(".md"))
-    die(`${file} is Markdown — give the paper's .bib or paper.tex`);
   if (file.endsWith(".bib")) return { text, file };
+  // Only a .bib and a .tex are read: any other file would fall through to the refs.bib beside it,
+  // and the report would name a file nobody asked about.
+  if (!file.endsWith(".tex"))
+    die(`${file} is not a .bib or a .tex — give the paper's .bib or paper.tex`);
   // A .tex may carry the bibliography inline via filecontents — that is how our papers do it.
   const m = text.match(
     /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/,

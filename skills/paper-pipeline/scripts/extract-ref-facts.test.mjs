@@ -210,7 +210,7 @@ writeTree(root, {
     "@misc{a, author={A. A}, title={Found}, note={doi:10.1234/ok}}\n" +
     "@misc{b, author={B. B}, title={Lost}, note={doi:10.1234/down}}\n",
   "empty/refs.bib": "% nothing cited\n",
-  "markdown/paper.md": "## References\n\n1. A. A. *Found.* doi:10.1234/ok\n",
+  "notes/notes.txt": "A. A. Found. doi:10.1234/ok\n",
   // `fetch` in the child: 10.1234/down fails at the transport, anything else is a CrossRef hit.
   "fetch.mjs":
     `globalThis.fetch = async (url) => {\n` +
@@ -299,13 +299,12 @@ test("refusals: nowhere to read from, a file that is not a .bib, and zero entrie
     stderr:
       "🛑 parsed 0 entries out of empty/refs.bib. Silence here would look like a clean bibliography.\n",
   });
-  // Guards: a Markdown paper's reference list is not a source — named, not parsed as BibTeX, and
-  // nothing is written.
-  assert.deepEqual(cli([join(root, "markdown/paper.md"), "--offline"]), {
+  // Guards: a file that is not a .bib is named, not parsed as BibTeX, and nothing is written.
+  assert.deepEqual(cli([join(root, "notes/notes.txt"), "--offline"]), {
     status: 1,
     stdout: "",
     stderr:
-      "🛑 markdown/paper.md is not a .bib — the bibliography is read from refs.bib or build/custom.bib.\n",
+      "🛑 notes/notes.txt is not a .bib — the bibliography is read from refs.bib or build/custom.bib.\n",
   });
 });
 
