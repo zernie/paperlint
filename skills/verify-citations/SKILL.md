@@ -4,7 +4,7 @@ description: Verify every citation is a real work with correct metadata, and tha
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:6eac9c48bd482938 compiled from skills/verify-citations/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:fdb023ed7c613e1b compiled from skills/verify-citations/SKILL.md.spec.ts -->
 
 # verify-citations — every cite real, the delta explicit
 
@@ -165,10 +165,13 @@ heavier than a typo, and it is exactly the class §"any regalia about third part
 
 **How to run.**
 ```
-node scripts/bib-authors.mjs <paper-dir>          # the bibliography TeX reads; or a .bib, or a .tex
+node scripts/bib-authors.mjs <paper-dir>          # the databases bibtex opened in the last build; or a .bib, or a .tex
 node scripts/bib-authors.mjs <paper-dir> --json
 ```
-Exits **1** on any author-set or author-order disagreement, **0** when clean, **2** on usage/IO error.
+Exits **1** on any author-set or author-order disagreement, **0** when clean, **2** on usage/IO error. A paper
+directory or a `.tex` is read through the build's record (`_build/sources.json`): a paper that was never built,
+or changed since, is refused (exit 2) and told to run `npx paperlint build` first — the databases are TeX's answer,
+not a reading of the source. A `.bib` named is read as itself.
 
 **Source is DBLP, and that choice is the evidence.** DBLP indexes the proceedings record and the CoRR record
 **separately**, so a single query returns both lists side by side — the cleanest proof available that the
@@ -244,7 +247,7 @@ It used to be one script, `verify-refs.mjs`; the measurement half stayed a scrip
 became twelve ESLint rules over the facts it writes.
 
 ```
-# 1. measure: parse the bibliography, ask CrossRef/arXiv, write _build/refs.facts.json
+# 1. measure: parse the bibliography bibtex opened (build the paper first), ask CrossRef/arXiv, write _build/refs.facts.json
 node .claude/skills/paper-pipeline/scripts/extract-ref-facts.mjs <paper-dir>
 node .claude/skills/paper-pipeline/scripts/extract-ref-facts.mjs <paper-dir> --offline  # cached responses only
 

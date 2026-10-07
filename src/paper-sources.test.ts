@@ -21,12 +21,7 @@ import {
   type PaperSources,
 } from "./domain/paper-sources.ts";
 import { texInputsDir } from "./package-dirs.ts";
-import {
-  bibliographyAt,
-  bibliographyUnreadWhy,
-  paperSources,
-  sourcesOf,
-} from "./paper-sources.ts";
+import { paperSources, sourcesOf } from "./paper-sources.ts";
 import { unseenBy } from "./references.ts";
 
 const FIXTURES = join(
@@ -792,63 +787,5 @@ describe("the filecontents blocks TeX writes", () => {
         stateOf(bibOf(doc(pre, "\\bibliography{refs}"))),
       ),
     ).toEqual([[["missing", "refs", null]], [["missing", "refs", null]]]);
-  });
-});
-
-describe("bibliographyAt — a path a person gave, and the bibliography to read for it", () => {
-  const disk = {
-    "/p/paper.tex": doc("", "\\bibliography{refs}"),
-    "/p/refs.bib": A,
-    "/p/other.bib": B,
-    "/p/notes.txt": "notes",
-    "/q/paper.tex": doc("", "no bibliography"),
-    "/r/paper.tex": doc(
-      "",
-      "\\begin{thebibliography}{9}\\bibitem{x} X.\\end{thebibliography}",
-    ),
-    "/s/paper.tex": doc("", "\\bibliography{gone}"),
-  };
-  const deps = {
-    files: memoryFiles(disk),
-    latex: latexReader,
-    committed: ALL_COMMITTED,
-    bib: bibReader,
-  };
-  /** What a path comes to: the paper's directory and the files read, or the one sentence why not. */
-  const at = (path: string) => {
-    const r = bibliographyAt(absolutePath(path), deps);
-    return r.ok
-      ? [
-          r.value.paperDir,
-          r.value.texts.map((t) => t.path),
-          r.value.bibliography?.kind ?? null,
-        ]
-      : bibliographyUnreadWhy(r.error);
-  };
-
-  it("a .bib is read alone; a .tex, or the directory of a paper.tex, is the bibliography TeX reads", () => {
-    expect([at("/p/other.bib"), at("/p/paper.tex"), at("/p")]).toEqual([
-      ["/p", ["/p/other.bib"], null],
-      ["/p", ["/p/refs.bib"], "databases"],
-      ["/p", ["/p/refs.bib"], "databases"],
-    ]);
-  });
-
-  it("every refusal in one vocabulary, naming the path and what to give instead", () => {
-    expect([
-      at("/p/gone.bib"),
-      at("/nowhere"),
-      at("/p/notes.txt"),
-      at("/q"),
-      at("/r"),
-      at("/s/paper.tex"),
-    ]).toEqual([
-      "/p/gone.bib does not exist — nowhere to take a bibliography from",
-      "no paper.tex in /nowhere — name the paper's .tex, or a .bib to read it alone",
-      "/p/notes.txt is neither a .bib nor a .tex — name the paper's directory, its .tex, or a .bib",
-      "/q/paper.tex declares no bibliography (no \\bibliography, no \\addbibresource)",
-      "/r/paper.tex writes its references by hand in thebibliography — there is no database to read",
-      "/s/paper.tex declares gone (missing), and none of them is on disk",
-    ]);
   });
 });

@@ -14,24 +14,30 @@
  * that no longer exists, and refs-fresh already says so once. A paper with no bibliography gets
  * nothing.
  *
- * The bibliography is the one TeX reads (`paperSources`, src/paper-sources.ts). An entry in a block
- * of `paper.tex` is reported on its line; an entry in a `.bib` file — which ESLint does not lint — at
- * the `\bibliography` that declares it, the file, line and column at the front of the message.
+ * `paper/author-list` and `paper/cite-exists` judge the entries of the databases the last build's
+ * bibtex opened (`_build/sources.json`, src/recorded-bibliography.ts), and say nothing for a paper with
+ * no current record (`paper/sources-fresh` speaks). An entry of a `.bib` TeX wrote from a block of
+ * `paper.tex` is reported on its line there; any other entry — a `.bib` file, which ESLint does not
+ * lint — at the top of `paper.tex`, the file, line and column at the front of the message.
  *
  * `paper/author-list` used to live on PIPELINE-STATUS.md and ask whether the scorecard mentioned
  * a run. It lives here now because its subject is the bibliography, and the record of the run is
  * the run's own output.
  */
 import { basename, dirname } from "node:path";
-import { entryReport, type EntryReport } from "./bib-rules.ts";
 import { callerPath } from "./caller-path.ts";
-import {
-  MAIN_FILE,
-  type FoundEntry,
-  type PaperSources,
-} from "./domain/paper-sources.ts";
+import { MAIN_FILE, type FoundEntry } from "./domain/paper-sources.ts";
 import type { EntryVerdict } from "./ports/check-references.ts";
 import { paperSources, type SourcesDeps } from "./paper-sources.ts";
+import {
+  entriesOfDatabases,
+  entryReports,
+  recordedBibliography,
+  type EntryReport,
+  type RecordedBibliography,
+  type RecordedDeps,
+  type RecordedEntry,
+} from "./recorded-bibliography.ts";
 import {
   bibHash,
   checkedBibliography,
@@ -50,6 +56,8 @@ interface RuleContext {
   readonly filename: string;
   readonly cwd: string;
   readonly sourceCode: {
+    /** The file as written (the `tex/latex` language's source code). */
+    readonly raw: string;
     getLocFromIndex(i: number): Loc;
   };
   report(d: {
@@ -76,18 +84,7 @@ type Assessment =
   | { readonly kind: "unrecorded" }
   | { readonly kind: "not-checked"; readonly why: string }
   | { readonly kind: "stale" }
-  | {
-      readonly kind: "ready";
-      readonly sources: PaperSources;
-      readonly unseen: Unseen;
-      readonly failing: readonly {
-        /** The entry that failed: one key may name two (an `undecided` bibliography's candidates). */
-        readonly found: FoundEntry;
-        readonly key: string;
-        readonly rule: "author-list" | "cite-exists";
-        readonly why: string;
-      }[];
-    };
+  | { readonly kind: "ready"; readonly unseen: Unseen };
 
 /**
  * Each entry checked with its verdict — when the record holds one verdict per entry, in its order, as
@@ -106,19 +103,6 @@ function laid(
     : null;
 }
 
-/** The findings the verdicts carry, each at the entry it is about. */
-const failingOf = (
-  verdicts: readonly (readonly [FoundEntry, EntryVerdict])[],
-): Extract<Assessment, { kind: "ready" }>["failing"] =>
-  verdicts.flatMap(([found, e]) => [
-    ...(e.authors === "mismatch"
-      ? [{ found, key: e.key, rule: "author-list" as const, why: e.why ?? "" }]
-      : []),
-    ...(e.exists === "false"
-      ? [{ found, key: e.key, rule: "cite-exists" as const, why: e.why ?? "" }]
-      : []),
-  ]);
-
 function assess(deps: SourcesDeps, paperDir: string): Assessment {
   const read = paperSources(paperDir, deps);
   if (!read.ok) return { kind: "no-bibliography" };
@@ -130,14 +114,8 @@ function assess(deps: SourcesDeps, paperDir: string): Assessment {
   if (doc.bib.sha256 !== bibHash(bib)) return { kind: "stale" };
   if (doc.status === "not-checked")
     return { kind: "not-checked", why: doc.why ?? "no reason recorded" };
-  const verdicts = laid(doc.entries, bib.entries);
-  if (verdicts === null) return { kind: "stale" };
-  return {
-    kind: "ready",
-    sources: read.value,
-    unseen: unseenBy(read.value, doc.bibtex),
-    failing: failingOf(verdicts),
-  };
+  if (laid(doc.entries, bib.entries) === null) return { kind: "stale" };
+  return { kind: "ready", unseen: unseenBy(read.value, doc.bibtex) };
 }
 
 const BUILD = "`npx paperlint build`";
@@ -214,27 +192,9 @@ const unseenReports = (u: Unseen): readonly Report[] => {
     : [{ at: AT_START, messageId: "unseen", data: { what: what.join(", ") } }];
 };
 
-const JUDGES: Readonly<Record<Name, (a: Assessment) => readonly Report[]>> = {
-  "author-list": (a) =>
-    a.kind === "ready"
-      ? a.failing
-          .filter((f) => f.rule === "author-list")
-          .map((f) => ({
-            at: entryReport(a.sources, f.found),
-            messageId: "mismatch",
-            data: { key: f.key, why: f.why },
-          }))
-      : [],
-  "cite-exists": (a) =>
-    a.kind === "ready"
-      ? a.failing
-          .filter((f) => f.rule === "cite-exists")
-          .map((f) => ({
-            at: entryReport(a.sources, f.found),
-            messageId: "missing",
-            data: { key: f.key, why: f.why },
-          }))
-      : [],
+const JUDGES: Readonly<
+  Record<"refs-checked" | "refs-fresh", (a: Assessment) => readonly Report[]>
+> = {
   "refs-checked": (a) => {
     switch (a.kind) {
       case "unrecorded":
@@ -272,28 +232,111 @@ function report(context: RuleContext, r: Report): void {
   });
 }
 
+/** The verdicts a rule reports, and the message and data each makes. */
+const VERDICT_RULES = {
+  "author-list": {
+    failed: (v: EntryVerdict) => v.authors === "mismatch",
+    messageId: "mismatch",
+  },
+  "cite-exists": {
+    failed: (v: EntryVerdict) => v.exists === "false",
+    messageId: "missing",
+  },
+} as const;
+
+/** What `references.json` judged, laid on the entries of the databases the last build's bibtex opened. */
+interface Judged {
+  readonly r: Extract<RecordedBibliography, { readonly kind: "recorded" }>;
+  readonly entries: readonly RecordedEntry[];
+  readonly verdicts: readonly EntryVerdict[];
+}
+
+/**
+ * The verdicts of a checked `references.json` laid on the entries of the databases the last build's
+ * bibtex opened — or none: without a current record of the paper, without a checked `references.json`,
+ * or when that is not one verdict per entry of these databases, in order, about the bytes they hold
+ * now. Its verdicts would be about another bibliography, and `paper/refs-fresh` says so.
+ */
+function judgedIn(dir: string, deps: RecordedDeps): Judged | null {
+  const r = recordedBibliography(dir, deps);
+  if (r.kind === "unrecorded") return null;
+  const doc = readReferences(deps.files, dir);
+  const [first, ...rest] = r.databases.map((d) => d.bib);
+  if (doc === null || doc.status !== "checked" || first === undefined)
+    return null;
+  const entries = entriesOfDatabases(r.databases);
+  const aligned =
+    doc.bib.sha256 === bibHash({ texts: [first, ...rest], entries: [] }) &&
+    doc.entries.length === entries.length &&
+    entries.every((f, i) => doc.entries[i]?.key === f.entry.key);
+  return aligned ? { r, entries, verdicts: doc.entries } : null;
+}
+
+/**
+ * The entries `references.json` judged failing for `rule`, each where it is reported (`entryReports`).
+ */
+function verdictReports(
+  rule: keyof typeof VERDICT_RULES,
+  context: RuleContext,
+  deps: RecordedDeps,
+): readonly Report[] {
+  const main = callerPath(context.filename);
+  const dir = dirname(main);
+  const judged = judgedIn(dir, deps);
+  if (judged === null) return [];
+  const { failed, messageId } = VERDICT_RULES[rule];
+  const flagged = judged.entries.flatMap((f, i) => {
+    const v = judged.verdicts[i];
+    return v !== undefined && failed(v) ? [{ f, v }] : [];
+  });
+  const at = entryReports(
+    {
+      dir,
+      record: judged.r.record,
+      main: { path: main, text: context.sourceCode.raw },
+    },
+    flagged.map(({ f }) => f),
+    deps,
+  );
+  return flagged.flatMap(({ v }, i): readonly Report[] => {
+    const place = at[i];
+    return place === undefined
+      ? []
+      : [{ at: place, messageId, data: { key: v.key, why: v.why ?? "" } }];
+  });
+}
+
 /** The four rules, reading the paper through `deps`. They act on `paper.tex` only. */
 export function referenceRules(
-  deps: SourcesDeps,
+  deps: SourcesDeps & RecordedDeps,
 ): Record<Name, ReferenceRuleModule> {
-  const make = (name: Name): ReferenceRuleModule => ({
+  const make = (
+    name: Name,
+    judge: (context: RuleContext) => readonly Report[],
+  ): ReferenceRuleModule => ({
     meta: META[name],
     create: (context) =>
       basename(context.filename) !== MAIN_FILE
         ? {}
         : {
             "root:exit": () => {
-              const paperDir = dirname(callerPath(context.filename));
-              const a = assess(deps, paperDir);
-              for (const r of JUDGES[name](a)) report(context, r);
+              for (const r of judge(context)) report(context, r);
             },
           },
   });
+  const assessed =
+    (name: "refs-checked" | "refs-fresh") =>
+    (context: RuleContext): readonly Report[] =>
+      JUDGES[name](assess(deps, dirname(callerPath(context.filename))));
   return {
-    "author-list": make("author-list"),
-    "cite-exists": make("cite-exists"),
-    "refs-checked": make("refs-checked"),
-    "refs-fresh": make("refs-fresh"),
+    "author-list": make("author-list", (c) =>
+      verdictReports("author-list", c, deps),
+    ),
+    "cite-exists": make("cite-exists", (c) =>
+      verdictReports("cite-exists", c, deps),
+    ),
+    "refs-checked": make("refs-checked", assessed("refs-checked")),
+    "refs-fresh": make("refs-fresh", assessed("refs-fresh")),
   };
 }
 

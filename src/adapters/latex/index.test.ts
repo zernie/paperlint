@@ -697,3 +697,39 @@ describe("bodyEmphasis — each style, and edge cases", () => {
     expect(e && src.slice(e.span.start, e.span.end)).toBe("\\textbf{see it}");
   });
 });
+
+describe("latexReader.filecontents — the blocks that write a file, where they stand", () => {
+  const SRC =
+    "\\documentclass{x}\n" +
+    "\\begin{filecontents*}[overwrite]{refs.bib}\n@misc{a, title={A}}\n\\end{filecontents*}\n" +
+    "\\begin{document}\n" +
+    "\\begin{filecontents}{\\jobname.bib}\n@misc{b, title={B}}\n\\end{filecontents}\n" +
+    "\\end{document}\n" +
+    "\\begin{filecontents}{late.bib}\n@misc{c}\n\\end{filecontents}\n";
+
+  it("each live block, in order: the file it writes (\\jobname expanded), [overwrite], its span and body", () => {
+    const blocks = latexReader.filecontents(SRC, "paper");
+    expect(
+      blocks.map((b) => [
+        b.writes,
+        b.overwrite,
+        SRC.slice(b.body.start, b.body.end),
+      ]),
+    ).toEqual([
+      ["refs.bib", true, "@misc{a, title={A}}\n"],
+      ["paper.bib", false, "@misc{b, title={B}}\n"],
+    ]);
+    expect(SRC.slice(blocks[0]?.span.start, blocks[0]?.span.end)).toMatch(
+      /^\\begin\{filecontents\*\}.*\\end\{filecontents\*\}$/s,
+    );
+  });
+
+  it("a block inside a comment, or after \\end{document}, is not one TeX runs", () => {
+    expect(
+      latexReader.filecontents(
+        "% \\begin{filecontents}{x.bib}\n% @misc{z}\n% \\end{filecontents}\n\\begin{document}\n\\end{document}\n",
+        "paper",
+      ),
+    ).toEqual([]);
+  });
+});

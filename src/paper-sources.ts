@@ -14,11 +14,8 @@ import { basename, dirname, extname, join, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import type { PaperSource } from "./domain/paper-source.ts";
 import {
-  bibTexts,
-  databasesOf,
   MAIN_FILE,
   type BibText,
-  type Bibliography,
   type IncludedFile,
   type PaperSources,
   type Role,
@@ -26,6 +23,13 @@ import {
 import type { AbsolutePath } from "./domain/paths.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import type { Span } from "./domain/tex-document.ts";
+import { describeChanges } from "./domain/sources-record.ts";
+import type { PaperRecord } from "./paper-record.ts";
+import {
+  authoredTexts,
+  recordedBibliography,
+  type RecordedDeps,
+} from "./recorded-bibliography.ts";
 import type { CommittedFiles } from "./ports/committed.ts";
 import type { BibReader } from "./ports/bib-reader.ts";
 import type { BibDisk, BibPaper } from "./ports/latex.ts";
@@ -210,8 +214,6 @@ export interface PathBibliography {
   /** The `.bib`'s directory, the `.tex`'s, or the directory named. */
   readonly paperDir: AbsolutePath;
   readonly texts: readonly [BibText, ...BibText[]];
-  /** The paper's bibliography as `paperSources` decides it; null for a `.bib` named, read alone. */
-  readonly bibliography: Bibliography | null;
 }
 
 /** Why a path a person gave has no bibliography to read. One vocabulary for every caller. */
@@ -222,40 +224,48 @@ export type BibliographyUnread =
   | { readonly kind: "not-bib-or-tex"; readonly path: AbsolutePath }
   /** Not a file, and no `paper.tex` in it. */
   | { readonly kind: "no-paper"; readonly path: AbsolutePath }
-  /** A paper whose bibliography has no database on disk. */
+  /** A paper with no current record of a build: what bibtex read is not known (`state` says why). */
+  | {
+      readonly kind: "not-built";
+      readonly dir: AbsolutePath;
+      readonly state: Exclude<PaperRecord, { readonly kind: "fresh" }>;
+    }
+  /** A paper whose last build's bibtex read no database, or whose databases are not on disk now. */
   | {
       readonly kind: "no-database";
-      readonly main: AbsolutePath;
-      readonly bibliography: Bibliography;
+      readonly dir: AbsolutePath;
+      /** The databases bibtex opened: none when it ran none. */
+      readonly opened: readonly string[];
     };
 
-/** The paper's texts to read, or why it has none. */
+/** The texts of the paper in `dir` the last build's bibtex read, or why there are none. */
 function ofPaper(
-  s: PaperSources,
+  dir: AbsolutePath,
+  deps: RecordedDeps,
 ): Result<PathBibliography, BibliographyUnread> {
-  const [first, ...rest] = bibTexts(s.bibliography);
+  const r = recordedBibliography(dir, deps);
+  if (r.kind === "unrecorded")
+    return err({ kind: "not-built", dir, state: r.record });
+  const [first, ...rest] = authoredTexts(dir, r, deps);
   return first === undefined
     ? err({
         kind: "no-database",
-        main: s.main.path,
-        bibliography: s.bibliography,
+        dir,
+        opened: r.record.bibtex.ran ? r.record.bibtex.databases : [],
       })
-    : ok({
-        paperDir: s.dir,
-        texts: [first, ...rest],
-        bibliography: s.bibliography,
-      });
+    : ok({ paperDir: dir, texts: [first, ...rest] });
 }
 
 /**
  * THE answer to "a path a person gave → the bibliography to read", for every script that takes one: a
- * `.bib` is read alone, as named; a `.tex`, or a directory holding `paper.tex`, is the bibliography
- * TeX reads for that paper (`paperSources`) — never a guess by file name. Anything else is refused,
- * in the words `bibliographyUnreadWhy` gives.
+ * `.bib` is read alone, as named; a `.tex`, or a directory holding `paper.tex`, is the bibliography the
+ * last build's bibtex opened for that paper (`_build/sources.json`) — never a guess by file name, and
+ * never read out of TeX source. A paper with no current record is refused: run `npx paperlint build`
+ * first. Anything else is refused in the words `bibliographyUnreadWhy` gives.
  */
 export function bibliographyAt(
   path: AbsolutePath,
-  deps: SourcesDeps,
+  deps: RecordedDeps,
 ): Result<PathBibliography, BibliographyUnread> {
   const ext = extname(path).toLowerCase();
   if (ext === ".bib" || ext === ".tex") {
@@ -265,27 +275,29 @@ export function bibliographyAt(
       ? ok({
           paperDir: callerPath(dirname(path)),
           texts: [deps.bib.readFile(path, decoded(bytes))],
-          bibliography: null,
         })
-      : ofPaper(sourcesOf(path, decoded(bytes), deps));
+      : ofPaper(callerPath(dirname(path)), deps);
   }
   if (deps.files.isFile(path)) return err({ kind: "not-bib-or-tex", path });
-  const r = paperSources(path, deps);
-  return r.ok ? ofPaper(r.value) : err({ kind: "no-paper", path });
+  return deps.files.readBytes(callerPath(join(path, MAIN_FILE))) === null
+    ? err({ kind: "no-paper", path })
+    : ofPaper(path, deps);
 }
 
-/** Why a bibliography has no text to read, in words a person can act on. */
-function noDatabaseWhy(main: AbsolutePath, b: Bibliography): string {
-  switch (b.kind) {
+const BUILD = "run `npx paperlint build` first";
+
+/** Why a paper has no current record, in words a person can act on. */
+function notBuiltWhy(
+  dir: AbsolutePath,
+  s: Extract<BibliographyUnread, { readonly kind: "not-built" }>["state"],
+): string {
+  switch (s.kind) {
     case "none":
-      return `${main} declares no bibliography (no \\bibliography, no \\addbibresource)`;
-    case "thebibliography":
-      return `${main} writes its references by hand in thebibliography — there is no database to read`;
-    case "databases":
-    case "undecided":
-      return `${main} declares ${databasesOf(b)
-        .map((d) => `${d.name} (${d.kind})`)
-        .join(", ")}, and none of them is on disk`;
+      return s.unreadable === null
+        ? `${dir} has not been built — ${BUILD}, which records the databases bibtex reads`
+        : `the last build's record of ${dir} cannot be used (${s.unreadable}) — ${BUILD}`;
+    case "stale":
+      return `${dir} changed since the last build (${describeChanges(s.changed)}) — ${BUILD}`;
   }
 }
 
@@ -298,7 +310,11 @@ export function bibliographyUnreadWhy(e: BibliographyUnread): string {
       return `${e.path} is neither a .bib nor a .tex — name the paper's directory, its .tex, or a .bib`;
     case "no-paper":
       return `no paper.tex in ${e.path} — name the paper's .tex, or a .bib to read it alone`;
+    case "not-built":
+      return notBuiltWhy(e.dir, e.state);
     case "no-database":
-      return noDatabaseWhy(e.main, e.bibliography);
+      return e.opened.length === 0
+        ? `bibtex read no database in the last build of ${e.dir} — there is nothing to read`
+        : `bibtex opened ${e.opened.join(", ")} in the last build of ${e.dir}, and none of them is on disk now`;
   }
 }

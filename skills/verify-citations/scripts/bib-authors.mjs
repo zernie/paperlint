@@ -44,9 +44,9 @@
  * Exit:   0 = no author-set/order differences   1 = differences found   2 = usage/IO error
  */
 import { resolve } from "node:path";
-import { gitCommitted } from "#src/adapters/git/index";
 import { latexReader } from "#src/adapters/latex/index";
-import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
+import { nodeFiles } from "#src/adapters/node/index";
+import { sourcesCodec } from "#src/adapters/sources-record/index";
 import { absolutePath } from "#src/domain/paths";
 import { bibReader } from "#src/adapters/bibtex/index";
 import { bibliographyAt, bibliographyUnreadWhy } from "#src/paper-sources";
@@ -58,14 +58,15 @@ const DBLP = "https://dblp.org/search/publ/api";
 
 const DEPS = {
   files: nodeFiles,
+  codec: sourcesCodec,
   latex: latexReader,
-  committed: gitCommitted(spawnProcess(), process.env),
   bib: bibReader,
 };
 
 /**
- * The texts to read: a `.bib` as named; for a paper directory or a `.tex`, the databases TeX reads —
- * `bibliographyAt` (src/paper-sources.ts) answers, and refuses in its words.
+ * The texts to read: a `.bib` as named; for a paper directory or a `.tex`, the databases the last
+ * build's bibtex opened (`_build/sources.json`) — `bibliographyAt` (src/paper-sources.ts) answers, and
+ * refuses in its words, "run `npx paperlint build` first" among them.
  */
 function bibliographyFrom(target) {
   const r = bibliographyAt(absolutePath(resolve(target)), DEPS);

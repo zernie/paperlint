@@ -3,13 +3,12 @@
     "What the rules say about this accepted paper today. Growth fails; a drop never does.",
     "Each count is classified in ../README.md, 'What the rules say about the corpus'.",
     "Recorded when the paper joined the corpus, 2026-09-29.",
-    "bib/reachable-entry and paper/refs-checked since the bibliography is read where TeX reads it (paperSources): the .bib files the paper declares. 92 entries have no doi, url, arXiv id or \\url (55 of them cited in the committed paper.bbl, 37 uncited)."
+    "paper/refs-checked: the lint test never builds, so no build checked the references. bib/reachable-entry is silent here for the same reason, since it reads the databases the build's bibtex opened (_build/sources.json), and paper/sources-fresh says so. On 2026-09-29, when it read the .bib files the paper declares, it counted 92 entries with no doi, url, arXiv id or \\url."
   ],
   "findings": {
     "pdf/measured": 1,
     "paper/sources-fresh": 1,
     "tex/claim-provenance": 28,
-    "paper/refs-checked": 1,
-    "bib/reachable-entry": 92
+    "paper/refs-checked": 1
   }
 }
