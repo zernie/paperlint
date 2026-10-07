@@ -1,0 +1,20 @@
+{
+  "inputs": [
+    "paper.tex",
+    "bibsetup.tex"
+  ],
+  "written": [],
+  "databases": [
+    "refs.bib"
+  ],
+  "citations": [
+    "*"
+  ],
+  "bibitems": [
+    "refskey"
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
+}

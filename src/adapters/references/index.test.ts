@@ -137,6 +137,37 @@ test("each entry gets its existence and its authors: confirmed, fabricated, mism
   );
 });
 
+test("one key in two candidate databases: it fails when either entry does, whatever their order", async () => {
+  vi.useFakeTimers();
+  fakeFetch({
+    "https://api.crossref.org/works/10.1%2Fgood": () =>
+      json(200, {
+        message: { title: ["Good Paper"], issued: { "date-parts": [[2024]] } },
+      }),
+    "https://doi.org/api/handles/10.1/good": () =>
+      json(200, { responseCode: 1 }),
+    "https://doi.org/api/handles/10.1/fake": () => json(404),
+    "https://api.crossref.org/": () => json(200),
+    "https://dblp.org/": () => json(200, {}),
+  });
+  // An `undecided` bibliography: the anonymous and the real database both define `k`.
+  const good =
+    "@inproceedings{k, author={Ada Lovelace}, title={Good Paper}, booktitle={ICSE}, doi={10.1/good}}";
+  const fake =
+    "@inproceedings{k, author={Ada Lovelace}, title={Fake Paper}, booktitle={ICSE}, doi={10.1/fake}}";
+  const verdicts = async (bib: string) => {
+    const r = await settle(checkOnly(bib));
+    return (r.kind === "checked" ? r.entries : []).map((e) => [
+      e.key,
+      e.exists,
+    ]);
+  };
+  assert.deepEqual(
+    [await verdicts(`${good}\n${fake}`), await verdicts(`${fake}\n${good}`)],
+    [[["k", "false"]], [["k", "false"]]],
+  );
+});
+
 test("an author finding names what is extra and what is out of order", async () => {
   vi.useFakeTimers();
   fakeFetch({

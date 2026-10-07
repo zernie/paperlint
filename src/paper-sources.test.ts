@@ -119,6 +119,13 @@ const UNSEEN: Readonly<Record<string, readonly string[]>> = {
   "v6-unclosed": ["a4", "a2unclosed"],
   "v7-unbalanced-field": ["a2brace", "a4"],
   "v13-percent-text": ["pt1", "k2inComment"],
+  // A name built by a macro other than `\jobname` is unresolved: the database, and its entries.
+  "v27-jobname-prefix": ["refskey"],
+};
+
+/** The databases bibtex opened that the static answer cannot name — named by the post-build check. */
+const UNSEEN_DATABASES: Readonly<Record<string, readonly string[]>> = {
+  "v27-jobname-prefix": ["refs.bib"],
 };
 
 describe("paperSources agrees with TeX on the planted papers", () => {
@@ -132,11 +139,13 @@ describe("paperSources agrees with TeX on the planted papers", () => {
     const got = answerOf(p, recorded.citations);
     const unseen = unseenBy(p, recorded);
     expect(got.inputs).toEqual(truth.inputs);
-    // Every database bibtex opened is one the paper's bibliography names: for `undecided`, a candidate.
-    expect(unseen.databases).toEqual([]);
+    // Every database bibtex opened is one the paper's bibliography names (for `undecided`, a
+    // candidate), or one the post-build check names.
+    const named = UNSEEN_DATABASES[paper] ?? [];
+    expect(unseen.databases).toEqual(named);
     expect(got.reads).toEqual(
       p.bibliography.kind === "undecided"
-        ? expect.arrayContaining([...truth.reads])
+        ? expect.arrayContaining(truth.reads.filter((r) => !named.includes(r)))
         : truth.reads,
     );
     // What bibtex read is what the reader read, plus what the post-build check names.
@@ -358,6 +367,55 @@ describe("a declaration the module cannot decide is `undecided`, never silence",
     expect([b.kind, databasesOf(b).map((d) => d.name)]).toEqual([
       "databases",
       ["refs"],
+    ]);
+  });
+});
+
+describe("a declaration's names, read off the parse tree as TeX reads them", () => {
+  it("v26: a comment inside the braces is no part of a name — both databases", () => {
+    expect(stateOf(sourcesIn("v26-comment-in-names").bibliography)).toEqual([
+      ["file", "one", ["onekey"]],
+      ["file", "two", ["twokey"]],
+    ]);
+  });
+
+  it("v27: `\\jobnamebib` is a macro of its own, not `\\jobname` and `bib`: unresolved", () => {
+    const b = sourcesIn("v27-jobname-prefix").bibliography;
+    expect([b.kind, databasesOf(b).map((d) => [d.kind, d.name])]).toEqual([
+      "undecided",
+      [["unresolved", "\\jobnamebib"]],
+    ]);
+  });
+
+  it("v28: a comment inside an include's braces is no part of its path", () => {
+    const s = sourcesIn("v28-comment-in-include");
+    expect(s.includes.map((i) => i.rel)).toEqual(["bibsetup.tex"]);
+    expect(stateOf(s.bibliography)).toEqual([["file", "refs", ["refskey"]]]);
+  });
+
+  it("an option's comment is no part of it: `location=remote` still names a remote resource", () => {
+    const b = bibOf(
+      doc(
+        "\\addbibresource[location=remote,% fetched by biber\n]{https://example.org/r.bib}",
+        "x",
+      ),
+    );
+    expect(databasesOf(b).map((d) => [d.kind, d.name])).toEqual([
+      ["remote", "https://example.org/r.bib"],
+    ]);
+  });
+
+  it("a block's file name is read the same way: `\\jobname` is the main file's, `\\jobnamebib` is not", () => {
+    const block = (name: string) =>
+      `\\begin{filecontents*}[overwrite]{${name}}\n${A}\n\\end{filecontents*}`;
+    expect([
+      stateOf(bibOf(doc(block("\\jobname.bib"), "\\bibliography{paper}"))),
+      stateOf(
+        bibOf(doc(block("\\jobnamebib.bib"), "\\bibliography{paperbib}")),
+      ),
+    ]).toEqual([
+      [["embedded", "paper", ["a2024"]]],
+      [["missing", "paperbib", null]],
     ]);
   });
 });
