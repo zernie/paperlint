@@ -34,6 +34,7 @@ import { bodyEmphasis, bodyProse } from "./prose.ts";
 import { renderedRuns } from "./rendered.ts";
 import { layoutOverridesOf } from "./layout.ts";
 import { decideBibliography } from "./bibliography.ts";
+import { filecontentsOf } from "./filecontents.ts";
 
 export {
   documentClassOf,
@@ -72,4 +73,5 @@ export const latexReader: LatexReader = {
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
   layoutOverrides: (src) => layoutOverridesOf(parseLatex(src)),
   bibliography: decideBibliography,
+  filecontents: (src, jobname) => filecontentsOf(parseLatex(src), jobname),
 };

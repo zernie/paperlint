@@ -21,6 +21,7 @@
 import type * as Ast from "@unified-latex/unified-latex-types";
 import type { Span } from "../../domain/tex-document.ts";
 import type { Filecontents } from "../../ports/latex.ts";
+import { blockOf, isBlock, written } from "./filecontents.ts";
 import {
   argumentPieces,
   inPlace,
@@ -30,17 +31,7 @@ import {
   type ArgumentPiece,
   type Node,
 } from "./nodes.ts";
-import {
-  DEFINITION_MACROS,
-  liveRoot,
-  parseLatex,
-  type ParsedTex,
-} from "./parse.ts";
-
-const FILECONTENTS: ReadonlySet<string> = new Set([
-  "filecontents",
-  "filecontents*",
-]);
+import { DEFINITION_MACROS, liveRoot, type ParsedTex } from "./parse.ts";
 
 /** Names and options as TeX reads them: off the tree, a comma between two names. */
 type Name = readonly ArgumentPiece[];
@@ -68,48 +59,6 @@ const splitNames = (pieces: readonly ArgumentPiece[]): readonly Name[] => {
   );
   return [...end.done, end.current];
 };
-
-const written = (name: Name): string =>
-  name
-    .map((p) => p.text)
-    .join("")
-    .trim();
-
-/**
- * One verbatim `filecontents` node as a block: its name, option, and body. unified-latex reads the
- * whole environment as verbatim, so its first line — `[options]{name}` and what TeX ignores after
- * it — is parsed on its own, and the name read off that tree like a declaration's.
- */
-function blockOf(
-  src: string,
-  n: Readonly<Ast.VerbatimEnvironment>,
-  jobname: string,
-): readonly Filecontents[] {
-  return inPlace(placeOf(n), (span) => {
-    // The node runs from `\begin{env}` to past `\end{env}`.
-    const headAt = span.start + `\\begin{${n.env}}`.length;
-    const end = span.end - `\\end{${n.env}}`.length;
-    const line = src.slice(headAt, end).split("\n", 1).join("");
-    const nodes = parseLatex(line).root.content;
-    const at = nodes.findIndex((x) => x.type === "group");
-    if (at < 0) return [];
-    const options = written(argumentPieces(nodes.slice(0, at), null))
-      .replace(/^\[|\]$/g, "")
-      .split(",")
-      .map((o) => o.trim());
-    return [
-      {
-        writes: written(argumentPieces(nodes.slice(at, at + 1), jobname)),
-        overwrite: options.includes("overwrite") || options.includes("force"),
-        span,
-        body: { start: Math.min(headAt + line.length + 1, end), end },
-      },
-    ];
-  });
-}
-
-const isBlock = (n: Node): n is Readonly<Ast.VerbatimEnvironment> =>
-  n.type === "verbatim" && FILECONTENTS.has(n.env);
 
 /** A declared name: one bibtex can open, or one built by a macro this reader does not expand. */
 export type DeclaredName =

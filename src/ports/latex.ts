@@ -110,4 +110,13 @@ export interface LatexReader {
    * (`src/domain/paper-sources.ts`).
    */
   readonly bibliography: (paper: BibPaper, disk: BibDisk) => Bibliography;
+  /**
+   * Every live `filecontents` block of `src`, in source order, where each stands: a lookup of the text
+   * that wrote a `.bib`, never a decision of what TeX wrote (that is `_build/sources.json`). `jobname`
+   * is what `\jobname` names in a block's file name.
+   */
+  readonly filecontents: (
+    src: string,
+    jobname: string,
+  ) => readonly Filecontents[];
 }
