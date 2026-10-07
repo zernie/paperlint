@@ -24,6 +24,7 @@
     "errors": []
   },
   "sha256": {
-    "paper.tex": "d68bcaabe9be4cbc07f5a1e672e8cd448e96bc9b5134be350d2906ee48834482"
+    "paper.tex": "d68bcaabe9be4cbc07f5a1e672e8cd448e96bc9b5134be350d2906ee48834482",
+    "paper.bib": "bc5a9faf4bbdcdf22705c4c8b69d656382ab9d1d03f57388c00631c3aa6ebf70"
   }
 }

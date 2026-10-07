@@ -47,7 +47,7 @@ None.
 - `@string` and `@preamble`, which are not entries.
 - A paper with no record of a build, or one changed since: the rule is silent, and
   [`paper/sources-fresh`](../paper/sources-fresh.md) says once that it was not built.
-- A database bibtex opened that is not on disk now, and an entry bibtex reads that the `.bib` reader
+- A database bibtex found outside the paper directory, and an entry bibtex reads that the `.bib` reader
   does not (behind `%`, inside `@comment{…}`): that is the post-build check's.
 - With `eslint --cache`, a change to a `.bib` alone does not re-run the rule: its findings depend on
   files other than `paper.tex`. `paperlint lint` does not cache.

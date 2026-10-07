@@ -27,11 +27,13 @@ import { sha256Hex } from "./domain/sha256.ts";
 import { filesOfRun, type RunFiles } from "./domain/tex-run.ts";
 import { auxBib, bibtexRead } from "./latex-log.ts";
 import type { Files } from "./ports/files.ts";
+import type { ListDir } from "./ports/talk-media.ts";
 import type { TexOutput } from "./ports/tex-output.ts";
 
-/** What recording needs: the disk, and the readers of TeX's own files. */
+/** What recording needs: the disk, its directory listings, and the readers of TeX's own files. */
 export interface RecordDeps {
   readonly files: Files;
+  readonly listDir: ListDir;
   readonly texOutput: TexOutput;
 }
 
@@ -70,6 +72,47 @@ const distinct = <T>(xs: readonly T[]): readonly T[] => [...new Set(xs)];
 /** A path as the record spells it: relative to the paper directory, `./` and doubled slashes gone. */
 const spelled = (p: string): string => posix.normalize(p);
 
+/** The entry of `names` that is `segment`: itself, else the one entry equal to it ignoring case. */
+const entryFor = (names: readonly string[], segment: string): string => {
+  if (names.includes(segment)) return segment;
+  const [only, ...more] = names.filter(
+    (n) => n.toLowerCase() === segment.toLowerCase(),
+  );
+  return only !== undefined && more.length === 0 ? only : segment;
+};
+
+/**
+ * A path of the record spelled as the paper directory's entries spell it. TeX logs the name it opened:
+ * on a file system that ignores case that is the source's spelling, while TeX on one that does not
+ * retries without case and logs the disk's — one paper, two records. A segment no entry matches, or
+ * several do, stays as TeX spelled it.
+ */
+const spelledOnDisk =
+  (listDir: ListDir, paperDir: string) =>
+  (p: string): string =>
+    p
+      .split("/")
+      .reduce(
+        (at, segment) =>
+          posix.join(
+            at,
+            entryFor(listDir(callerPath(resolve(paperDir, at))), segment),
+          ),
+        "",
+      );
+
+/** The files a run read and wrote, each named as the disk names it. */
+const respelled = (files: RunFiles, spell: (p: string) => string): RunFiles => {
+  const inputs = files.inputs.map((i) => ({ ...i, path: spell(i.path) }));
+  return {
+    ...files,
+    inputs: inputs.filter(
+      (i, n) => inputs.findIndex((j) => j.path === i.path) === n,
+    ),
+    written: distinct(files.written.map(spell)),
+  };
+};
+
 /** The bytes of a file of the paper by its path in the record, or null when it is not there. */
 const bytesOf =
   (deps: RecordDeps, paperDir: string) =>
@@ -87,6 +130,7 @@ const textOf =
 function bibtexOf(
   deps: RecordDeps,
   text: (p: string) => string | null,
+  spell: (p: string) => string,
   exit: number | null,
 ): RecordedBibtex {
   if (exit === null) return { ran: false };
@@ -95,7 +139,7 @@ function bibtexOf(
   const read = bibtexRead(blg, bbl);
   return {
     ran: true,
-    databases: read.databases,
+    databases: distinct(read.databases.map((d) => spell(spelled(d)))),
     keys: read.bibitems,
     exit,
     errors: deps.texOutput.blgErrors(blg),
@@ -103,19 +147,16 @@ function bibtexOf(
 }
 
 /**
- * The digest of every file the paper is made of: each input, and each database bibtex opened that TeX
- * did not write. Null for one that is not there.
+ * The digest of every file the paper is made of: each input, and each database bibtex opened — one TeX
+ * wrote too, since the rules read it from disk and an edit to it after the build must read as a change.
+ * Null for one that is not there.
  */
 function hashesOf(
   inputs: readonly RecordedInput[],
-  written: readonly string[],
   databases: readonly string[],
   bytes: (p: string) => Uint8Array | null,
 ): SourcesRecord["sha256"] {
-  const paths = distinct([
-    ...inputs.map((i) => i.path),
-    ...databases.map(spelled).filter((d) => !written.includes(d)),
-  ]);
+  const paths = distinct([...inputs.map((i) => i.path), ...databases]);
   return Object.fromEntries(
     paths.map((p) => {
       const b = bytes(p);
@@ -145,19 +186,19 @@ function recordOf(
 ): SourcesRecord {
   const bytes = bytesOf(deps, paperDir);
   const text = textOf(bytes);
-  const bibtex = bibtexOf(deps, text, run.bibtexExit);
+  const bibtex = bibtexOf(
+    deps,
+    text,
+    spelledOnDisk(deps.listDir, paperDir),
+    run.bibtexExit,
+  );
   return {
     schema: SOURCES_SCHEMA,
     inputs: files.inputs,
     written: files.written,
     bibdata: auxBib(text(`${JOBNAME}.aux`) ?? "", text).databases,
     bibtex,
-    sha256: hashesOf(
-      files.inputs,
-      files.written,
-      bibtex.ran ? bibtex.databases : [],
-      bytes,
-    ),
+    sha256: hashesOf(files.inputs, bibtex.ran ? bibtex.databases : [], bytes),
   };
 }
 
@@ -166,10 +207,13 @@ export function recordSources(
   paperDir: string,
   run: TexRun,
 ): Recorded {
-  const files = filesOfRun(run.fls.map(deps.texOutput.fls), {
-    jobname: JOBNAME,
-    generated: run.bibtexExit === null ? [] : [`${JOBNAME}.bbl`],
-  });
+  const files = respelled(
+    filesOfRun(run.fls.map(deps.texOutput.fls), {
+      jobname: JOBNAME,
+      generated: run.bibtexExit === null ? [] : [`${JOBNAME}.bbl`],
+    }),
+    spelledOnDisk(deps.listDir, paperDir),
+  );
   const why = nothingToRecord(run, files.inputs);
   if (why !== null) return { kind: "not-recorded", why };
   const record = recordOf(deps, paperDir, run, files);

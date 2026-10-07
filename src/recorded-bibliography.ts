@@ -65,7 +65,11 @@ export type RecordedBibliography =
       readonly record: SourcesRecord;
       /** In the order bibtex opened them, each once. */
       readonly databases: readonly ReadDatabase[];
-      /** As bibtex names them: the databases it opened that are not on disk now (a `.bib` TeX wrote, then removed). */
+      /**
+       * As bibtex names them: the databases it opened that the paper directory does not hold — found on
+       * its search path (BIBINPUTS). One that was there when the build recorded it and is gone now made
+       * the record stale instead: every database bibtex opened is hashed.
+       */
       readonly unread: readonly string[];
     };
 

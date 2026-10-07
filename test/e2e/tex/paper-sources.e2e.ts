@@ -33,7 +33,7 @@ import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
-import { nodeFiles } from "../../../dist/adapters/node/index.js";
+import { nodeFiles, nodeListDir } from "../../../dist/adapters/node/index.js";
 import { referencesChecker } from "../../../dist/adapters/references/index.js";
 import { texOutput } from "../../../dist/adapters/tex-output/index.js";
 import {
@@ -105,10 +105,14 @@ function recordOf(paper: string): string {
   const bibtexExit =
     bibInput(dir).kind === "needed" ? run(dir, "bibtex", [JOB]) : null;
   const rest = [pass(dir, false), pass(dir, true)];
-  const recorded = recordSources({ files: nodeFiles, texOutput }, dir, {
-    fls: [first, ...rest],
-    bibtexExit,
-  });
+  const recorded = recordSources(
+    { files: nodeFiles, listDir: nodeListDir, texOutput },
+    dir,
+    {
+      fls: [first, ...rest],
+      bibtexExit,
+    },
+  );
   if (recorded.kind !== "recorded")
     throw new Error(`${paper}: ${recorded.why}`);
   return serializeSourcesRecord(recorded.record);

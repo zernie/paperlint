@@ -1457,7 +1457,11 @@ async function runBuild(
     log,
     checkReferences,
     readBibliography: bibliographyReader(RECORDED_DEPS),
-    recordSources: sourcesRecorder({ files: nodeFiles, texOutput }),
+    recordSources: sourcesRecorder({
+      files: nodeFiles,
+      listDir: nodeListDir,
+      texOutput,
+    }),
     engine: () => engineEnv(targets, a, { log, err }),
   });
   if (out.kind === "no-engine") return 1;

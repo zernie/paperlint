@@ -8,7 +8,8 @@
  *   no verdicts, or recorded "not checked"   paper/refs-checked (warn) — like pdf/measured
  *   a key bibtex typeset that no entry the  paper/refs-checked (warn): that reference was not
  *   reader read has (`unseenKeys`)           checked
- *   a database bibtex opened is not on disk  paper/refs-checked (warn): its references were not checked
+ *   a database bibtex found outside the      paper/refs-checked (warn): its references were not checked
+ *   paper directory (BIBINPUTS)
  *   databases edited after the build         paper/refs-fresh (error) — like pdf/fresh
  *
  * The databases are the ones the last build's bibtex opened (`_build/sources.json`,
@@ -179,7 +180,7 @@ const META: Readonly<Record<Name, ReferenceRuleModule["meta"]>> = {
       notChecked: `the last build could not check the references ({{why}}) — run ${BUILD} with network`,
       unseen:
         "the last build's bibtex typeset {{what}}, which paperlint's reader did not read from the databases bibtex opened, so those references were not checked: an entry behind `%` or inside `@comment{…}` — bibtex has no comment syntax and reads it, the reader skips it. Delete the entry, or remove its `@`",
-      unread: `{{what}}, which the last build's bibtex opened, is not on disk (a file TeX wrote, and something removed it) — run ${BUILD}, which writes it again and checks its references`,
+      unread: `{{what}}, which the last build's bibtex opened, is not in the paper directory (bibtex found it on its search path, BIBINPUTS), so its references were not checked — move it beside paper.tex`,
     },
   },
   "refs-fresh": {

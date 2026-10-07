@@ -20,7 +20,11 @@ the last pdflatex pass and bibtex, from TeX's own files in the paper directory:
 | `written` | `paper.fls` `OUTPUT`      | the `.bib` files TeX wrote (a `filecontents` block)                                                                                                                                 |
 | `bibdata` | `paper.aux` `\bibdata{…}` | the databases bibtex was told to read, after every switch, macro and `\input`                                                                                                       |
 | `bibtex`  | `paper.blg`, `paper.bbl`  | the database files bibtex opened, the keys it typeset, its exit and errors                                                                                                          |
-| `sha256`  | the files themselves      | every `inputs` file and every opened database TeX did not write, by path and bytes                                                                                                  |
+| `sha256`  | the files themselves      | every `inputs` file and every database bibtex opened (one TeX wrote too), by path and bytes                                                                                         |
+
+Every path is relative to the paper directory and spelled as the directory entries spell it: TeX
+logs the name it opened, which on a file system that ignores case is the source's spelling, so the
+record takes each segment's spelling from the disk and one paper gets one record on every platform.
 
 A record of its own, not `references.json`: it is written by every build (the references step is
 optional and may record "not checked"), it is read by rules that have nothing to do with references,
@@ -100,8 +104,9 @@ define a key with other metadata.
 - **What is checked is `readBibliography`**: the databases the build's bibtex opened, in the order it
   opened them, each once, read by the bibtex reader — a view over `recordedBibliography`, the one reader
   of the record's databases. Without a fresh record the step checks nothing and its note names the
-  reason; a database bibtex opened that is not on disk now (a `.bib` TeX wrote, then a clean removed it)
-  is named, not skipped.
+  reason; a database bibtex opened that is not in the paper directory (bibtex found it on its search
+  path, `BIBINPUTS`) is named, not skipped. One removed after the build — a `.bib` TeX wrote, then a
+  clean — makes the record stale: every database bibtex opened is hashed.
 - **One verdict per entry, in order.** The `CheckReferences` port returns verdict `i` for entry `i`;
   the adapter runs verify-cites and bib-authors per entry and pairs them by position.
 - **`_build/references.json`, schema 3**: `bib {sources, sha256}`, `status`, `entries`. `sources` are
@@ -123,7 +128,7 @@ not emulate it. Each difference has an owner:
 
 `paper/refs-checked` names every key bibtex typeset (`paper.bbl`) that no entry of the databases it
 opened has (`unseenKeys`; keys compare case-insensitively, as bibtex's do), and every database bibtex
-opened that is not on disk.
+opened that is not in the paper directory.
 
 ## 8. Ground truth — `tex-truth.json`
 

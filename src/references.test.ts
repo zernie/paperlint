@@ -656,9 +656,7 @@ describe("the references step checks the databases bibtex opened (tex-truth.json
   });
 
   it("a database TeX wrote that is on disk (the build's leftover) is checked as bibtex read it", async () => {
-    const files = planted("v8-jobname", {
-      "paper.bib": "@misc{jkey, title={J}, author={Doe, J}, year={2024}}\n",
-    });
+    const files = planted("v8-jobname");
     const f = passing();
     await build(files, f.check);
     expect(f.handed).toEqual(["jkey"]);
@@ -722,19 +720,35 @@ describe("when there is nothing bibtex opened, the step says why — and records
     expect(await lint(files)).toEqual([]);
   });
 
-  it("🔴 a database TeX wrote that is not on disk cannot be read: the step says which, and lint warns", async () => {
+  it("🔴 a database TeX wrote that a clean removed after the build makes the record stale: the step says so", async () => {
     const files = planted("v11-two-blocks");
+    files.map.delete(`${PAPER}/refs.bib`);
     const { out } = await build(files, never);
     expect(out).toEqual({
       ok: true,
-      note: "references NOT checked — refs.bib, which bibtex opened, is not on disk; lint will say so",
+      note: "references NOT checked — the paper changed since the build recorded it (refs.bib deleted); lint will say so",
+    });
+    expect(readReferences(files, PAPER)).toBeNull();
+  });
+
+  it("🔴 a database bibtex found outside the paper directory cannot be read: the step says which, and lint warns", async () => {
+    const files = planted("v11-two-blocks");
+    files.map.delete(`${PAPER}/refs.bib`);
+    patchRecord(files, (r) => ({
+      ...r,
+      sha256: { ...r.sha256, "refs.bib": null },
+    }));
+    const { out } = await build(files, never);
+    expect(out).toEqual({
+      ok: true,
+      note: "references NOT checked — refs.bib, which bibtex opened, is not in the paper directory; lint will say so",
     });
     expect(readReferences(files, PAPER)).toBeNull();
     const msgs = await lint(files);
     expect(msgs.map((m) => [m.ruleId, m.severity])).toEqual([
       ["paper/refs-checked", 1],
     ]);
-    expect(msgs[0]?.message).toMatch(/refs\.bib.*not on disk/);
+    expect(msgs[0]?.message).toMatch(/refs\.bib.*not in the paper directory/);
   });
 });
 

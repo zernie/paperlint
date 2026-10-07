@@ -55,8 +55,11 @@ it typesets and paperlint's reader does not; `paper/refs-checked` names each suc
 which is the same entry.) A malformed `.bib` never gets that far: bibtex fails on it, and `paperlint
 build` fails with bibtex's own lines.
 
-A database TeX wrote itself (a `filecontents` block) is read from the file it left beside the paper. When
-that file is not on disk, the step says which and `paper/refs-checked` warns: build again to write it.
+A database TeX wrote itself (a `filecontents` block) is read from the file it left beside the paper.
+The build hashes it like any other, so when that file is edited or removed after the build the record
+is stale and `paper/sources-fresh` says so: build again to write it. A database bibtex found outside
+the paper directory, on its search path (`BIBINPUTS`), is not read: the step says which and
+`paper/refs-checked` warns.
 
 ## `repro/references-cache.json` — commit it
 

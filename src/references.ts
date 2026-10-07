@@ -122,7 +122,7 @@ export type BibliographyRead =
     }
   /** bibtex opened no database: the build ran none, or the paper names none. */
   | { readonly kind: "nothing" }
-  /** Databases bibtex opened that are not on disk now (a `.bib` TeX wrote and a clean removed). */
+  /** Databases bibtex opened that are not in the paper directory: it found them on its search path. */
   | { readonly kind: "unread"; readonly databases: readonly string[] }
   /** The build was not given a reader. */
   | { readonly kind: "not-wired" };
@@ -305,7 +305,7 @@ function unreadNote(
     case "nothing":
       return "no bibliography database — bibtex opened none, nothing to check";
     case "unread":
-      return `references NOT checked — ${read.databases.join(", ")}, which bibtex opened, is not on disk; lint will say so`;
+      return `references NOT checked — ${read.databases.join(", ")}, which bibtex opened, is not in the paper directory; lint will say so`;
     case "not-wired":
       return "references NOT checked — no bibliography reader was wired into this build; lint will say so";
   }

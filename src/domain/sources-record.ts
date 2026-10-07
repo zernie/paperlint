@@ -11,8 +11,8 @@
  *     "bibdata": [ "refs" ],                                      what `\bibdata` told bibtex to read
  *     "bibtex":  { "ran": true, "databases": [ "refs.bib" ],      the files bibtex opened, the keys it
  *                  "keys": [ … ], "exit": 0, "errors": [] },      typeset, how it ended
- *     "sha256":  { "paper.tex": "…", … } }                        every input and every opened database
- *                                                                 TeX did not write, by path and bytes
+ *     "sha256":  { "paper.tex": "…", … } }                        every input and every database bibtex
+ *                                                                 opened, by path and bytes
  *
  * 🔴 A role is the file's, and the main file is the body. A file is `preamble` when TeX read it only
  * before `\begin{document}` — before it opened `paper.aux` for writing (measured) — and `body` when
@@ -24,7 +24,7 @@
  *
  * 🔴 STALENESS is the record's own question: `changesSince` compares the bytes now with `sha256`, one
  * key per file, so a rule can tell that the paper changed after the build without running TeX. A `.bib`
- * TeX wrote is not hashed — its bytes are the block of the `.tex` that wrote it, which is.
+ * TeX wrote is hashed too: the rules read it from disk, so an edit to it after the build is a change.
  */
 import type { Sha256 } from "./sha256.ts";
 

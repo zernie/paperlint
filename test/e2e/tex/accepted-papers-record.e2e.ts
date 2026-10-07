@@ -35,7 +35,7 @@ import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
-import { nodeFiles } from "../../../dist/adapters/node/index.js";
+import { nodeFiles, nodeListDir } from "../../../dist/adapters/node/index.js";
 import { texOutput } from "../../../dist/adapters/tex-output/index.js";
 import {
   bibInput,
@@ -108,10 +108,14 @@ function recordOf(paper: string): string {
     throw new Error(
       `${paper}: the last pdflatex pass exited ${String(last?.status)}`,
     );
-  const recorded = recordSources({ files: nodeFiles, texOutput }, dir, {
-    fls: [first, ...rest].map((p) => p.fls),
-    bibtexExit,
-  });
+  const recorded = recordSources(
+    { files: nodeFiles, listDir: nodeListDir, texOutput },
+    dir,
+    {
+      fls: [first, ...rest].map((p) => p.fls),
+      bibtexExit,
+    },
+  );
   if (recorded.kind !== "recorded")
     throw new Error(`${paper}: ${recorded.why}`);
   return serializeSourcesRecord(recorded.record);

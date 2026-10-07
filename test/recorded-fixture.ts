@@ -68,36 +68,62 @@ export const fixtureFiles = (
   dir: string,
 ): Record<string, string> => under(dir, planted(name).files);
 
-/** The planted paper under `dir` as a build left it: its files, and `_build/sources.json` — TeX's record. */
+/** The text each `filecontents` block of `tex` writes: its lines between `\begin{…}` and the `\end{…}` after. */
+function blockBodies(tex: string): readonly string[] {
+  const lines = tex.split("\n");
+  return lines.flatMap((l, at) => {
+    if (!l.startsWith("\\begin{filecontents")) return [];
+    const end = lines.findIndex(
+      (e, n) => n > at && e.startsWith("\\end{filecontents"),
+    );
+    return [`${lines.slice(at + 1, end).join("\n")}\n`];
+  });
+}
+
+const digest = (text: string): string =>
+  sha256Hex(new TextEncoder().encode(text));
+
+/**
+ * The files TeX wrote, as a build leaves them beside the paper: each `.bib` the record lists as
+ * written, holding the text of the `filecontents` block whose bytes the record hashed (a starred
+ * block is written as its lines stand). `files` are the paper's, by relative path. A written file
+ * whose digest no block matches is a fixture out of step with its record: thrown, not guessed.
+ */
+function writtenByTeX(
+  files: Readonly<Record<string, string>>,
+  record: string,
+): Readonly<Record<string, string>> {
+  const parsed = sourcesCodec.parse(record);
+  if (!parsed.ok) throw new Error(parsed.why);
+  const bodies = Object.entries(files)
+    .filter(([p]) => p.endsWith(".tex"))
+    .flatMap(([, tex]) => blockBodies(tex));
+  return Object.fromEntries(
+    parsed.record.written.map((w) => {
+      const want = parsed.record.sha256[w];
+      const body = bodies.find((b) => digest(b) === want);
+      if (body === undefined)
+        throw new Error(
+          `no filecontents block holds the ${w} the record hashed — the fixture is out of step with it`,
+        );
+      return [w, body];
+    }),
+  );
+}
+
+/** The planted paper's files as a build leaves its folder: its own, and the `.bib` TeX wrote. */
+export const leftByTeX = (p: Planted): Readonly<Record<string, string>> => ({
+  ...p.files,
+  ...writtenByTeX(p.files, p.record),
+});
+
+/** The planted paper under `dir` as a build left it: its files, what TeX wrote, and TeX's record. */
 export function builtFixture(
   name: string,
   dir: string,
 ): Record<string, string> {
   const p = planted(name);
-  return under(dir, { ...p.files, "_build/sources.json": p.record });
-}
-
-/** The text of the `.bib` a `filecontents` block writes: its lines between `\begin{…}` and `\end{…}`. */
-function blockBody(tex: string): string {
-  const lines = tex.split("\n");
-  const from = lines.findIndex((l) => l.startsWith("\\begin{filecontents"));
-  const to = lines.findIndex((l) => l.startsWith("\\end{filecontents"));
-  return `${lines.slice(from + 1, to).join("\n")}\n`;
-}
-
-/**
- * The planted paper's files as a build leaves its folder: the `.bib` TeX wrote from a `filecontents`
- * block is on disk, holding the lines of the block (TeX writes them as they stand).
- */
-export function leftByTeX(p: Planted): Readonly<Record<string, string>> {
-  const parsed = sourcesCodec.parse(p.record);
-  const body = blockBody(p.files["paper.tex"] ?? "");
-  return parsed.ok
-    ? {
-        ...p.files,
-        ...Object.fromEntries(parsed.record.written.map((w) => [w, body])),
-      }
-    : p.files;
+  return under(dir, { ...leftByTeX(p), "_build/sources.json": p.record });
 }
 
 /** A planted paper laid out in `dir` on disk as a build leaves it: its files, and TeX's record. */
@@ -126,8 +152,7 @@ export function recordText(
   const written = shape.written ?? [];
   const databases = shape.databases;
   const hashed = [
-    ...shape.inputs.map(([p]) => p),
-    ...(databases ?? []).filter((d) => !written.includes(d)),
+    ...new Set([...shape.inputs.map(([p]) => p), ...(databases ?? [])]),
   ];
   return serializeSourcesRecord({
     schema: 1,
@@ -221,29 +246,51 @@ const truthOf = (paperDir: string): string =>
     join(paperDir, "record-by-hand.json"),
   ].find((f) => existsSync(f)) ?? join(paperDir, "tex-truth.json");
 
+/** The `.tex` files of a paper on disk, by path relative to it. */
+const texOf = (paperDir: string): Record<string, string> =>
+  Object.fromEntries(
+    readdirSync(paperDir, { recursive: true, withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.endsWith(".tex"))
+      .map((e) => {
+        const at = join(e.parentPath, e.name);
+        return [relative(paperDir, at), readFileSync(at, "utf8")];
+      }),
+  );
+
 /**
  * A paper's files as a build left them, for a paper that sits on disk with its snapshot beside it:
- * `base`, and `_build/sources.json` answered from the snapshot. The paper's own bytes are hashed
- * against the record as they are on disk.
+ * `base`, the `.bib` TeX wrote, and `_build/sources.json` answered from the snapshot. The paper's own
+ * bytes are hashed against the record as they are on disk.
  */
 export function withRecord(base: Files, paperDir: string): Files {
   const at = join(paperDir, "_build", "sources.json");
   const truth = truthOf(paperDir);
+  const written = new Map(
+    Object.entries(
+      writtenByTeX(texOf(paperDir), readFileSync(truth, "utf8")),
+    ).map(([w, text]) => [join(paperDir, w), new TextEncoder().encode(text)]),
+  );
   return {
-    isFile: (p) => p === at || base.isFile(p),
+    isFile: (p) => p === at || written.has(p) || base.isFile(p),
     readBytes: (p) =>
-      p === at ? new Uint8Array(readFileSync(truth)) : base.readBytes(p),
+      p === at
+        ? new Uint8Array(readFileSync(truth))
+        : (written.get(p) ?? base.readBytes(p)),
     writeAtomic: (p, b) => {
       base.writeAtomic(p, b);
     },
   };
 }
 
-/** The snapshot laid on disk as the build writes it: `<paperDir>/_build/sources.json`. */
+/** The snapshot laid on disk as the build leaves it: the `.bib` TeX wrote, and `_build/sources.json`. */
 export function layRecord(
   paperDir: string,
   truth: string = truthOf(paperDir),
 ): void {
+  writeTree(
+    paperDir,
+    writtenByTeX(texOf(paperDir), readFileSync(truth, "utf8")),
+  );
   mkdirSync(join(paperDir, "_build"), { recursive: true });
   copyFileSync(truth, join(paperDir, "_build", "sources.json"));
 }
