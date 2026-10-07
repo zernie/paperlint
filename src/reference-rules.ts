@@ -23,9 +23,14 @@
  * the run's own output.
  */
 import { basename, dirname } from "node:path";
-import { entryReport, findEntry, type EntryReport } from "./bib-rules.ts";
+import { entryReport, type EntryReport } from "./bib-rules.ts";
 import { callerPath } from "./caller-path.ts";
-import { MAIN_FILE, type PaperSources } from "./domain/paper-sources.ts";
+import {
+  MAIN_FILE,
+  type FoundEntry,
+  type PaperSources,
+} from "./domain/paper-sources.ts";
+import type { EntryVerdict } from "./ports/check-references.ts";
 import { paperSources, type SourcesDeps } from "./paper-sources.ts";
 import {
   bibHash,
@@ -75,11 +80,30 @@ type Assessment =
       readonly sources: PaperSources;
       readonly unseen: Unseen;
       readonly failing: readonly {
+        /** The entry that failed: one key may name two (an `undecided` bibliography's candidates). */
+        readonly found: FoundEntry;
         readonly key: string;
         readonly rule: "author-list" | "cite-exists";
         readonly why: string;
       }[];
     };
+
+/**
+ * Each entry checked with its verdict — when the record holds one verdict per entry, in its order, as
+ * the build writes it. One that does not (written by hand) is not about this bibliography: null.
+ */
+function laid(
+  verdicts: readonly EntryVerdict[],
+  entries: readonly FoundEntry[],
+): readonly (readonly [FoundEntry, EntryVerdict])[] | null {
+  const pairs = entries.flatMap((f, i) => {
+    const v = verdicts[i];
+    return v?.key === f.entry.key ? [[f, v] as const] : [];
+  });
+  return pairs.length === entries.length && verdicts.length === entries.length
+    ? pairs
+    : null;
+}
 
 function assess(deps: SourcesDeps, paperDir: string): Assessment {
   const read = paperSources(paperDir, deps);
@@ -90,12 +114,14 @@ function assess(deps: SourcesDeps, paperDir: string): Assessment {
   if (doc.bib.sha256 !== bibHash(bib)) return { kind: "stale" };
   if (doc.status === "not-checked")
     return { kind: "not-checked", why: doc.why ?? "no reason recorded" };
-  const failing = doc.entries.flatMap((e) => [
+  const verdicts = laid(doc.entries, bib.entries);
+  if (verdicts === null) return { kind: "stale" };
+  const failing = verdicts.flatMap(([found, e]) => [
     ...(e.authors === "mismatch"
-      ? [{ key: e.key, rule: "author-list" as const, why: e.why ?? "" }]
+      ? [{ found, key: e.key, rule: "author-list" as const, why: e.why ?? "" }]
       : []),
     ...(e.exists === "false"
-      ? [{ key: e.key, rule: "cite-exists" as const, why: e.why ?? "" }]
+      ? [{ found, key: e.key, rule: "cite-exists" as const, why: e.why ?? "" }]
       : []),
   ]);
   return {
@@ -105,14 +131,6 @@ function assess(deps: SourcesDeps, paperDir: string): Assessment {
     failing,
   };
 }
-
-/** Where a finding about entry `key` is reported in paper.tex (the file's start when no entry has it). */
-const keyReport = (sources: PaperSources, key: string): EntryReport => {
-  const found = findEntry(sources, key);
-  return found === null
-    ? { kind: "here", span: { start: 0, end: 0 } }
-    : entryReport(sources, found);
-};
 
 const BUILD = "`npx paperlint build`";
 
@@ -194,7 +212,7 @@ const JUDGES: Readonly<Record<Name, (a: Assessment) => readonly Report[]>> = {
       ? a.failing
           .filter((f) => f.rule === "author-list")
           .map((f) => ({
-            at: keyReport(a.sources, f.key),
+            at: entryReport(a.sources, f.found),
             messageId: "mismatch",
             data: { key: f.key, why: f.why },
           }))
@@ -204,7 +222,7 @@ const JUDGES: Readonly<Record<Name, (a: Assessment) => readonly Report[]>> = {
       ? a.failing
           .filter((f) => f.rule === "cite-exists")
           .map((f) => ({
-            at: keyReport(a.sources, f.key),
+            at: entryReport(a.sources, f.found),
             messageId: "missing",
             data: { key: f.key, why: f.why },
           }))

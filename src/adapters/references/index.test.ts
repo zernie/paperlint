@@ -147,6 +147,8 @@ test("one key in two candidate databases: each entry gets its own verdict, in th
     "https://doi.org/api/handles/10.1/good": () =>
       json(200, { responseCode: 1 }),
     "https://doi.org/api/handles/10.1/fake": () => json(404),
+    // Crossref knows nothing of the fake: a 404, not a refusal that would stop the run asking it.
+    "https://api.crossref.org/works/10.1%2Ffake": () => json(404),
     "https://dblp.org/search/publ/api/?q=Good%20Paper": () =>
       dblp("Good Paper", ["Ada Lovelace"]),
     "https://api.crossref.org/": () => json(200),

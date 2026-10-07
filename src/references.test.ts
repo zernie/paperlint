@@ -321,7 +321,9 @@ describe("the reference rules", () => {
       ["paper/cite-exists", 8],
     ]);
   });
+});
 
+describe("the reference rules, when the record is not about the bibliography", () => {
   it("🔴 the bibliography edited after the build → refs-fresh, and the stale verdicts are not judged", async () => {
     const { files } = await build(
       TEX(ENTRIES),
@@ -338,7 +340,10 @@ describe("the reference rules", () => {
 
   it("the same bibliography, unchanged → silent", async () => {
     const tex = TEX(ENTRIES);
-    const { files } = await build(tex, checker([verdict("schick2023")]));
+    const { files } = await build(
+      tex,
+      checker([verdict("schick2023"), verdict("other")]),
+    );
     expect(await lint(files, tex)).toEqual([]);
   });
 
@@ -421,21 +426,34 @@ describe("the reference rules over a record written by hand", () => {
     expect(msgs[0]?.message).toMatch(/no reason recorded/);
   });
 
-  it("a verdict without a reason, and one for a key the bibliography lacks, still report", async () => {
+  it("a verdict without a reason still reports, on the entry it is about", async () => {
     const tex = TEX(ENTRIES);
     const files = memoryFiles({ [`${PAPER}/paper.tex`]: tex });
     record(files, {
       status: "checked",
       entries: [
         { key: "schick2023", exists: "true", authors: "mismatch" },
-        { key: "ghost", exists: "false", authors: "match" },
+        { key: "other", exists: "false", authors: "match" },
       ],
     });
     const msgs = await lint(files, tex);
     expect(msgs.map((m) => [m.ruleId, m.line])).toEqual([
-      ["paper/cite-exists", 1],
       ["paper/author-list", 3],
+      ["paper/cite-exists", 8],
     ]);
+  });
+
+  it("verdicts that are not one per entry, in order, are not about this bibliography: refs-fresh", async () => {
+    const tex = TEX(ENTRIES);
+    const files = memoryFiles({ [`${PAPER}/paper.tex`]: tex });
+    const judged = async (entries: readonly EntryVerdict[]) => {
+      record(files, { status: "checked", entries });
+      return (await lint(files, tex)).map((m) => m.ruleId);
+    };
+    expect([
+      await judged([verdict("schick2023", "mismatch")]),
+      await judged([verdict("other"), verdict("schick2023", "mismatch")]),
+    ]).toEqual([["paper/refs-fresh"], ["paper/refs-fresh"]]);
   });
 });
 
@@ -449,7 +467,7 @@ describe("the reference rules over refs.bib, and on other files", () => {
     });
     record(files, {
       status: "checked",
-      entries: [verdict("schick2023", "mismatch")],
+      entries: [verdict("schick2023", "mismatch"), verdict("other")],
     });
     const msgs = await lint(files, tex);
     expect(msgs.map((m) => [m.ruleId, m.line, m.column])).toEqual([

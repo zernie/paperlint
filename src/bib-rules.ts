@@ -17,41 +17,22 @@
 import { basename, relative } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
-  databasesOf,
+  entriesOf,
   MAIN_FILE,
-  texReads,
   type BibEntry,
   type BibText,
-  type Database,
+  type FoundEntry,
   type PaperSources,
 } from "./domain/paper-sources.ts";
 import type { Span } from "./domain/tex-document.ts";
 import { sourcesOf, type SourcesDeps } from "./paper-sources.ts";
 import { lineColumn } from "./tex-paper.ts";
 
-/** An entry TeX reads, the text that holds it, and the database it belongs to. */
-export interface FoundEntry {
-  readonly db: Database;
-  readonly bib: BibText;
-  readonly entry: BibEntry;
-}
-
 /** Where a finding about an entry is reported in paper.tex. */
 export type EntryReport =
   | { readonly kind: "here"; readonly span: Span }
   /** The entry is in another file: reported at `span` (its declaration), `where` names the entry. */
   | { readonly kind: "elsewhere"; readonly span: Span; readonly where: string };
-
-/** Every entry TeX reads (for `undecided`, may read), with its database. */
-export const entriesOf = (s: PaperSources): readonly FoundEntry[] =>
-  databasesOf(s.bibliography).flatMap((db) => {
-    const bib = texReads(db);
-    return bib === null ? [] : bib.entries.map((entry) => ({ db, bib, entry }));
-  });
-
-/** The first entry TeX reads under `key`, or null. */
-export const findEntry = (s: PaperSources, key: string): FoundEntry | null =>
-  entriesOf(s).find((f) => f.entry.key === key) ?? null;
 
 /** The first line of an entry: `@misc{key,` — what a finding underlines. */
 const headOf = (bib: BibText, e: BibEntry): Span => {
@@ -218,7 +199,7 @@ const reachable = (e: BibEntry): boolean =>
 
 /** Every entry with no doi, url or arXiv id. */
 const unreachable = (s: PaperSources): readonly EntryFinding[] =>
-  entriesOf(s)
+  entriesOf(s.bibliography)
     .filter(({ entry }) => !reachable(entry))
     .filter((f) => !excepted(s, f, "bib/reachable-entry"))
     .map((f) => ({

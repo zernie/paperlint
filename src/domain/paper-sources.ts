@@ -78,10 +78,23 @@ export interface BibText {
   /** The database inside `text`: all of it for a `.bib`, the body for a block. */
   readonly body: Span;
   readonly entries: readonly BibEntry[];
-  /** The `@string` definitions, by name: bibtex expands them into the entries. */
-  readonly strings: Readonly<Record<string, string>>;
-  /** The `@preamble` commands, in order: bibtex writes them into the `.bbl`. */
+  /** The same entries as bibtex takes them, in order: what two databases are compared by. */
+  readonly written: readonly WrittenEntry[];
+  /** The `@preamble` commands, as written, in order: bibtex writes them into the `.bbl`. */
   readonly preamble: readonly string[];
+}
+
+/**
+ * An entry as bibtex takes it from the database: the type, the key, and each field's value with the
+ * `@string`s it uses expanded where it uses them (a later redefinition changes nothing) and its LaTeX
+ * as written — `{\"o}` and `ö` are different values here, as they are in the `.bbl` bibtex writes.
+ */
+export interface WrittenEntry {
+  /** Lower-cased, as bibtex reads it. */
+  readonly type: string;
+  readonly key: string;
+  /** Whitespace runs folded to one space, as bibtex folds them. */
+  readonly fields: Readonly<Record<string, string>>;
 }
 
 /** A `filecontents` block writing a `.bib`, as the parse tree gives it. */
@@ -181,16 +194,17 @@ export interface PaperSources {
 }
 
 /**
- * What a database holds, for comparing two: every entry by its bytes with whitespace runs folded
- * (TeX drops trailing spaces when it writes a block out), the `@string` definitions and the
- * `@preamble` commands. Text between entries does not count: bibtex reads none of it.
+ * What bibtex takes from a database, for comparing two: each entry as bibtex reads it, in order, its
+ * fields in name order, and the `@preamble` commands. Nothing else in the bytes reaches the `.bbl`:
+ * not the text between entries (a `filecontents` header among it), not a `@string` no entry uses.
  */
 const contentOf = (b: BibText): string =>
   JSON.stringify([
-    b.entries.map((e) =>
-      b.text.slice(e.span.start, e.span.end).replace(/\s+/g, " "),
-    ),
-    Object.entries(b.strings).sort(([x], [y]) => x.localeCompare(y)),
+    b.written.map((e) => [
+      e.type,
+      e.key,
+      Object.entries(e.fields).sort(([x], [y]) => x.localeCompare(y)),
+    ]),
     b.preamble,
   ]);
 
@@ -226,16 +240,39 @@ export function databasesOf(b: Bibliography): readonly Database[] {
   }
 }
 
-/** Every text TeX reads (or, `undecided`, may read) for the bibliography, each once. */
-export const bibTexts = (b: Bibliography): readonly BibText[] =>
+/** An entry TeX reads (for `undecided`, may read), the text that holds it, and the database it is read for. */
+export interface FoundEntry {
+  readonly db: Database;
+  readonly bib: BibText;
+  readonly entry: BibEntry;
+}
+
+/** Each text TeX reads (or, `undecided`, may read) for the bibliography, once, with the first database read from it. */
+const readings = (
+  b: Bibliography,
+): readonly { readonly db: Database; readonly bib: BibText }[] =>
   databasesOf(b)
-    .flatMap((d) => {
-      const r = texReads(d);
-      return r === null ? [] : [r];
+    .flatMap((db) => {
+      const bib = texReads(db);
+      return bib === null ? [] : [{ db, bib }];
     })
     .filter(
       (r, i, all) =>
         all.findIndex(
-          (o) => o.path === r.path && o.body.start === r.body.start,
+          (o) =>
+            o.bib.path === r.bib.path && o.bib.body.start === r.bib.body.start,
         ) === i,
     );
+
+/** Every text TeX reads (or, `undecided`, may read) for the bibliography, each once. */
+export const bibTexts = (b: Bibliography): readonly BibText[] =>
+  readings(b).map((r) => r.bib);
+
+/**
+ * Every entry TeX reads (or, `undecided`, may read), each text once, in order. An entry is this, not
+ * its key: two candidates may each define a key, with other metadata.
+ */
+export const entriesOf = (b: Bibliography): readonly FoundEntry[] =>
+  readings(b).flatMap(({ db, bib }) =>
+    bib.entries.map((entry) => ({ db, bib, entry })),
+  );

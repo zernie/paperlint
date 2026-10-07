@@ -43,6 +43,7 @@ import type {
   AuthorFinding,
   BibEntry,
 } from "../../../skills/verify-citations/scripts/bib-authors.mjs";
+import { zip } from "remeda";
 import { messageOf } from "../../domain/text.ts";
 import { isRecord } from "../../domain/record.ts";
 
@@ -55,12 +56,13 @@ const describeAuthors = (f: AuthorFinding): string =>
     .filter(Boolean)
     .join("; ") + ` (DBLP: ${f.venue})`;
 
-const authorsOf = (key: string, a: AuthorBuckets): EntryVerdict["authors"] =>
-  a.findings.some((f) => f.key === key)
+/** bib-authors' answer for one entry, from its buckets for that entry alone. */
+const authorsOf = (a: AuthorBuckets): EntryVerdict["authors"] =>
+  a.findings.length > 0
     ? "mismatch"
-    : a.unchecked.some((u) => u.key === key)
+    : a.unchecked.length > 0
       ? "unchecked"
-      : a.matched.includes(key)
+      : a.matched.length > 0
         ? "match"
         : "skipped";
 
@@ -74,43 +76,39 @@ const unconfirmed = (c: CiteVerdict): readonly (string | undefined)[] =>
     ? [c.reason, ...(c.refused ?? []).map((r) => `not asked: ${r}`)]
     : [];
 
-/** How badly a verdict fails: a disproof is worse than no answer, which is worse than a match. */
-const FAILS: Readonly<Record<CiteVerdict["verdict"], number>> = {
-  true: 0,
-  unresolvable: 1,
-  false: 2,
-};
-
-/**
- * The verdict a key stands for. Every entry is checked on its own — an `undecided` bibliography's
- * candidates may each define the key, with other metadata — and the key fails if any of them does.
- */
-const worstUnder = (
-  found: readonly CiteVerdict[],
-  first: CiteVerdict,
-): CiteVerdict =>
-  found
-    .filter((c) => c.id === first.id)
-    .reduce((w, c) => (FAILS[c.verdict] > FAILS[w.verdict] ? c : w), first);
-
-/** One entry's verdict from the two checkers' answers (both read the same entries). */
+/** One entry's verdict: verify-cites' answer for it, and bib-authors' buckets for it alone. */
 function entryVerdict(c: CiteVerdict, a: AuthorBuckets): EntryVerdict {
-  const key = c.id;
-  const mismatch = a.findings.find((f) => f.key === key);
   const why = [
     ...unconfirmed(c),
-    mismatch ? describeAuthors(mismatch) : undefined,
-    a.unchecked.find((u) => u.key === key)?.why,
+    ...a.findings.map(describeAuthors),
+    ...a.unchecked.map((u) => u.why),
   ]
     .filter(Boolean)
     .join("; ");
   return {
-    key,
+    key: c.id,
     exists: c.verdict,
-    authors: authorsOf(key, a),
+    authors: authorsOf(a),
     ...(why ? { why } : {}),
   };
 }
+
+/**
+ * bib-authors over each entry on its own, one after another as it would run them: its buckets name
+ * an entry by key, and two entries of a bibliography may share a key (an `undecided` one's
+ * candidates each define it, with other metadata).
+ */
+const authorsOfEach = (
+  parsed: readonly BibEntry[],
+  d: Pick<ReturnType<typeof cachedDblp>, "lookup" | "pause">,
+): Promise<readonly AuthorBuckets[]> =>
+  parsed.reduce<Promise<readonly AuthorBuckets[]>>(
+    async (done, e) => [
+      ...(await done),
+      await authors.checkAuthors([e], { lookup: d.lookup, pause: d.pause }),
+    ],
+    Promise.resolve([]),
+  );
 
 /** Whether bib-authors will ask DBLP about this entry — the filter its `checkAuthors` applies. */
 const asksDblp = (e: BibEntry): boolean =>
@@ -250,14 +248,10 @@ export const referencesChecker =
           breaker,
         }),
       ),
-      authors.checkAuthors(parsed, {
-        lookup: d.lookup,
-        pause: d.pause,
-      }),
+      authorsOfEach(parsed, d),
     ]);
-    const entries = found
-      .filter((c, i) => found.findIndex((o) => o.id === c.id) === i)
-      .map((first) => entryVerdict(worstUnder(found, first), a));
+    // Both lists are one per entry, in its order: so is the verdict list.
+    const entries = zip(found, a).map(([c, b]) => entryVerdict(c, b));
     return {
       check: { kind: "checked", entries },
       cache: grown({ cache, usable }, { store, dblp: d.dblp }, today),

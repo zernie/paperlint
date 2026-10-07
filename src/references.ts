@@ -15,6 +15,7 @@
  *                 "bibitems": ["key", …] },                  `paper.blg` and `paper.bbl` it left
  *     "status": "checked" | "not-checked", "why": "…",       not-checked: nothing could be asked
  *     "entries": [ { "key", "exists", "authors", "why" } ] }
+ *                                                            one per entry checked, in its order
  *
  * A sibling file, not a new field of `paper.facts.json`: those facts are about ONE PDF and are
  * stale when it changes (`pdf_sha256`); these are about the bibliography and are stale when IT
@@ -60,7 +61,8 @@ import { messageOf } from "./domain/text.ts";
 import {
   bibTexts,
   databasesOf,
-  type BibEntry,
+  entriesOf,
+  type FoundEntry,
   type BibText,
   type Bibliography,
   type PaperSources,
@@ -88,11 +90,12 @@ const text = (files: Files, p: string): string | null => {
 
 /**
  * The bibliography the build checks: every text TeX reads for it (`paperSources`; for `undecided`,
- * every candidate), and their entries, as the bibtex reader read them.
+ * every candidate), and their entries, as the bibtex reader read them. The verdicts are recorded one
+ * per entry, in this order: a verdict is about an entry, not about its key.
  */
 export interface CheckedBibliography {
   readonly texts: readonly [BibText, ...BibText[]];
-  readonly entries: readonly BibEntry[];
+  readonly entries: readonly FoundEntry[];
 }
 
 /** What a build's bibtex read that paperlint's reading of the paper does not have. */
@@ -127,7 +130,7 @@ export function checkedBibliography(
   const [first, ...rest] = bibTexts(b);
   if (first === undefined) return null;
   const texts: readonly [BibText, ...BibText[]] = [first, ...rest];
-  return { texts, entries: texts.flatMap((t) => t.entries) };
+  return { texts, entries: entriesOf(b) };
 }
 
 /** The bytes of the databases checked, in order: what a later lint compares to see the record is current. */
@@ -231,14 +234,17 @@ const newAnswers = (before: LookupCache, after: LookupCache): number => {
   );
 };
 
-/** Run the checker; a throw is `not-checked`, with the cache as it was. */
+/** Run the checker over the bibliography's entries; a throw is `not-checked`, with the cache as it was. */
 async function run(
   check: CheckReferences,
-  entries: readonly BibEntry[],
+  bib: CheckedBibliography,
   cache: LookupCache,
 ): Promise<ReferencesRun> {
   try {
-    return await check(entries, cache);
+    return await check(
+      bib.entries.map((f) => f.entry),
+      cache,
+    );
   } catch (e) {
     return { check: { kind: "not-checked", why: messageOf(e) }, cache };
   }
@@ -290,7 +296,7 @@ export async function recordReferences(
     return notChecked(
       `${LOOKUP_CACHE_FILE} cannot be read (${cache.error}) — fix it, or delete it to ask every question again`,
     );
-  const result = await run(check, bib.entries, cache.value);
+  const result = await run(check, bib, cache.value);
   if (result.check.kind === "not-checked") return notChecked(result.check.why);
   const doc = record(result.check);
   const fetched = newAnswers(cache.value, result.cache);

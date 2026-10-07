@@ -3,7 +3,9 @@
  * (`src/ports/bib-reader.ts`).
  *
  * It reads a well-formed database as bibtex does: entries, fields (LaTeX read into text, so `{\"u}`
- * is `ü` and `\url{x}` a link), name lists split into names, `@string` and `@preamble`. A malformed
+ * is `ü` and `\url{x}` a link), name lists split into names, `@string`s expanded, `@preamble`. A
+ * second reading keeps each field as bibtex takes it, LaTeX as written: what two databases are
+ * compared by (`sameDatabase`), where `{\"u}` and `ü` must stay different. A malformed
  * database is bibtex's to report: the build runs bibtex and fails with bibtex's own lines. The two
  * readers also differ on one well-formed shape: bibtex has no comment syntax, so an entry behind
  * `%` or inside `@comment{…}` is one bibtex reads and this reader does not. The build records what
@@ -15,15 +17,32 @@ import {
   parse,
   type Creator,
   type Entry,
+  type Library,
   type Options,
 } from "@retorquere/bibtex-parser";
-import type { BibEntry, BibName, BibText } from "../../domain/paper-sources.ts";
+import type {
+  BibEntry,
+  BibName,
+  BibText,
+  WrittenEntry,
+} from "../../domain/paper-sources.ts";
 import type { AbsolutePath } from "../../domain/paths.ts";
 import type { Span } from "../../domain/tex-document.ts";
 import type { BibReader } from "../../ports/bib-reader.ts";
 
 /** A title as written, not sentence-cased; no field kept as raw LaTeX. */
 const OPTIONS: Readonly<Options> = { sentenceCase: false, verbatimFields: [] };
+
+/**
+ * Every field as bibtex takes it: `@string`s expanded where they are used, LaTeX left as written (no
+ * conversion, no name split, no outer braces dropped).
+ */
+const AS_WRITTEN: Readonly<Options> = {
+  raw: true,
+  sentenceCase: false,
+  verbatimFields: [/.*/],
+  removeOuterBraces: [],
+};
 
 /** A name's parts, those it has: the parser leaves the others out. */
 const nameOf = (c: Readonly<Creator>): BibName =>
@@ -81,18 +100,32 @@ function placed(
   ).found;
 }
 
+/** The entries the parser finished: one it could not keeps no text — it is malformed, and bibtex reports it. */
+const finished = (lib: Readonly<Library>): readonly Readonly<Entry>[] =>
+  lib.entries.filter((e) => e.input !== "");
+
+/** An entry as bibtex takes it; a list field (`keywords`) as one value. */
+const writtenOf = (e: Readonly<Entry>): WrittenEntry => ({
+  type: e.type.toLowerCase(),
+  key: e.key,
+  fields: Object.fromEntries(
+    Object.entries(e.fields).map(([k, v]) => [
+      k,
+      [v].flat().filter(isText).join(", "),
+    ]),
+  ),
+});
+
 /** The database in `body` of `text`, the text of the file at `path`. */
 function read(path: AbsolutePath, text: string, body: Span): BibText {
   const source = text.slice(body.start, body.end);
   const lib = parse(source, OPTIONS);
-  // An entry the parser could not finish keeps no text: it is malformed, and bibtex reports it.
-  const parsed = lib.entries.filter((e) => e.input !== "");
   return {
     path,
     text,
     body,
-    entries: placed(parsed, source, body.start),
-    strings: lib.strings,
+    entries: placed(finished(lib), source, body.start),
+    written: finished(parse(source, AS_WRITTEN)).map(writtenOf),
     preamble: lib.preamble,
   };
 }

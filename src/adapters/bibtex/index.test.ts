@@ -72,14 +72,31 @@ describe("the bibtex reader", () => {
 });
 
 describe("the bibtex reader — what a copy is compared on, and what it leaves to bibtex", () => {
-  it("reads @string definitions and @preamble commands", () => {
+  it("reads @preamble commands, and expands each @string where an entry uses it", () => {
     const bib = read(
-      '@string{v = "Venue"}\n@preamble{"\\x"}\n@misc{k, note = v}',
+      '@string{v = "Venue"}\n@preamble{"\\x"}\n@misc{k, note = v}\n@string{v = "Later"}',
     );
-    expect([bib.strings, bib.preamble, bib.entries[0]?.fields]).toEqual([
-      { V: "Venue" },
+    expect([bib.preamble, bib.entries[0]?.fields]).toEqual([
       ['"\\x"'],
       { note: "Venue" },
+    ]);
+  });
+
+  it("keeps each entry as bibtex takes it: the value it used, LaTeX and braces as written, whitespace folded", () => {
+    const bib = read(
+      '@string{v = "Venue"}\n@Misc{k, note = v # " 2", author = {G{\\"o}del,   Kurt}, title = {{X}}, keywords = {b, a}}\n@string{v = "Later"}',
+    );
+    expect(bib.written).toEqual([
+      {
+        type: "misc",
+        key: "k",
+        fields: {
+          note: "Venue 2",
+          author: 'G{\\"o}del, Kurt',
+          title: "{X}",
+          keywords: "a, b",
+        },
+      },
     ]);
   });
 

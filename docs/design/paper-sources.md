@@ -1298,13 +1298,20 @@ PRs 2–5. Where the build differs from §3 and §7.2, and why:
    (`src/adapters/bibtex/`), now a dependency: `paperSources`, `bib/reachable-entry`, the build's
    reference check (verify-cites and bib-authors through `CheckReferences`, which takes the reader's
    entries), `extract-ref-facts` and `bib-authors` all read `.bib` text through it. Two databases are
-   the same copy when their entries, `@string` definitions and `@preamble` commands are (v25). What
-   bibtex reads differently is §9.
+   the same copy when bibtex takes the same from them: each entry in order — type, key, and every
+   field with the `@string`s it uses expanded where it uses them and its LaTeX as written — and the
+   `@preamble` commands (v25, v29: a `@string` redefined after its use; v30: `{\"o}` and `ö`, one
+   letter to the reader and two values in the `.bbl`). The text between entries and a `@string` no
+   entry uses do not count. What bibtex reads differently is §9.
 7. **An entry in a `.bib` file is reported at its declaration.** ESLint lints `paper.tex`, not the
    `.bib`. A finding about such an entry is reported at the `\bibliography` naming it, with
    `refs.bib:12:1:` in front (the `reportInPaper` precedent), and a disable directive on the line
    above the entry in the `.bib` is honoured. The reference rules (`paper/author-list`,
-   `paper/cite-exists`) do the same.
+   `paper/cite-exists`) do the same. What is checked is an entry, not a key: two candidates of an
+   `undecided` bibliography may each define a key with other metadata, so the build records one
+   verdict per entry, in the order `entriesOf` gives them, and a finding is reported at the entry that
+   failed. A record whose verdicts are not one per entry, in order, is not about this bibliography
+   (`paper/refs-fresh`).
 8. **The `bib` rules are built by the root with their ports** (`src/bib-rules.ts`, as
    `src/reference-rules.ts` is), not imported from `eslint-rules/` (§3.6) nor carried in `settings`
    (finding 9). `bib/reachable-entry` judges the reader's fields: a doi, a url, an arXiv eprint, a
@@ -1366,6 +1373,9 @@ what bibtex typeset (`src/paper-sources.test.ts`, against `tex-truth.json`).
 - `eslint --cache`: `bib/reachable-entry`'s findings depend on files other than the linted one, so a
   cached result can be stale after a `.bib` changes. `paperlint lint` does not cache.
 - Reading past `\end{document}` in `headings.ts`, `layout.ts` and `rendered.ts` (#178).
+- Two copies of a database compared where bibtex's reading and the parser's differ in what no check
+  reads: a `@preamble` is compared as written, so a `@string` it uses that is redefined between two
+  copies is not seen; `keywords` are compared as the parser sorts them.
 - Q3, the hooks, the build's `.fls` facts and the enforcement rule: PRs 2–5.
 
 ## Appendix A — prototype of the rule
