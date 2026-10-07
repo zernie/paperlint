@@ -4,7 +4,13 @@
  * record TeX wrote for it (`tex-truth.json`), what TeX leaves behind for a `filecontents` block (the
  * `.bib` it wrote), and a record for a paper made up in a test.
  */
-import { readdirSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { sourcesCodec } from "../src/adapters/sources-record/index.ts";
@@ -13,6 +19,7 @@ import {
   serializeSourcesRecord,
   type InputRole,
 } from "../src/domain/sources-record.ts";
+import { writeTree } from "./support.ts";
 
 const PLANTED = join(
   dirname(dirname(fileURLToPath(import.meta.url))),
@@ -103,5 +110,29 @@ export function recordText(
         ];
       }),
     ),
+  });
+}
+
+/**
+ * Write `<dir>/_build/sources.json` for the paper in `dir` on disk — the record `paperlint build`
+ * leaves — hashed over the files of `shape` as they are there now (a file that is not there: null).
+ */
+export function recordOnDisk(dir: string, shape: Shape): void {
+  const names = [...shape.inputs.map(([p]) => p), ...(shape.databases ?? [])];
+  const files = Object.fromEntries(
+    names.flatMap((n): readonly (readonly [string, string])[] =>
+      existsSync(join(dir, n)) ? [[n, readFileSync(join(dir, n), "utf8")]] : [],
+    ),
+  );
+  mkdirSync(join(dir, "_build"), { recursive: true });
+  writeFileSync(join(dir, "_build", "sources.json"), recordText(files, shape));
+}
+
+/** A planted paper laid out in `dir` on disk as a build leaves it: its files, and TeX's record. */
+export function plantedOnDisk(dir: string, name: string): void {
+  const p = planted(name);
+  writeTree(dir, {
+    ...leftByTeX(p),
+    "_build/sources.json": p.record,
   });
 }

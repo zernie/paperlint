@@ -41,6 +41,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { bibReader } from "#src/adapters/bibtex/index";
 import { absolutePath } from "#src/domain/paths";
+import { sha256Hex } from "#src/domain/sha256";
+import { serializeSourcesRecord } from "#src/domain/sources-record";
 import { consumerRoot } from "./consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -75,14 +77,46 @@ const REAL_PAPERS = existsSync(PAPERS_ROOT)
   : [];
 
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "extract-ref-facts-")));
+
+/**
+ * What `paperlint build` leaves in a paper's folder (`_build/sources.json`): bibtex opened `refs.bib`.
+ * The paper is read through that record and refused without it, so every paper here is built first.
+ */
+function built(dir) {
+  const digest = (name) => sha256Hex(readFileSync(join(dir, name)));
+  mkdirSync(join(dir, "_build"), { recursive: true });
+  writeFileSync(
+    join(dir, "_build", "sources.json"),
+    serializeSourcesRecord({
+      schema: 1,
+      inputs: [
+        { path: "paper.tex", role: "body" },
+        { path: "refs.bib", role: "preamble" },
+      ],
+      written: [],
+      bibdata: ["refs"],
+      bibtex: {
+        ran: true,
+        databases: ["refs.bib"],
+        keys: [],
+        exit: 0,
+        errors: [],
+      },
+      sha256: {
+        "paper.tex": digest("paper.tex"),
+        "refs.bib": digest("refs.bib"),
+      },
+    }),
+  );
+}
 // Cleanup is attached IMMEDIATELY: assertions throw, and "rmSync at end of file" does not execute precisely in those
 // runs that are red.
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 
 // ── 1. DEFECT #1: the `.bib` a paper declares is opened ──────────────────────
 //
-// The paper's `\bibliography{refs}` names the file, and `paperSources` opens it. A fixture paper
-// declares the frozen real `.bib`, so the leg is proven on a real file in every checkout.
+// The build recorded that bibtex opened `refs.bib`, and `bibliographyAt` opens it. A fixture paper
+// holds the frozen real `.bib`, so the leg is proven on a real file in every checkout.
 {
   const dir = join(TMP, "declares-real-bib");
   mkdirSync(dir, { recursive: true });
@@ -94,6 +128,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     join(dir, "refs.bib"),
     readFileSync(join(HERE, "fixtures", "real-bib", "refs.bib")),
   );
+  built(dir);
   const found = X.bibliographyFrom(dir);
   assert.deepEqual(
     found.ok && found.texts.map((t) => t.path),
@@ -323,6 +358,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     "\\documentclass{article}\\begin{document}x\\bibliography{refs}\\end{document}\n",
   );
   writeFileSync(join(dir, "refs.bib"), "% no entries at all\n");
+  built(dir);
   const r = spawnSync(
     "node",
     [join(HERE, "extract-ref-facts.mjs"), dir, "--offline"],
@@ -373,6 +409,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     join(dir, "paper.tex"),
     "\\documentclass{article}\\begin{document}x\\bibliography{refs}\\end{document}\n",
   );
+  built(dir);
   writeFileSync(
     join(dir, "repro", "refs-cache.json"),
     JSON.stringify({

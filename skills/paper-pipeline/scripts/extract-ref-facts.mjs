@@ -63,12 +63,11 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve, dirname, basename } from "node:path";
-import { gitCommitted } from "#src/adapters/git/index";
 import { latexReader } from "#src/adapters/latex/index";
-import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
+import { nodeFiles } from "#src/adapters/node/index";
+import { sourcesCodec } from "#src/adapters/sources-record/index";
 import { absolutePath } from "#src/domain/paths";
 import { bibReader } from "#src/adapters/bibtex/index";
-import { databasesOf, texReads } from "#src/domain/paper-sources";
 import { bibliographyAt, bibliographyUnreadWhy } from "#src/paper-sources";
 import { isMain } from "./consumer.mjs";
 
@@ -357,46 +356,23 @@ export function recordFrom(key, cached) {
 // ── assembling the facts ─────────────────────────────────────────────────────
 
 /**
- * WHICH BIBLIOGRAPHY: the one TeX reads, as `paperSources` decides it (src/paper-sources.ts) — never
- * an order of file names of our own. Measured on the planted papers of fixtures/paper-sources, any
- * such order reads the inline block where TeX reads a committed `refs.bib` (no `[overwrite]`), misses
- * a `\bibliography{paper}`'s `paper.bib`, or reads a COMMENTED-OUT block as zero entries.
+ * WHICH BIBLIOGRAPHY: the one the last build's bibtex opened, as `paperlint build` recorded it
+ * (`_build/sources.json`, docs/design/paper-sources.md §1) and `bibliographyAt` reads it
+ * (src/paper-sources.ts) — never an order of file names of our own, and never read out of TeX source.
  *
- *   a directory   its paper.tex, and the databases its `\bibliography` / `\addbibresource` declare
- *   a .tex        the same, for that file
+ *   a directory   the databases bibtex opened for its paper.tex
+ *   a .tex        the same, for that file's folder
  *   a .bib        that file, as named
  *
+ * A paper with no current record is refused: run `npx paperlint build` first. A database TeX wrote from
+ * a `filecontents` block is read from the block, where the author edits it.
  */
-const committed = gitCommitted(spawnProcess(), process.env);
 const DEPS = {
   files: nodeFiles,
+  codec: sourcesCodec,
   latex: latexReader,
-  committed,
   bib: bibReader,
 };
-
-/** What the reader should know about a bibliography it is about to read: conflicts, switches. */
-const notes = (b) => [
-  ...(b.kind === "undecided"
-    ? [
-        `⚠️ which bibliography TeX reads depends on a switch or a macro — reading every candidate: ${databasesOf(
-          b,
-        )
-          .map((d) => d.name)
-          .join(", ")}`,
-      ]
-    : []),
-  ...databasesOf(b)
-    .filter((d) => d.kind === "conflict")
-    .map(
-      (d) =>
-        `⚠️ ${d.name}.bib holds other entries than the filecontents block that writes it — TeX reads the ${
-          texReads(d) === d.file
-            ? "file (the block has no [overwrite])"
-            : "block"
-        }`,
-    ),
-];
 
 /**
  * The bibliography of `target`: the texts to read, or why there are none — `bibliographyAt`
@@ -405,13 +381,8 @@ const notes = (b) => [
 export function bibliographyFrom(target) {
   const r = bibliographyAt(absolutePath(resolve(target)), DEPS);
   if (!r.ok) return { ok: false, why: bibliographyUnreadWhy(r.error) };
-  const { paperDir, texts, bibliography } = r.value;
-  return {
-    ok: true,
-    paperDir,
-    texts,
-    notes: bibliography === null ? [] : notes(bibliography),
-  };
+  const { paperDir, texts } = r.value;
+  return { ok: true, paperDir, texts };
 }
 
 /** The entries of one text TeX reads, each with its file. */
@@ -476,7 +447,6 @@ async function main(argv) {
     console.error(`🛑 ${found.why}.`);
     return 1;
   }
-  for (const n of found.notes) console.error(n);
   const { paperDir, texts } = found;
   const cachePath = opt("cache")
     ? resolve(opt("cache"))

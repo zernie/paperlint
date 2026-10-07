@@ -1,7 +1,7 @@
 /**
- * bib-authors.mjs as a process: the bibliography it reads (a .bib named, or what TeX reads for a
- * paper directory or a .tex — `paperSources`), the targets it refuses, and the report and exit code
- * for each outcome. DBLP is a preload that answers
+ * bib-authors.mjs as a process: the bibliography it reads (a .bib named, or what the last build's
+ * bibtex opened for a paper directory or a .tex — `_build/sources.json`, through `bibliographyAt`), the
+ * targets it refuses, and the report and exit code for each outcome. DBLP is a preload that answers
  * by title from a table (the documented `result.hits.hit[].info` shape) — no network.
  */
 import assert from "node:assert/strict";
@@ -15,6 +15,11 @@ import {
   useTempDir,
   writeTree,
 } from "../../../test/support.ts";
+import {
+  plantedOnDisk,
+  recordOnDisk,
+  type Shape,
+} from "../../../test/recorded-paper.ts";
 import { absolutePath } from "#src/domain/paths";
 import { bibliographyUnreadWhy } from "#src/paper-sources";
 
@@ -58,11 +63,18 @@ writeTree(root, {
     bib("order", "Alan Turing and Ada Lovelace", "Swapped Order"),
   "findings/other.bib": bib("never", "X", "Never Read"),
   "twotex/b.tex": "\\documentclass{article}\n",
-  "twotex/a.tex": declaring(
+  "twotex/paper.tex": declaring(
     "refs",
     "\\begin{filecontents*}[overwrite]{refs.bib}\n" +
       bib("pre", "Ada Lovelace", "A Preprint", "journal = {arXiv preprint}") +
       "\\end{filecontents*}\n",
+  ),
+  // What TeX wrote from that block: the file bibtex opened.
+  "twotex/refs.bib": bib(
+    "pre",
+    "Ada Lovelace",
+    "A Preprint",
+    "journal = {arXiv preprint}",
   ),
   "sibling/paper.tex": declaring("refs"),
   "sibling/refs.bib": bib("good", "Ada Lovelace", "All Good"),
@@ -73,6 +85,25 @@ writeTree(root, {
     bib("etal", "Ada Lovelace and others", "Truncated"),
   "down/paper.tex": declaring("refs"),
   "down/refs.bib": bib("down", "Ada Lovelace", "Service Down"),
+});
+
+/** The record of a paper whose bibliography is `db`, a file the author keeps. */
+const keeps = (db: string): Shape => ({
+  inputs: [
+    ["paper.tex", "body"],
+    [db, "preamble"],
+  ],
+  databases: [db],
+});
+recordOnDisk(join(root, "findings"), keeps("paper.bib"));
+recordOnDisk(join(root, "sibling"), keeps("refs.bib"));
+recordOnDisk(join(root, "etal"), keeps("refs.bib"));
+recordOnDisk(join(root, "down"), keeps("refs.bib"));
+// A block TeX wrote into refs.bib: the file is no input, the block is.
+recordOnDisk(join(root, "twotex"), {
+  inputs: [["paper.tex", "body"]],
+  written: ["refs.bib"],
+  databases: ["refs.bib"],
 });
 
 const run = (...args: string[]) => {
@@ -135,16 +166,16 @@ test("a paper directory: the paper.bib its \\bibliography{paper} declares is rea
   });
 });
 
-test("a .tex named is read — never a guess among a directory's .tex files", () => {
-  const r = run(join(root, "twotex", "a.tex"), "--json");
+test("a .tex named is its folder's paper: the database bibtex opened is read from the block that wrote it", () => {
+  const r = run(join(root, "twotex", "paper.tex"), "--json");
   assert.deepEqual(
     { status: r.status, stderr: r.stderr, report: parseJson(r.stdout) },
     {
       status: 0,
       stderr: "",
       report: {
-        file: "<root>/twotex/a.tex",
-        files: ["<root>/twotex/a.tex"],
+        file: "<root>/twotex/paper.tex",
+        files: ["<root>/twotex/paper.tex"],
         entries: 1,
         findings: [],
         skipped: [],
@@ -200,19 +231,17 @@ test("DBLP down: NOT CHECKED, PARTIAL, exit 2 — never a pass", () => {
   });
 });
 
-// The planted papers of fixtures/paper-sources: the file read is the one TeX reads (tex-truth.json).
-const PLANTED = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../fixtures/paper-sources",
-);
-
+// The planted papers of fixtures/paper-sources, laid out as a build leaves them: the file read is the
+// one bibtex opened (tex-truth.json), or the block that wrote it.
 test.each([
   ["v1-stale", "refs.bib"],
   ["v2-overwrite", "paper.tex"],
   ["v3-declared", "paper.bib"],
   ["v4-commented", "refs.bib"],
 ])("%s: reads %s", (paper, file) => {
-  const r = runNode(SCRIPT, [join(PLANTED, paper), "--json"], {
+  const dir = join(root, "planted", paper);
+  plantedOnDisk(dir, paper);
+  const r = runNode(SCRIPT, [dir, "--json"], {
     nodeArgs: ["--import", join(root, "dblp.mjs")],
   });
   const report: unknown = parseJson(r.stdout);
@@ -220,6 +249,35 @@ test.each([
     report !== null && typeof report === "object" && "files" in report
       ? report.files
       : report,
-    [join(PLANTED, paper, file)],
+    [join(dir, file)],
   );
+});
+
+test("🔴 a paper that was not built is refused — run `npx paperlint build` first — and so is one changed since", () => {
+  const unbuilt = join(root, "unbuilt");
+  writeTree(unbuilt, {
+    "paper.tex": declaring("refs"),
+    "refs.bib": bib("good", "Ada Lovelace", "All Good"),
+  });
+  assert.deepEqual(
+    [run(unbuilt), run(join(unbuilt, "paper.tex"))].map(
+      ({ status, stdout, stderr }) => ({ status, stdout, stderr }),
+    ),
+    Array.from({ length: 2 }, () => ({
+      status: 2,
+      stdout: "",
+      stderr:
+        "bib-authors: <root>/unbuilt has not been built — run `npx paperlint build` first, which records the databases bibtex reads\n",
+    })),
+  );
+  recordOnDisk(unbuilt, keeps("refs.bib"));
+  writeTree(unbuilt, {
+    "refs.bib": bib("good", "Ada Lovelace", "All Good Edited"),
+  });
+  assert.deepEqual(run(unbuilt), {
+    status: 2,
+    stdout: "",
+    stderr:
+      "bib-authors: <root>/unbuilt changed since the last build (refs.bib edited) — run `npx paperlint build` first\n",
+  });
 });

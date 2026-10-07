@@ -49,9 +49,9 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, extname, resolve } from "node:path";
 import { bibReader } from "#src/adapters/bibtex/index";
-import { gitCommitted } from "#src/adapters/git/index";
 import { latexReader } from "#src/adapters/latex/index";
-import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
+import { nodeFiles } from "#src/adapters/node/index";
+import { sourcesCodec } from "#src/adapters/sources-record/index";
 import { absolutePath } from "#src/domain/paths";
 import { bibliographyAt, bibliographyUnreadWhy } from "#src/paper-sources";
 import { createHash } from "node:crypto";
@@ -1137,8 +1137,8 @@ export async function verifyCitationLive(
 /** What `bibliographyAt` needs to read a `.bib` (src/paper-sources.ts, the one answer for a path). */
 const DEPS = {
   files: nodeFiles,
+  codec: sourcesCodec,
   latex: latexReader,
-  committed: gitCommitted(spawnProcess(), process.env),
   bib: bibReader,
 };
 
