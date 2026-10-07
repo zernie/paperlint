@@ -714,6 +714,51 @@ describe("what the build's bibtex read, against what paperlint read (the post-bu
   });
 });
 
+describe("🔴 after a build, an `undecided` bibliography is the databases bibtex opened", () => {
+  // Two candidates behind a switch. bibtex opened refs.bib, where `k` sits behind `%` (bibtex reads
+  // it, the reader skips it); the unopened anon.bib has a plain `k`.
+  const tex =
+    "\\documentclass{acmart}\n\\newif\\ifanon\n\\begin{document}x\n\\ifanon\\bibliography{anon}\\else\\bibliography{refs}\\fi\n\\end{document}\n";
+  const build = async () => {
+    const files = memoryFiles({
+      [`${PAPER}/paper.tex`]: tex,
+      [`${PAPER}/anon.bib`]: "@misc{k, url = {https://x.org}}\n",
+      [`${PAPER}/refs.bib`]:
+        "% @misc{k, url = {https://x.org}}\n@misc{other, url = {https://x.org}}\n",
+      [`${PAPER}/paper.blg`]:
+        "This is BibTeX, Version 0.99d\nDatabase file #1: refs.bib\n",
+      [`${PAPER}/paper.bbl`]:
+        "\\begin{thebibliography}{9}\n\\bibitem{k}\nX.\n\\bibitem{other}\nY.\n\\end{thebibliography}\n",
+    });
+    await referencesStep.run({
+      ...ctx(files),
+      checkReferences: (bib, cache) =>
+        Promise.resolve({
+          check: {
+            kind: "checked",
+            entries: bib.map((e) => verdict(e.key)),
+          },
+          cache,
+        }),
+    });
+    return files;
+  };
+
+  it("the entries checked are those of the database bibtex opened, not every candidate's", async () => {
+    const files = await build();
+    expect(readReferences(files, PAPER)?.entries.map((e) => e.key)).toEqual([
+      "other",
+    ]);
+  });
+
+  it("a key bibtex typeset from the opened database, which the reader did not see there, is named — whatever an unopened candidate holds", async () => {
+    const files = await build();
+    const msgs = await lint(files, tex);
+    expect(msgs.map((m) => m.ruleId)).toEqual(["paper/refs-checked"]);
+    expect(msgs[0]?.message).toMatch(/`k`/);
+  });
+});
+
 describe("reading what bibtex left", () => {
   it("bibtexRead: the databases the .blg names, the keys the .bbl typesets — natbib's labels too", () => {
     expect(

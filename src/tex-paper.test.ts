@@ -78,6 +78,16 @@ describe("bodyFiles — the files of the body lint reads on their own", () => {
     ).toEqual({ files: [], missing: [] });
   });
 
+  it("🔴 a file included in the preamble AND in the body is body: the role is the file's, across every include of it", () => {
+    expect(
+      bodyFiles(
+        "/p/paper.tex",
+        doc("\\input{sections/b}", "\\input{sections/b}\nText."),
+        { files: files(), latex: latexReader },
+      ),
+    ).toEqual({ files: ["/p/sections/b.tex"], missing: [] });
+  });
+
   it("an include that resolves nowhere is named, with the file that wrote it", () => {
     expect(
       bodyFiles("/p/paper.tex", doc("", "\\input{gone}"), {
