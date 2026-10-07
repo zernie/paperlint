@@ -17,7 +17,7 @@
  */
 import type { Passage, Span } from "./domain/tex-document.ts";
 import { bodySentences, wordsOf } from "./domain/register.ts";
-import { readPaper, reportInPaper, type PaperDeps } from "./tex-paper.ts";
+import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
 import {
   ruleDocsUrl,
   type Located,
@@ -125,7 +125,7 @@ const META: TexRuleModule["meta"] = {
 };
 
 /** The rule, over the body's prose of the whole paper, its includes spliced (`readPaper`). */
-export const registerRule = (deps: PaperDeps): TexRuleModule => ({
+export const registerRule = (deps: ProseDeps): TexRuleModule => ({
   meta: META,
   create(context) {
     return {

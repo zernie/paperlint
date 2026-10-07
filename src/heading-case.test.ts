@@ -12,6 +12,7 @@ import { run } from "./cli.ts";
 import { headingCaseRule } from "./heading-case.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import { useTempDir, writeTree } from "../test/support.ts";
+import { recordedTree } from "../test/recorded-fixture.ts";
 
 const Results = z.array(
   z.looseObject({
@@ -369,10 +370,15 @@ describe("tex/heading-case refuses, when ESLint loads it, a configuration that a
 });
 
 describe("tex/heading-case in the files a paper includes", () => {
-  const tree = paper(
-    doc("\\section{Introduction}\n\\input{sections/results}"),
-    PRESET,
-    { "papers/p/sections/results.tex": "\\section{Results and discussion}\n" },
+  const tree = recordedTree(
+    paper(doc("\\section{Introduction}\n\\input{sections/results}"), PRESET, {
+      "papers/p/sections/results.tex": "\\section{Results and discussion}\n",
+    }),
+    "papers/p",
+    [
+      { path: "paper.tex", role: "body" },
+      { path: "sections/results.tex", role: "body" },
+    ],
   );
 
   it("reports a heading at its own file and line, and --fix edits that file", async () => {
@@ -391,12 +397,20 @@ describe("tex/heading-case in the files a paper includes", () => {
   });
 
   it("🔴 reads a \\title kept in a file the body includes, where it stands", async () => {
-    const withTitle = paper(
-      `${ACM}\n\\begin{document}\n\\input{front}\n\\maketitle\n\\end{document}\n`,
-      PRESET,
-      {
-        "papers/p/front.tex": "% the front matter\n\\title{Measuring things}\n",
-      },
+    const withTitle = recordedTree(
+      paper(
+        `${ACM}\n\\begin{document}\n\\input{front}\n\\maketitle\n\\end{document}\n`,
+        PRESET,
+        {
+          "papers/p/front.tex":
+            "% the front matter\n\\title{Measuring things}\n",
+        },
+      ),
+      "papers/p",
+      [
+        { path: "paper.tex", role: "body" },
+        { path: "front.tex", role: "body" },
+      ],
     );
     const { found } = await lint(withTitle);
     expect(found).toEqual([

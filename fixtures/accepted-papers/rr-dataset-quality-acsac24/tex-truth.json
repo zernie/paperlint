@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "IEEEtran.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "algorithmic.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "cleveref.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "Introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "DatasetQuality.tex",
+      "role": "body"
+    },
+    {
+      "path": "Methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "Result.tex",
+      "role": "body"
+    },
+    {
+      "path": "beam_size.png",
+      "role": "body"
+    },
+    {
+      "path": "ThreatsToValidity.tex",
+      "role": "body"
+    },
+    {
+      "path": "RelatedSection.tex",
+      "role": "body"
+    },
+    {
+      "path": "Conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "Appendices.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [
+    "ACSAC2024_bibliography"
+  ],
+  "bibtex": {
+    "ran": true,
+    "databases": [
+      "ACSAC2024_bibliography.bib"
+    ],
+    "keys": [
+      "chen2022neural",
+      "fu2022vulrepair",
+      "zhang2023pre",
+      "huang2023empirical",
+      "fu2024vision",
+      "mastropaolo2024training",
+      "ding2024vulnerability",
+      "fan2020ac",
+      "bhandari2021cvefixes",
+      "vqm2024",
+      "croft2023data",
+      "iso/iec25012",
+      "acm-badges",
+      "VulRepair-HuggingFace",
+      "wang2021codet5",
+      "feng2020codebert",
+      "guo2020graphcodebert",
+      "guo2022unixcoder",
+      "top10",
+      "herzig2013impact",
+      "vulrepairgit",
+      "isenglabgit",
+      "chen2023diversevul"
+    ],
+    "exit": 0,
+    "errors": []
+  },
+  "sha256": {
+    "paper.tex": "f269bee158f3860f0f1875d1e4ecd34dec67f0f981e9cd6efac4736c267944cf",
+    "IEEEtran.cls": "da751920a317ed318b7b5cd7fa585a6cc7d28502d457856382e9be24b10a3bd7",
+    "algorithmic.sty": "7fe47ed7f8222c56452bd73bf0682e72023ece06d59207653a02e080a341118d",
+    "cleveref.sty": "58d7e2b67b8b165ec1c7e12dd2ea6edc807d5a61f68cb316267cea44fe128ef9",
+    "Introduction.tex": "a66de418c850e1ee760b08e07e04a03fc543394cc68ddc5097d7ba244b3d2996",
+    "DatasetQuality.tex": "1e1edcd4a6e94d081e91faf398d612cd02611bc8e9c3c3c6e441105488f16ec9",
+    "Methodology.tex": "6e4cd70f4db0ce17ab8eaedeae8e9fae9701ae966e0d9ba093c0cb7b93878fe0",
+    "Result.tex": "99669016f9f60d36dbbeb7793f8455e2db190647c2835fbb29727ec6c1f3364b",
+    "beam_size.png": "e86c1a75fbe54c73fc3d398c95dc2f5a3940f1cacebe976b4f7a9f716c290401",
+    "ThreatsToValidity.tex": "953b5022342c19a7ed0a64228e8439ea9d733e8e11571dcfb95c3ad6aa108381",
+    "RelatedSection.tex": "115caadb2df6118355534ee7205e7cbcec72e01ea586ff9d3da0bcbe15420505",
+    "Conclusion.tex": "8e19335a432e2ee64977cea85a6225a5bcb1e608e891659f2bcb74e0d6e7c77d",
+    "Appendices.tex": "f5d7f265ce2b0711734d04d30b3a17fdfe61ed5e3ce74484c66a80a1d9c59d61",
+    "ACSAC2024_bibliography.bib": "25788f1d9ace8b9fb5aaa635e9cd564160f67cc75aa78048a0713e0e15ef9d86"
+  }
+}

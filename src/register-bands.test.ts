@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
 import { nodeFiles } from "./adapters/node/index.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import {
   bandOf,
   rateOf,
@@ -36,6 +37,7 @@ import {
   standingOf,
 } from "./register-bands.ts";
 import { readPaper } from "./tex-paper.ts";
+import { withRecord } from "../test/recorded-fixture.ts";
 import { useTempDir, writeTree } from "../test/support.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -56,8 +58,9 @@ const aidc = (() => {
 const sourceOf = (paper: string): string => {
   const file = join(CORPUS, paper, "paper.tex");
   return readPaper(file, readFileSync(file, "utf8"), {
-    files: nodeFiles,
+    files: withRecord(nodeFiles, join(CORPUS, paper)),
     latex: latexReader,
+    codec: sourcesCodec,
   }).text;
 };
 
@@ -286,6 +289,7 @@ describe("the rules, as ESLint calls them", () => {
       files: nodeFiles,
       venuesDir: presetsDir(),
       latex: latexReader,
+      codec: sourcesCodec,
     };
     registerBandRules(deps)
       [rule].create({

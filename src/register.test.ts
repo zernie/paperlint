@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import {
   judgeRegister,
   measureRegister,
@@ -125,7 +126,11 @@ describe("the rule — reported at the start of the body, the option read from t
   }
   const run = (src: string, options?: readonly unknown[]): Seen[] => {
     const seen: Seen[] = [];
-    registerRule({ files: memoryFiles({}), latex: latexReader })
+    registerRule({
+      files: memoryFiles({}),
+      latex: latexReader,
+      codec: sourcesCodec,
+    })
       .create({
         filename: "/p/paper.tex",
         ...(options === undefined ? {} : { options }),

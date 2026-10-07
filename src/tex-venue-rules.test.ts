@@ -7,6 +7,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import {
@@ -21,10 +22,13 @@ import {
 } from "./tex-venue-rules.ts";
 import { resolvePreset } from "./presets.ts";
 import { buildConfig, SHIPPED_RULES } from "./cli.ts";
+import { builtPaper } from "../test/recorded-fixture.ts";
 import { venuePreset } from "../test/support.ts";
 
 const VENUES = presetsDir();
 const PAPER = "/work/papers/p";
+/** What the rules read with besides the files: the presets, the LaTeX reader, the record's schema. */
+const READERS = { venuesDir: VENUES, latex: latexReader, codec: sourcesCodec };
 const shipped = Object.fromEntries(
   readdirSync(VENUES)
     .filter((f) => f.endsWith(".jsonc") || f.endsWith(".json"))
@@ -70,7 +74,7 @@ function lint(
     ...extra,
   });
   const out: Finding[] = [];
-  const deps = { files, venuesDir: VENUES, latex: latexReader };
+  const deps = { files, ...READERS };
   for (const [id, rule] of [
     ...Object.entries(texVenueRules(deps)).map(
       ([n, r]) => [`tex/${n}`, r] as const,
@@ -207,13 +211,29 @@ describe("the venue rules read the whole paper: the files it \\inputs, spliced w
       "\\documentclass[conference,compsoc]{IEEEtran}",
       "Text.\n\\input{sections/closing}",
     );
-    const extra = {
-      [`${PAPER}/sections/closing.tex`]:
-        "\\section*{LLM Usage Statement}\nNone.\n",
-    };
+    // The build recorded TeX reading both files.
+    const extra = builtPaper(
+      PAPER,
+      {
+        "paper.tex": tex,
+        "sections/closing.tex": "\\section*{LLM Usage Statement}\nNone.\n",
+      },
+      [
+        { path: "paper.tex", role: "body" },
+        { path: "sections/closing.tex", role: "body" },
+      ],
+    );
     expect(lint(tex, AIDC, { extra })).toEqual([]);
     // Without the file, the section is missing.
     expect(ids(lint(tex, AIDC))).toEqual(["tex/required-section:missing"]);
+    // 🔴 The file on disk and no record of the build: the paper is paper.tex, and the section is missing.
+    const unbuilt = {
+      [`${PAPER}/sections/closing.tex`]:
+        "\\section*{LLM Usage Statement}\nNone.\n",
+    };
+    expect(ids(lint(tex, AIDC, { extra: unbuilt }))).toEqual([
+      "tex/required-section:missing",
+    ]);
   });
 
   it("a leftover venue name in an included file is reported at the \\input, naming the file and line", () => {
@@ -222,9 +242,17 @@ describe("the venue rules read the whole paper: the files it \\inputs, spliced w
       "Text.\n\\input{intro}\n\\section*{LLM Usage Statement}\nNone.",
     );
     const fs = lint(tex, AIDC, {
-      extra: {
-        [`${PAPER}/intro.tex`]: "One line.\nFirst written for AgenticDev.\n",
-      },
+      extra: builtPaper(
+        PAPER,
+        {
+          "paper.tex": tex,
+          "intro.tex": "One line.\nFirst written for AgenticDev.\n",
+        },
+        [
+          { path: "paper.tex", role: "body" },
+          { path: "intro.tex", role: "body" },
+        ],
+      ),
     });
     expect(fs.map((f) => [f.line, f.message.split(": ")[0]])).toEqual([
       [5, "intro.tex:2:19"],

@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "IEEEtran.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "algorithm.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "algorithmic.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "listings.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "lstpatch.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "lstmisc.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "listings.cfg",
+      "role": "preamble"
+    },
+    {
+      "path": "multirow.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sections_full_version/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections_full_version/intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/attack_flow.pdf",
+      "role": "body"
+    },
+    {
+      "path": "sections_full_version/background.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/dsp-illustration_small.pdf",
+      "role": "body"
+    },
+    {
+      "path": "sections_full_version/model.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/flink_architecture.pdf",
+      "role": "body"
+    },
+    {
+      "path": "sections_full_version/methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/engine_architecure.pdf",
+      "role": "body"
+    },
+    {
+      "path": "sections_full_version/experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/nexmark_cdf_Q1_Map.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Figures/nexmark_cdf_Q2_Filter.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Figures/nexmark_cdf_Q3_Join.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Figures/nexmark_cdf_Q6_Avg_Partition.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Figures/nexmark_cdf_Q5_Count_Auction.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Figures/nexmark_cdf_Q4_Max.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Figures/nexmark_tsne_plot.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Figures/svr_nexmark_ts2vec_confusion_matrix.pdf",
+      "role": "body"
+    },
+    {
+      "path": "sections_full_version/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections_full_version/related.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections_full_version/conclusions.tex",
+      "role": "body"
+    },
+    {
+      "path": "paper.bbl",
+      "role": "body"
+    },
+    {
+      "path": "sections_full_version/appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/xgb_secure_sgx_ts2vec_confusion_matrix.pdf",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "72c2074ec6a59f1eddd04bab5b1925badba93960d49c3485b94acb09dd5d12aa",
+    "IEEEtran.cls": "da751920a317ed318b7b5cd7fa585a6cc7d28502d457856382e9be24b10a3bd7",
+    "algorithm.sty": "d63fdf24879f0efd535bc6d06bc2a008b79ae77f6d6d2bc96156ff1f35e96bd7",
+    "algorithmic.sty": "7fe47ed7f8222c56452bd73bf0682e72023ece06d59207653a02e080a341118d",
+    "listings.sty": "574c30237aa72d0fe7021d1388ce04a911fa785023a4470a8bc2d29c0cc8342a",
+    "lstpatch.sty": "0a9bb48acb234c19a096611de95f23429de2d1c4e14f4b6e27410c0a795a5754",
+    "lstmisc.sty": "5411c733b2fdd7cc57a59e050d2a23bc9cace435a5de08bc49a910562db0ceba",
+    "listings.cfg": "5464ab55dadb072fe38c20205ca8ef35e76ac59292b44b366370edf926a231fd",
+    "multirow.sty": "1ad428e46dc0b736132d2c6e87eccbf0947091ca7581733165cfee765cd0992c",
+    "sections_full_version/abstract.tex": "9fc53f482b8e8bb27a8fe584575f782c4433dbb247fe2a7fda5e33184d49e747",
+    "sections_full_version/intro.tex": "d766d5d4d665e10fbb16f63c202245d8be96400af13d084220a01be2bc2707f8",
+    "Figures/attack_flow.pdf": "69ad053850b31f00560eaf58aafc42970dc7f399c14309abf3ba0f4f0e61f763",
+    "sections_full_version/background.tex": "e8b9d7c6a8470ad8fcdb5fc981780d10e533af241c0ac17b0cb45fb9c1132dc3",
+    "Figures/dsp-illustration_small.pdf": "01141bd1ba48ea6a216358f6ef997764111ecaf175c4b97a6a1c15feda166571",
+    "sections_full_version/model.tex": "1400d16781cda79a957b0b4c1a858a1a816d351e0317caf947be7f0bfa2f69c1",
+    "Figures/flink_architecture.pdf": "bebcf8ea16522210560b652acb7620df2400c48e24e002cbdde3fef8c3555e01",
+    "sections_full_version/methodology.tex": "40b4c57f197741c94137327a0a0a18f655764413bd6e08f18969f7ad2fb60118",
+    "Figures/engine_architecure.pdf": "6b381bfdb83ce814984e835d0519dfd08ce50ed9458e86e44f63c2b8fcbe804a",
+    "sections_full_version/experiments.tex": "8cbd5a2545025011329b1b694d2d124b159530b609c4efdcf9d3d3003a5e8f91",
+    "Figures/nexmark_cdf_Q1_Map.pdf": "0aa6d242c9b6ab014ab91d7545448f5ccc754266f448bbfda0ea57f20d96ff20",
+    "Figures/nexmark_cdf_Q2_Filter.pdf": "0aa6d242c9b6ab014ab91d7545448f5ccc754266f448bbfda0ea57f20d96ff20",
+    "Figures/nexmark_cdf_Q3_Join.pdf": "0aa6d242c9b6ab014ab91d7545448f5ccc754266f448bbfda0ea57f20d96ff20",
+    "Figures/nexmark_cdf_Q6_Avg_Partition.pdf": "0aa6d242c9b6ab014ab91d7545448f5ccc754266f448bbfda0ea57f20d96ff20",
+    "Figures/nexmark_cdf_Q5_Count_Auction.pdf": "0aa6d242c9b6ab014ab91d7545448f5ccc754266f448bbfda0ea57f20d96ff20",
+    "Figures/nexmark_cdf_Q4_Max.pdf": "0aa6d242c9b6ab014ab91d7545448f5ccc754266f448bbfda0ea57f20d96ff20",
+    "Figures/nexmark_tsne_plot.pdf": "0aa6d242c9b6ab014ab91d7545448f5ccc754266f448bbfda0ea57f20d96ff20",
+    "Figures/svr_nexmark_ts2vec_confusion_matrix.pdf": "036db0286159e678b627c4ed4d11641a26024f98e1c0ebddc0f8fec51ed7d523",
+    "sections_full_version/discussion.tex": "2aa9bb221e18b9a6aa545379ddf315e2e058a564d9bfb014b75171d394d2e8d9",
+    "sections_full_version/related.tex": "1e5828c87c286261a491479d1dfccd197896049155a97a90e61b32f8032b5760",
+    "sections_full_version/conclusions.tex": "ef7092d47f99fed44b2cc1aac4215d8ed60b5cd07d3c44ca08ad5ec23d6f4ada",
+    "paper.bbl": "c2d892ffcd3a662453fe887e87543ad0a5b5dfbb8dc18edf2ab18024edd15e27",
+    "sections_full_version/appendix.tex": "e609b1828b8d097a3db21cf16f911ec356ee4be7110260b62acb4ec9436974d6",
+    "Figures/xgb_secure_sgx_ts2vec_confusion_matrix.pdf": "036db0286159e678b627c4ed4d11641a26024f98e1c0ebddc0f8fec51ed7d523"
+  }
+}

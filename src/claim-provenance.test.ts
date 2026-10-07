@@ -7,10 +7,12 @@
 import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import {
   claimProvenanceRule,
   judgeClaimProvenance,
 } from "./claim-provenance.ts";
+import { builtPaper } from "../test/recorded-fixture.ts";
 
 const doc = (body: string): string =>
   `\\documentclass{article}\n\\begin{document}\n${body}\n\\end{document}\n`;
@@ -317,7 +319,11 @@ function run(
 }
 
 const onDisk = (files: Record<string, string> = {}) =>
-  claimProvenanceRule({ files: memoryFiles(files), latex: latexReader });
+  claimProvenanceRule({
+    files: memoryFiles(files),
+    latex: latexReader,
+    codec: sourcesCodec,
+  });
 
 describe("the rule, as ESLint runs it", () => {
   it("reports each finding at its lines, with the message naming the owners that would do", () => {
@@ -337,16 +343,36 @@ describe("the rule, as ESLint runs it", () => {
     ]);
   });
 
-  it("🔴 reads the files the paper \\inputs: a finding there is reported at the \\input, naming its file and line", () => {
-    const rule = onDisk({
-      "/p/sections/results.tex":
-        "\\section{Results}\nIt holds.\nAgents ignore 42\\% of rules.\n",
-    });
-    expect(run(rule, doc("Intro.\n\\input{sections/results}"))).toEqual([
+  it("🔴 reads the files the build recorded TeX reading: a finding there is reported at the \\input, naming its file and line", () => {
+    const main = doc("Intro.\n\\input{sections/results}");
+    const rule = onDisk(
+      builtPaper(
+        "/p",
+        {
+          "paper.tex": main,
+          "sections/results.tex":
+            "\\section{Results}\nIt holds.\nAgents ignore 42\\% of rules.\n",
+        },
+        [
+          { path: "paper.tex", role: "body" },
+          { path: "sections/results.tex", role: "body" },
+        ],
+      ),
+    );
+    expect(run(rule, main)).toEqual([
       {
         line: 4,
         message: `sections/results.tex:3:1: ${String(rule.meta.messages["noOwner"]).replace("{{number}}", "42%")}`,
       },
     ]);
+  });
+
+  it("🔴 without a record the paper is paper.tex: the file it \\inputs is not read", () => {
+    const main = doc("Intro.\n\\input{sections/results}");
+    const rule = onDisk({
+      "/p/paper.tex": main,
+      "/p/sections/results.tex": "Agents ignore 42\\% of rules.\n",
+    });
+    expect(run(rule, main)).toEqual([]);
   });
 });

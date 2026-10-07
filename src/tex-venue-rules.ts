@@ -49,7 +49,7 @@ import type { LatexReader } from "./ports/latex.ts";
 import { paperPreset, shippedVenueNames, type Preset } from "./presets.ts";
 import type { NamedVenue } from "./domain/venue-name.ts";
 import type { PaperSource } from "./domain/paper-source.ts";
-import { readPaper, reportInPaper } from "./tex-paper.ts";
+import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
 import type { RequiredSection } from "./tex-requirements.ts";
 import type { Finding, VenueRuleDeps } from "./venue-rules.ts";
 import { isPorting } from "./domain/cycle.ts";
@@ -476,10 +476,8 @@ export function otherVenues(
     .map(({ label, aliases, mentions }) => ({ label, aliases, mentions }));
 }
 
-/** What the venue-conformance rules are built with: the preset store, and the LaTeX reader. */
-export interface TexVenueRuleDeps extends VenueRuleDeps {
-  readonly latex: LatexReader;
-}
+/** What the venue-conformance rules are built with: the preset store, the LaTeX reader, and the paper's files as the build recorded them. */
+export interface TexVenueRuleDeps extends VenueRuleDeps, ProseDeps {}
 
 /**
  * What a judge reads for the paper whose `paper.tex` is `filename` — the paper with its includes

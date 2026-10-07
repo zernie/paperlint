@@ -31,7 +31,7 @@ import type { BibReader } from "./ports/bib-reader.ts";
 import type { BibDisk, BibPaper } from "./ports/latex.ts";
 import {
   locations,
-  readPaper,
+  readEveryInclude,
   type PaperDeps,
   type Unread,
 } from "./tex-paper.ts";
@@ -74,7 +74,7 @@ export function paperFiles(
   deps: PaperDeps,
 ): PaperFiles {
   const dir = callerPath(dirname(main));
-  const assembled = readPaper(main, text, deps);
+  const assembled = readEveryInclude(main, text, deps);
   const body = deps.latex.documentBody(text);
   const inBody = (via: Span | null): boolean =>
     via !== null &&

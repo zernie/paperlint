@@ -40,7 +40,7 @@ import type { Emphasis, Passage, Span } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
 import { paperPreset } from "./presets.ts";
 import { MIN_WORDS, startOf } from "./register.ts";
-import { readPaper, reportInPaper } from "./tex-paper.ts";
+import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
 import {
   ruleDocsUrl,
   type Located,
@@ -49,10 +49,8 @@ import {
 } from "./tex-venue-rules.ts";
 import type { VenueRuleDeps } from "./venue-rules.ts";
 
-/** What the three rules read: the preset store, and the LaTeX reader. */
-export interface RegisterBandDeps extends VenueRuleDeps {
-  readonly latex: LatexReader;
-}
+/** What the three rules read: the preset store, the LaTeX reader, and the paper's files as the build recorded them. */
+export interface RegisterBandDeps extends VenueRuleDeps, ProseDeps {}
 
 export type RegisterBandRuleName =
   "contrast-frames" | "claim-emphasis" | "relation-markers";

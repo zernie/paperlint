@@ -8,6 +8,8 @@ import { join } from "node:path";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
+import { cpSync } from "node:fs";
+import { layRecord, recordedTree } from "../../test/recorded-fixture.ts";
 import { runNode, useTempDir, writeTree } from "../../test/support.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "prose-lint.mjs");
@@ -17,16 +19,17 @@ const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "prose-lint.mjs");
  */
 const SPAWN_LATEX_MS = 60_000;
 /** An accepted paper whose bibliography sits inline in `filecontents`, beside a long preamble. */
-const ACCEPTED = join(
+const ACCEPTED_DIR = join(
   dirname(fileURLToPath(import.meta.url)),
   "..",
   "..",
   "fixtures",
   "accepted-papers",
   "agenticdev-acm26",
-  "paper.tex",
 );
 const root = useTempDir("prose-lint-");
+/** The accepted paper as a build left it: a copy with TeX's record laid at `_build/sources.json`. */
+const ACCEPTED = join(root, "accepted", "paper.tex");
 
 const LONG_CAPTION_SENTENCE = Array.from(
   { length: 45 },
@@ -37,7 +40,7 @@ const LONG_CAPTION_SENTENCE = Array.from(
 const tex = (body: string): string =>
   `\\documentclass{article}\n\\begin{document}\n${body}\n\\end{document}\n`;
 
-writeTree(root, {
+const TREE = {
   "p/paper.tex": tex(
     "\\section{Introduction}\nIn this paper we present a linter. It might possibly help.\n\\input{figures/fig1}\n\\input{figures/fig2}\n\\input{figures/fig4}\n\\input{figures/fig5}",
   ),
@@ -66,7 +69,36 @@ writeTree(root, {
   "page.txt":
     "A rendered page. It was hyphen-\nated across a line.\n\n12\n\fNext page text here.\nReferences\n[1] cut here.\n",
   "notes.rtf": "not a paper",
-});
+};
+/** What each paper's last build read: its paper.tex, and the files it includes. */
+const READ: Readonly<Record<string, readonly string[]>> = {
+  p: [
+    "paper.tex",
+    "figures/fig1.tex",
+    "figures/fig2.tex",
+    "figures/fig4.tex",
+    "figures/fig5.tex",
+  ],
+  clean: ["paper.tex"],
+  inline: ["paper.tex", "sec/results.tex"],
+  commented: ["paper.tex"],
+  "ends-on-marks": ["paper.tex"],
+  empty: ["paper.tex"],
+};
+writeTree(
+  root,
+  Object.entries(READ).reduce<Record<string, string>>(
+    (tree, [dir, files]) =>
+      recordedTree(
+        tree,
+        dir,
+        files.map((path) => ({ path, role: "body" as const })),
+      ),
+    TREE,
+  ),
+);
+cpSync(ACCEPTED_DIR, join(root, "accepted"), { recursive: true });
+layRecord(join(root, "accepted"), join(ACCEPTED_DIR, "tex-truth.json"));
 
 test("no arguments: the usage line, exit 0", () => {
   assert.deepEqual(runNode(SCRIPT), {

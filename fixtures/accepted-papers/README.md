@@ -29,6 +29,20 @@ paper's `baseline.json`, using the reader in [`baseline.ts`](baseline.ts):
 - a recorded rule that goes **fully quiet** fails — that is how a check dies unnoticed;
 - a partial drop passes — that is what a fix looks like; lower the recording in the same change.
 
+Lint reads the files of a paper from the record of its last build (`_build/sources.json`,
+docs/design/paper-sources.md §1), so each paper carries one, laid beside it as `tex-truth.json` —
+the record `paperlint build` wrote for it, snapshotted by `test/e2e/tex/accepted-papers-record.e2e.ts`
+(`vitest -u` on a machine with TeX re-records). The test lays it at `_build/sources.json` in its copy;
+the register tests read it through `test/recorded-fixture.ts`. Its hashes are over the paper's bytes,
+so a paper edited without re-recording is a stale record, which lint treats as `paper.tex` alone.
+
+🔴 **`llm-splained-acsac25` has `record-by-hand.json`, not `tex-truth.json`.** It does not compile in
+paperlint's TeX tree (`subfig`, `svg`, `cleveref`, `listings` and others are in no preset), and a
+record is of a build that compiled. Its file lists what the old static reading found from the
+`\input`s of `paper.tex`, in order — a list written by that reading, not TeX's answer, so what is
+measured on this paper is measured on a belief about TeX. The e2e requires the paper to still fail to
+compile, so the exception ends when the reason does.
+
 A new rule is measured here the day it is registered. The corpus is excluded from the npm tarball
 (`!fixtures/accepted-papers` in `package.json`).
 
@@ -43,7 +57,6 @@ the count is not yet classified.
 | paper | rule | n | kind | why |
 | --- | --- | ---: | --- | --- |
 | all six | `pdf/measured` | 1 | known | the lint test reads the source and never builds, so the PDF rules cannot run; the rule says so, correctly |
-| all six | `paper/sources-fresh` | 1 | known | the same: with no build there is no record of the files TeX read (`_build/sources.json`), so the rules that need it are silent and this one says so, correctly |
 | agenticdev-acm26 | `paper/refs-checked` | 1 | known | the same: the inline bibliography was never checked by `paperlint build` here |
 | agenticdev-acm26 | `tex/claim-provenance` | 9 | real | numbers stated with no owner in the sentence ("The first is that the tool cuts output tokens by 65%.") — the paper reviewers called too informal |
 | secure-acsac24 | `tex/claim-provenance` | 6 | real | the authors' own results stated without a subject or a pointer ("LLMs experience a significant decrease in accuracy, with a 5.44% drop …"); the owner is in a neighbouring sentence, which the rule does not read |

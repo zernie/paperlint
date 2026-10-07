@@ -46,7 +46,6 @@ import {
   FRAGMENT_FILES,
   includeBlocks,
   paperBodies,
-  unreadLines,
 } from "./paper-includes.ts";
 import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
@@ -321,9 +320,10 @@ const SOURCES_DEPS = {
 /** What reads the build's record of a paper: the disk, and the schema its text is parsed with. */
 const RECORD_DEPS = { files: nodeFiles, codec: sourcesCodec };
 
-/** What the rules over a paper.tex read with: the paper's sources, and the shipped presets. */
+/** What the rules over a paper.tex read with: the paper's sources, the build's record, and the shipped presets. */
 const TEX_RULE_DEPS = {
   ...SOURCES_DEPS,
+  ...RECORD_DEPS,
   venuesDir: presetsDir(),
 };
 
@@ -1797,24 +1797,12 @@ export async function run(
   // rather than failing outright — the LaTeX rules simply have no language to run in.
   const texLanguage: unknown = await loadTexLanguage().catch(() => null);
 
-  // Each paper's body files, resolved the way the build resolves them — only when the LaTeX language
+  // Each paper's body files, as the last build recorded TeX reading them — only when the LaTeX language
   // loaded, since only its rules read them. The project's papers too: `paperlint lint .` reaches
   // papers two levels down, which a directory's immediate papers do not.
   const bodies = texLanguage
-    ? paperBodies(paperDirs([...paths, ...papersRoots(cfg)]), {
-        files: nodeFiles,
-        latex: latexReader,
-      })
+    ? paperBodies(paperDirs([...paths, ...papersRoots(cfg)]), RECORD_DEPS)
     : [];
-  // Named only for the papers this run lints: a paper elsewhere in the project is not this run's.
-  const inScope = (dir: string) =>
-    paths.some((p) => dir === p || dir.startsWith(`${p}${sep}`));
-  unreadLines(
-    bodies.filter((b) => inScope(b.dir)),
-    (p) => shown(cwd, p),
-  ).forEach((l) => {
-    err(l);
-  });
 
   const eslint = new ESLint({
     cwd: lintRoot(root, paths),
