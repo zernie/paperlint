@@ -161,10 +161,10 @@ export interface BuildContext {
    */
   readonly readBibliography: ReadBibliography;
   /**
-   * Writes `_build/sources.json` from TeX's own files after a compile; the CLI wires the real one. A
-   * context without one (a step run on its own, in a test) records nothing and says so.
+   * Writes `_build/sources.json` from TeX's own files after a compile; the CLI wires the real one.
+   * `buildPapers` hands the step `notWiredRecord` when it is given none: it records nothing and says so.
    */
-  readonly recordSources?: RecordSources;
+  readonly recordSources: RecordSources;
 }
 
 export type StepOutcome =
@@ -551,7 +551,7 @@ export const compileStep: BuildStep = {
       : "";
     return {
       ok: true,
-      note: `${plural(latex, "pdflatex pass", "pdflatex passes")}, ${plural(bibtex, "bibtex run", "bibtex runs")}${warn}; ${recordingNote((ctx.recordSources ?? notWiredRecord)(ctx.paperDir, run))}`,
+      note: `${plural(latex, "pdflatex pass", "pdflatex passes")}, ${plural(bibtex, "bibtex run", "bibtex runs")}${warn}; ${recordingNote(ctx.recordSources(ctx.paperDir, run))}`,
     };
   },
 };

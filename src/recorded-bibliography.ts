@@ -20,7 +20,6 @@
 import { extname, relative, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
-  MAIN_FILE,
   sameDatabase,
   type BibEntry,
   type BibText,
@@ -128,31 +127,35 @@ const headOf = (bib: BibText, e: BibEntry): Span => {
 
 const TOP: Span = { start: 0, end: 0 };
 
+const decoded = (b: Uint8Array | null): string | null =>
+  b === null ? null : new TextDecoder().decode(b);
+
 /** A text of the paper that may hold a block: a file of the record, the main file as the editor has it. */
 interface Holder {
   readonly path: AbsolutePath;
   readonly text: string;
 }
 
-/** The text of every `.tex` the record lists, the main file first and as given. */
+/**
+ * The text of every `.tex` the record lists, in the order TeX first read them: from disk, except
+ * `override` (the main file as the editor holds it), which stands for its own path. A record is only
+ * current while every file it lists is on disk, so none is skipped for being absent.
+ */
 function holders(
   dir: string,
   record: SourcesRecord,
-  main: Holder,
+  override: Holder | null,
   deps: RecordedDeps,
 ): readonly Holder[] {
-  return [
-    main,
-    ...record.inputs
-      .map((i) => callerPath(resolve(dir, i.path)))
-      .filter((p) => p !== main.path && extname(p) === ".tex")
-      .flatMap((path): readonly Holder[] => {
-        const bytes = deps.files.readBytes(path);
-        return bytes === null
-          ? []
-          : [{ path, text: new TextDecoder().decode(bytes) }];
-      }),
-  ];
+  return record.inputs
+    .map((i) => callerPath(resolve(dir, i.path)))
+    .filter((p) => extname(p) === ".tex")
+    .map((path) =>
+      override !== null && override.path === path
+        ? override
+        : { path, text: decoded(deps.files.readBytes(path)) },
+    )
+    .filter((h): h is Holder => h.text !== null);
 }
 
 /** The block, in some text of the paper, that holds what bibtex read of `db`. */
@@ -231,17 +234,7 @@ export function authoredTexts(
   recorded: Extract<RecordedBibliography, { readonly kind: "recorded" }>,
   deps: RecordedDeps,
 ): readonly BibText[] {
-  const mainPath = callerPath(resolve(dir, MAIN_FILE));
-  const bytes = deps.files.readBytes(mainPath);
-  const texts = holders(
-    dir,
-    recorded.record,
-    {
-      path: mainPath,
-      text: bytes === null ? "" : new TextDecoder().decode(bytes),
-    },
-    deps,
-  );
+  const texts = holders(dir, recorded.record, null, deps);
   return recorded.databases.map(
     (d) => (d.written ? blockHolding(d, texts, deps)?.bib : undefined) ?? d.bib,
   );

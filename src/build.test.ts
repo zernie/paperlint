@@ -560,6 +560,28 @@ test("sources: without a recorder, or when it records nothing, the build still b
   );
 });
 
+test("sources: the note counts the files the record lists", async () => {
+  const two: Recorded = {
+    ...RECORDED,
+    record: {
+      ...RECORDED.record,
+      inputs: [
+        { path: "paper.tex", role: "body" },
+        { path: "sections/intro.tex", role: "body" },
+      ],
+    },
+  };
+  const { r } = await build(
+    paper(),
+    {},
+    { recordSources: spyRecorder(two).recordSources },
+  );
+  assert.ok(
+    r.notes?.[0]?.endsWith("; sources: 2 files read → _build/sources.json"),
+    JSON.stringify(r.notes),
+  );
+});
+
 test("sources: a build that fails records nothing", async () => {
   const spy = spyRecorder(RECORDED);
   const { r } = await build(

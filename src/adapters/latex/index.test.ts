@@ -732,4 +732,13 @@ describe("latexReader.filecontents — the blocks that write a file, where they 
       ),
     ).toEqual([]);
   });
+
+  it("a block that names no file writes none", () => {
+    expect(
+      latexReader.filecontents(
+        "\\begin{filecontents}\n@misc{z}\n\\end{filecontents}\n\\begin{document}\n\\end{document}\n",
+        "paper",
+      ),
+    ).toEqual([]);
+  });
 });

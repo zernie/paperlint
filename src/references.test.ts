@@ -29,6 +29,7 @@ import type {
   EntryVerdict,
 } from "./ports/check-references.ts";
 import { referencesStep } from "./build.ts";
+import { notWiredRecord } from "./sources-record.ts";
 import {
   bibHash,
   bibliographyReader,
@@ -112,6 +113,7 @@ const depsOf = (files: Files) => ({
 /** The step's context over `files`, with every port it does not use stubbed. */
 const ctx = (files: Files) => ({
   readBibliography: bibliographyReader(depsOf(files)),
+  recordSources: notWiredRecord,
   paperDir: PAPER,
   env: {},
   run: () => ({ status: 0 }),
