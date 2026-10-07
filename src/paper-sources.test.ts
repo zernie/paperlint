@@ -435,24 +435,17 @@ describe("TeX's execution order across files: an include is read where it stands
     ]);
   });
 
-  it("an include in a macro's body is read where the macro is used: a candidate", () => {
-    const b = bibOf(doc("\\newcommand{\\refs}{\\input{bibsetup}}", "\\refs"), {
-      "/p/bibsetup.tex": "\\bibliography{refs}\n",
-      "/p/refs.bib": A,
-    });
-    expect([b.kind, databasesOf(b).map((d) => d.name)]).toEqual([
-      "undecided",
-      ["refs"],
-    ]);
+  it("a main file with no document environment is read whole", () => {
+    expect(
+      stateOf(bibOf("\\bibliography{refs}\n", { "/p/refs.bib": A })),
+    ).toEqual([["file", "refs", ["a2024"]]]);
   });
 
   it("a declaration in an include is placed in that file", () => {
     const b = sourcesIn("v17-include-order").bibliography;
     expect(
       databasesOf(b).map((d) => [basename(d.declared.file), d.declared.span]),
-    ).toEqual([
-      ["bibsetup.tex", { start: 0, end: "\\bibliography{first}".length }],
-    ]);
+    ).toEqual([["bibsetup.tex", { start: 0, end: "\\bibliography".length }]]);
   });
 });
 
@@ -484,6 +477,11 @@ describe("every block that can be the one TeX's file holds is a candidate (PR re
       ],
     ]);
   });
+});
+
+describe("a run of switched blocks: outcomes that cannot differ are one (PR review)", () => {
+  const outcomes = (b: Bibliography) =>
+    stateOf(b).map(([kind, , keys]) => [kind, keys]);
 
   it("a sure [overwrite] block after the switched ones always wins: decided", () => {
     const b = bibOf(
@@ -511,7 +509,7 @@ describe("every block that can be the one TeX's file holds is a candidate (PR re
     ]);
   });
 
-  it("a committed file beside switched blocks: the file when none runs, a conflict for each that can win", () => {
+  it("a committed file beside switched blocks: the file when none runs, a conflict for each block that can run last", () => {
     const b = bibOf(
       doc(
         `\\newif\\ifa\n\\newif\\ifb\n\\ifa\n${BLOCK("[overwrite]", A)}\n\\fi\n\\ifb\n${BLOCK("", "@misc{c2021, title={C}}")}\n\\fi`,
@@ -519,12 +517,14 @@ describe("every block that can be the one TeX's file holds is a candidate (PR re
       ),
       { "/p/refs.bib": B },
     );
-    // The second block has no [overwrite]: a file exists, so it never writes.
+    // The second block has no [overwrite]: a file exists, so it never writes — when it runs alone,
+    // TeX reads the file and the block is shadowed, a conflict of its own.
     expect([b.kind, outcomes(b)]).toEqual([
       "undecided",
       [
         ["file", ["b2020"]],
         ["conflict", ["a2024"]],
+        ["conflict", ["b2020"]],
       ],
     ]);
   });

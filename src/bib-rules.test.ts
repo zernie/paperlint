@@ -388,24 +388,36 @@ describe("validated on the accepted corpus (fixtures/accepted-papers)", () => {
     "paper.tex",
   );
   const original = readFileSync(ACCEPTED, "utf8");
+  // A real 48 KiB paper, linted by the bib rules alone and fixed in passes: each pass parses paper.tex
+  // and the paper as TeX reads it (paper-sources.ts). In `paperlint lint` the other rules parse that
+  // text too (a memo hit); here nothing else does. About 2.5 s, 4.5 s under coverage.
+  const SLOW = 20_000;
 
-  it("the accepted ACM paper, whose block has [overwrite], is silent", async () => {
-    expect(
-      found((await lint(original)).messages, "filecontents-overwrite"),
-    ).toEqual([]);
-  });
+  it(
+    "the accepted ACM paper, whose block has [overwrite], is silent",
+    async () => {
+      expect(
+        found((await lint(original)).messages, "filecontents-overwrite"),
+      ).toEqual([]);
+    },
+    SLOW,
+  );
 
-  it("the same paper with ONE change — [overwrite] removed — is reported, and the fix restores its bytes exactly", async () => {
-    const variant = original.replace(
-      "\\begin{filecontents*}[overwrite]{refs.bib}",
-      "\\begin{filecontents*}{refs.bib}",
-    );
-    expect(variant).not.toBe(original);
-    expect(
-      found((await lint(variant)).messages, "filecontents-overwrite").map(
-        (m) => m[0],
-      ),
-    ).toEqual([2]);
-    expect((await lint(variant, {}, { fix: true })).output).toBe(original);
-  });
+  it(
+    "the same paper with ONE change — [overwrite] removed — is reported, and the fix restores its bytes exactly",
+    async () => {
+      const variant = original.replace(
+        "\\begin{filecontents*}[overwrite]{refs.bib}",
+        "\\begin{filecontents*}{refs.bib}",
+      );
+      expect(variant).not.toBe(original);
+      expect(
+        found((await lint(variant)).messages, "filecontents-overwrite").map(
+          (m) => m[0],
+        ),
+      ).toEqual([2]);
+      expect((await lint(variant, {}, { fix: true })).output).toBe(original);
+    },
+    SLOW,
+  );
 });

@@ -22,7 +22,7 @@ import type { AbsolutePath } from "./domain/paths.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import type { Span } from "./domain/tex-document.ts";
 import type { CommittedFiles } from "./ports/committed.ts";
-import type { BibDisk } from "./ports/latex.ts";
+import type { BibDisk, BibPaper } from "./ports/latex.ts";
 import {
   locations,
   readPaper,
@@ -102,6 +102,27 @@ const bibDisk = (dir: AbsolutePath, deps: SourcesDeps): BibDisk => ({
   committed: deps.committed.isCommitted,
 });
 
+/**
+ * The paper as TeX executes it, for the bibliography: the assembled text, each stretch with the file
+ * it came from — the file TeX opens, as `paperFiles` finds it.
+ */
+const bibPaper = (f: PaperFiles, deps: PaperDeps): BibPaper => ({
+  main: f.main,
+  text: f.assembled.text,
+  pieces: f.assembled.segments.flatMap((seg) =>
+    (seg.file === f.assembled.main
+      ? [f.main]
+      : locations(f.dir, seg.file, deps.files).slice(0, 1)
+    ).map((path) => ({
+      start: seg.start,
+      end: seg.end,
+      path,
+      source: seg.source,
+      from: seg.from,
+    })),
+  ),
+});
+
 /** The sources of the paper whose main file is `main`, its text given (an editor's buffer). */
 export function sourcesOf(
   main: AbsolutePath,
@@ -109,9 +130,8 @@ export function sourcesOf(
   deps: SourcesDeps,
 ): PaperSources {
   const f = paperFiles(main, text, deps);
-  const own = f.includes.filter((i) => i.role !== "package-input");
   const { bibliography, blocks } = deps.latex.bibliography(
-    [{ path: main, text }, ...own.map((i) => ({ path: i.path, text: i.text }))],
+    bibPaper(f, deps),
     bibDisk(f.dir, deps),
   );
   return {

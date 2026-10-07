@@ -37,6 +37,28 @@ export interface BibSource {
   readonly text: string;
 }
 
+/** A stretch of the paper as TeX reads it, copied from one file: `[start, end)` here is `from…` there. */
+export interface BibPiece {
+  readonly start: number;
+  readonly end: number;
+  readonly path: AbsolutePath;
+  /** The whole text of the file at `path`. */
+  readonly source: string;
+  readonly from: number;
+}
+
+/**
+ * The paper as TeX executes it: the main file with every include spliced where it stands, and where
+ * each stretch came from. Declarations and blocks are read in this order, inside the conditionals and
+ * definitions around their include — never file by file.
+ */
+export interface BibPaper {
+  /** The main file: `\jobname` is its name. */
+  readonly main: AbsolutePath;
+  readonly text: string;
+  readonly pieces: readonly BibPiece[];
+}
+
 /** What deciding the bibliography asks of the disk. */
 export interface BibDisk {
   /** The `.bib` named (relative to the paper directory, where bibtex runs), or null. */
@@ -96,11 +118,11 @@ export interface LatexReader {
   /** A `.bib` file's text as bibtex reads it: its entries, an entry behind `%` included. */
   readonly bibText: (path: AbsolutePath, text: string) => BibText;
   /**
-   * The bibliography of a paper whose sources are `sources` (the main file first), decided as TeX and
-   * bibtex would from the committed bytes (`src/domain/paper-sources.ts`).
+   * The bibliography of `paper`, decided as TeX and bibtex would from the committed bytes
+   * (`src/domain/paper-sources.ts`).
    */
   readonly bibliography: (
-    sources: readonly BibSource[],
+    paper: BibPaper,
     disk: BibDisk,
   ) => BibliographyReading;
 }
