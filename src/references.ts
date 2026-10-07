@@ -8,9 +8,11 @@
  * "bib-authors" in a scorecard table, or a command the project configured. Now the build runs
  * them and records the result as data, beside the facts it already writes about the PDF:
  *
- *   { "schema": 2,
+ *   { "schema": 3,
  *     "bib": { "sources": ["paper.tex"], "sha256": "…" },    the bibliography that was checked: the
  *                                                            files TeX reads it from (`paperSources`)
+ *     "bibtex": { "databases": ["refs.bib"],                 what the build's bibtex read: the
+ *                 "bibitems": ["key", …] },                  `paper.blg` and `paper.bbl` it left
  *     "status": "checked" | "not-checked", "why": "…",       not-checked: nothing could be asked
  *     "entries": [ { "key", "exists", "authors", "why" } ] }
  *
@@ -24,11 +26,20 @@
  * MAX_AGE_DAYS, not once per build (#107: 217 s for 27 references, every build). The verdicts above are NOT cached: they are derived from the cached
  * answers on every build, so a fix to the checkers reaches every paper at once.
  *
+ * ── WHAT BIBTEX READ, AGAINST WHAT PAPERLINT READ ─────────────────────────────────────
+ * The bibliography checked is the one paperlint reads before a build: `paperSources`' decision, and
+ * the one bibtex reader. bibtex itself reads differently in two places — it has no comment syntax,
+ * so an entry behind `%` or inside `@comment{…}` is one it typesets, and TeX may take a database
+ * the static decision does not name. So the step also records what the build's bibtex read, and
+ * `paper/refs-checked` names whatever of it paperlint did not see (`unseenBy`). A malformed `.bib`
+ * never gets here: bibtex fails on it, and the build fails with bibtex's own lines.
+ *
  * 🔴 THE STEP NEVER FAILS THE BUILD. A build without network still builds the PDF; the reference
  * step records `not-checked` and the lint rule says so, as a warning. Recording "not checked" as
  * a pass would be the counter that counts what it never looked at.
  */
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
+import { bibtexRead, type BibtexRead } from "./latex-log.ts";
 import { callerPath } from "./caller-path.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
@@ -56,8 +67,8 @@ import {
 } from "./domain/paper-sources.ts";
 import type { SourcesUnread } from "./paper-sources.ts";
 
-/** 2 since `bib.source` became `bib.sources`, the files TeX reads; a record of 1 reads as none. */
-export const REFERENCES_SCHEMA = 2;
+/** 3 since the record holds what the build's bibtex read; an older record reads as none. */
+export const REFERENCES_SCHEMA = 3;
 export const REFERENCES_FILE = "references.json";
 
 /** The lookup cache's place in a paper: committed, beside the paper's other reproduction files. */
@@ -82,6 +93,31 @@ const text = (files: Files, p: string): string | null => {
 export interface CheckedBibliography {
   readonly texts: readonly [BibText, ...BibText[]];
   readonly entries: readonly BibEntry[];
+}
+
+/** What a build's bibtex read that paperlint's reading of the paper does not have. */
+export interface Unseen {
+  /** Databases bibtex opened that the bibliography does not name (for `undecided`: no candidate). */
+  readonly databases: readonly string[];
+  /** Entries bibtex typeset that the bibtex reader did not read from those databases. */
+  readonly keys: readonly string[];
+}
+
+/**
+ * What `read` — one build's bibtex — has that `s` does not: each database compared as the file
+ * bibtex opens from the paper's directory, each entry by its key.
+ */
+export function unseenBy(s: PaperSources, read: BibtexRead): Unseen {
+  const named = databasesOf(s.bibliography).map((d) =>
+    resolve(s.dir, `${d.name}.bib`),
+  );
+  const keys = new Set(
+    bibTexts(s.bibliography).flatMap((t) => t.entries.map((e) => e.key)),
+  );
+  return {
+    databases: read.databases.filter((n) => !named.includes(resolve(s.dir, n))),
+    keys: read.bibitems.filter((k) => !keys.has(k)),
+  };
 }
 
 /** The bibliography to check, or null when TeX reads no database for this paper. */
@@ -124,6 +160,7 @@ export interface ReferencesDocument {
     readonly sources: readonly string[];
     readonly sha256: string;
   };
+  readonly bibtex: BibtexRead;
   readonly status: "checked" | "not-checked";
   readonly why?: string;
   readonly entries: readonly EntryVerdict[];
@@ -132,6 +169,7 @@ export interface ReferencesDocument {
 export const documentOf = (
   paperDir: string,
   bib: CheckedBibliography,
+  bibtex: BibtexRead,
   check: ReferencesCheck,
 ): ReferencesDocument => ({
   schema: REFERENCES_SCHEMA,
@@ -139,6 +177,7 @@ export const documentOf = (
     sources: [...new Set(bib.texts.map((t) => relative(paperDir, t.path)))],
     sha256: bibHash(bib),
   },
+  bibtex,
   ...(check.kind === "checked"
     ? { status: "checked" as const, entries: check.entries }
     : { status: "not-checked" as const, why: check.why, entries: [] }),
@@ -230,8 +269,12 @@ export async function recordReferences(
   const paperDir = sources.value.dir;
   const bib = checkedBibliography(sources.value.bibliography);
   if (bib === null) return nothingToCheck(sources.value.bibliography);
+  const bibtex = bibtexRead(
+    text(files, join(paperDir, "paper.blg")) ?? "",
+    text(files, join(paperDir, "paper.bbl")) ?? "",
+  );
   const record = (c: ReferencesCheck): ReferencesDocument => {
-    const doc = documentOf(paperDir, bib, c);
+    const doc = documentOf(paperDir, bib, bibtex, c);
     files.writeAtomic(
       callerPath(referencesPath(paperDir)),
       new TextEncoder().encode(`${JSON.stringify(doc, null, 2)}\n`),

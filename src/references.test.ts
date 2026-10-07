@@ -43,6 +43,7 @@ import {
   type CachedResponse,
   type LookupCache,
 } from "./domain/lookup-cache.ts";
+import { bibtexRead } from "./latex-log.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 import { texLanguage } from "../eslint-rules/latex-language.ts";
 import { present } from "../test/support.ts";
@@ -379,7 +380,9 @@ describe("reading what is on disk", () => {
       JSON.stringify({ schema: 999, entries: [] }),
       // Schema 1 named one file in `bib.source`; the next build rewrites it.
       JSON.stringify({ schema: 1, entries: [] }),
-      JSON.stringify({ schema: 2 }),
+      // Schema 2 did not record what bibtex read; the next build does.
+      JSON.stringify({ schema: 2, entries: [] }),
+      JSON.stringify({ schema: 3 }),
       "null",
       "{",
     ]) {
@@ -399,8 +402,9 @@ const record = (
     absolutePath(referencesPath(PAPER)),
     new TextEncoder().encode(
       JSON.stringify({
-        schema: 2,
+        schema: 3,
         bib: { sources: ["paper.tex"], sha256: bibHash(bib) },
+        bibtex: { databases: [], bibitems: [] },
         ...body,
       }),
     ),
@@ -655,5 +659,19 @@ describe("what the build's bibtex read, against what paperlint read (the post-bu
     const msgs = await lint(files, TEX(ENTRIES));
     expect(msgs.map((m) => m.ruleId)).toEqual(["paper/refs-checked"]);
     expect(msgs[0]?.message).toMatch(/elsewhere\.bib/);
+  });
+});
+
+describe("reading what bibtex left", () => {
+  it("bibtexRead: the databases the .blg names, the keys the .bbl typesets — natbib's labels too", () => {
+    expect(
+      bibtexRead(
+        "This is BibTeX\nDatabase file #1: refs.bib\nDatabase file #2: /lib/shared.bib\n",
+        "\\bibitem{plain}\n\\bibitem[{Smith et~al.(2020)}]{smith}\n\\bibitem[Doe(2019)]{doe}\n",
+      ),
+    ).toEqual({
+      databases: ["refs.bib", "/lib/shared.bib"],
+      bibitems: ["plain", "smith", "doe"],
+    });
   });
 });

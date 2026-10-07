@@ -15,7 +15,6 @@ import { memoryFiles } from "./adapters/memory/index.ts";
 import { nodeFiles } from "./adapters/node/index.ts";
 import { absolutePath, type AbsolutePath } from "./domain/paths.ts";
 import {
-  bibTexts,
   texReads,
   type Bibliography,
   type Database,
@@ -24,7 +23,6 @@ import {
 import { texInputsDir } from "./package-dirs.ts";
 import { paperSources, sourcesOf } from "./paper-sources.ts";
 import { unseenBy } from "./references.ts";
-import { present } from "../test/support.ts";
 
 const FIXTURES = join(
   dirname(dirname(fileURLToPath(import.meta.url))),
@@ -118,7 +116,7 @@ const truthOf = (t: z.infer<typeof Truth>) => ({
  */
 const UNSEEN: Readonly<Record<string, readonly string[]>> = {
   "v5-percent-entry": ["dead2020"],
-  "v6-unclosed": ["a2unclosed", "a4"],
+  "v6-unclosed": ["a4", "a2unclosed"],
   "v7-unbalanced-field": ["a2brace", "a4"],
   "v13-percent-text": ["pt1", "k2inComment"],
 };
@@ -458,11 +456,23 @@ describe("TeX's execution order across files: an include is read where it stands
     ).toEqual([["file", "refs", ["a2024"]]]);
   });
 
-  it("a declaration in an include is placed in that file", () => {
+  it("a declaration is placed in the file that holds it", () => {
     const b = sourcesIn("v17-include-order").bibliography;
     expect(
-      databasesOf(b).map((d) => [basename(d.declared.file), d.declared.span]),
-    ).toEqual([["bibsetup.tex", { start: 0, end: "\\bibliography".length }]]);
+      databasesOf(b).map((d) => [
+        basename(d.declared.file),
+        d.declared.span.start,
+      ]),
+    ).toEqual([
+      ["bibsetup.tex", 0],
+      [
+        "paper.tex",
+        readFileSync(
+          join(FIXTURES, "v17-include-order", "paper.tex"),
+          "utf8",
+        ).indexOf("\\bibliography{later}"),
+      ],
+    ]);
   });
 });
 

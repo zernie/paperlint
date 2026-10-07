@@ -25,37 +25,37 @@ import type { BibReader } from "../../ports/bib-reader.ts";
 /** A title as written, not sentence-cased; no field kept as raw LaTeX. */
 const OPTIONS: Readonly<Options> = { sentenceCase: false, verbatimFields: [] };
 
-const nameOf = (c: Readonly<Creator>): BibName => ({
-  ...(c.lastName === undefined ? {} : { lastName: c.lastName }),
-  ...(c.firstName === undefined ? {} : { firstName: c.firstName }),
-  ...(c.prefix === undefined ? {} : { prefix: c.prefix }),
-  ...(c.suffix === undefined ? {} : { suffix: c.suffix }),
-  ...(c.name === undefined ? {} : { name: c.name }),
-});
+/** A name's parts, those it has: the parser leaves the others out. */
+const nameOf = (c: Readonly<Creator>): BibName =>
+  Object.fromEntries(
+    Object.entries({
+      lastName: c.lastName,
+      firstName: c.firstName,
+      prefix: c.prefix,
+      suffix: c.suffix,
+      name: c.name,
+    }).filter((kv): kv is [string, string] => kv[1] !== undefined),
+  );
 
 const isText = (x: unknown): x is string => typeof x === "string";
-
-/** One name of a name list: parsed into parts, or a literal the parser kept whole. */
-const nameIn = (c: Readonly<Creator> | string): BibName =>
-  isText(c) ? { name: c } : nameOf(c);
+const isName = (x: unknown): x is Readonly<Creator> =>
+  typeof x === "object" && x !== null;
 
 /** An entry's fields and name lists, from the parser's one record of both. */
 function fieldsOf(e: Readonly<Entry>): Pick<BibEntry, "fields" | "names"> {
   const pairs = Object.entries(e.fields);
   const isNames = (k: string): boolean => e.mode[k] === "creatorlist";
   return {
+    // A list field (`keywords`, `publisher`) is joined as BibTeX writes it.
     fields: Object.fromEntries(
       pairs
         .filter(([k]) => !isNames(k))
-        .map(([k, v]) => [
-          k,
-          Array.isArray(v) ? v.filter(isText).join(" and ") : v,
-        ]),
+        .map(([k, v]) => [k, [v].flat().filter(isText).join(" and ")]),
     ),
     names: Object.fromEntries(
       pairs
         .filter(([k]) => isNames(k))
-        .map(([k, v]) => [k, Array.isArray(v) ? v.map(nameIn) : []]),
+        .map(([k, v]) => [k, [v].flat().filter(isName).map(nameOf)]),
     ),
   };
 }

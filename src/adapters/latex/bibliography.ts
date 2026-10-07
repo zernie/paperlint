@@ -32,7 +32,11 @@ import {
 import type { Span } from "../../domain/tex-document.ts";
 import type { BibReader } from "../../ports/bib-reader.ts";
 import type { BibDisk, BibPaper, BibPiece } from "../../ports/latex.ts";
-import { scanSource, type Declaration } from "./declarations.ts";
+import {
+  scanSource,
+  type Declaration,
+  type SourceScan,
+} from "./declarations.ts";
 import { isNode, visited } from "./nodes.ts";
 import { liveRoot, parseLatex, type ParsedTex } from "./parse.ts";
 
@@ -91,6 +95,25 @@ interface Parsed {
   readonly theBibliography: Declared | null;
 }
 
+/** A scanned block, placed in the file that holds it and read as a database. */
+function blockIn(
+  paper: BibPaper,
+  { block, conditional }: SourceScan["blocks"][number],
+  reader: BibReader,
+): Block {
+  const p = placed(paper, block.span);
+  const body = placed(paper, block.body);
+  return {
+    conditional,
+    bib: {
+      writes: block.writes,
+      overwrite: block.overwrite,
+      span: p.span,
+      bib: reader.read(p.piece.path, p.piece.source, body.span),
+    },
+  };
+}
+
 function parsedPaper(
   paper: BibPaper,
   jobname: string,
@@ -107,19 +130,7 @@ function parsedPaper(
     declarations: scan.declarations.map((d) => ({ d, at: declaredAt(d.span) })),
     blocks: scan.blocks
       .filter(({ block }) => block.writes.endsWith(".bib"))
-      .map(({ block, conditional }) => {
-        const p = placed(paper, block.span);
-        const body = placed(paper, block.body);
-        return {
-          conditional,
-          bib: {
-            writes: block.writes,
-            overwrite: block.overwrite,
-            span: p.span,
-            bib: reader.read(p.piece.path, p.piece.source, body.span),
-          },
-        };
-      }),
+      .map((b) => blockIn(paper, b, reader)),
     theBibliography: thb === null ? null : declaredAt(thb),
   };
 }

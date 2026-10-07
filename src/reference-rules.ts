@@ -6,6 +6,8 @@
  *   entry whose authors are the preprint's   paper/author-list (error), on the entry
  *   entry whose identifier provably fails    paper/cite-exists (error), on the entry
  *   no record, or recorded "not checked"     paper/refs-checked (warn) — like pdf/measured
+ *   the build's bibtex read what paperlint    paper/refs-checked (warn): those references were not
+ *   did not (`unseenBy`)                      checked
  *   bibliography edited after the build      paper/refs-fresh (error) — like pdf/fresh
  *
  * While the record is stale, the per-entry rules are silent: they would judge a bibliography
@@ -30,6 +32,8 @@ import {
   checkedBibliography,
   readReferences,
   REFERENCES_FILE,
+  unseenBy,
+  type Unseen,
 } from "./references.ts";
 
 interface Loc {
@@ -69,6 +73,7 @@ type Assessment =
   | {
       readonly kind: "ready";
       readonly sources: PaperSources;
+      readonly unseen: Unseen;
       readonly failing: readonly {
         readonly key: string;
         readonly rule: "author-list" | "cite-exists";
@@ -93,7 +98,12 @@ function assess(deps: SourcesDeps, paperDir: string): Assessment {
       ? [{ key: e.key, rule: "cite-exists" as const, why: e.why ?? "" }]
       : []),
   ]);
-  return { kind: "ready", sources: read.value, failing };
+  return {
+    kind: "ready",
+    sources: read.value,
+    unseen: unseenBy(read.value, doc.bibtex),
+    failing,
+  };
 }
 
 /** Where a finding about entry `key` is reported in paper.tex (the file's start when no entry has it). */
@@ -145,6 +155,8 @@ const META: Readonly<Record<Name, ReferenceRuleModule["meta"]>> = {
     messages: {
       unrecorded: `the references have not been checked — ${BUILD} checks them online and records the result in _build/${REFERENCES_FILE}`,
       notChecked: `the last build could not check the references ({{why}}) — run ${BUILD} with network`,
+      unseen:
+        "the last build's bibtex read {{what}}, which paperlint did not read, so those references were not checked: a database the paper's bibliography does not name, or an entry behind `%` or inside `@comment{…}` — bibtex has no comment syntax and reads it, paperlint's reader skips it. Delete the entry, or remove its `@`",
     },
   },
   "refs-fresh": {
@@ -168,7 +180,15 @@ type Report = {
 
 const AT_START: EntryReport = { kind: "here", span: { start: 0, end: 0 } };
 
-const JUDGES: Readonly<Record<Name, (a: Assessment) => Report[]>> = {
+/** One finding naming what the build's bibtex read and paperlint did not, or none. */
+const unseenReports = (u: Unseen): readonly Report[] => {
+  const what = [...u.databases, ...u.keys.map((k) => `\`${k}\``)];
+  return what.length === 0
+    ? []
+    : [{ at: AT_START, messageId: "unseen", data: { what: what.join(", ") } }];
+};
+
+const JUDGES: Readonly<Record<Name, (a: Assessment) => readonly Report[]>> = {
   "author-list": (a) =>
     a.kind === "ready"
       ? a.failing
@@ -189,12 +209,21 @@ const JUDGES: Readonly<Record<Name, (a: Assessment) => Report[]>> = {
             data: { key: f.key, why: f.why },
           }))
       : [],
-  "refs-checked": (a) =>
-    a.kind === "unrecorded"
-      ? [{ at: AT_START, messageId: "unrecorded" }]
-      : a.kind === "not-checked"
-        ? [{ at: AT_START, messageId: "notChecked", data: { why: a.why } }]
-        : [],
+  "refs-checked": (a) => {
+    switch (a.kind) {
+      case "unrecorded":
+        return [{ at: AT_START, messageId: "unrecorded" }];
+      case "not-checked":
+        return [
+          { at: AT_START, messageId: "notChecked", data: { why: a.why } },
+        ];
+      case "ready":
+        return unseenReports(a.unseen);
+      case "no-bibliography":
+      case "stale":
+        return [];
+    }
+  },
   "refs-fresh": (a) =>
     a.kind === "stale" ? [{ at: AT_START, messageId: "stale" }] : [],
 };
