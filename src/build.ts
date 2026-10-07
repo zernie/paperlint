@@ -67,6 +67,13 @@ import type { Files } from "./ports/files.ts";
 import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import { notWiredSources, type ReadSources } from "./paper-sources.ts";
+import {
+  notWiredRecord,
+  recordingNote,
+  type RecordSources,
+  type TexRun,
+} from "./sources-record.ts";
+import { JOBNAME } from "./domain/sources-record.ts";
 import { recordReferences, REFERENCES_FILE } from "./references.ts";
 import {
   auxBib,
@@ -94,7 +101,7 @@ export const PAPER_MARKERS = ["PIPELINE-STATUS.md", "paper.tex", CONFIG_FILE];
 
 /** The source paperlint compiles, and the job name every output file carries. */
 export const MAIN = "paper.tex";
-export const JOB = "paper";
+export const JOB = JOBNAME;
 
 /**
  * Scripts that `paperlint build` USED to run. Their presence is reported and nothing more: running a
@@ -102,11 +109,16 @@ export const JOB = "paper";
  */
 export const IGNORED_SCRIPTS = ["build.sh", "repro/build-submission.sh"];
 
-/** The pdflatex flags: never stop for input, stop at the first error, and say file:line. */
+/**
+ * The pdflatex flags: never stop for input, stop at the first error, say file:line, and write
+ * `paper.fls` — every file the pass opened, which is how the build learns what the paper is made of
+ * (`sources-record.ts`) without reading its TeX.
+ */
 export const PDFLATEX_FLAGS = [
   "-interaction=nonstopmode",
   "-halt-on-error",
   "-file-line-error",
+  "-recorder",
 ];
 
 /** Everything the steps may know about a paper — parsed from it, not configured. */
@@ -141,6 +153,11 @@ export interface BuildContext {
   readonly checkReferences: CheckReferences;
   /** The paper's files and bibliography (`paperSources`); the CLI wires the real reader. */
   readonly readSources: ReadSources;
+  /**
+   * Writes `_build/sources.json` from TeX's own files after a compile; the CLI wires the real one. A
+   * context without one (a step run on its own, in a test) records nothing and says so.
+   */
+  readonly recordSources?: RecordSources;
 }
 
 export type StepOutcome =
@@ -377,6 +394,7 @@ function latexPass(
     after: hashes(ctx.paperDir),
     markers: logMarkers(log),
     bib: bibInput(ctx.paperDir),
+    fls: readOr(join(ctx.paperDir, `${JOB}.fls`), "utf8"),
     errorLines:
       exitCode === 0
         ? []
@@ -423,28 +441,47 @@ function bibtexPass(ctx: BuildContext, opts: SpawnOptions): Observation | null {
   };
 }
 
+/** What the loop's passes left for the record of the build's sources (`sources-record.ts`). */
+function runOf(history: readonly Observation[]): TexRun {
+  const bibtexRuns = history.flatMap((o) =>
+    o.step === "bibtex" ? [o.exitCode] : [],
+  );
+  return {
+    fls: history.flatMap((o) =>
+      o.step === "latex" && o.fls !== null ? [o.fls] : [],
+    ),
+    bibtexExit: bibtexRuns.at(-1) ?? null,
+  };
+}
+
 /** Run the loop until `nextStep` says done or fail. */
 export function compile(ctx: BuildContext): {
   end: Terminal;
   latex: number;
   bibtex: number;
+  run: TexRun;
 } {
   const history: Observation[] = [];
   const opts = spawnOptions(ctx);
-  // Every log this loop reads is one its own pdflatex wrote. A pdflatex that dies before opening
-  // paper.log would otherwise have an earlier build's error quoted as this one's.
-  rmSync(join(ctx.paperDir, `${JOB}.log`), { force: true });
+  // Every file this loop reads is one its own pdflatex wrote. A pdflatex that dies before opening
+  // paper.log would otherwise have an earlier build's error quoted as this one's, and one that wrote
+  // no paper.fls would hand the record the files an earlier build read.
+  const remove = (ext: string): void => {
+    rmSync(join(ctx.paperDir, `${JOB}.${ext}`), { force: true });
+  };
+  remove("log");
+  remove("fls");
   const runs = { latex: 0, bibtex: 0 };
+  const finish = (end: Terminal) => ({ end, ...runs, run: runOf(history) });
   for (;;) {
     const step = nextStep(summarize(history));
-    if (step.kind === "done" || step.kind === "fail")
-      return { end: step, ...runs };
+    if (step.kind === "done" || step.kind === "fail") return finish(step);
     runs[step.kind]++;
     const seen =
       step.kind === "latex"
         ? latexPass(ctx, step.final, opts)
         : bibtexPass(ctx, opts);
-    if (seen === null) return { end: cannotStart(step.kind), ...runs };
+    if (seen === null) return finish(cannotStart(step.kind));
     history.push(seen);
   }
 }
@@ -471,7 +508,7 @@ export const compileStep: BuildStep = {
     return { yes: true, why: `${facts.main} (${cls}${venue})` };
   },
   run: (ctx) => {
-    const { end, latex, bibtex } = compile(ctx);
+    const { end, latex, bibtex, run } = compile(ctx);
     if (end.kind === "fail") {
       const bin = end.step === "latex" ? "pdflatex" : "bibtex";
       const where =
@@ -507,7 +544,7 @@ export const compileStep: BuildStep = {
       : "";
     return {
       ok: true,
-      note: `${plural(latex, "pdflatex pass", "pdflatex passes")}, ${plural(bibtex, "bibtex run", "bibtex runs")}${warn}`,
+      note: `${plural(latex, "pdflatex pass", "pdflatex passes")}, ${plural(bibtex, "bibtex run", "bibtex runs")}${warn}; ${recordingNote((ctx.recordSources ?? notWiredRecord)(ctx.paperDir, run))}`,
     };
   },
 };
@@ -660,6 +697,11 @@ export interface BuildOptions {
    * and records nothing, and lint warns. The CLI passes `paperSources` over the real ports.
    */
   readSources?: ReadSources;
+  /**
+   * Writes `_build/sources.json` after a compile. Default: none — the build says it recorded nothing,
+   * and lint reports the paper as not built. The CLI passes `recordSources` over the real ports.
+   */
+  recordSources?: RecordSources;
 }
 
 /**
@@ -681,7 +723,10 @@ function baseDefaults({
   readPdf = pdfjsReader,
   projectRoot = env["CLAUDE_PROJECT_DIR"] || cwd,
 }: BuildOptions): Required<
-  Omit<BuildOptions, "measure" | "files" | "checkReferences" | "readSources">
+  Omit<
+    BuildOptions,
+    "measure" | "files" | "checkReferences" | "readSources" | "recordSources"
+  >
 > {
   return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
 }
@@ -699,7 +744,10 @@ const notWired: CheckReferences = (_bib, cache) =>
 /** banal as the measurer, wired from the build's environment: the one piece of root work left here (#76). */
 function defaultMeasurer(
   b: Required<
-    Omit<BuildOptions, "measure" | "files" | "checkReferences" | "readSources">
+    Omit<
+      BuildOptions,
+      "measure" | "files" | "checkReferences" | "readSources" | "recordSources"
+    >
   >,
 ): MeasureGeometry {
   const dirs = hostDirs({ cwd: b.cwd });
@@ -720,6 +768,7 @@ function withDefaults(o: BuildOptions): Required<BuildOptions> {
     files: o.files ?? nodeFiles,
     checkReferences: o.checkReferences ?? notWired,
     readSources: o.readSources ?? notWiredSources,
+    recordSources: o.recordSources ?? notWiredRecord,
   };
 }
 

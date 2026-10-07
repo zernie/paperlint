@@ -86,6 +86,8 @@ export type Observation =
       readonly bib: BibInput;
       /** The first error and its source context, from the log. Empty on success. */
       readonly errorLines: readonly string[];
+      /** What `-recorder` wrote after this pass (`paper.fls`), or null when pdflatex wrote none. */
+      readonly fls: string | null;
     }
   | {
       readonly step: "bibtex";

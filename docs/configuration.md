@@ -388,13 +388,19 @@ papers/my-paper
   (`paper-guards.tex`, `<venue>.tex`), so `\input{paper-guards}` in a preamble resolves with no
   setup and a file of the paper's own wins over paperlint's of the same name. The system tree still
   resolves after them. `paperlint lint` looks for an included file in the same places.
-- **compile** — `pdflatex -interaction=nonstopmode -halt-on-error -file-line-error`, then `bibtex`
+- **compile** — `pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -recorder`, then `bibtex`
   when the `.aux` names a bibliography, then pdflatex again until the `.aux`, `.toc`, `.out` and
   `.bbl` stop changing and the log stops asking for a rerun. bibtex runs again only when the cited
   keys or a `.bib` file changed. After that, one **final** pass defines `\finalpass`, which arms
   the reference guards in `paper-guards.tex`: an undefined `\ref` or `\cite` fails the build
   there instead of printing `??`. A document that still changes after five passes fails, naming
-  the file that kept changing.
+  the file that kept changing. After a green compile the step also writes
+  `_build/sources.json`, the record of what TeX read: every file of the paper directory its passes
+  opened (from the `.fls` that `-recorder` makes), whether each came before or after
+  `\begin{document}`, the `.bib` files TeX itself wrote, the databases and keys bibtex read, and a
+  SHA-256 of each file. Rules read that record instead of reading TeX source, and
+  [`paper/sources-fresh`](rules/paper/sources-fresh.md) reports a paper whose record is missing or
+  older than its files.
 - **measure** — after a green compile, the PDF is read with pdf.js and what it measures is written
   to `_build/paper.facts.json`: the page count, every font the pages draw text with (and whether
   its program is embedded, and whether it is Type 3), and the heights of the last page's two
