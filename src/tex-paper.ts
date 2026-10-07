@@ -14,9 +14,6 @@
  * record, or a stale one, the paper is `paper.tex` alone, and `paper/sources-fresh` says the files it
  * includes went unlinted. Where an include stands in the text is the only thing read from the text:
  * whether the file it names is part of the paper is the record's to say, never the disk's.
- *
- * `readEveryInclude` is the reading this replaced — every include resolved on the TeX search path, no
- * record asked — and stays only for the static `paperSources` until it is deleted.
  */
 import { basename, dirname, join } from "node:path";
 import {
@@ -28,8 +25,6 @@ import type { Span } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
 import type { Files } from "./ports/files.ts";
 import { callerPath } from "./caller-path.ts";
-import type { AbsolutePath } from "./domain/paths.ts";
-import { texSearchPath } from "./package-dirs.ts";
 import { paperRecord, type RecordReadDeps } from "./paper-record.ts";
 import type { Located, TexRuleContext } from "./tex-venue-rules.ts";
 
@@ -60,8 +55,8 @@ export function readPaper(
     record.kind === "fresh"
       ? new Set(record.record.inputs.map((i) => i.path))
       : null;
-  const assembled = assemblePaper(basename(filename), src, {
-    // No record: no include is looked at, so there is nothing to splice and nothing to miss.
+  return assemblePaper(basename(filename), src, {
+    // No record: no include is looked at, so there is nothing to splice.
     includes: listed === null ? () => [] : deps.latex.includes,
     documentBody: deps.latex.documentBody,
     read: (rel) =>
@@ -69,48 +64,6 @@ export function readPaper(
         ? decoded(deps.files.readBytes(callerPath(join(dir, rel))))
         : null,
   });
-  // An include of a file TeX did not read is not missing — it is not part of the paper.
-  return { ...assembled, missing: [] };
-}
-
-/**
- * The paper whose main file is `filename` with the text `src`, every include resolved on the TeX
- * search path whatever TeX read. The static reading `paperSources` is built on; nothing else calls it.
- */
-export function readEveryInclude(
-  filename: string,
-  src: string,
-  deps: PaperDeps,
-): PaperSource {
-  const dir = dirname(filename);
-  return assemblePaper(basename(filename), src, {
-    includes: deps.latex.includes,
-    documentBody: deps.latex.documentBody,
-    read: (rel) => {
-      const at = located(dir, rel, deps.files);
-      return at === null ? null : decoded(deps.files.readBytes(at));
-    },
-  });
-}
-
-/** `rel` in every directory of the paper's TeX search path that holds it, first to last. */
-export const locations = (
-  dir: string,
-  rel: string,
-  files: Files,
-): readonly AbsolutePath[] =>
-  texSearchPath(dir)
-    .map((d) => callerPath(join(d, rel)))
-    .filter((p) => files.isFile(p));
-
-/** `rel` in the first directory of the paper's TeX search path that holds it, or null. */
-const located = (dir: string, rel: string, files: Files): AbsolutePath | null =>
-  locations(dir, rel, files)[0] ?? null;
-
-/** An include that resolved nowhere: the file that wrote it, and the path as written. */
-export interface Unread {
-  readonly file: string;
-  readonly target: string;
 }
 
 /** Line and column (1-based) of an offset in a text. */

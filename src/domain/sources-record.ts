@@ -84,16 +84,6 @@ export type ParsedRecord =
 export const serializeSourcesRecord = (r: SourcesRecord): string =>
   `${JSON.stringify(r, null, 2)}\n`;
 
-// ── reading a record ────────────────────────────────────────────────────────────────────
-
-/** The files TeX read in the body, main file included, in the order TeX first read them. */
-export const bodyInputs = (r: SourcesRecord): readonly string[] =>
-  r.inputs.filter((i) => i.role === "body").map((i) => i.path);
-
-/** The files TeX read only before `\begin{document}`, in the order TeX first read them. */
-export const preambleInputs = (r: SourcesRecord): readonly string[] =>
-  r.inputs.filter((i) => i.role === "preamble").map((i) => i.path);
-
 // ── staleness ───────────────────────────────────────────────────────────────────────────
 
 export type ChangeKind = "edited" | "deleted" | "added";

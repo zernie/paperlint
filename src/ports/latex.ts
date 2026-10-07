@@ -3,9 +3,6 @@
  * parser. The one implementation is `src/adapters/latex/` (unified-latex); `src/cli.ts` wires it.
  */
 import type { Include } from "../domain/paper-source.ts";
-import type { Bibliography } from "../domain/paper-sources.ts";
-import type { AbsolutePath } from "../domain/paths.ts";
-import type { BibReader } from "./bib-reader.ts";
 import type {
   ClassLine,
   DocumentClass,
@@ -26,43 +23,6 @@ export interface Filecontents {
   readonly span: Span;
   /** What it writes: from the line after `\begin{…}{…}` to `\end`. */
   readonly body: Span;
-}
-
-/** One source of a paper, as the bibliography is decided over it. */
-export interface BibSource {
-  readonly path: AbsolutePath;
-  readonly text: string;
-}
-
-/** A stretch of the paper as TeX reads it, copied from one file: `[start, end)` here is `from…` there. */
-export interface BibPiece {
-  readonly start: number;
-  readonly end: number;
-  readonly path: AbsolutePath;
-  /** The whole text of the file at `path`. */
-  readonly source: string;
-  readonly from: number;
-}
-
-/**
- * The paper as TeX executes it: the main file with every include spliced where it stands, and where
- * each stretch came from. Declarations and blocks are read in this order, inside the conditionals and
- * definitions around their include — never file by file.
- */
-export interface BibPaper {
-  /** The main file: `\jobname` is its name. */
-  readonly main: AbsolutePath;
-  readonly text: string;
-  readonly pieces: readonly BibPiece[];
-}
-
-/** What deciding the bibliography asks of the disk, and how it reads a database. */
-export interface BibDisk {
-  /** The `.bib` named (relative to the paper directory, where bibtex runs), or null. */
-  readonly bib: (name: string) => BibSource | null;
-  /** Whether a file is committed — what a fresh checkout of the paper holds. */
-  readonly committed: (p: AbsolutePath) => boolean;
-  readonly reader: BibReader;
 }
 
 export interface LatexReader {
@@ -105,11 +65,6 @@ export interface LatexReader {
   readonly withDocumentClass: (src: string, want: DocumentClass) => string;
   /** Every command that changes the page layout the class sets: margins, text block, line spacing. */
   readonly layoutOverrides: (src: string) => readonly LayoutOverride[];
-  /**
-   * The bibliography of `paper`, decided as TeX and bibtex would from the committed bytes
-   * (`src/domain/paper-sources.ts`).
-   */
-  readonly bibliography: (paper: BibPaper, disk: BibDisk) => Bibliography;
   /**
    * Every live `filecontents` block of `src`, in source order, where each stands: a lookup of the text
    * that wrote a `.bib`, never a decision of what TeX wrote (that is `_build/sources.json`). `jobname`

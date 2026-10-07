@@ -2,8 +2,7 @@
  * The reading every parse-tree rule shares (`readPaper`): the paper's text with the files TeX read
  * spliced in — the files the build's record lists, and no others — and where a finding of that text
  * is reported (`reportInPaper`). The record fed to it is TeX's own answer for a planted paper
- * (`fixtures/paper-sources/<name>/tex-truth.json`). `bodyFiles`, the old static answer to "which
- * files", is still here until it goes (docs/design/paper-sources.md §1).
+ * (`fixtures/paper-sources/<name>/tex-truth.json`).
  */
 import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
@@ -11,7 +10,6 @@ import { memoryFiles } from "./adapters/memory/index.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import { join } from "node:path";
 import { texInputsDir } from "./package-dirs.ts";
-import { bodyFiles } from "./paper-sources.ts";
 import { readPaper, reportInPaper } from "./tex-paper.ts";
 import {
   builtFixture,
@@ -37,7 +35,6 @@ describe("readPaper — the paper as the rules read it, from the files TeX read"
     const main = textOf(files);
     const intro = files["/p/sections/intro.tex"] ?? "";
     expect(p.text).toBe(main.replace("\\input{sections/intro}", intro));
-    expect(p.missing).toEqual([]);
     expect(p.main).toBe("paper.tex");
   });
 
@@ -63,7 +60,6 @@ describe("readPaper — the paper as the rules read it, from the files TeX read"
     const p = readPaper(MAIN, textOf(files), proseDeps(files));
     expect(p.text).toBe(textOf(files));
     expect(p.segments).toHaveLength(1);
-    expect(p.missing).toEqual([]);
   });
 
   it("🔴 with a stale record, the paper is paper.tex alone", () => {
@@ -142,69 +138,6 @@ describe("readPaper — which files, in which order", () => {
     );
     const p = readPaper(MAIN, textOf(files), proseDeps(files));
     expect(p.text).toBe("\\newcommand{\\x}{y}\n\n\\begin{document}\nText.\n");
-  });
-});
-
-describe("bodyFiles — the files of the body lint reads on their own", () => {
-  const doc = (preamble: string, body: string): string =>
-    `\\documentclass{article}\n${preamble}\n\\begin{document}\n${body}\n\\end{document}\n`;
-  const files = (extra: Record<string, string> = {}) =>
-    memoryFiles({
-      "/p/macros.tex": "\\newcommand{\\x}{y}",
-      "/p/sections/a.tex": "A\n\\input{sections/b}\n",
-      "/p/sections/b.tex": "B",
-      [join(texInputsDir(), "guards.tex")]: "G",
-      ...extra,
-    });
-
-  it("every file an include in the document body brings in, nested ones too, by absolute path", () => {
-    expect(
-      bodyFiles("/p/paper.tex", doc("", "\\input{sections/a}"), {
-        files: files(),
-        latex: latexReader,
-      }),
-    ).toEqual({
-      files: ["/p/sections/a.tex", "/p/sections/b.tex"],
-      missing: [],
-    });
-  });
-
-  it("not a preamble include (macros), and not a file found only in paperlint's inputs", () => {
-    expect(
-      bodyFiles(
-        "/p/paper.tex",
-        doc("\\input{macros}", "\\input{guards}\nText."),
-        { files: files(), latex: latexReader },
-      ),
-    ).toEqual({ files: [], missing: [] });
-  });
-
-  it("🔴 a file included in the preamble AND in the body is body: the role is the file's, across every include of it", () => {
-    expect(
-      bodyFiles(
-        "/p/paper.tex",
-        doc("\\input{sections/b}", "\\input{sections/b}\nText."),
-        { files: files(), latex: latexReader },
-      ),
-    ).toEqual({ files: ["/p/sections/b.tex"], missing: [] });
-  });
-
-  it("an include that resolves nowhere is named, with the file that wrote it", () => {
-    expect(
-      bodyFiles("/p/paper.tex", doc("", "\\input{gone}"), {
-        files: files(),
-        latex: latexReader,
-      }),
-    ).toEqual({ files: [], missing: [{ file: "paper.tex", target: "gone" }] });
-  });
-
-  it("a main file with no document environment: every include is the body", () => {
-    expect(
-      bodyFiles("/p/paper.tex", "\\input{sections/b}", {
-        files: files(),
-        latex: latexReader,
-      }),
-    ).toEqual({ files: ["/p/sections/b.tex"], missing: [] });
   });
 });
 

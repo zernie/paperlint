@@ -28,7 +28,6 @@
  * the run's own output.
  */
 import { basename, dirname } from "node:path";
-import { zip } from "remeda";
 import { callerPath } from "./caller-path.ts";
 import { MAIN_FILE } from "./domain/paper-sources.ts";
 import type { EntryVerdict } from "./ports/check-references.ts";
@@ -198,7 +197,7 @@ const META: Readonly<Record<Name, ReferenceRuleModule["meta"]>> = {
 
 interface Report {
   /** Where in paper.tex; the start of the file when absent. */
-  readonly at?: EntryReport;
+  readonly at?: EntryReport | undefined;
   readonly messageId: string;
   readonly data?: Record<string, string>;
 }
@@ -292,8 +291,8 @@ function verdictReports(
     flagged.map(([f]) => f),
     deps,
   );
-  return zip(flagged, at).map(([[, v], place]) => ({
-    at: place,
+  return flagged.map(([, v], i) => ({
+    at: at[i],
     messageId,
     data: { key: v.key, why: v.why ?? "" },
   }));

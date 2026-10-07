@@ -5,10 +5,8 @@
 import { describe, expect, it } from "vitest";
 import { parseSha256 } from "./sha256.ts";
 import {
-  bodyInputs,
   changesSince,
   describeChanges,
-  preambleInputs,
   serializeSourcesRecord,
   type SourcesRecord,
 } from "./sources-record.ts";
@@ -40,16 +38,6 @@ describe("serializing a record", () => {
     expect(serializeSourcesRecord({ ...RECORD, bibtex: { ran: false } })).toBe(
       `${JSON.stringify({ ...RECORD, bibtex: { ran: false } }, null, 2)}\n`,
     );
-  });
-});
-
-describe("reading a record", () => {
-  it("the body files are the main file and what TeX read after \\begin{document}, in the order it first read them", () => {
-    expect(bodyInputs(RECORD)).toEqual(["paper.tex", "sections/intro.tex"]);
-  });
-
-  it("the preamble files are those it read only before", () => {
-    expect(preambleInputs(RECORD)).toEqual(["macros.tex"]);
   });
 });
 

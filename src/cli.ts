@@ -52,14 +52,12 @@ import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { bibReader } from "./adapters/bibtex/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
-import { gitCommitted } from "./adapters/git/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import {
   hostDirs,
   nodeAdapters,
   nodeFiles,
   nodeListDir,
-  spawnProcess,
 } from "./adapters/node/index.ts";
 import { probeVideo } from "./adapters/mp4box/index.ts";
 import { imageSize } from "./adapters/png/index.ts";
@@ -309,24 +307,16 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
   unknown key, in either file, is an error.
 `;
 
-/** What reads a paper's sources (`paperSources`): the disk, the LaTeX reader, git's index, the bibtex reader. */
-const SOURCES_DEPS = {
-  files: nodeFiles,
-  latex: latexReader,
-  committed: gitCommitted(spawnProcess(), process.env),
-  bib: bibReader,
-};
-
 /** What reads the build's record of a paper: the disk, and the schema its text is parsed with. */
 const RECORD_DEPS = { files: nodeFiles, codec: sourcesCodec };
 
 /** What reads the bibliography the last build recorded: the record, and the readers of its databases and blocks. */
 const RECORDED_DEPS = { ...RECORD_DEPS, latex: latexReader, bib: bibReader };
 
-/** What the rules over a paper.tex read with: the paper's sources, the build's record, and the shipped presets. */
+/** What the rules over a paper.tex read with: the paper's disk and LaTeX reader, the build's record, and the shipped presets. */
 const TEX_RULE_DEPS = {
-  ...SOURCES_DEPS,
   ...RECORD_DEPS,
+  latex: latexReader,
   venuesDir: presetsDir(),
 };
 

@@ -1,6 +1,6 @@
 /**
  * The paper as one text: includes spliced where they stand, every character mapped back to its
- * file, a missing file reported, a subfile's body only, and a file that includes itself entered once.
+ * file, a file with nothing behind it left out, a subfile's body only, and a file that includes itself entered once.
  * The reader is a stand-in that finds `\input{…}` by position, so these tests are about assembling,
  * not about parsing LaTeX (the LaTeX adapter's own tests cover `includes`).
  */
@@ -42,7 +42,6 @@ describe("assemblePaper — the text TeX reads", () => {
       deps({ "s/one.tex": "one", "two.tex": "two" }),
     );
     expect(p.text).toBe("Aone\nBtwo\nC");
-    expect(p.missing).toEqual([]);
     expect([...new Set(p.segments.map((g) => g.file))]).toEqual([
       "paper.tex",
       "s/one.tex",
@@ -66,18 +65,10 @@ describe("assemblePaper — the text TeX reads", () => {
     });
   });
 
-  it("🔴 a missing file is reported where it stands, and left out", () => {
-    const main = "a\\input{gone}b";
-    const p = assemblePaper("paper.tex", main, deps({}));
+  it("a file the reader has none of contributes nothing", () => {
+    const p = assemblePaper("paper.tex", "a\\input{gone}b", deps({}));
     expect(p.text).toBe("ab");
-    expect(p.missing).toEqual([
-      {
-        file: "paper.tex",
-        target: "gone",
-        span: { start: 1, end: 13 },
-        via: { start: 1, end: 13 },
-      },
-    ]);
+    expect(p.segments.map((g) => g.file)).toEqual(["paper.tex", "paper.tex"]);
   });
 });
 
