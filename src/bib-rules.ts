@@ -33,11 +33,7 @@ import {
 export type { EntryReport } from "./recorded-bibliography.ts";
 
 /** `% eslint-disable-next-line <rule>` (a reason after ` -- ` or not) on the line above `at` in `text`. */
-function directiveAbove(
-  text: string,
-  at: number,
-  rule: string,
-): boolean {
+function directiveAbove(text: string, at: number, rule: string): boolean {
   const lineStart = text.lastIndexOf("\n", at - 1) + 1;
   const above = text.slice(
     text.lastIndexOf("\n", lineStart - 2) + 1,
