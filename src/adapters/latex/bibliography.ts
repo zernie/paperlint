@@ -139,7 +139,13 @@ function parsedPaper(
 interface Decide {
   readonly name: string;
   readonly declared: Declared;
+  /**
+   * The file a run where no block writes reads. When no block writes this name, the `.bib` on disk,
+   * committed or not: it is the paper's. When some block does, only a committed one: an uncommitted
+   * file of that name is a build's leftover, which a fresh checkout does not have.
+   */
   readonly file: BibText | null;
+  /** The committed `.bib` of this name, which a block without `[overwrite]` does not replace. */
   readonly committed: BibText | null;
 }
 
@@ -205,14 +211,16 @@ function decided(
 ): readonly Database[] {
   const fileName = fileNameOf(d.name);
   const found = disk.bib(fileName);
-  const file =
+  const onDisk =
     found === null ? null : disk.reader.readFile(found.path, found.text);
+  const committed =
+    onDisk !== null && disk.committed(onDisk.path) ? onDisk : null;
+  const mine = blocks.filter((b) => normalize(b.bib.writes) === fileName);
   const at: Decide = {
     ...d,
-    file,
-    committed: file !== null && disk.committed(file.path) ? file : null,
+    file: mine.length === 0 ? onDisk : committed,
+    committed,
   };
-  const mine = blocks.filter((b) => normalize(b.bib.writes) === fileName);
   return runsOf(at, mine).map((r) => databaseOf(at, r));
 }
 

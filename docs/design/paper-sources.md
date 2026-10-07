@@ -100,7 +100,10 @@ tree, as TeX executes the paper:
   (`argumentPieces`).
 - **Committed bytes.** A block without `[overwrite]` writes its file only when none exists, and after
   one build TeX's own copy exists. So the block is `embedded` unless a file of that name in git's
-  index holds something else: `conflict`. "Same" means bibtex takes the same from both (§4).
+  index holds something else: `conflict`. "Same" means bibtex takes the same from both (§4). For a
+  name some block writes, the run where no block does sees only a committed file too: an uncommitted
+  one is a build's leftover (`missing`, and the post-build check names what bibtex read from it). A
+  `.bib` no block writes is the paper's, committed or not.
 - **Where bibtex looks.** A database is resolved in the paper's directory (an absolute name as it is);
   the build sets no `BIBINPUTS`.
 
