@@ -71,7 +71,7 @@ export function blockOf(
   });
 }
 
-export const isBlock = (n: Node): n is Readonly<Ast.VerbatimEnvironment> =>
+const isBlock = (n: Node): n is Readonly<Ast.VerbatimEnvironment> =>
   n.type === "verbatim" && FILECONTENTS.has(n.env);
 
 /** Every live `filecontents` block of a source whose main file's name is `jobname`, in source order. */

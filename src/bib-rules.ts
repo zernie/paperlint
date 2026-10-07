@@ -33,7 +33,7 @@ import {
 export type { EntryReport } from "./recorded-bibliography.ts";
 
 /** `% eslint-disable-next-line <rule>` (a reason after ` -- ` or not) on the line above `at` in `text`. */
-export function directiveAbove(
+function directiveAbove(
   text: string,
   at: number,
   rule: string,
