@@ -321,6 +321,9 @@ const SOURCES_DEPS = {
 /** What reads the build's record of a paper: the disk, and the schema its text is parsed with. */
 const RECORD_DEPS = { files: nodeFiles, codec: sourcesCodec };
 
+/** What reads the bibliography the last build recorded: the record, and the readers of its databases and blocks. */
+const RECORDED_DEPS = { ...RECORD_DEPS, latex: latexReader, bib: bibReader };
+
 /** What the rules over a paper.tex read with: the paper's sources, and the shipped presets. */
 const TEX_RULE_DEPS = {
   ...SOURCES_DEPS,
@@ -372,7 +375,7 @@ export function buildConfig(
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
     ...paperRules,
-    ...referenceRules(SOURCES_DEPS),
+    ...referenceRules({ ...SOURCES_DEPS, ...RECORDED_DEPS }),
     ...sourcesRules(RECORD_DEPS),
   };
   // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
@@ -464,7 +467,7 @@ export function buildConfig(
           },
         },
         paper: { rules: texPaperRules },
-        bib: { rules: bibRules(SOURCES_DEPS) },
+        bib: { rules: bibRules(RECORDED_DEPS) },
         talk: { rules: talkRules(TALK_RULE_DEPS) },
         format: {
           rules: {

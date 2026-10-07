@@ -30,6 +30,8 @@ import {
 } from "./references.ts";
 import { bibReader } from "./adapters/bibtex/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
+import { blockBody, recordText } from "../test/recorded-paper.ts";
 import {
   notWiredSources,
   paperSources,
@@ -88,13 +90,53 @@ const offline: CheckReferences = (_bib, cache) =>
     cache,
   });
 
-/** The paper's sources over `files`, every file counted as committed. */
+/** The paper's sources over `files`, every file counted as committed, and the build's record of them. */
 const depsOf = (files: ReturnType<typeof memoryFiles>) => ({
   files,
+  codec: sourcesCodec,
   latex: latexReader,
   committed: { isCommitted: () => true },
   bib: bibReader,
 });
+
+/**
+ * What a build leaves in the paper directory for the rules that read the bibliography TeX read: the
+ * record of the build (`_build/sources.json`), and, for a paper whose bibliography is a block, the
+ * `.bib` TeX wrote from it. A paper with its own `refs.bib` on disk has that one opened.
+ */
+function leaveBuild(files: ReturnType<typeof memoryFiles>): void {
+  const text = (name: string): string | null => {
+    const b = files.readBytes(absolutePath(`${PAPER}/${name}`));
+    return b === null ? null : new TextDecoder().decode(b);
+  };
+  const tex = text("paper.tex") ?? "";
+  const own = text("refs.bib");
+  const written = own === null;
+  const bib = own ?? blockBody(tex);
+  if (written)
+    files.writeAtomic(
+      absolutePath(`${PAPER}/refs.bib`),
+      new TextEncoder().encode(bib),
+    );
+  files.writeAtomic(
+    absolutePath(`${PAPER}/_build/sources.json`),
+    new TextEncoder().encode(
+      recordText(
+        { "paper.tex": tex, "refs.bib": bib },
+        {
+          inputs: written
+            ? [["paper.tex", "body"]]
+            : [
+                ["paper.tex", "body"],
+                ["refs.bib", "preamble"],
+              ],
+          written: written ? ["refs.bib"] : [],
+          databases: ["refs.bib"],
+        },
+      ),
+    ),
+  );
+}
 
 /** The bibliography the build checks for the paper in `files`. */
 const checkedIn = (files: ReturnType<typeof memoryFiles>) => {
@@ -128,6 +170,7 @@ async function build(tex: string, check: CheckReferences) {
     ...ctx(files),
     checkReferences: check,
   });
+  leaveBuild(files);
   return { files, out };
 }
 
@@ -336,6 +379,8 @@ describe("the reference rules, when the record is not about the bibliography", (
     const edited = TEX(
       ENTRIES.replace("Schick, Timo", "Schick, Timo and Hambro, Eric"),
     );
+    // The .bib TeX wrote is a build product: a fresh checkout does not hold it.
+    files.map.delete(`${PAPER}/refs.bib`);
     const msgs = await lint(files, edited);
     expect(msgs.map((m) => [m.ruleId, m.severity])).toEqual([
       ["paper/refs-fresh", 2],
@@ -406,6 +451,7 @@ const record = (
   files: ReturnType<typeof memoryFiles>,
   body: Record<string, unknown>,
 ) => {
+  leaveBuild(files);
   const bib = checkedIn(files);
   files.writeAtomic(
     absolutePath(referencesPath(PAPER)),
@@ -462,7 +508,7 @@ describe("the reference rules over a record written by hand", () => {
 });
 
 describe("the reference rules over refs.bib, and on other files", () => {
-  it("an external refs.bib: the finding sits at the \\bibliography that declares it, naming the entry's file, line and column", async () => {
+  it("an external refs.bib: the finding sits at the top of paper.tex, naming the entry's file, line and column", async () => {
     const tex =
       "\\documentclass{acmart}\n\\begin{document}x\n\\bibliography{refs}\\end{document}\n";
     const files = memoryFiles({
@@ -475,22 +521,83 @@ describe("the reference rules over refs.bib, and on other files", () => {
     });
     const msgs = await lint(files, tex);
     expect(msgs.map((m) => [m.ruleId, m.line, m.column])).toEqual([
-      ["paper/author-list", 3, 1],
+      ["paper/author-list", 1, 1],
     ]);
     expect(msgs[0]?.message).toMatch(/^refs\.bib:1:1: `schick2023`/);
   });
 });
 
-describe("a finding is about the entry that failed, not about its key", () => {
-  it("🔴 one key in two candidate databases, only the later failing: the finding names the failing copy, not the first", async () => {
-    const tex =
-      "\\documentclass{acmart}\n\\newif\\ifanon\n\\begin{document}x\n\\ifanon\\bibliography{anon}\\else\\bibliography{refs}\\fi\n\\end{document}\n";
-    const copy = (title: string) =>
-      `@misc{k,\n  title = {${title}},\n  url = {https://x.org}\n}\n`;
+describe("author-list and cite-exists judge what the last build's bibtex read — and only while that record is current", () => {
+  const failing = {
+    status: "checked",
+    entries: [
+      { key: "schick2023", exists: "true", authors: "mismatch", why: "w" },
+      { key: "other", exists: "false", authors: "match", why: "w" },
+    ],
+  };
+  const judged = async (files: ReturnType<typeof memoryFiles>, tex: string) =>
+    (await lint(files, tex))
+      .map((m) => m.ruleId)
+      .filter((r) => r === "paper/author-list" || r === "paper/cite-exists");
+
+  it("with a current record, both rules report the failing entries", async () => {
+    const tex = TEX(ENTRIES);
+    const files = memoryFiles({ [`${PAPER}/paper.tex`]: tex });
+    record(files, failing);
+    expect(await judged(files, tex)).toEqual([
+      "paper/author-list",
+      "paper/cite-exists",
+    ]);
+  });
+
+  it("🔴 with no record of the build, the verdicts are not judged — paper/sources-fresh is the one to speak", async () => {
+    const tex = TEX(ENTRIES);
+    const files = memoryFiles({ [`${PAPER}/paper.tex`]: tex });
+    record(files, failing);
+    files.map.delete(`${PAPER}/_build/sources.json`);
+    expect(await judged(files, tex)).toEqual([]);
+  });
+
+  it("🔴 once a file the build read has changed, the record is stale and so are its verdicts", async () => {
+    const tex = TEX(ENTRIES);
     const files = memoryFiles({
       [`${PAPER}/paper.tex`]: tex,
-      [`${PAPER}/anon.bib`]: copy("Good"),
-      [`${PAPER}/refs.bib`]: `\n\n${copy("Fake")}`,
+      [`${PAPER}/refs.bib`]: `${ENTRIES}\n`,
+    });
+    record(files, failing);
+    expect(await judged(files, tex)).toEqual([
+      "paper/author-list",
+      "paper/cite-exists",
+    ]);
+    files.writeAtomic(
+      absolutePath(`${PAPER}/refs.bib`),
+      new TextEncoder().encode(`${ENTRIES}\n\n`),
+    );
+    expect(await judged(files, tex)).toEqual([]);
+  });
+
+  it("verdicts for other databases than the ones bibtex opened are not laid on these entries", async () => {
+    const tex = TEX(ENTRIES);
+    const files = memoryFiles({ [`${PAPER}/paper.tex`]: tex });
+    record(files, { ...failing, entries: [failing.entries[0]] });
+    expect(await judged(files, tex)).toEqual([]);
+  });
+});
+
+describe("a finding is about the entry that failed, not about its key", () => {
+  it("🔴 one key in two databases bibtex opened, only the later failing: the finding names the failing copy, not the first", async () => {
+    const tex =
+      "\\documentclass{acmart}\n\\begin{document}x\n\\bibliography{anon,refs}\n\\end{document}\n";
+    const copy = (title: string) =>
+      `@misc{k,\n  title = {${title}},\n  url = {https://x.org}\n}\n`;
+    const bibs = {
+      "anon.bib": copy("Good"),
+      "refs.bib": `\n\n${copy("Fake")}`,
+    };
+    const files = memoryFiles({
+      [`${PAPER}/paper.tex`]: tex,
+      [`${PAPER}/anon.bib`]: bibs["anon.bib"],
+      [`${PAPER}/refs.bib`]: bibs["refs.bib"],
     });
     // The checker is handed each copy, and fails the one titled Fake.
     await referencesStep.run({
@@ -508,12 +615,30 @@ describe("a finding is about the entry that failed, not about its key", () => {
           cache,
         }),
     });
+    files.writeAtomic(
+      absolutePath(`${PAPER}/_build/sources.json`),
+      new TextEncoder().encode(
+        recordText(
+          { "paper.tex": tex, ...bibs },
+          {
+            inputs: [
+              ["paper.tex", "body"],
+              ["anon.bib", "preamble"],
+              ["refs.bib", "preamble"],
+            ],
+            databases: ["anon.bib", "refs.bib"],
+          },
+        ),
+      ),
+    );
     const msgs = await lint(files, tex);
     expect(msgs.map((m) => [m.ruleId, m.message.split(": ")[0]])).toEqual([
       ["paper/cite-exists", "refs.bib:3:1"],
     ]);
   });
+});
 
+describe("the reference rules judge paper.tex alone", () => {
   it("only paper.tex is judged", () => {
     const files = memoryFiles({});
     const rules = referenceRules(depsOf(files));
@@ -522,7 +647,10 @@ describe("a finding is about the entry that failed, not about its key", () => {
         rule.create({
           filename: `${PAPER}/notes.tex`,
           cwd: "/work",
-          sourceCode: { getLocFromIndex: () => ({ line: 1, column: 0 }) },
+          sourceCode: {
+            raw: "",
+            getLocFromIndex: () => ({ line: 1, column: 0 }),
+          },
           report: () => {
             throw new Error("a file that is not paper.tex is never reported");
           },

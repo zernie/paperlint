@@ -58,10 +58,7 @@ the count is not yet classified.
 | leaking-queries-acsac25 | `tex/claim-provenance` | 25 | sampled | percentages in the experiments and the appendix («86%», «90%», «72%») |
 | leaking-queries-acsac25 | `paper/section-word` | 1 | real | `\S\ref{subsec:results}` in `sections_full_version/discussion.tex`, where IEEE style writes «Section» |
 | barovox-acsac24, llm-splained-acsac25, rr-dataset-quality-acsac24, secure-acsac24 | `paper/refs-checked` | 1 | known | the bibliography is the `.bib` each paper declares (`\bibliography`, `\addbibresource`), read where TeX reads it; the lint test never builds, so no build checked it |
-| barovox-acsac24 | `bib/reachable-entry` | 92 | real / known | entries with no doi, url, arXiv id or `\url`: 55 are cited in the committed `paper.bbl` (real — the reader has nothing to follow), 37 are not cited (known: the rule judges every entry of the database, and bibtex prints only cited ones) |
-| llm-splained-acsac25 | `bib/reachable-entry` | 55 | sampled | the same, over its three `bibs/*.bib`; its `paper.bbl` is biblatex's, so the count is not split by citation |
-| rr-dataset-quality-acsac24 | `bib/reachable-entry` | 11 | real | all 11 are cited in `paper.bbl` (`chen2022neural`, `fu2022vulrepair`, …) |
-| secure-acsac24 | `bib/reachable-entry` | 77 | real / known | 18 cited (real); 59 uncited — the paper's `references.bib` carries ACM's sample entries (`Kosiur01`, `JCohen96`), which it never cites (known, as above) |
+| barovox-acsac24, llm-splained-acsac25, rr-dataset-quality-acsac24, secure-acsac24 | `bib/reachable-entry` | 0 | known | the rule judges the entries of the databases the build's bibtex opened (`_build/sources.json`); the lint test never builds, so it is silent here and `paper/sources-fresh` says so. Measured on 2026-09-29, when it read the `.bib` files each paper declares: 92, 55, 11 and 77 entries with no doi, url, arXiv id or `\url` (barovox: 55 of its 92 cited in the committed `paper.bbl`; rr-dataset-quality: all 11; secure: 18 of 77, the rest ACM's sample entries it never cites) — a count nobody re-measures until the corpus is built |
 
 One limit the corpus shows and no count records:
 
