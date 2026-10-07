@@ -54,18 +54,16 @@ const splitNames = (pieces: readonly ArgumentPiece[]): readonly Name[] => {
     (acc, p) =>
       p.macro
         ? { ...acc, current: [...acc.current, p] }
-        : p.text
-            .split(",")
-            .reduce(
-              (a, text, i) =>
-                i === 0
-                  ? { ...a, current: [...a.current, { text, macro: false }] }
-                  : {
-                      done: [...a.done, a.current],
-                      current: [{ text, macro: false }],
-                    },
-              acc,
-            ),
+        : p.text.split(",").reduce(
+            (a, text, i) =>
+              i === 0
+                ? { ...a, current: [...a.current, { text, macro: false }] }
+                : {
+                    done: [...a.done, a.current],
+                    current: [{ text, macro: false }],
+                  },
+            acc,
+          ),
     { done: [], current: [] },
   );
   return [...end.done, end.current];
