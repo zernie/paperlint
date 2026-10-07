@@ -226,6 +226,24 @@ describe("bib/reachable-entry — a block is only a lookup of where the text sta
       [1, 1, expect.stringMatching(/^bibblock\.tex:3:1: `lost`/)],
     ]);
   });
+
+  it("🔴 two blocks with the same entries: the finding is in the block that wrote the database bibtex opened", async () => {
+    const entry = "@article{lost, title = {x}}";
+    const block = (name: string) =>
+      `\\begin{filecontents*}{${name}}\n${entry}\n\\end{filecontents*}\n`;
+    const { messages } = await lint({
+      tex: `\\documentclass{acmart}\n${block("a.bib")}${block("b.bib")}\\begin{document}\nx\n\\bibliography{b}\n\\end{document}\n`,
+      files: { "a.bib": `${entry}\n`, "b.bib": `${entry}\n` },
+      record: {
+        inputs: [["paper.tex", "body"]],
+        written: ["a.bib", "b.bib"],
+        databases: ["b.bib"],
+      },
+    });
+    expect(found(messages, "reachable-entry")).toEqual([
+      [6, 1, expect.stringMatching(/`lost`/)],
+    ]);
+  });
 });
 
 describe("bib/reachable-entry — which bibliography: the one bibtex opened", () => {

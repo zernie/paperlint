@@ -19,6 +19,7 @@ import {
   SOURCES_DIR,
   SOURCES_FILE,
   SOURCES_SCHEMA,
+  spelledIn,
   type RecordedBibtex,
   type RecordedInput,
   type SourcesRecord,
@@ -72,15 +73,6 @@ const distinct = <T>(xs: readonly T[]): readonly T[] => [...new Set(xs)];
 /** A path as the record spells it: relative to the paper directory, `./` and doubled slashes gone. */
 const spelled = (p: string): string => posix.normalize(p);
 
-/** The entry of `names` that is `segment`: itself, else the one entry equal to it ignoring case. */
-const entryFor = (names: readonly string[], segment: string): string => {
-  if (names.includes(segment)) return segment;
-  const [only, ...more] = names.filter(
-    (n) => n.toLowerCase() === segment.toLowerCase(),
-  );
-  return only !== undefined && more.length === 0 ? only : segment;
-};
-
 /**
  * A path of the record spelled as the paper directory's entries spell it. TeX logs the name it opened:
  * on a file system that ignores case that is the source's spelling, while TeX on one that does not
@@ -96,7 +88,8 @@ const spelledOnDisk =
         (at, segment) =>
           posix.join(
             at,
-            entryFor(listDir(callerPath(resolve(paperDir, at))), segment),
+            spelledIn(listDir(callerPath(resolve(paperDir, at))), segment) ??
+              segment,
           ),
         "",
       );

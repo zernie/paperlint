@@ -26,6 +26,7 @@ import type { LatexReader } from "./ports/latex.ts";
 import type { Files } from "./ports/files.ts";
 import { callerPath } from "./caller-path.ts";
 import { paperRecord, type RecordReadDeps } from "./paper-record.ts";
+import { spelledIn } from "./domain/sources-record.ts";
 import type { Located, TexRuleContext } from "./tex-venue-rules.ts";
 
 /** What reading a paper needs: the disk, and the LaTeX reader. */
@@ -53,17 +54,17 @@ export function readPaper(
   const dir = dirname(filename);
   const record = paperRecord(dir, deps);
   const listed =
-    record.kind === "fresh"
-      ? new Set(record.record.inputs.map((i) => i.path))
-      : null;
+    record.kind === "fresh" ? record.record.inputs.map((i) => i.path) : [];
   return assemblePaper(basename(filename), src, {
     // No record: no include is looked at, so there is nothing to splice.
-    includes: listed === null ? () => [] : deps.latex.includes,
+    includes: record.kind === "fresh" ? deps.latex.includes : () => [],
     documentBody: deps.latex.documentBody,
-    read: (rel) =>
-      listed?.has(rel) === true
-        ? decoded(deps.files.readBytes(callerPath(join(dir, rel))))
-        : null,
+    read: (rel) => {
+      const recorded = spelledIn(listed, rel);
+      return recorded === null
+        ? null
+        : decoded(deps.files.readBytes(callerPath(join(dir, recorded))));
+    },
   });
 }
 

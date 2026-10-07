@@ -17,7 +17,7 @@
  * build — and for the entry of every other `.bib`, the finding is at the top of `paper.tex`, the file,
  * line and column of the entry at the front of the message (`refs.bib:12:1:`).
  */
-import { extname, relative, resolve } from "node:path";
+import { extname, posix, relative, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
   sameDatabase,
@@ -26,7 +26,11 @@ import {
 } from "./domain/paper-sources.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import type { Span } from "./domain/tex-document.ts";
-import { JOBNAME, type SourcesRecord } from "./domain/sources-record.ts";
+import {
+  JOBNAME,
+  spelledIn,
+  type SourcesRecord,
+} from "./domain/sources-record.ts";
 import {
   paperRecord,
   type PaperRecord,
@@ -175,10 +179,14 @@ const blockHolding = (
 ): { readonly holder: Holder; readonly bib: BibText } | null =>
   texts
     .flatMap((holder) =>
-      deps.latex.filecontents(holder.text, JOBNAME).map((b) => ({
-        holder,
-        bib: deps.bib.read(holder.path, holder.text, b.body),
-      })),
+      deps.latex
+        .filecontents(holder.text, JOBNAME)
+        // The block that wrote this database: its file, then its text.
+        .filter((b) => spelledIn([posix.normalize(b.writes)], db.name) !== null)
+        .map((b) => ({
+          holder,
+          bib: deps.bib.read(holder.path, holder.text, b.body),
+        })),
     )
     .find((b) => sameDatabase(b.bib, db.bib)) ?? null;
 

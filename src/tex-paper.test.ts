@@ -189,3 +189,17 @@ describe("reportInPaper — where a finding of the assembled text is reported", 
     ]);
   });
 });
+
+describe("readPaper — how an include names its file", () => {
+  it("🔴 an include spelled otherwise than the disk is the file the record names: TeX opened it by either spelling", () => {
+    const files = builtPaper(
+      "/p",
+      { "paper.tex": "x\\input{Sections/Intro}y", "sections/intro.tex": "I" },
+      [
+        { path: "paper.tex", role: "body" },
+        { path: "sections/intro.tex", role: "body" },
+      ],
+    );
+    expect(readPaper(MAIN, textOf(files), proseDeps(files)).text).toBe("xI\ny");
+  });
+});

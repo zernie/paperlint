@@ -116,3 +116,21 @@ export function changesSince(
 /** `paper.tex edited, sections/a.tex deleted` — what a finding names. */
 export const describeChanges = (cs: readonly Change[]): string =>
   cs.map((c) => `${c.path} ${c.change}`).join(", ");
+
+/**
+ * The name among `names` that `name` stands for: `name` itself, else the one name equal to it ignoring
+ * case — null when there is none, or several. TeX opens a file by the name the source gives it; on a
+ * file system that ignores case that is the source's spelling, on one that does not TeX retries
+ * without case, and the record holds the disk's spelling either way. A name and the record's spelling
+ * of it are matched by this, once, wherever one is looked up in the other.
+ */
+export function spelledIn(
+  names: readonly string[],
+  name: string,
+): string | null {
+  if (names.includes(name)) return name;
+  const [only, ...more] = names.filter(
+    (n) => n.toLowerCase() === name.toLowerCase(),
+  );
+  return only !== undefined && more.length === 0 ? only : null;
+}

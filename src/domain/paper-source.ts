@@ -21,7 +21,7 @@
  * file the caller's `read` has none of contributes nothing; a file that includes itself, directly or
  * through others, is spliced once.
  */
-import { extname, normalize } from "node:path";
+import { posix } from "node:path";
 import type { Span } from "./tex-document.ts";
 
 /** One `\input`, `\include` or `\subfile` in a source: the path as written and where the macro stands. */
@@ -62,8 +62,8 @@ export interface PaperSource {
 
 /** The paths TeX tries for a target: `name.tex`, then `name` — or the name alone if it has one. */
 const candidates = (target: string): readonly string[] => {
-  const t = normalize(target.trim());
-  return extname(t) === "" ? [`${t}.tex`, t] : [t];
+  const t = posix.normalize(target.trim());
+  return posix.extname(t) === "" ? [`${t}.tex`, t] : [t];
 };
 
 /** The first candidate path that exists, with its text. */
