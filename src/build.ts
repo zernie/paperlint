@@ -292,7 +292,6 @@ export const inputsStep: BuildStep = {
     yes: true,
     why: `TEXINPUTS += the paper's directory, then ${texInputsDir()}`,
   }),
-  // The same search path the lint rules read includes through: one answer to which file is meant.
   // A pass runs IN the paper's directory, so that directory is `.` here. TeX names a file it finds
   // through an absolute entry by that absolute path: with the directory itself on TEXINPUTS, the
   // `broken` build fixture's log said `/tmp/…/paper.tex:6:` instead of `./paper.tex:6:` (measured).

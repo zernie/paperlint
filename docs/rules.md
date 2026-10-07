@@ -200,13 +200,13 @@ Put it in your repository and extend it by a path relative to the file that name
 
 ```
 package.json
-paperlint.json (optional)
+paperlint.json            (optional)
 venues/
- usenix-sec.jsonc
+  usenix-sec.jsonc
 papers/
- usenix-2027/
- paper.tex
- paperlint.json { "extends": "../../venues/usenix-sec.jsonc", "kind": "full" }
+  usenix-2027/
+    paper.tex
+    paperlint.json        { "extends": "../../venues/usenix-sec.jsonc", "kind": "full" }
 ```
 
 ```jsonc
@@ -284,13 +284,13 @@ not kept. Today you record it by hand; a command for it is planned
 ```yaml
 ---
 stages:
- - stage: submitted
- date: 2026-07-22
- venue: A Venue 2026
- pdf: versions/2026-07-22-submitted.pdf
- bytes: 305412
- source: versions/2026-07-22-submitted.tex
- sourceBytes: 57210
+  - stage: submitted
+    date: 2026-07-22
+    venue: A Venue 2026
+    pdf: versions/2026-07-22-submitted.pdf
+    bytes: 305412
+    source: versions/2026-07-22-submitted.tex
+    sourceBytes: 57210
 ---
 ```
 
