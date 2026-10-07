@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    "paper.tex",
+    "earlyblock.tex"
+  ],
+  "written": [
+    "refs.bib"
+  ],
+  "databases": [
+    "refs.bib"
+  ],
+  "citations": [
+    "*"
+  ],
+  "bibitems": [
+    "mainblock"
+  ]
+}

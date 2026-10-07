@@ -1,0 +1,16 @@
+{
+  "inputs": [
+    "paper.tex",
+    "bibsetup.tex"
+  ],
+  "written": [],
+  "databases": [
+    "first.bib"
+  ],
+  "citations": [
+    "*"
+  ],
+  "bibitems": [
+    "firstkey"
+  ]
+}

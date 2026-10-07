@@ -1,0 +1,11 @@
+\documentclass{article}
+\newif\ifanon
+\anontrue
+\begin{document}
+\nocite{*}
+\bibliographystyle{plain}
+\ifanon
+\input{anonbib}
+\fi
+\bibliography{real}
+\end{document}

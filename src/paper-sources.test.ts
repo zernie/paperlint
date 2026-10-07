@@ -5,7 +5,7 @@
  * (docs/design/paper-sources.md §3.2, revised in §7.2).
  */
 import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -400,5 +400,132 @@ describe("names TeX builds from macros, and where bibtex looks (design §9)", ()
         bibOf(doc("", "\\bibliography{/shared/lib}"), { "/shared/lib.bib": A }),
       ),
     ).toEqual([["file", "/shared/lib", ["a2024"]]]);
+  });
+});
+
+describe("TeX's execution order across files: an include is read where it stands (PR review)", () => {
+  const keysOf = (b: Bibliography) =>
+    stateOf(b).map(([kind, name, keys]) => [kind, name, keys]);
+
+  it("v17: an include's \\bibliography before the main file's own is the first one, so bibtex reads it", () => {
+    expect(keysOf(sourcesIn("v17-include-order").bibliography)).toEqual([
+      ["file", "first", ["firstkey"]],
+    ]);
+  });
+
+  it("v18: an include's block runs before a later block of the main file, so the main file's wins", () => {
+    const s = sourcesIn("v18-include-block-order");
+    expect(keysOf(s.bibliography)).toEqual([
+      ["embedded", "refs", ["mainblock"]],
+    ]);
+    // Every block, in the order TeX runs them, each in the file that holds it.
+    expect(
+      s.blocks.map((b) => [basename(b.bib.path), b.bib.entries[0]?.key]),
+    ).toEqual([
+      ["earlyblock.tex", "includeblock"],
+      ["paper.tex", "mainblock"],
+    ]);
+  });
+
+  it("v19: an include inside a conditional is conditional: its declaration is a candidate", () => {
+    const b = sourcesIn("v19-include-in-conditional").bibliography;
+    expect([b.kind, databasesOf(b).map((d) => d.name)]).toEqual([
+      "undecided",
+      ["anon", "real"],
+    ]);
+  });
+
+  it("an include in a macro's body is read where the macro is used: a candidate", () => {
+    const b = bibOf(doc("\\newcommand{\\refs}{\\input{bibsetup}}", "\\refs"), {
+      "/p/bibsetup.tex": "\\bibliography{refs}\n",
+      "/p/refs.bib": A,
+    });
+    expect([b.kind, databasesOf(b).map((d) => d.name)]).toEqual([
+      "undecided",
+      ["refs"],
+    ]);
+  });
+
+  it("a declaration in an include is placed in that file", () => {
+    const b = sourcesIn("v17-include-order").bibliography;
+    expect(
+      databasesOf(b).map((d) => [basename(d.declared.file), d.declared.span]),
+    ).toEqual([
+      ["bibsetup.tex", { start: 0, end: "\\bibliography{first}".length }],
+    ]);
+  });
+});
+
+describe("every block that can be the one TeX's file holds is a candidate (PR review)", () => {
+  /** Each candidate's state and the keys TeX would read from it. */
+  const outcomes = (b: Bibliography) =>
+    stateOf(b).map(([kind, , keys]) => [kind, keys]);
+
+  it("v20: blocks in the two branches of one switch — no block, either one", () => {
+    const b = sourcesIn("v20-exclusive-blocks").bibliography;
+    expect([b.kind, outcomes(b)]).toEqual([
+      "undecided",
+      [
+        ["missing", null],
+        ["embedded", ["anonblock"]],
+        ["embedded", ["realblock"]],
+      ],
+    ]);
+  });
+
+  it("v21: blocks behind two independent switches — no block, the first alone, the second", () => {
+    const b = sourcesIn("v21-independent-switches").bibliography;
+    expect([b.kind, outcomes(b)]).toEqual([
+      "undecided",
+      [
+        ["missing", null],
+        ["embedded", ["shortblock"]],
+        ["embedded", ["longblock"]],
+      ],
+    ]);
+  });
+
+  it("a sure [overwrite] block after the switched ones always wins: decided", () => {
+    const b = bibOf(
+      doc(
+        `\\newif\\ifanon\n\\ifanon\n${BLOCK("[overwrite]", A)}\n\\fi\n${BLOCK("[overwrite]", B)}`,
+        "\\bibliography{refs}",
+      ),
+    );
+    expect([b.kind, outcomes(b)]).toEqual([
+      "databases",
+      [["embedded", ["b2020"]]],
+    ]);
+  });
+
+  it("a switched block without [overwrite] after a sure one never writes: decided", () => {
+    const b = bibOf(
+      doc(
+        `${BLOCK("", A)}\n\\newif\\ifanon\n\\ifanon\n${BLOCK("", B)}\n\\fi`,
+        "\\bibliography{refs}",
+      ),
+    );
+    expect([b.kind, outcomes(b)]).toEqual([
+      "databases",
+      [["embedded", ["a2024"]]],
+    ]);
+  });
+
+  it("a committed file beside switched blocks: the file when none runs, a conflict for each that can win", () => {
+    const b = bibOf(
+      doc(
+        `\\newif\\ifa\n\\newif\\ifb\n\\ifa\n${BLOCK("[overwrite]", A)}\n\\fi\n\\ifb\n${BLOCK("", "@misc{c2021, title={C}}")}\n\\fi`,
+        "\\bibliography{refs}",
+      ),
+      { "/p/refs.bib": B },
+    );
+    // The second block has no [overwrite]: a file exists, so it never writes.
+    expect([b.kind, outcomes(b)]).toEqual([
+      "undecided",
+      [
+        ["file", ["b2020"]],
+        ["conflict", ["a2024"]],
+      ],
+    ]);
   });
 });
