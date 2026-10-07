@@ -24,3 +24,6 @@ coverage/
 # eslint-plugin-project-structure writes this into the project root when a preset has no card
 # (eslint.config.mjs, presetCards); a clean run removes it.
 projectStructure.cache.json
+
+# TeX's own output, captured whole as the readers' test inputs (test/fixtures/tex-output/README.md).
+!test/fixtures/tex-output/*/*
