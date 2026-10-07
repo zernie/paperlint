@@ -704,24 +704,6 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(inlineBib(BIB)),
   },
-  "bib/filecontents-overwrite": {
-    reports: {
-      tree: paper(inlineBib(BIB, "")),
-      file: TEX_FILE,
-      severity: 2,
-      line: 2,
-    },
-    silent: paper(inlineBib(BIB)),
-  },
-  "bib/commented-entry": {
-    reports: {
-      tree: paper(inlineBib(`${BIB}% @misc{b, url = {https://example.org}}`)),
-      file: TEX_FILE,
-      severity: 1,
-      line: 9,
-    },
-    silent: paper(inlineBib(BIB)),
-  },
   "pdf/fresh": {
     reports: onPdf(built({ pdf_sha256: "0".repeat(64) })),
     silent: built(),

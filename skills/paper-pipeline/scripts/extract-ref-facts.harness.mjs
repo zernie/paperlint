@@ -39,11 +39,16 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { bibReader } from "#src/adapters/bibtex/index";
+import { absolutePath } from "#src/domain/paths";
 import { consumerRoot } from "./consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = consumerRoot();
 const X = await import(join(HERE, "extract-ref-facts.mjs"));
+/** The facts' entries of a BibTeX text, read by the one bibtex reader. */
+const factsOf = (text) =>
+  X.factEntries(bibReader.readFile(absolutePath("/p/refs.bib"), text));
 
 // 🔴 PAPERS ROOT — FROM THE DECLARATION, NOT BY THE FIRST CONSUMER'S DIRECTORY NAME (12.09.2026).
 // `package.json` → `paperlint.papersDir`, default `papers`. The same key is read by
@@ -128,7 +133,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     parsed++;
     const text = readFileSync(f, "utf8");
     const want = (text.match(/^@\w+\{/gm) ?? []).length;
-    const got = await X.parseBib(text);
+    const got = factsOf(text);
     assert.ok(
       want > 0,
       `${paper}/refs.bib: no @… entries in file — fixture is broken`,
@@ -170,7 +175,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 @misc{inst2,
   author={{sh-guard contributors}},
   title={Another}, year={2026}}`;
-  const es = await X.parseBib(bib);
+  const es = factsOf(bib);
   assert.deepEqual(
     es.map((e) => e.authors),
     [["Adversa AI"], ["sh-guard contributors"]],
@@ -185,7 +190,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 // single brace — ordinary author, and order "LastName, FirstName" must be unwound.
 {
   const bib = `@misc{human, author={Adversa, Alice}, title={T}, year={2026}}`;
-  const [e] = await X.parseBib(bib);
+  const [e] = factsOf(bib);
   assert.deepEqual(
     e.authors,
     ["Alice Adversa"],
@@ -201,7 +206,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   const bib = `@inproceedings{k1,
   author={Jimenez, Carlos E. and Di Penta, Massimiliano and others},
   title={A Title}, booktitle={ICLR}, year={2024}, note={arXiv:2310.06770}}`;
-  const [e] = await X.parseBib(bib);
+  const [e] = factsOf(bib);
   assert.deepEqual(
     e.authors,
     ["Carlos E. Jimenez", "Massimiliano Di Penta"],

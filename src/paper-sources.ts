@@ -5,9 +5,10 @@
  * `src/domain/paper-sources.ts`.
  *
  * Reads through the ports only: the disk (`Files`), the LaTeX reader (`LatexReader`, which decides the
- * bibliography by TeX's rules) and `CommittedFiles` (whether a `.bib` beside a block is part of the
- * paper or of this machine). `sourcesOf` takes the main file's text from the caller — a lint rule
- * hands the editor's buffer — and reads the rest from disk.
+ * bibliography by TeX's rules), the bibtex reader (`BibReader`, the one reader of `.bib` text) and
+ * `CommittedFiles` (whether a `.bib` beside a block is part of the paper or of this machine).
+ * `sourcesOf` takes the main file's text from the caller — a lint rule hands the editor's buffer —
+ * and reads the rest from disk.
  */
 import { basename, dirname, join, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
@@ -22,6 +23,7 @@ import type { AbsolutePath } from "./domain/paths.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import type { Span } from "./domain/tex-document.ts";
 import type { CommittedFiles } from "./ports/committed.ts";
+import type { BibReader } from "./ports/bib-reader.ts";
 import type { BibDisk, BibPaper } from "./ports/latex.ts";
 import {
   locations,
@@ -30,9 +32,10 @@ import {
   type Unread,
 } from "./tex-paper.ts";
 
-/** What reading a paper's sources needs: the disk, the LaTeX reader, and git's index. */
+/** What reading a paper's sources needs: the disk, the LaTeX reader, git's index, the bibtex reader. */
 export interface SourcesDeps extends PaperDeps {
   readonly committed: CommittedFiles;
+  readonly bib: BibReader;
 }
 
 /** A directory with no main file: not an empty paper. */
@@ -100,6 +103,7 @@ const bibDisk = (dir: AbsolutePath, deps: SourcesDeps): BibDisk => ({
     return b === null ? null : { path, text: decoded(b) };
   },
   committed: deps.committed.isCommitted,
+  reader: deps.bib,
 });
 
 /**
@@ -130,7 +134,7 @@ export function sourcesOf(
   deps: SourcesDeps,
 ): PaperSources {
   const f = paperFiles(main, text, deps);
-  const { bibliography, blocks } = deps.latex.bibliography(
+  const bibliography = deps.latex.bibliography(
     bibPaper(f, deps),
     bibDisk(f.dir, deps),
   );
@@ -140,7 +144,6 @@ export function sourcesOf(
     includes: f.includes,
     assembled: f.assembled,
     bibliography,
-    blocks,
   };
 }
 

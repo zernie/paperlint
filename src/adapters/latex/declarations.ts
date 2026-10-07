@@ -21,15 +21,7 @@
 import type * as Ast from "@unified-latex/unified-latex-types";
 import type { Span } from "../../domain/tex-document.ts";
 import type { Filecontents } from "../../ports/latex.ts";
-import {
-  inPlace,
-  isNode,
-  mandatory,
-  optional,
-  placeOf,
-  visited,
-  type Node,
-} from "./nodes.ts";
+import { inPlace, mandatory, optional, placeOf, type Node } from "./nodes.ts";
 import { DEFINITION_MACROS, liveRoot, type ParsedTex } from "./parse.ts";
 
 const FILECONTENTS: ReadonlySet<string> = new Set([
@@ -71,12 +63,6 @@ function blockOf(
 
 const isBlock = (n: Node): n is Readonly<Ast.VerbatimEnvironment> =>
   n.type === "verbatim" && FILECONTENTS.has(n.env);
-
-/** Every live `filecontents` block of a source, in source order (names as written). */
-export const filecontentsOf = (t: ParsedTex): readonly Filecontents[] =>
-  visited(liveRoot(t), () => false)
-    .filter(isNode)
-    .flatMap((n) => (isBlock(n) ? blockOf(t.src, n, "\\jobname") : []));
 
 /** A declared name: one bibtex can open, or one built by a macro this reader does not expand. */
 export type DeclaredName =

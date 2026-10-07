@@ -11,5 +11,9 @@
   ],
   "bibitems": [
     "k1"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

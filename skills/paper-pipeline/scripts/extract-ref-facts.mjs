@@ -73,12 +73,8 @@ import { gitCommitted } from "#src/adapters/git/index";
 import { latexReader } from "#src/adapters/latex/index";
 import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
 import { absolutePath } from "#src/domain/paths";
-import {
-  bibTexts,
-  bibtexView,
-  databasesOf,
-  texReads,
-} from "#src/domain/paper-sources";
+import { bibReader } from "#src/adapters/bibtex/index";
+import { bibTexts, databasesOf, texReads } from "#src/domain/paper-sources";
 import { paperSources, sourcesOf } from "#src/paper-sources";
 import { isMain } from "./consumer.mjs";
 
@@ -121,47 +117,15 @@ const joinName = (a) =>
     .trim();
 
 /**
- * 🔴 THE .bib PARSER IS AN OPTIONAL DEPENDENCY, AND THE FAILURE MUST BE LOUD AND CARRY THE CURE.
- * It weighs 15 MB out of the consumer's 56 MB install (the package itself 9 MB plus the English
- * model `wink-eng-lite-web-model` 4 MB and `unicode2latex` 2 MB) — 27% of the weight for a single
- * call that only whoever extracts bibliography facts needs. The import here is dynamic anyway, so
- * the laziness was already there; the manifest merely stopped lying about it being required.
- *
- * ⚠️ A silent skip here would be the worst of the options: a missing checker and a passing one look
- * the same, and "the bibliography was not checked" reads as "the bibliography is fine". That is why
- * the message names the command, not the fact.
+ * The facts' entries of one database, as the bibtex reader read them (src/ports/bib-reader.ts): each
+ * with its line in the file that holds it, so a finding points where the author edits (the block's
+ * lines in paper.tex, or the `.bib`'s).
  */
-export async function parseBib(
-  text,
-  { load = () => import("@retorquere/bibtex-parser") } = {},
-) {
-  let parse;
-  try {
-    ({ parse } = await load());
-  } catch (e) {
-    if (e?.code !== "ERR_MODULE_NOT_FOUND") throw e;
-    throw new Error(
-      "parsing .bib requires @retorquere/bibtex-parser — it is declared OPTIONAL because it " +
-        "weighs 15 MB and is needed only for bibliography facts.\n" +
-        "   Install:  npm i -D @retorquere/bibtex-parser\n" +
-        "   Why not our own regex: measured 26.08 — the regex gave 0 entries on both real " +
-        "files, four libraries gave the correct 27 and 51.",
-    );
-  }
-  // `sentenceCase: false` — the title is needed as written. Our normalisation folds the case
-  // anyway, but a fact has to be a fact: a paraphrased title cannot be shown to a human.
-  const res = parse(text, { sentenceCase: false, verbatimFields: [] });
-  // The entry's line in the file — found by its key. The parser gives no positions, and a finding
-  // needs an address; a key in `.bib` is unique by definition of the format, so the search is
-  // unambiguous.
-  const lines = text.split("\n");
-  const lineOfKey = (key) => {
-    const i = lines.findIndex((l) => l.includes(`{${key},`));
-    return i === -1 ? 0 : i + 1;
-  };
-  return res.entries.map((e, i) => {
-    const f = e.fields ?? {};
-    const names = Array.isArray(f.author) ? f.author : [];
+export function factEntries(bib) {
+  const lineOf = (at) => bib.text.slice(0, at).split("\n").length;
+  return bib.entries.map((e, i) => {
+    const f = e.fields;
+    const names = e.names.author ?? [];
     // `and others` is BibTeX's `et al.`. The parser returns it as an author with no first name.
     const isOthers = (a) => !a.firstName && /^others$/i.test(a.lastName ?? "");
     const truncated = names.some(isOthers);
@@ -169,29 +133,20 @@ export async function parseBib(
       .filter((a) => !isOthers(a))
       .map(joinName)
       .filter(Boolean);
-    // A field is a string in today's parser output (list fields such as `keywords` are arrays,
-    // and none of those is read); an array or a number from another parser version is joined or
-    // printed rather than dropped.
-    const str = (v) =>
-      Array.isArray(v)
-        ? v.join(" ")
-        : typeof v === "string"
-          ? v
-          : v == null
-            ? ""
-            : String(v);
+    // Every field the reader gives is text; a field the entry lacks is "".
+    const str = (v) => v ?? "";
     const venueText = [f.booktitle, f.journal, f.note, f.howpublished]
       .map(str)
       .filter(Boolean)
       .join(" ");
     return {
       n: i + 1,
-      line: lineOfKey(e.key),
+      line: lineOf(e.span.start),
       key: e.key,
       // `raw` is where identifiers are looked for: they hide in `note`, in `journal`
       // (`arXiv preprint arXiv:2107.03374`), and in a separate `doi` field.
       raw: [
-        str(f.author && authors.join(" and ")),
+        authors.join(" and "),
         str(f.title),
         venueText,
         str(f.doi),
@@ -417,10 +372,14 @@ export function recordFrom(key, cached) {
  *   a .tex        the same, for that file
  *   a .bib        that file, as named
  *
- * The text each entry is parsed from is `bibtexView`: an entry behind `%` is one bibtex reads.
  */
 const committed = gitCommitted(spawnProcess(), process.env);
-const DEPS = { files: nodeFiles, latex: latexReader, committed };
+const DEPS = {
+  files: nodeFiles,
+  latex: latexReader,
+  committed,
+  bib: bibReader,
+};
 
 /** Why a bibliography has no text to read, in words a person can act on. */
 function noTextWhy(where, b) {
@@ -486,7 +445,7 @@ function fromFile(t) {
     return {
       ok: true,
       paperDir: dirname(t),
-      texts: [latexReader.bibText(absolutePath(t), text)],
+      texts: [bibReader.readFile(absolutePath(t), text)],
       notes: [],
     };
   if (!t.endsWith(".tex"))
@@ -508,18 +467,10 @@ function fromSources(paperDir, where, b) {
     : { ok: true, paperDir, texts, notes: notes(b) };
 }
 
-/**
- * The entries of one text TeX reads — each with its file, and its line in that file, so a finding
- * points where the author edits (the block's lines in paper.tex, or the `.bib`'s).
- */
-export async function loadEntries(bib) {
-  const above = bib.text.slice(0, bib.body.start).split("\n").length - 1;
+/** The entries of one text TeX reads, each with its file. */
+export function loadEntries(bib) {
   const file = rel(bib.path);
-  return (await parseBib(bibtexView(bib))).map((e) => ({
-    ...e,
-    file,
-    line: e.line === 0 ? 0 : e.line + above,
-  }));
+  return factEntries(bib).map((e) => ({ ...e, file }));
 }
 
 /** Every registry key a list of entries needs. Computed once so the requests go in one batch. */
@@ -587,7 +538,7 @@ async function main(argv) {
     ? resolve(opt("out"))
     : join(paperDir, "_build", "refs.facts.json");
 
-  const entries = (await Promise.all(texts.map(loadEntries))).flat();
+  const entries = texts.flatMap(loadEntries);
   const names = [...new Set(texts.map((b) => basename(b.path)))].join(", ");
   if (!entries.length) {
     // 🔴 Zero entries is a suspect, not a success. Facts with an empty list would look like a

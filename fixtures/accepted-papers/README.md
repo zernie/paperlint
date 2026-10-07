@@ -60,7 +60,7 @@ the count is not yet classified.
 | barovox-acsac24 | `bib/reachable-entry` | 92 | real / known | entries with no doi, url, arXiv id or `\url`: 55 are cited in the committed `paper.bbl` (real — the reader has nothing to follow), 37 are not cited (known: the rule judges every entry of the database, and bibtex prints only cited ones) |
 | llm-splained-acsac25 | `bib/reachable-entry` | 55 | sampled | the same, over its three `bibs/*.bib`; its `paper.bbl` is biblatex's, so the count is not split by citation |
 | rr-dataset-quality-acsac24 | `bib/reachable-entry` | 11 | real | all 11 are cited in `paper.bbl` (`chen2022neural`, `fu2022vulrepair`, …) |
-| secure-acsac24 | `bib/reachable-entry` | 75 | real / known | 18 cited (real); 57 uncited — the paper's `references.bib` carries ACM's sample entries (`Kosiur01`, `JCohen96`), which it never cites (known, as above) |
+| secure-acsac24 | `bib/reachable-entry` | 77 | real / known | 18 cited (real); 59 uncited — the paper's `references.bib` carries ACM's sample entries (`Kosiur01`, `JCohen96`), which it never cites (known, as above) |
 
 One limit the corpus shows and no count records:
 

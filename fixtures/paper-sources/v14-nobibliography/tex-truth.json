@@ -11,5 +11,9 @@
   ],
   "bibitems": [
     "nobkey"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

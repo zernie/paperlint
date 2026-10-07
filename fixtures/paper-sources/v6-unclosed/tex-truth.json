@@ -14,5 +14,11 @@
     "a4",
     "a3",
     "a2unclosed"
-  ]
+  ],
+  "bibtex": {
+    "exit": 2,
+    "errors": [
+      "I was expecting a `,' or a `}'---line 4 of file refs.bib"
+    ]
+  }
 }

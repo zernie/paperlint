@@ -10,5 +10,9 @@
   "citations": [
     "fresh"
   ],
-  "bibitems": []
+  "bibitems": [],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

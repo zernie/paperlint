@@ -51,6 +51,7 @@ import {
 import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
+import { bibReader } from "./adapters/bibtex/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
 import { gitCommitted } from "./adapters/git/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
@@ -305,11 +306,12 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
   unknown key, in either file, is an error.
 `;
 
-/** What reads a paper's sources (`paperSources`): the disk, the LaTeX reader, git's index. */
+/** What reads a paper's sources (`paperSources`): the disk, the LaTeX reader, git's index, the bibtex reader. */
 const SOURCES_DEPS = {
   files: nodeFiles,
   latex: latexReader,
   committed: gitCommitted(spawnProcess(), process.env),
+  bib: bibReader,
 };
 
 /** What the rules over a paper.tex read with: the paper's sources, and the shipped presets. */

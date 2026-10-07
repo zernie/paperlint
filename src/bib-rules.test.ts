@@ -1,9 +1,7 @@
 /**
- * The `bib` rules through real ESLint on the `tex/latex` language: `bib/reachable-entry`,
- * `bib/commented-entry` and `bib/filecontents-overwrite` — each fires, stays silent, reports where
- * the entry is (on its line in paper.tex, or at the `\bibliography` naming the `.bib` that holds it),
- * and the overwrite fix produces an exact output. On the planted papers of fixtures/paper-sources and
- * on an accepted paper of the corpus with one change.
+ * The `bib` rules through real ESLint on the `tex/latex` language: `bib/reachable-entry` fires, stays
+ * silent, and reports where the entry is (on its line in paper.tex, or at the `\bibliography` naming
+ * the `.bib` that holds it). On the planted papers of fixtures/paper-sources too.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -11,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { ESLint, type Linter } from "eslint";
 import { describe, expect, it } from "vitest";
 import { texLanguage } from "../eslint-rules/latex-language.ts";
+import { bibReader } from "./adapters/bibtex/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { BIB_RULE_LEVELS, bibRules } from "./bib-rules.ts";
@@ -20,20 +19,16 @@ import { present } from "../test/support.ts";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const PAPER = "/work/papers/p";
 
-type Committed = (p: string) => boolean;
-const ALL: Committed = () => true;
-
-/** Lint `tex` as the paper's paper.tex (or `file`), beside `others`; `fix` applies the fixes. */
+/** Lint `tex` as the paper's paper.tex (or `file`), beside `others`, every file committed. */
 async function lint(
   tex: string,
   others: Readonly<Record<string, string>> = {},
-  { file = "paper.tex", fix = false, committed = ALL } = {},
-): Promise<{ messages: Linter.LintMessage[]; output: string }> {
+  { file = "paper.tex" } = {},
+): Promise<{ messages: Linter.LintMessage[] }> {
   const files = memoryFiles({ [`${PAPER}/paper.tex`]: tex, ...others });
   const eslint = new ESLint({
     cwd: "/work",
     overrideConfigFile: true,
-    fix,
     overrideConfig: eslintConfig([
       {
         files: ["**/*.tex"],
@@ -43,7 +38,8 @@ async function lint(
             rules: bibRules({
               files,
               latex: latexReader,
-              committed: { isCommitted: committed },
+              committed: { isCommitted: () => true },
+              bib: bibReader,
             }),
           },
         },
@@ -56,7 +52,7 @@ async function lint(
   const [res] = await eslint.lintText(tex, { filePath: join(PAPER, file) });
   const r = present(res, "one lint result");
   expect(r.messages.filter((m) => m.fatal)).toEqual([]);
-  return { messages: r.messages, output: r.output ?? tex };
+  return { messages: r.messages };
 }
 
 const found = (
@@ -67,9 +63,9 @@ const found = (
     .filter((m) => m.ruleId === `bib/${rule}`)
     .map((m) => [m.line, m.column, m.message] as const);
 
-/** A paper whose bibliography is a block (`[overwrite]` unless `option` says otherwise). */
-const inline = (entries: string, option = "[overwrite]"): string =>
-  `\\documentclass{acmart}\n\\begin{filecontents*}${option}{refs.bib}\n${entries}\n\\end{filecontents*}\n\\begin{document}\nx\n\\bibliography{refs}\n\\end{document}\n`;
+/** A paper whose bibliography is a block. */
+const inline = (entries: string): string =>
+  `\\documentclass{acmart}\n\\begin{filecontents*}[overwrite]{refs.bib}\n${entries}\n\\end{filecontents*}\n\\begin{document}\nx\n\\bibliography{refs}\n\\end{document}\n`;
 /** A paper whose bibliography is `refs.bib` on disk. */
 const declaring =
   "\\documentclass{acmart}\n\\begin{document}\nx\n\\bibliography{refs}\n\\end{document}\n";
@@ -199,161 +195,7 @@ describe("bib/reachable-entry — which bibliography, and which file", () => {
   });
 });
 
-describe("bib/commented-entry", () => {
-  it("an entry behind `%` in the block is reported at the `%`", async () => {
-    const { messages } = await lint(
-      inline(
-        "@misc{ok, url = {https://x.org}}\n  % @misc{dead, url = {https://x.org}}",
-      ),
-    );
-    expect(found(messages, "commented-entry")).toEqual([
-      [4, 3, expect.stringMatching(/^`dead` is behind `%`/)],
-    ]);
-  });
-
-  it("in a .bib: at the \\bibliography, with the file and line; the directive above keeps an exception", async () => {
-    const { messages } = await lint(declaring, {
-      [`${PAPER}/refs.bib`]:
-        "%@misc{one, url = {u}}\n% eslint-disable-next-line bib/commented-entry -- kept on purpose\n% @misc{two, url = {u}}\n",
-    });
-    expect(found(messages, "commented-entry")).toEqual([
-      [4, 1, expect.stringMatching(/^refs\.bib:1:1: `one` is behind `%`/)],
-    ]);
-  });
-
-  it("a `%` line that is not an entry, and an entry with no `%`, are silent", async () => {
-    const { messages } = await lint(
-      inline("% a note\n@misc{ok, url = {https://x.org}}"),
-    );
-    expect(found(messages, "commented-entry")).toEqual([]);
-  });
-});
-
-describe("bib/filecontents-overwrite", () => {
-  it("a block writing a .bib without [overwrite] is reported on its \\begin line, and --fix adds the option", async () => {
-    const tex = inline("@misc{ok, url = {u}}", "");
-    const { messages } = await lint(tex);
-    expect(found(messages, "filecontents-overwrite")).toEqual([
-      [
-        2,
-        1,
-        expect.stringMatching(
-          /^`\\begin\{filecontents\*\}\{refs\.bib\}` has no `\[overwrite\]`/,
-        ),
-      ],
-    ]);
-    const { output } = await lint(tex, {}, { fix: true });
-    expect(output).toBe(inline("@misc{ok, url = {u}}"));
-  });
-
-  it("an option list gains `overwrite` at its front; the fixed block is silent", async () => {
-    const tex = inline("@misc{ok, url = {u}}", "[nosearch]");
-    const { output } = await lint(tex, {}, { fix: true });
-    expect(output).toBe(inline("@misc{ok, url = {u}}", "[overwrite,nosearch]"));
-    expect(
-      found((await lint(output)).messages, "filecontents-overwrite"),
-    ).toEqual([]);
-  });
-
-  it("silent: [overwrite], [force], a commented-out block, one in \\iffalse, one writing no .bib", async () => {
-    const quiet = [
-      inline("@misc{ok, url = {u}}", "[overwrite]"),
-      inline("@misc{ok, url = {u}}", "[force]"),
-      "% \\begin{filecontents*}{refs.bib}\n% @misc{a,}\n% \\end{filecontents*}\n\\begin{document}x\\end{document}\n",
-      "\\iffalse\n\\begin{filecontents*}{refs.bib}\n@misc{a,}\n\\end{filecontents*}\n\\fi\n\\begin{document}x\\end{document}\n",
-      "\\begin{filecontents*}{data.csv}\na,b\n\\end{filecontents*}\n\\begin{document}x\\end{document}\n",
-    ];
-    for (const tex of quiet)
-      expect(
-        found((await lint(tex)).messages, "filecontents-overwrite"),
-      ).toEqual([]);
-  });
-});
-
-describe("bib/filecontents-overwrite — what the fix may overwrite, and blocks elsewhere", () => {
-  // The fix makes the NEXT build write the block over the file: offered only when that loses nothing.
-  it("🔴 a refs.bib that holds other entries is never overwritten by --fix: a suggestion names the file", async () => {
-    const tex = inline("@misc{ok, url = {u}}", "");
-    const stale = { [`${PAPER}/refs.bib`]: "@misc{stale, url = {u}}\n" };
-    const shown = async (committed: (p: string) => boolean) => {
-      const { messages } = await lint(tex, stale, { committed });
-      const m = messages.find((x) => x.ruleId === "bib/filecontents-overwrite");
-      return {
-        message: m?.message.slice(0, 40),
-        fix: m?.fix,
-        suggestions: m?.suggestions?.map((x) => x.desc),
-      };
-    };
-    expect(await shown(() => true)).toEqual({
-      message: "TeX reads the committed refs.bib, not th",
-      fix: undefined,
-      suggestions: [
-        "Add `[overwrite]`: the next build writes this block over refs.bib, which holds other entries",
-      ],
-    });
-    expect(await shown(() => false)).toEqual({
-      message: "`\\begin{filecontents*}{refs.bib}` has no",
-      fix: undefined,
-      suggestions: [
-        "Add `[overwrite]`: the next build writes this block over refs.bib, which holds other entries",
-      ],
-    });
-    expect((await lint(tex, stale, { fix: true })).output).toBe(tex);
-  });
-});
-
-describe("bib/filecontents-overwrite — when the fix is safe, and blocks in included files", () => {
-  it("a refs.bib that equals the block (TeX's own copy) is no loss: --fix applies", async () => {
-    const tex = inline("@misc{ok, url = {u}}", "");
-    const { output } = await lint(
-      tex,
-      { [`${PAPER}/refs.bib`]: "@misc{ok, url = {u}}\n" },
-      { fix: true },
-    );
-    expect(output).toBe(inline("@misc{ok, url = {u}}"));
-  });
-
-  it("a refs.bib whose entries equal the block's but whose @string differs is a loss: no --fix", async () => {
-    const tex = inline(
-      '@string{v = "Block"}\n@misc{ok, url = {u}, note = v}',
-      "",
-    );
-    const { output } = await lint(
-      tex,
-      {
-        [`${PAPER}/refs.bib`]:
-          '@string{v = "File"}\n@misc{ok, url = {u}, note = v}\n',
-      },
-      { fix: true },
-    );
-    expect(output).toBe(tex);
-  });
-
-  it("🔴 a block in an included file is reported at its \\input, with the file and line in front — no fix from paper.tex", async () => {
-    const tex =
-      "\\documentclass{article}\n\\input{bibblock}\n\\begin{document}\nx\\bibliography{refs}\n\\end{document}\n";
-    const { messages, output } = await lint(
-      tex,
-      {
-        [`${PAPER}/bibblock.tex`]:
-          "\\begin{filecontents*}{refs.bib}\n@misc{fresh, url = {u}}\n\\end{filecontents*}\n",
-      },
-      { fix: true },
-    );
-    expect(found(messages, "filecontents-overwrite")).toEqual([
-      [
-        2,
-        1,
-        expect.stringMatching(
-          /^bibblock\.tex:1:1: `\\begin\{filecontents\*\}\{refs\.bib\}` has no/,
-        ),
-      ],
-    ]);
-    expect(output).toBe(tex);
-  });
-});
-
-// ── the planted papers, and a paper of the accepted corpus with one change ──────────────────
+// ── the planted papers ─────────────────────────────────────────────────────────────────────
 
 const PLANTED = join(ROOT, "fixtures", "paper-sources");
 
@@ -375,65 +217,21 @@ function planted(paper: string): {
 }
 
 describe("on the planted papers (fixtures/paper-sources, TeX's answer in tex-truth.json)", () => {
+  // The entries of the bibliography TeX reads that carry no doi, url or arXiv id. An entry only
+  // bibtex reads (v5, v6: malformed or behind `%`) is the post-build check's, not this rule's.
   it.each([
-    ["v1-stale", ["filecontents-overwrite"]],
-    ["v2-overwrite", []],
-    ["v3-declared", []],
-    ["v4-commented", []],
-    ["v5-percent-entry", ["commented-entry"]],
-    // a3 has no link and a4 is behind `%`: both after an unclosed entry, both read by bibtex.
-    ["v6-unclosed", ["commented-entry", "reachable-entry", "reachable-entry"]],
-    ["v8-jobname", ["commented-entry", "reachable-entry", "reachable-entry"]],
-    // The block in bibblock.tex has no [overwrite]; TeX reads the committed refs.bib (no link).
-    ["v16-included-block", ["filecontents-overwrite", "reachable-entry"]],
-  ])("%s: %j", async (paper, rules) => {
+    ["v1-stale", []],
+    ["v5-percent-entry", []],
+    ["v6-unclosed", ["a3"]],
+    ["v8-jobname", ["jkey"]],
+    ["v16-included-block", ["stale"]],
+    ["v24-quoted-fields", ["q2", "q3", "q4", "q5"]],
+    ["v25-string-differs", ["k1"]],
+  ])("%s: %j", async (paper, keys) => {
     const { tex, others } = planted(paper);
     const { messages } = await lint(tex, others);
-    expect(messages.map((m) => m.ruleId).sort()).toEqual(
-      rules.map((r) => `bib/${r}`),
-    );
+    expect(
+      messages.map((m) => [m.ruleId, /`([^`]+)`/.exec(m.message)?.[1]]),
+    ).toEqual(keys.map((k) => ["bib/reachable-entry", k]));
   });
-});
-
-describe("validated on the accepted corpus (fixtures/accepted-papers)", () => {
-  const ACCEPTED = join(
-    ROOT,
-    "fixtures",
-    "accepted-papers",
-    "agenticdev-acm26",
-    "paper.tex",
-  );
-  const original = readFileSync(ACCEPTED, "utf8");
-  // A real 48 KiB paper, linted by the bib rules alone and fixed in passes: each pass parses paper.tex
-  // and the paper as TeX reads it (paper-sources.ts). In `paperlint lint` the other rules parse that
-  // text too (a memo hit); here nothing else does. About 2.5 s, 4.5 s under coverage.
-  const SLOW = 20_000;
-
-  it(
-    "the accepted ACM paper, whose block has [overwrite], is silent",
-    async () => {
-      expect(
-        found((await lint(original)).messages, "filecontents-overwrite"),
-      ).toEqual([]);
-    },
-    SLOW,
-  );
-
-  it(
-    "the same paper with ONE change — [overwrite] removed — is reported, and the fix restores its bytes exactly",
-    async () => {
-      const variant = original.replace(
-        "\\begin{filecontents*}[overwrite]{refs.bib}",
-        "\\begin{filecontents*}{refs.bib}",
-      );
-      expect(variant).not.toBe(original);
-      expect(
-        found((await lint(variant)).messages, "filecontents-overwrite").map(
-          (m) => m[0],
-        ),
-      ).toEqual([2]);
-      expect((await lint(variant, {}, { fix: true })).output).toBe(original);
-    },
-    SLOW,
-  );
 });

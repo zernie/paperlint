@@ -11,5 +11,9 @@
   ],
   "bibitems": [
     "anonkey"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

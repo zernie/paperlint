@@ -22,6 +22,7 @@ import {
   type PaperFacts,
 } from "./build.ts";
 import type { Geometry } from "./domain/geometry.ts";
+import { bibReader } from "./adapters/bibtex/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import { nodeFiles } from "./adapters/node/index.ts";
 import { sourcesReader } from "./paper-sources.ts";
@@ -283,6 +284,7 @@ test("references: without a reader the step says it was not wired; with one and 
     files: nodeFiles,
     latex: latexReader,
     committed: { isCommitted: () => true },
+    bib: bibReader,
   });
   const wired = await build(paper(bib), {}, { readSources });
   assert.ok(

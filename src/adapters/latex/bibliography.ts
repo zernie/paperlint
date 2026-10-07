@@ -1,13 +1,13 @@
 /**
- * WHERE A PAPER'S BIBLIOGRAPHY IS — decided by TeX's and bibtex's rules from what each source
- * declares (`declarations.ts`). The decision is here, in the latex adapter, because it is TeX's
- * knowledge (finding 9 of the design's refutation, docs/design/paper-sources.md §7); the states it
- * returns are the domain's (`src/domain/paper-sources.ts`).
+ * WHERE A PAPER'S BIBLIOGRAPHY IS — decided by TeX's reading model from what the paper declares
+ * (`declarations.ts`). The decision is here, in the latex adapter, because it is TeX's knowledge; the
+ * states it returns are the domain's (`src/domain/paper-sources.ts`), and the databases are read
+ * through the bibtex reader the caller hands in (`disk.reader`).
  *
  * The rules, each measured on the planted papers of fixtures/paper-sources (tex-truth.json):
  *
- *   - bibtex reads the databases of the FIRST `\bibliography` (`\nobibliography`); a second one is an
- *     error it reports and ignores (v9);
+ *   - bibtex takes one `\bibdata`: a paper with two `\bibliography` (`\nobibliography`) commands is
+ *     one bibtex fails on, so its bibliography is `undecided`, every database a candidate (v9);
  *   - TeX reads the paper in one pass, an include where it stands: the declarations and blocks are
  *     read off the assembled paper, so an `\input` before the main file's own `\bibliography` comes
  *     first (v17, v18), and an include inside a conditional is conditional (v19);
@@ -22,7 +22,7 @@
  */
 import { basename, extname, normalize } from "node:path";
 import {
-  sameEntries,
+  sameDatabase,
   type BibText,
   type Bibliography,
   type Database,
@@ -30,13 +30,8 @@ import {
   type EmbeddedBib,
 } from "../../domain/paper-sources.ts";
 import type { Span } from "../../domain/tex-document.ts";
-import type {
-  BibDisk,
-  BibliographyReading,
-  BibPaper,
-  BibPiece,
-} from "../../ports/latex.ts";
-import { bibFileText, bibText } from "./bibtex.ts";
+import type { BibReader } from "../../ports/bib-reader.ts";
+import type { BibDisk, BibPaper, BibPiece } from "../../ports/latex.ts";
 import { scanSource, type Declaration } from "./declarations.ts";
 import { isNode, visited } from "./nodes.ts";
 import { liveRoot, parseLatex, type ParsedTex } from "./parse.ts";
@@ -96,7 +91,11 @@ interface Parsed {
   readonly theBibliography: Declared | null;
 }
 
-function parsedPaper(paper: BibPaper, jobname: string): Parsed {
+function parsedPaper(
+  paper: BibPaper,
+  jobname: string,
+  reader: BibReader,
+): Parsed {
   const t = parseLatex(paper.text);
   const scan = scanSource(t, jobname);
   const declaredAt = (span: Span): Declared => {
@@ -117,7 +116,7 @@ function parsedPaper(paper: BibPaper, jobname: string): Parsed {
             writes: block.writes,
             overwrite: block.overwrite,
             span: p.span,
-            bib: bibText(p.piece.path, p.piece.source, body.span),
+            bib: reader.read(p.piece.path, p.piece.source, body.span),
           },
         };
       }),
@@ -176,7 +175,7 @@ function databaseOf(d: Decide, r: Run): Database {
     return d.file === null
       ? { kind: "missing", name: shown, declared: d.declared }
       : { kind: "file", name: shown, declared: d.declared, file: d.file };
-  return d.committed !== null && !sameEntries(block.bib, d.committed)
+  return d.committed !== null && !sameDatabase(block.bib, d.committed)
     ? {
         kind: "conflict",
         name: shown,
@@ -195,7 +194,8 @@ function decided(
 ): readonly Database[] {
   const fileName = fileNameOf(d.name);
   const found = disk.bib(fileName);
-  const file = found === null ? null : bibFileText(found.path, found.text);
+  const file =
+    found === null ? null : disk.reader.readFile(found.path, found.text);
   const at: Decide = {
     ...d,
     file,
@@ -210,17 +210,9 @@ interface At {
   readonly at: Declared;
 }
 
-/** Every declaration bibtex reads: all but a `\bibliography` after an unconditional first one (v9). */
-const readByBibtex = (declared: readonly At[]): readonly At[] => {
-  const writesBibdata = (d: Declaration) =>
-    d.macro === "bibliography" || d.macro === "nobibliography";
-  const first = declared.findIndex(
-    ({ d }) => writesBibdata(d) && !d.conditional,
-  );
-  return declared.filter(
-    ({ d }, i) => first < 0 || i <= first || !writesBibdata(d),
-  );
-};
+/** `\bibliography` and `\nobibliography` write `\bibdata`; bibtex takes one. */
+const writesBibdata = (d: Declaration): boolean =>
+  d.macro === "bibliography" || d.macro === "nobibliography";
 
 /** The candidates of one declared name. */
 const candidates = (
@@ -241,12 +233,13 @@ function databasesFrom(
   parsed: Parsed,
   disk: BibDisk,
 ): { readonly databases: readonly Database[]; readonly undecided: boolean } {
-  const declared = readByBibtex(parsed.declarations);
+  const declared = parsed.declarations;
   const perName = declared.flatMap((a) => candidates(a, parsed.blocks, disk));
   return {
     databases: perName.flat(),
     undecided:
       declared.some(({ d }) => d.conditional) ||
+      declared.filter(({ d }) => writesBibdata(d)).length > 1 ||
       perName.some(
         (c) => c.length > 1 || c.some((d) => d.kind === "unresolved"),
       ),
@@ -254,30 +247,27 @@ function databasesFrom(
 }
 
 /**
- * The bibliography of `paper` — the main file with its includes spliced where they stand — and every
- * block it holds that writes a `.bib`, in the order TeX runs them. A `.bib` is looked up where bibtex
- * runs, the paper's directory (`disk.bib`); a file there counts against a block only when it is
- * committed (`disk.committed`) — see the domain module.
+ * The bibliography of `paper` — the main file with its includes spliced where they stand. A `.bib` is
+ * looked up where bibtex runs, the paper's directory (`disk.bib`); a file there counts against a block
+ * only when it is committed (`disk.committed`) — see the domain module.
  */
 export function decideBibliography(
   paper: BibPaper,
   disk: BibDisk,
-): BibliographyReading {
-  const parsed = parsedPaper(paper, basename(paper.main, extname(paper.main)));
-  const blocks = parsed.blocks.map((b) => b.bib);
+): Bibliography {
+  const parsed = parsedPaper(
+    paper,
+    basename(paper.main, extname(paper.main)),
+    disk.reader,
+  );
   const { databases, undecided } = databasesFrom(parsed, disk);
   const [first, ...rest] = databases;
   if (first !== undefined)
     return {
-      bibliography: {
-        kind: undecided ? "undecided" : "databases",
-        databases: [first, ...rest],
-      },
-      blocks,
+      kind: undecided ? "undecided" : "databases",
+      databases: [first, ...rest],
     };
-  const bibliography: Bibliography =
-    parsed.theBibliography === null
-      ? { kind: "none" }
-      : { kind: "thebibliography", declared: parsed.theBibliography };
-  return { bibliography, blocks };
+  return parsed.theBibliography === null
+    ? { kind: "none" }
+    : { kind: "thebibliography", declared: parsed.theBibliography };
 }

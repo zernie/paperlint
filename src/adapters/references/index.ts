@@ -69,20 +69,14 @@ const authorsOf = (key: string, a: AuthorBuckets): EntryVerdict["authors"] =>
  * one, so "unresolvable" is not read as "every registry looked and found nothing". Nothing for a
  * confirmed work: a refusal after a confirmation changed nothing.
  */
-const unconfirmed = (
-  c: CiteVerdict | undefined,
-): readonly (string | undefined)[] =>
-  c && c.verdict !== "true"
+const unconfirmed = (c: CiteVerdict): readonly (string | undefined)[] =>
+  c.verdict !== "true"
     ? [c.reason, ...(c.refused ?? []).map((r) => `not asked: ${r}`)]
     : [];
 
-/** One entry's verdict from the two checkers' answers. */
-function entryVerdict(
-  key: string,
-  found: readonly CiteVerdict[],
-  a: AuthorBuckets,
-): EntryVerdict {
-  const c = found.find((x) => x.id === key);
+/** One entry's verdict from the two checkers' answers (both read the same entries). */
+function entryVerdict(c: CiteVerdict, a: AuthorBuckets): EntryVerdict {
+  const key = c.id;
   const mismatch = a.findings.find((f) => f.key === key);
   const why = [
     ...unconfirmed(c),
@@ -93,7 +87,7 @@ function entryVerdict(
     .join("; ");
   return {
     key,
-    exists: c?.verdict ?? "unresolvable",
+    exists: c.verdict,
     authors: authorsOf(key, a),
     ...(why ? { why } : {}),
   };
@@ -212,8 +206,8 @@ export const referencesChecker =
   async (bib, cache) => {
     // Answers past MAX_AGE_DAYS are left out, so the run asks them again (and `grown` re-dates them).
     const usable = freshPart(cache, today());
-    const citations = cites.parseBib(bib);
-    const parsed = authors.parseBib(bib);
+    const citations = cites.citationsOf(bib);
+    const parsed = authors.authorEntries(bib);
     const store: Record<string, unknown> = Object.fromEntries(
       [...usable.citations].map(([k, v]) => [k, v.response]),
     );
@@ -242,11 +236,9 @@ export const referencesChecker =
         pause: d.pause,
       }),
     ]);
-    const keys = new Set([
-      ...found.map((c) => c.id),
-      ...a.findings.map((f) => f.key),
-    ]);
-    const entries = [...keys].map((key) => entryVerdict(key, found, a));
+    const entries = found
+      .filter((c, i) => found.findIndex((o) => o.id === c.id) === i)
+      .map((c) => entryVerdict(c, a));
     return {
       check: { kind: "checked", entries },
       cache: grown({ cache, usable }, { store, dblp: d.dblp }, today),

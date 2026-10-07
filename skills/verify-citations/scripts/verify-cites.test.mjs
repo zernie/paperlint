@@ -24,7 +24,7 @@ import {
   checkNvd,
   checkCommit,
   reduceVerdict,
-  parseBib,
+  citationsOf,
   parseArxivFeed,
   normalizeDoi,
   normalizeArxiv,
@@ -33,6 +33,12 @@ import {
   titleIdentity,
   isValidCveId,
 } from "./verify-cites.mjs";
+import { bibReader } from "#src/adapters/bibtex/index";
+import { absolutePath } from "#src/domain/paths";
+
+/** The citations of a BibTeX text, read by the one bibtex reader. */
+const citationsIn = (bib) =>
+  citationsOf(bibReader.readFile(absolutePath("/p/refs.bib"), bib).entries);
 
 /** One vitest case per check, named by it. */
 function ok(cond, name) {
@@ -377,7 +383,7 @@ console.log("\n(extra) .bib parser best-effort extraction:");
   eprint={1512.03385}
 }
 `;
-  const cites = parseBib(bib);
+  const cites = citationsIn(bib);
   eq(cites.length, 2, "parsed 2 entries");
   eq(cites[0].doi, "10.5555/3295222.3295349", "entry 1 doi");
   eq(cites[1].arxiv, "1512.03385", "entry 2 arxiv eprint");
@@ -724,7 +730,7 @@ console.log("\n[S4] .bib parser edge cases:");
   title = {The Real Paper Title},
   year = {2021}
 }`;
-  const a = parseBib(bibA)[0];
+  const a = citationsIn(bibA)[0];
   eq(a.title, "The Real Paper Title", "title anchored — not booktitle");
 
   // (b) brace-protected acronym must not truncate at the inner brace.
@@ -733,14 +739,14 @@ console.log("\n[S4] .bib parser edge cases:");
   year = {2026}
 }`;
   eq(
-    parseBib(bibB)[0].title,
+    citationsIn(bibB)[0].title,
     "Evaluating LLM-based Systems for Code Review",
     "brace-protected acronym kept whole",
   );
 
   // (c1) one-line entry (no \n} at column 0).
   const bibC1 = `@article{k3, title = {A One Line Entry}, year = {2020}, doi = {10.1/abc}}`;
-  const c1 = parseBib(bibC1)[0];
+  const c1 = citationsIn(bibC1)[0];
   eq(c1.title, "A One Line Entry", "one-line entry title parsed");
   eq(c1.doi, "10.1/abc", "one-line entry doi parsed");
 
@@ -750,14 +756,14 @@ console.log("\n[S4] .bib parser edge cases:");
     year = {2019}
   }`;
   eq(
-    parseBib(bibC2)[0].title,
+    citationsIn(bibC2)[0].title,
     "Indented Closing Brace",
     "indented-closing-brace entry parsed",
   );
 
   // all four parse together, in sequence (balanced-brace scan resumes correctly).
   eq(
-    parseBib(bibA + "\n" + bibB + "\n" + bibC1 + "\n" + bibC2).length,
+    citationsIn(bibA + "\n" + bibB + "\n" + bibC1 + "\n" + bibC2).length,
     4,
     "all 4 entries parsed in sequence",
   );
@@ -796,15 +802,6 @@ console.log("\n[S4] .bib parser edge cases:");
   });
   eq(n.doi, "10.1/y", "normalizeIdentifiers cleans doi");
   eq(n.arxiv, "1234.5678", "normalizeIdentifiers cleans arxiv");
-  // the exact live-reproduced break: a \bibitem DOI with a swallowed sentence period.
-  const bib = `\\begin{thebibliography}{9}
-\\bibitem{ccs23} A. Author. Title. In Proc. CCS. doi:10.1145/3576915.3623218. 2023.
-\\end{thebibliography}`;
-  eq(
-    parseBib(bib)[0].doi,
-    "10.1145/3576915.3623218",
-    "bibitem DOI trailing period not swallowed",
-  );
 }
 
 // ── Edges of the pure layer: the defensive arms, each with the input that reaches it ──────────
@@ -916,32 +913,22 @@ test("reduceVerdict: an arXiv id missed only by a non-authoritative source is un
   });
 });
 
-test("parseBib: @comment/@string/@preamble are skipped, a bare value is read, an empty one is absent", () => {
+test("citationsOf: @comment/@string/@preamble are no citations; a quoted and a bare value are read; authors written out", () => {
   const bib = [
     "@comment{c, not an entry}",
-    "@string{s, x = {y}}",
-    '@article{k1, title = "Quoted Title", year = 2017, eprint = {1706.03762}, archiveprefix = {arXiv}}',
-    "@misc{k2, title = {T}, year = ,}",
+    "@string{s = {y}}",
+    '@article{k1, title = "Quoted Title", year = 2017, eprint = {1706.03762}, archiveprefix = {arXiv}, author = {Vaswani, Ashish and von Neumann, John}}',
+    "@misc{k2, title = {T}, eprint = {x}, archiveprefix = {HAL}}",
   ].join("\n");
-  assert.deepEqual(parseBib(bib), [
-    { id: "k1", title: "Quoted Title", year: "2017", arxiv: "1706.03762" },
-    { id: "k2", title: "T" },
-  ]);
-});
-
-test("parseBib's \\bibitem fallback reads an arXiv id and an \\emph title", () => {
-  const text = [
-    "\\begin{thebibliography}{9}",
-    "\\bibitem{a} A. Author. \\emph{A Long Enough Title}. arXiv:1706.03762, 2017.",
-    "\\end{thebibliography}",
-  ].join("\n");
-  assert.deepEqual(parseBib(text), [
+  assert.deepEqual(citationsIn(bib), [
     {
-      id: "a",
-      arxiv: "1706.03762",
+      id: "k1",
+      title: "Quoted Title",
       year: "2017",
-      title: "A Long Enough Title",
+      authors: "Ashish Vaswani and John von Neumann",
+      arxiv: "1706.03762",
     },
+    { id: "k2", title: "T" },
   ]);
 });
 

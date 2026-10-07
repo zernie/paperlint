@@ -14,5 +14,9 @@
   ],
   "bibitems": [
     "mainblock"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

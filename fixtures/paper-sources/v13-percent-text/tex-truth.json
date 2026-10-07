@@ -13,5 +13,9 @@
     "pt1",
     "k2inComment",
     "ok1"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

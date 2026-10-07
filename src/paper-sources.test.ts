@@ -9,6 +9,7 @@ import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+import { bibReader } from "./adapters/bibtex/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { nodeFiles } from "./adapters/node/index.ts";
@@ -22,6 +23,7 @@ import {
 } from "./domain/paper-sources.ts";
 import { texInputsDir } from "./package-dirs.ts";
 import { paperSources, sourcesOf } from "./paper-sources.ts";
+import { unseenBy } from "./references.ts";
 import { present } from "../test/support.ts";
 
 const FIXTURES = join(
@@ -36,6 +38,7 @@ const Truth = z.object({
   databases: z.array(z.string()),
   citations: z.array(z.string()),
   bibitems: z.array(z.string()),
+  bibtex: z.object({ exit: z.number(), errors: z.array(z.string()) }),
 });
 
 /** Every file of the fixtures counts as committed: they are, in this repository. */
@@ -44,6 +47,7 @@ const onDisk = {
   files: nodeFiles,
   latex: latexReader,
   committed: ALL_COMMITTED,
+  bib: bibReader,
 };
 
 const sourcesIn = (paper: string): PaperSources => {
@@ -103,6 +107,22 @@ const truthOf = (t: z.infer<typeof Truth>) => ({
   ),
 });
 
+/**
+ * What bibtex read that the reader does not see, per planted paper — named by the post-build check
+ * (`unseenBy`), never silently dropped. Two kinds, both measured:
+ *
+ *   - the database is malformed: bibtex reports it, exits 2, and `paperlint build` fails with its
+ *     lines (`bibtex.errors` in tex-truth.json); the reader skips the entry it cannot finish;
+ *   - the database is well-formed, and the entry is one bibtex reads where the reader sees a comment:
+ *     behind `%` or inside `@comment{…}` (bibtex has no comment syntax).
+ */
+const UNSEEN: Readonly<Record<string, readonly string[]>> = {
+  "v5-percent-entry": ["dead2020"],
+  "v6-unclosed": ["a2unclosed", "a4"],
+  "v7-unbalanced-field": ["a2brace", "a4"],
+  "v13-percent-text": ["pt1", "k2inComment"],
+};
+
 describe("paperSources agrees with TeX on the planted papers", () => {
   const papers = readdirSync(FIXTURES);
   it.each(papers)("%s", (paper) => {
@@ -112,14 +132,27 @@ describe("paperSources agrees with TeX on the planted papers", () => {
     const truth = truthOf(recorded);
     const p = sourcesIn(paper);
     const got = answerOf(p, recorded.citations);
-    if (p.bibliography.kind !== "undecided") {
-      expect(got).toEqual(truth);
-      return;
-    }
-    // Undecided: what TeX chose is among the candidates the module names.
+    const unseen = unseenBy(p, recorded);
     expect(got.inputs).toEqual(truth.inputs);
-    expect(got.reads).toEqual(expect.arrayContaining([...truth.reads]));
-    expect(got.found).toEqual(expect.arrayContaining([...truth.found]));
+    // Every database bibtex opened is one the paper's bibliography names: for `undecided`, a candidate.
+    expect(unseen.databases).toEqual([]);
+    expect(got.reads).toEqual(
+      p.bibliography.kind === "undecided"
+        ? expect.arrayContaining([...truth.reads])
+        : truth.reads,
+    );
+    // What bibtex read is what the reader read, plus what the post-build check names.
+    expect(unseen.keys).toEqual(UNSEEN[paper] ?? []);
+    expect(
+      set([
+        ...got.found,
+        ...unseen.keys.filter((k) => truth.found.includes(k)),
+      ]),
+    ).toEqual(
+      p.bibliography.kind === "undecided"
+        ? expect.arrayContaining([...truth.found])
+        : truth.found,
+    );
   });
 });
 
@@ -138,18 +171,6 @@ describe("the bibliography's states, on the planted papers", () => {
   });
   it("v4: a commented-out block is no block → the file refs.bib", () => {
     expect(kinds("v4-commented")).toEqual(["file"]);
-  });
-  it("v5: an entry behind `%` is an entry, as bibtex reads it, and says where the `%` is", () => {
-    const [read] = bibTexts(sourcesIn("v5-percent-entry").bibliography);
-    expect(
-      present(read, "the block").entries.map((e) => [
-        e.key,
-        e.percent !== null,
-      ]),
-    ).toEqual([
-      ["inline2024", false],
-      ["dead2020", true],
-    ]);
   });
 });
 
@@ -203,6 +224,7 @@ function bibOf(
     files: memoryFiles({ [main]: tex, ...files }),
     latex: latexReader,
     committed: { isCommitted: (p: AbsolutePath) => committed.includes(p) },
+    bib: bibReader,
   }).bibliography;
 }
 
@@ -220,7 +242,7 @@ const stateOf = (b: Bibliography) =>
     return [d.kind, d.name, r === null ? null : r.entries.map((e) => e.key)];
   });
 
-describe("the bibliography is decided from committed bytes (§7.2)", () => {
+describe("the bibliography is decided from committed bytes", () => {
   it("a block and NO file on disk: embedded", () => {
     expect(stateOf(bibOf(doc(BLOCK("", A), "\\bibliography{refs}")))).toEqual([
       ["embedded", "refs", ["a2024"]],
@@ -285,7 +307,7 @@ describe("the bibliography's other states", () => {
   });
 });
 
-describe("a declaration the module cannot decide is `undecided`, never silence (finding 4)", () => {
+describe("a declaration the module cannot decide is `undecided`, never silence", () => {
   it("behind a \\newif switch: both branches are candidates", () => {
     const b = bibOf(
       doc(
@@ -342,7 +364,7 @@ describe("a declaration the module cannot decide is `undecided`, never silence (
   });
 });
 
-describe("names TeX builds from macros, and where bibtex looks (design §9)", () => {
+describe("names TeX builds from macros, and where bibtex looks", () => {
   it("\\jobname is the main file's name: a block writing \\jobname.bib and \\bibliography{\\jobname}", () => {
     const b = bibOf(
       doc(
@@ -403,13 +425,15 @@ describe("names TeX builds from macros, and where bibtex looks (design §9)", ()
   });
 });
 
-describe("TeX's execution order across files: an include is read where it stands (PR review)", () => {
+describe("TeX's execution order across files: an include is read where it stands", () => {
   const keysOf = (b: Bibliography) =>
     stateOf(b).map(([kind, name, keys]) => [kind, name, keys]);
 
-  it("v17: an include's \\bibliography before the main file's own is the first one, so bibtex reads it", () => {
-    expect(keysOf(sourcesIn("v17-include-order").bibliography)).toEqual([
-      ["file", "first", ["firstkey"]],
+  it("v17: an include's \\bibliography stands before the main file's own — bibtex takes one: both, in TeX's order", () => {
+    const b = sourcesIn("v17-include-order").bibliography;
+    expect([b.kind, databasesOf(b).map((d) => d.name)]).toEqual([
+      "undecided",
+      ["first", "later"],
     ]);
   });
 
@@ -417,13 +441,6 @@ describe("TeX's execution order across files: an include is read where it stands
     const s = sourcesIn("v18-include-block-order");
     expect(keysOf(s.bibliography)).toEqual([
       ["embedded", "refs", ["mainblock"]],
-    ]);
-    // Every block, in the order TeX runs them, each in the file that holds it.
-    expect(
-      s.blocks.map((b) => [basename(b.bib.path), b.bib.entries[0]?.key]),
-    ).toEqual([
-      ["earlyblock.tex", "includeblock"],
-      ["paper.tex", "mainblock"],
     ]);
   });
 
@@ -449,7 +466,7 @@ describe("TeX's execution order across files: an include is read where it stands
   });
 });
 
-describe("every block that can be the one TeX's file holds is a candidate (PR review)", () => {
+describe("every block that can be the one TeX's file holds is a candidate", () => {
   /** Each candidate's state and the keys TeX would read from it. */
   const outcomes = (b: Bibliography) =>
     stateOf(b).map(([kind, , keys]) => [kind, keys]);
@@ -479,7 +496,7 @@ describe("every block that can be the one TeX's file holds is a candidate (PR re
   });
 });
 
-describe("a run of switched blocks: outcomes that cannot differ are one (PR review)", () => {
+describe("a run of switched blocks: outcomes that cannot differ are one", () => {
   const outcomes = (b: Bibliography) =>
     stateOf(b).map(([kind, , keys]) => [kind, keys]);
 
@@ -530,7 +547,7 @@ describe("a run of switched blocks: outcomes that cannot differ are one (PR revi
   });
 });
 
-describe("what TeX never reads, and what bibtex reads in a quoted field (PR review)", () => {
+describe("what TeX never reads, and what bibtex reads in a quoted field", () => {
   it("v22: a thebibliography after \\end{document} is never read: none", () => {
     expect(sourcesIn("v22-parked-thebibliography").bibliography).toEqual({
       kind: "none",
@@ -584,5 +601,45 @@ describe("what TeX never reads, and what bibtex reads in a quoted field (PR revi
       "/p/refs.bib": `Exported by a tool.\n${A}\n`,
     });
     expect(stateOf(b)).toEqual([["embedded", "refs", ["a2024"]]]);
+  });
+});
+
+describe("the filecontents blocks TeX writes", () => {
+  it("the plain form too, its body from the line after `\\begin` (text after the name is ignored)", () => {
+    const b = bibOf(
+      doc(
+        "\\begin{filecontents}{b.bib} text TeX ignores\n@misc{b, title={B}}\n\\end{filecontents}",
+        "\\bibliography{b}",
+      ),
+    );
+    expect(stateOf(b)).toEqual([["embedded", "b", ["b"]]]);
+  });
+
+  it("[force] overwrites as [overwrite] does; [nosearch] alone does not", () => {
+    const read = (opt: string) =>
+      stateOf(
+        bibOf(doc(BLOCK(opt, A), "\\bibliography{refs}"), {
+          "/p/refs.bib": B,
+        }),
+      );
+    expect([
+      read("[force]"),
+      read("[nosearch,overwrite]"),
+      read("[nosearch]"),
+    ]).toEqual([
+      [["conflict", "refs", ["a2024"]]],
+      [["conflict", "refs", ["a2024"]]],
+      [["conflict", "refs", ["b2020"]]],
+    ]);
+  });
+
+  it("a block that names no file, and one inside \\iffalse, write nothing TeX reads", () => {
+    const unnamed = "\\begin{filecontents*}\n@misc{a,}\n\\end{filecontents*}";
+    const hidden = `\\iffalse\n${BLOCK("", A)}\n\\fi`;
+    expect(
+      [unnamed, hidden].map((pre) =>
+        stateOf(bibOf(doc(pre, "\\bibliography{refs}"))),
+      ),
+    ).toEqual([[["missing", "refs", null]], [["missing", "refs", null]]]);
   });
 });

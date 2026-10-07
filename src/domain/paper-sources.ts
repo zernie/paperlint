@@ -10,14 +10,15 @@
  * (`decideBibliography`), which knows TeX's and bibtex's rules; this file holds the states and what
  * a consumer reads from each.
  *
- * ── WHY "COMMITTED" (§7.2, after the refutation) ────────────────────────────────────
+ * ── WHY "COMMITTED" ─────────────────────────────────────────────────────────────────
  * A `filecontents` block without `[overwrite]` writes its file only when no file of that name
  * exists, so whether TeX reads the block depends on what lies on the disk — and after ONE build,
  * TeX's own copy lies there. A static answer from the disk would differ between a fresh checkout and
  * a built working copy. So the static answer reads only what a fresh checkout holds: the block is
- * `embedded` unless a COMMITTED `.bib` of that name holds other entries (`conflict`). A block without
- * `[overwrite]` is a finding of its own (`bib/filecontents-overwrite`), whose fix makes `embedded`
- * true on every machine. What one build's TeX actually read is a post-build fact, not this value.
+ * `embedded` unless a COMMITTED `.bib` of that name holds something else (`conflict`).
+ *
+ * This value is the answer BEFORE a build. What one build's bibtex actually read is recorded by the
+ * build (`references.ts`) and compared with this value by `paper/refs-checked`.
  */
 import type { PaperSource } from "./paper-source.ts";
 import type { AbsolutePath } from "./paths.ts";
@@ -45,23 +46,30 @@ export interface IncludedFile extends SourceFile {
   readonly role: Role;
 }
 
-/** One entry as bibtex finds it: from its `@` to past its closing brace or parenthesis. */
+/** A name in a name list (`author`, `editor`), split into its parts as BibTeX defines them. */
+export interface BibName {
+  readonly lastName?: string;
+  readonly firstName?: string;
+  readonly prefix?: string;
+  readonly suffix?: string;
+  /** A name written as one unit (`{World Health Organization}`). */
+  readonly name?: string;
+}
+
+/** One entry of a database. */
 export interface BibEntry {
   /** Lower-cased (`@Article` → `article`). */
   readonly type: string;
   readonly key: string;
-  /** In the text of the file that holds the entry. */
+  /** From its `@` to its closing brace or parenthesis, in the text of the file that holds it. */
   readonly span: Span;
-  /**
-   * From a `%` before the `@` on its line to the `@` (`% `, `% see `): LaTeX reads the line as a
-   * comment, bibtex has no comment character and READS the entry — measured: `% @misc{dead2020,…}`
-   * and `% see @misc{pt1,…}` are in the `.bbl` (fixtures/paper-sources/v5, v13). Null for an entry with
-   * no `%` before it on its line.
-   */
-  readonly percent: Span | null;
+  /** Its fields, LaTeX read into text (`{\"u}` → `ü`, `\url{x}` → a link); a list field joined by ` and `. */
+  readonly fields: Readonly<Record<string, string>>;
+  /** Its name lists (`author`, `editor`, …), each name split into its parts. */
+  readonly names: Readonly<Record<string, readonly BibName[]>>;
 }
 
-/** The bytes of one database, where they sit: a whole `.bib`, or a `filecontents` block's body. */
+/** The bytes of one database, where they sit, and what the reader read from them. */
 export interface BibText {
   /** The file holding the bytes: the `.bib`, or the `.tex` that holds the block. */
   readonly path: AbsolutePath;
@@ -70,10 +78,10 @@ export interface BibText {
   /** The database inside `text`: all of it for a `.bib`, the body for a block. */
   readonly body: Span;
   readonly entries: readonly BibEntry[];
-  /** The `@string` and `@preamble` commands: no entries, but what bibtex expands into them. */
-  readonly commands: readonly Span[];
-  /** The `@comment` words in it: bibtex skips the word and reads what follows as junk, entries too. */
-  readonly comments: readonly Span[];
+  /** The `@string` definitions, by name: bibtex expands them into the entries. */
+  readonly strings: Readonly<Record<string, string>>;
+  /** The `@preamble` commands, in order: bibtex writes them into the `.bbl`. */
+  readonly preamble: readonly string[];
 }
 
 /** A `filecontents` block writing a `.bib`, as the parse tree gives it. */
@@ -170,29 +178,25 @@ export interface PaperSources {
   /** The whole paper as one text with the map back to its files, and the includes not found. */
   readonly assembled: PaperSource;
   readonly bibliography: Bibliography;
-  /**
-   * Every live `filecontents` block writing a `.bib` in the main file and its own includes, declared
-   * or not, in TeX's order — what `bib/filecontents-overwrite` judges.
-   */
-  readonly blocks: readonly EmbeddedBib[];
 }
 
 /**
- * What bibtex reads from a text, for comparing two: every entry and every `@string` and `@preamble`
- * command, in order, by its bytes with whitespace runs folded (TeX drops trailing spaces). The text
- * bibtex skips between them does not count.
+ * What a database holds, for comparing two: every entry by its bytes with whitespace runs folded
+ * (TeX drops trailing spaces when it writes a block out), the `@string` definitions and the
+ * `@preamble` commands. Text between entries does not count: bibtex reads none of it.
  */
-const identities = (b: BibText): readonly string[] =>
-  [...b.entries.map((e) => e.span), ...b.commands]
-    .sort((x, y) => x.start - y.start)
-    .map((s) => b.text.slice(s.start, s.end).replace(/\s+/g, " "));
+const contentOf = (b: BibText): string =>
+  JSON.stringify([
+    b.entries.map((e) =>
+      b.text.slice(e.span.start, e.span.end).replace(/\s+/g, " "),
+    ),
+    Object.entries(b.strings).sort(([x], [y]) => x.localeCompare(y)),
+    b.preamble,
+  ]);
 
-/** Whether two texts hold what bibtex reads alike, as TeX's own copy of a block holds the block's. */
-export const sameEntries = (a: BibText, b: BibText): boolean => {
-  const x = identities(a);
-  const y = identities(b);
-  return x.length === y.length && x.every((v, i) => v === y[i]);
-};
+/** Whether two databases hold the same, as TeX's own copy of a block holds the block's. */
+export const sameDatabase = (a: BibText, b: BibText): boolean =>
+  contentOf(a) === contentOf(b);
 
 /** The bytes TeX reads for one database, or null when there are none on disk. */
 export function texReads(db: Database): BibText | null {
@@ -235,24 +239,3 @@ export const bibTexts = (b: Bibliography): readonly BibText[] =>
           (o) => o.path === r.path && o.body.start === r.body.start,
         ) === i,
     );
-
-/**
- * A database's bytes as bibtex reads them, for a parser that treats `%` as a comment and skips the
- * braces of `@comment`: the body, with what stands between a `%` and an entry's `@` blanked, and every
- * `@comment` word blanked, so the parser sees the entries bibtex reads. Length-preserving: an offset
- * into the body is an offset into this text.
- */
-export function bibtexView(bib: BibText): string {
-  const blanks = [
-    ...bib.entries.flatMap((e) => (e.percent === null ? [] : [e.percent])),
-    ...bib.comments,
-  ];
-  const body = bib.text.slice(bib.body.start, bib.body.end);
-  return blanks.reduce(
-    (t, s) =>
-      t.slice(0, s.start - bib.body.start) +
-      " ".repeat(s.end - s.start) +
-      t.slice(s.end - bib.body.start),
-    body,
-  );
-}

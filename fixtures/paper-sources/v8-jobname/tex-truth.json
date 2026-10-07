@@ -13,5 +13,9 @@
   ],
   "bibitems": [
     "jkey"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

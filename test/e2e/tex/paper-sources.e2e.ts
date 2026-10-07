@@ -11,6 +11,7 @@
  *   databases  what bibtex read (`.blg`, `Database file #n:`)
  *   citations  what the paper cites (`.aux`, `\citation{…}`)
  *   bibitems   the entries bibtex found for them (`.bbl`, `\bibitem{…}`)
+ *   bibtex     bibtex's exit code, and each error it reported (`.blg`: `<what>---line N of file F`)
  *
  * The recorded file is compared byte for byte (`toMatchFileSnapshot`): a TeX that answers
  * differently fails here, and `vitest -u` on a machine with TeX writes the new answer.
@@ -57,10 +58,9 @@ afterAll(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
 
-/** One program run in `dir`; its status is not judged — TeX's warnings are part of the answer. */
-const run = (dir: string, cmd: string, args: readonly string[]): void => {
-  spawnSync(cmd, [...args], { cwd: dir, env, encoding: "utf8" });
-};
+/** One program run in `dir`, and its exit code; not judged — TeX's warnings are part of the answer. */
+const run = (dir: string, cmd: string, args: readonly string[]): number =>
+  spawnSync(cmd, [...args], { cwd: dir, env, encoding: "utf8" }).status ?? -1;
 
 /** A recorded file's lines of one kind, paths as TeX wrote them, minus a leading `./`. */
 const flsLines = (fls: string, kind: "INPUT" | "OUTPUT"): string[] =>
@@ -77,7 +77,7 @@ const captures = (text: string, re: RegExp): string[] =>
   [...text.matchAll(re)].map((m) => m[1] ?? "");
 
 /** Build a copy of `paper` and read TeX's answer off the files the run left. */
-function truthOf(paper: string): Record<string, readonly string[]> {
+function truthOf(paper: string): Record<string, unknown> {
   const dir = join(scratch, paper);
   cpSync(join(FIXTURES, paper), dir, { recursive: true });
   const pass = (): string => {
@@ -89,7 +89,7 @@ function truthOf(paper: string): Record<string, readonly string[]> {
     return readFileSync(join(dir, "paper.fls"), "utf8");
   };
   const first = pass();
-  run(dir, "bibtex", ["paper"]);
+  const bibtex = run(dir, "bibtex", ["paper"]);
   const fls = [first, pass(), pass()].join("\n");
   // A file the run did not write (no \bibdata: bibtex writes no .bbl) reads as empty.
   const read = (name: string): string =>
@@ -106,6 +106,12 @@ function truthOf(paper: string): Record<string, readonly string[]> {
     databases: captures(read("paper.blg"), /^Database file #\d+: (.+)$/gm),
     citations: distinct(captures(read("paper.aux"), /^\\citation\{(.+)\}$/gm)),
     bibitems: captures(read("paper.bbl"), /\\bibitem\{([^}]+)\}/g),
+    bibtex: {
+      exit: bibtex,
+      errors: read("paper.blg")
+        .split("\n")
+        .filter((l) => /---(line \d+ of file|while reading file) /.test(l)),
+    },
   };
 }
 

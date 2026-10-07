@@ -15,5 +15,11 @@
   "bibitems": [
     "dead2020",
     "inline2024"
-  ]
+  ],
+  "bibtex": {
+    "exit": 2,
+    "errors": [
+      "You're missing a field name---line 8 of file refs.bib"
+    ]
+  }
 }

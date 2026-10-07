@@ -15,7 +15,6 @@ import {
   extractIds,
   loadCache,
   loadEntries,
-  parseBib,
   primaryOf,
   readArxiv,
   readCrossref,
@@ -28,10 +27,13 @@ const SCRIPT = join(
 );
 const root = useTempDir("extract-ref-facts-");
 
-test(".bib: a key the text spells with spaces has no line; a missing title or year is null, not empty", async () => {
-  const [entry] = await parseBib(
-    "@misc{ spaced ,\n  note={see arXiv:2101.00001}\n}\n",
+test(".bib: an entry's line is where its `@` stands; a missing title or year is null, not empty", () => {
+  const bib = join(root, "lines.bib");
+  writeFileSync(
+    bib,
+    "% a comment\n\n@misc{ spaced ,\n  note={see arXiv:2101.00001}\n}\n",
   );
+  const [entry] = loadEntries(bibliographyFrom(bib).texts[0]);
   assert.deepEqual(
     {
       line: entry.line,
@@ -41,58 +43,12 @@ test(".bib: a key the text spells with spaces has no line; a missing title or ye
       raw: entry.raw,
     },
     {
-      line: 0,
+      line: 3,
       title: null,
       year: null,
       authors: [],
       raw: "see arXiv:2101.00001",
     },
-  );
-});
-
-test(".bib from a parser that returns no fields, or list and number fields: joined and printed, not dropped", async () => {
-  const load = async () => ({
-    parse: () => ({
-      entries: [
-        { key: "bare" },
-        {
-          key: "odd",
-          fields: {
-            title: ["Split", "Title"],
-            year: 2021,
-            note: null,
-            author: [{ firstName: "Ada", lastName: "Lovelace" }],
-          },
-        },
-      ],
-    }),
-  });
-  const [bare, odd] = await parseBib("@misc{bare,}\n@misc{odd,}\n", { load });
-  assert.deepEqual(
-    [
-      bare,
-      { title: odd.title, year: odd.year, authors: odd.authors, raw: odd.raw },
-    ],
-    [
-      {
-        n: 1,
-        line: 1,
-        key: "bare",
-        raw: "",
-        authors: [],
-        truncated: false,
-        title: null,
-        year: null,
-        venue_text: "",
-        doi_field: null,
-      },
-      {
-        title: "Split Title",
-        year: "2021",
-        authors: ["Ada Lovelace"],
-        raw: "Ada Lovelace Split Title 2021",
-      },
-    ],
   );
 });
 
@@ -186,7 +142,7 @@ test("sources: a .bib named is read as itself, as BibTeX; facts without a cache 
   writeFileSync(bib, "@misc{k, title={T}, year={2020}}\n");
   const found = bibliographyFrom(bib);
   assert.deepEqual([found.ok, found.texts.map((t) => t.path)], [true, [bib]]);
-  const entries = await loadEntries(found.texts[0]);
+  const entries = loadEntries(found.texts[0]);
   const facts = buildFacts({
     texts: found.texts,
     entries,
@@ -225,13 +181,6 @@ writeTree(root, {
     `  if (url.includes("down")) throw new Error("network down");\n` +
     `  return { status: 200, text: async () => ${JSON.stringify(CROSSREF_OK)} };\n` +
     `};\n`,
-  // The optional .bib parser, uninstalled — and broken in some other way.
-  "no-parser.mjs":
-    "import { register } from 'node:module';\n" +
-    "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s === '@retorquere/bibtex-parser') throw Object.assign(new Error('gone'), { code: 'ERR_MODULE_NOT_FOUND' }); return next(s, c); }\"));\n",
-  "bad-parser.mjs":
-    "import { register } from 'node:module';\n" +
-    "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s === '@retorquere/bibtex-parser') throw Object.assign(new Error('broken install'), { code: 'EACCES' }); return next(s, c); }\"));\n",
   "bib/paper.tex": declaring(),
   "thebib/paper.tex":
     "\\documentclass{article}\\begin{document}x\\begin{thebibliography}{9}\\bibitem{k} K.\\end{thebibliography}\\end{document}\n",
@@ -342,23 +291,6 @@ test("refusals: nowhere to read from, a file that is not a .bib, and zero entrie
   });
 });
 
-test(".bib without its optional parser: the error names the install; any other failure is not masked", () => {
-  const missing = cli(["bib", "--offline"], {
-    nodeArgs: ["--import", join(root, "no-parser.mjs")],
-  });
-  assert.equal(missing.status, 1);
-  assert.match(
-    missing.stderr,
-    /parsing \.bib requires @retorquere\/bibtex-parser[\s\S]*Install: {2}npm i -D @retorquere\/bibtex-parser/,
-  );
-  const broken = cli(["bib", "--offline"], {
-    nodeArgs: ["--import", join(root, "bad-parser.mjs")],
-  });
-  assert.equal(broken.status, 1);
-  assert.match(broken.stderr, /broken install/);
-  assert.doesNotMatch(broken.stderr, /npm i -D/);
-});
-
 test("🔴 a paper directory whose paper.tex embeds its .bib with [overwrite]: the embedded one is read, and the other refs.bib beside it named", () => {
   const r = cli(["inline", "--offline"]);
   // Guards: only materialized .bib files were looked for, so a paper with its bibliography in
@@ -415,7 +347,7 @@ test("a bibliography behind a switch: every candidate is read, and the run says 
   });
 });
 
-test("an embedded entry whose key has no line of its own keeps line 0, not a shifted 0", async () => {
+test("an embedded entry's line is its line in paper.tex", () => {
   const tex = join(root, "spaced.tex");
   writeFileSync(
     tex,
@@ -425,8 +357,8 @@ test("an embedded entry whose key has no line of its own keeps line 0, not a shi
   );
   const found = bibliographyFrom(tex);
   assert.deepEqual(
-    (await loadEntries(found.texts[0])).map((e) => e.line),
-    [0],
+    loadEntries(found.texts[0]).map((e) => e.line),
+    [3],
   );
 });
 
@@ -453,11 +385,12 @@ test.each([
   ],
   ["v3-declared", "", "paper.bib", ["declared2023"]],
   ["v4-commented", "", "refs.bib", ["stale2020"]],
-  ["v5-percent-entry", "", "paper.tex", ["inline2024", "dead2020"]],
-  // An unclosed entry, then more: bibtex reads them all (v6); `% see @…` and `@comment{ @… }` (v13).
-  ["v6-unclosed", "", "refs.bib", ["a1", "a2unclosed", "a3", "a4"]],
-  ["v13-percent-text", "", "refs.bib", ["pt1", "k2inComment", "ok1"]],
-  ["v8-jobname", "", "paper.tex", ["jkey", "jdead"]],
+  // What bibtex reads beyond these — a malformed entry, or one behind `%` or inside `@comment{…}` —
+  // the build's post-build check names (src/references.ts).
+  ["v5-percent-entry", "", "paper.tex", ["inline2024"]],
+  ["v6-unclosed", "", "refs.bib", ["a1", "a3"]],
+  ["v13-percent-text", "", "refs.bib", ["ok1"]],
+  ["v8-jobname", "", "paper.tex", ["jkey"]],
 ])("%s: the bibliography TeX reads", (paper, stderr, file, keys) => {
   const out = join(root, "planted", `${paper}.json`);
   const r = cli([

@@ -3,12 +3,9 @@
  * parser. The one implementation is `src/adapters/latex/` (unified-latex); `src/cli.ts` wires it.
  */
 import type { Include } from "../domain/paper-source.ts";
-import type {
-  BibText,
-  Bibliography,
-  EmbeddedBib,
-} from "../domain/paper-sources.ts";
+import type { Bibliography } from "../domain/paper-sources.ts";
 import type { AbsolutePath } from "../domain/paths.ts";
+import type { BibReader } from "./bib-reader.ts";
 import type {
   ClassLine,
   DocumentClass,
@@ -59,18 +56,13 @@ export interface BibPaper {
   readonly pieces: readonly BibPiece[];
 }
 
-/** What deciding the bibliography asks of the disk. */
+/** What deciding the bibliography asks of the disk, and how it reads a database. */
 export interface BibDisk {
   /** The `.bib` named (relative to the paper directory, where bibtex runs), or null. */
   readonly bib: (name: string) => BibSource | null;
   /** Whether a file is committed — what a fresh checkout of the paper holds. */
   readonly committed: (p: AbsolutePath) => boolean;
-}
-
-/** The bibliography of a paper, and every block its sources hold that writes a `.bib`. */
-export interface BibliographyReading {
-  readonly bibliography: Bibliography;
-  readonly blocks: readonly EmbeddedBib[];
+  readonly reader: BibReader;
 }
 
 export interface LatexReader {
@@ -113,16 +105,9 @@ export interface LatexReader {
   readonly withDocumentClass: (src: string, want: DocumentClass) => string;
   /** Every command that changes the page layout the class sets: margins, text block, line spacing. */
   readonly layoutOverrides: (src: string) => readonly LayoutOverride[];
-  /** Every live `filecontents` block, in source order: not a commented-out one, not one in `\iffalse`. */
-  readonly filecontents: (src: string) => readonly Filecontents[];
-  /** A `.bib` file's text as bibtex reads it: its entries, an entry behind `%` included. */
-  readonly bibText: (path: AbsolutePath, text: string) => BibText;
   /**
    * The bibliography of `paper`, decided as TeX and bibtex would from the committed bytes
    * (`src/domain/paper-sources.ts`).
    */
-  readonly bibliography: (
-    paper: BibPaper,
-    disk: BibDisk,
-  ) => BibliographyReading;
+  readonly bibliography: (paper: BibPaper, disk: BibDisk) => Bibliography;
 }

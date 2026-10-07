@@ -49,7 +49,8 @@ import { gitCommitted } from "#src/adapters/git/index";
 import { latexReader } from "#src/adapters/latex/index";
 import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
 import { absolutePath } from "#src/domain/paths";
-import { bibTexts, bibtexView, databasesOf } from "#src/domain/paper-sources";
+import { bibReader } from "#src/adapters/bibtex/index";
+import { bibTexts, databasesOf } from "#src/domain/paper-sources";
 import { paperSources, sourcesOf } from "#src/paper-sources";
 import { isMain } from "../../paper-pipeline/scripts/consumer.mjs";
 
@@ -61,6 +62,7 @@ const DEPS = {
   files: nodeFiles,
   latex: latexReader,
   committed: gitCommitted(spawnProcess(), process.env),
+  bib: bibReader,
 };
 
 /**
@@ -73,7 +75,10 @@ function bibliographyFrom(target) {
   const t = resolve(target);
   if (!existsSync(t)) die(`no such path: ${target}`);
   if (statSync(t).isFile() && t.endsWith(".bib"))
-    return { files: [t], texts: [readFileSync(t, "utf-8")] };
+    return {
+      files: [t],
+      texts: [bibReader.readFile(absolutePath(t), readFileSync(t, "utf-8"))],
+    };
   if (statSync(t).isFile() && !t.endsWith(".tex"))
     die(
       `${target} is not a .bib or a .tex — give the paper's .bib or paper.tex`,
@@ -90,10 +95,7 @@ function bibliographyFrom(target) {
             .map((d) => `${d.name} (${d.kind})`)
             .join(", ")}, and none of them is on disk`,
     );
-  return {
-    files: [...new Set(texts.map((x) => x.path))],
-    texts: texts.map(bibtexView),
-  };
+  return { files: [...new Set(texts.map((x) => x.path))], texts };
 }
 
 function sourcesOrDie(dir) {
@@ -102,59 +104,28 @@ function sourcesOrDie(dir) {
   return r.value;
 }
 
-/* ---------- a deliberately small bib reader ----------
- * Only three fields are needed (type, key, author, title, booktitle/journal), and a full
- * BibTeX grammar would be a second thing to maintain. Brace-depth counting is enough and
- * is exercised by the colocated test. */
-export function parseBib(text) {
-  const out = [];
-  const re = /@(\w+)\s*\{\s*([^,\s]+)\s*,/g;
-  let m;
-  while ((m = re.exec(text))) {
-    const [, type, key] = m;
-    let i = re.lastIndex,
-      depth = 1;
-    while (i < text.length && depth > 0) {
-      if (text[i] === "{") depth++;
-      else if (text[i] === "}") depth--;
-      i++;
-    }
-    const body = text.slice(re.lastIndex, i - 1);
-    out.push({ type: type.toLowerCase(), key, ...fields(body) });
-  }
-  return out;
-}
+/* ---------- entries: as the bibtex reader read them ---------- */
 
-function fields(body) {
-  const get = (name) => {
-    const r = new RegExp(`(?:^|[,\\s])${name}\\s*=\\s*`, "i");
-    const at = body.search(r);
-    if (at === -1) return "";
-    let i = body.indexOf("=", at) + 1;
-    while (/\s/.test(body[i])) i++;
-    if (body[i] === "{") {
-      let depth = 1,
-        j = i + 1;
-      while (j < body.length && depth > 0) {
-        if (body[j] === "{") depth++;
-        else if (body[j] === "}") depth--;
-        j++;
-      }
-      return body.slice(i + 1, j - 1);
-    }
-    if (body[i] === '"') {
-      const j = body.indexOf('"', i + 1);
-      return body.slice(i + 1, j);
-    }
-    const j = body.indexOf(",", i);
-    return body.slice(i, j === -1 ? undefined : j);
-  };
-  return {
-    author: get("author"),
-    title: get("title"),
-    booktitle: get("booktitle"),
-    journal: get("journal"),
-  };
+/** A name of a name list as BibTeX writes it, family part first: `von Last, First`, or the literal. */
+const writtenName = (n) =>
+  n.name ??
+  [[n.prefix, n.lastName].filter(Boolean).join(" "), n.firstName]
+    .filter(Boolean)
+    .join(", ");
+
+/**
+ * The entries this check reads, from the bibtex reader's (src/ports/bib-reader.ts): type, key, the
+ * author list written out (`and others` kept), title, booktitle and journal; "" for a field it lacks.
+ */
+export function authorEntries(entries) {
+  return entries.map((e) => ({
+    type: e.type,
+    key: e.key,
+    author: (e.names.author ?? []).map(writtenName).join(" and "),
+    title: e.fields.title ?? "",
+    booktitle: e.fields.booktitle ?? "",
+    journal: e.fields.journal ?? "",
+  }));
 }
 
 /* ---------- normalisation: surnames only, in order ---------- */
@@ -351,7 +322,7 @@ async function main() {
 
   const { files, texts } = bibliographyFrom(args[0]);
   const file = files.join(", ");
-  const parsed = texts.flatMap(parseBib);
+  const parsed = texts.flatMap((t) => authorEntries(t.entries));
   const entries = parsed.filter((e) => e.title && e.author);
   const { findings, skipped, unchecked } = await checkAuthors(parsed);
   if (asJson) {

@@ -9,7 +9,7 @@ what happens in CI and without a network.
 
 For each entry in the bibliography TeX reads — the `filecontents` block inside `paper.tex`, or the
 `.bib` files its `\bibliography` / `\addbibresource` declare, as `paperSources` decides it
-(`src/paper-sources.ts`; a block without `[overwrite]` is `bib/filecontents-overwrite`):
+(`src/paper-sources.ts`), read by the one bibtex reader (`src/ports/bib-reader.ts`):
 
 | question                                                                                                 | asked of                                    |
 | -------------------------------------------------------------------------------------------------------- | ------------------------------------------- |

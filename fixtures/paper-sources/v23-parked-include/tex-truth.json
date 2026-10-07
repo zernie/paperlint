@@ -11,5 +11,9 @@
   ],
   "bibitems": [
     "real"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

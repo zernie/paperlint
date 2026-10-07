@@ -1,7 +1,7 @@
 // Types for bib-authors.mjs, for the exports `src/` imports — the same arrangement as
 // `verify-cites.d.mts` beside it. Only what `src/` imports is declared.
 
-/** One entry as `parseBib` returns it; a field the entry lacks is "". */
+/** One entry as `authorEntries` returns it; a field the entry lacks is "". */
 export interface BibEntry {
   readonly type: string;
   readonly key: string;
@@ -11,7 +11,27 @@ export interface BibEntry {
   readonly journal: string;
 }
 
-export declare function parseBib(text: string): BibEntry[];
+/** A name of a name list, in its parts (`BibName`). */
+export interface ReadName {
+  readonly lastName?: string;
+  readonly firstName?: string;
+  readonly prefix?: string;
+  readonly suffix?: string;
+  readonly name?: string;
+}
+
+/** An entry as the bibtex reader reads it (src/domain/paper-sources.ts), as far as this check uses it. */
+export interface ReadEntry {
+  readonly type: string;
+  readonly key: string;
+  readonly fields: Readonly<Record<string, string>>;
+  readonly names: Readonly<Record<string, readonly ReadName[]>>;
+}
+
+/** The entries this check reads, from the bibtex reader's. */
+export declare function authorEntries(
+  entries: readonly ReadEntry[],
+): BibEntry[];
 
 /** True when the author list ends in `and others` — there is nothing complete to compare. */
 export declare const truncated: (authorField: string) => boolean;

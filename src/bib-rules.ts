@@ -2,9 +2,7 @@
  * The `bib` rules — about the bibliography TeX reads, as `paperSources` decides it
  * (src/paper-sources.ts), on `paper.tex`:
  *
- *   bib/filecontents-overwrite  a `filecontents` block writing a `.bib` has no `[overwrite]`   fix
- *   bib/reachable-entry         an entry with no doi, url or arXiv id                          —
- *   bib/commented-entry         an entry behind `%`, which bibtex reads anyway                  —
+ *   bib/reachable-entry   an entry with no doi, url or arXiv id
  *
  * WHERE A FINDING ABOUT AN ENTRY GOES. An entry in a block of `paper.tex` is reported on its own
  * line, and a disable directive above it works as everywhere. An entry in a `.bib` file — which
@@ -16,17 +14,15 @@
  * The main file is read from the editor's buffer (`sourcesOf`), so a finding in `paper.tex` points at
  * the text being edited; the `.bib` files and the includes are read from disk.
  */
-import { basename, relative, resolve } from "node:path";
+import { basename, relative } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
   databasesOf,
   MAIN_FILE,
-  sameEntries,
   texReads,
   type BibEntry,
   type BibText,
   type Database,
-  type EmbeddedBib,
   type PaperSources,
 } from "./domain/paper-sources.ts";
 import type { Span } from "./domain/tex-document.ts";
@@ -66,12 +62,9 @@ const headOf = (bib: BibText, e: BibEntry): Span => {
   return { start: e.span.start, end: e.span.start + first.length };
 };
 
-/** Where a finding about `f` (at `at`, the entry's head by default) is reported in paper.tex. */
-export function entryReport(
-  s: PaperSources,
-  f: FoundEntry,
-  at: Span = headOf(f.bib, f.entry),
-): EntryReport {
+/** Where a finding about `f` (at the entry's head) is reported in paper.tex. */
+export function entryReport(s: PaperSources, f: FoundEntry): EntryReport {
+  const at = headOf(f.bib, f.entry);
   if (f.bib.path === s.main.path) return { kind: "here", span: at };
   const declared = f.db.declared;
   return {
@@ -119,11 +112,6 @@ interface Loc {
   readonly column: number;
 }
 
-/** ESLint's fixer, as far as the `bib` rules use it. */
-interface Fixer {
-  replaceTextRange(range: readonly [number, number], text: string): unknown;
-}
-
 /** The slice of ESLint's rule API the `bib` rules use. */
 export interface BibRuleContext {
   readonly filename: string;
@@ -136,20 +124,12 @@ export interface BibRuleContext {
     readonly loc: { readonly start: Loc; readonly end: Loc };
     readonly messageId: string;
     readonly data?: Readonly<Record<string, string>>;
-    readonly fix?: (fixer: Fixer) => unknown;
-    readonly suggest?: readonly {
-      readonly messageId: string;
-      readonly data?: Readonly<Record<string, string>>;
-      readonly fix: (fixer: Fixer) => unknown;
-    }[];
   }): void;
 }
 
 export interface BibRuleModule {
   readonly meta: {
     readonly type: "problem" | "suggestion";
-    readonly fixable?: "code";
-    readonly hasSuggestions?: true;
     readonly docs: { readonly description: string; readonly url: string };
     readonly schema: readonly object[];
     readonly messages: Readonly<Record<string, string>>;
@@ -157,8 +137,7 @@ export interface BibRuleModule {
   create(context: BibRuleContext): { "root:exit"?: () => void };
 }
 
-type BibRuleName =
-  "filecontents-overwrite" | "reachable-entry" | "commented-entry";
+type BibRuleName = "reachable-entry";
 
 const docsUrl = (name: BibRuleName): string =>
   `https://github.com/zernie/paperlint/blob/main/docs/rules/bib/${name}.md`;
@@ -219,18 +198,28 @@ const excepted = (s: PaperSources, f: FoundEntry, rule: string): boolean =>
   f.bib.path !== s.main.path &&
   directiveAbove(f.bib.text, f.entry.span.start, rule);
 
-const HAS_LINK = /\b(doi|url)\s*=/i;
-const HAS_ARXIV = /arxiv[:\s]*\d{4}\.\d{4,5}/i;
-/** `\url{…}` or `\href{…}` in any field: a link the bibliography style typesets (`howpublished`). */
-const HAS_URL_MACRO = /\\(url|href)\s*\{/;
+/** An arXiv identifier in a field's text: `arXiv:2401.00001`, `arXiv preprint arXiv:2401.00001`. */
+const ARXIV_ID = /arxiv[:\s]*\d{4}\.\d{4,5}/i;
+/** A link the reader parsed out of `\url{…}` or `\href{…}`, in any field (`howpublished`, `note`). */
+const PARSED_LINK = '<a href="';
+
+const has = (e: BibEntry, field: string): boolean =>
+  (e.fields[field] ?? "").trim() !== "";
+
+/** A doi, a url, an arXiv eprint, or a link or arXiv id in any field: something a reader can follow. */
+const reachable = (e: BibEntry): boolean =>
+  has(e, "doi") ||
+  has(e, "url") ||
+  (has(e, "eprint") &&
+    /arxiv/i.test(e.fields["archiveprefix"] ?? e.fields["eprinttype"] ?? "")) ||
+  Object.values(e.fields).some(
+    (v) => ARXIV_ID.test(v) || v.includes(PARSED_LINK),
+  );
 
 /** Every entry with no doi, url or arXiv id. */
 const unreachable = (s: PaperSources): readonly EntryFinding[] =>
   entriesOf(s)
-    .filter(({ bib, entry }) => {
-      const text = bib.text.slice(entry.span.start, entry.span.end);
-      return ![HAS_LINK, HAS_ARXIV, HAS_URL_MACRO].some((re) => re.test(text));
-    })
+    .filter(({ entry }) => !reachable(entry))
     .filter((f) => !excepted(s, f, "bib/reachable-entry"))
     .map((f) => ({
       at: entryReport(s, f),
@@ -240,9 +229,6 @@ const unreachable = (s: PaperSources): readonly EntryFinding[] =>
 
 const UNREACHABLE =
   "`{{key}}` has no doi, url or arXiv id — a reader has nothing to follow. If none exists, keep the exception with `% eslint-disable-next-line bib/reachable-entry -- <why>` above the entry";
-const COMMENTED =
-  "`{{key}}` is behind `%`, and bibtex has no comment character: it reads this entry anyway, and a `%` inside an entry corrupts its fields. Delete the entry, or remove its `@` so bibtex skips it as text";
-
 /** An entry's key as a message names it: `?` for an entry written with none (`@misc{, …}`). */
 const keyOf = (f: FoundEntry): string => f.entry.key || "?";
 
@@ -261,199 +247,14 @@ const REACHABLE_META: BibRuleModule["meta"] = {
   },
 };
 
-/** Every entry behind `%`, reported from the `%`. */
-const commented = (s: PaperSources): readonly EntryFinding[] =>
-  entriesOf(s).flatMap((f) => {
-    const { percent } = f.entry;
-    if (percent === null || excepted(s, f, "bib/commented-entry")) return [];
-    const span = { start: percent.start, end: headOf(f.bib, f.entry).end };
-    return [
-      {
-        at: entryReport(s, f, span),
-        messageId: "commented",
-        key: keyOf(f),
-      },
-    ];
-  });
-
-/** `bib/commented-entry`: an entry behind `%` is one bibtex reads. */
-const COMMENTED_META: BibRuleModule["meta"] = {
-  type: "problem",
-  docs: {
-    description:
-      "no bibliography entry is written behind `%` — bibtex has no comment character and reads it anyway",
-    url: docsUrl("commented-entry"),
-  },
-  schema: [],
-  messages: { commented: COMMENTED, commentedIn: `{{where}}: ${COMMENTED}` },
-};
-
-/** `bib/filecontents-overwrite`: a block writing a `.bib` overwrites it, so it is what TeX reads. */
-const NO_OVERWRITE =
-  "`{{begin}}` has no `[overwrite]`: TeX writes {{file}} only when no file of that name exists, so once one does — from an earlier build, or committed — edits to this block stop reaching the PDF";
-const WOULD_OVERWRITE =
-  "`{{begin}}` has no `[overwrite]`, and the {{file}} beside it holds other entries: TeX reads that file, not this block. Adding `[overwrite]` would write the block over it on the next build, so `--fix` does not — decide which one is the bibliography";
-const SHADOWED =
-  "TeX reads the committed {{file}}, not this block: the two hold different entries, and without `[overwrite]` TeX never writes the block over the file. Adding `[overwrite]` makes the block what TeX reads and rewrites the committed file on the next build, so `--fix` does not — decide which one is the bibliography";
-const OVERWRITE_META: BibRuleModule["meta"] = {
-  type: "problem",
-  fixable: "code",
-  hasSuggestions: true,
-  docs: {
-    description:
-      "a filecontents block that writes a .bib has [overwrite], so the block is what TeX reads on every machine",
-    url: docsUrl("filecontents-overwrite"),
-  },
-  schema: [],
-  messages: {
-    noOverwrite: `${NO_OVERWRITE}. \`--fix\` adds \`[overwrite]\``,
-    noOverwriteIn: `{{where}}: ${NO_OVERWRITE}. Add \`[overwrite]\` there`,
-    wouldOverwrite: WOULD_OVERWRITE,
-    wouldOverwriteIn: `{{where}}: ${WOULD_OVERWRITE}`,
-    shadowed: SHADOWED,
-    shadowedIn: `{{where}}: ${SHADOWED}`,
-    addOverwrite:
-      "Add `[overwrite]`: the next build writes this block over {{file}}, which holds other entries",
-  },
-};
-
-/** Where `[overwrite]` goes in a block's `\\begin{…}`: into its option list, or as one. */
-function overwriteFix(
-  raw: string,
-  begin: number,
-): { readonly at: number; readonly text: string } {
-  const at = raw.indexOf("}", begin) + 1;
-  const options = /^\s*\[/.exec(raw.slice(at));
-  return options === null
-    ? { at, text: "[overwrite]" }
-    : { at: at + options[0].length, text: "overwrite," };
-}
-
-/**
- * What adding `[overwrite]` to `b` loses on the next build: nothing when no file of that name exists
- * or it holds the block's entries (TeX's own copy); else the file's entries — committed, or this
- * machine's only copy (a reference manager's export).
- */
-function loss(
-  s: PaperSources,
-  b: EmbeddedBib,
-  deps: SourcesDeps,
-): "none" | "committed" | "local" {
-  const path = callerPath(resolve(s.dir, b.writes));
-  const bytes = deps.files.readBytes(path);
-  if (bytes === null) return "none";
-  const file = deps.latex.bibText(path, new TextDecoder().decode(bytes));
-  if (sameEntries(b.bib, file)) return "none";
-  return deps.committed.isCommitted(path) ? "committed" : "local";
-}
-
-const MESSAGE = {
-  none: "noOverwrite",
-  committed: "shadowed",
-  local: "wouldOverwrite",
-} as const;
-
-/** One block without `[overwrite]`: its `\\begin` line, what adding it loses, where it is reported. */
-interface OpenBlock {
-  readonly block: EmbeddedBib;
-  readonly head: Span;
-  readonly loss: "none" | "committed" | "local";
-  readonly data: Readonly<Record<string, string>>;
-}
-
-/** Every block the paper's sources hold that writes a `.bib` without `[overwrite]`. */
-const openBlocks = (s: PaperSources, deps: SourcesDeps): readonly OpenBlock[] =>
-  s.blocks
-    .filter((b) => !b.overwrite)
-    .map((block) => {
-      const text = block.bib.text;
-      const first = text
-        .slice(block.span.start, block.span.end)
-        .split("\n", 1)
-        .join("");
-      const head = {
-        start: block.span.start,
-        end: block.span.start + first.length,
-      };
-      return {
-        block,
-        head,
-        loss: loss(s, block, deps),
-        data: { begin: first.trim(), file: block.writes },
-      };
-    });
-
-/** Where, in paper.tex, the include that brought the file at `path` in stands (its start, if none). */
-const includeOf = (s: PaperSources, path: string): Span => {
-  const rel = s.includes.filter((i) => i.path === path).map((i) => i.rel);
-  return s.assembled.segments
-    .filter((seg) => rel.includes(seg.file))
-    .map((seg) => seg.via)
-    .filter((via): via is Span => via !== null)
-    .slice(0, 1)
-    .reduce((_, via) => via, { start: 0, end: 0 });
-};
-
-/** A block in paper.tex: on its line, fixed when nothing is lost, else a suggestion that names the file. */
-function reportHere(context: BibRuleContext, b: OpenBlock): void {
-  const loc = (i: number) => context.sourceCode.getLocFromIndex(i);
-  const fix = overwriteFix(context.sourceCode.raw, b.block.span.start);
-  const insert = (fixer: Fixer) =>
-    fixer.replaceTextRange([fix.at, fix.at], fix.text);
-  context.report({
-    loc: { start: loc(b.head.start), end: loc(b.head.end) },
-    messageId: MESSAGE[b.loss],
-    data: b.data,
-    ...(b.loss === "none"
-      ? { fix: insert }
-      : {
-          suggest: [{ messageId: "addOverwrite", data: b.data, fix: insert }],
-        }),
-  });
-}
-
-/** A block in an included file: at its include, the file and line first; the fix is that file's. */
-function reportElsewhere(
-  context: BibRuleContext,
-  s: PaperSources,
-  b: OpenBlock,
-): void {
-  const loc = (i: number) => context.sourceCode.getLocFromIndex(i);
-  const at = includeOf(s, b.block.bib.path);
-  const where = `${relative(s.dir, b.block.bib.path)}:${lineColumn(b.block.bib.text, b.head.start)}`;
-  context.report({
-    loc: { start: loc(at.start), end: loc(at.end) },
-    messageId: `${MESSAGE[b.loss]}In`,
-    data: { ...b.data, where },
-  });
-}
-
-const filecontentsOverwrite = (deps: SourcesDeps): BibRuleModule => ({
-  meta: OVERWRITE_META,
-  create: (context) => ({
-    "root:exit": () => {
-      const s = linted(context, deps);
-      if (s === null) return;
-      openBlocks(s, deps).forEach((b) => {
-        if (b.block.bib.path === s.main.path) reportHere(context, b);
-        else reportElsewhere(context, s, b);
-      });
-    },
-  }),
-});
-
 /** The `bib` plugin's rules, reading the paper through `deps`. They act on `paper.tex` only. */
 export const bibRules = (
   deps: SourcesDeps,
 ): Readonly<Record<BibRuleName, BibRuleModule>> => ({
-  "filecontents-overwrite": filecontentsOverwrite(deps),
   "reachable-entry": entryRule(REACHABLE_META, unreachable, deps),
-  "commented-entry": entryRule(COMMENTED_META, commented, deps),
 });
 
 /** The level each is on at for every `paper.tex` in paperlint's own config. */
 export const BIB_RULE_LEVELS = {
-  "bib/filecontents-overwrite": "error",
   "bib/reachable-entry": "warn",
-  "bib/commented-entry": "warn",
 } as const;

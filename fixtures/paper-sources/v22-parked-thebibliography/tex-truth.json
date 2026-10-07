@@ -5,5 +5,13 @@
   "written": [],
   "databases": [],
   "citations": [],
-  "bibitems": []
+  "bibitems": [],
+  "bibtex": {
+    "exit": 2,
+    "errors": [
+      "I found no \\citation commands---while reading file paper.aux",
+      "I found no \\bibdata command---while reading file paper.aux",
+      "I found no \\bibstyle command---while reading file paper.aux"
+    ]
+  }
 }

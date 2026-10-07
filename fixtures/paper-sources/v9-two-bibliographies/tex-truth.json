@@ -11,5 +11,11 @@
   ],
   "bibitems": [
     "onekey"
-  ]
+  ],
+  "bibtex": {
+    "exit": 2,
+    "errors": [
+      "Illegal, another \\bibdata command---line 5 of file paper.aux"
+    ]
+  }
 }

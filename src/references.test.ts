@@ -27,6 +27,7 @@ import {
   readReferences,
   referencesPath,
 } from "./references.ts";
+import { bibReader } from "./adapters/bibtex/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import {
   notWiredSources,
@@ -90,6 +91,7 @@ const depsOf = (files: ReturnType<typeof memoryFiles>) => ({
   files,
   latex: latexReader,
   committed: { isCommitted: () => true },
+  bib: bibReader,
 });
 
 /** The bibliography the build checks for the paper in `files`. */
@@ -535,14 +537,15 @@ describe("the references step reads the bibliography TeX reads (tex-truth.json)"
     ["v2-overwrite", ["paper.tex"], ["inline2024"]],
     ["v3-declared", ["paper.bib"], ["declared2023"]],
     ["v4-commented", ["refs.bib"], ["stale2020"]],
-    ["v5-percent-entry", ["paper.tex"], ["inline2024", "dead2020"]],
+    // The entry behind `%` is bibtex's, not the reader's: the post-build check names it.
+    ["v5-percent-entry", ["paper.tex"], ["inline2024"]],
   ])("%s: checks %j, keys %j", async (paper, sources, keys) => {
     const files = planted(paper);
     const handed: string[] = [];
     await referencesStep.run({
       ...ctx(files),
       checkReferences: (bib, cache) => {
-        handed.push(bib);
+        handed.push(...bib.map((e) => e.key));
         return Promise.resolve({
           check: { kind: "checked", entries: [] },
           cache,
@@ -551,7 +554,7 @@ describe("the references step reads the bibliography TeX reads (tex-truth.json)"
     });
     expect({
       sources: readReferences(files, PAPER)?.bib.sources,
-      keys: [...(handed[0] ?? "").matchAll(/@\w+\{([^,]+),/g)].map((m) => m[1]),
+      keys: handed,
     }).toEqual({ sources, keys });
   });
 });
@@ -594,5 +597,63 @@ describe("when there is nothing TeX reads, the step says why — and records not
     expect((await nothing(doc("x"), false)).note).toBe(
       "references NOT checked — no paper reader was wired into this build; lint will say so",
     );
+  });
+});
+
+describe("what the build's bibtex read, against what paperlint read (the post-build check)", () => {
+  /** A build of TEX(ENTRIES) whose bibtex left `blg` and `bbl` in the paper directory. */
+  async function built(tex: string, blg: string | null, bbl: string | null) {
+    const files = memoryFiles({
+      [`${PAPER}/paper.tex`]: tex,
+      ...(blg === null ? {} : { [`${PAPER}/paper.blg`]: blg }),
+      ...(bbl === null ? {} : { [`${PAPER}/paper.bbl`]: bbl }),
+    });
+    await referencesStep.run({
+      ...ctx(files),
+      checkReferences: checker([verdict("schick2023"), verdict("other")]),
+    });
+    return files;
+  }
+  const BLG = "This is BibTeX, Version 0.99d\nDatabase file #1: refs.bib\n";
+  const bbl = (...keys: readonly string[]) =>
+    `\\begin{thebibliography}{9}\n${keys.map((k) => `\\bibitem{${k}}\nX.\n`).join("")}\\end{thebibliography}\n`;
+
+  it("the step records the databases paper.blg names and the entries paper.bbl holds", async () => {
+    const files = await built(TEX(ENTRIES), BLG, bbl("schick2023", "other"));
+    expect(readReferences(files, PAPER)?.bibtex).toEqual({
+      databases: ["refs.bib"],
+      bibitems: ["schick2023", "other"],
+    });
+    expect(await lint(files, TEX(ENTRIES))).toEqual([]);
+  });
+
+  it("no paper.blg or paper.bbl (bibtex did not run): nothing recorded, nothing to judge", async () => {
+    const files = await built(TEX(ENTRIES), null, null);
+    expect(readReferences(files, PAPER)?.bibtex).toEqual({
+      databases: [],
+      bibitems: [],
+    });
+    expect(await lint(files, TEX(ENTRIES))).toEqual([]);
+  });
+
+  it("🔴 an entry bibtex read that the reader does not see (behind `%`) → refs-checked names it", async () => {
+    const tex = TEX(`${ENTRIES}\n% @misc{hidden, url = {https://x.org}}`);
+    const files = await built(tex, BLG, bbl("schick2023", "hidden"));
+    const msgs = await lint(files, tex);
+    expect(msgs.map((m) => [m.ruleId, m.severity])).toEqual([
+      ["paper/refs-checked", 1],
+    ]);
+    expect(msgs[0]?.message).toMatch(/`hidden`/);
+  });
+
+  it("a database bibtex opened that the paper's bibliography does not name → refs-checked names it", async () => {
+    const files = await built(
+      TEX(ENTRIES),
+      `${BLG}Database file #2: elsewhere.bib\n`,
+      bbl("schick2023"),
+    );
+    const msgs = await lint(files, TEX(ENTRIES));
+    expect(msgs.map((m) => m.ruleId)).toEqual(["paper/refs-checked"]);
+    expect(msgs[0]?.message).toMatch(/elsewhere\.bib/);
   });
 });

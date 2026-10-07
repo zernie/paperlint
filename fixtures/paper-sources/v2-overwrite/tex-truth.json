@@ -14,5 +14,9 @@
   ],
   "bibitems": [
     "inline2024"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

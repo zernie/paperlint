@@ -13,5 +13,9 @@
   ],
   "bibitems": [
     "shortblock"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

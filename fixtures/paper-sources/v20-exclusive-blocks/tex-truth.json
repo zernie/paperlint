@@ -13,5 +13,9 @@
   ],
   "bibitems": [
     "anonblock"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

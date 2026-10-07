@@ -12,5 +12,9 @@
   ],
   "bibitems": [
     "stale2020"
-  ]
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
 }

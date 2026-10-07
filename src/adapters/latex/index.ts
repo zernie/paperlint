@@ -34,8 +34,6 @@ import { bodyEmphasis, bodyProse } from "./prose.ts";
 import { renderedRuns } from "./rendered.ts";
 import { layoutOverridesOf } from "./layout.ts";
 import { decideBibliography } from "./bibliography.ts";
-import { filecontentsOf } from "./declarations.ts";
-import { bibFileText } from "./bibtex.ts";
 
 export {
   documentClassOf,
@@ -59,8 +57,6 @@ export { bodyEmphasis, bodyProse } from "./prose.ts";
 export { renderedRuns } from "./rendered.ts";
 export { layoutOverridesOf } from "./layout.ts";
 export { decideBibliography } from "./bibliography.ts";
-export { filecontentsOf } from "./declarations.ts";
-export { bibFileText } from "./bibtex.ts";
 
 /** The `LatexReader` port over unified-latex: each call parses its source once. */
 export const latexReader: LatexReader = {
@@ -75,7 +71,5 @@ export const latexReader: LatexReader = {
   template: parseTemplate,
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
   layoutOverrides: (src) => layoutOverridesOf(parseLatex(src)),
-  filecontents: (src) => filecontentsOf(parseLatex(src)),
-  bibText: bibFileText,
   bibliography: decideBibliography,
 };

@@ -11,10 +11,16 @@ import {
   type LookupCache,
 } from "../../domain/lookup-cache.ts";
 import * as cites from "../../../skills/verify-citations/scripts/verify-cites.mjs";
+import { absolutePath } from "../../domain/paths.ts";
+import { bibReader } from "../bibtex/index.ts";
+
+/** A BibTeX text's entries, as the bibtex reader reads them. */
+const read = (bib: string) =>
+  bibReader.readFile(absolutePath("/p/refs.bib"), bib).entries;
 
 /** The verdicts of a cold run — an empty cache, the adapter the CLI wires. */
 const checkOnly = async (bib: string) =>
-  (await onlineReferences(bib, EMPTY_LOOKUP_CACHE)).check;
+  (await onlineReferences(read(bib), EMPTY_LOOKUP_CACHE)).check;
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -131,23 +137,19 @@ test("each entry gets its existence and its authors: confirmed, fabricated, mism
   );
 });
 
-test("an author finding names what is extra and what is out of order; an entry only the author check read is unresolvable", async () => {
+test("an author finding names what is extra and what is out of order", async () => {
   vi.useFakeTimers();
   fakeFetch({
     "https://dblp.org/search/publ/api/?q=Extra%20Paper": () =>
       dblp("Extra Paper", ["Ada Lovelace"]),
     "https://dblp.org/search/publ/api/?q=Swapped%20Paper": () =>
       dblp("Swapped Paper", ["Ada Lovelace", "Alan Turing"]),
-    "https://dblp.org/search/publ/api/?q=Comment%20Paper": () =>
-      dblp("Comment Paper", ["Grace Hopper"]),
     "https://dblp.org/": () => json(200, {}),
     "https://api.crossref.org/": () => json(200, { message: { items: [] } }),
   });
   const bib = [
     "@inproceedings{extra, author={Ada Lovelace and Grace Hopper}, title={Extra Paper}, booktitle={ICSE}}",
     "@inproceedings{swapped, author={Alan Turing and Ada Lovelace}, title={Swapped Paper}, booktitle={ICSE}}",
-    // verify-cites skips @comment blocks; bib-authors reads them — so only one checker sees this key.
-    "@comment{commented, author={Ada Lovelace}, title={Comment Paper}, booktitle={ICSE}}",
   ].join("\n");
   const r = await settle(checkOnly(bib));
   const why = Object.fromEntries(
@@ -164,10 +166,6 @@ test("an author finding names what is extra and what is out of order; an entry o
     swapped: [
       "unresolvable",
       "not found by title in any database (no resolvable id to disprove) — could be a legit unindexed/regional/pre-digital work, NOT fabrication; order differs (DBLP: ICSE 2024)",
-    ],
-    commented: [
-      "unresolvable",
-      "missing hopper; extra lovelace (DBLP: ICSE 2024)",
     ],
   });
 });
@@ -208,7 +206,7 @@ test(
     slowFetch(40);
     const bib = manyBib(20);
     const serial: string[] = [];
-    for (const c of cites.parseBib(bib))
+    for (const c of cites.citationsOf(read(bib)))
       serial.push((await cites.verifyCitationLive(c, { cache: {} })).verdict);
     const t0 = Date.now();
     const r = await checkOnly(bib);
@@ -265,7 +263,7 @@ const answering = () =>
 async function cold(bib: string) {
   vi.useFakeTimers();
   answering();
-  return settle(cached(bib, EMPTY_LOOKUP_CACHE));
+  return settle(cached(read(bib), EMPTY_LOOKUP_CACHE));
 }
 
 test("cold: every answer is stored with the day it was fetched — responses, never verdicts", async () => {
@@ -324,7 +322,7 @@ test("🔴 warm: a fully cached bibliography asks NOTHING — no lookup, no reac
   // Fake timers with NO advancing: a single DBLP pause would never resolve and time the test out.
   vi.useFakeTimers();
   const calls = fakeFetch({});
-  const second = await cached(bib, first.cache);
+  const second = await cached(read(bib), first.cache);
   assert.deepEqual(
     // Nothing fetched, so the cache comes back as the very object passed in — nothing to write.
     { calls, check: second.check, sameCache: second.cache === first.cache },
@@ -338,7 +336,7 @@ test("🔴 one entry edited: only that entry is asked again, and the old answers
   vi.useFakeTimers();
   const calls = answering();
   const edited = PAPERS.join("\n").replace("Other Paper", "Renamed Paper");
-  const second = await settle(cached(edited, first.cache));
+  const second = await settle(cached(read(edited), first.cache));
   assert.deepEqual(
     {
       // The lookups run concurrently, so the order of requests is not the subject.
@@ -373,14 +371,14 @@ test("an answer older than 30 days is asked again and re-dated; at 30 days it is
   vi.useFakeTimers();
   const quiet = fakeFetch({});
   const at30 = await referencesChecker({ today: () => "2026-10-27" })(
-    bib,
+    read(bib),
     first.cache,
   );
   vi.useRealTimers();
   vi.useFakeTimers();
   const calls = answering();
   const at31 = await settle(
-    referencesChecker({ today: () => "2026-10-28" })(bib, first.cache),
+    referencesChecker({ today: () => "2026-10-28" })(read(bib), first.cache),
   );
   assert.deepEqual(
     {
@@ -408,7 +406,7 @@ test("a failed lookup is not cached: the next run asks it again", async () => {
     "https://dblp.org/": () => json(500),
   });
   const bib = PAPERS[1];
-  const r = await settle(cached(bib, EMPTY_LOOKUP_CACHE));
+  const r = await settle(cached(read(bib), EMPTY_LOOKUP_CACHE));
   const failed: LookupCache = r.cache;
   assert.deepEqual(
     {
@@ -423,7 +421,7 @@ test("offline with an incomplete cache: not-checked, and the cache comes back un
   vi.stubGlobal("fetch", () =>
     Promise.reject(new Error("getaddrinfo ENOTFOUND api.crossref.org")),
   );
-  const r = await cached(PAPERS[0], EMPTY_LOOKUP_CACHE);
+  const r = await cached(read(PAPERS[0]), EMPTY_LOOKUP_CACHE);
   assert.deepEqual(r, {
     check: {
       kind: "not-checked",
@@ -461,7 +459,7 @@ test("🔴 #120: DBLP answering HTML is asked ONCE — no retries, no pause — 
     () => new Response("<!doctype html><title>429</title>"),
     () => json(429),
   );
-  const { check } = await cached(PUBLISHED, EMPTY_LOOKUP_CACHE);
+  const { check } = await cached(read(PUBLISHED), EMPTY_LOOKUP_CACHE);
   const entries = check.kind === "checked" ? check.entries : [];
   assert.deepEqual(
     {
@@ -507,14 +505,14 @@ test("#120: a DBLP 429 trips it as well; DBLP answering keeps its 900 ms pace be
     () => json(429),
     () => json(200, { data: [] }),
   );
-  await cached(PUBLISHED, EMPTY_LOOKUP_CACHE);
+  await cached(read(PUBLISHED), EMPTY_LOOKUP_CACHE);
   vi.useRealTimers();
   vi.useFakeTimers();
   const answering = refusing(
     () => dblp("First Paper", ["Ada Lovelace"]),
     () => json(200, { data: [] }),
   );
-  const pending = cached(PUBLISHED, EMPTY_LOOKUP_CACHE);
+  const pending = cached(read(PUBLISHED), EMPTY_LOOKUP_CACHE);
   // One compared entry, then the pause: without advancing time, the run cannot finish.
   let done = false;
   void pending.finally(() => (done = true));

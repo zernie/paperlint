@@ -48,8 +48,8 @@ import type {
 import { messageOf } from "./domain/text.ts";
 import {
   bibTexts,
-  bibtexView,
   databasesOf,
+  type BibEntry,
   type BibText,
   type Bibliography,
   type PaperSources,
@@ -77,12 +77,11 @@ const text = (files: Files, p: string): string | null => {
 
 /**
  * The bibliography the build checks: every text TeX reads for it (`paperSources`; for `undecided`,
- * every candidate), and the one text the checkers read — each database as bibtex reads it, an entry
- * behind `%` included (`bibtexView`).
+ * every candidate), and their entries, as the bibtex reader read them.
  */
 export interface CheckedBibliography {
   readonly texts: readonly [BibText, ...BibText[]];
-  readonly text: string;
+  readonly entries: readonly BibEntry[];
 }
 
 /** The bibliography to check, or null when TeX reads no database for this paper. */
@@ -92,11 +91,16 @@ export function checkedBibliography(
   const [first, ...rest] = bibTexts(b);
   if (first === undefined) return null;
   const texts: readonly [BibText, ...BibText[]] = [first, ...rest];
-  return { texts, text: texts.map(bibtexView).join("\n") };
+  return { texts, entries: texts.flatMap((t) => t.entries) };
 }
 
+/** The bytes of the databases checked, in order: what a later lint compares to see the record is current. */
 export const bibHash = (b: CheckedBibliography): string =>
-  sha256Hex(new TextEncoder().encode(b.text));
+  sha256Hex(
+    new TextEncoder().encode(
+      b.texts.map((t) => t.text.slice(t.body.start, t.body.end)).join("\n"),
+    ),
+  );
 
 /** Why a paper's references are not checked: there is no database TeX reads. */
 function nothingToCheck(b: Bibliography): string {
@@ -191,11 +195,11 @@ const newAnswers = (before: LookupCache, after: LookupCache): number => {
 /** Run the checker; a throw is `not-checked`, with the cache as it was. */
 async function run(
   check: CheckReferences,
-  bib: string,
+  entries: readonly BibEntry[],
   cache: LookupCache,
 ): Promise<ReferencesRun> {
   try {
-    return await check(bib, cache);
+    return await check(entries, cache);
   } catch (e) {
     return { check: { kind: "not-checked", why: messageOf(e) }, cache };
   }
@@ -243,7 +247,7 @@ export async function recordReferences(
     return notChecked(
       `${LOOKUP_CACHE_FILE} cannot be read (${cache.error}) — fix it, or delete it to ask every question again`,
     );
-  const result = await run(check, bib.text, cache.value);
+  const result = await run(check, bib.entries, cache.value);
   if (result.check.kind === "not-checked") return notChecked(result.check.why);
   const doc = record(result.check);
   const fetched = newAnswers(cache.value, result.cache);
