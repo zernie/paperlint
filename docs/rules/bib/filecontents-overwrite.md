@@ -80,9 +80,10 @@ lint` does not cache.
 
 `paperlint lint --fix` adds `[overwrite]` (into the option list when there is one:
 `[overwrite,nosearch]`) — but only when that loses nothing: no file of the block's name exists in the
-paper's directory, or the file holds the block's entries (TeX's own copy from an earlier build).
+paper's directory, or the file holds the block's entries, `@string` and `@preamble` commands (TeX's
+own copy from an earlier build).
 
-When the file holds OTHER entries — committed, or a local file such as a reference manager's
+When the file holds OTHER entries or commands — committed, or a local file such as a reference manager's
 export — adding `[overwrite]` would write the block over it on the next build, so `--fix` leaves it
 and the finding carries a suggestion instead, which your editor applies on request:
 

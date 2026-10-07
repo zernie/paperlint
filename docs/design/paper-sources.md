@@ -1706,7 +1706,7 @@ name. Any other macro in a name gives a new database state, `unresolved`. The bi
 declaration where it is written.
 
 **3. Blocks in included files.** `PaperSources.blocks` lists every live block that writes a `.bib`,
-in the main file and in its own includes. `bib/filecontents-overwrite` judges all of them. A block in
+in the main file and in its own includes (in TeX's order since §10). `bib/filecontents-overwrite` judges all of them. A block in
 an included file is reported at its `\input`, with `bibblock.tex:1:1:` first. There is no fix for it
 from `paper.tex`: the edit belongs to that file.
 
@@ -1739,7 +1739,8 @@ recently used tree goes first.
 - 9 (`\ifthenelse`): **fixed**. Its three groups are read as conditional (v10).
 - 10 (two blocks for one file): **fixed**. The blocks run in order: a block writes when it has
   `[overwrite]` or no file exists yet (v11).
-- 11 (a block behind a switch): **fixed**. Its database is both candidates (v12).
+- 11 (a block behind a switch): **fixed**. Its database is both candidates (v12). §10 widens this
+  to every block that can be the last to write.
 - 12: **fixed** for `\nobibliography` (v14), `\addglobalbib` and `\addsectionbib`. **Not
   modelled:** multibib's `\newcites` and bibunits' `\putbib`. Whether biber accepts an
   extensionless `\addbibresource{refs}` is not measured (no biber).
@@ -1768,6 +1769,81 @@ recently used tree goes first.
 
 **Verdict after response:** findings 1–6 are fixed, each red first. Every note is either fixed or
 stated above as not modelled. The response has not been through a third refutation.
+
+## 10. Code review on the PR (Codex, on `0543c5f` and `e34e712`)
+
+The automated reviewer left five findings on #174. Each became a planted paper whose `tex-truth.json`
+was recorded by `pdflatex -recorder` and `bibtex`, then a failing test, then the fix.
+
+| paper                                                                         | TeX reads → `.bbl`                   | module before                             | module now                                  |
+| ----------------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------- | ------------------------------------------- |
+| v17 `\input{bibsetup}` (`\bibliography{first}`) before `\bibliography{later}` | `first.bib` → firstkey               | `file:later`                              | `file:first`                                |
+| v18 an include's `[overwrite]` block, then the main file's                    | the main file's block → mainblock    | the include's block                       | the main file's block                       |
+| v19 `\ifanon\input{anonbib}\fi` before `\bibliography{real}`                  | `anon.bib` → anonkey                 | `databases`: real                         | `undecided`: anon, real                     |
+| v20 `[overwrite]` blocks in `\ifanon … \else … \fi`                           | the first block → anonblock          | `undecided`: missing, the second block    | `undecided`: missing, the first, the second |
+| v21 `[overwrite]` blocks behind two independent switches                      | the first block → shortblock         | `undecided`: missing, the second block    | `undecided`: missing, the first, the second |
+| v22 `thebibliography` after `\end{document}`                                  | none                                 | `thebibliography`                         | `none`                                      |
+| v23 `\input{parked}` after `\end{document}`                                   | inputs: `paper.tex` only             | `parked.tex` a file of the paper          | not a file of the paper                     |
+| v24 `@`, `)`, `{"}` inside quoted fields                                      | q1–q5                                | q1–q5 and three entries that do not exist | q1–q5, each entry whole                     |
+| v25 committed `refs.bib`, same entry, other `@string`                         | the file (`.bbl` holds "File Venue") | `embedded`: the block                     | `conflict`: the file                        |
+
+**1. Execution order (P1).** The decision read the main file's declarations and blocks, then each
+include's: grouped by file. TeX reads one stream. The decision now reads the assembled paper (the main
+file with every include spliced where it stands, the text the other rules already parse) and places
+each declaration and block back in the file that holds it (`BibPaper`, `BibPiece` in the port). The
+class had three members, all fixed by the one change: the order of declarations (v17), the order of
+blocks for one file (v18), and the context around an include, so an include inside a conditional is
+conditional (v19). Files found only on paperlint's inputs path are read too, as TeX reads them.
+**Not modelled:** an `\input` inside a macro's body. The assembly splices no include there (it
+expands no macro, `src/domain/paper-source.ts`), so what that file declares is not seen.
+
+**2. Every block that can win (P2).** The candidates were "no switched block runs" and "all run". The
+decision now follows every run the blocks can make: a sure block runs, a switched one may or may not.
+Runs that leave the same block are one outcome, so there are at most the blocks and one, and the
+first is the run where no switched block runs. A sure `[overwrite]` block after switched ones always
+wins, so that bibliography is now `databases`, not `undecided`. A switched block without
+`[overwrite]` beside a committed file is an outcome of its own: TeX reads the file, and the block is
+shadowed (`conflict`).
+
+**3. After `\end{document}`.** `liveRoot` (in `parse.ts`) is the part of a source TeX reads. The
+`thebibliography` lookup, the include reader, the block reader and the declaration scan use it. The
+class, searched in the adapter: every walk of the whole tree. The include reader was a member (v23,
+Q1). `headings.ts`, `layout.ts` and `rendered.ts` also walk past `\end{document}`. They answer other
+questions (outline, lists, rendered prose) for other rules, and are left to those rules' owners.
+
+**4. Quoted fields.** Measured with bibtex 0.99d first:
+
+| probe                                                   | bibtex reads                                                      |
+| ------------------------------------------------------- | ----------------------------------------------------------------- |
+| `note = "mail a@b.org"`                                 | the entry, whole                                                  |
+| `note = "x {"} @y"`                                     | the entry, whole                                                  |
+| `@misc(p1, note = "a ) b", …)`                          | the entry, whole                                                  |
+| `title = {A "quoted @ thing}`                           | the entry, whole                                                  |
+| `note = "open @misc{q7…` (never closed)                 | q6 only, to the end of file                                       |
+| `note = "a } b"` in a `{…}` entry, and in a `(…)` entry | the entry ends at the `}` ("Unbalanced braces"), the next is read |
+| `note = "n" @misc{q11…`                                 | q10, q11 (resync, as before)                                      |
+| `@string{em = "x@y.org"}`, `note = "a" # "b@c"`         | as written                                                        |
+
+The scanner keeps a quote state: a `"` at depth 0 opens or closes it; inside it `@` and `)` are
+text and braces still nest. A `}` at depth 0 ends the entry in either kind of entry.
+
+Before a fourth hand-written rule, three parsers were run on the eleven measured shapes:
+
+- `@retorquere/bibtex-parser` 10.0.2 (already a dependency) gets quotes, `@string` and `@preamble`
+  right. It differs from bibtex on five shapes: an open quote, an unclosed entry followed by
+  `% @misc`, an `@` after a comma, `@comment{ @misc{…} }` and `% see @misc{…}`.
+- bibtex-tidy and citation-js throw on every malformed shape: neither recovers.
+
+None reproduces bibtex's recovery, so the scanner stays. Nothing in this PR switches parser.
+
+**5. `@string` and `@preamble` in a copy.** `BibText.commands` holds them. Two texts are alike when
+their entries and commands are, in order. Text bibtex skips between them still does not count. A
+committed `.bib` whose `@string` differs from the block's is a `conflict` (v25), and
+`bib/filecontents-overwrite` offers a suggestion, not a fix.
+
+The bib rules' two corpus tests now carry an explicit timeout. Linted by the bib rules alone, the
+assembled ACM paper is parsed there and nowhere else (about 2.5 s, 4.5 s under coverage). In
+`paperlint lint` the register, claim-provenance and venue rules parse that text too, a memo hit.
 
 ## Appendix A — prototype of the rule
 
