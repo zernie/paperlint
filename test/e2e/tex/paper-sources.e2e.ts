@@ -1,7 +1,7 @@
 /**
  * TeX's own answer for the planted papers of `fixtures/paper-sources/`, recorded beside each one as
  * `tex-truth.json` — so the values the module's tests compare against (`src/paper-sources.test.ts`)
- * were written by TeX, not by the hand that writes the module (docs/design/paper-sources.md §5).
+ * were written by TeX, not by the hand that writes the module (docs/design/paper-sources.md §8).
  *
  * Each paper is copied to a scratch directory and built the way a person builds it by hand:
  * `pdflatex -recorder`, `bibtex`, then two more `pdflatex -recorder` passes. Read from the run:

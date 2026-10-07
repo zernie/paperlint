@@ -95,7 +95,7 @@ interface Run {
  * The inline bibliography — a `filecontents` block writing a `.bib` — with its offsets: the span the
  * markup rules skip. Which bibliography TeX reads is `paperSources`' answer (src/paper-sources.ts);
  * this range only says which bytes are not prose, and moves onto the one projection of live text
- * with the rest of `skippedRanges` (docs/design/paper-sources.md §3.4).
+ * with the rest of `skippedRanges` (Q3, docs/design/paper-sources.md §10).
  */
 function bibRange(text: string): BibRange | null {
   const m =

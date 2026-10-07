@@ -403,7 +403,7 @@ no longer be opt-in. It costs about 15 MB of the install (9 MB itself, plus
 
 Where it reads differently from bibtex — bibtex has no comment syntax, so an entry behind `%` or
 inside `@comment{…}` is one bibtex typesets — paperlint does not emulate bibtex: the build records
-what bibtex read, and `paper/refs-checked` names the difference (docs/design/paper-sources.md §9).
+what bibtex read, and `paper/refs-checked` names the difference (docs/design/paper-sources.md §7).
 
 🔴 **Therefore the pin here and the pin in the consumer move TOGETHER, in one pass.** A major
 mismatch means a hook compiled by one version is executed by another: the stamp does not
