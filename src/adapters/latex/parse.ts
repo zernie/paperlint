@@ -139,9 +139,9 @@ const parser = once(() =>
 
 /**
  * The trees parsed last, by their source: a tree is a pure function of its text, and one lint of a
- * paper asks for the same texts many times — every rule that reads the paper (`readPaper`,
- * `paperSources`) parses `paper.tex`, its includes and the assembled whole again. Measured 2026-10-06
- * on the accepted ACM paper of the corpus: 0.9 s per `paperSources`, seven of them per lint,
+ * paper asks for the same texts many times — every rule that reads the paper (`readPaper`)
+ * parses `paper.tex`, its includes and the assembled whole again. Measured 2026-10-06 on the
+ * accepted ACM paper of the corpus: 0.9 s per reading of the paper's sources, seven of them per lint,
  * 50–76 ms with the memo.
  *
  * Bounded by the SOURCE TEXT it holds (UTF-16 units, about bytes for TeX), least recently used out.

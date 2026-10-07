@@ -396,7 +396,7 @@ working, not a defect, exactly as argued below.
 ### The `.bib` parser is a dependency: the one bibtex reader
 
 `@retorquere/bibtex-parser` is a `dependency`. It is the one reader of `.bib` text in paperlint
-(`src/ports/bib-reader.ts`, adapter `src/adapters/bibtex/`): `paperSources`, `bib/reachable-entry`,
+(`src/ports/bib-reader.ts`, adapter `src/adapters/bibtex/`): `recordedBibliography`, `bib/reachable-entry`,
 the build's reference check, `extract-ref-facts` and `bib-authors` all read through it, so it can
 no longer be opt-in. It costs about 15 MB of the install (9 MB itself, plus
 `wink-eng-lite-web-model` and `unicode2latex`).

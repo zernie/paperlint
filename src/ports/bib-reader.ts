@@ -1,5 +1,5 @@
 /**
- * THE BIBTEX READER — the one way paperlint reads a `.bib` database. Every consumer (`paperSources`,
+ * THE BIBTEX READER — the one way paperlint reads a `.bib` database. Every consumer (`recordedBibliography`,
  * `bib/reachable-entry`, the build's reference check, `extract-ref-facts`, `bib-authors`) reads
  * through it; the adapter is `src/adapters/bibtex/`.
  */

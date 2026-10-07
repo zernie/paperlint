@@ -1,8 +1,9 @@
-# Paper sources — one owner for "which files, which bibliography"
+# Paper sources — TeX answers "which files, which bibliography"
 
 As built in PR #174. Everything that asks which files make up a paper, or which bibliography TeX reads,
-asks one module; nothing reads a `.bib` but one adapter. TeX's own answer for each case is recorded
-beside the case (§8), and the module is tested against that, not against prose.
+reads the record the last build wrote from TeX's own files; nothing in paperlint reads TeX source to
+decide either, and nothing reads a `.bib` but one adapter. TeX's own answer for each planted paper is
+recorded beside it (§8), and the consumers are tested against that, not against prose.
 
 ## 1. TeX is the one source of truth
 
@@ -84,24 +85,29 @@ skill's script).
 
 `extract-ref-facts`, `bib-authors` and `verify-cites` (its `.bib` input) take a path on the command
 line. All three ask `bibliographyAt(path, deps)`: a `.bib` is read alone, as named; a `.tex`, or a
-directory holding `paper.tex`, is the bibliography TeX reads for that paper. A refusal is a
-`BibliographyUnread` (`missing`, `not-bib-or-tex`, `no-paper`, `no-database`), and
-`bibliographyUnreadWhy` is its one sentence. Each script keeps its own CLI frame around it.
+directory holding `paper.tex`, is the bibliography the last build's bibtex opened for that paper
+(`recordedBibliography`) — for a database TeX wrote, the text of the `filecontents` block (or included
+file) that holds it, so an entry stands where the author edits it. A refusal is a `BibliographyUnread`
+(`missing`, `not-bib-or-tex`, `no-paper`, `not-built`, `no-database`), and `bibliographyUnreadWhy` is
+its one sentence; `not-built` covers a missing, unreadable and stale record alike: run
+`npx paperlint build` first. Each script keeps its own CLI frame around it.
 
 ## 6. The references a build checks
 
-The build's references step (`src/references.ts`) checks entries, not keys: two candidates of an
-`undecided` bibliography may each define a key with other metadata.
+The build's references step (`src/references.ts`) checks entries, not keys: two databases may each
+define a key with other metadata.
 
-- **What is checked is `checkedBibliography(sources, bibtexRead)`**: the bibliography as the build
-  observed it (`observed`). For `undecided`, the candidates whose database the build's bibtex opened
-  (`paper.blg`) and paperlint can read; when it opened none of them (it did not run), every
-  candidate. The verdicts, their hash and the post-build comparison are all about that one set.
+- **What is checked is `readBibliography`**: the databases the build's bibtex opened, in the order it
+  opened them, each once, read by the bibtex reader — a view over `recordedBibliography`, the one reader
+  of the record's databases. Without a fresh record the step checks nothing and its note names the
+  reason; a database bibtex opened that is not on disk now (a `.bib` TeX wrote, then a clean removed it)
+  is named, not skipped.
 - **One verdict per entry, in order.** The `CheckReferences` port returns verdict `i` for entry `i`;
   the adapter runs verify-cites and bib-authors per entry and pairs them by position.
-- **`_build/references.json`, schema 3**: `bib {sources, sha256}`, `bibtex {databases, bibitems}`,
-  `status`, `entries`. Lint lays the verdicts on the entries checked and reports each at its entry;
-  a record that is not one verdict per entry, in order, is not about this bibliography
+- **`_build/references.json`, schema 3**: `bib {sources, sha256}`, `status`, `entries`. `sources` are
+  the database names as bibtex names them and `sha256` covers their text. Lint lays the verdicts on the
+  entries of the same databases and reports each at its entry (`entryReports`); a record that is not one
+  verdict per entry, in order, about the bytes the databases hold now, is not about this bibliography
   (`paper/refs-fresh`).
 
 ## 7. The post-build check — where bibtex reads differently
@@ -112,50 +118,42 @@ not emulate it. Each difference has an owner:
 | shape                                                          | answered by                                                            |
 | -------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | malformed: an entry or brace never closed, `%` inside an entry | the build — bibtex exits 2, and `paperlint build` fails with its lines |
-| two `\bibliography` commands                                   | the build, as above; statically `undecided`                            |
-| an entry behind `%`, or inside `@comment{…}`                   | the post-build check                                                   |
+| an entry behind `%`, or inside `@comment{…}`                   | `paper/refs-checked`, from the keys bibtex typeset                     |
 | `@`, `)` or `{"}` inside a quoted field                        | the reader, which reads it as bibtex does                              |
 
-**The post-build check.** The step records the databases `paper.blg` names and the keys `paper.bbl`
-typesets. `paper/refs-checked` names, via `unseenBy`, every database the paper does not name and
-every key bibtex typeset that the reader did not read from the databases bibtex opened.
-
-**The safety net.** When the static answer has no database at all but the build's bibtex opened
-some, the step still records what bibtex read, and `paper/refs-checked` names those databases. A
-paper whose bibliography the static reading cannot see (#177, #181) is loud after a build, not
-silent.
+`paper/refs-checked` names every key bibtex typeset (`paper.bbl`) that no entry of the databases it
+opened has (`unseenKeys`; keys compare case-insensitively, as bibtex's do), and every database bibtex
+opened that is not on disk.
 
 ## 8. Ground truth — `tex-truth.json`
 
 Each planted paper of `fixtures/paper-sources/` carries `tex-truth.json`, written by TeX:
-`test/e2e/tex/paper-sources.e2e.ts` builds it with `pdflatex -recorder` and `bibtex` and records
-the files opened, the `.bib` files written, the databases bibtex read, the citations, the entries
-typeset, and bibtex's exit code and errors. `-u` re-records; a TeX that answers differently fails.
-`src/paper-sources.test.ts` compares the module with those files without TeX, and names every key
-the post-build check must name (`UNSEEN`, `UNSEEN_DATABASES`). The files are the numbers; this
-document does not copy them.
+`test/e2e/tex/paper-sources.e2e.ts` builds it with `pdflatex -recorder` and `bibtex` and snapshots the
+record the build writes. `-u` re-records; a TeX that answers differently fails. The unit tests of the
+consumers lay that file at `_build/sources.json` (`test/recorded-fixture.ts`). The accepted papers of
+`fixtures/accepted-papers/` carry theirs the same way (`test/e2e/tex/accepted-papers-record.e2e.ts`).
+The files are the numbers; this document does not copy them.
 
 ## 9. Decisions
 
-- **Tracked files decide which files are the paper's; their working-tree bytes are read** — the
-  author's draft is what TeX builds here, and a build's untracked leftover must not change the answer.
-- **"Tracked" asks git's index through a port** (`TrackedFiles`) — "a file exists" would count a
-  build's leftover as the paper's; outside a work tree every file counts.
-- **`undecided` is a state of the bibliography** — which databases TeX reads depends on a value the
-  reader does not compute; listing every candidate is the only answer that is never silent.
-- **The build's observation decides `undecided` after a build** — bibtex's `.blg` says which
-  candidate it opened; checking the others would judge entries TeX never read.
-- **One verdict per entry, not per key** — a key does not identify an entry; a verdict that cannot
-  say which entry it is about reports at the wrong one.
+- **The record, not a reading** — which files and databases a paper has is what TeX did on the last
+  build; a static reading of the text agrees only on the cases its author thought of.
+- **No record, no verdict** — a rule that needs the record is silent without a current one, and one
+  rule (`paper/sources-fresh`) says so once; a stale answer is worse than none.
+- **Prose rules splice only the files the record lists** — an include behind `\iffalse` contributes
+  nothing; without a record the text is `paper.tex` alone and `paper/sources-fresh` says the rest went
+  unlinted.
+- **A lookup of where a text stands is not a decision of what TeX reads** — `filecontents` blocks are
+  found in the text only to put a finding on the line that holds an entry (`sameDatabase`).
+- **One verdict per entry, not per key** — a key does not identify an entry; a verdict that cannot say
+  which entry it is about reports at the wrong one.
 - **"Same database" is what bibtex takes** — raw bytes and the final `@string` map are a proxy that
   misses a `@string` redefined after use; the text between entries reaches no `.bbl`.
 - **One `.bib` reader, fenced by lint** — three readers grew before there was one; the parser's name
   may appear in one folder only.
 - **One path → bibliography function** — three scripts each resolved it by hand, each with its own
   refusals.
-- **A role is the file's** — a file included in the preamble and the body is body prose; its first
-  include alone would drop it from lint.
-- **Recorded TeX truth, not hand-written expectations** — the module's tests compare with what TeX
+- **Recorded TeX truth, not hand-written expectations** — the consumers' tests compare with what TeX
   did, so a wrong belief about TeX cannot be written into both the code and its test.
 - **The post-build check, not emulation** — no parser recovers as bibtex does; bibtex's own output
   is compared instead.
@@ -163,21 +161,16 @@ document does not copy them.
 ## 10. Scope: what this PR does not decide
 
 - A finding for a `filecontents` block without `[overwrite]` (#176).
-- `\includeonly` and `\endinput`: every include is read, so a block in an excluded file still is.
-- An `\input` inside a macro's body: the assembly expands no macro, so that file is not read (#177).
-- A `filecontents` block whose file name a macro other than `\jobname` builds: matched to no
-  declaration; the post-build check names the database bibtex read.
-- multibib's `\newcites` and bibunits' `\putbib`.
-- biber: an extensionless `\addbibresource{refs}` is not measured; a remote resource is not fetched.
-- kpathsea's search tree: a `.bib` found only there is `missing` statically; the post-build check
-  names it.
+- A listed body file that no include macro in the text stands for (an `\input` inside a macro's body,
+  #177): linted as a file of its own, absent from the whole-paper text.
 - `eslint --cache`: `bib/reachable-entry` depends on files other than the linted one, so a cached
   result can be stale after a `.bib` changes. `paperlint lint` does not cache.
 - Reading past `\end{document}` in `headings.ts`, `layout.ts` and `rendered.ts` (#178).
+- A database TeX wrote is read from the file it left on disk, which the record does not hash: edited
+  after a build, that file is not detected as stale.
 - Two copies compared where bibtex and the parser differ in what no check reads: a `@preamble` is
   compared as written, so a `@string` it uses that is redefined between the copies is not seen; and
   `keywords` are compared as the parser splits, dedupes and sorts them — it does so for that field
   name unconditionally, with no option to keep it as written.
 - Q3 (one projection of the live text, replacing `paper-typography`'s `skippedRanges` and
-  `texToMdast`'s own parse), the hooks, the build's `.fls` facts and an enforcement rule for Q1–Q3:
-  later PRs.
+  `texToMdast`'s own parse), the hooks, and an enforcement rule for Q1–Q3: later PRs.
