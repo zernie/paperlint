@@ -10,6 +10,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import { z } from "zod";
+import { absolutePath } from "#src/domain/paths";
+import { bibliographyUnreadWhy } from "#src/paper-sources";
 import {
   runNode,
   useTempDir,
@@ -89,6 +91,20 @@ test("an input that cannot be read: exit 2, named", () => {
   assert.deepEqual(
     { status: r.status, stdout: r.stdout, stderr: r.stderr.split(" — ")[0] },
     { status: 2, stdout: "", stderr: "error: could not read input" },
+  );
+});
+
+test("a .bib that is not there: exit 2, in bibliographyAt's words", () => {
+  // The path → bibliography vocabulary is tested once, beside bibliographyAt (src/paper-sources.ts).
+  const gone = join(root, "gone.bib");
+  const r = offline([gone]);
+  assert.deepEqual(
+    { status: r.status, stdout: r.stdout, stderr: r.stderr },
+    {
+      status: 2,
+      stdout: "",
+      stderr: `error: could not read input — ${bibliographyUnreadWhy({ kind: "missing", path: absolutePath(gone) })}\n`,
+    },
   );
 });
 
