@@ -44,7 +44,6 @@ the count is not yet classified.
 | --- | --- | ---: | --- | --- |
 | all six | `pdf/measured` | 1 | known | the lint test reads the source and never builds, so the PDF rules cannot run; the rule says so, correctly |
 | all six | `paper/sources-fresh` | 1 | known | the same: with no build there is no record of the files TeX read (`_build/sources.json`), so the rules that need it are silent and this one says so, correctly |
-| agenticdev-acm26 | `paper/refs-checked` | 1 | known | the same: the inline bibliography was never checked by `paperlint build` here |
 | agenticdev-acm26 | `tex/claim-provenance` | 9 | real | numbers stated with no owner in the sentence ("The first is that the tool cuts output tokens by 65%.") — the paper reviewers called too informal |
 | secure-acsac24 | `tex/claim-provenance` | 6 | real | the authors' own results stated without a subject or a pointer ("LLMs experience a significant decrease in accuracy, with a 5.44% drop …"); the owner is in a neighbouring sentence, which the rule does not read |
 | secure-acsac24 | `tex/claim-provenance` | 1 | known | a range that defines a scale, not a result ("Typically set between 0 and 1, the temperature …") |
@@ -57,7 +56,6 @@ the count is not yet classified.
 | rr-dataset-quality-acsac24 | `tex/claim-provenance` | 15 | sampled | percentages in the results («31.3%», «17%» in `Result.tex`) and one in the related work («60%») |
 | leaking-queries-acsac25 | `tex/claim-provenance` | 25 | sampled | percentages in the experiments and the appendix («86%», «90%», «72%») |
 | leaking-queries-acsac25 | `paper/section-word` | 1 | real | `\S\ref{subsec:results}` in `sections_full_version/discussion.tex`, where IEEE style writes «Section» |
-| barovox-acsac24, llm-splained-acsac25, rr-dataset-quality-acsac24, secure-acsac24 | `paper/refs-checked` | 1 | known | the bibliography is the `.bib` each paper declares (`\bibliography`, `\addbibresource`), read where TeX reads it; the lint test never builds, so no build checked it |
 | barovox-acsac24 | `bib/reachable-entry` | 92 | real / known | entries with no doi, url, arXiv id or `\url`: 55 are cited in the committed `paper.bbl` (real — the reader has nothing to follow), 37 are not cited (known: the rule judges every entry of the database, and bibtex prints only cited ones) |
 | llm-splained-acsac25 | `bib/reachable-entry` | 55 | sampled | the same, over its three `bibs/*.bib`; its `paper.bbl` is biblatex's, so the count is not split by citation |
 | rr-dataset-quality-acsac24 | `bib/reachable-entry` | 11 | real | all 11 are cited in `paper.bbl` (`chen2022neural`, `fu2022vulrepair`, …) |

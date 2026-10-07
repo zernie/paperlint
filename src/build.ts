@@ -66,7 +66,6 @@ import type { Runner } from "./engine.ts";
 import type { Files } from "./ports/files.ts";
 import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
-import { notWiredSources, type ReadSources } from "./paper-sources.ts";
 import {
   notWiredRecord,
   recordingNote,
@@ -74,7 +73,12 @@ import {
   type TexRun,
 } from "./sources-record.ts";
 import { JOBNAME } from "./domain/sources-record.ts";
-import { recordReferences, REFERENCES_FILE } from "./references.ts";
+import {
+  notWiredBibliography,
+  recordReferences,
+  REFERENCES_FILE,
+  type ReadBibliography,
+} from "./references.ts";
 import {
   auxBib,
   bibtexExcerpt,
@@ -151,8 +155,11 @@ export interface BuildContext {
   readonly files: Files;
   /** The online reference checks; the CLI wires the real ones, a test passes a function. */
   readonly checkReferences: CheckReferences;
-  /** The paper's files and bibliography (`paperSources`); the CLI wires the real reader. */
-  readonly readSources: ReadSources;
+  /**
+   * The databases the build's bibtex opened (`readBibliography`, from `_build/sources.json`); the CLI
+   * wires the real reader.
+   */
+  readonly readBibliography: ReadBibliography;
   /**
    * Writes `_build/sources.json` from TeX's own files after a compile; the CLI wires the real one. A
    * context without one (a step run on its own, in a test) records nothing and says so.
@@ -627,7 +634,8 @@ export const referencesStep: BuildStep = {
     ok: true,
     note: await recordReferences(
       ctx.files,
-      ctx.readSources(ctx.paperDir),
+      ctx.paperDir,
+      ctx.readBibliography(ctx.paperDir),
       ctx.checkReferences,
     ),
   }),
@@ -693,10 +701,11 @@ export interface BuildOptions {
    */
   checkReferences?: CheckReferences;
   /**
-   * The paper's sources, for the references step. Default: none — the step says it was not wired
-   * and records nothing, and lint warns. The CLI passes `paperSources` over the real ports.
+   * The databases the build's bibtex opened, for the references step. Default: none — the step says
+   * it was not wired and records nothing, and lint warns. The CLI passes `bibliographyReader` over the
+   * real ports.
    */
-  readSources?: ReadSources;
+  readBibliography?: ReadBibliography;
   /**
    * Writes `_build/sources.json` after a compile. Default: none — the build says it recorded nothing,
    * and lint reports the paper as not built. The CLI passes `recordSources` over the real ports.
@@ -725,7 +734,11 @@ function baseDefaults({
 }: BuildOptions): Required<
   Omit<
     BuildOptions,
-    "measure" | "files" | "checkReferences" | "readSources" | "recordSources"
+    | "measure"
+    | "files"
+    | "checkReferences"
+    | "readBibliography"
+    | "recordSources"
   >
 > {
   return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
@@ -746,7 +759,11 @@ function defaultMeasurer(
   b: Required<
     Omit<
       BuildOptions,
-      "measure" | "files" | "checkReferences" | "readSources" | "recordSources"
+      | "measure"
+      | "files"
+      | "checkReferences"
+      | "readBibliography"
+      | "recordSources"
     >
   >,
 ): MeasureGeometry {
@@ -767,7 +784,7 @@ function withDefaults(o: BuildOptions): Required<BuildOptions> {
     measure,
     files: o.files ?? nodeFiles,
     checkReferences: o.checkReferences ?? notWired,
-    readSources: o.readSources ?? notWiredSources,
+    readBibliography: o.readBibliography ?? notWiredBibliography,
     recordSources: o.recordSources ?? notWiredRecord,
   };
 }

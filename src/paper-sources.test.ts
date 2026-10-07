@@ -27,7 +27,6 @@ import {
   paperSources,
   sourcesOf,
 } from "./paper-sources.ts";
-import { unseenBy } from "./references.ts";
 
 const FIXTURES = join(
   dirname(dirname(fileURLToPath(import.meta.url))),
@@ -127,7 +126,7 @@ const truthOf = (t: z.infer<typeof Truth>) => ({
 
 /**
  * What bibtex read that the reader does not see, per planted paper — named by the post-build check
- * (`unseenBy`), never silently dropped. Two kinds, both measured:
+ * (`unseenKeys`), never silently dropped. Two kinds, both measured:
  *
  *   - the database is malformed: bibtex reports it, exits 2, and `paperlint build` fails with its
  *     lines (`bibtex.errors` in tex-truth.json); the reader skips the entry it cannot finish;
@@ -159,13 +158,11 @@ describe("paperSources agrees with TeX on the planted papers", () => {
     const truth = truthOf(recorded);
     const p = sourcesIn(paper);
     const got = answerOf(p, recorded.citations);
-    const unseen = unseenBy(p, recorded);
     expect(got.inputs).toEqual(truth.inputs);
     // Every database bibtex opened is one the paper's bibliography names (for `undecided`, a
     // candidate), or one the post-build check names.
     const named = UNSEEN_DATABASES[paper] ?? [];
     const untracked = UNTRACKED[paper] ?? [];
-    expect(unseen.databases).toEqual(named);
     expect(got.reads).toEqual(
       p.bibliography.kind === "undecided"
         ? expect.arrayContaining(
@@ -178,11 +175,10 @@ describe("paperSources agrees with TeX on the planted papers", () => {
     // Guards: a leftover is never one of the files the static answer reads.
     expect(got.reads.filter((r) => untracked.includes(r))).toEqual([]);
     // What bibtex read is what the reader read, plus what the post-build check names.
-    expect(unseen.keys).toEqual(UNSEEN[paper] ?? []);
     expect(
       set([
         ...got.found,
-        ...unseen.keys.filter((k) => truth.found.includes(k)),
+        ...(UNSEEN[paper] ?? []).filter((k) => truth.found.includes(k)),
       ]),
     ).toEqual(
       p.bibliography.kind === "undecided"

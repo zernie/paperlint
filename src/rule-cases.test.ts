@@ -173,20 +173,40 @@ const BIB =
   "@article{a,\n  title = {A},\n  author = {Doe, J.},\n  year = {2026},\n  doi = {10.1/x}\n}\n";
 /** The hash the build records for a bibliography that is BIB alone (`bibHash` over its one text). */
 const sha: string = sha256Hex(new TextEncoder().encode(BIB));
-/** A paper citing refs.bib, with its references record (`status`, `entries`) or none. */
+/** The paper `cited` builds: it cites refs.bib. */
+const CITING = tex("See~\\cite{a}.\n\\bibliography{refs}");
+const digest = (text: string): string =>
+  sha256Hex(new TextEncoder().encode(text));
+/**
+ * A paper citing refs.bib that was built — TeX read paper.tex, bibtex opened refs.bib and typeset `a`
+ * — with its references record (`status`, `entries`) or none.
+ */
 const cited = (
   body: Record<string, unknown> | null,
   bibSha = sha,
 ): Record<string, string> =>
-  paper(tex("See~\\cite{a}.\n\\bibliography{refs}"), {
+  paper(CITING, {
     [`${P}/refs.bib`]: BIB,
+    [`${P}/_build/sources.json`]: JSON.stringify({
+      schema: 1,
+      inputs: [{ path: "paper.tex", role: "body" }],
+      written: [],
+      bibdata: ["refs"],
+      bibtex: {
+        ran: true,
+        databases: ["refs.bib"],
+        keys: ["a"],
+        exit: 0,
+        errors: [],
+      },
+      sha256: { "paper.tex": digest(CITING), "refs.bib": digest(BIB) },
+    }),
     ...(body === null
       ? {}
       : {
           [`${P}/_build/references.json`]: JSON.stringify({
             schema: 3,
             bib: { sources: ["refs.bib"], sha256: bibSha },
-            bibtex: { databases: ["refs.bib"], bibitems: ["a"] },
             ...body,
           }),
         }),
@@ -533,7 +553,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       tree: cited(checked("true", "mismatch")),
       file: TEX_FILE,
       severity: 2,
-      line: 4, // the \bibliography that declares refs.bib
+      line: 1, // an entry of a .bib is reported at the start of paper.tex, naming its own line
     },
     silent: cited(checked("true", "match")),
   },
@@ -542,7 +562,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       tree: cited(checked("false", "match")),
       file: TEX_FILE,
       severity: 2,
-      line: 4, // the \bibliography that declares refs.bib
+      line: 1, // an entry of a .bib is reported at the start of paper.tex, naming its own line
     },
     silent: cited(checked("true", "match")),
   },

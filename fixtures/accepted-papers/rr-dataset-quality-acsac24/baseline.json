@@ -3,13 +3,12 @@
     "What the rules say about this accepted paper today. Growth fails; a drop never does.",
     "Each count is classified in ../README.md, 'What the rules say about the corpus'.",
     "Recorded when the paper joined the corpus, 2026-09-29.",
-    "bib/reachable-entry and paper/refs-checked since the bibliography is read where TeX reads it (paperSources): the .bib files the paper declares. 11 entries have no doi, url, arXiv id or \\url (11 of them cited in the committed paper.bbl, 0 uncited)."
+    "bib/reachable-entry since the bibliography is read where TeX reads it (paperSources): the .bib files the paper declares. 11 entries have no doi, url, arXiv id or \\url (11 of them cited in the committed paper.bbl, 0 uncited)."
   ],
   "findings": {
     "pdf/measured": 1,
     "paper/sources-fresh": 1,
     "tex/claim-provenance": 15,
-    "paper/refs-checked": 1,
     "bib/reachable-entry": 11
   }
 }

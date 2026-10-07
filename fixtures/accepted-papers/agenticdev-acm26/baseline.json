@@ -9,7 +9,6 @@
   "findings": {
     "pdf/measured": 1,
     "paper/sources-fresh": 1,
-    "paper/refs-checked": 1,
     "tex/claim-provenance": 9,
     "tex/register": 1,
     "tex/heading-case": 18
