@@ -206,6 +206,24 @@ describe("what lint decides for the whole paper, it decides over every file of i
   });
 });
 
+describe("a built paper whose files are clean", () => {
+  it("is reported as the files that were checked — the paper's, and the section TeX read", async () => {
+    const root = project({
+      "papers/a/sections/intro.tex": "Plain words, nothing to flag.\n",
+    });
+    const out: string[] = [];
+    const code = await run(["lint"], {
+      cwd: root,
+      log: (s: string) => out.push(s),
+      err: () => undefined,
+    });
+    expect({ code, out }).toEqual({
+      code: 0,
+      out: ["✓ 3 file(s) checked, no findings"],
+    });
+  });
+});
+
 describe("a paper whose record is missing, stale or silent about a file", () => {
   it("🔴 a paper no build has recorded is paper.tex alone: its includes are not linted, and paper/sources-fresh says so", async () => {
     const { byFile } = await lint(project({}, null));

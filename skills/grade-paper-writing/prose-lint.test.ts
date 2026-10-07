@@ -189,6 +189,22 @@ test("--flags-only: a paper with no figures directory is clean, exit 0 and silen
   );
 });
 
+test("🔴 a paper no build has recorded is read as paper.tex alone, and the run says so", () => {
+  writeTree(root, {
+    "unbuilt/paper.tex": tex("Short and plain. Nothing else."),
+  });
+  const file = join(root, "unbuilt", "paper.tex");
+  const r = runNode(SCRIPT, ["--flags-only", file]);
+  assert.deepEqual(
+    { status: r.status, stdout: r.stdout, stderr: r.stderr },
+    {
+      status: 0,
+      stdout: "",
+      stderr: `prose-lint: ${file} has no current build record (_build/sources.json), so only paper.tex was read, not the files it includes — run \`npx paperlint build\` first\n`,
+    },
+  );
+});
+
 test("a .tex with no prose in its body is refused with exit 2, not reported as NaN", () => {
   const file = join(root, "empty", "paper.tex");
   assert.deepEqual(runNode(SCRIPT, [file]), {

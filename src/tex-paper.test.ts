@@ -86,6 +86,14 @@ describe("readPaper — the paper as the rules read it, from the files TeX read"
 });
 
 describe("readPaper — which files, in which order", () => {
+  it("a file the record lists that is not on disk (it was absent when recorded and still is) contributes nothing", () => {
+    const files = builtPaper("/p", { "paper.tex": "x\\input{gone}y" }, [
+      { path: "paper.tex", role: "body" },
+      { path: "gone.tex", role: "body" },
+    ]);
+    expect(readPaper(MAIN, textOf(files), proseDeps(files)).text).toBe("xy");
+  });
+
   it("files are found in the paper's directory only: paperlint's inputs are not the paper's", () => {
     const files = {
       ...builtPaper("/p", { "paper.tex": "x\\input{guards}y" }, [

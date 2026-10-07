@@ -61,7 +61,8 @@ export function builtFixture(
 
 /**
  * A paper as a build would have left it, written by hand: `files` (paths relative to `dir`) and a
- * record that lists `inputs` — in this order, with these roles — and hashes each as it is. For a
+ * record that lists `inputs` — in this order, with these roles — and hashes each as it is (a listed
+ * file that `files` lacks gets a null digest, as for a file absent when TeX's record was made). For a
  * consumer's test whose paper no planted fixture has the shape of (prose in an included file).
  * Where a planted fixture has the shape, `builtFixture` is TeX's own answer and is used instead.
  */
@@ -79,11 +80,15 @@ export function builtPaper(
     written: [],
     bibdata: [],
     bibtex: { ran: false },
+    // A listed file that is not in `files` was not there when the record was made: a null digest.
     sha256: Object.fromEntries(
-      inputs.map((i) => [
-        i.path,
-        sha256Hex(new TextEncoder().encode(files[i.path] ?? "")),
-      ]),
+      inputs.map((i) => {
+        const text = files[i.path];
+        return [
+          i.path,
+          text === undefined ? null : sha256Hex(new TextEncoder().encode(text)),
+        ];
+      }),
     ),
   };
   return {
