@@ -46,6 +46,15 @@ const check = createChecker();
 const tex = (body) =>
   `\\documentclass{article}\n\\begin{document}\n${body}\n\\end{document}\n`;
 
+/**
+ * A run that linted a paper nobody built clean: exit 0, and the one finding is the warning that no
+ * build recorded what TeX read (`paper/sources-fresh`) — what "no findings" meant before that rule.
+ */
+const cleanButUnbuilt = (r) =>
+  r.code === 0 &&
+  /paper\/sources-fresh/.test(r.out) &&
+  /1 problem \(0 errors, 1 warning\)/.test(r.out);
+
 /** Runs the utility with output captured — quieter and faster than spawning a process. */
 async function cli(args, cwd) {
   // 🔴 THE STREAMS ARE SPLIT, AND THAT IS LOAD-BEARING. As long as the harness dumped log and
@@ -196,7 +205,7 @@ check(
     const bare = await cli(["lint"], root);
     check(
       "🔴 NO paperlint.json IS A VALID PROJECT — the default papers directory is linted",
-      bare.code === 0 && /no findings/.test(bare.out),
+      cleanButUnbuilt(bare),
     );
     check(
       "and no config line is printed when there is no file to name",
@@ -208,7 +217,7 @@ check(
     const empty = await cli(["lint"], root);
     check(
       `an empty paperlint.json — no \`${PAPERS_DIR_FIELD}\`, so the default`,
-      empty.code === 0 && /no findings/.test(empty.out),
+      cleanButUnbuilt(empty),
     );
 
     // 🔴 THE DECLARED DIRECTORY IS NOT THE DEFAULT: with `papers` declared, a CLI that ignored
@@ -221,7 +230,7 @@ check(
     const r = await cli(["lint"], root);
     check(
       "🔴 THE UTILITY READS THE DECLARATION FROM paperlint.json — the file `paperlint init` writes and the hooks read",
-      r.code === 0 && /no findings/.test(r.out),
+      cleanButUnbuilt(r),
     );
     check(
       "and NAMES the carrier out loud — swapping settings is never silent",
@@ -713,7 +722,7 @@ check(
     const clean = await cli(["lint", "papers"], root);
     check(
       "on a clean corpus — zero and a legible report",
-      clean.code === 0 && /no findings/.test(clean.out),
+      cleanButUnbuilt(clean),
     );
 
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(999));
@@ -822,7 +831,7 @@ check(
     const found = await cli(["lint"], root);
     check(
       "the config is FOUND on its own: `lint` with no argument at all runs",
-      found.code === 0 && /no findings/.test(found.out),
+      cleanButUnbuilt(found),
     );
     check(
       "and the found file is NAMED out loud — swapping settings silently is not acceptable",
@@ -836,7 +845,7 @@ check(
     const fromSub = await cli(["lint"], paper);
     check(
       "the path from the config resolves relative to the CONFIG'S DIRECTORY, not the current one",
-      fromSub.code === 0 && /no findings/.test(fromSub.out),
+      cleanButUnbuilt(fromSub),
     );
 
     // Consumer data from the found config actually reaches the rules, not just gets read.
@@ -865,7 +874,7 @@ check(
     const noPapers = await cli(["lint"], root);
     check(
       "a config WITHOUT the papers-directory field lints the default `papers/`",
-      noPapers.code === 0 && /no findings/.test(noPapers.out),
+      cleanButUnbuilt(noPapers),
     );
     check(
       'an empty string as the papers directory is refused, not read as the directory ""',
@@ -925,7 +934,7 @@ check(
     );
     check(
       'and the failure names the NUMBER and the THRESHOLD, not just "too many"',
-      /3 warning\(s\) exceed the --max-warnings limit of 0/.test(strict.out),
+      /4 warning\(s\) exceed the --max-warnings limit of 0/.test(strict.out),
     );
     const generous = await cli(["lint", "--max-warnings", "5"], root);
     check(
@@ -1597,13 +1606,14 @@ console.log(
     );
     const r = await cli(["new", "demo"], root);
     check(
-      "🔴 `paperlint new demo` creates writing/demo/ and its lint is the verdict — exit 0, and only the warning that no venue is chosen yet",
+      "🔴 `paperlint new demo` creates writing/demo/ and its lint is the verdict — exit 0, and only two warnings: no venue is chosen yet, the paper is not built",
       r.code === 0 &&
         existsSync(join(root, "writing", "demo", "PIPELINE-STATUS.md")) &&
         existsSync(join(root, "writing", "demo", "paper.tex")) &&
         existsSync(join(root, "writing", "demo", "paperlint.json")) &&
         /names no venue preset yet/.test(r.out) &&
-        /\(0 errors, 1 warning\)/.test(r.out),
+        /paper\/sources-fresh/.test(r.out) &&
+        /\(0 errors, 2 warnings\)/.test(r.out),
     );
     const again = await cli(["new", "demo"], root);
     check(

@@ -112,10 +112,11 @@ try {
   );
   const l = await lint(join(papers, "demo"));
   check(
-    "🔴 `paperlint lint` passes the scaffold — exit 0, not a missing-file error — with the one warning that no venue is chosen yet",
+    "🔴 `paperlint lint` passes the scaffold — exit 0, not a missing-file error — with two warnings: no venue is chosen yet, and the paper is not built",
     l.code === 0 &&
       /names no venue preset yet/.test(l.text) &&
-      /1 problem \(0 errors, 1 warning\)/.test(l.text),
+      /paper\/sources-fresh/.test(l.text) &&
+      /2 problems \(0 errors, 2 warnings\)/.test(l.text),
   );
 
   // What the status hook reads on every paper edit: the verdict line.
