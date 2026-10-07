@@ -52,14 +52,17 @@ reads and when it fails. Errors fail `paperlint lint`; warnings print and do not
 | [`talk/one-slide-size`](rules/talk/one-slide-size.md)                 | error                                        | `paper.tex` → the one-slide PNG                                                                      | the one-slide image is not the size the paper or the preset states, or not a PNG — [page](rules/talk/one-slide-size.md)                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | [`talk/captions-cover`](rules/talk/captions-cover.md)                 | warn                                         | `paper.tex` → the captions and the video                                                             | the captions start late, end early or leave a long gap (uncalibrated thresholds) — [page](rules/talk/captions-cover.md)                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
-**Body files** are the files `paper.tex` includes from its document body (`\input`, `\include`,
-`\subfile`, nested ones too), found in the paper's directory — not a preamble include, not a file
-found only in paperlint's own inputs, and not any other `.tex` beside the paper (`versions/`). Only
-the `.tex` ones are linted on their own: an included `.bbl` or `.pgf` is a tool's output, read into
-the whole paper where TeX typesets it, but not judged or fixed as prose of its own. A
-finding in a body file is reported at that file and line, and `--fix` edits that file. Which reference form
-is the majority and whether the build is a review build are decided over the whole paper. An include
-that names no file is printed as a note: lint did not read it, and the build will stop on it.
+**Body files** are the files of the paper's directory that TeX read after `\begin{document}` in the
+last build, as `paperlint build` recorded them in `_build/sources.json` — not a preamble file, not a
+file found only in paperlint's own inputs, not a file the text names but TeX never read (behind
+`\iffalse`), and not any other `.tex` beside the paper (`versions/`). Lint never looks for an include
+itself. Only the `.tex` ones are linted on their own: an included `.bbl` or `.pgf` is a tool's output,
+read into the whole paper where TeX typesets it, but not judged or fixed as prose of its own. A
+finding in a body file is reported at that file and line, and `--fix` edits that file. Which reference
+form is the majority and whether the build is a review build are decided over the whole paper: the
+files the record lists, spliced where their includes stand, each ended as TeX ends a file's last
+line. A paper with no record, or one it has changed since, is `paper.tex` alone, and
+[`paper/sources-fresh`](rules/paper/sources-fresh.md) says the files it includes went unlinted.
 
 `tex/required-section` requires AIDC's «LLM Usage Statement» **always**. ACSAC asks for it «if
 LLMs are used», which no rule can know; an author who used none says so in the section

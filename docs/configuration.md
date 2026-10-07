@@ -79,7 +79,8 @@ where your papers are, and writes `{ "papersDir": … }` only when that is not `
 `papersDir` already declared is kept, and nothing is measured or asked.
 
 **Under `papersDir`, only the files paperlint's own rules are written for are linted:**
-`PIPELINE-STATUS.md`, `paper.tex` (and the files it includes), `reviews/*.md` and `siblings/*.md`.
+`PIPELINE-STATUS.md`, `paper.tex` (and the files TeX read for it in the last build), `reviews/*.md`
+and `siblings/*.md`.
 Everything else — a paper's `repro/` scripts, vendored JavaScript, data files — is never handed to
 ESLint, so it cannot fail the run. A file you name on the command line that is not one of these is
 refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
@@ -387,7 +388,8 @@ papers/my-paper
 - **inputs** — `TEXINPUTS` is the paper's directory, then paperlint's own venue files
   (`paper-guards.tex`, `<venue>.tex`), so `\input{paper-guards}` in a preamble resolves with no
   setup and a file of the paper's own wins over paperlint's of the same name. The system tree still
-  resolves after them. `paperlint lint` looks for an included file in the same places.
+  resolves after them. `paperlint lint` does not look for included files at all: it reads which files
+  TeX read from the record the build writes (`_build/sources.json`).
 - **compile** — `pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -recorder`, then `bibtex`
   when the `.aux` names a bibliography, then pdflatex again until the `.aux`, `.toc`, `.out` and
   `.bbl` stop changing and the log stops asking for a rerun. bibtex runs again only when the cited

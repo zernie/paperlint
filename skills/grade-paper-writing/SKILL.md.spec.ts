@@ -228,8 +228,9 @@ is what happened.
    node \${CLAUDE_SKILL_DIR}/prose-lint.mjs --headings <paper-dir>/paper.tex  # the headings as a set
    \`\`\`
 
-   It measures the prose a reader sees — includes spliced, no preamble, comments, floats or inline
-   \`.bib\` — so its rates are the paper's, not the source file's. The skill is what must ACT on it.
+   It measures the prose a reader sees — the files the last build read spliced in, no preamble,
+   comments, floats or inline \`.bib\` — so its rates are the paper's, not the source file's. Run
+   \`npx paperlint build\` first: with no current build record it reads \`paper.tex\` alone and says so. The skill is what must ACT on it.
    Its thresholds are sourced; a FLAG means the text sits above a published human or machine
    baseline, which is a defect with a number attached, not an opinion.
    Two entries in \`THRESHOLDS\` exist because this skill previously ran five times without either
