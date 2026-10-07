@@ -224,7 +224,7 @@ test("dblpHits: no hits is an empty list; 429 is retryable; other errors are not
 test("authorEntries: names written family first (`and others` kept), a quoted value, a field that is absent", () => {
   assert.deepEqual(
     entriesIn(
-      '@article{k, author = "Ada Lovelace and van der Berg, Jan and others", title = {The {BERT} Model}, journal = {J}}',
+      '@article{k, author = "Ada Lovelace and van der Berg, Jan and others", title = {The {BERT} Model}, journal = {J}}\n@misc{untitled, author = {Hopper, Grace}}',
     ),
     [
       {
@@ -234,6 +234,14 @@ test("authorEntries: names written family first (`and others` kept), a quoted va
         title: "The BERT Model",
         booktitle: "",
         journal: "J",
+      },
+      {
+        type: "misc",
+        key: "untitled",
+        author: "Hopper, Grace",
+        title: "",
+        booktitle: "",
+        journal: "",
       },
     ],
   );
