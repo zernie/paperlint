@@ -184,15 +184,16 @@ const cited = (
       ? {}
       : {
           [`${P}/_build/references.json`]: JSON.stringify({
-            schema: 2,
+            schema: 3,
             bib: { sources: ["refs.bib"], sha256: bibSha },
+            bibtex: { databases: ["refs.bib"], bibitems: ["a"] },
             ...body,
           }),
         }),
   });
-/** A paper whose bibliography is written inline, by `filecontents*` (`[overwrite]` unless `option` says otherwise). */
-const inlineBib = (entry: string, option = "[overwrite]"): string =>
-  `\\documentclass{article}\n\\begin{filecontents*}${option}{refs.bib}\n${entry}\n\\end{filecontents*}\n\\begin{document}\nSee~\\cite{a}.\n\\bibliography{refs}\n\\end{document}\n`;
+/** A paper whose bibliography is written inline, by `filecontents*[overwrite]`. */
+const inlineBib = (entry: string): string =>
+  `\\documentclass{article}\n\\begin{filecontents*}[overwrite]{refs.bib}\n${entry}\n\\end{filecontents*}\n\\begin{document}\nSee~\\cite{a}.\n\\bibliography{refs}\n\\end{document}\n`;
 const checked = (exists: string, authors: string) => ({
   status: "checked",
   entries: [{ key: "a", exists, authors }],
