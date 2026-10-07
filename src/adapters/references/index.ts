@@ -74,6 +74,25 @@ const unconfirmed = (c: CiteVerdict): readonly (string | undefined)[] =>
     ? [c.reason, ...(c.refused ?? []).map((r) => `not asked: ${r}`)]
     : [];
 
+/** How badly a verdict fails: a disproof is worse than no answer, which is worse than a match. */
+const FAILS: Readonly<Record<CiteVerdict["verdict"], number>> = {
+  true: 0,
+  unresolvable: 1,
+  false: 2,
+};
+
+/**
+ * The verdict a key stands for. Every entry is checked on its own — an `undecided` bibliography's
+ * candidates may each define the key, with other metadata — and the key fails if any of them does.
+ */
+const worstUnder = (
+  found: readonly CiteVerdict[],
+  first: CiteVerdict,
+): CiteVerdict =>
+  found
+    .filter((c) => c.id === first.id)
+    .reduce((w, c) => (FAILS[c.verdict] > FAILS[w.verdict] ? c : w), first);
+
 /** One entry's verdict from the two checkers' answers (both read the same entries). */
 function entryVerdict(c: CiteVerdict, a: AuthorBuckets): EntryVerdict {
   const key = c.id;
@@ -238,7 +257,7 @@ export const referencesChecker =
     ]);
     const entries = found
       .filter((c, i) => found.findIndex((o) => o.id === c.id) === i)
-      .map((c) => entryVerdict(c, a));
+      .map((first) => entryVerdict(worstUnder(found, first), a));
     return {
       check: { kind: "checked", entries },
       cache: grown({ cache, usable }, { store, dblp: d.dblp }, today),

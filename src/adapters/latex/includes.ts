@@ -4,6 +4,7 @@ import type { Include } from "../../domain/paper-source.ts";
 import type { Span } from "../../domain/tex-document.ts";
 import { isDefinition } from "./hidden.ts";
 import {
+  argumentPieces,
   inPlace,
   isNode,
   macroPlace,
@@ -22,15 +23,22 @@ const INCLUDE_MACROS: ReadonlyMap<string, Include["macro"]> = new Map([
 ]);
 
 /**
- * The path an include names, as written: its braced argument, or — TeX's own form, `\input name` —
- * the name up to the next space. unified-latex gives the unbraced form an argument of the first
- * token only (`sections` of `sections/a`), so the source is read for it.
+ * The path an include names: its braced argument read off the tree as TeX reads it (a comment is no
+ * part of it; a macro stays as written: nothing here expands one), or — TeX's own form, `\\input name`
+ * — the name up to the next space. unified-latex gives the unbraced form an argument of the first
+ * token only (`sections` of `sections/a`), so the source is read for that one.
  */
 function argumentText(src: string, m: Macro): string | null {
-  const start = mandatory(m)[0]?.content[0]?.position?.start.offset;
-  if (start === undefined) return null;
+  const arg = mandatory(m)[0];
+  const start = arg?.content[0]?.position?.start.offset;
+  if (arg === undefined || start === undefined) return null;
+  // The parser gives both forms `{` as their open mark; the source says which one was written.
+  if (src[start - 1] === "{")
+    return argumentPieces(arg.content, null)
+      .map((p) => p.text)
+      .join("");
   const rest = src.slice(start);
-  const stop = rest.search(src[start - 1] === "{" ? /\}/u : /[\s{}%]/u);
+  const stop = rest.search(/[\s{}%]/u);
   return stop < 0 ? rest : rest.slice(0, stop);
 }
 

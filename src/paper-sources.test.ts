@@ -393,6 +393,14 @@ describe("a declaration's names, read off the parse tree as TeX reads them", () 
     expect(stateOf(s.bibliography)).toEqual([["file", "refs", ["refskey"]]]);
   });
 
+  it("what a name cannot hold as text (math) leaves it unresolved, never a guessed file", () => {
+    const b = bibOf(doc("", "\\bibliography{refs$x$}"));
+    expect([b.kind, databasesOf(b).map((d) => [d.kind, d.name])]).toEqual([
+      "undecided",
+      [["unresolved", "refs\\inlinemath"]],
+    ]);
+  });
+
   it("an option's comment is no part of it: `location=remote` still names a remote resource", () => {
     const b = bibOf(
       doc(

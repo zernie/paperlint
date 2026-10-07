@@ -156,3 +156,67 @@ export const isArgument = (v: Visited): v is Argument =>
 /** A node, as opposed to a node list or an argument (which visit also reports). */
 export const isNode = (v: Visited): v is Node =>
   !isList(v) && v.type !== "argument" && v.type !== "root";
+
+/** A piece of an argument as TeX reads it: text, or a macro this reader leaves as written (`\x`). */
+export interface ArgumentPiece {
+  readonly text: string;
+  readonly macro: boolean;
+}
+
+/**
+ * An argument's nodes as TeX reads them, off the tree: a comment is no part of it, a group's braces
+ * are none, and white space is one space. `\jobname` is the main file's name when `jobname` is given;
+ * every other macro — `\jobnamebib` included, a control sequence of its own — is a piece of its own,
+ * written as it stands, and so is anything else (math, verbatim) a name cannot hold.
+ */
+export function argumentPieces(
+  nodes: readonly Node[],
+  jobname: string | null,
+): readonly ArgumentPiece[] {
+  return nodes.flatMap((n) => pieceOf(n, jobname));
+}
+
+/** The nodes a name cannot hold as text: an environment, math, verbatim. */
+type Nameless = Extract<
+  Node,
+  {
+    readonly type:
+      | "root"
+      | "environment"
+      | "mathenv"
+      | "inlinemath"
+      | "displaymath"
+      | "verb"
+      | "verbatim";
+  }
+>;
+const NAMELESS: ReadonlySet<string> = new Set([
+  "root",
+  "environment",
+  "mathenv",
+  "inlinemath",
+  "displaymath",
+  "verb",
+  "verbatim",
+]);
+const isNameless = (n: Node): n is Nameless => NAMELESS.has(n.type);
+
+/** One node of an argument as `argumentPieces` reads it. */
+function pieceOf(n: Node, jobname: string | null): readonly ArgumentPiece[] {
+  if (isNameless(n)) return [{ text: `\\${n.type}`, macro: true }];
+  switch (n.type) {
+    case "comment":
+      return [];
+    case "string":
+      return [{ text: n.content, macro: false }];
+    case "whitespace":
+    case "parbreak":
+      return [{ text: " ", macro: false }];
+    case "group":
+      return argumentPieces(n.content, jobname);
+    case "macro":
+      return n.content === "jobname" && jobname !== null
+        ? [{ text: jobname, macro: false }]
+        : [{ text: `\\${n.content}`, macro: true }];
+  }
+}

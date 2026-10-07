@@ -21,22 +21,67 @@
 import type * as Ast from "@unified-latex/unified-latex-types";
 import type { Span } from "../../domain/tex-document.ts";
 import type { Filecontents } from "../../ports/latex.ts";
-import { inPlace, mandatory, optional, placeOf, type Node } from "./nodes.ts";
-import { DEFINITION_MACROS, liveRoot, type ParsedTex } from "./parse.ts";
+import {
+  argumentPieces,
+  inPlace,
+  mandatory,
+  optional,
+  placeOf,
+  type ArgumentPiece,
+  type Node,
+} from "./nodes.ts";
+import {
+  DEFINITION_MACROS,
+  liveRoot,
+  parseLatex,
+  type ParsedTex,
+} from "./parse.ts";
 
 const FILECONTENTS: ReadonlySet<string> = new Set([
   "filecontents",
   "filecontents*",
 ]);
 
-/** `[options]{name}` at the start of a `filecontents` node, and the rest of its first line. */
-const BLOCK_HEAD = /^\s*(?:\[([^\]]*)\])?\s*\{([^}]*)\}[^\n]*\n?/;
+/** Names and options as TeX reads them: off the tree, a comma between two names. */
+type Name = readonly ArgumentPiece[];
 
-/** `\jobname` in a name, as TeX expands it: the main file's name. */
-const expanded = (name: string, jobname: string): string =>
-  name.replaceAll("\\jobname", jobname);
+/** The comma-separated names of some pieces, each a run of pieces between two commas. */
+const splitNames = (pieces: readonly ArgumentPiece[]): readonly Name[] => {
+  const end = pieces.reduce<{
+    readonly done: readonly Name[];
+    readonly current: Name;
+  }>(
+    (acc, p) =>
+      p.macro
+        ? { ...acc, current: [...acc.current, p] }
+        : p.text
+            .split(",")
+            .reduce(
+              (a, text, i) =>
+                i === 0
+                  ? { ...a, current: [...a.current, { text, macro: false }] }
+                  : {
+                      done: [...a.done, a.current],
+                      current: [{ text, macro: false }],
+                    },
+              acc,
+            ),
+    { done: [], current: [] },
+  );
+  return [...end.done, end.current];
+};
 
-/** One verbatim `filecontents` node as a block: its name, option, and body. */
+const written = (name: Name): string =>
+  name
+    .map((p) => p.text)
+    .join("")
+    .trim();
+
+/**
+ * One verbatim `filecontents` node as a block: its name, option, and body. unified-latex reads the
+ * whole environment as verbatim, so its first line — `[options]{name}` and what TeX ignores after
+ * it — is parsed on its own, and the name read off that tree like a declaration's.
+ */
 function blockOf(
   src: string,
   n: Readonly<Ast.VerbatimEnvironment>,
@@ -46,16 +91,20 @@ function blockOf(
     // The node runs from `\begin{env}` to past `\end{env}`.
     const headAt = span.start + `\\begin{${n.env}}`.length;
     const end = span.end - `\\end{${n.env}}`.length;
-    const head = BLOCK_HEAD.exec(src.slice(headAt, end));
-    if (head === null) return [];
-    const [line, options = "", writes] = head;
-    const opts = options.split(",").map((o) => o.trim());
+    const line = src.slice(headAt, end).split("\n", 1).join("");
+    const nodes = parseLatex(line).root.content;
+    const at = nodes.findIndex((x) => x.type === "group");
+    if (at < 0) return [];
+    const options = written(argumentPieces(nodes.slice(0, at), null))
+      .replace(/^\[|\]$/g, "")
+      .split(",")
+      .map((o) => o.trim());
     return [
       {
-        writes: expanded(String(writes).trim(), jobname),
-        overwrite: opts.includes("overwrite") || opts.includes("force"),
+        writes: written(argumentPieces(nodes.slice(at, at + 1), jobname)),
+        overwrite: options.includes("overwrite") || options.includes("force"),
         span,
-        body: { start: headAt + line.length, end },
+        body: { start: Math.min(headAt + line.length + 1, end), end },
       },
     ];
   });
@@ -99,42 +148,30 @@ const DECLARING: ReadonlySet<string> = new Set([
   "addsectionbib",
 ]);
 
-/** The source text of an argument's content, or null for an empty one. */
-function argumentText(src: string, content: readonly Node[]): string | null {
-  const first = content[0]?.position?.start.offset;
-  const last = content.at(-1)?.position?.end.offset;
-  return first === undefined || last === undefined
-    ? null
-    : src.slice(first, last);
-}
-
 /**
- * The names a declaration's `{…}` holds, or null when it is not a declaration: an empty argument,
- * `*` (`\nobibliography*`), or a parameter (`\bibliography{#1}` in a definition).
+ * The names a declaration's `{…}` holds, read off the tree, or null when it is not a declaration: an
+ * empty argument, `*` (`\nobibliography*`), or a parameter (`\bibliography{#1}` in a definition).
  */
 function namesOf(
-  src: string,
   m: Readonly<Ast.Macro>,
   jobname: string,
 ): readonly DeclaredName[] | null {
-  const text = argumentText(src, mandatory(m)[0]?.content ?? []) ?? "";
-  const names = text
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s !== "" && s !== "*");
-  if (names.length === 0 || text.includes("#")) return null;
-  return names.map((written): DeclaredName => {
-    const name = expanded(written, jobname);
-    return name.includes("\\")
-      ? { kind: "unresolved", written }
-      : { kind: "name", name };
-  });
+  const names = splitNames(
+    argumentPieces(mandatory(m)[0]?.content ?? [], jobname),
+  ).filter((n) => written(n) !== "" && written(n) !== "*");
+  if (names.length === 0 || names.some((n) => written(n).includes("#")))
+    return null;
+  return names.map((n): DeclaredName =>
+    n.some((p) => p.macro)
+      ? { kind: "unresolved", written: written(n) }
+      : { kind: "name", name: written(n) },
+  );
 }
 
 /** `\addbibresource[location=remote]{…}`: a URL biber fetches. */
-const isRemote = (src: string, m: Readonly<Ast.Macro>): boolean =>
+const isRemote = (m: Readonly<Ast.Macro>): boolean =>
   /\blocation\s*=\s*remote\b/.test(
-    argumentText(src, optional(m)?.content ?? []) ?? "",
+    written(argumentPieces(optional(m)?.content ?? [], null)),
   );
 
 /** A macro that opens a TeX conditional closed by `\fi` (`\ifthenelse` takes arguments instead). */
@@ -238,9 +275,7 @@ function macroScan(
   m: Readonly<Ast.Macro>,
   conditional: boolean,
 ): SourceScan {
-  const names = DECLARING.has(m.content)
-    ? namesOf(ctx.src, m, ctx.jobname)
-    : null;
+  const names = DECLARING.has(m.content) ? namesOf(m, ctx.jobname) : null;
   const own: readonly Declaration[] =
     names === null
       ? []
@@ -248,7 +283,7 @@ function macroScan(
           {
             macro: m.content,
             names,
-            remote: m.content !== "bibliography" && isRemote(ctx.src, m),
+            remote: m.content !== "bibliography" && isRemote(m),
             span,
             conditional,
           },

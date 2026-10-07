@@ -1291,7 +1291,9 @@ PRs 2–5. Where the build differs from §3 and §7.2, and why:
    v17, v19), and switched blocks writing one file: every block that can be the last to write is a
    candidate, and so is the file when none writes (v12, v20, v21). A redefinition OF `\bibliography`
    (the accepted ACM paper's `\let` and `\renewcommand`) declares nothing; `\jobname` is the main
-   file's name (v8).
+   file's name (v8). Names — a declaration's, a block's file name, an option, an include's braced
+   path — are read off the parse tree as TeX reads them: a comment inside the braces is no part of a
+   name (v26, v28), and `\jobname` is that macro only, so `\jobnamebib` is `unresolved` (v27).
 6. **One bibtex reader.** `src/ports/bib-reader.ts`, over `@retorquere/bibtex-parser`
    (`src/adapters/bibtex/`), now a dependency: `paperSources`, `bib/reachable-entry`, the build's
    reference check (verify-cites and bib-authors through `CheckReferences`, which takes the reader's
@@ -1355,6 +1357,8 @@ what bibtex typeset (`src/paper-sources.test.ts`, against `tex-truth.json`).
 - `\includeonly` and `\endinput`: the module reads every include, so a block in a file
   `\includeonly` excludes is still read.
 - An `\input` inside a macro's body: the assembly expands no macro, so that file is not read (#177).
+- A `filecontents` block whose file name a macro other than `\jobname` builds: the file it writes is
+  not matched to any declaration; the post-build check names the database bibtex read.
 - multibib's `\newcites` and bibunits' `\putbib`.
 - biber: an extensionless `\addbibresource{refs}` is not measured; a remote resource is not fetched.
 - kpathsea's search tree: a `.bib` bibtex finds only there (`~/texmf/bibtex/bib/`) is `missing` to the
