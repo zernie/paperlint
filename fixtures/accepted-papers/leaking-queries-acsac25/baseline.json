@@ -7,7 +7,6 @@
   "findings": {
     "paper/section-word": 1,
     "pdf/measured": 1,
-    "paper/sources-fresh": 1,
     "tex/claim-provenance": 25
   }
 }

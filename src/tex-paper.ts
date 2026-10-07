@@ -7,9 +7,16 @@
  * file at the include in `paper.tex` that brought it in — the one place ESLint can point to in this
  * file — with the included file, line and column at the front of the message.
  *
- * An include is looked for where the build tells TeX to look (`texSearchPath`): the paper's own
- * directory, then paperlint's inputs. Which of them are the paper's BODY, and every other answer about
- * what the paper is made of, is `paperSources` (src/paper-sources.ts).
+ * 🔴 WHICH FILES ARE THE PAPER'S IS TEX'S ANSWER, NOT THIS MODULE'S (docs/design/paper-sources.md §1).
+ * `readPaper` splices only the files the build's record lists (`_build/sources.json`, `paperRecord`):
+ * the files of the paper directory TeX read. An include of a file the record does not list — behind
+ * `\iffalse`, never reached — contributes nothing, as it did to TeX. With no
+ * record, or a stale one, the paper is `paper.tex` alone, and `paper/sources-fresh` says the files it
+ * includes went unlinted. Where an include stands in the text is the only thing read from the text:
+ * whether the file it names is part of the paper is the record's to say, never the disk's.
+ *
+ * `readEveryInclude` is the reading this replaced — every include resolved on the TeX search path, no
+ * record asked — and stays only for the static `paperSources` until it is deleted.
  */
 import { basename, dirname, join } from "node:path";
 import {
@@ -23,6 +30,7 @@ import type { Files } from "./ports/files.ts";
 import { callerPath } from "./caller-path.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { texSearchPath } from "./package-dirs.ts";
+import { paperRecord, type RecordReadDeps } from "./paper-record.ts";
 import type { Located, TexRuleContext } from "./tex-venue-rules.ts";
 
 /** What reading a paper needs: the disk, and the LaTeX reader. */
@@ -31,8 +39,45 @@ export interface PaperDeps {
   readonly latex: LatexReader;
 }
 
-/** The paper whose main file is `filename` with the text `src`, its includes spliced. */
+/** What `readPaper` needs: the disk, the LaTeX reader (where an include stands), and the record's schema. */
+export interface ProseDeps extends PaperDeps, RecordReadDeps {}
+
+const decoded = (b: Uint8Array | null): string | null =>
+  b === null ? null : new TextDecoder().decode(b);
+
+/**
+ * The paper whose main file is `filename` with the text `src`: the files the last build's record lists
+ * spliced where their includes stand. No record, or one the paper has outgrown, is `src` alone.
+ */
 export function readPaper(
+  filename: string,
+  src: string,
+  deps: ProseDeps,
+): PaperSource {
+  const dir = dirname(filename);
+  const record = paperRecord(dir, deps);
+  const listed =
+    record.kind === "fresh"
+      ? new Set(record.record.inputs.map((i) => i.path))
+      : null;
+  const assembled = assemblePaper(basename(filename), src, {
+    // No record: no include is looked at, so there is nothing to splice and nothing to miss.
+    includes: listed === null ? () => [] : deps.latex.includes,
+    documentBody: deps.latex.documentBody,
+    read: (rel) =>
+      listed?.has(rel) === true
+        ? decoded(deps.files.readBytes(callerPath(join(dir, rel))))
+        : null,
+  });
+  // An include of a file TeX did not read is not missing — it is not part of the paper.
+  return { ...assembled, missing: [] };
+}
+
+/**
+ * The paper whose main file is `filename` with the text `src`, every include resolved on the TeX
+ * search path whatever TeX read. The static reading `paperSources` is built on; nothing else calls it.
+ */
+export function readEveryInclude(
   filename: string,
   src: string,
   deps: PaperDeps,
@@ -43,8 +88,7 @@ export function readPaper(
     documentBody: deps.latex.documentBody,
     read: (rel) => {
       const at = located(dir, rel, deps.files);
-      const b = at === null ? null : deps.files.readBytes(at);
-      return b === null ? null : new TextDecoder().decode(b);
+      return at === null ? null : decoded(deps.files.readBytes(at));
     },
   });
 }

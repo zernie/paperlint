@@ -7,12 +7,11 @@
     "The count GREW when the rules started to follow \\input (#141): 0 to 9 for tex/claim-provenance;",
     "then 9 to 11 when list items started to be read as prose (one in the reviews' disabled branch).",
     "paper/leading-zero 0 to 2 when lint started to read the included files as files of their own (#144): `.58` and `.73` in sections/5-discussion.tex.",
-    "paper/refs-checked and bib/reachable-entry: both are silent here, since they read the databases the build's bibtex opened (_build/sources.json), and paper/sources-fresh says so. On 2026-09-29, when bib/reachable-entry read the .bib files the paper declares, it counted 55 entries with no doi, url, arXiv id or \\url."
+    "paper/refs-checked and bib/reachable-entry are silent: biblatex with biber, so bibtex never ran and the record lists no database. When bib/reachable-entry read the .bib files the paper declares (2026-09-29) it counted 55 entries with no doi, url, arXiv id or \\url."
   ],
   "findings": {
     "paper/leading-zero": 2,
     "pdf/measured": 1,
-    "paper/sources-fresh": 1,
     "tex/claim-provenance": 11
   }
 }

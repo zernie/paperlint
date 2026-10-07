@@ -9,6 +9,13 @@
  * answers about one file (the class, the outline, the rendered text, the body's passages) is
  * answered about the paper, unchanged. A subfile is a document of its own; only its body is spliced.
  *
+ * ── THE END OF AN INCLUDED FILE'S LAST LINE ─────────────────────────────────────
+ * TeX ends every line it reads with its end-of-line character, the last line of a file included:
+ * `a\input{f}b` with `f` holding `foo` and no final newline typesets "afoo b" (measured, TeX Live
+ * 2026), not "afoob". The splice does the same: an included file whose text does not end in a newline
+ * gets one, mapped to the end of that file; an empty file read no line and gets nothing. The main file
+ * is the caller's text and is left as given.
+ *
  * ── WHAT IS NOT DONE ─────────────────────────────────────────────────────────────
  * No macro is expanded, so a path built from a macro (`\input{\dir/intro}`) is read as written. A
  * file that cannot be found is left out and named in `missing`; a file that includes itself,
@@ -162,6 +169,13 @@ function spliced(file: string, text: string, range: Span, ctx: Context): Piece {
   return joined([...pieces, at(cursor, range.end)]);
 }
 
+/** TeX's end of line after the last line of `file`, standing where its text ends: one newline. */
+const endOfLine = (file: string, text: string, via: Span | null): Piece => ({
+  text: "\n",
+  segments: [{ start: 0, end: 1, file, source: text, from: text.length, via }],
+  missing: [],
+});
+
 /** One include: the file it names, spliced, or — when not found — nothing, and a report. */
 function included(file: string, inc: Include, ctx: Context): Piece {
   const via = ctx.via ?? inc.span;
@@ -173,12 +187,18 @@ function included(file: string, inc: Include, ctx: Context): Piece {
     };
   if (ctx.stack.includes(hit.path)) return NOTHING;
   const body = inc.macro === "subfile" ? ctx.deps.documentBody(hit.text) : null;
-  return spliced(
-    hit.path,
-    hit.text,
-    body ?? { start: 0, end: hit.text.length },
-    { deps: ctx.deps, stack: [...ctx.stack, hit.path], via },
-  );
+  const range = body ?? { start: 0, end: hit.text.length };
+  const piece = spliced(hit.path, hit.text, range, {
+    deps: ctx.deps,
+    stack: [...ctx.stack, hit.path],
+    via,
+  });
+  // The last line of the file is read to its end; a subfile's body ends inside its last line.
+  const endsLine =
+    range.end === hit.text.length &&
+    hit.text !== "" &&
+    !hit.text.endsWith("\n");
+  return endsLine ? joined([piece, endOfLine(hit.path, hit.text, via)]) : piece;
 }
 
 /** The paper whose main file is `main` (a path relative to the paper directory) with `text`. */

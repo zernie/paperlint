@@ -34,22 +34,30 @@ hash (a file edited, added to an `\input`, deleted), is one finding of a new rul
 
 **The consumers.**
 
-| consumer                                                         | reads                                                               | no record / stale                                                 |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `bib/reachable-entry`, `paper/author-list`, `paper/cite-exists`  | the entries of the databases bibtex opened, through the `BibReader` | silent (`paper/sources-fresh` speaks)                             |
-| `paper/refs-checked`                                             | keys bibtex typeset that the reader did not read (`%`, `@comment`)  | silent                                                            |
-| `extract-ref-facts`, `bib-authors`, `verify-cites` (dir, `.tex`) | `bibliographyAt` → the record's databases                           | refused: "run `npx paperlint build` first"                        |
-| `bibliographyAt` with a `.bib`                                   | that file alone, unchanged                                          | —                                                                 |
-| `paperlint lint`'s files (`paper-includes.ts`), `paper-context`  | the `body` `.tex` files of `inputs`                                 | `paper.tex` only; `paper/sources-fresh` says the rest is unlinted |
+| consumer                                                         | reads                                                               | no record / stale                                                  |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `bib/reachable-entry`, `paper/author-list`, `paper/cite-exists`  | the entries of the databases bibtex opened, through the `BibReader` | silent (`paper/sources-fresh` speaks)                              |
+| `paper/refs-checked`                                             | keys bibtex typeset that the reader did not read (`%`, `@comment`)  | silent                                                             |
+| `extract-ref-facts`, `bib-authors`, `verify-cites` (dir, `.tex`) | `bibliographyAt` → the record's databases                           | refused: "run `npx paperlint build` first"                         |
+| `bibliographyAt` with a `.bib`                                   | that file alone, unchanged                                          | —                                                                  |
+| `paperlint lint`'s files (`paper-includes.ts`), `paper-context`  | the `body` `.tex` files of `inputs`                                 | `paper.tex` only; `paper/sources-fresh` says the rest is unlinted  |
+| the prose rules' text (`readPaper`)                              | `paper.tex` with the files of `inputs` spliced where they stand     | `paper.tex` alone; `paper/sources-fresh` says the rest is unlinted |
 
 An entry in a `.bib` TeX wrote is reported at the `filecontents` block whose body bibtex takes as
 the same database (`sameDatabase`) — a lookup of where the text stands, not a decision of what TeX
 reads; an entry in any other `.bib` at the top of `paper.tex`, `refs.bib:12:1:` first.
 
-**What stays syntactic.** The prose rules read `paper.tex` with its includes spliced (`readPaper`,
-as on main): a projection of the text for rules to read in context, which decides nothing above.
-It still resolves `\input{x}` itself; restricting it to the files `inputs` lists is a follow-up if
-even that second answer must go.
+**What stays syntactic: where an include stands, and nothing else.** The prose rules read
+`paper.tex` with the files of `inputs` spliced in (`readPaper`): a projection of the text for rules to
+read in context, which decides nothing above. Which files are spliced is the record's answer — an
+include of a file `inputs` does not list (behind `\iffalse`, or past `\end{document}`) contributes
+nothing, as it did to TeX, and no include is looked for on disk. Where the macro stands in the text
+is the one thing read from the text, because `.fls` records no position: files are spliced in the
+order the text names them, which is the order TeX read them, each ended the way TeX ends the last
+line of a file it reads (a newline when the file has none — measured: `a\input{f}b` with `f` holding
+`foo` typesets "afoo b"). With no record, or a stale one, the text is `paper.tex` alone. A file the
+record lists that no include macro in the text stands for (an `\input` inside a macro's body, #177)
+is linted as a file of its own and is absent from the whole-paper text.
 
 **Ground truth.** `test/e2e/tex/paper-sources.e2e.ts` runs the build's own record step on each
 planted paper and snapshots its `sources.json` as `tex-truth.json`; the unit tests run the

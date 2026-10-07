@@ -29,6 +29,20 @@ paper's `baseline.json`, using the reader in [`baseline.ts`](baseline.ts):
 - a recorded rule that goes **fully quiet** fails — that is how a check dies unnoticed;
 - a partial drop passes — that is what a fix looks like; lower the recording in the same change.
 
+Lint reads the files of a paper from the record of its last build (`_build/sources.json`,
+docs/design/paper-sources.md §1), so each paper carries one, laid beside it as `tex-truth.json` —
+the record `paperlint build` wrote for it, snapshotted by `test/e2e/tex/accepted-papers-record.e2e.ts`
+(`vitest -u` on a machine with TeX re-records). The test lays it at `_build/sources.json` in its copy;
+the register tests read it through `test/recorded-fixture.ts`. Its hashes are over the paper's bytes,
+so a paper edited without re-recording is a stale record, which lint treats as `paper.tex` alone.
+
+🔴 **`llm-splained-acsac25` has `record-by-hand.json`, not `tex-truth.json`.** It does not compile in
+paperlint's TeX tree (`subfig`, `svg`, `cleveref`, `listings` and others are in no preset), and a
+record is of a build that compiled. Its file lists what the old static reading found from the
+`\input`s of `paper.tex`, in order — a list written by that reading, not TeX's answer, so what is
+measured on this paper is measured on a belief about TeX. The e2e requires the paper to still fail to
+compile, so the exception ends when the reason does.
+
 A new rule is measured here the day it is registered. The corpus is excluded from the npm tarball
 (`!fixtures/accepted-papers` in `package.json`).
 
@@ -43,7 +57,6 @@ the count is not yet classified.
 | paper | rule | n | kind | why |
 | --- | --- | ---: | --- | --- |
 | all six | `pdf/measured` | 1 | known | the lint test reads the source and never builds, so the PDF rules cannot run; the rule says so, correctly |
-| all six | `paper/sources-fresh` | 1 | known | the same: with no build there is no record of the files TeX read (`_build/sources.json`), so the rules that need it are silent and this one says so, correctly |
 | agenticdev-acm26 | `tex/claim-provenance` | 9 | real | numbers stated with no owner in the sentence ("The first is that the tool cuts output tokens by 65%.") — the paper reviewers called too informal |
 | secure-acsac24 | `tex/claim-provenance` | 6 | real | the authors' own results stated without a subject or a pointer ("LLMs experience a significant decrease in accuracy, with a 5.44% drop …"); the owner is in a neighbouring sentence, which the rule does not read |
 | secure-acsac24 | `tex/claim-provenance` | 1 | known | a range that defines a scale, not a result ("Typically set between 0 and 1, the temperature …") |
@@ -56,7 +69,11 @@ the count is not yet classified.
 | rr-dataset-quality-acsac24 | `tex/claim-provenance` | 15 | sampled | percentages in the results («31.3%», «17%» in `Result.tex`) and one in the related work («60%») |
 | leaking-queries-acsac25 | `tex/claim-provenance` | 25 | sampled | percentages in the experiments and the appendix («86%», «90%», «72%») |
 | leaking-queries-acsac25 | `paper/section-word` | 1 | real | `\S\ref{subsec:results}` in `sections_full_version/discussion.tex`, where IEEE style writes «Section» |
-| barovox-acsac24, llm-splained-acsac25, rr-dataset-quality-acsac24, secure-acsac24 | `paper/refs-checked`, `bib/reachable-entry` | 0 | known | both rules judge the databases the build's bibtex opened (`_build/sources.json`); the lint test never builds, so they are silent here and `paper/sources-fresh` says so. Measured on 2026-09-29, when `bib/reachable-entry` read the `.bib` files each paper declares: 92, 55, 11 and 77 entries with no doi, url, arXiv id or `\url` (barovox: 55 of its 92 cited in the committed `paper.bbl`; rr-dataset-quality: all 11; secure: 18 of 77, the rest ACM's sample entries it never cites) — a count nobody re-measures until the corpus is built |
+| agenticdev-acm26, barovox-acsac24, rr-dataset-quality-acsac24, secure-acsac24 | `paper/refs-checked` | 1 | known | the record (`tex-truth.json`) names the databases bibtex opened, and no `_build/references.json` says they were checked: the lint test never runs the build's online check |
+| barovox-acsac24 | `bib/reachable-entry` | 92 | real / known | entries with no doi, url, arXiv id or `\url`: 55 are cited in the committed `paper.bbl` (real — the reader has nothing to follow), 37 are not cited (known: the rule judges every entry of the database, and bibtex prints only cited ones) |
+| rr-dataset-quality-acsac24 | `bib/reachable-entry` | 11 | real | all 11 are cited in `paper.bbl` (`chen2022neural`, `fu2022vulrepair`, …) |
+| secure-acsac24 | `bib/reachable-entry` | 77 | real / known | 18 cited (real); 59 uncited — the paper's `references.bib` carries ACM's sample entries (`Kosiur01`, `JCohen96`), which it never cites (known, as above) |
+| llm-splained-acsac25 | `paper/refs-checked`, `bib/reachable-entry` | 0 | known | the paper uses biblatex with biber, so bibtex never runs and the record lists no database: neither rule has one to judge. Measured on 2026-09-29, when `bib/reachable-entry` read the `.bib` files the paper declares: 55 entries with no doi, url, arXiv id or `\url` — a count nobody re-measures while the paper does not build |
 
 One limit the corpus shows and no count records:
 

@@ -20,6 +20,7 @@ import { join, relative } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { run } from "./cli.ts";
 import { lintReport } from "../test/lint-report.ts";
+import { recordedTree } from "../test/recorded-fixture.ts";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -87,7 +88,14 @@ function project(): string {
     "papers/a/sections/intro.tex": "Intro.\n",
     ...NEIGHBOURS,
   };
-  for (const [p, text] of Object.entries(all)) {
+  // As a build left it: TeX read paper.tex, the macro file in the preamble and the section in the body
+  // (`paper-guards` is paperlint's own input, outside the paper's directory, so the record has none).
+  const built = recordedTree(all, "papers/a", [
+    { path: "paper.tex", role: "body" },
+    { path: "macros.tex", role: "preamble" },
+    { path: "sections/intro.tex", role: "body" },
+  ]);
+  for (const [p, text] of Object.entries(built)) {
     mkdirSync(join(root, p, ".."), { recursive: true });
     writeFileSync(join(root, p), text);
   }

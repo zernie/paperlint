@@ -3,11 +3,12 @@
     "What the rules say about this accepted paper today. Growth fails; a drop never does.",
     "Each count is classified in ../README.md, 'What the rules say about the corpus'.",
     "Recorded when the paper joined the corpus, 2026-09-29.",
-    "paper/refs-checked and bib/reachable-entry: both are silent here, since they read the databases the build's bibtex opened (_build/sources.json), and paper/sources-fresh says so. On 2026-09-29, when bib/reachable-entry read the .bib files the paper declares, it counted 92 entries with no doi, url, arXiv id or \\url."
+    "bib/reachable-entry over the databases bibtex opened (the record, tex-truth.json): 92 entries have no doi, url, arXiv id or \\url (55 of them cited in the committed paper.bbl, 37 uncited)."
   ],
   "findings": {
     "pdf/measured": 1,
-    "paper/sources-fresh": 1,
-    "tex/claim-provenance": 28
+    "tex/claim-provenance": 28,
+    "paper/refs-checked": 1,
+    "bib/reachable-entry": 92
   }
 }

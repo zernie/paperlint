@@ -37,7 +37,7 @@ import {
   segmentOf,
   sentences,
 } from "./domain/sentences.ts";
-import { readPaper, reportInPaper, type PaperDeps } from "./tex-paper.ts";
+import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
 import {
   ruleDocsUrl,
   type Located,
@@ -198,7 +198,7 @@ const META: TexRuleModule["meta"] = {
 };
 
 /** The rule, over the body's prose of the whole paper, its includes spliced (`readPaper`). */
-export const claimProvenanceRule = (deps: PaperDeps): TexRuleModule => ({
+export const claimProvenanceRule = (deps: ProseDeps): TexRuleModule => ({
   meta: META,
   create(context) {
     return {

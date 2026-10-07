@@ -17,7 +17,7 @@
 import { bodySentences } from "./domain/register.ts";
 import { CITATION, MATH, REFERENCE } from "./domain/sentences.ts";
 import { runText } from "./domain/tex-document.ts";
-import { readPaper, type PaperDeps } from "./tex-paper.ts";
+import { readPaper, type ProseDeps } from "./tex-paper.ts";
 
 /** A sentence's text with each mark as a reader would see it set, and math left out. */
 const rendered = (raw: string): string =>
@@ -43,7 +43,7 @@ export interface PaperProse {
 export function paperProse(
   filename: string,
   src: string,
-  deps: PaperDeps,
+  deps: ProseDeps,
 ): PaperProse {
   const { text, segments } = readPaper(filename, src, deps);
   const passages = deps.latex
