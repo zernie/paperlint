@@ -23,9 +23,11 @@ import {
 } from "./build.ts";
 import type { Geometry } from "./domain/geometry.ts";
 import { bibReader } from "./adapters/bibtex/index.ts";
-import { latexReader } from "./adapters/latex/index.ts";
 import { nodeFiles } from "./adapters/node/index.ts";
-import { sourcesReader } from "./paper-sources.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
+import { sha256Hex } from "./domain/sha256.ts";
+import { serializeSourcesRecord } from "./domain/sources-record.ts";
+import { bibliographyReader } from "./references.ts";
 import type { PdfReader } from "./pdf-facts.ts";
 import type { Recorded, TexRun } from "./sources-record.ts";
 
@@ -272,25 +274,46 @@ test("compile: warnings the final log still reports are named in the note", asyn
 });
 
 test("references: without a reader the step says it was not wired; with one and no checker, the record says not checked", async () => {
-  const bib = {
+  const text = {
     "paper.tex":
       "\\documentclass{article}\\begin{document}x\\bibliography{refs}\\end{document}",
     "refs.bib": "@misc{a, url = {https://example.org}}\n",
   };
+  // What a build of this paper records: TeX read paper.tex, bibtex opened refs.bib and typeset `a`.
+  const digest = (s: string) => sha256Hex(new TextEncoder().encode(s));
+  const bib = {
+    ...text,
+    "_build/sources.json": serializeSourcesRecord({
+      schema: 1,
+      inputs: [{ path: "paper.tex", role: "body" }],
+      written: [],
+      bibdata: ["refs"],
+      bibtex: {
+        ran: true,
+        databases: ["refs.bib"],
+        keys: ["a"],
+        exit: 0,
+        errors: [],
+      },
+      sha256: {
+        "paper.tex": digest(text["paper.tex"]),
+        "refs.bib": digest(text["refs.bib"]),
+      },
+    }),
+  };
   const unwired = await build(paper(bib));
   assert.ok(
     unwired.r.notes?.includes(
-      "references NOT checked — no paper reader was wired into this build; lint will say so",
+      "references NOT checked — no bibliography reader was wired into this build; lint will say so",
     ),
     JSON.stringify(unwired.r.notes),
   );
-  const readSources = sourcesReader({
+  const readBibliography = bibliographyReader({
     files: nodeFiles,
-    latex: latexReader,
-    committed: { isCommitted: () => true },
+    codec: sourcesCodec,
     bib: bibReader,
   });
-  const wired = await build(paper(bib), {}, { readSources });
+  const wired = await build(paper(bib), {}, { readBibliography });
   assert.ok(
     wired.r.notes?.includes(
       "references NOT checked — no reference checker was wired into this build; lint will say so",

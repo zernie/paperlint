@@ -19,8 +19,8 @@ reads and when it fails. Errors fail `paperlint lint`; warnings print and do not
 | `paper/figure-ref-style`                                              | warn                                         | `paper.tex` and its body files                                                    | `Fig.~\ref` and `Figure~\ref` mixed in one document; each minority occurrence is reported. **Fixable:** `--fix` writes the majority form                                                                                                                                                                                                                                                                                                                                                                                                               |
 | [`bib/reachable-entry`](rules/bib/reachable-entry.md)                 | warn                                         | `paper.tex` → `_build/sources.json`: the databases the last build's bibtex opened | an entry has no doi, url or arXiv id — a reader has nothing to follow. Reported on the entry in the `filecontents` block of `paper.tex` that wrote its `.bib`, or at the top of `paper.tex` with the entry's file and line first; silent until a build records the paper; no fix, the link has to be looked up — [page](rules/bib/reachable-entry.md)                                                                                                                                                                                                  |
 | `paper/cite-exists`                                                   | error                                        | `paper.tex` → `_build/references.json`                                            | an entry's doi or arXiv id resolves to nothing, or to a different work. Checked online by `paperlint build`; a work that was merely not found is not a finding                                                                                                                                                                                                                                                                                                                                                                                         |
-| `paper/refs-fresh`                                                    | error                                        | `paper.tex` → `_build/references.json`                                            | the bibliography changed since the build checked it (its SHA-256 differs) — run `npx paperlint build`                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `paper/refs-checked`                                                  | warn                                         | `paper.tex` → `_build/references.json`                                            | the paper has a bibliography and no build has checked it, or the last build could not (no network), or the last build's bibtex read an entry or a database paperlint did not (an entry behind `%`, inside `@comment{…}`) — so the two rules above did not run on it                                                                                                                                                                                                                                                                                    |
+| `paper/refs-fresh`                                                    | error                                        | `paper.tex` → `_build/references.json`                                            | the databases bibtex opened changed since the build checked them (their SHA-256 differs) — run `npx paperlint build`                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `paper/refs-checked`                                                  | warn                                         | `paper.tex` → `_build/references.json`                                            | a build recorded the paper's databases and none has checked their references, or the last build could not (no network), or its bibtex typeset a key paperlint's reader did not read (an entry behind `%`, inside `@comment{…}`), or a database TeX wrote is not on disk — so the two rules above did not run on it. Silent without a record of the build (`paper/sources-fresh` speaks)                                                                                                                                                                |
 | `tex/future-promise`                                                  | warn                                         | `paper.tex` and its body files                                                    | a camera-ready build still says "will be released" about something already handed over                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `tex/acm-frontmatter-override`                                        | error                                        | `paper.tex`                                                                       | an `acmart` build overrides ACM's front-matter commands and drops template elements from page 1                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | [`tex/template`](rules/tex/template.md)                               | error                                        | `paper.tex` → `paperlint.json`                                                    | the `\documentclass` is not the preset's `template` class, or lacks an option it names — [page](rules/tex/template.md)                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -197,13 +197,13 @@ Put it in your repository and extend it by a path relative to the file that name
 
 ```
 package.json
-paperlint.json            (optional)
+paperlint.json (optional)
 venues/
-  usenix-sec.jsonc
+ usenix-sec.jsonc
 papers/
-  usenix-2027/
-    paper.tex
-    paperlint.json        { "extends": "../../venues/usenix-sec.jsonc", "kind": "full" }
+ usenix-2027/
+ paper.tex
+ paperlint.json { "extends": "../../venues/usenix-sec.jsonc", "kind": "full" }
 ```
 
 ```jsonc
@@ -281,13 +281,13 @@ not kept. Today you record it by hand; a command for it is planned
 ```yaml
 ---
 stages:
-  - stage: submitted
-    date: 2026-07-22
-    venue: A Venue 2026
-    pdf: versions/2026-07-22-submitted.pdf
-    bytes: 305412
-    source: versions/2026-07-22-submitted.tex
-    sourceBytes: 57210
+ - stage: submitted
+ date: 2026-07-22
+ venue: A Venue 2026
+ pdf: versions/2026-07-22-submitted.pdf
+ bytes: 305412
+ source: versions/2026-07-22-submitted.tex
+ sourceBytes: 57210
 ---
 ```
 

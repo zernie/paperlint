@@ -101,7 +101,7 @@ import { recordSources } from "./sources-record.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import { texOutput } from "./adapters/tex-output/index.ts";
 import { BIB_RULE_LEVELS, bibRules } from "./bib-rules.ts";
-import { sourcesReader } from "./paper-sources.ts";
+import { bibliographyReader } from "./references.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
 import { hotcrpPortal } from "./adapters/hotcrp/index.ts";
 import { runSubmission } from "./submission.ts";
@@ -375,7 +375,7 @@ export function buildConfig(
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
     ...paperRules,
-    ...referenceRules({ ...SOURCES_DEPS, ...RECORDED_DEPS }),
+    ...referenceRules(RECORDED_DEPS),
     ...sourcesRules(RECORD_DEPS),
   };
   // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
@@ -1466,7 +1466,7 @@ async function runBuild(
     dryRun: a.dryRun,
     log,
     checkReferences,
-    readSources: sourcesReader(SOURCES_DEPS),
+    readBibliography: bibliographyReader(RECORDED_DEPS),
     recordSources: (dir, run) =>
       recordSources({ files: nodeFiles, texOutput }, dir, run),
     engine: () => engineEnv(targets, a, { log, err }),

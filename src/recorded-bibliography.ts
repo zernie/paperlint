@@ -7,7 +7,7 @@
  *   unrecorded   no record, or a stale one — the rules that need it are silent (`paper/sources-fresh`
  *                speaks), the scripts refuse ("run `npx paperlint build` first")
  *   recorded     a current record, and the databases bibtex opened that are on disk now (none when
- *                bibtex ran none, or when the files are gone)
+ *                bibtex ran none), and the names of those that are not
  *
  * WHERE A FINDING ABOUT AN ENTRY GOES (`entryReports`). ESLint lints `paper.tex` only, so every finding
  * is a place in it. An entry of a `.bib` TeX wrote (a `filecontents` block) is reported on its own line
@@ -67,6 +67,8 @@ export type RecordedBibliography =
       readonly record: SourcesRecord;
       /** In the order bibtex opened them, each once. */
       readonly databases: readonly ReadDatabase[];
+      /** As bibtex names them: the databases it opened that are not on disk now (a `.bib` TeX wrote, then removed). */
+      readonly unread: readonly string[];
     };
 
 /** The bibliography the last build of the paper in `dir` read. */
@@ -76,12 +78,19 @@ export function recordedBibliography(
 ): RecordedBibliography {
   const r = paperRecord(dir, deps);
   if (r.kind !== "fresh") return { kind: "unrecorded", record: r };
-  const databases = openedDatabases(dir, r.record, deps)
-    .flatMap((d): readonly ReadDatabase[] =>
-      d.bib === null ? [] : [{ name: d.name, written: d.written, bib: d.bib }],
-    )
-    .filter((d, i, all) => all.findIndex((o) => o.name === d.name) === i);
-  return { kind: "recorded", record: r.record, databases };
+  const opened = openedDatabases(dir, r.record, deps).filter(
+    (d, i, all) =>
+      all.findIndex((o) => resolve(dir, o.name) === resolve(dir, d.name)) === i,
+  );
+  const databases = opened.flatMap((d): readonly ReadDatabase[] =>
+    d.bib === null ? [] : [{ name: d.name, written: d.written, bib: d.bib }],
+  );
+  return {
+    kind: "recorded",
+    record: r.record,
+    databases,
+    unread: opened.filter((d) => d.bib === null).map((d) => d.name),
+  };
 }
 
 /** An entry of a database bibtex opened, and where it stands in that database. */

@@ -137,7 +137,7 @@ test("each entry gets its existence and its authors: confirmed, fabricated, mism
   );
 });
 
-test("one key in two candidate databases: each entry gets its own verdict, in the order given", async () => {
+test("one key in two databases bibtex opened: each entry gets its own verdict, in the order given", async () => {
   vi.useFakeTimers();
   fakeFetch({
     "https://api.crossref.org/works/10.1%2Fgood": () =>
@@ -154,7 +154,7 @@ test("one key in two candidate databases: each entry gets its own verdict, in th
     "https://api.crossref.org/": () => json(200),
     "https://dblp.org/": () => json(200, {}),
   });
-  // An `undecided` bibliography: the anonymous and the real database both define `k`, and only one
+  // Two databases of one `\bibliography`: both define `k` (bibtex takes the first), and only one
   // copy fails — its existence, or its authors. The failing verdict is the failing copy's own.
   const good =
     "@inproceedings{k, author={Ada Lovelace}, title={Good Paper}, booktitle={ICSE}, doi={10.1/good}}";

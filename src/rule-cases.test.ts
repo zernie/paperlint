@@ -174,39 +174,44 @@ const BIB =
   "@article{a,\n  title = {A},\n  author = {Doe, J.},\n  year = {2026},\n  doi = {10.1/x}\n}\n";
 /** The hash the build records for a bibliography that is BIB alone (`bibHash` over its one text). */
 const sha: string = sha256Hex(new TextEncoder().encode(BIB));
+/** The paper `cited` builds: it cites refs.bib. */
+const CITING = tex("See~\\cite{a}.\n\\bibliography{refs}");
+const digest = (text: string): string =>
+  sha256Hex(new TextEncoder().encode(text));
 /**
- * A paper citing refs.bib, with its references record (`status`, `entries`) or none, and the record
- * of its build: bibtex opened refs.bib (`_build/sources.json`).
+ * A paper citing refs.bib that was built — TeX read paper.tex, bibtex opened refs.bib and typeset `a`
+ * — with its references record (`status`, `entries`) or none.
  */
 const cited = (
   body: Record<string, unknown> | null,
   bibSha = sha,
-): Record<string, string> => {
-  const paperTex = tex("See~\\cite{a}.\n\\bibliography{refs}");
-  return paper(paperTex, {
+): Record<string, string> =>
+  paper(CITING, {
     [`${P}/refs.bib`]: BIB,
-    [`${P}/_build/sources.json`]: recordText(
-      { "paper.tex": paperTex, "refs.bib": BIB },
-      {
-        inputs: [
-          ["paper.tex", "body"],
-          ["refs.bib", "preamble"],
-        ],
+    [`${P}/_build/sources.json`]: JSON.stringify({
+      schema: 1,
+      inputs: [{ path: "paper.tex", role: "body" }],
+      written: [],
+      bibdata: ["refs"],
+      bibtex: {
+        ran: true,
         databases: ["refs.bib"],
+        keys: ["a"],
+        exit: 0,
+        errors: [],
       },
-    ),
+      sha256: { "paper.tex": digest(CITING), "refs.bib": digest(BIB) },
+    }),
     ...(body === null
       ? {}
       : {
           [`${P}/_build/references.json`]: JSON.stringify({
             schema: 3,
             bib: { sources: ["refs.bib"], sha256: bibSha },
-            bibtex: { databases: ["refs.bib"], bibitems: ["a"] },
             ...body,
           }),
         }),
   });
-};
 /** A paper whose bibliography is written inline, by `filecontents*[overwrite]`. */
 const inlineBib = (entry: string): string =>
   `\\documentclass{article}\n\\begin{filecontents*}[overwrite]{refs.bib}\n${entry}\n\\end{filecontents*}\n\\begin{document}\nSee~\\cite{a}.\n\\bibliography{refs}\n\\end{document}\n`;

@@ -95,8 +95,8 @@ function entryVerdict(c: CiteVerdict, a: AuthorBuckets): EntryVerdict {
 
 /**
  * bib-authors over each entry on its own, one after another as it would run them: its buckets name
- * an entry by key, and two entries of a bibliography may share a key (an `undecided` one's
- * candidates each define it, with other metadata).
+ * an entry by key, and two entries of a bibliography may share a key (two databases bibtex
+ * opened may each define it, with other metadata).
  */
 const authorsOfEach = (
   parsed: readonly BibEntry[],
