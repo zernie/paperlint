@@ -32,10 +32,15 @@
  * counted by construction — and a range directive (`/* eslint-disable … *\/` around a multi-line
  * import) counts exactly what it silences.
  *
+ * ESLint lints only the files that can carry one (`filesToLint`): a suppressed finding comes from a
+ * directive, and every directive's text holds `eslint-disable` (`-line`, `-next-line`, the block
+ * form). The bulk-suppressions file is not applied here. So the narrowing drops only files that
+ * cannot add to the count — 21 of 223 today — and the count still comes from ESLint's report.
+ *
  * Run: `node scripts/layer-legacy-frozen.ts` (also part of `npm run check`)
  */
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
@@ -195,11 +200,35 @@ function layerLint(cwd: string): ESLint {
   });
 }
 
+/**
+ * The `src/**\/*.ts` files of `root` whose text holds `eslint-disable` — every file that can carry a
+ * suppressed finding — relative to `root`, POSIX separators, sorted.
+ */
+export function filesToLint(root: string): string[] {
+  const src = join(root, "src");
+  const all = readdirSync(src, { recursive: true, withFileTypes: true })
+    .filter((e) => e.isFile() && e.name.endsWith(".ts"))
+    .map((e) => join(e.parentPath, e.name));
+  return all
+    .filter((f) => readFileSync(f, "utf8").includes("eslint-disable"))
+    .map((f) => relative(root, f).split(sep).join("/"))
+    .sort();
+}
+
+/**
+ * The files ESLint lints: those that can carry a suppression, or — when there are none, or no
+ * `src/` — the whole glob, so ESLint itself refuses a tree with no source.
+ */
+const lintTargets = (root: string): string[] => {
+  const narrowed = existsSync(join(root, "src")) ? filesToLint(root) : [];
+  return narrowed.length > 0 ? narrowed : ["src/**/*.ts"];
+};
+
 /** Lint `src/` with the repository's configuration and run the whole check. */
 export async function checkFrozen(
   root: string = ROOT,
   {
-    lint = (cwd: string) => layerLint(cwd).lintFiles(["src/**/*.ts"]),
+    lint = (cwd: string) => layerLint(cwd).lintFiles(lintTargets(cwd)),
   }: { lint?: (cwd: string) => Promise<readonly Suppressed[]> } = {},
 ): Promise<FrozenCheck> {
   const data = FrozenFile.parse(

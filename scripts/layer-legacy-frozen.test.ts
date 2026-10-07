@@ -165,8 +165,9 @@ test("main: problems are listed and fail; a clean count passes", async () => {
   );
 });
 
-// Lints the whole of src/ with the real config: ~3 s alone, 5.6 s measured under c8 with the
-// suite running in parallel — past vitest's 5 s default, so the budget is stated here.
+// Loads the real config (about 2.5 s) and lints the src/ files that carry a directive (21 of 223),
+// measured 2026-10-07: 5.5 s alone, 10–11 s under c8 — past vitest's 5 s default, so the budget is
+// stated here. Linting all of src/ took 22–23 s under c8 and timed out with the suite in parallel.
 test(
   "checkFrozen on this repository: nothing new, nothing grown — and on a tree with no src/, ESLint refuses loudly",
   {
