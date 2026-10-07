@@ -21,7 +21,7 @@ import {
   planted,
   recordText,
   type Shape,
-} from "../test/recorded-paper.ts";
+} from "../test/recorded-fixture.ts";
 import { present } from "../test/support.ts";
 
 const PAPER = "/work/papers/p";

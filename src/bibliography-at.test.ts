@@ -18,7 +18,7 @@ import {
   planted,
   recordText,
   type Shape,
-} from "../test/recorded-paper.ts";
+} from "../test/recorded-fixture.ts";
 
 const doc = (body: string): string =>
   `\\documentclass{article}\n\\begin{document}\n${body}\n\\end{document}\n`;

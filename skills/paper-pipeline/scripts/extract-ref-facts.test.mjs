@@ -9,7 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
-import { plantedOnDisk, recordOnDisk } from "../../../test/recorded-paper.ts";
+import { plantedOnDisk, recordOnDisk } from "../../../test/recorded-fixture.ts";
 import { bibliographyUnreadWhy } from "#src/paper-sources";
 import {
   bibliographyFrom,

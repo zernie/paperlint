@@ -17,7 +17,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
-import { recordText } from "../test/recorded-paper.ts";
+import { recordText } from "../test/recorded-fixture.ts";
 import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));

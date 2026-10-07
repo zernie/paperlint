@@ -5,7 +5,7 @@ kept whole as the input of the readers' tests (`src/adapters/tex-output/index.te
 `src/domain/tex-run.test.ts`, `src/sources-record.test.ts`). They are TeX's answer, not text written
 for a test.
 
-One directory per paper, named as the planted paper is, holding:
+One directory per paper, named as the planted paper is, holding those of these files its tests read:
 
 | file             | what it is                                                                |
 | ---------------- | ------------------------------------------------------------------------- |

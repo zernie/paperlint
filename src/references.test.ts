@@ -43,9 +43,6 @@ import {
 import { bibReader } from "./adapters/bibtex/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, relative } from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   parseLookupCache,
   serializeLookupCache,
@@ -56,6 +53,7 @@ import { bibtexRead } from "./latex-log.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 import { texLanguage } from "../eslint-rules/latex-language.ts";
 import { present } from "../test/support.ts";
+import { builtFixture } from "../test/recorded-fixture.ts";
 
 const PAPER = "/work/papers/p";
 const ENTRIES =
@@ -231,33 +229,10 @@ function patchRecord(files: Files, patch: (r: SourcesRecord) => SourcesRecord) {
 
 // ── the planted papers of fixtures/paper-sources, with the record TeX wrote for each ───────
 
-const PLANTED = join(
-  dirname(dirname(fileURLToPath(import.meta.url))),
-  "fixtures",
-  "paper-sources",
-);
-
-/** Every file of a planted paper under PAPER, and its `tex-truth.json` as the build's record. */
+/** A planted paper under PAPER, and its `tex-truth.json` as the build's record. */
 const planted = (paper: string, extra: Readonly<Record<string, string>> = {}) =>
   memoryFiles({
-    ...Object.fromEntries(
-      readdirSync(join(PLANTED, paper), {
-        recursive: true,
-        withFileTypes: true,
-      })
-        .filter((e) => e.isFile())
-        .map((e) => {
-          const at = join(e.parentPath, e.name);
-          return [
-            join(PAPER, relative(join(PLANTED, paper), at)),
-            readFileSync(at, "utf8"),
-          ];
-        }),
-    ),
-    [`${PAPER}/_build/sources.json`]: readFileSync(
-      join(PLANTED, paper, "tex-truth.json"),
-      "utf8",
-    ),
+    ...builtFixture(paper, PAPER),
     ...Object.fromEntries(
       Object.entries(extra).map(([name, text]) => [`${PAPER}/${name}`, text]),
     ),

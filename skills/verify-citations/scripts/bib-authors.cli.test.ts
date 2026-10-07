@@ -19,7 +19,7 @@ import {
   plantedOnDisk,
   recordOnDisk,
   type Shape,
-} from "../../../test/recorded-paper.ts";
+} from "../../../test/recorded-fixture.ts";
 import { absolutePath } from "#src/domain/paths";
 import { bibliographyUnreadWhy } from "#src/paper-sources";
 
