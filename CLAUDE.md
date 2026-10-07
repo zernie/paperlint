@@ -393,33 +393,17 @@ working, not a defect, exactly as argued below.
 ⚠️ The consumer in this project's own base is unaffected: it declares `vigiles` itself
 (`devDependencies: ^27.2.0`), so nothing about its tree changes.
 
-### The `.bib` parser is optional for the same reason, and the failure says so out loud
+### The `.bib` parser is a dependency: the one bibtex reader
 
-`@retorquere/bibtex-parser` is imported at exactly one site
-(`skills/paper-pipeline/scripts/extract-ref-facts.mjs`, and already through a dynamic
-`await import`), and it costs **15 MB of a 56 MB tree**: 9 MB itself, plus
-`wink-eng-lite-web-model` (4 MB, an English NLP model) and `unicode2latex` (2 MB). That is 27%
-of the install for one call that only a consumer extracting bibliography facts ever makes.
+`@retorquere/bibtex-parser` is a `dependency`. It is the one reader of `.bib` text in paperlint
+(`src/ports/bib-reader.ts`, adapter `src/adapters/bibtex/`): `paperSources`, `bib/reachable-entry`,
+the build's reference check, `extract-ref-facts` and `bib-authors` all read through it, so it can
+no longer be opt-in. It costs about 15 MB of the install (9 MB itself, plus
+`wink-eng-lite-web-model` and `unicode2latex`).
 
-|                                            | packages | `du -sm node_modules` |
-| ------------------------------------------ | -------: | --------------------: |
-| after the `vigiles` peer was made optional |      164 |                 56 MB |
-| parser moved to an optional peer as well   |      149 |             **39 MB** |
-
-🔴 **`optionalDependencies` is the wrong entry and was tried first** — npm _installs_ those and
-only tolerates failure, so the weight stays. What makes a dependency genuinely opt-in is
-`peerDependencies` + `peerDependenciesMeta: { optional: true }`, the same pair used for `vigiles`.
-It stays in `devDependencies` too, because this package's own harnesses parse `.bib`.
-
-⚠️ A silent skip here would be the worst outcome: a missing checker and a passing one look
-identical, and "the bibliography was not checked" reads as "the bibliography is fine". So the
-absence throws, and the message carries the cure rather than the diagnosis:
-
-```
-parsing .bib requires @retorquere/bibtex-parser — it is declared OPTIONAL because it weighs 15 MB…
-   Install:  npm i -D @retorquere/bibtex-parser
-   Why not our own regex: measured 26.08 — the regex gave 0 entries on both real files…
-```
+Where it reads differently from bibtex — bibtex has no comment syntax, so an entry behind `%` or
+inside `@comment{…}` is one bibtex typesets — paperlint does not emulate bibtex: the build records
+what bibtex read, and `paper/refs-checked` names the difference (docs/design/paper-sources.md §9).
 
 🔴 **Therefore the pin here and the pin in the consumer move TOGETHER, in one pass.** A major
 mismatch means a hook compiled by one version is executed by another: the stamp does not

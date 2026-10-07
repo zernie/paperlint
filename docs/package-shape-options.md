@@ -138,7 +138,7 @@ lockfile in that array was not.
 zero: `pipeline-check.mjs`, `extract-ref-facts.mjs` and `bib-authors.mjs`, all reaching
 `markdown-it`. Which retires a number this note carried: the closure is **two** third-party
 packages over **eight** referenced scripts, not one over seven — `extract-ref-facts.mjs` reaches
-`@retorquere/bibtex-parser` through a dynamic `await import()` that a static grep does not see.
+`@retorquere/bibtex-parser`, now through `#src/adapters/bibtex/index`.
 
 ⏳ **Not measured, recorded as such:** the documented 60-second install timeout; the personal
 `~/.claude/skills` and `--add-dir` channels (2 of 4 locations verified); and a genuine

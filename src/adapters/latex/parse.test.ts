@@ -1,6 +1,6 @@
 /**
- * `parseLatex` keeps the trees of a bounded amount of source text: an editor session must not hold a tree for every
- * version of the paper it has seen (design §9, finding 5).
+ * `parseLatex` keeps the trees of a bounded amount of source text: an editor session must not hold a
+ * tree for every version of the paper it has seen.
  */
 import { describe, expect, it } from "vitest";
 import { parseLatex } from "./index.ts";

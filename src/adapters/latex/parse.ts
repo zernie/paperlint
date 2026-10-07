@@ -144,10 +144,10 @@ const parser = once(() =>
  * on the accepted ACM paper of the corpus: 0.9 s per `paperSources`, seven of them per lint,
  * 50–76 ms with the memo.
  *
- * Bounded by the SOURCE TEXT it holds (UTF-16 units, about bytes for TeX), least recently used out. A count bound is wrong both ways:
- * 64 trees held 64 versions of one file in an editor (186 MiB for a 48 KiB paper, design doc §9,
- * finding 5), and 8 trees thrashed on a paper with ten includes — the rules read them in a cycle, so
- * every read missed and the corpus lint timed out. `MEMO_BYTES` holds the largest paper of the corpus
+ * Bounded by the SOURCE TEXT it holds (UTF-16 units, about bytes for TeX), least recently used out.
+ * A count bound is wrong both ways: 64 trees held 64 versions of one file in an editor (186 MiB for a
+ * 48 KiB paper), and 8 trees thrashed on a paper with ten includes — the rules read them in a cycle,
+ * so every read missed and the corpus lint timed out. `MEMO_BYTES` holds the largest paper of the corpus
  * (150 KB of sources, and the assembled whole) and about ten versions of a 48 KiB file.
  */
 const MEMO_BYTES = 512 * 1024;

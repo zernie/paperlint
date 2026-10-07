@@ -2,7 +2,7 @@
  * `paperSources` — which files make up a paper (Q1) and which bibliography TeX reads (Q2), against
  * TeX's own answer on the planted papers of `fixtures/paper-sources/` (`tex-truth.json`, recorded by
  * `test/e2e/tex/paper-sources.e2e.ts`), and against the states the design names
- * (docs/design/paper-sources.md §3.2, revised in §7.2).
+ * (docs/design/paper-sources.md).
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";

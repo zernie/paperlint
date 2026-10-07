@@ -21,7 +21,7 @@ const TIMEOUT_MS = 10_000;
 /**
  * The variables of an environment that are set, without git's own: a git hook runs with `GIT_DIR=.git`
  * (relative to the repository's root), and `git -C <paper dir>` would then look for `.git` inside the
- * paper and exit 128 — every file would count as committed (design doc §9, note 14).
+ * paper and exit 128 — every file would count as committed.
  */
 const setOnly = (
   env: Readonly<Record<string, string | undefined>>,

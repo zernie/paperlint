@@ -37,6 +37,13 @@ The verdicts land in `<paper>/_build/references.json`. `paperlint lint` reads th
 The step never fails the build. Without a network the PDF is still built and lint warns that the
 references were not checked.
 
+The step also records what the build's bibtex read: the databases its `paper.blg` names and the
+entries its `paper.bbl` typesets. bibtex has no comment syntax, so an entry behind `%` or inside
+`@comment{…}` is one it typesets and paperlint's reader does not; `paper/refs-checked` names such an
+entry, and any database bibtex opened that the paper's bibliography does not name, as not checked. A
+malformed `.bib` never gets that far: bibtex fails on it, and `paperlint build` fails with bibtex's
+own lines.
+
 ## `repro/references-cache.json` — commit it
 
 Asking five services about every entry is slow. DBLP asks clients to pause between requests, and a
