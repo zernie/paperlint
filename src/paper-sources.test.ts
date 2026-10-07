@@ -53,8 +53,23 @@ const onDisk = {
   bib: bibReader,
 };
 
+/**
+ * Files of a planted paper that stand for a build's leftover: on disk, never committed. TeX reads
+ * them on the machine that has them; the static answer — a fresh checkout's — does not, and what
+ * bibtex typeset from them is named by the post-build check (`UNSEEN`).
+ */
+const UNTRACKED: Readonly<Record<string, readonly string[]>> = {
+  "v31-untracked-leftover": ["refs.bib"],
+};
+
 const sourcesIn = (paper: string): PaperSources => {
-  const r = paperSources(join(FIXTURES, paper), onDisk);
+  const untracked = (UNTRACKED[paper] ?? []).map((f) =>
+    join(FIXTURES, paper, f),
+  );
+  const r = paperSources(join(FIXTURES, paper), {
+    ...onDisk,
+    committed: { isCommitted: (f: AbsolutePath) => !untracked.includes(f) },
+  });
   if (!r.ok) throw new Error(`no paper.tex in ${paper}`);
   return r.value;
 };
@@ -126,6 +141,8 @@ const UNSEEN: Readonly<Record<string, readonly string[]>> = {
   "v13-percent-text": ["pt1", "k2inComment"],
   // A name built by a macro other than `\jobname` is unresolved: the database, and its entries.
   "v27-jobname-prefix": ["refskey"],
+  // A build's leftover: TeX read it on this machine; a fresh checkout has no such file.
+  "v31-untracked-leftover": ["stale1"],
 };
 
 /** The databases bibtex opened that the static answer cannot name — named by the post-build check. */
@@ -147,12 +164,19 @@ describe("paperSources agrees with TeX on the planted papers", () => {
     // Every database bibtex opened is one the paper's bibliography names (for `undecided`, a
     // candidate), or one the post-build check names.
     const named = UNSEEN_DATABASES[paper] ?? [];
+    const untracked = UNTRACKED[paper] ?? [];
     expect(unseen.databases).toEqual(named);
     expect(got.reads).toEqual(
       p.bibliography.kind === "undecided"
-        ? expect.arrayContaining(truth.reads.filter((r) => !named.includes(r)))
+        ? expect.arrayContaining(
+            truth.reads.filter(
+              (r) => !named.includes(r) && !untracked.includes(r),
+            ),
+          )
         : truth.reads,
     );
+    // Guards: a leftover is never one of the files the static answer reads.
+    expect(got.reads.filter((r) => untracked.includes(r))).toEqual([]);
     // What bibtex read is what the reader read, plus what the post-build check names.
     expect(unseen.keys).toEqual(UNSEEN[paper] ?? []);
     expect(
@@ -268,6 +292,34 @@ describe("the bibliography is decided from committed bytes", () => {
       [],
     );
     expect(stateOf(b)).toEqual([["embedded", "refs", ["a2024"]]]);
+  });
+
+  it("🔴 an UNCOMMITTED refs.bib beside a block that may not run: the run where it does not finds no file — missing, not the leftover", () => {
+    const b = bibOf(
+      doc(
+        "\\newif\\ifanon",
+        `\\ifanon\n${BLOCK("", A)}\n\\fi\n\\bibliography{refs}`,
+      ),
+      { "/p/refs.bib": B },
+      [],
+    );
+    expect(stateOf(b)).toEqual([
+      ["missing", "refs", null],
+      ["embedded", "refs", ["a2024"]],
+    ]);
+  });
+
+  it("but an UNCOMMITTED refs.bib that no block writes is the paper's file: read", () => {
+    const b = bibOf(doc("", "\\bibliography{refs}"), { "/p/refs.bib": B }, []);
+    expect(stateOf(b)).toEqual([["file", "refs", ["b2020"]]]);
+  });
+
+  it("v31: a switched block that did not run, and a build's leftover refs.bib: TeX read the leftover; the paper has none", () => {
+    expect(
+      databasesOf(sourcesIn("v31-untracked-leftover").bibliography).map(
+        (d) => d.kind,
+      ),
+    ).toEqual(["missing", "embedded"]);
   });
 
   it("a committed refs.bib whose entries equal the block's (TeX's own output, trailing spaces dropped): embedded", () => {
