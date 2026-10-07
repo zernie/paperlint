@@ -43,6 +43,7 @@ the count is not yet classified.
 | paper | rule | n | kind | why |
 | --- | --- | ---: | --- | --- |
 | all six | `pdf/measured` | 1 | known | the lint test reads the source and never builds, so the PDF rules cannot run; the rule says so, correctly |
+| all six | `paper/sources-fresh` | 1 | known | the same: with no build there is no record of the files TeX read (`_build/sources.json`), so the rules that need it are silent and this one says so, correctly |
 | agenticdev-acm26 | `paper/refs-checked` | 1 | known | the same: the inline bibliography was never checked by `paperlint build` here |
 | agenticdev-acm26 | `tex/claim-provenance` | 9 | real | numbers stated with no owner in the sentence ("The first is that the tool cuts output tokens by 65%.") — the paper reviewers called too informal |
 | secure-acsac24 | `tex/claim-provenance` | 6 | real | the authors' own results stated without a subject or a pointer ("LLMs experience a significant decrease in accuracy, with a 5.44% drop …"); the owner is in a neighbouring sentence, which the rule does not read |

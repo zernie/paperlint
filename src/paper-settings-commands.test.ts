@@ -233,7 +233,7 @@ describe("paperlint lint — the venue preset's rules", () => {
     });
   });
 
-  it("🔴 an unbuilt agenticdev paper: ONE warning (pdf/measured), and no balance error", async () => {
+  it("🔴 an unbuilt agenticdev paper: two warnings (pdf/measured, paper/sources-fresh), and no balance error", async () => {
     const root = project({
       "papers/a/paperlint.json": JSON.stringify({
         extends: "paperlint:agenticdev",
@@ -245,7 +245,10 @@ describe("paperlint lint — the venue preset's rules", () => {
     });
     const r = await lint(root);
     expect(r.code).toBe(0);
-    expect(rulesIn(r.out, "a")).toEqual(["pdf/measured"]);
+    expect(rulesIn(r.out, "a")).toEqual([
+      "pdf/measured",
+      "paper/sources-fresh",
+    ]);
   });
 });
 

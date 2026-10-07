@@ -199,6 +199,21 @@ const checked = (exists: string, authors: string) => ({
   entries: [{ key: "a", exists, authors }],
 });
 
+// ── the build's record of the sources: what `paperlint build` would write after TeX read paper.tex ───
+
+/** A paper that was built: the record of its one file, hashed as it stands. */
+const sourced = (paperTex: string): Record<string, string> =>
+  paper(paperTex, {
+    [`${P}/_build/sources.json`]: JSON.stringify({
+      schema: 1,
+      inputs: [{ path: "paper.tex", role: "body" }],
+      written: [],
+      bibdata: [],
+      bibtex: { ran: false },
+      sha256: { "paper.tex": sha256Hex(new TextEncoder().encode(paperTex)) },
+    }),
+  });
+
 // ── a BlindConf paper, for the LaTeX venue rules ──────────────────────────────────────────────
 
 const BLIND_PAPER = onBlindConf(P);
@@ -543,6 +558,10 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       line: 1,
     },
     silent: cited(checked("true", "match")),
+  },
+  "paper/sources-fresh": {
+    reports: { tree: paper(tex("x")), file: TEX_FILE, severity: 1, line: 1 },
+    silent: sourced(tex("x")),
   },
   "review/frontmatter": {
     reports: {

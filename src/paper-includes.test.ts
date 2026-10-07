@@ -120,9 +120,10 @@ describe("lint reads the files paper.tex includes from its body", () => {
     // Guards: the `.bbl` was the one file of the run with a parse error («Unexpected token %»).
     // It is bibtex's output, not prose the author edits: no fragment rule reports in it, and
     // paper.tex — which reads it, spliced, as TeX typesets it — draws no finding from its `.05`.
+    // Not built: the one finding of an unbuilt paper, `paper/sources-fresh`, and nothing else.
     expect(byFile).toEqual({
       "papers/a/PIPELINE-STATUS.md": [],
-      "papers/a/paper.tex": [],
+      "papers/a/paper.tex": ["paper/sources-fresh"],
     });
     // Read, not missing: no «lint did not read» note names it.
     expect(err).not.toMatch(/paper\.bbl/);

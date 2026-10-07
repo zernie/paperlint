@@ -12,6 +12,7 @@
   "findings": {
     "paper/leading-zero": 2,
     "pdf/measured": 1,
+    "paper/sources-fresh": 1,
     "tex/claim-provenance": 11,
     "paper/refs-checked": 1,
     "bib/reachable-entry": 55

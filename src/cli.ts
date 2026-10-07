@@ -96,6 +96,10 @@ import {
   type PaperSettings,
 } from "./paper-settings.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
+import { SOURCES_RULE_LEVELS, sourcesRules } from "./sources-rules.ts";
+import { recordSources } from "./sources-record.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
+import { texOutput } from "./adapters/tex-output/index.ts";
 import { BIB_RULE_LEVELS, bibRules } from "./bib-rules.ts";
 import { sourcesReader } from "./paper-sources.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
@@ -314,6 +318,9 @@ const SOURCES_DEPS = {
   bib: bibReader,
 };
 
+/** What reads the build's record of a paper: the disk, and the schema its text is parsed with. */
+const RECORD_DEPS = { files: nodeFiles, codec: sourcesCodec };
+
 /** What the rules over a paper.tex read with: the paper's sources, and the shipped presets. */
 const TEX_RULE_DEPS = {
   ...SOURCES_DEPS,
@@ -366,6 +373,7 @@ export function buildConfig(
   const texPaperRules = {
     ...paperRules,
     ...referenceRules(SOURCES_DEPS),
+    ...sourcesRules(RECORD_DEPS),
   };
   // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
   const prose = {
@@ -470,6 +478,7 @@ export function buildConfig(
       rules: {
         ...prose,
         ...REFERENCE_RULE_LEVELS,
+        ...SOURCES_RULE_LEVELS,
         "paper/figure-ref-style": "warn",
         ...BIB_RULE_LEVELS,
         "tex/future-promise": "warn",
@@ -1455,6 +1464,8 @@ async function runBuild(
     log,
     checkReferences,
     readSources: sourcesReader(SOURCES_DEPS),
+    recordSources: (dir, run) =>
+      recordSources({ files: nodeFiles, texOutput }, dir, run),
     engine: () => engineEnv(targets, a, { log, err }),
   });
   if (out.kind === "no-engine") return 1;
