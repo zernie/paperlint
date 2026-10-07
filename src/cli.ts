@@ -94,7 +94,7 @@ import {
 } from "./paper-settings.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 import { SOURCES_RULE_LEVELS, sourcesRules } from "./sources-rules.ts";
-import { recordSources } from "./sources-record.ts";
+import { sourcesRecorder } from "./sources-record.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import { texOutput } from "./adapters/tex-output/index.ts";
 import { BIB_RULE_LEVELS, bibRules } from "./bib-rules.ts";
@@ -1457,8 +1457,7 @@ async function runBuild(
     log,
     checkReferences,
     readBibliography: bibliographyReader(RECORDED_DEPS),
-    recordSources: (dir, run) =>
-      recordSources({ files: nodeFiles, texOutput }, dir, run),
+    recordSources: sourcesRecorder({ files: nodeFiles, texOutput }),
     engine: () => engineEnv(targets, a, { log, err }),
   });
   if (out.kind === "no-engine") return 1;

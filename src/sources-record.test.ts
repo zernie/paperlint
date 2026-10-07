@@ -12,7 +12,11 @@ import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { texOutput } from "./adapters/tex-output/index.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
-import { recordSources, type TexRun } from "./sources-record.ts";
+import {
+  recordSources,
+  sourcesRecorder,
+  type TexRun,
+} from "./sources-record.ts";
 
 const CAPTURES = join(
   dirname(dirname(fileURLToPath(import.meta.url))),
@@ -119,6 +123,14 @@ describe("what the record leaves out, or marks absent", () => {
       },
       sha256: { "paper.tex": sha("% block\n") },
     });
+  });
+
+  it("sourcesRecorder is recordSources with its ports bound", () => {
+    const files = after("p1", { "paper.tex": "% p\n" });
+    const bound = sourcesRecorder({ files, texOutput })(DIR, run("p1", 0));
+    expect(bound).toEqual(
+      recordSources({ files, texOutput }, DIR, run("p1", 0)),
+    );
   });
 
   it("a database bibtex opened that no TeX input names is hashed all the same", () => {

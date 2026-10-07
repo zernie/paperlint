@@ -181,6 +181,12 @@ export function recordSources(
   return { kind: "recorded", record, path };
 }
 
+/** `recordSources` over `deps`, as the `RecordSources` the build is handed. */
+export const sourcesRecorder =
+  (deps: RecordDeps): RecordSources =>
+  (paperDir, run) =>
+    recordSources(deps, paperDir, run);
+
 /** The line a build prints for a recording. */
 export const recordingNote = (r: Recorded): string =>
   r.kind === "recorded"
