@@ -6,7 +6,11 @@
  *     `% @misc{dead2020,…}` is an entry bibtex reads, and its `%` is reported as such (`percent`);
  *   - `@type{key, …}` and `@type(key, …)` end at the matching brace or parenthesis; an `@` inside
  *     an entry is text;
- *   - `@string` and `@preamble` are commands, not entries; `@comment` is skipped as a WORD, so its
+ *   - a `"` at brace depth 0 opens or closes a quoted value; inside it `@` and `)` are text, braces
+ *     still nest, and a `"` inside braces is a character (`note = "x {"} y"`); a quote left open
+ *     runs to the end of the file. A `}` at depth 0 ends the entry even inside quotes or in a
+ *     `(…)` entry — bibtex reports unbalanced braces and skips the rest of the entry;
+ *   - `@string` and `@preamble` are commands, not entries (`commands`); `@comment` is skipped as a WORD, so its
  *     braces are junk and an entry written inside them is read (the word is named, `comments`, so a
  *     parser that would skip the braces can be shown what bibtex reads);
  *   - an entry left open — never closed, or a field whose brace is never closed — is read with what
@@ -39,10 +43,10 @@ type Mode =
       readonly at: number;
       readonly type: string;
       readonly key: string;
-      /** `}` or `)`, and how many braces are open inside. */
+      /** `}` or `)`, how many braces are open inside, and whether a quoted value is open. */
       readonly close: string;
       readonly depth: number;
-      readonly record: boolean;
+      readonly quoted: boolean;
       readonly skipTo: number;
     };
 
@@ -74,7 +78,7 @@ function opened(text: string, at: number): Omit<Scan, "found"> {
       key,
       close: delim === "{" ? "}" : ")",
       depth: 0,
-      record: type !== "string" && type !== "preamble",
+      quoted: false,
       // Past the opening delimiter, which the scan must not count as a brace of the entry's own.
       skipTo: at + whole.length - key.length,
     },
@@ -84,9 +88,14 @@ function opened(text: string, at: number): Omit<Scan, "found"> {
 
 type Entry = Extract<Mode, { kind: "entry" }>;
 
-/** The entry as read so far, ending at `end`. */
-const recorded = (e: Entry, end: number): Scan["found"] =>
-  e.record ? [{ type: e.type, key: e.key, span: { start: e.at, end } }] : NONE;
+/** The entry or command as read so far, ending at `end`. */
+const recorded = (e: Entry, end: number): Scan["found"] => [
+  { type: e.type, key: e.key, span: { start: e.at, end } },
+];
+
+/** `@string` and `@preamble` are commands bibtex runs, not entries. */
+const isCommand = (e: Omit<BibEntry, "percent">): boolean =>
+  e.type === "string" || e.type === "preamble";
 
 /** The last character before `i` that is not white space. */
 const before = (text: string, i: number): string =>
@@ -104,13 +113,22 @@ function resync(text: string, e: Entry, i: number): Scan {
   return { ...opened(text, i), found };
 }
 
-/** One delimiter inside an entry: deeper, shallower, the close that ends it, or an `@`. */
+/** A quote, or a brace that nests: the entry with it, or null for a mark that is none of them. */
+function nested(e: Entry, c: string): Entry | null {
+  if (c === '"') return e.depth === 0 ? { ...e, quoted: !e.quoted } : e;
+  if (c === "{") return { ...e, depth: e.depth + 1 };
+  return c === "}" && e.depth > 0 ? { ...e, depth: e.depth - 1 } : null;
+}
+
+/** One mark inside an entry: a quote or a brace, an `@`, or a close that ends it. */
 function inEntry(text: string, e: Entry, c: string, i: number): Scan {
   const same = (mode: Mode): Scan => ({ mode, found: NONE, comments: [] });
-  if (c === "@") return e.depth === 0 ? resync(text, e, i) : same(e);
-  if (c === "{") return same({ ...e, depth: e.depth + 1 });
-  if (c === "}" && e.depth > 0) return same({ ...e, depth: e.depth - 1 });
-  if (c !== e.close || e.depth > 0) return same(e);
+  const inner = nested(e, c);
+  if (inner !== null) return same(inner);
+  const outside = e.depth === 0 && !e.quoted;
+  if (c === "@") return outside ? resync(text, e, i) : same(e);
+  // A `}` at depth 0 ends the entry, its own close or not; a `)` only when it is the close.
+  if (c !== "}" && (c !== e.close || !outside)) return same(e);
   return {
     mode: { kind: "junk", skipTo: i + 1 },
     found: recorded(e, i + 1),
@@ -130,7 +148,7 @@ function percentBefore(text: string, at: number, body: Span): Span | null {
 
 /** What a scan of `text` within `body` found: the entries in order, and the `@comment` words. */
 function scanned(text: string, body: Span): Omit<Scan, "mode"> {
-  const marks = [...text.slice(body.start, body.end).matchAll(/[@{}()]/g)];
+  const marks = [...text.slice(body.start, body.end).matchAll(/[@{}()"]/g)];
   const end = marks.reduce<Scan>(
     (s, m) => {
       const i = body.start + m.index;
@@ -157,15 +175,19 @@ function scanned(text: string, body: Span): Omit<Scan, "mode"> {
 /** A database's bytes, `body` of `text` in the file at `path`, as bibtex reads them. */
 export function bibText(path: AbsolutePath, text: string, body: Span): BibText {
   const { found, comments } = scanned(text, body);
-  // A `%` counts only after the entry before it on the same line: `title={50%}} @misc{…}` is no comment.
-  const entries = found.map((e, i) => ({
-    ...e,
-    percent: percentBefore(text, e.span.start, {
-      start: Math.max(body.start, found[i - 1]?.span.end ?? body.start),
-      end: body.end,
-    }),
-  }));
-  return { path, text, body, entries, comments };
+  // A `%` counts only after the entry or command before it on the same line: `title={50%}} @misc{…}`
+  // is no comment.
+  const entries = found
+    .map((e, i) => ({
+      ...e,
+      percent: percentBefore(text, e.span.start, {
+        start: Math.max(body.start, found[i - 1]?.span.end ?? body.start),
+        end: body.end,
+      }),
+    }))
+    .filter((e) => !isCommand(e));
+  const commands = found.filter(isCommand).map((e) => e.span);
+  return { path, text, body, entries, commands, comments };
 }
 
 /** A whole `.bib` file as a `BibText`. */

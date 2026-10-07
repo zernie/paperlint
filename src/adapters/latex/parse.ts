@@ -187,3 +187,17 @@ export function parseLatex(src: string): ParsedTex {
   memo.set(src, parsed);
   return parsed;
 }
+
+/**
+ * The part of a source's tree TeX reads: everything up to and with the `document` environment.
+ * TeX stops at `\end{document}`, so a `\bibliography`, a `thebibliography`, a block or an `\input`
+ * parked after it is never read. A source with no `document` environment is read whole.
+ */
+export function liveRoot(t: ParsedTex): Readonly<Ast.Root> {
+  const end = t.root.content.findIndex(
+    (n) => n.type === "environment" && n.env === "document",
+  );
+  return end < 0
+    ? t.root
+    : { ...t.root, content: t.root.content.slice(0, end + 1) };
+}

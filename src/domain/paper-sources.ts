@@ -70,6 +70,8 @@ export interface BibText {
   /** The database inside `text`: all of it for a `.bib`, the body for a block. */
   readonly body: Span;
   readonly entries: readonly BibEntry[];
+  /** The `@string` and `@preamble` commands: no entries, but what bibtex expands into them. */
+  readonly commands: readonly Span[];
   /** The `@comment` words in it: bibtex skips the word and reads what follows as junk, entries too. */
   readonly comments: readonly Span[];
 }
@@ -175,13 +177,17 @@ export interface PaperSources {
   readonly blocks: readonly EmbeddedBib[];
 }
 
-/** An entry's identity for comparing two texts: its bytes, whitespace runs folded (TeX drops trailing spaces). */
+/**
+ * What bibtex reads from a text, for comparing two: every entry and every `@string` and `@preamble`
+ * command, in order, by its bytes with whitespace runs folded (TeX drops trailing spaces). The text
+ * bibtex skips between them does not count.
+ */
 const identities = (b: BibText): readonly string[] =>
-  b.entries.map((e) =>
-    b.text.slice(e.span.start, e.span.end).replace(/\s+/g, " "),
-  );
+  [...b.entries.map((e) => e.span), ...b.commands]
+    .sort((x, y) => x.start - y.start)
+    .map((s) => b.text.slice(s.start, s.end).replace(/\s+/g, " "));
 
-/** Whether two texts hold the same entries, as TeX's own copy of a block holds the block's. */
+/** Whether two texts hold what bibtex reads alike, as TeX's own copy of a block holds the block's. */
 export const sameEntries = (a: BibText, b: BibText): boolean => {
   const x = identities(a);
   const y = identities(b);

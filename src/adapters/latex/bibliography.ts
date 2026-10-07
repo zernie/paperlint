@@ -39,11 +39,11 @@ import type {
 import { bibFileText, bibText } from "./bibtex.ts";
 import { scanSource, type Declaration } from "./declarations.ts";
 import { isNode, visited } from "./nodes.ts";
-import { parseLatex, type ParsedTex } from "./parse.ts";
+import { liveRoot, parseLatex, type ParsedTex } from "./parse.ts";
 
-/** The first live `thebibliography` environment's span, or null. */
+/** The first live `thebibliography` environment's span, or null — never one after `\end{document}`. */
 const theBibliographyOf = (t: ParsedTex): Span | null => {
-  const env = visited(t.root, () => false)
+  const env = visited(liveRoot(t), () => false)
     .filter(isNode)
     .find((n) => n.type === "environment" && n.env === "thebibliography");
   const pos = env?.position;

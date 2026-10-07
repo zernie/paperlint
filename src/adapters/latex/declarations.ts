@@ -30,7 +30,7 @@ import {
   visited,
   type Node,
 } from "./nodes.ts";
-import { DEFINITION_MACROS, type ParsedTex } from "./parse.ts";
+import { DEFINITION_MACROS, liveRoot, type ParsedTex } from "./parse.ts";
 
 const FILECONTENTS: ReadonlySet<string> = new Set([
   "filecontents",
@@ -74,7 +74,7 @@ const isBlock = (n: Node): n is Readonly<Ast.VerbatimEnvironment> =>
 
 /** Every live `filecontents` block of a source, in source order (names as written). */
 export const filecontentsOf = (t: ParsedTex): readonly Filecontents[] =>
-  visited(t.root, () => false)
+  visited(liveRoot(t), () => false)
     .filter(isNode)
     .flatMap((n) => (isBlock(n) ? blockOf(t.src, n, "\\jobname") : []));
 
@@ -300,14 +300,6 @@ function scanLists(
     );
 }
 
-/** The top level TeX reads: up to and with the `document` environment, nothing after it. */
-const readTopLevel = (t: ParsedTex): readonly Node[] => {
-  const end = t.root.content.findIndex(
-    (n) => n.type === "environment" && n.env === "document",
-  );
-  return end < 0 ? t.root.content : t.root.content.slice(0, end + 1);
-};
-
 /** Every live declaration and block of a source whose main file's name is `jobname`. */
 export const scanSource = (t: ParsedTex, jobname: string): SourceScan =>
-  scanLists({ src: t.src, jobname }, [readTopLevel(t)], false);
+  scanLists({ src: t.src, jobname }, [liveRoot(t).content], false);

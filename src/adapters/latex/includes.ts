@@ -13,7 +13,7 @@ import {
   type Macro,
   type Node,
 } from "./nodes.ts";
-import type { ParsedTex } from "./parse.ts";
+import { liveRoot, type ParsedTex } from "./parse.ts";
 
 const INCLUDE_MACROS: ReadonlyMap<string, Include["macro"]> = new Map([
   ["input", "input"],
@@ -44,11 +44,11 @@ function includeOf(src: string, m: Macro): readonly Include[] {
 
 /**
  * Every `\input`, `\include` and `\subfile` of the source, in source order — not in a comment (a
- * comment is a node of its own) and not in a macro definition's body, which is read where the macro
- * is used, and nothing here expands macros.
+ * comment is a node of its own), not in a macro definition's body, which is read where the macro
+ * is used, and nothing here expands macros; not after `\end{document}`, which TeX never reads.
  */
 export const includesOf = (t: ParsedTex): readonly Include[] =>
-  visited(t.root, isDefinition)
+  visited(liveRoot(t), isDefinition)
     .filter(isNode)
     .flatMap((n) => (n.type === "macro" ? includeOf(t.src, n) : []));
 
