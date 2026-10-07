@@ -28,7 +28,6 @@ import type { AbsolutePath } from "./domain/paths.ts";
 import type { Span } from "./domain/tex-document.ts";
 import { JOBNAME, type SourcesRecord } from "./domain/sources-record.ts";
 import {
-  openedDatabases,
   paperRecord,
   type PaperRecord,
   type RecordReadDeps,
@@ -77,17 +76,26 @@ export function recordedBibliography(
 ): RecordedBibliography {
   const r = paperRecord(dir, deps);
   if (r.kind !== "fresh") return { kind: "unrecorded", record: r };
-  const opened = openedDatabases(dir, r.record, deps).filter(
-    (d, i, all) =>
-      all.findIndex((o) => resolve(dir, o.name) === resolve(dir, d.name)) === i,
-  );
-  const databases = opened.flatMap((d): readonly ReadDatabase[] =>
-    d.bib === null ? [] : [{ name: d.name, written: d.written, bib: d.bib }],
-  );
+  const { bibtex, written } = r.record;
+  const opened = (bibtex.ran ? bibtex.databases : [])
+    .filter(
+      (d, i, all) =>
+        all.findIndex((o) => resolve(dir, o) === resolve(dir, d)) === i,
+    )
+    .map((name) => {
+      const path = callerPath(resolve(dir, name));
+      const text = decoded(deps.files.readBytes(path));
+      return {
+        name,
+        bib: text === null ? null : deps.bib.readFile(path, text),
+      };
+    });
   return {
     kind: "recorded",
     record: r.record,
-    databases,
+    databases: opened.flatMap(({ name, bib }): readonly ReadDatabase[] =>
+      bib === null ? [] : [{ name, written: written.includes(name), bib }],
+    ),
     unread: opened.filter((d) => d.bib === null).map((d) => d.name),
   };
 }

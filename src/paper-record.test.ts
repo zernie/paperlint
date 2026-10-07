@@ -13,7 +13,8 @@ import {
   serializeSourcesRecord,
   type SourcesRecord,
 } from "./domain/sources-record.ts";
-import { openedDatabases, paperRecord, recordedFiles } from "./paper-record.ts";
+import { paperRecord, recordedFiles } from "./paper-record.ts";
+import { recordedBibliography } from "./recorded-bibliography.ts";
 
 const DIR = "/work/paper";
 const bytes = (s: string) => new TextEncoder().encode(s);
@@ -110,8 +111,10 @@ describe("paperRecord", () => {
   });
 });
 
-const keysOf = (bib: BibText | null): readonly string[] | null =>
-  bib === null ? null : bib.entries.map((e) => e.key);
+const keysOf = (bib: BibText): readonly string[] =>
+  bib.entries.map((e) => e.key);
+
+const DEPS = { codec: sourcesCodec, bib: bibReader };
 
 describe("what a rule takes from a record", () => {
   it("the files of a role, as absolute paths, in the order TeX first read them", () => {
@@ -124,13 +127,13 @@ describe("what a rule takes from a record", () => {
     ]);
   });
 
-  it("the databases bibtex opened, read as the bibtex reader reads them, a block's copy marked written", () => {
+  it("the databases bibtex opened, read as the bibtex reader reads them, a block's copy marked written, a missing one named", () => {
     const record: SourcesRecord = {
       ...RECORD,
       written: ["gen.bib"],
       bibtex: {
         ran: true,
-        databases: ["refs.bib", "gen.bib", "gone.bib"],
+        databases: ["refs.bib", "gen.bib", "gone.bib", "./refs.bib"],
         keys: [],
         exit: 0,
         errors: [],
@@ -138,25 +141,33 @@ describe("what a rule takes from a record", () => {
     };
     const files = built(record);
     files.map.set(`${DIR}/gen.bib`, bytes("@misc{g, title={G}}"));
-    const opened = openedDatabases(DIR, record, {
-      files,
-      bib: bibReader,
+    const r = recordedBibliography(DIR, { ...DEPS, files });
+    expect(
+      r.kind === "recorded"
+        ? {
+            databases: r.databases.map((d) => [
+              d.name,
+              d.written,
+              keysOf(d.bib),
+            ]),
+            unread: r.unread,
+            path: r.databases[0]?.bib.path,
+          }
+        : r,
+    ).toEqual({
+      databases: [
+        ["refs.bib", false, ["a"]],
+        ["gen.bib", true, ["g"]],
+      ],
+      unread: ["gone.bib"],
+      path: `${DIR}/refs.bib`,
     });
-    expect(opened.map((d) => [d.name, d.written, keysOf(d.bib)])).toEqual([
-      ["refs.bib", false, ["a"]],
-      ["gen.bib", true, ["g"]],
-      ["gone.bib", false, null],
-    ]);
-    expect(opened[0]?.bib?.path).toBe(`${DIR}/refs.bib`);
   });
 
   it("a build that ran no bibtex opened no database", () => {
+    const record: SourcesRecord = { ...RECORD, bibtex: { ran: false } };
     expect(
-      openedDatabases(
-        DIR,
-        { ...RECORD, bibtex: { ran: false } },
-        { files: built(), bib: bibReader },
-      ),
-    ).toEqual([]);
+      recordedBibliography(DIR, { ...DEPS, files: built(record) }),
+    ).toMatchObject({ kind: "recorded", databases: [], unread: [] });
   });
 });

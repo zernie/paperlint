@@ -12,7 +12,6 @@
  */
 import { resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import type { BibText } from "./domain/paper-sources.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { sha256Hex, type Sha256 } from "./domain/sha256.ts";
 import {
@@ -21,7 +20,6 @@ import {
   type InputRole,
   type SourcesRecord,
 } from "./domain/sources-record.ts";
-import type { BibReader } from "./ports/bib-reader.ts";
 import type { Files } from "./ports/files.ts";
 import type { SourcesCodec } from "./ports/sources-codec.ts";
 import { sourcesPath } from "./sources-record.ts";
@@ -66,34 +64,3 @@ export const recordedFiles = (
   record.inputs
     .filter((i) => i.role === role)
     .map((i) => callerPath(resolve(dir, i.path)));
-
-/** One database the build's bibtex opened. */
-export interface OpenedDatabase {
-  /** As bibtex names it: `refs.bib`, `bibs/x.bib`. */
-  readonly name: string;
-  /** A `.bib` TeX wrote (a `filecontents` block), not one the author keeps. */
-  readonly written: boolean;
-  /** Its text as the bibtex reader reads it; null when the file is not on disk now. */
-  readonly bib: BibText | null;
-}
-
-/** The databases the build's bibtex opened, in the order it opened them. None when it ran none. */
-export function openedDatabases(
-  dir: string,
-  record: SourcesRecord,
-  deps: { readonly files: Files; readonly bib: BibReader },
-): readonly OpenedDatabase[] {
-  if (!record.bibtex.ran) return [];
-  return record.bibtex.databases.map((name) => {
-    const path = callerPath(resolve(dir, name));
-    const bytes = deps.files.readBytes(path);
-    return {
-      name,
-      written: record.written.includes(name),
-      bib:
-        bytes === null
-          ? null
-          : deps.bib.readFile(path, new TextDecoder().decode(bytes)),
-    };
-  });
-}
