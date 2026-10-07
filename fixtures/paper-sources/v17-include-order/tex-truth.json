@@ -1,22 +1,40 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex",
-    "bibsetup.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "bibsetup.tex",
+      "role": "body"
+    }
   ],
   "written": [],
-  "databases": [
-    "first.bib"
-  ],
-  "citations": [
-    "*"
-  ],
-  "bibitems": [
-    "firstkey"
+  "bibdata": [
+    "first",
+    "later"
   ],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "first.bib"
+    ],
+    "keys": [
+      "firstkey"
+    ],
     "exit": 2,
     "errors": [
-      "Illegal, another \\bibdata command---line 5 of file paper.aux"
+      {
+        "message": "Illegal, another \\bibdata command",
+        "file": "paper.aux",
+        "line": 5
+      }
     ]
+  },
+  "sha256": {
+    "paper.tex": "6dfd240b12ad235906f6c28f184f0b64bdb5b4134c757caae639eb17f1e067aa",
+    "bibsetup.tex": "4c54f878fd33b8a0d3c1c91cbf9dc2910c9599f9ec8fbdc51186a0087ecd65e3",
+    "first.bib": "657a37350055ed17b619131230a750ecb95b6362d84ab20426101c8bed6d8ec6"
   }
 }

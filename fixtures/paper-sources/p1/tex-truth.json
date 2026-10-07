@@ -1,21 +1,37 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex",
-    "sections/intro.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "refs.bib",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/intro.tex",
+      "role": "body"
+    }
   ],
   "written": [],
-  "databases": [
-    "refs.bib"
-  ],
-  "citations": [
-    "inline2024",
-    "stale2020"
-  ],
-  "bibitems": [
-    "stale2020"
+  "bibdata": [
+    "refs"
   ],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "refs.bib"
+    ],
+    "keys": [
+      "stale2020"
+    ],
     "exit": 0,
     "errors": []
+  },
+  "sha256": {
+    "paper.tex": "52ab53ff01ae6dee061f4f674764dc5f5e38f8f6710a3b1c418b1bf07cb46196",
+    "refs.bib": "7a720777755f3dd727c2428f66f06d5f818f367e41fe4c47543aa9f55adfebb4",
+    "sections/intro.tex": "bf7cdcd18d243940cc13a9a9281b7a61446a693f3a49fbd551a69f8a87a98f89"
   }
 }

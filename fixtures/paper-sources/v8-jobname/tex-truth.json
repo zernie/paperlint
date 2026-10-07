@@ -1,21 +1,29 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
   ],
   "written": [
     "paper.bib"
   ],
-  "databases": [
-    "paper.bib"
-  ],
-  "citations": [
-    "jkey"
-  ],
-  "bibitems": [
-    "jkey"
+  "bibdata": [
+    "paper"
   ],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "paper.bib"
+    ],
+    "keys": [
+      "jkey"
+    ],
     "exit": 0,
     "errors": []
+  },
+  "sha256": {
+    "paper.tex": "d68bcaabe9be4cbc07f5a1e672e8cd448e96bc9b5134be350d2906ee48834482"
   }
 }

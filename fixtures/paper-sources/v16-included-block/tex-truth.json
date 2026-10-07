@@ -1,18 +1,35 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex",
-    "bibblock.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "bibblock.tex",
+      "role": "preamble"
+    },
+    {
+      "path": "refs.bib",
+      "role": "preamble"
+    }
   ],
   "written": [],
-  "databases": [
-    "refs.bib"
+  "bibdata": [
+    "refs"
   ],
-  "citations": [
-    "fresh"
-  ],
-  "bibitems": [],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "refs.bib"
+    ],
+    "keys": [],
     "exit": 0,
     "errors": []
+  },
+  "sha256": {
+    "paper.tex": "c58b895f4bb215019a85af42df7a80eb1df12030a1b87c8b22765035a17f0777",
+    "bibblock.tex": "f17173d581a3e65cf174770ef259f4ac5e91adf5deeaf679410613c652eb6f86",
+    "refs.bib": "9537774c99fb9df278b23c8fb506cdc72ab514deb926f69d2c88780e71dcc8d4"
   }
 }

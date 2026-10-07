@@ -1,20 +1,32 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "refs.bib",
+      "role": "preamble"
+    }
   ],
   "written": [],
-  "databases": [
-    "refs.bib"
-  ],
-  "citations": [
-    "inline2024",
-    "stale2020"
-  ],
-  "bibitems": [
-    "stale2020"
+  "bibdata": [
+    "refs"
   ],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "refs.bib"
+    ],
+    "keys": [
+      "stale2020"
+    ],
     "exit": 0,
     "errors": []
+  },
+  "sha256": {
+    "paper.tex": "54f0abc51bdc3df728907c7d4bcc90af43b0e3678d6e2ab1fa4c817a2c20f29d",
+    "refs.bib": "7a720777755f3dd727c2428f66f06d5f818f367e41fe4c47543aa9f55adfebb4"
   }
 }

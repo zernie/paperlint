@@ -1,21 +1,29 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
   ],
   "written": [
     "refs.bib"
   ],
-  "databases": [
-    "refs.bib"
-  ],
-  "citations": [
-    "*"
-  ],
-  "bibitems": [
-    "shortblock"
+  "bibdata": [
+    "refs"
   ],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "refs.bib"
+    ],
+    "keys": [
+      "shortblock"
+    ],
     "exit": 0,
     "errors": []
+  },
+  "sha256": {
+    "paper.tex": "93e328a2009d2e5e033ac31a1e83385821212b00e45578ab953f3da4d41c31c6"
   }
 }

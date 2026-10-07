@@ -1,25 +1,36 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
   ],
   "written": [
     "refs.bib"
   ],
-  "databases": [
-    "refs.bib"
-  ],
-  "citations": [
-    "inline2024",
-    "dead2020"
-  ],
-  "bibitems": [
-    "dead2020",
-    "inline2024"
+  "bibdata": [
+    "refs"
   ],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "refs.bib"
+    ],
+    "keys": [
+      "dead2020",
+      "inline2024"
+    ],
     "exit": 2,
     "errors": [
-      "You're missing a field name---line 8 of file refs.bib"
+      {
+        "message": "You're missing a field name",
+        "file": "refs.bib",
+        "line": 8
+      }
     ]
+  },
+  "sha256": {
+    "paper.tex": "f520de6b9f34e249851913d2e9fc23532603378787b034e08e0b43e2bc111994"
   }
 }

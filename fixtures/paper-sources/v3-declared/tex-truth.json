@@ -1,19 +1,28 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
   ],
   "written": [],
-  "databases": [
-    "paper.bib"
-  ],
-  "citations": [
-    "declared2023"
-  ],
-  "bibitems": [
-    "declared2023"
+  "bibdata": [
+    "paper"
   ],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "paper.bib"
+    ],
+    "keys": [
+      "declared2023"
+    ],
     "exit": 0,
     "errors": []
+  },
+  "sha256": {
+    "paper.tex": "365c348f503b060973c7b1d5db0348659dffa91d7b149d10181204ae27e31dfb",
+    "paper.bib": "efe5f0577c8173e99be73ed728679904dcac9c90b1ec56350cf64d0771f8305e"
   }
 }

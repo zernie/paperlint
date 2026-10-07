@@ -1,21 +1,35 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
   ],
   "written": [],
-  "databases": [
-    "one.bib"
-  ],
-  "citations": [
-    "*"
-  ],
-  "bibitems": [
-    "onekey"
+  "bibdata": [
+    "one",
+    "two"
   ],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "one.bib"
+    ],
+    "keys": [
+      "onekey"
+    ],
     "exit": 2,
     "errors": [
-      "Illegal, another \\bibdata command---line 5 of file paper.aux"
+      {
+        "message": "Illegal, another \\bibdata command",
+        "file": "paper.aux",
+        "line": 5
+      }
     ]
+  },
+  "sha256": {
+    "paper.tex": "f45db61354f01066eb49ab48d240033bea99ed172f04a2c4558daca8640ce796",
+    "one.bib": "61cca311ca7d77570ed410fc536c655ba76d36168fc3e56068235a2c4b16f7bf"
   }
 }

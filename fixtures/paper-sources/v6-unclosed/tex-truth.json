@@ -1,24 +1,37 @@
 {
+  "schema": 1,
   "inputs": [
-    "paper.tex"
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
   ],
   "written": [],
-  "databases": [
-    "refs.bib"
-  ],
-  "citations": [
-    "*"
-  ],
-  "bibitems": [
-    "a1",
-    "a4",
-    "a3",
-    "a2unclosed"
+  "bibdata": [
+    "refs"
   ],
   "bibtex": {
+    "ran": true,
+    "databases": [
+      "refs.bib"
+    ],
+    "keys": [
+      "a1",
+      "a4",
+      "a3",
+      "a2unclosed"
+    ],
     "exit": 2,
     "errors": [
-      "I was expecting a `,' or a `}'---line 4 of file refs.bib"
+      {
+        "message": "I was expecting a `,' or a `}'",
+        "file": "refs.bib",
+        "line": 4
+      }
     ]
+  },
+  "sha256": {
+    "paper.tex": "9ad22f9c50070c2620c5bf8885ed53cee4b0901e7bfdc83c61f70902686ac5e0",
+    "refs.bib": "1d33d35cf2e384fc54acf45654493881315c98a4b494b952464668d33924aeec"
   }
 }
