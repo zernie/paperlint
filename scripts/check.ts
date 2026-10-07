@@ -30,8 +30,10 @@
  *
  * ── NO `--fast` FLAG, ON PURPOSE ───────────────────────────────────────────────────────────
  * A subset flag re-creates the exact failure above: the cheap half gets run and reported as
- * "the gates". The slow steps instead SKIP LOUDLY when their prerequisite is genuinely absent
- * (no TeX, no network), and the tail names every skip. "I ran check" then means one thing.
+ * "the gates". Every gate runs with CI=true, as in CI, so a local check is the CI check: the e2e
+ * steps are strict (`test/e2e/need.ts`) — a missing prerequisite (no TeX) FAILS with what to
+ * install, as it does in CI — and a test that still skips is named in the tail, never counted as a
+ * pass. "I ran check" then means one thing.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";
@@ -293,7 +295,9 @@ function runEach(
       cwd: ROOT,
       stdio: "inherit",
       encoding: "utf8",
-      env: { ...process.env, PATH: BIN_FIRST_PATH },
+      // CI=true, as CI runs every gate: libraries read it (typescript-eslint infers a single run and
+      // parses from disk), so without it a local check is not the CI check (2026-10-07).
+      env: { ...process.env, CI: "true", PATH: BIN_FIRST_PATH },
     });
     // 🔴 The exit code is read from the command itself, never from a pipe. `cmd | tail && …`
     // reports the FILTER's status, which is almost always zero — that is how a red harness
