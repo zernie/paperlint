@@ -33,13 +33,18 @@ import { texInputsDir } from "./package-dirs.ts";
 const root = useTempDir("cli-test-");
 
 /** `run(argv)` from `cwd`, the output as one string per stream. */
-async function cli(argv: string[], cwd: string) {
+async function cli(
+  argv: string[],
+  cwd: string,
+  deps: Pick<NonNullable<Parameters<typeof run>[1]>, "loadTexLanguage"> = {},
+) {
   const out: string[] = [];
   const err: string[] = [];
   const code = await run(argv, {
     log: (...a: unknown[]) => out.push(a.join(" ")),
     err: (...a: unknown[]) => err.push(a.join(" ")),
     cwd,
+    ...deps,
   });
   return { code, out: out.join("\n"), err: err.join("\n") };
 }
@@ -617,21 +622,20 @@ test("init's TeX Live install runs the toolchain over the project's papers, neve
   assert.equal(typeof here.installed(), "boolean");
 });
 
-test("lint with its LaTeX language missing from the install still lints the scorecards", () => {
+test("lint with its LaTeX language missing from the install still lints the scorecards", async () => {
   const dir = writeTree(join(root, "lint-no-tex-language"), {
     "papers/p/PIPELINE-STATUS.md": "---\nstages: []\n---\n# S\n",
-    "no-latex.mjs":
-      "import { register } from 'node:module';\n" +
-      "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s === '#eslint-rules/latex-language') throw Object.assign(new Error('gone'), { code: 'ERR_MODULE_NOT_FOUND' }); return next(s, c); }\"));\n",
   });
-  const without = runNode(BIN, ["lint", "papers"], {
-    cwd: dir,
-    nodeArgs: ["--import", join(dir, "no-latex.mjs")],
+  const gone = Object.assign(new Error("gone"), {
+    code: "ERR_MODULE_NOT_FOUND",
   });
-  const whole = runNode(BIN, ["lint", "papers"], { cwd: dir });
+  const without = await cli(["lint", "papers"], dir, {
+    loadTexLanguage: () => Promise.reject(gone),
+  });
+  const whole = await cli(["lint", "papers"], dir);
   // A scorecard needs no LaTeX language: the same report, the same code.
   assert.deepEqual(without, whole);
-  assert.match(whole.stdout, /missing all of `paper\.tex`/);
+  assert.match(whole.out, /missing all of `paper\.tex`/);
 });
 
 test("`paperlint hook` with no name: exit 2, and the usage names an example", async () => {

@@ -21,7 +21,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { globSync, readFileSync } from "node:fs";
-import { dirname, join, matchesGlob, resolve } from "node:path";
+import { basename, dirname, join, matchesGlob, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 import ts from "typescript";
@@ -145,37 +145,36 @@ test("every typeOnly exclusion has no runtime code", () => {
   assert.deepEqual(offenders, []);
 });
 
-// Parses the import statements of every source in the repository: measured 4.1–4.5 s under coverage on
-// an idle machine, so the 5 s default timed it out whenever the gate ran loaded.
-const EVERY_SOURCE_PARSED = 20_000;
-
-test(
-  "every evalOnly exclusion is imported only by an eval or another evalOnly module",
-  () => {
-    const evalOnly = new Set(expand(CONFIG.evalOnly).map((f) => join(ROOT, f)));
-    const sources = globSync("**/*.{mjs,ts}", {
-      cwd: ROOT,
-      exclude: (p) => p === "node_modules" || p === "dist" || p === "coverage",
-    });
-    const importers = sources.flatMap((f) => {
-      const abs = join(ROOT, f);
-      return importedPaths(abs, readFileSync(abs, "utf8"))
-        .filter((target) => evalOnly.has(target))
-        .map(() => f);
-    });
-    const outsiders = importers.filter(
-      (f) => !f.endsWith(".eval.mjs") && !evalOnly.has(join(ROOT, f)),
-    );
-    assert.deepEqual(
-      { outsiders, anyImporter: importers.length > 0 },
-      {
-        outsiders: [],
-        anyImporter: true,
-      },
-    );
-  },
-  EVERY_SOURCE_PARSED,
-);
+test("every evalOnly exclusion is imported only by an eval or another evalOnly module", () => {
+  const only = expand(CONFIG.evalOnly);
+  const evalOnly = new Set(only.map((f) => join(ROOT, f)));
+  // Any import of one names it — `./x.mjs`, `#lib/x` — so a source whose text holds none of their
+  // base names imports none of them, and only the others are parsed.
+  const names = only.map((f) => basename(f).replace(/\.[^.]+$/, ""));
+  const sources = globSync("**/*.{mjs,ts}", {
+    cwd: ROOT,
+    exclude: (p) => p === "node_modules" || p === "dist" || p === "coverage",
+  });
+  const importers = sources.flatMap((f) => {
+    const abs = join(ROOT, f);
+    const text = readFileSync(abs, "utf8");
+    return names.some((n) => text.includes(n))
+      ? importedPaths(abs, text)
+          .filter((target) => evalOnly.has(target))
+          .map(() => f)
+      : [];
+  });
+  const outsiders = importers.filter(
+    (f) => !f.endsWith(".eval.mjs") && !evalOnly.has(join(ROOT, f)),
+  );
+  assert.deepEqual(
+    { outsiders, anyImporter: importers.length > 0 },
+    {
+      outsiders: [],
+      anyImporter: true,
+    },
+  );
+});
 
 /** Every tracked file c8 could load as code — the extensions it is configured to measure. */
 function trackedSources(): string[] {
@@ -266,11 +265,13 @@ test("no measured source carries a coverage-ignore comment", () => {
   // The scan covers exactly what c8 measures: the same set, derived from the tracked files.
   assert.deepEqual(files, trackedSources().filter(isMeasured));
   assert.ok(files.length > 0);
-  const offenders = files.filter((f) =>
-    comments(f, readFileSync(join(ROOT, f), "utf8")).some((c) =>
-      IGNORE.test(c),
-    ),
-  );
+  // An ignore comment's text matches IGNORE, so a source whose text does not holds none, and only
+  // the others have their comments read off the tree.
+  const offenders = files
+    .map((f) => [f, readFileSync(join(ROOT, f), "utf8")] as const)
+    .filter(([, text]) => IGNORE.test(text))
+    .filter(([f, text]) => comments(f, text).some((c) => IGNORE.test(c)))
+    .map(([f]) => f);
   assert.deepEqual(offenders, []);
 });
 

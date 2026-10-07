@@ -1668,10 +1668,17 @@ export async function run(
     err = console.error,
     cwd = process.cwd(),
     checkReferences = onlineReferences,
+    loadTexLanguage = async () =>
+      (await import("#eslint-rules/latex-language")).texLanguage,
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
     cwd?: string;
+    /**
+     * `lint`'s LaTeX language, loaded lazily because only `lint` needs it. A test hands one that
+     * fails, as a broken install would.
+     */
+    loadTexLanguage?: () => Promise<unknown>;
     /**
      * `build`'s online reference check — the real services by default. The e2e build passes a
      * fake: no test depends on Crossref, Semantic Scholar or DBLP answering.
@@ -1777,12 +1784,7 @@ export async function run(
   // Loaded lazily because only `lint` needs it. If the module cannot be loaded (a broken install:
   // the file missing from the package), lint still runs over the scorecards and the review notes
   // rather than failing outright — the LaTeX rules simply have no language to run in.
-  let texLanguage: unknown = null;
-  try {
-    ({ texLanguage } = await import("#eslint-rules/latex-language"));
-  } catch {
-    texLanguage = null;
-  }
+  const texLanguage: unknown = await loadTexLanguage().catch(() => null);
 
   // Each paper's body files, resolved the way the build resolves them — only when the LaTeX language
   // loaded, since only its rules read them. The project's papers too: `paperlint lint .` reaches
