@@ -41,7 +41,7 @@ describe("assemblePaper — the text TeX reads", () => {
       main,
       deps({ "s/one.tex": "one", "two.tex": "two" }),
     );
-    expect(p.text).toBe("AoneBtwoC");
+    expect(p.text).toBe("Aone\nBtwo\nC");
     expect(p.missing).toEqual([]);
     expect([...new Set(p.segments.map((g) => g.file))]).toEqual([
       "paper.tex",
@@ -57,7 +57,7 @@ describe("assemblePaper — the text TeX reads", () => {
       main,
       deps({ "a.tex": "[\\input{s/b}]", "s/b.tex": "BB" }),
     );
-    expect(p.text).toBe("x[BB]y");
+    expect(p.text).toBe("x[BB\n]\ny");
     expect(originOf(p, { start: 2, end: 4 })).toEqual({
       file: "s/b.tex",
       source: "BB",
@@ -99,7 +99,7 @@ describe("assemblePaper — subfiles and a file that includes itself", () => {
       "<\\subfile{s}>",
       deps({ "s.tex": "ALL" }),
     );
-    expect(p.text).toBe("<ALL>");
+    expect(p.text).toBe("<ALL\n>");
   });
 
   it("a file that includes itself is entered once", () => {
@@ -108,7 +108,54 @@ describe("assemblePaper — subfiles and a file that includes itself", () => {
       "m\\input{a}",
       deps({ "a.tex": "a\\input{a}\\input{paper.tex}" }),
     );
-    expect(p.text).toBe("ma");
+    expect(p.text).toBe("ma\n");
+  });
+});
+
+describe("assemblePaper — TeX's end of line after the last line of an included file", () => {
+  // Measured with TeX Live 2026: `a\input f b` with f = `foo`, no final newline, typesets «afoo b» —
+  // the file's last line is ended like any other; `f` = `bar` plus a newline typesets the same; an
+  // empty file reads no line and adds nothing.
+  it("a file whose last line has no newline is ended, so what follows it is a new word", () => {
+    const p = assemblePaper(
+      "paper.tex",
+      "a\\input{f}b",
+      deps({ "f.tex": "foo" }),
+    );
+    expect(p.text).toBe("afoo\nb");
+  });
+
+  it("a file that ends with a newline gets no second one", () => {
+    const p = assemblePaper(
+      "paper.tex",
+      "a\\input{f}b",
+      deps({ "f.tex": "foo\n" }),
+    );
+    expect(p.text).toBe("afoo\nb");
+  });
+
+  it("an empty file reads no line: it adds nothing", () => {
+    const p = assemblePaper("paper.tex", "a\\input{f}b", deps({ "f.tex": "" }));
+    expect(p.text).toBe("ab");
+  });
+
+  it("the main file is not ended: its text is the caller's, as given", () => {
+    const p = assemblePaper("paper.tex", "no newline", deps({}));
+    expect(p.text).toBe("no newline");
+  });
+
+  it("the end of line belongs to the file it ends, at the end of that file", () => {
+    const p = assemblePaper(
+      "paper.tex",
+      "a\\input{f}b",
+      deps({ "f.tex": "foo" }),
+    );
+    expect(originOf(p, { start: 4, end: 5 })).toEqual({
+      file: "f.tex",
+      source: "foo",
+      span: { start: 3, end: 4 },
+      via: { start: 1, end: 10 },
+    });
   });
 });
 
@@ -129,7 +176,7 @@ describe("originOf — where a span of the assembled text comes from", () => {
   });
 
   it("after the include: offsets in the main file past the macro", () => {
-    expect(originOf(p, { start: 5, end: 7 })).toEqual({
+    expect(originOf(p, { start: 6, end: 8 })).toEqual({
       file: "paper.tex",
       source: "ab\\input{x}cd",
       span: { start: 11, end: 13 },
@@ -147,10 +194,10 @@ describe("originOf — where a span of the assembled text comes from", () => {
   });
 
   it("an empty span at the very end belongs to the last stretch; outside the text there is none", () => {
-    expect(originOf(p, { start: 7, end: 7 })?.span).toEqual({
+    expect(originOf(p, { start: 8, end: 8 })?.span).toEqual({
       start: 13,
       end: 13,
     });
-    expect(originOf(p, { start: 9, end: 9 })).toBe(null);
+    expect(originOf(p, { start: 10, end: 10 })).toBe(null);
   });
 });
