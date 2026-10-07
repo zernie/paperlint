@@ -37,7 +37,8 @@ export interface PaperDeps {
 /** What `readPaper` needs: the disk, the LaTeX reader (where an include stands), and the record's schema. */
 export interface ProseDeps extends PaperDeps, RecordReadDeps {}
 
-const decoded = (b: Uint8Array | null): string | null =>
+/** The text of a file read from the disk, or null when there was none. */
+export const decoded = (b: Uint8Array | null): string | null =>
   b === null ? null : new TextDecoder().decode(b);
 
 /**

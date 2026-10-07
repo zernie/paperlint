@@ -35,7 +35,7 @@ import {
 } from "./paper-record.ts";
 import type { BibReader } from "./ports/bib-reader.ts";
 import type { LatexReader } from "./ports/latex.ts";
-import { lineColumn } from "./tex-paper.ts";
+import { decoded, lineColumn } from "./tex-paper.ts";
 
 /** What reading the recorded bibliography needs: the disk, the record's schema, the bibtex reader. */
 export interface RecordedReadDeps extends RecordReadDeps {
@@ -126,9 +126,6 @@ const headOf = (bib: BibText, e: BibEntry): Span => {
 };
 
 const TOP: Span = { start: 0, end: 0 };
-
-const decoded = (b: Uint8Array | null): string | null =>
-  b === null ? null : new TextDecoder().decode(b);
 
 /** A text of the paper that may hold a block: a file of the record, the main file as the editor has it. */
 interface Holder {
