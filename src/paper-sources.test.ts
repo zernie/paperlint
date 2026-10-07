@@ -655,10 +655,28 @@ describe("what TeX never reads, and what bibtex reads in a quoted field", () => 
         ),
     ).toEqual([true]);
   });
+});
 
+describe("a committed file is TeX's copy of a block only when bibtex reads the same from both", () => {
   it("v25: a committed file whose @string differs from the block's is not TeX's copy of it: conflict", () => {
     expect(
       databasesOf(sourcesIn("v25-string-differs").bibliography).map(
+        (d) => d.kind,
+      ),
+    ).toEqual(["conflict"]);
+  });
+
+  it("v29: the same entry and the same last @string, but the entry used another value: conflict (TeX typesets the file's)", () => {
+    expect(
+      databasesOf(sourcesIn("v29-string-redefined").bibliography).map(
+        (d) => d.kind,
+      ),
+    ).toEqual(["conflict"]);
+  });
+
+  it('v30: `{\\"o}` in the block and `ö` in the file read as the same letter, but bibtex writes what is written: conflict', () => {
+    expect(
+      databasesOf(sourcesIn("v30-accent-as-written").bibliography).map(
         (d) => d.kind,
       ),
     ).toEqual(["conflict"]);

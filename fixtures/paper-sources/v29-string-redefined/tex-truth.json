@@ -1,0 +1,19 @@
+{
+  "inputs": [
+    "paper.tex"
+  ],
+  "written": [],
+  "databases": [
+    "refs.bib"
+  ],
+  "citations": [
+    "*"
+  ],
+  "bibitems": [
+    "k1"
+  ],
+  "bibtex": {
+    "exit": 0,
+    "errors": []
+  }
+}

@@ -137,7 +137,7 @@ test("each entry gets its existence and its authors: confirmed, fabricated, mism
   );
 });
 
-test("one key in two candidate databases: it fails when either entry does, whatever their order", async () => {
+test("one key in two candidate databases: each entry gets its own verdict, in the order given", async () => {
   vi.useFakeTimers();
   fakeFetch({
     "https://api.crossref.org/works/10.1%2Fgood": () =>
@@ -147,24 +147,47 @@ test("one key in two candidate databases: it fails when either entry does, whate
     "https://doi.org/api/handles/10.1/good": () =>
       json(200, { responseCode: 1 }),
     "https://doi.org/api/handles/10.1/fake": () => json(404),
+    "https://dblp.org/search/publ/api/?q=Good%20Paper": () =>
+      dblp("Good Paper", ["Ada Lovelace"]),
     "https://api.crossref.org/": () => json(200),
     "https://dblp.org/": () => json(200, {}),
   });
-  // An `undecided` bibliography: the anonymous and the real database both define `k`.
+  // An `undecided` bibliography: the anonymous and the real database both define `k`, and only one
+  // copy fails — its existence, or its authors. The failing verdict is the failing copy's own.
   const good =
     "@inproceedings{k, author={Ada Lovelace}, title={Good Paper}, booktitle={ICSE}, doi={10.1/good}}";
   const fake =
     "@inproceedings{k, author={Ada Lovelace}, title={Fake Paper}, booktitle={ICSE}, doi={10.1/fake}}";
+  const drift =
+    "@inproceedings{k, author={Ada Lovelace and Alan Turing}, title={Good Paper}, booktitle={ICSE}, doi={10.1/good}}";
   const verdicts = async (bib: string) => {
     const r = await settle(checkOnly(bib));
     return (r.kind === "checked" ? r.entries : []).map((e) => [
       e.key,
       e.exists,
+      e.authors,
     ]);
   };
   assert.deepEqual(
-    [await verdicts(`${good}\n${fake}`), await verdicts(`${fake}\n${good}`)],
-    [[["k", "false"]], [["k", "false"]]],
+    [
+      await verdicts(`${good}\n${fake}`),
+      await verdicts(`${fake}\n${good}`),
+      await verdicts(`${good}\n${drift}`),
+    ],
+    [
+      [
+        ["k", "true", "match"],
+        ["k", "false", "skipped"],
+      ],
+      [
+        ["k", "false", "skipped"],
+        ["k", "true", "match"],
+      ],
+      [
+        ["k", "true", "match"],
+        ["k", "true", "mismatch"],
+      ],
+    ],
   );
 });
 

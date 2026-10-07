@@ -457,6 +457,40 @@ describe("the reference rules over refs.bib, and on other files", () => {
     ]);
     expect(msgs[0]?.message).toMatch(/^refs\.bib:1:1: `schick2023`/);
   });
+});
+
+describe("a finding is about the entry that failed, not about its key", () => {
+  it("🔴 one key in two candidate databases, only the later failing: the finding names the failing copy, not the first", async () => {
+    const tex =
+      "\\documentclass{acmart}\n\\newif\\ifanon\n\\begin{document}x\n\\ifanon\\bibliography{anon}\\else\\bibliography{refs}\\fi\n\\end{document}\n";
+    const copy = (title: string) =>
+      `@misc{k,\n  title = {${title}},\n  url = {https://x.org}\n}\n`;
+    const files = memoryFiles({
+      [`${PAPER}/paper.tex`]: tex,
+      [`${PAPER}/anon.bib`]: copy("Good"),
+      [`${PAPER}/refs.bib`]: `\n\n${copy("Fake")}`,
+    });
+    // The checker is handed each copy, and fails the one titled Fake.
+    await referencesStep.run({
+      ...ctx(files),
+      checkReferences: (bib, cache) =>
+        Promise.resolve({
+          check: {
+            kind: "checked",
+            entries: bib.map((e) => ({
+              key: e.key,
+              exists: e.fields["title"] === "Fake" ? "false" : "true",
+              authors: "match",
+            })),
+          },
+          cache,
+        }),
+    });
+    const msgs = await lint(files, tex);
+    expect(msgs.map((m) => [m.ruleId, m.message.split(": ")[0]])).toEqual([
+      ["paper/cite-exists", "refs.bib:3:1"],
+    ]);
+  });
 
   it("only paper.tex is judged", () => {
     const files = memoryFiles({});
