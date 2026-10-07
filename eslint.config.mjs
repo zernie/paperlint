@@ -798,6 +798,28 @@ export default [
       "no-restricted-imports": ["error", { paths: ONE_COLLECTION_LIBRARY }],
     },
   },
+  // 🔴 ONE PLACE READS BIBLIOGRAPHIES. `@retorquere/bibtex-parser` is known to its adapter only;
+  // every other file — the app, the domain, another adapter, a skill's script — reads a `.bib` through
+  // the `BibReader` port, and a path a person gave through `bibliographyAt` (src/paper-sources.ts).
+  // Three readers of `.bib` text grew here before there was one. Its own rule id, so no other
+  // `no-restricted-imports` block can replace it (test/eslint-bib-parser.test.ts).
+  {
+    files: ["**/*.{ts,mts,mjs,js,cjs}"],
+    ignores: ["src/adapters/bibtex/**"],
+    plugins: { n },
+    rules: {
+      "n/no-restricted-import": [
+        "error",
+        [
+          {
+            name: ["@retorquere/bibtex-parser", "@retorquere/bibtex-parser/**"],
+            message:
+              "The bibtex parser is src/adapters/bibtex/'s: read a .bib through the BibReader port (src/ports/bib-reader.ts), or a path through bibliographyAt (src/paper-sources.ts).",
+          },
+        ],
+      ],
+    },
+  },
   // 🔴 THE LINTER DOES NOT READ A SKILL. Skills are consumers of the package, not its storage: the
   // venue presets once lived in a skill and were located through a skill's script, so renaming the
   // skill broke `paperlint lint` (#133). The package's own code — src/, eslint-rules/, lib/ — may

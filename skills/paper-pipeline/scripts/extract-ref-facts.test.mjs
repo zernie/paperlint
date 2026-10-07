@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
+import { bibliographyUnreadWhy } from "#src/paper-sources";
 import {
   bibliographyFrom,
   buildFacts,
@@ -182,10 +183,6 @@ writeTree(root, {
     `  return { status: 200, text: async () => ${JSON.stringify(CROSSREF_OK)} };\n` +
     `};\n`,
   "bib/paper.tex": declaring(),
-  "thebib/paper.tex":
-    "\\documentclass{article}\\begin{document}x\\begin{thebibliography}{9}\\bibitem{k} K.\\end{thebibliography}\\end{document}\n",
-  "gone/paper.tex":
-    "\\documentclass{article}\\begin{document}x\\bibliography{gone}\\end{document}\n",
   "switched/paper.tex":
     "\\documentclass{article}\\newif\\ifanon\\begin{document}x\\ifanon\\bibliography{anon}\\else\\bibliography{refs}\\fi\\end{document}\n",
   "switched/anon.bib": "@misc{anon1, title={A}, note={doi:10.1234/a}}\n",
@@ -199,10 +196,6 @@ writeTree(root, {
       "\\end{filecontents*}\n",
   ),
   "inline/refs.bib": "@misc{stale, title={Stale}, note={doi:10.1234/old}}\n",
-  // A paper.tex that declares no bibliography: TeX reads none, whatever lies beside it.
-  "plain/paper.tex":
-    "\\documentclass{article}\\begin{document}x\\end{document}\n",
-  "plain/refs.bib": "@misc{k, title={T}, note={doi:10.1234/ok}}\n",
 });
 const cli = (args, { cwd = root, nodeArgs = [] } = {}) =>
   runNode(SCRIPT, args, {
@@ -265,29 +258,20 @@ test("no target: the current directory", () => {
   assert.equal(r.status, 0, r.stderr);
 });
 
-test("refusals: nowhere to read from, a file that is not a .bib, and zero entries (not written as a clean bibliography)", () => {
-  assert.deepEqual(cli([join(root, "nope"), "--offline"]), {
+test("refusals: no bibliography to read (in bibliographyAt's words), and zero entries (not written as a clean bibliography)", () => {
+  // The path → bibliography vocabulary is tested once, beside bibliographyAt (src/paper-sources.ts).
+  // Here: that the command speaks it, and stops.
+  const notes = join(root, "notes/notes.txt");
+  assert.deepEqual(cli([notes, "--offline"]), {
     status: 1,
     stdout: "",
-    stderr: `🛑 ${join(root, "nope")} does not exist — nowhere to take a bibliography from.\n`,
-  });
-  assert.deepEqual(cli(["notes", "--offline"]), {
-    status: 1,
-    stdout: "",
-    stderr: `🛑 no paper.tex in ${join(root, "notes")} — name the paper's .tex, or a .bib to read it alone.\n`,
+    stderr: `🛑 ${bibliographyUnreadWhy({ kind: "not-bib-or-tex", path: notes })}.\n`,
   });
   assert.deepEqual(cli(["empty", "--offline"]), {
     status: 1,
     stdout: "",
     stderr:
       "🛑 parsed 0 entries out of empty/refs.bib. Silence here would look like a clean bibliography.\n",
-  });
-  // Guards: a file that is neither a .bib nor a .tex is named, not parsed as BibTeX, and nothing is written.
-  assert.deepEqual(cli([join(root, "notes/notes.txt"), "--offline"]), {
-    status: 1,
-    stdout: "",
-    stderr:
-      "🛑 notes/notes.txt is neither a .bib nor a .tex — give the paper's directory, its .tex, or a .bib.\n",
   });
 });
 
@@ -312,28 +296,6 @@ test("🔴 a paper directory whose paper.tex embeds its .bib with [overwrite]: t
       ["inline/paper.tex", "a", 3],
       ["inline/paper.tex", "b", 4],
     ],
-  );
-});
-
-test("a paper.tex that declares no bibliography is refused with why — TeX reads no refs.bib beside it", () => {
-  const why =
-    "🛑 plain/paper.tex declares no bibliography (no \\bibliography, no \\addbibresource).\n";
-  for (const target of ["plain", join(root, "plain/paper.tex")])
-    assert.deepEqual(cli([target, "--offline"]), {
-      status: 1,
-      stdout: "",
-      stderr: why,
-    });
-});
-
-test("no database to read: written by hand, or declared and on no disk — each refused with why", () => {
-  assert.deepEqual(
-    cli(["thebib", "--offline"]).stderr,
-    "🛑 thebib/paper.tex writes its references by hand in thebibliography — there is no database to read.\n",
-  );
-  assert.deepEqual(
-    cli(["gone", "--offline"]).stderr,
-    "🛑 gone/paper.tex declares gone (missing), and none of them is on disk.\n",
   );
 });
 

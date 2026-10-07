@@ -29,7 +29,8 @@ export const MAIN_FILE = "paper.tex";
 
 /**
  * What an included file is to the paper: prose of its body, macros of its preamble, or one of
- * paperlint's own inputs (`paper-guards.tex`) found only on the search path the build adds.
+ * paperlint's own inputs (`paper-guards.tex`) found only on the search path the build adds. A role is
+ * the file's, across every include of it: one included in the preamble and again in the body is body.
  */
 export type Role = "body" | "preamble" | "package-input";
 

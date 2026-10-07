@@ -35,6 +35,7 @@ import { paperSources, type SourcesDeps } from "./paper-sources.ts";
 import {
   bibHash,
   checkedBibliography,
+  NOTHING_READ,
   readReferences,
   REFERENCES_FILE,
   unseenBy,
@@ -105,18 +106,11 @@ function laid(
     : null;
 }
 
-function assess(deps: SourcesDeps, paperDir: string): Assessment {
-  const read = paperSources(paperDir, deps);
-  const bib = read.ok ? checkedBibliography(read.value.bibliography) : null;
-  if (!read.ok || bib === null) return { kind: "no-bibliography" };
-  const doc = readReferences(deps.files, paperDir);
-  if (doc === null) return { kind: "unrecorded" };
-  if (doc.bib.sha256 !== bibHash(bib)) return { kind: "stale" };
-  if (doc.status === "not-checked")
-    return { kind: "not-checked", why: doc.why ?? "no reason recorded" };
-  const verdicts = laid(doc.entries, bib.entries);
-  if (verdicts === null) return { kind: "stale" };
-  const failing = verdicts.flatMap(([found, e]) => [
+/** The findings the verdicts carry, each at the entry it is about. */
+const failingOf = (
+  verdicts: readonly (readonly [FoundEntry, EntryVerdict])[],
+): Extract<Assessment, { kind: "ready" }>["failing"] =>
+  verdicts.flatMap(([found, e]) => [
     ...(e.authors === "mismatch"
       ? [{ found, key: e.key, rule: "author-list" as const, why: e.why ?? "" }]
       : []),
@@ -124,11 +118,25 @@ function assess(deps: SourcesDeps, paperDir: string): Assessment {
       ? [{ found, key: e.key, rule: "cite-exists" as const, why: e.why ?? "" }]
       : []),
   ]);
+
+function assess(deps: SourcesDeps, paperDir: string): Assessment {
+  const read = paperSources(paperDir, deps);
+  if (!read.ok) return { kind: "no-bibliography" };
+  const doc = readReferences(deps.files, paperDir);
+  // The bibliography as the recorded build's bibtex observed it; before any build, every candidate.
+  const bib = checkedBibliography(read.value, doc?.bibtex ?? NOTHING_READ);
+  if (bib === null) return { kind: "no-bibliography" };
+  if (doc === null) return { kind: "unrecorded" };
+  if (doc.bib.sha256 !== bibHash(bib)) return { kind: "stale" };
+  if (doc.status === "not-checked")
+    return { kind: "not-checked", why: doc.why ?? "no reason recorded" };
+  const verdicts = laid(doc.entries, bib.entries);
+  if (verdicts === null) return { kind: "stale" };
   return {
     kind: "ready",
     sources: read.value,
     unseen: unseenBy(read.value, doc.bibtex),
-    failing,
+    failing: failingOf(verdicts),
   };
 }
 

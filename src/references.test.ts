@@ -22,6 +22,7 @@ import { referencesStep } from "./build.ts";
 import {
   bibHash,
   checkedBibliography,
+  NOTHING_READ,
   lookupCachePath,
   recordReferences,
   readReferences,
@@ -99,7 +100,10 @@ const depsOf = (files: ReturnType<typeof memoryFiles>) => ({
 const checkedIn = (files: ReturnType<typeof memoryFiles>) => {
   const r = paperSources(PAPER, depsOf(files));
   if (!r.ok) throw new Error("no paper.tex");
-  return present(checkedBibliography(r.value.bibliography), "the bibliography");
+  return present(
+    checkedBibliography(r.value, NOTHING_READ),
+    "the bibliography",
+  );
 };
 
 /** The step's context over `files`, with every port it does not use stubbed. */

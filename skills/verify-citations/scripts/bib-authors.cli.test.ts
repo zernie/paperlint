@@ -15,6 +15,8 @@ import {
   useTempDir,
   writeTree,
 } from "../../../test/support.ts";
+import { absolutePath } from "#src/domain/paths";
+import { bibliographyUnreadWhy } from "#src/paper-sources";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "bib-authors.mjs");
 const root = useTempDir("bib-authors-cli-");
@@ -64,10 +66,6 @@ writeTree(root, {
   ),
   "sibling/paper.tex": declaring("refs"),
   "sibling/refs.bib": bib("good", "Ada Lovelace", "All Good"),
-  "nobib/paper.tex": "\\documentclass{article}\n",
-  "thebib/paper.tex":
-    "\\documentclass{article}\\begin{document}\\begin{thebibliography}{9}\\bibitem{k} K.\\end{thebibliography}\\end{document}\n",
-  "gone/paper.tex": declaring("gone"),
   "etal/paper.tex": declaring("refs"),
   "etal/notes.txt": "not a bibliography\n",
   "etal/refs.bib":
@@ -75,7 +73,6 @@ writeTree(root, {
     bib("etal", "Ada Lovelace and others", "Truncated"),
   "down/paper.tex": declaring("refs"),
   "down/refs.bib": bib("down", "Ada Lovelace", "Service Down"),
-  "empty/.keep": "",
 });
 
 const run = (...args: string[]) => {
@@ -89,14 +86,16 @@ const run = (...args: string[]) => {
   };
 };
 
-test("refusals: no argument, no such path, a directory with nothing to read, a .tex with no bibliography", () => {
+test("refusals: no argument; a path with no bibliography to read, in bibliographyAt's words", () => {
+  // The path → bibliography vocabulary is tested once, beside bibliographyAt (src/paper-sources.ts).
+  // Here: that the command speaks it, and exits 2.
+  const notes = join(root, "etal", "notes.txt");
   assert.deepEqual(
-    [
-      run(),
-      run(join(root, "nope")),
-      run(join(root, "empty")),
-      run(join(root, "nobib", "paper.tex")),
-    ].map(({ status, stdout, stderr }) => ({ status, stdout, stderr })),
+    [run(), run(notes)].map(({ status, stdout, stderr }) => ({
+      status,
+      stdout,
+      stderr,
+    })),
     [
       {
         status: 2,
@@ -107,19 +106,7 @@ test("refusals: no argument, no such path, a directory with nothing to read, a .
       {
         status: 2,
         stdout: "",
-        stderr: "bib-authors: no such path: <root>/nope\n",
-      },
-      {
-        status: 2,
-        stdout: "",
-        stderr:
-          "bib-authors: no paper.tex in <root>/empty — name the paper's .tex, or its .bib\n",
-      },
-      {
-        status: 2,
-        stdout: "",
-        stderr:
-          "bib-authors: no bibliography database in <root>/nobib/paper.tex (no \\bibliography or \\addbibresource)\n",
+        stderr: `bib-authors: ${bibliographyUnreadWhy({ kind: "not-bib-or-tex", path: absolutePath(notes) }).replaceAll(root, "<root>")}\n`,
       },
     ],
   );
@@ -148,13 +135,7 @@ test("a paper directory: the paper.bib its \\bibliography{paper} declares is rea
   });
 });
 
-test("a directory without paper.tex is refused — never a guess among its .tex files; the .tex named is read", () => {
-  assert.deepEqual(run(join(root, "twotex")), {
-    status: 2,
-    stdout: "",
-    stderr:
-      "bib-authors: no paper.tex in <root>/twotex — name the paper's .tex, or its .bib\n",
-  });
+test("a .tex named is read — never a guess among a directory's .tex files", () => {
   const r = run(join(root, "twotex", "a.tex"), "--json");
   assert.deepEqual(
     { status: r.status, stderr: r.stderr, report: parseJson(r.stdout) },
@@ -191,35 +172,6 @@ test("a .tex that declares refs and has no block reads refs.bib — PASS, exit 0
     stderr: "",
     stdout:
       "== bib-authors: <root>/sibling/refs.bib ==\n\n-- 1 entries · 0 difference(s) · 0 not applicable · 0 NOT CHECKED\nPASS: no author-list disagreement.\n",
-  });
-});
-
-test("no database: a bibliography written by hand, one declared and on no disk", () => {
-  assert.deepEqual(
-    [run(join(root, "thebib")), run(join(root, "gone"))].map((r) => [
-      r.status,
-      r.stderr,
-    ]),
-    [
-      [
-        2,
-        "bib-authors: no bibliography database in <root>/thebib (thebibliography is written by hand)\n",
-      ],
-      [
-        2,
-        "bib-authors: <root>/gone declares gone (missing), and none of them is on disk\n",
-      ],
-    ],
-  );
-});
-
-test("a file that is neither a .bib nor a .tex is refused — not swapped for the refs.bib beside it", () => {
-  const r = run(join(root, "etal", "notes.txt"));
-  assert.deepEqual(r, {
-    status: 2,
-    stdout: "",
-    stderr:
-      "bib-authors: <root>/etal/notes.txt is not a .bib or a .tex — give the paper's .bib or paper.tex\n",
   });
 });
 

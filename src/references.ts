@@ -62,9 +62,11 @@ import {
   bibTexts,
   databasesOf,
   entriesOf,
+  texReads,
   type FoundEntry,
   type BibText,
   type Bibliography,
+  type Database,
   type PaperSources,
 } from "./domain/paper-sources.ts";
 import type { SourcesUnread } from "./paper-sources.ts";
@@ -89,8 +91,8 @@ const text = (files: Files, p: string): string | null => {
 };
 
 /**
- * The bibliography the build checks: every text TeX reads for it (`paperSources`; for `undecided`,
- * every candidate), and their entries, as the bibtex reader read them. The verdicts are recorded one
+ * The bibliography the build checks: every text TeX reads for it (`paperSources`, as the build's
+ * bibtex observed it — `observed`), and their entries, as the bibtex reader read them. The verdicts are recorded one
  * per entry, in this order: a verdict is about an entry, not about its key.
  */
 export interface CheckedBibliography {
@@ -106,27 +108,56 @@ export interface Unseen {
   readonly keys: readonly string[];
 }
 
+/** What a build that ran no bibtex read: nothing — every candidate stays one. */
+export const NOTHING_READ: BibtexRead = { databases: [], bibitems: [] };
+
 /**
- * What `read` — one build's bibtex — has that `s` does not: each database compared as the file
- * bibtex opens from the paper's directory, each entry by its key.
+ * The bibliography as the build observed it. For an `undecided` one, the candidates whose database
+ * bibtex opened (`paper.blg`) and paperlint can read: the build's observation decides what the
+ * static reading could not, so after a build the entries checked, their verdicts and the post-build
+ * comparison are about those databases, not every candidate. When bibtex opened none of them (it did
+ * not run), every candidate.
+ */
+export function observed(s: PaperSources, read: BibtexRead): Bibliography {
+  const b = s.bibliography;
+  if (b.kind !== "undecided") return b;
+  const opened = (d: Database): boolean =>
+    read.databases.some(
+      (n) => resolve(s.dir, n) === resolve(s.dir, `${d.name}.bib`),
+    );
+  const [first, ...rest] = b.databases.filter(
+    (d) => texReads(d) !== null && opened(d),
+  );
+  return first === undefined
+    ? b
+    : { kind: "undecided", databases: [first, ...rest] };
+}
+
+/**
+ * What `read` — one build's bibtex — has that `s` does not: each database the paper does not name,
+ * compared as the file bibtex opens from the paper's directory, and each entry bibtex typeset that
+ * the reader did not read from the databases it opened (`observed`).
  */
 export function unseenBy(s: PaperSources, read: BibtexRead): Unseen {
   const named = databasesOf(s.bibliography).map((d) =>
     resolve(s.dir, `${d.name}.bib`),
   );
-  const keys = new Set(
-    bibTexts(s.bibliography).flatMap((t) => t.entries.map((e) => e.key)),
-  );
+  const keys = new Set(entriesOf(observed(s, read)).map((f) => f.entry.key));
   return {
     databases: read.databases.filter((n) => !named.includes(resolve(s.dir, n))),
     keys: read.bibitems.filter((k) => !keys.has(k)),
   };
 }
 
-/** The bibliography to check, or null when TeX reads no database for this paper. */
+/**
+ * The bibliography a build checks, as its bibtex observed it (`observed`), or null when TeX reads no
+ * database for this paper.
+ */
 export function checkedBibliography(
-  b: Bibliography,
+  s: PaperSources,
+  read: BibtexRead,
 ): CheckedBibliography | null {
+  const b = observed(s, read);
   const [first, ...rest] = bibTexts(b);
   if (first === undefined) return null;
   const texts: readonly [BibText, ...BibText[]] = [first, ...rest];
@@ -273,12 +304,12 @@ export async function recordReferences(
 ): Promise<string> {
   if (!sources.ok) return unread(sources.error);
   const paperDir = sources.value.dir;
-  const bib = checkedBibliography(sources.value.bibliography);
-  if (bib === null) return nothingToCheck(sources.value.bibliography);
   const bibtex = bibtexRead(
     text(files, join(paperDir, "paper.blg")) ?? "",
     text(files, join(paperDir, "paper.bbl")) ?? "",
   );
+  const bib = checkedBibliography(sources.value, bibtex);
+  if (bib === null) return nothingToCheck(sources.value.bibliography);
   const record = (c: ReferencesCheck): ReferencesDocument => {
     const doc = documentOf(paperDir, bib, bibtex, c);
     files.writeAtomic(

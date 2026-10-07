@@ -49,7 +49,11 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, extname, resolve } from "node:path";
 import { bibReader } from "#src/adapters/bibtex/index";
+import { gitCommitted } from "#src/adapters/git/index";
+import { latexReader } from "#src/adapters/latex/index";
+import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
 import { absolutePath } from "#src/domain/paths";
+import { bibliographyAt, bibliographyUnreadWhy } from "#src/paper-sources";
 import { createHash } from "node:crypto";
 import {
   consumerContactEmail,
@@ -1130,14 +1134,23 @@ export async function verifyCitationLive(
 // CLI
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** What `bibliographyAt` needs to read a `.bib` (src/paper-sources.ts, the one answer for a path). */
+const DEPS = {
+  files: nodeFiles,
+  latex: latexReader,
+  committed: gitCommitted(spawnProcess(), process.env),
+  bib: bibReader,
+};
+
 function loadInput(argv) {
   const path = argv.find((a) => !a.startsWith("-"));
+  if (path && extname(path).toLowerCase() === ".bib") {
+    const r = bibliographyAt(absolutePath(resolve(path)), DEPS);
+    if (!r.ok) throw new Error(bibliographyUnreadWhy(r.error));
+    return citationsOf(r.value.texts.flatMap((t) => t.entries));
+  }
   const raw =
     path && path !== "-" ? readFileSync(path, "utf8") : readFileSync(0, "utf8"); // stdin
-  if (path && extname(path).toLowerCase() === ".bib")
-    return citationsOf(
-      bibReader.readFile(absolutePath(resolve(path)), raw).entries,
-    );
   const parsed = JSON.parse(raw);
   return Array.isArray(parsed) ? parsed : [parsed];
 }

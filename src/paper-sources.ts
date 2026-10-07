@@ -10,11 +10,15 @@
  * `sourcesOf` takes the main file's text from the caller — a lint rule hands the editor's buffer —
  * and reads the rest from disk.
  */
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import type { PaperSource } from "./domain/paper-source.ts";
 import {
+  bibTexts,
+  databasesOf,
   MAIN_FILE,
+  type BibText,
+  type Bibliography,
   type IncludedFile,
   type PaperSources,
   type Role,
@@ -75,8 +79,11 @@ export function paperFiles(
   const inBody = (via: Span | null): boolean =>
     via !== null &&
     (body === null || (via.start >= body.start && via.end <= body.end));
-  const includes = assembled.segments
-    .filter((s) => s.file !== assembled.main)
+  const spliced = assembled.segments.filter((s) => s.file !== assembled.main);
+  // A file's role is the file's, across every include of it: body when any of them is in the body.
+  const anyInBody = (file: string): boolean =>
+    spliced.some((s) => s.file === file && inBody(s.via));
+  const includes = spliced
     .filter((s, i, all) => all.findIndex((o) => o.file === s.file) === i)
     // A spliced file was found, so it has a first location: the one TeX opens.
     .flatMap((s): readonly IncludedFile[] =>
@@ -86,7 +93,7 @@ export function paperFiles(
           path,
           rel: s.file,
           text: s.source,
-          role: roleOf(path, callerPath(join(dir, s.file)), inBody(s.via)),
+          role: roleOf(path, callerPath(join(dir, s.file)), anyInBody(s.file)),
         })),
     );
   return { dir, main, includes, assembled };
@@ -195,3 +202,103 @@ export const sourcesReader =
 /** No reader: the build was not given one. Never "no bibliography" — it says so. */
 export const notWiredSources: ReadSources = (dir) =>
   err({ kind: "not-wired", dir });
+
+// ── a path a person gave → the bibliography to read ─────────────────────────────────────────
+
+/** What a path a person gave comes to: where the paper is, and the texts to read. */
+export interface PathBibliography {
+  /** The `.bib`'s directory, the `.tex`'s, or the directory named. */
+  readonly paperDir: AbsolutePath;
+  readonly texts: readonly [BibText, ...BibText[]];
+  /** The paper's bibliography as `paperSources` decides it; null for a `.bib` named, read alone. */
+  readonly bibliography: Bibliography | null;
+}
+
+/** Why a path a person gave has no bibliography to read. One vocabulary for every caller. */
+export type BibliographyUnread =
+  /** A `.bib` or `.tex` named that is not there. */
+  | { readonly kind: "missing"; readonly path: AbsolutePath }
+  /** A file that is neither a `.bib` nor a `.tex`. */
+  | { readonly kind: "not-bib-or-tex"; readonly path: AbsolutePath }
+  /** Not a file, and no `paper.tex` in it. */
+  | { readonly kind: "no-paper"; readonly path: AbsolutePath }
+  /** A paper whose bibliography has no database on disk. */
+  | {
+      readonly kind: "no-database";
+      readonly main: AbsolutePath;
+      readonly bibliography: Bibliography;
+    };
+
+/** The paper's texts to read, or why it has none. */
+function ofPaper(
+  s: PaperSources,
+): Result<PathBibliography, BibliographyUnread> {
+  const [first, ...rest] = bibTexts(s.bibliography);
+  return first === undefined
+    ? err({
+        kind: "no-database",
+        main: s.main.path,
+        bibliography: s.bibliography,
+      })
+    : ok({
+        paperDir: s.dir,
+        texts: [first, ...rest],
+        bibliography: s.bibliography,
+      });
+}
+
+/**
+ * THE answer to "a path a person gave → the bibliography to read", for every script that takes one: a
+ * `.bib` is read alone, as named; a `.tex`, or a directory holding `paper.tex`, is the bibliography
+ * TeX reads for that paper (`paperSources`) — never a guess by file name. Anything else is refused,
+ * in the words `bibliographyUnreadWhy` gives.
+ */
+export function bibliographyAt(
+  path: AbsolutePath,
+  deps: SourcesDeps,
+): Result<PathBibliography, BibliographyUnread> {
+  const ext = extname(path).toLowerCase();
+  if (ext === ".bib" || ext === ".tex") {
+    const bytes = deps.files.readBytes(path);
+    if (bytes === null) return err({ kind: "missing", path });
+    return ext === ".bib"
+      ? ok({
+          paperDir: callerPath(dirname(path)),
+          texts: [deps.bib.readFile(path, decoded(bytes))],
+          bibliography: null,
+        })
+      : ofPaper(sourcesOf(path, decoded(bytes), deps));
+  }
+  if (deps.files.isFile(path)) return err({ kind: "not-bib-or-tex", path });
+  const r = paperSources(path, deps);
+  return r.ok ? ofPaper(r.value) : err({ kind: "no-paper", path });
+}
+
+/** Why a bibliography has no text to read, in words a person can act on. */
+function noDatabaseWhy(main: AbsolutePath, b: Bibliography): string {
+  switch (b.kind) {
+    case "none":
+      return `${main} declares no bibliography (no \\bibliography, no \\addbibresource)`;
+    case "thebibliography":
+      return `${main} writes its references by hand in thebibliography — there is no database to read`;
+    case "databases":
+    case "undecided":
+      return `${main} declares ${databasesOf(b)
+        .map((d) => `${d.name} (${d.kind})`)
+        .join(", ")}, and none of them is on disk`;
+  }
+}
+
+/** One sentence: why `bibliographyAt` refused, naming the path and what to give instead. */
+export function bibliographyUnreadWhy(e: BibliographyUnread): string {
+  switch (e.kind) {
+    case "missing":
+      return `${e.path} does not exist — nowhere to take a bibliography from`;
+    case "not-bib-or-tex":
+      return `${e.path} is neither a .bib nor a .tex — name the paper's directory, its .tex, or a .bib`;
+    case "no-paper":
+      return `no paper.tex in ${e.path} — name the paper's .tex, or a .bib to read it alone`;
+    case "no-database":
+      return noDatabaseWhy(e.main, e.bibliography);
+  }
+}

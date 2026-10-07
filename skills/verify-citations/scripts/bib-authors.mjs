@@ -43,15 +43,13 @@
  * Usage:  node bib-authors.mjs <paper-dir-or-.bib-or-.tex> [--json]
  * Exit:   0 = no author-set/order differences   1 = differences found   2 = usage/IO error
  */
-import { readFileSync, existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { gitCommitted } from "#src/adapters/git/index";
 import { latexReader } from "#src/adapters/latex/index";
 import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
 import { absolutePath } from "#src/domain/paths";
 import { bibReader } from "#src/adapters/bibtex/index";
-import { bibTexts, databasesOf } from "#src/domain/paper-sources";
-import { paperSources, sourcesOf } from "#src/paper-sources";
+import { bibliographyAt, bibliographyUnreadWhy } from "#src/paper-sources";
 import { isMain } from "../../paper-pipeline/scripts/consumer.mjs";
 
 const DBLP = "https://dblp.org/search/publ/api";
@@ -66,42 +64,14 @@ const DEPS = {
 };
 
 /**
- * The texts to read: a `.bib` as named; for a paper directory or a `.tex`, the databases TeX reads, as
- * `paperSources` decides them (src/paper-sources.ts) — the block or the committed file, the
- * `\bibliography{…}` the paper declares, every candidate when that depends on a switch. Never a guess
- * by file name: a directory without `paper.tex` is refused, and the caller names the file.
+ * The texts to read: a `.bib` as named; for a paper directory or a `.tex`, the databases TeX reads —
+ * `bibliographyAt` (src/paper-sources.ts) answers, and refuses in its words.
  */
 function bibliographyFrom(target) {
-  const t = resolve(target);
-  if (!existsSync(t)) die(`no such path: ${target}`);
-  if (statSync(t).isFile() && t.endsWith(".bib"))
-    return {
-      files: [t],
-      texts: [bibReader.readFile(absolutePath(t), readFileSync(t, "utf-8"))],
-    };
-  if (statSync(t).isFile() && !t.endsWith(".tex"))
-    die(
-      `${target} is not a .bib or a .tex — give the paper's .bib or paper.tex`,
-    );
-  const b = statSync(t).isFile()
-    ? sourcesOf(absolutePath(t), readFileSync(t, "utf-8"), DEPS).bibliography
-    : sourcesOrDie(t).bibliography;
-  const texts = bibTexts(b);
-  if (texts.length === 0)
-    die(
-      b.kind === "none" || b.kind === "thebibliography"
-        ? `no bibliography database in ${target} (${b.kind === "none" ? "no \\bibliography or \\addbibresource" : "thebibliography is written by hand"})`
-        : `${target} declares ${databasesOf(b)
-            .map((d) => `${d.name} (${d.kind})`)
-            .join(", ")}, and none of them is on disk`,
-    );
+  const r = bibliographyAt(absolutePath(resolve(target)), DEPS);
+  if (!r.ok) die(bibliographyUnreadWhy(r.error));
+  const { texts } = r.value;
   return { files: [...new Set(texts.map((x) => x.path))], texts };
-}
-
-function sourcesOrDie(dir) {
-  const r = paperSources(dir, DEPS);
-  if (!r.ok) die(`no paper.tex in ${dir} — name the paper's .tex, or its .bib`);
-  return r.value;
 }
 
 /* ---------- entries: as the bibtex reader read them ---------- */

@@ -60,13 +60,7 @@
  * registry's response, not by a comparison. If the cache kept parsed entries, those readers would
  * stay uncovered while looking covered.
  */
-import {
-  readFileSync,
-  writeFileSync,
-  existsSync,
-  mkdirSync,
-  statSync,
-} from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve, dirname, basename } from "node:path";
 import { gitCommitted } from "#src/adapters/git/index";
@@ -74,8 +68,8 @@ import { latexReader } from "#src/adapters/latex/index";
 import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
 import { absolutePath } from "#src/domain/paths";
 import { bibReader } from "#src/adapters/bibtex/index";
-import { bibTexts, databasesOf, texReads } from "#src/domain/paper-sources";
-import { paperSources, sourcesOf } from "#src/paper-sources";
+import { databasesOf, texReads } from "#src/domain/paper-sources";
+import { bibliographyAt, bibliographyUnreadWhy } from "#src/paper-sources";
 import { isMain } from "./consumer.mjs";
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -381,20 +375,6 @@ const DEPS = {
   bib: bibReader,
 };
 
-/** Why a bibliography has no text to read, in words a person can act on. */
-function noTextWhy(where, b) {
-  switch (b.kind) {
-    case "none":
-      return `${where} declares no bibliography (no \\bibliography, no \\addbibresource)`;
-    case "thebibliography":
-      return `${where} writes its references by hand in thebibliography — there is no database to read`;
-    default:
-      return `${where} declares ${databasesOf(b)
-        .map((d) => `${d.name} (${d.kind})`)
-        .join(", ")}, and none of them is on disk`;
-  }
-}
-
 /** What the reader should know about a bibliography it is about to read: conflicts, switches. */
 const notes = (b) => [
   ...(b.kind === "undecided"
@@ -419,52 +399,19 @@ const notes = (b) => [
 ];
 
 /**
- * The bibliography of `target`: the texts to read, or why there are none. `paperDir` is where the
- * cache and the facts go.
+ * The bibliography of `target`: the texts to read, or why there are none — `bibliographyAt`
+ * (src/paper-sources.ts) answers, in its words. `paperDir` is where the cache and the facts go.
  */
 export function bibliographyFrom(target) {
-  const t = resolve(target);
-  if (!existsSync(t))
-    return {
-      ok: false,
-      why: `${t} does not exist — nowhere to take a bibliography from`,
-    };
-  if (statSync(t).isFile()) return fromFile(t);
-  const r = paperSources(t, DEPS);
-  if (!r.ok)
-    return {
-      ok: false,
-      why: `no paper.tex in ${t} — name the paper's .tex, or a .bib to read it alone`,
-    };
-  return fromSources(t, rel(join(t, "paper.tex")), r.value.bibliography);
-}
-
-function fromFile(t) {
-  const text = readFileSync(t, "utf8");
-  if (t.endsWith(".bib"))
-    return {
-      ok: true,
-      paperDir: dirname(t),
-      texts: [bibReader.readFile(absolutePath(t), text)],
-      notes: [],
-    };
-  if (!t.endsWith(".tex"))
-    return {
-      ok: false,
-      why: `${rel(t)} is neither a .bib nor a .tex — give the paper's directory, its .tex, or a .bib`,
-    };
-  return fromSources(
-    dirname(t),
-    rel(t),
-    sourcesOf(absolutePath(t), text, DEPS).bibliography,
-  );
-}
-
-function fromSources(paperDir, where, b) {
-  const texts = bibTexts(b);
-  return texts.length === 0
-    ? { ok: false, why: noTextWhy(where, b) }
-    : { ok: true, paperDir, texts, notes: notes(b) };
+  const r = bibliographyAt(absolutePath(resolve(target)), DEPS);
+  if (!r.ok) return { ok: false, why: bibliographyUnreadWhy(r.error) };
+  const { paperDir, texts, bibliography } = r.value;
+  return {
+    ok: true,
+    paperDir,
+    texts,
+    notes: bibliography === null ? [] : notes(bibliography),
+  };
 }
 
 /** The entries of one text TeX reads, each with its file. */

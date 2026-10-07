@@ -24,30 +24,44 @@ async function fenced(path: string, source: string): Promise<number> {
   const [result] = await eslint.lintText(source, {
     filePath: join(ROOT, path),
   });
-  return (result?.messages ?? []).filter((m) => m.ruleId === RULE).length;
+  const messages = result?.messages ?? [];
+  // Guards: a file the parser refused is linted by no rule — zero findings that prove nothing.
+  assert.deepEqual(
+    messages.filter((m) => m.fatal === true).map((m) => m.message),
+    [],
+    path,
+  );
+  return messages.filter((m) => m.ruleId === RULE).length;
 }
 
-const PLANTED = [
+/** Three imports of the parser — a value, a type, a dynamic subpath — planted in a TypeScript file. */
+const PLANTED_TS = [
   'import { parse } from "@retorquere/bibtex-parser";',
   'import type { Entry } from "@retorquere/bibtex-parser";',
   'export const later = () => import("@retorquere/bibtex-parser/dist/esm/index.js");',
   "export { parse };",
   "export type { Entry };",
 ].join("\n");
+/** The same in a script of a skill, which is JavaScript: a value and a dynamic subpath. */
+const PLANTED_JS = [
+  'import { parse } from "@retorquere/bibtex-parser";',
+  'export const later = () => import("@retorquere/bibtex-parser/dist/esm/index.js");',
+  "export { parse };",
+].join("\n");
 
+// The config is type-aware: a planted text is linted as an EXISTING file of the project, or the
+// TypeScript parser refuses a path its program does not hold.
 test(
   "an import of the parser outside its adapter is an error — app, domain, another adapter, a skill's script",
   { timeout: 30_000 },
   async () => {
-    const counts = await Promise.all(
-      [
-        "src/planted.ts",
-        "src/domain/planted.ts",
-        "src/adapters/latex/planted.ts",
-        "skills/verify-citations/scripts/planted.mjs",
-      ].map((p) => fenced(p, PLANTED)),
-    );
-    assert.deepEqual(counts, [3, 3, 3, 3]);
+    const counts = await Promise.all([
+      fenced("src/references.ts", PLANTED_TS),
+      fenced("src/domain/paper-sources.ts", PLANTED_TS),
+      fenced("src/adapters/latex/index.ts", PLANTED_TS),
+      fenced("skills/verify-citations/scripts/bib-authors.mjs", PLANTED_JS),
+    ]);
+    assert.deepEqual(counts, [3, 3, 3, 2]);
   },
 );
 
@@ -59,7 +73,7 @@ test(
     assert.deepEqual(
       [
         await own("src/adapters/bibtex/index.ts"),
-        await fenced("src/adapters/bibtex/planted.test.ts", PLANTED),
+        await fenced("src/adapters/bibtex/index.test.ts", PLANTED_TS),
       ],
       [0, 0],
     );
