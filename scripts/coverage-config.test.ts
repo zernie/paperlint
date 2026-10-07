@@ -145,29 +145,37 @@ test("every typeOnly exclusion has no runtime code", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("every evalOnly exclusion is imported only by an eval or another evalOnly module", () => {
-  const evalOnly = new Set(expand(CONFIG.evalOnly).map((f) => join(ROOT, f)));
-  const sources = globSync("**/*.{mjs,ts}", {
-    cwd: ROOT,
-    exclude: (p) => p === "node_modules" || p === "dist" || p === "coverage",
-  });
-  const importers = sources.flatMap((f) => {
-    const abs = join(ROOT, f);
-    return importedPaths(abs, readFileSync(abs, "utf8"))
-      .filter((target) => evalOnly.has(target))
-      .map(() => f);
-  });
-  const outsiders = importers.filter(
-    (f) => !f.endsWith(".eval.mjs") && !evalOnly.has(join(ROOT, f)),
-  );
-  assert.deepEqual(
-    { outsiders, anyImporter: importers.length > 0 },
-    {
-      outsiders: [],
-      anyImporter: true,
-    },
-  );
-});
+// Parses the import statements of every source in the repository: measured 4.1–4.5 s under coverage on
+// an idle machine, so the 5 s default timed it out whenever the gate ran loaded.
+const EVERY_SOURCE_PARSED = 20_000;
+
+test(
+  "every evalOnly exclusion is imported only by an eval or another evalOnly module",
+  () => {
+    const evalOnly = new Set(expand(CONFIG.evalOnly).map((f) => join(ROOT, f)));
+    const sources = globSync("**/*.{mjs,ts}", {
+      cwd: ROOT,
+      exclude: (p) => p === "node_modules" || p === "dist" || p === "coverage",
+    });
+    const importers = sources.flatMap((f) => {
+      const abs = join(ROOT, f);
+      return importedPaths(abs, readFileSync(abs, "utf8"))
+        .filter((target) => evalOnly.has(target))
+        .map(() => f);
+    });
+    const outsiders = importers.filter(
+      (f) => !f.endsWith(".eval.mjs") && !evalOnly.has(join(ROOT, f)),
+    );
+    assert.deepEqual(
+      { outsiders, anyImporter: importers.length > 0 },
+      {
+        outsiders: [],
+        anyImporter: true,
+      },
+    );
+  },
+  EVERY_SOURCE_PARSED,
+);
 
 /** Every tracked file c8 could load as code — the extensions it is configured to measure. */
 function trackedSources(): string[] {
