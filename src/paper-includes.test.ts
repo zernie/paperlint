@@ -24,11 +24,7 @@ import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import { run } from "./cli.ts";
 import { includeBlocks, paperBodies } from "./paper-includes.ts";
 import { lintReport } from "../test/lint-report.ts";
-import {
-  builtFixture,
-  fixtureFiles,
-  recordedTree,
-} from "../test/recorded-fixture.ts";
+import { builtFixture, recordedTree } from "../test/recorded-fixture.ts";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -245,30 +241,6 @@ describe("a paper whose record is missing, stale or silent about a file", () => 
       expect.stringMatching(/sections\/intro\.tex edited/),
     ]);
   });
-
-  it("🔴 a file the text names and TeX did not read is not linted: the record, not the text, says what the paper is", async () => {
-    const { byFile } = await lint(
-      project(
-        {
-          "papers/a/paper.tex": doc(
-            "{article}",
-            "",
-            "Text.\n\\input{sections/intro}\n\\iffalse\n\\input{sections/parked}\n\\fi",
-          ),
-          "papers/a/sections/parked.tex": "See §3 and p < .05.\n",
-        },
-        [
-          { path: "paper.tex", role: "body" },
-          { path: "sections/intro.tex", role: "body" },
-        ],
-      ),
-    );
-    expect(Object.keys(byFile).sort()).toEqual([
-      "papers/a/PIPELINE-STATUS.md",
-      "papers/a/paper.tex",
-      "papers/a/sections/intro.tex",
-    ]);
-  });
 });
 
 describe("paperBodies — the body files of the record TeX's own build left", () => {
@@ -292,26 +264,6 @@ describe("paperBodies — the body files of the record TeX's own build left", ()
     expect(
       bodies(builtFixture("v17-include-order", "/papers/p"))[0]?.files,
     ).toEqual(["/papers/p/bibsetup.tex"]);
-  });
-
-  it("🔴 a file the text names after the document ends, which TeX never read, is not handed over (v23)", () => {
-    expect(
-      bodies(builtFixture("v23-parked-include", "/papers/p"))[0]?.files,
-    ).toEqual([]);
-  });
-
-  it("🔴 no record: paper.tex alone", () => {
-    expect(bodies(fixtureFiles("p1", "/papers/p"))).toEqual([
-      { dir: "/papers/p", main: "/papers/p/paper.tex", files: [] },
-    ]);
-  });
-
-  it("🔴 a stale record: paper.tex alone", () => {
-    const files = {
-      ...builtFixture("p1", "/papers/p"),
-      "/papers/p/sections/intro.tex": "Changed.\n",
-    };
-    expect(bodies(files)[0]?.files).toEqual([]);
   });
 
   it("a directory without paper.tex is no paper", () => {

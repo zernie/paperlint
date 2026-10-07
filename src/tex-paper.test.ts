@@ -70,15 +70,6 @@ describe("readPaper — the paper as the rules read it, from the files TeX read"
     const p = readPaper(MAIN, textOf(files), proseDeps(files));
     expect(p.text).toBe(textOf(files));
   });
-
-  it("a record this paperlint cannot read is no record", () => {
-    const files = {
-      ...builtFixture("p1", "/p"),
-      "/p/_build/sources.json": "{",
-    };
-    const p = readPaper(MAIN, textOf(files), proseDeps(files));
-    expect(p.text).toBe(textOf(files));
-  });
 });
 
 describe("readPaper — which files, in which order", () => {

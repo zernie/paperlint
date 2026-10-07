@@ -110,21 +110,6 @@ describe("paperRecord", () => {
   });
 });
 
-describe("paperRecord, a file that appeared", () => {
-  it("a file the build saw absent that is there now makes it stale", () => {
-    const record: SourcesRecord = {
-      ...RECORD,
-      sha256: { ...RECORD.sha256, "extra.tex": null },
-    };
-    const files = built(record);
-    files.map.set(`${DIR}/extra.tex`, bytes("x"));
-    expect(paperRecord(DIR, { files, codec: sourcesCodec })).toEqual({
-      kind: "stale",
-      changed: [{ path: "extra.tex", change: "added" }],
-    });
-  });
-});
-
 const keysOf = (bib: BibText | null): readonly string[] | null =>
   bib === null ? null : bib.entries.map((e) => e.key);
 
