@@ -313,6 +313,22 @@ describe("bib/filecontents-overwrite — when the fix is safe, and blocks in inc
     expect(output).toBe(inline("@misc{ok, url = {u}}"));
   });
 
+  it("a refs.bib whose entries equal the block's but whose @string differs is a loss: no --fix", async () => {
+    const tex = inline(
+      '@string{v = "Block"}\n@misc{ok, url = {u}, note = v}',
+      "",
+    );
+    const { output } = await lint(
+      tex,
+      {
+        [`${PAPER}/refs.bib`]:
+          '@string{v = "File"}\n@misc{ok, url = {u}, note = v}\n',
+      },
+      { fix: true },
+    );
+    expect(output).toBe(tex);
+  });
+
   it("🔴 a block in an included file is reported at its \\input, with the file and line in front — no fix from paper.tex", async () => {
     const tex =
       "\\documentclass{article}\n\\input{bibblock}\n\\begin{document}\nx\\bibliography{refs}\n\\end{document}\n";

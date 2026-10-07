@@ -529,3 +529,60 @@ describe("a run of switched blocks: outcomes that cannot differ are one (PR revi
     ]);
   });
 });
+
+describe("what TeX never reads, and what bibtex reads in a quoted field (PR review)", () => {
+  it("v22: a thebibliography after \\end{document} is never read: none", () => {
+    expect(sourcesIn("v22-parked-thebibliography").bibliography).toEqual({
+      kind: "none",
+    });
+  });
+
+  it("v23: an \\input after \\end{document} is never opened: not a file of the paper", () => {
+    const s = sourcesIn("v23-parked-include");
+    expect(s.includes.map((i) => i.rel)).toEqual([]);
+    expect(stateOf(s.bibliography)).toEqual([["file", "refs", ["real"]]]);
+  });
+
+  it("v24: an `@` or `)` inside a quoted field is text; each entry ends where bibtex ends it", () => {
+    const [db] = databasesOf(sourcesIn("v24-quoted-fields").bibliography);
+    const bib = db === undefined ? null : texReads(db);
+    expect(bib?.entries.map((e) => e.key)).toEqual([
+      "q1",
+      "q2",
+      "q3",
+      "q4",
+      "q5",
+    ]);
+    // The whole first entry, the link after the quoted `@` included.
+    expect(
+      bib?.entries
+        .slice(0, 1)
+        .map((e) =>
+          bib.text.slice(e.span.start, e.span.end).endsWith("title = {T1}}"),
+        ),
+    ).toEqual([true]);
+  });
+
+  it("v25: a committed file whose @string differs from the block's is not TeX's copy of it: conflict", () => {
+    expect(
+      databasesOf(sourcesIn("v25-string-differs").bibliography).map(
+        (d) => d.kind,
+      ),
+    ).toEqual(["conflict"]);
+  });
+
+  it("a committed file whose @preamble differs is not a copy either", () => {
+    const b = bibOf(
+      doc(BLOCK("", `@preamble{"x"}\n${A}`), "\\bibliography{refs}"),
+      { "/p/refs.bib": `@preamble{"y"}\n${A}\n` },
+    );
+    expect(stateOf(b)).toEqual([["conflict", "refs", ["a2024"]]]);
+  });
+
+  it("but a committed file that differs only in what bibtex skips (text between entries) is the block's copy", () => {
+    const b = bibOf(doc(BLOCK("", A), "\\bibliography{refs}"), {
+      "/p/refs.bib": `Exported by a tool.\n${A}\n`,
+    });
+    expect(stateOf(b)).toEqual([["embedded", "refs", ["a2024"]]]);
+  });
+});

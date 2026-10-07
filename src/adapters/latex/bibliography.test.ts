@@ -132,6 +132,68 @@ describe("bibText — a BibTeX text's entries, as bibtex finds them", () => {
   });
 });
 
+describe("bibText — quoted fields, as bibtex 0.99d reads them (PR review)", () => {
+  const keys = (t: string) => entries(t).map((e) => e.key);
+
+  it("an `@` inside a quoted field is text, and so is a `)` in a parenthesised entry", () => {
+    expect(
+      keys(
+        '@misc{q1, note = "mail a@b.org", title={T1}}\n@misc{q2, title={T2}}\n',
+      ),
+    ).toEqual(["q1", "q2"]);
+    expect(
+      keys(
+        '@misc(p1, note = "a ) @misc{g, title={G}} b", title={T5})\n@misc{p2, title={T6}}\n',
+      ),
+    ).toEqual(["p1", "p2"]);
+  });
+
+  it('a `"` inside braces is a character, in a quoted field or a braced one', () => {
+    expect(
+      keys('@misc{q3, note = "x {"} @y", title={T3}}\n@misc{q4, title={T4}}\n'),
+    ).toEqual(["q3", "q4"]);
+    expect(
+      keys(
+        '@misc{p9, note = {a "b} @misc{p10, title={T14}}\n@misc{p11, title={T15}}\n',
+      ),
+    ).toEqual(["p9", "p10", "p11"]);
+  });
+
+  it("a quote left open runs to the end of the file: no `@` after it starts an entry", () => {
+    expect(
+      keys(
+        '@misc{q6, note = "open @misc{q7, title={T7}}\n@misc{q8, title={T8}}\n',
+      ),
+    ).toEqual(["q6"]);
+  });
+
+  it("a `}` at depth 0 ends the entry even inside quotes, in either kind of entry", () => {
+    const spans = (t: string) => entries(t).map((e) => [e.key, e.text]);
+    expect(
+      spans(
+        '@misc{q13, note = "a } b", title={T13}}\n@misc{q14, title={T14}}\n',
+      ),
+    ).toEqual([
+      ["q13", '@misc{q13, note = "a }'],
+      ["q14", "@misc{q14, title={T14}}"],
+    ]);
+    expect(
+      spans('@misc(p3, note = "a } b", title={T8})\n@misc{p4, title={T9}}\n'),
+    ).toEqual([
+      ["p3", '@misc(p3, note = "a }'],
+      ["p4", "@misc{p4, title={T9}}"],
+    ]);
+  });
+
+  it("an `@` after a closed quote, at depth 0, starts the next entry as before", () => {
+    expect(
+      keys(
+        '@misc{q10, note = "n" @misc{q11, title={T11}}\n@misc{q12, title={T12}}\n',
+      ),
+    ).toEqual(["q10", "q11", "q12"]);
+  });
+});
+
 describe("bibText — how bibtex recovers from a malformed entry", () => {
   // Each case below was run through bibtex 0.99d with \nocite{*} (fixtures/paper-sources/v6, v7, and
   // the probes listed in docs/design/paper-sources.md §9); the keys are the ones its .bbl printed.
