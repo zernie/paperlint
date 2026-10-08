@@ -49,6 +49,16 @@ export type BibliographyUnread =
       readonly dir: AbsolutePath;
       /** The databases bibtex opened: none when it ran none. */
       readonly opened: readonly string[];
+    }
+  /**
+   * A paper whose last build's bibtex also opened databases the paper directory does not hold — found
+   * on its search path (BIBINPUTS). Reading the others alone would leave every entry of these out.
+   */
+  | {
+      readonly kind: "outside-paper";
+      readonly dir: AbsolutePath;
+      /** As bibtex names them. */
+      readonly unread: readonly [string, ...string[]];
     };
 
 /** The texts of the paper in `dir` the last build's bibtex read, or why there are none. */
@@ -60,13 +70,17 @@ function ofPaper(
   if (r.kind === "unrecorded")
     return err({ kind: "not-built", dir, state: r.record });
   const [first, ...rest] = authoredTexts(dir, r, deps);
-  return first === undefined
-    ? err({
-        kind: "no-database",
-        dir,
-        opened: r.record.bibtex.ran ? r.record.bibtex.databases : [],
-      })
-    : ok({ paperDir: dir, texts: [first, ...rest] });
+  if (first === undefined)
+    return err({
+      kind: "no-database",
+      dir,
+      opened: r.record.bibtex.ran ? r.record.bibtex.databases : [],
+    });
+  // Some databases read and some not is no bibliography: a script would report on part of it as on all.
+  const [outside, ...more] = r.unread;
+  return outside === undefined
+    ? ok({ paperDir: dir, texts: [first, ...rest] })
+    : err({ kind: "outside-paper", dir, unread: [outside, ...more] });
 }
 
 /**
@@ -74,7 +88,9 @@ function ofPaper(
  * `.bib` is read alone, as named; a `.tex`, or a directory holding `paper.tex`, is the bibliography the
  * last build's bibtex opened for that paper (`_build/sources.json`) — never a guess by file name, and
  * never read out of TeX source. A paper with no current record is refused: run `npx paperlint build`
- * first. Anything else is refused in the words `bibliographyUnreadWhy` gives.
+ * first, and so is one whose bibtex also opened a database outside the paper directory — a part of the
+ * bibliography is not given as the whole. Anything else is refused in the words `bibliographyUnreadWhy`
+ * gives.
  */
 export function bibliographyAt(
   path: AbsolutePath,
@@ -129,5 +145,7 @@ export function bibliographyUnreadWhy(e: BibliographyUnread): string {
       return e.opened.length === 0
         ? `bibtex read no database in the last build of ${e.dir} — there is nothing to read`
         : `bibtex opened ${e.opened.join(", ")} in the last build of ${e.dir}, and none of them is on disk now`;
+    case "outside-paper":
+      return `bibtex opened ${e.unread.join(", ")} in the last build of ${e.dir} from outside it (its search path, BIBINPUTS), and paperlint reads only the paper's own databases — copy it into ${e.dir}, or name each .bib to read it alone`;
   }
 }

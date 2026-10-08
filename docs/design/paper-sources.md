@@ -105,9 +105,10 @@ line. All three ask `bibliographyAt(path, deps)`: a `.bib` is read alone, as nam
 directory holding `paper.tex`, is the bibliography the last build's bibtex opened for that paper
 (`recordedBibliography`) — for a database TeX wrote, the text of the `filecontents` block (or included
 file) that holds it, so an entry stands where the author edits it. A refusal is a `BibliographyUnread`
-(`missing`, `not-bib-or-tex`, `no-paper`, `not-built`, `no-database`), and `bibliographyUnreadWhy` is
-its one sentence; `not-built` covers a missing, unreadable and stale record alike: run
-`npx paperlint build` first. Each script keeps its own CLI frame around it.
+(`missing`, `not-bib-or-tex`, `no-paper`, `not-built`, `no-database`, `outside-paper`), and
+`bibliographyUnreadWhy` is its one sentence; `outside-paper` is a paper whose bibtex also opened a
+database the paper directory does not hold (BIBINPUTS) — refused rather than read in part;
+`not-built` covers a missing, unreadable and stale record alike: run `npx paperlint build` first. Each script keeps its own CLI frame around it.
 
 ## 6. The references a build checks
 
