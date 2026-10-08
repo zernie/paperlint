@@ -7,7 +7,7 @@
  *   { "schema": 1,
  *     "inputs":  [ { "path": "paper.tex", "role": "body" }, … ],  the files of the paper directory TeX
  *                                                                 read, in first-read order
- *     "written": [ "refs.bib" ],                                  the `.bib` files TeX wrote (filecontents)
+ *     "written": [ "refs.bib" ],                                  the `.bib` and `.tex` files TeX wrote (filecontents)
  *     "bibdata": [ "refs" ],                                      what `\bibdata` told bibtex to read
  *     "bibtex":  { "ran": true, "databases": [ "refs.bib" ],      the files bibtex opened, the keys it
  *                  "keys": [ … ], "exit": 0, "errors": [] },      typeset, how it ended

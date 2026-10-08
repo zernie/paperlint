@@ -26,6 +26,13 @@
  * words are someone else's (the titles of cited works) and whose fix the next run of the tool
  * overwrites. TeX still reads it, and so does `readPaper`: the rules over the whole paper see it
  * spliced into `paper.tex`, where TeX typesets it.
+ *
+ * ── NOR IS A `.tex` TeX WROTE ────────────────────────────────────────────────────
+ * A `filecontents` block may write a `.tex` the body `\\input`s (the record lists it as an input and
+ * as written, src/domain/tex-run.ts). Its words are the block's, which the author edits in the file
+ * holding the block; a fix made in the written copy is overwritten by an `[overwrite]` block on the next
+ * build, and splits the copy from the block without one. So it is read the way TeX reads it — spliced by
+ * `readPaper`, for the rules over the whole paper — and is not handed to ESLint as a file of its own.
  */
 import { extname, join, relative } from "node:path";
 import { PAPERLINT_SETTINGS } from "#eslint-rules/paper-context";
@@ -48,7 +55,7 @@ const isFragment = (file: string): boolean => extname(file) === ".tex";
 export interface PaperBody {
   readonly dir: string;
   readonly main: AbsolutePath;
-  /** The body files ESLint lints, each as a fragment: the `.tex` ones. None without a fresh record. */
+  /** The body files ESLint lints, each as a fragment: the `.tex` ones TeX did not write. None without a fresh record. */
   readonly files: readonly AbsolutePath[];
 }
 
@@ -61,12 +68,13 @@ export function paperBodies(
     const main = callerPath(join(dir, "paper.tex"));
     if (!deps.files.isFile(main)) return [];
     const record = paperRecord(dir, deps);
-    const files =
-      record.kind === "fresh"
-        ? recordedFiles(dir, record.record, "body").filter(
-            (f) => f !== main && isFragment(f),
-          )
-        : [];
+    if (record.kind !== "fresh") return [{ dir, main, files: [] }];
+    const written = new Set(
+      record.record.written.map((w) => callerPath(join(dir, w))),
+    );
+    const files = recordedFiles(dir, record.record, "body").filter(
+      (f) => f !== main && isFragment(f) && !written.has(f),
+    );
     return [{ dir, main, files }];
   });
 }

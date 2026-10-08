@@ -17,10 +17,17 @@ the last pdflatex pass and bibtex, from TeX's own files in the paper directory:
 | field     | from                      | holds                                                                                                                                                                               |
 | --------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `inputs`  | `paper.fls` (`-recorder`) | every file in the paper directory TeX read, in first-read order, each `role: preamble` or `body` — before or after TeX opens `paper.aux` for writing (`\begin{document}`, measured) |
-| `written` | `paper.fls` `OUTPUT`      | the `.bib` files TeX wrote (a `filecontents` block)                                                                                                                                 |
+| `written` | `paper.fls` `OUTPUT`      | the `.bib` and `.tex` files TeX wrote (a `filecontents` block)                                                                                                                      |
 | `bibdata` | `paper.aux` `\bibdata{…}` | the databases bibtex was told to read, after every switch, macro and `\input`                                                                                                       |
 | `bibtex`  | `paper.blg`, `paper.bbl`  | the database files bibtex opened, the keys it typeset, its exit and errors                                                                                                          |
 | `sha256`  | the files themselves      | every `inputs` file and every database bibtex opened (one TeX wrote too), by path and bytes                                                                                         |
+
+A file TeX wrote is an input only when it is a `.tex`: a `filecontents` block that writes `body.tex` the
+body `\input`s puts that text in the PDF, so the file is hashed and spliced like any other (measured:
+pass 1 `OUTPUT body.tex` then `INPUT ./body.tex` after `\begin{document}`). Every other file a pass
+wrote — `.aux`, `.out`, `.toc`, a block's `.bib` — is TeX's bookkeeping or a database, not an input.
+The written `.tex` is not handed to ESLint as a file of its own: its words are the block's, and the
+block's body is no prose to the rules, so the text is judged once, where `readPaper` splices it.
 
 Every path is relative to the paper directory and spelled as the directory entries spell it: TeX
 logs the name it opened, which on a file system that ignores case is the source's spelling, so the
@@ -45,7 +52,7 @@ hash (a file edited, added to an `\input`, deleted), is one finding of a new rul
 | `paper/refs-checked`                                             | keys bibtex typeset that the reader did not read (`%`, `@comment`)  | silent                                                             |
 | `extract-ref-facts`, `bib-authors`, `verify-cites` (dir, `.tex`) | `bibliographyAt` → the record's databases                           | refused: "run `npx paperlint build` first"                         |
 | `bibliographyAt` with a `.bib`                                   | that file alone, unchanged                                          | —                                                                  |
-| `paperlint lint`'s files (`paper-includes.ts`), `paper-context`  | the `body` `.tex` files of `inputs`                                 | `paper.tex` only; `paper/sources-fresh` says the rest is unlinted  |
+| `paperlint lint`'s files (`paper-includes.ts`), `paper-context`  | the `body` `.tex` files of `inputs` TeX did not write               | `paper.tex` only; `paper/sources-fresh` says the rest is unlinted  |
 | the prose rules' text (`readPaper`)                              | `paper.tex` with the files of `inputs` spliced where they stand     | `paper.tex` alone; `paper/sources-fresh` says the rest is unlinted |
 
 An entry in a `.bib` TeX wrote is reported at the `filecontents` block whose body bibtex takes as
@@ -171,6 +178,8 @@ The files are the numbers; this document does not copy them.
 - `eslint --cache`: `bib/reachable-entry` depends on files other than the linted one, so a cached
   result can be stale after a `.bib` changes. `paperlint lint` does not cache.
 - Reading past `\end{document}` in `headings.ts`, `layout.ts` and `rendered.ts` (#178).
+- A file a `filecontents` block writes under another extension than `.tex` (a `.pgf` the body
+  `\input`s) is not an input: its text reaches the PDF, but the record neither hashes nor splices it.
 - A database TeX wrote is read from the file it left on disk, which the record does not hash: edited
   after a build, that file is not detected as stale.
 - Two copies compared where bibtex and the parser differ in what no check reads: a `@preamble` is

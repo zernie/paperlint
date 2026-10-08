@@ -5,17 +5,21 @@
  *   inputs   the files of the paper directory the LAST pass read, in the order it first read them,
  *            each a `preamble` or `body` file: before or after TeX opened `<jobname>.aux` for writing,
  *            which `\begin{document}` does (measured). The main file, read first, is `body`.
- *   written  the `.bib` files ANY pass wrote — a `filecontents` block.
+ *   written  the `.bib` and `.tex` files ANY pass wrote — a `filecontents` block's.
  *
  * 🔴 WHY THE LAST PASS FOR INPUTS AND EVERY PASS FOR WHAT WAS WRITTEN. A block without `[overwrite]`
  * writes its file on the first pass only; the later passes find it there and read it (measured on TeX
  * Live 2026: pass 1 `OUTPUT refs.bib`, passes 2 and 3 `INPUT refs.bib`, no OUTPUT). The last pass alone
- * would list TeX's own copy as a file of the paper. And the first pass reads no `.aux`, `.toc` or `.out`
- * yet, so only a later pass lists what the paper reads and the passes after it write.
+ * would list TeX's own copy of a `.bib` as a file of the paper. And the first pass reads no `.aux`,
+ * `.toc` or `.out` yet, so only a later pass lists what the paper reads and the passes after it write.
  *
- * Files TeX wrote are not inputs: its `.aux` and `.out`, a block's `.bib`, whatever a pass writes and
- * the next reads. `generated` names the files other programs wrote from them (the `.bbl`, when bibtex
- * ran): the same.
+ * 🔴 A FILE TeX WROTE IS AN INPUT ONLY WHEN IT IS TeX SOURCE OF THE PAPER: a `.tex`. A block that
+ * writes `body.tex` the body `\input`s puts that text in the PDF (measured: pass 1 `OUTPUT body.tex`
+ * then `INPUT ./body.tex` after `\begin{document}`; the later passes read it again), so it is an
+ * input like any other: hashed, spliced where its include stands. Every other file a pass wrote is
+ * TeX's bookkeeping or a database — its `.aux`, `.out` and `.toc`, a block's `.bib` — and is no input.
+ * A file another program wrote from TeX's output (`generated`: the `.bbl`, when bibtex ran) is none
+ * either.
  */
 import { isAbsolute, posix } from "node:path";
 import type { RecordedInput } from "./sources-record.ts";
@@ -55,6 +59,11 @@ function inPaperDir(path: string, pwd: string | null): string | null {
 
 const distinct = <T>(xs: readonly T[]): readonly T[] => [...new Set(xs)];
 
+/** A file TeX writes that the record names: TeX source of the paper (`.tex`) or a database (`.bib`). */
+const isTexSource = (path: string): boolean => posix.extname(path) === ".tex";
+const isRecordedWrite = (path: string): boolean =>
+  isTexSource(path) || posix.extname(path) === ".bib";
+
 type Opened = FlsLine & { readonly rel: string };
 
 /** The files of the paper directory a pass opened, with the op, in order. */
@@ -78,9 +87,9 @@ interface Read {
 }
 
 /**
- * The reads of the last pass: INPUT lines of files nothing wrote, each with its place against the
- * line that opens `<jobname>.aux` — `\begin{document}`. No such line (the run stopped first): none
- * is after it.
+ * The reads of the last pass: INPUT lines of files nothing wrote, or that a pass wrote as TeX source,
+ * each with its place against the line that opens `<jobname>.aux` — `\begin{document}`. No such line
+ * (the run stopped first): none is after it.
  */
 function readsOf(
   last: readonly Opened[],
@@ -91,7 +100,9 @@ function readsOf(
     (l) => l.op === "OUTPUT" && l.rel === `${jobname}.aux`,
   );
   return last.flatMap((l, i) =>
-    l.op === "INPUT" && !outputs.has(l.rel) && !generated.includes(l.rel)
+    l.op === "INPUT" &&
+    (!outputs.has(l.rel) || isTexSource(l.rel)) &&
+    !generated.includes(l.rel)
       ? [{ path: l.rel, afterBegin: boundary >= 0 && i > boundary }]
       : [],
   );
@@ -121,7 +132,7 @@ export function filesOfRun(
     })),
     written: distinct(
       everyPass
-        .filter((l) => wrote(l) && l.rel.endsWith(".bib"))
+        .filter((l) => wrote(l) && isRecordedWrite(l.rel))
         .map((l) => l.rel),
     ),
   };
