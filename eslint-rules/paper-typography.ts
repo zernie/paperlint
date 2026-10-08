@@ -7,8 +7,8 @@
  *   paper/figure-ref-style  `Fig.~\ref` beside `Figure~\ref` in one document → the majority form
  *
  * The fourth check of the old `paper/typography`, an unreachable bibliography entry, is
- * `bib/reachable-entry` (bib-reachable-entry.mjs): it is about the bibliography, not the prose,
- * and it has no fix.
+ * `bib/reachable-entry` (src/bib-rules.ts): it is about the bibliography, not the prose, and it has
+ * no fix.
  *
  * ── PROVENANCE: every one is a real review finding, not an invented style ───────────────
  * From HotCRP #20 (2026-08-23). Reviewer B listed two as literal to-dos:
@@ -75,7 +75,7 @@ import type {
 } from "./rule-context.ts";
 
 /** Where a `.bib` embedded in a `filecontents` environment sits in the file. */
-export interface BibRange {
+interface BibRange {
   readonly start: number;
   readonly end: number;
   readonly bodyStart: number;
@@ -91,10 +91,17 @@ interface Run {
   offs: (number | null)[];
 }
 
-/** The inline bibliography — a `filecontents` block writing a `.bib` — with its offsets. */
-export function bibRange(text: string): BibRange | null {
+/**
+ * The inline bibliography — a `filecontents` block writing a `.bib`, its name on the `\begin` line or
+ * after white space on a later one, as TeX takes it — with its offsets: the span the markup rules
+ * skip. Which bibliography TeX reads is the build's record (`_build/sources.json`,
+ * docs/design/paper-sources.md §1);
+ * this range only says which bytes are not prose, and moves onto the one projection of live text
+ * with the rest of `skippedRanges` (Q3, docs/design/paper-sources.md §10).
+ */
+function bibRange(text: string): BibRange | null {
   const m =
-    /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/d.exec(
+    /\\begin\{filecontents\*?\}\s*(?:\[[^\]]*\]\s*)?\{[^}]*\.bib\}[^\n]*\n([\s\S]*?)\\end\{filecontents\*?\}/d.exec(
       text,
     );
   if (!m) return null;

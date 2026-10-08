@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [
+    "refs"
+  ],
+  "bibtex": {
+    "ran": true,
+    "databases": [
+      "refs.bib"
+    ],
+    "keys": [
+      "pt1",
+      "k2inComment",
+      "ok1"
+    ],
+    "exit": 0,
+    "errors": []
+  },
+  "sha256": {
+    "paper.tex": "9ad22f9c50070c2620c5bf8885ed53cee4b0901e7bfdc83c61f70902686ac5e0",
+    "refs.bib": "3ec4425ebfa90481935c3c26bd1539ff833ba3ba6053c6aba748e05132c479c8"
+  }
+}

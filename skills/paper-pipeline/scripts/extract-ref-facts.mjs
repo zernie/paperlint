@@ -60,16 +60,15 @@
  * registry's response, not by a comparison. If the cache kept parsed entries, those readers would
  * stay uncovered while looking covered.
  */
-import {
-  readFileSync,
-  writeFileSync,
-  existsSync,
-  mkdirSync,
-  statSync,
-} from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve, dirname, basename } from "node:path";
-import { bibRange } from "#eslint-rules/paper-typography";
+import { latexReader } from "#src/adapters/latex/index";
+import { nodeFiles } from "#src/adapters/node/index";
+import { sourcesCodec } from "#src/adapters/sources-record/index";
+import { absolutePath } from "#src/domain/paths";
+import { bibReader } from "#src/adapters/bibtex/index";
+import { bibliographyAt, bibliographyUnreadWhy } from "#src/paper-sources";
 import { isMain } from "./consumer.mjs";
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -111,47 +110,15 @@ const joinName = (a) =>
     .trim();
 
 /**
- * 🔴 THE .bib PARSER IS AN OPTIONAL DEPENDENCY, AND THE FAILURE MUST BE LOUD AND CARRY THE CURE.
- * It weighs 15 MB out of the consumer's 56 MB install (the package itself 9 MB plus the English
- * model `wink-eng-lite-web-model` 4 MB and `unicode2latex` 2 MB) — 27% of the weight for a single
- * call that only whoever extracts bibliography facts needs. The import here is dynamic anyway, so
- * the laziness was already there; the manifest merely stopped lying about it being required.
- *
- * ⚠️ A silent skip here would be the worst of the options: a missing checker and a passing one look
- * the same, and "the bibliography was not checked" reads as "the bibliography is fine". That is why
- * the message names the command, not the fact.
+ * The facts' entries of one database, as the bibtex reader read them (src/ports/bib-reader.ts): each
+ * with its line in the file that holds it, so a finding points where the author edits (the block's
+ * lines in paper.tex, or the `.bib`'s).
  */
-export async function parseBib(
-  text,
-  { load = () => import("@retorquere/bibtex-parser") } = {},
-) {
-  let parse;
-  try {
-    ({ parse } = await load());
-  } catch (e) {
-    if (e?.code !== "ERR_MODULE_NOT_FOUND") throw e;
-    throw new Error(
-      "parsing .bib requires @retorquere/bibtex-parser — it is declared OPTIONAL because it " +
-        "weighs 15 MB and is needed only for bibliography facts.\n" +
-        "   Install:  npm i -D @retorquere/bibtex-parser\n" +
-        "   Why not our own regex: measured 26.08 — the regex gave 0 entries on both real " +
-        "files, four libraries gave the correct 27 and 51.",
-    );
-  }
-  // `sentenceCase: false` — the title is needed as written. Our normalisation folds the case
-  // anyway, but a fact has to be a fact: a paraphrased title cannot be shown to a human.
-  const res = parse(text, { sentenceCase: false, verbatimFields: [] });
-  // The entry's line in the file — found by its key. The parser gives no positions, and a finding
-  // needs an address; a key in `.bib` is unique by definition of the format, so the search is
-  // unambiguous.
-  const lines = text.split("\n");
-  const lineOfKey = (key) => {
-    const i = lines.findIndex((l) => l.includes(`{${key},`));
-    return i === -1 ? 0 : i + 1;
-  };
-  return res.entries.map((e, i) => {
-    const f = e.fields ?? {};
-    const names = Array.isArray(f.author) ? f.author : [];
+export function factEntries(bib) {
+  const lineOf = (at) => bib.text.slice(0, at).split("\n").length;
+  return bib.entries.map((e, i) => {
+    const f = e.fields;
+    const names = e.names.author ?? [];
     // `and others` is BibTeX's `et al.`. The parser returns it as an author with no first name.
     const isOthers = (a) => !a.firstName && /^others$/i.test(a.lastName ?? "");
     const truncated = names.some(isOthers);
@@ -159,29 +126,20 @@ export async function parseBib(
       .filter((a) => !isOthers(a))
       .map(joinName)
       .filter(Boolean);
-    // A field is a string in today's parser output (list fields such as `keywords` are arrays,
-    // and none of those is read); an array or a number from another parser version is joined or
-    // printed rather than dropped.
-    const str = (v) =>
-      Array.isArray(v)
-        ? v.join(" ")
-        : typeof v === "string"
-          ? v
-          : v == null
-            ? ""
-            : String(v);
+    // Every field the reader gives is text; a field the entry lacks is "".
+    const str = (v) => v ?? "";
     const venueText = [f.booktitle, f.journal, f.note, f.howpublished]
       .map(str)
       .filter(Boolean)
       .join(" ");
     return {
       n: i + 1,
-      line: lineOfKey(e.key),
+      line: lineOf(e.span.start),
       key: e.key,
       // `raw` is where identifiers are looked for: they hide in `note`, in `journal`
       // (`arXiv preprint arXiv:2107.03374`), and in a separate `doi` field.
       raw: [
-        str(f.author && authors.join(" and ")),
+        authors.join(" and "),
         str(f.title),
         venueText,
         str(f.doi),
@@ -398,40 +356,39 @@ export function recordFrom(key, cached) {
 // ── assembling the facts ─────────────────────────────────────────────────────
 
 /**
- * `paper.tex` when it embeds its `.bib` in `filecontents` → `refs.bib` → `build/custom.bib`.
- * `refs.bib` ADDED 26.08 (defect #1). The embedded one comes first, as in `paperlint build`
- * (`bibliographyOf`, src/references.ts): the author edits it there, and the `refs.bib` LaTeX
- * writes out of it is missing before a build and stale after an edit.
+ * WHICH BIBLIOGRAPHY: the one the last build's bibtex opened, as `paperlint build` recorded it
+ * (`_build/sources.json`, docs/design/paper-sources.md §1) and `bibliographyAt` reads it
+ * (src/paper-sources.ts) — never an order of file names of our own, and never read out of TeX source.
+ *
+ *   a directory   the databases bibtex opened for its paper.tex
+ *   a .tex        the same, for that file's folder
+ *   a .bib        that file, as named
+ *
+ * A paper with no current record is refused: run `npx paperlint build` first. A database TeX wrote from
+ * a `filecontents` block is read from the block, where the author edits it.
  */
-export const SOURCE_ORDER = ["paper.tex", "refs.bib", "build/custom.bib"];
-
-/** Whether `p` is a source: any `.bib`, and a `.tex` only when it carries a `.bib`. */
-const isSource = (p) =>
-  !p.endsWith(".tex") || bibRange(readFileSync(p, "utf8")) !== null;
-
-export function resolveSource(target) {
-  const t = resolve(target);
-  if (existsSync(t) && statSync(t).isFile()) return t;
-  for (const c of SOURCE_ORDER) {
-    const p = join(t, c);
-    if (existsSync(p) && isSource(p)) return p;
-  }
-  return null;
-}
+const DEPS = {
+  files: nodeFiles,
+  codec: sourcesCodec,
+  latex: latexReader,
+  bib: bibReader,
+};
 
 /**
- * The entries of a `.bib`, or of the `.bib` a `.tex` embeds (none when it embeds none) — each
- * entry's `line` its line in the file read, so a finding points where the author edits.
+ * The bibliography of `target`: the texts to read, or why there are none — `bibliographyAt`
+ * (src/paper-sources.ts) answers, in its words. `paperDir` is where the cache and the facts go.
  */
-export async function loadEntries(path) {
-  const text = readFileSync(path, "utf8");
-  if (!path.endsWith(".tex")) return parseBib(text);
-  const bib = bibRange(text);
-  if (bib === null) return [];
-  const above = text.slice(0, bib.bodyStart).split("\n").length - 1;
-  return (await parseBib(bib.body)).map((e) =>
-    e.line === 0 ? e : { ...e, line: e.line + above },
-  );
+export function bibliographyFrom(target) {
+  const r = bibliographyAt(absolutePath(resolve(target)), DEPS);
+  if (!r.ok) return { ok: false, why: bibliographyUnreadWhy(r.error) };
+  const { paperDir, texts } = r.value;
+  return { ok: true, paperDir, texts };
+}
+
+/** The entries of one text TeX reads, each with its file. */
+export function loadEntries(bib) {
+  const file = rel(bib.path);
+  return factEntries(bib).map((e) => ({ ...e, file }));
 }
 
 /** Every registry key a list of entries needs. Computed once so the requests go in one batch. */
@@ -443,7 +400,11 @@ export function keysFor(entries) {
 
 const rel = (p) => (p.startsWith(ROOT) ? p.slice(ROOT.length + 1) : p);
 
-export function buildFacts({ source, text, entries, cache, cachePath }) {
+/**
+ * The facts of a run. `source` is the file the first database was read from (the only one, for a
+ * paper with one), `sources` every one; `source_sha256` hashes those files' bytes, in order.
+ */
+export function buildFacts({ texts, entries, cache, cachePath }) {
   const withIds = entries.map((e) => {
     const ids = extractIds(e);
     return { ...e, ids, primary: primaryOf(ids), keys: allKeys(ids) };
@@ -454,9 +415,12 @@ export function buildFacts({ source, text, entries, cache, cachePath }) {
       if (!(k in records)) records[k] = recordFrom(k, cache[k]);
   return {
     schema: SCHEMA,
-    source: rel(source),
+    source: rel(texts[0].path),
+    sources: [...new Set(texts.map((b) => rel(b.path)))],
     source_kind: "bibtex",
-    source_sha256: createHash("sha256").update(text).digest("hex"),
+    source_sha256: [...new Set(texts.map((b) => b.text))]
+      .reduce((h, t) => h.update(t), createHash("sha256"))
+      .digest("hex"),
     cache: cachePath ? rel(cachePath) : null,
     generated: new Date().toISOString().slice(0, 10),
     entries: withIds,
@@ -478,24 +442,12 @@ async function main(argv) {
       .slice(1)
       .join("=");
 
-  const src = resolveSource(target);
-  if (!src) {
-    console.error(
-      `🛑 no ${SOURCE_ORDER.join(", ")} under ${resolve(target)} — nowhere to take a bibliography from.`,
-    );
+  const found = bibliographyFrom(target);
+  if (!found.ok) {
+    console.error(`🛑 ${found.why}.`);
     return 1;
   }
-  // A paper's references are read from a `.bib`, or the one a `.tex` embeds: any other file
-  // parsed as BibTeX would report zero entries for the wrong reason.
-  if (!src.endsWith(".bib") && !src.endsWith(".tex")) {
-    console.error(
-      `🛑 ${rel(src)} is neither a .bib nor a .tex — the bibliography is read from ${SOURCE_ORDER.join(", ")}.`,
-    );
-    return 1;
-  }
-  const paperDir = statSync(resolve(target)).isFile()
-    ? dirname(src)
-    : resolve(target);
+  const { paperDir, texts } = found;
   const cachePath = opt("cache")
     ? resolve(opt("cache"))
     : join(paperDir, "repro", "refs-cache.json");
@@ -503,13 +455,13 @@ async function main(argv) {
     ? resolve(opt("out"))
     : join(paperDir, "_build", "refs.facts.json");
 
-  const text = readFileSync(src, "utf8");
-  const entries = await loadEntries(src);
+  const entries = texts.flatMap(loadEntries);
+  const names = [...new Set(texts.map((b) => basename(b.path)))].join(", ");
   if (!entries.length) {
     // 🔴 Zero entries is a suspect, not a success. Facts with an empty list would look like a
     // clean bibliography, so we do not write them at all and exit with a non-zero code.
     console.error(
-      `🛑 parsed 0 entries out of ${rel(src)}. Silence here would look like a clean bibliography.`,
+      `🛑 parsed 0 entries out of ${[...new Set(texts.map((b) => rel(b.path)))].join(", ")}. Silence here would look like a clean bibliography.`,
     );
     return 1;
   }
@@ -536,12 +488,12 @@ async function main(argv) {
     if (fetched) saveCache(cachePath, cache);
   }
 
-  const facts = buildFacts({ source: src, text, entries, cache, cachePath });
+  const facts = buildFacts({ texts, entries, cache, cachePath });
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, `${JSON.stringify(facts, null, 2)}\n`);
   const resolved = Object.values(facts.records).filter((r) => r.found).length;
   console.log(
-    `📚 ${basename(src)} → ${rel(out)} (${entries.length} entries, ${Object.keys(facts.records).length} identifiers, ` +
+    `📚 ${names} → ${rel(out)} (${entries.length} entries, ${Object.keys(facts.records).length} identifiers, ` +
       `${resolved} resolved${offline ? ", offline" : fetched ? `, +${fetched} fetched` : ", all from cache"})`,
   );
   return 0;

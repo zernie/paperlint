@@ -11,7 +11,9 @@
  * `8127 words` against ~4636 real ones — and every metric here is a fraction of that count, so all
  * of them came out understated by about half and printed `ok`. `paperProse` (src/paper-prose.ts)
  * gives the body as the `tex/register` rule reads it: includes spliced, the abstract to the back
- * matter, no headings, captions, floats, code or citation marks.
+ * matter, no headings, captions, floats, code or citation marks. The files spliced in are the ones the
+ * paper's last build recorded TeX reading (`_build/sources.json`); a paper with no current record is
+ * read as `paper.tex` alone, and the run says so on stderr rather than print rates of half a paper.
  *
  * A `.txt` is the text of the rendered PDF — the page a reviewer actually reads.
  *
@@ -21,8 +23,10 @@
  * Advisory: it prints findings; `--flags-only` exits with code 1 if anything was found.
  */
 import { paperProse } from "#src/paper-prose";
+import { paperRecord } from "#src/paper-record";
 import { latexReader } from "#src/adapters/latex/index";
 import { nodeFiles } from "#src/adapters/node/index";
+import { sourcesCodec } from "#src/adapters/sources-record/index";
 import { texToMdast } from "#eslint-rules/latex-language";
 
 const THRESHOLDS = {
@@ -481,9 +485,14 @@ const flagsOnly = args.includes("--flags-only");
 let flagged = 0;
 for (const f of args.filter((a) => !a.startsWith("--"))) {
   const raw = fs.readFileSync(f, "utf8");
+  const deps = { files: nodeFiles, latex: latexReader, codec: sourcesCodec };
   const tex = f.endsWith(".tex")
-    ? paperProse(path.resolve(f), raw, { files: nodeFiles, latex: latexReader })
+    ? paperProse(path.resolve(f), raw, deps)
     : null;
+  if (tex && paperRecord(path.dirname(path.resolve(f)), deps).kind !== "fresh")
+    console.error(
+      `prose-lint: ${f} has no current build record (_build/sources.json), so only paper.tex was read, not the files it includes — run \`npx paperlint build\` first`,
+    );
   // 🔴 NOTHING LEFT IS NOT "CLEAN". A body that strips to no words used to be analysed anyway: every
   // metric is a fraction of the word count, so the report printed NaN, FLAGged three metrics and
   // exited 0. Refused — no number is better than a meaningless one. The test is on sentences: a

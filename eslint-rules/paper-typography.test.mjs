@@ -1,9 +1,9 @@
 /**
- * paper/section-word · paper/leading-zero · paper/figure-ref-style · bib/reachable-entry — each
- * FIRES on a bad input, stays SILENT on a good one, reports every occurrence at its own place,
- * and (the first three) fixes to an exact output. Plus the escape hatch: a disable directive in a
- * `%` comment, including inside the `filecontents` bibliography, silences exactly one finding,
- * and a directive that silences nothing is itself reported.
+ * paper/section-word · paper/leading-zero · paper/figure-ref-style — each FIRES on a bad input,
+ * stays SILENT on a good one, reports every occurrence at its own place, and fixes to an exact
+ * output. Plus the escape hatch: a disable directive in a `%` comment silences exactly one finding,
+ * and a directive that silences nothing is itself reported. (`bib/reachable-entry`, the fourth check
+ * of the old `paper/typography`, is tested beside it in src/bib-rules.test.ts.)
  *
  * The leading-zero cases are the ones paperlint#44 measured: a regex over the raw source found 22
  * decimals on a real corpus and none was a defect, so the SILENT list is as load-bearing as the
@@ -19,7 +19,6 @@ import typography, {
   crefDefinitionRanges,
   texVisibleRuns,
 } from "./paper-typography.ts";
-import bib from "./bib-reachable-entry.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIX = join(HERE, "..", "fixtures", "paper-typography");
@@ -28,7 +27,6 @@ const RULES = {
   "paper/section-word": "warn",
   "paper/leading-zero": "warn",
   "paper/figure-ref-style": "warn",
-  "bib/reachable-entry": "warn",
 };
 
 const eslint = (fix = false) =>
@@ -42,7 +40,6 @@ const eslint = (fix = false) =>
         plugins: {
           tex: { languages: { latex: texLanguage } },
           paper: typography,
-          bib,
         },
         language: "tex/latex",
         linterOptions: { reportUnusedDisableDirectives: "error" },
@@ -74,8 +71,6 @@ describe("the fixtures: messy fires on each rule, clean is silent", () => {
     expect(count("paper/section-word")).toBe(3);
     expect(count("paper/leading-zero")).toBe(2);
     expect(count("paper/figure-ref-style")).toBe(1);
-    expect(count("bib/reachable-entry")).toBe(2);
-    expect(ids(res, "bib/reachable-entry").map((m) => m.line)).toEqual([3, 8]);
   });
 
   it("clean-paper — nothing", async () => {
@@ -107,6 +102,13 @@ describe("paper/section-word", () => {
     const src =
       "\\documentclass{acmart}\n\\begin{filecontents*}{refs.bib}\n@misc{k, note = {see §5}, url = {https://x.org}}\n\\end{filecontents*}\n" +
       "\\begin{document}\nSection~\\ref{a}.\n% §5 in an old draft\n\\end{document}\n";
+    expect(ids(await lint(src), "paper/section-word")).toEqual([]);
+  });
+
+  it("🔴 silent on a bibliography whose file name stands on the line after \\begin{filecontents*}", async () => {
+    const src =
+      "\\documentclass{acmart}\n\\begin{filecontents*}\n{refs.bib}\n@misc{k, note = {see §5}, url = {https://x.org}}\n\\end{filecontents*}\n" +
+      "\\begin{document}\nSection~\\ref{a}.\n\\end{document}\n";
     expect(ids(await lint(src), "paper/section-word")).toEqual([]);
   });
 
@@ -296,69 +298,7 @@ describe("paper/figure-ref-style", () => {
   });
 });
 
-describe("bib/reachable-entry", () => {
-  const bibDoc = (entries) =>
-    `\\documentclass{acmart}\n\\begin{filecontents*}{refs.bib}\n${entries}\n\\end{filecontents*}\n\\begin{document}\nx\n\\end{document}\n`;
-
-  it("a doi, a url or an arXiv id each make an entry reachable", async () => {
-    const res = await lint(
-      bibDoc(
-        "@article{a, doi = {10.1/x}}\n@misc{b, url = {https://x.org}}\n@misc{c, note = {arXiv:2310.05736}}\n@string{v = {x}}",
-      ),
-    );
-    expect(ids(res, "bib/reachable-entry")).toEqual([]);
-  });
-
-  it("reports on the entry itself, naming its key", async () => {
-    const res = await lint(
-      bibDoc("@misc{ok, url = {https://x.org}}\n@article{lost, title = {x}}"),
-    );
-    const [m] = ids(res, "bib/reachable-entry");
-    expect(m.line).toBe(4);
-    expect(m.column).toBe(1);
-    expect(m.message).toMatch(/`lost`/);
-  });
-
-  it("an entry with no key is reported as `?`, not skipped", async () => {
-    const [m] = ids(
-      await lint(bibDoc("@article{\n  title = {x}}")),
-      "bib/reachable-entry",
-    );
-    expect(m.message).toMatch(/`\?`/);
-  });
-
-  it("a source code with only `text`, or with neither text nor raw", () => {
-    const run = (sourceCode) => {
-      const out = [];
-      bib.rules["reachable-entry"]
-        .create({
-          sourceCode: {
-            getLocFromIndex: (i) => ({ line: 1, column: i }),
-            ...sourceCode,
-          },
-          report: (r) => out.push(r.data.key),
-        })
-        ["root:exit"]();
-      return out;
-    };
-    expect(run({ text: bibDoc("@article{t, title = {x}}") })).toEqual(["t"]);
-    expect(run({})).toEqual([]);
-  });
-});
-
 describe("the escape hatch — a disable directive in a `%` comment", () => {
-  it("🔴 inside the filecontents bibliography, it silences exactly the next entry", async () => {
-    const res = await lint(
-      `\\documentclass{acmart}\n\\begin{filecontents*}{refs.bib}\n` +
-        "% eslint-disable-next-line bib/reachable-entry -- an invited talk, no recording exists\n" +
-        "@misc{talk, title = {x}}\n@misc{lost, title = {y}}\n" +
-        "\\end{filecontents*}\n\\begin{document}\nx\n\\end{document}\n",
-    );
-    const found = ids(res, "bib/reachable-entry");
-    expect(found).toHaveLength(1);
-    expect(found[0].message).toMatch(/`lost`/);
-  });
-
   it("in the body: next-line, same-line, and a disable/enable region", async () => {
     const src = doc(
       [

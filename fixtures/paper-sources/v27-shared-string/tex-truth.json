@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [
+    "abbreviations",
+    "references"
+  ],
+  "bibtex": {
+    "ran": true,
+    "databases": [
+      "abbreviations.bib",
+      "references.bib"
+    ],
+    "keys": [
+      "late"
+    ],
+    "exit": 0,
+    "errors": []
+  },
+  "sha256": {
+    "paper.tex": "f6ba2a563017e122deabc252bc7b36f4d2ffc79ffcf1b4fca349465987aabbeb",
+    "abbreviations.bib": "73084cf971a07ab999e668a8ad68734052fb0bb113226082a16b8badf0570f65",
+    "references.bib": "e37a1b173ecba38d5b748338276f48b4d014c9975e919bdfd1c8bfe755d76ca2"
+  }
+}

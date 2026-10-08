@@ -146,6 +146,26 @@ export function bibtexExcerpt(stdout: string): string[] {
     .slice(0, MAX_EXCERPT);
 }
 
+/** What a bibtex run read: the databases its `.blg` names, the entries its `.bbl` holds. */
+export interface BibtexRead {
+  readonly databases: readonly string[];
+  readonly bibitems: readonly string[];
+}
+
+/** `\bibitem{key}`, `\bibitem[label]{key}` — a label may hold one level of braces (natbib's `[{A}(2020)]`). */
+const BIBITEM = /\\bibitem\s*(?:\[(?:[^[\]{}]|\{[^{}]*\})*\])?\s*\{([^}]+)\}/g;
+
+/**
+ * What a bibtex run read, from the files it left: `Database file #n: name` in its `.blg` (the name
+ * as the `.aux` gave it, relative to where bibtex ran), and every key its `.bbl` typesets.
+ */
+export const bibtexRead = (blg: string, bbl: string): BibtexRead => ({
+  databases: [...blg.matchAll(/^Database file #\d+: (.+)$/gm)].flatMap((m) =>
+    m.slice(1, 2),
+  ),
+  bibitems: [...bbl.matchAll(BIBITEM)].flatMap((m) => m.slice(1, 2)),
+});
+
 /** What the `.aux` tells bibtex: the cited keys, the databases and the style. */
 export interface AuxBib {
   /** Sorted, unique. `*` (`\nocite{*}`) is a key like any other. */

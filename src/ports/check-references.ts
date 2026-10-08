@@ -4,9 +4,11 @@
  * passes a function.
  */
 import type { LookupCache } from "../domain/lookup-cache.ts";
+import type { BibEntry } from "../domain/paper-sources.ts";
 
 /** What one bibliography entry came to. */
 export interface EntryVerdict {
+  /** The entry's key: a name for people, not its identity — two entries may share it. */
   readonly key: string;
   /**
    * Does the cited work exist, and does its title match? `false` only on a positive disproof (an
@@ -21,6 +23,7 @@ export interface EntryVerdict {
 }
 
 export type ReferencesCheck =
+  /** One verdict per entry given, in the order given: verdict `i` is about entry `i`. */
   | { readonly kind: "checked"; readonly entries: readonly EntryVerdict[] }
   /** Nothing could be asked — no network, every service down. Never a pass. */
   | { readonly kind: "not-checked"; readonly why: string };
@@ -33,10 +36,11 @@ export interface ReferencesRun {
 }
 
 /**
- * The bibliography's text (BibTeX) and the paper's lookup cache → the verdicts, derived afresh from
- * cached and newly fetched answers. Never throws: a failure is `not-checked`.
+ * The bibliography's entries (as the bibtex reader read them) and the paper's lookup cache → the
+ * verdicts, one per entry in its order, derived afresh from cached and newly fetched answers. Never
+ * throws: a failure is `not-checked`.
  */
 export type CheckReferences = (
-  bib: string,
+  entries: readonly BibEntry[],
   cache: LookupCache,
 ) => Promise<ReferencesRun>;

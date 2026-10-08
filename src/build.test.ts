@@ -22,7 +22,14 @@ import {
   type PaperFacts,
 } from "./build.ts";
 import type { Geometry } from "./domain/geometry.ts";
+import { bibReader } from "./adapters/bibtex/index.ts";
+import { nodeFiles } from "./adapters/node/index.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
+import { sha256Hex } from "./domain/sha256.ts";
+import { serializeSourcesRecord } from "./domain/sources-record.ts";
+import { bibliographyReader } from "./references.ts";
 import type { PdfReader } from "./pdf-facts.ts";
+import type { Recorded, TexRun } from "./sources-record.ts";
 
 const root = useTempDir("paperlint-build-test-");
 const TEX = "\\documentclass{article}\\begin{document}x\\end{document}";
@@ -44,6 +51,8 @@ interface Fake {
   noLog?: boolean;
   /** Each pass writes a different .aux, so the loop never settles. */
   churn?: boolean;
+  /** What pdflatex's `-recorder` file holds after pass `n`; without it, pdflatex records nothing. */
+  fls?: (pass: number) => string;
 }
 /** A pdflatex pass: writes the .aux, the log unless it dies first, and a PDF when it exits 0. */
 function latexPass(f: Fake, cwd: string, pass: number) {
@@ -51,6 +60,7 @@ function latexPass(f: Fake, cwd: string, pass: number) {
   const aux = f.churn ? `\\relax % ${String(pass)}\n` : (f.aux ?? "\\relax\n");
   writeFileSync(join(cwd, "paper.aux"), aux);
   if (!f.noLog) writeFileSync(join(cwd, "paper.log"), f.log ?? "");
+  if (f.fls) writeFileSync(join(cwd, "paper.fls"), f.fls(pass));
   if (status === 0) writeFileSync(join(cwd, "paper.pdf"), "%PDF-fake");
   return f.noLog ? { status } : { status, stdout: "", stderr: "" };
 }
@@ -263,6 +273,55 @@ test("compile: warnings the final log still reports are named in the note", asyn
   assert.match(r.notes?.[0] ?? "", /— ⚠️ the final log still reports /);
 });
 
+test("references: without a reader the step says it was not wired; with one and no checker, the record says not checked", async () => {
+  const text = {
+    "paper.tex":
+      "\\documentclass{article}\\begin{document}x\\bibliography{refs}\\end{document}",
+    "refs.bib": "@misc{a, url = {https://example.org}}\n",
+  };
+  // What a build of this paper records: TeX read paper.tex, bibtex opened refs.bib and typeset `a`.
+  const digest = (s: string) => sha256Hex(new TextEncoder().encode(s));
+  const bib = {
+    ...text,
+    "_build/sources.json": serializeSourcesRecord({
+      schema: 1,
+      inputs: [{ path: "paper.tex", role: "body" }],
+      written: [],
+      bibdata: ["refs"],
+      bibtex: {
+        ran: true,
+        databases: ["refs.bib"],
+        keys: ["a"],
+        exit: 0,
+        errors: [],
+      },
+      sha256: {
+        "paper.tex": digest(text["paper.tex"]),
+        "refs.bib": digest(text["refs.bib"]),
+      },
+    }),
+  };
+  const unwired = await build(paper(bib));
+  assert.ok(
+    unwired.r.notes?.includes(
+      "references NOT checked — no bibliography reader was wired into this build; lint will say so",
+    ),
+    JSON.stringify(unwired.r.notes),
+  );
+  const readBibliography = bibliographyReader({
+    files: nodeFiles,
+    codec: sourcesCodec,
+    bib: bibReader,
+  });
+  const wired = await build(paper(bib), {}, { readBibliography });
+  assert.ok(
+    wired.r.notes?.includes(
+      "references NOT checked — no reference checker was wired into this build; lint will say so",
+    ),
+    JSON.stringify(wired.r.notes),
+  );
+});
+
 test("measure: a review build and a stub last page are named; a measured geometry adds nothing", async () => {
   const review = await build(paper(), {}, { readPdf: reader(page(20, 60)) });
   assert.match(
@@ -381,4 +440,155 @@ test("a failed result without its lines still says what failed", () => {
       "      paper.pdf removed — a stale PDF must not pass for this build",
     ].join("\n"),
   );
+});
+
+// ── the record of the build's sources ────────────────────────────────────────────────────────
+
+/** What a recorder was handed, for each paper it was asked about. */
+function spyRecorder(answer: Recorded) {
+  const asked: { dir: string; run: TexRun }[] = [];
+  return {
+    asked,
+    recordSources: (dir: string, run: TexRun): Recorded => {
+      asked.push({ dir, run });
+      return answer;
+    },
+  };
+}
+const RECORDED: Recorded = {
+  kind: "recorded",
+  path: "/p/_build/sources.json",
+  record: {
+    schema: 1,
+    inputs: [{ path: "paper.tex", role: "body" }],
+    written: [],
+    bibdata: [],
+    bibtex: { ran: false },
+    sha256: {},
+  },
+};
+
+test("sources: every pdflatex pass runs with -recorder, so TeX itself says which files it read", async () => {
+  const args: (readonly string[])[] = [];
+  const run = fakeRun({});
+  await build(
+    paper(),
+    {},
+    {
+      run: (bin, a, opts) => {
+        if (bin === "pdflatex") args.push(a);
+        return run(bin, a, opts);
+      },
+    },
+  );
+  assert.ok(args.length >= 2);
+  assert.ok(
+    args.every((a) => a.includes("-recorder")),
+    JSON.stringify(args),
+  );
+});
+
+test("sources: the recorder is handed the .fls of every pass, in order, and bibtex's exit when it ran", async () => {
+  const spy = spyRecorder(RECORDED);
+  const { r } = await build(
+    paper({ "paper.tex": TEX, "refs.bib": "@misc{k}\n" }),
+    {
+      aux: "\\citation{k}\n\\bibstyle{plain}\n\\bibdata{refs}\n",
+      fls: (pass) => `pass ${String(pass)}`,
+    },
+    { recordSources: spy.recordSources },
+  );
+  assert.equal(r.status, "built");
+  const [only] = spy.asked;
+  assert.equal(spy.asked.length, 1);
+  assert.match(only?.dir ?? "", /\/p\d+$/);
+  const passes = only?.run.fls ?? [];
+  assert.ok(passes.length >= 2);
+  assert.deepEqual(
+    passes,
+    passes.map((_, i) => `pass ${String(i + 1)}`),
+  );
+  assert.equal(only?.run.bibtexExit, 0);
+  assert.match(
+    r.notes?.[0] ?? "",
+    /bibtex runs?; sources: 1 file read → _build\/sources\.json$/,
+  );
+});
+
+test("sources: a build that ran no bibtex says so to the recorder", async () => {
+  const spy = spyRecorder(RECORDED);
+  await build(
+    paper(),
+    { fls: () => "x" },
+    { recordSources: spy.recordSources },
+  );
+  assert.equal(spy.asked[0]?.run.bibtexExit, null);
+});
+
+test("sources: a paper.fls an earlier build left is not this build's: pdflatex that wrote none hands the recorder none", async () => {
+  const spy = spyRecorder(RECORDED);
+  const dir = paper({ "paper.tex": TEX, "paper.fls": "INPUT stale.tex\n" });
+  await build(dir, {}, { recordSources: spy.recordSources });
+  assert.deepEqual(spy.asked[0]?.run.fls, []);
+});
+
+test("sources: without a recorder, or when it records nothing, the build still builds and the note says it did not record", async () => {
+  const unwired = await build(paper());
+  assert.equal(unwired.r.status, "built");
+  assert.ok(
+    unwired.r.notes?.[0]?.endsWith(
+      "; sources NOT recorded — no recorder was wired into this build; lint will say so",
+    ),
+    JSON.stringify(unwired.r.notes),
+  );
+  const empty = await build(
+    paper(),
+    {},
+    {
+      recordSources: spyRecorder({
+        kind: "not-recorded",
+        why: "pdflatex wrote no paper.fls — nothing to record",
+      }).recordSources,
+    },
+  );
+  assert.equal(empty.r.status, "built");
+  assert.ok(
+    empty.r.notes?.[0]?.endsWith(
+      "; sources NOT recorded — pdflatex wrote no paper.fls — nothing to record; lint will say so",
+    ),
+    JSON.stringify(empty.r.notes),
+  );
+});
+
+test("sources: the note counts the files the record lists", async () => {
+  const two: Recorded = {
+    ...RECORDED,
+    record: {
+      ...RECORDED.record,
+      inputs: [
+        { path: "paper.tex", role: "body" },
+        { path: "sections/intro.tex", role: "body" },
+      ],
+    },
+  };
+  const { r } = await build(
+    paper(),
+    {},
+    { recordSources: spyRecorder(two).recordSources },
+  );
+  assert.ok(
+    r.notes?.[0]?.endsWith("; sources: 2 files read → _build/sources.json"),
+    JSON.stringify(r.notes),
+  );
+});
+
+test("sources: a build that fails records nothing", async () => {
+  const spy = spyRecorder(RECORDED);
+  const { r } = await build(
+    paper(),
+    { latex: 1 },
+    { recordSources: spy.recordSources },
+  );
+  assert.equal(r.status, "failed");
+  assert.deepEqual(spy.asked, []);
 });

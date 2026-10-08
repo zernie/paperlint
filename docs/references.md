@@ -7,7 +7,11 @@ what happens in CI and without a network.
 
 ## What is checked, and where
 
-For each entry in the bibliography (the `filecontents` block inside `paper.tex`, else `refs.bib`):
+For each entry of the databases the build's bibtex **opened** — the `.bib` files its `\bibliography` /
+`\addbibresource` named after every switch and macro, and the file a `filecontents` block wrote. The
+build records them in `<paper>/_build/sources.json` from TeX's own files (`paper.blg`), so nothing here
+guesses which `.bib` TeX reads by reading the `.tex`. Their text is read by the one bibtex reader
+(`src/ports/bib-reader.ts`):
 
 | question                                                                                                 | asked of                                    |
 | -------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
@@ -23,17 +27,39 @@ A work that is simply not found is `unresolvable`, never a failure: plenty of re
 indexed. Only a positive disproof fails an entry, for example a DOI that resolves to a different
 paper, or one the DOI authority says does not exist.
 
-The verdicts land in `<paper>/_build/references.json`. `paperlint lint` reads that file and reports:
+The verdicts land in `<paper>/_build/references.json`: one verdict per entry of those databases, in the
+order bibtex opened them, and a hash of their text. `paperlint lint` reads that file and reports:
 
-| rule                 | when                                                              |
-| -------------------- | ----------------------------------------------------------------- |
-| `paper/cite-exists`  | an entry's identifier provably does not resolve to the work cited |
-| `paper/author-list`  | an entry's authors are the preprint's under a published venue     |
-| `paper/refs-fresh`   | the bibliography changed since the build checked it — build again |
-| `paper/refs-checked` | no build has checked the references, or the last one could not    |
+| rule                 | when                                                                                      |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| `paper/cite-exists`  | an entry's identifier provably does not resolve to the work cited                         |
+| `paper/author-list`  | an entry's authors are the preprint's under a published venue                             |
+| `paper/refs-fresh`   | the databases changed since the build checked them — build again                          |
+| `paper/refs-checked` | no build has checked the references, or the last one could not, or the reader missed some |
+
+An entry of a `.bib` is reported at the first line of `paper.tex`, with the entry's file, line and
+column at the front of the message (`refs.bib:12:1: …`): ESLint does not lint a `.bib`.
 
 The step never fails the build. Without a network the PDF is still built and lint warns that the
 references were not checked.
+
+**No record of the build, no answer.** Which databases bibtex opened is in `sources.json`, so a paper
+with no record (never built), or one whose files changed since (`paper/sources-fresh`), has none to
+check: the step records nothing, and the four rules are silent while `paper/sources-fresh` says once
+that the paper must be built.
+
+**What bibtex typeset, against what paperlint read.** The record also holds the keys bibtex typeset
+(its `paper.bbl`). bibtex has no comment syntax, so an entry behind `%` or inside `@comment{…}` is one
+it typesets and paperlint's reader does not; `paper/refs-checked` names each such key as not checked.
+(bibtex's keys are case-insensitive: `\cite{SMITH}` typesets `\bibitem{SMITH}` from an entry `smith`,
+which is the same entry.) A malformed `.bib` never gets that far: bibtex fails on it, and `paperlint
+build` fails with bibtex's own lines.
+
+A database TeX wrote itself (a `filecontents` block) is read from the file it left beside the paper.
+The build hashes it like any other, so when that file is edited or removed after the build the record
+is stale and `paper/sources-fresh` says so: build again to write it. A database bibtex found outside
+the paper directory, on its search path (`BIBINPUTS`), is not read: the step says which and
+`paper/refs-checked` warns.
 
 ## `repro/references-cache.json` — commit it
 

@@ -1,0 +1,255 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "IEEEtran.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "algorithm2e.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "ifoddpage.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "relsize.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "setspace.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "multirow.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "Chapters/01_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "Chapters/02_background.tex",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/DPS_Electronics_b.pdf",
+      "role": "body"
+    },
+    {
+      "path": "newestPDF/Cleanroom_CCS_newest2.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Chapters/09_Related_Works.tex",
+      "role": "body"
+    },
+    {
+      "path": "Chapters/04_attack_model.tex",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/attack_design.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Chapters/05_Visibility_study.tex",
+      "role": "body"
+    },
+    {
+      "path": "newestPDF/Expt_setup.pdf",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/one_STFT.pdf",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/one_FFT_2.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Chapters/06_Attack_Design_and_Implementation.tex",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/nonLinear.pdf",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/SD_1_4.pdf",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/Equalization_2.pdf",
+      "role": "body"
+    },
+    {
+      "path": "Chapters/07_Evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "Chapters/08_Discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "Chapters/10_Conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "Chapters/11_APPENDIX.tex",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/sound_as_pressure.pdf",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/harm_perc_filtering_2.pdf",
+      "role": "body"
+    },
+    {
+      "path": "newPDF/distance.pdf",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [
+    "barovox"
+  ],
+  "bibtex": {
+    "ran": true,
+    "databases": [
+      "barovox.bib"
+    ],
+    "keys": [
+      "avnet2024pressure",
+      "standard2004cleanrooms",
+      "datasheetsdp",
+      "bradford_hvac_2024",
+      "fitzgerald2010harmonic",
+      "driedger2014extending",
+      "leng2021mbnet",
+      "errattahi2018automatic",
+      "firstsensor:2020",
+      "cooper1986particulate",
+      "kitajima1997requirements",
+      "shilov_2019",
+      "yap_2018",
+      "miller2017implementing",
+      "litheaudio2023",
+      "zenitel2023",
+      "michalevsky2014gyrophone",
+      "zhang2015accelword",
+      "anand2018speechless",
+      "anand2021spearphone",
+      "han2017pitchln",
+      "7878599",
+      "marquardt2011sp",
+      "9517289",
+      "9095984",
+      "cpams",
+      "ba2020learning",
+      "wang2022mmphone",
+      "gao2022device",
+      "gao2022kite",
+      "sami2020spying",
+      "roy2016listening",
+      "nassi2022lamphone",
+      "kwong2019hard",
+      "long2023side",
+      "nassi2021glowworm",
+      "nassi2023little",
+      "nassi2022little",
+      "wang2022wavesdropper",
+      "basak2022mmspy",
+      "tu2021transduction",
+      "barua2022wolf",
+      "primex2021",
+      "lee2019securely",
+      "paccagnella2020logging",
+      "xb13",
+      "rs-online",
+      "vaidyanathan2001generalizations",
+      "heide1998speech",
+      "villchur1973signal",
+      "whitmore2009improved",
+      "ladefoged2014course",
+      "gilman2019science",
+      "moulines1995non",
+      "cano2014phase",
+      "tachibana2014harmonic",
+      "zhang2021influence",
+      "nishimura2004noise",
+      "li2020time",
+      "falconer2002frequency",
+      "speechcommandsv2",
+      "ts1",
+      "ts2",
+      "ts3",
+      "resnet",
+      "audioresnet",
+      "receptivefields",
+      "gu2021efficiently",
+      "cobo2008airborne",
+      "holbrook2009controlling",
+      "taipeitimes_tsmc_2017",
+      "justice_chinese_2018",
+      "justice_chinese_2021",
+      "justice2018lexington",
+      "Alpha161",
+      "testo-6383",
+      "siemens547",
+      "PASCAL-ST",
+      "RSMEB003",
+      "sensos",
+      "spectrogramnfft",
+      "subspectral",
+      "kamal2022",
+      "nader2011harmonic",
+      "nader2011unfolding",
+      "chung2021w2vbert",
+      "zhang2022pushing",
+      "hasani2022liquid"
+    ],
+    "exit": 0,
+    "errors": []
+  },
+  "sha256": {
+    "paper.tex": "953486e66da7d1dbacb050793b8d5f67efc606f3f66d5bda30612f65b1070d9f",
+    "IEEEtran.cls": "da751920a317ed318b7b5cd7fa585a6cc7d28502d457856382e9be24b10a3bd7",
+    "algorithm2e.sty": "a17e47f93a2a5d35763dc9f5a026184c16fad432ef5d77a9c9abf2ad39b1b92c",
+    "ifoddpage.sty": "a02ef0946e6764afafa57d21da2328a84946c31697b0f34bcd2499080349b597",
+    "relsize.sty": "117b458cb417ce12bdc1f6f7d03bae5ebf4d6dbd23f88bc99c8711db86947932",
+    "setspace.sty": "40037cd787ed53ada6be53a814203a37d0c00616e2894ec34675f1817543d8f8",
+    "multirow.sty": "1ad428e46dc0b736132d2c6e87eccbf0947091ca7581733165cfee765cd0992c",
+    "Chapters/01_introduction.tex": "c39953157e9e19d4aebc3c513ccaa62043f350156bc9127ebcb0c9eee00c80d3",
+    "Chapters/02_background.tex": "5e037cd71423e4277bc93a8ee70c416c1dc603f0e6c4efd86d30810649dabda1",
+    "newPDF/DPS_Electronics_b.pdf": "9a13f5422ab786efd7514d07f01adf2d91485fcb8c28c8f20cebb5425b7afd6c",
+    "newestPDF/Cleanroom_CCS_newest2.pdf": "701a0aafaca899729823c9a1eb24c518b2d6161b3c0b4f8a5e6832a0fa6d4268",
+    "Chapters/09_Related_Works.tex": "a58439debe7ec55d0f45bee6822d847d7931fe0d420ea508a0de99f7ff542348",
+    "Chapters/04_attack_model.tex": "9cf8e18494e7efeb741294252463c74df7f9210bb7e225e7bec2d577dc4f5712",
+    "newPDF/attack_design.pdf": "2f7a7cb34d0dbcd24ed5bbe3763d3cb6d37bf884b623ae685fa43271201dc06b",
+    "Chapters/05_Visibility_study.tex": "7500045bd94e9f334888acbfb1bf4011fdd8a9321d2cddc63deeb821e5725a84",
+    "newestPDF/Expt_setup.pdf": "e0f60299db18dc457694ebfec165cf676724af0e052e6595d8bbdfed6a0e4f01",
+    "newPDF/one_STFT.pdf": "0d9ed3ae51fbd580c8f1384888a0d39ef54b799f4c307581f8bbe3ad3df6d66b",
+    "newPDF/one_FFT_2.pdf": "1a015cbaef2675390fe65550bddf0ff5923cdc73ae36cee34e9cbf0d1b01159b",
+    "Chapters/06_Attack_Design_and_Implementation.tex": "6e835e77deb5bcc556d431ec07e514fc8d39a231f01d28f145b47aa82afb004e",
+    "newPDF/nonLinear.pdf": "4b4ad3e883879c567a1e8c5aeb23fde5672963f8663bcf7ecf2be710ef0729fa",
+    "newPDF/SD_1_4.pdf": "128d3440d85fe410b05209ddef8ce630c37c5c32fd5347354bf615968ea8a5b0",
+    "newPDF/Equalization_2.pdf": "70ff4c67c091dd351f7c42732ed428984e626e85147c5c86567b645b8270096a",
+    "Chapters/07_Evaluation.tex": "507b2a1ec063f66e2039d681a8ff49a4db1c6207aeee82c23af47e139af33d06",
+    "Chapters/08_Discussion.tex": "26833aac2405320184ca6e5a20d12bebb93fac74408f480a7851f5f025d898d7",
+    "Chapters/10_Conclusion.tex": "42651174ccf443b9a2a2148418f882ea24980f766f057e0ac86e1a00c8e292dc",
+    "Chapters/11_APPENDIX.tex": "46549738b30ed822420cd246fc3bf1069e76dc599bc65b61857ca9054132c152",
+    "newPDF/sound_as_pressure.pdf": "9e2aa4da57d5d70ecb6410ad9d334780aca423b326f9f89f34b64b12c6feaa9b",
+    "newPDF/harm_perc_filtering_2.pdf": "000ca13efad1d7ab6c13d08e6bcce3d9ab15a302f782517ea2fa4616e8f89aec",
+    "newPDF/distance.pdf": "bd15cba28c60157ee5ceee10d336d794ab8d66871b6acf9deec8eb19c52c933a",
+    "barovox.bib": "720d88cb45975581dd3a253a83f8eeff2e5e0867773f5fd89867521881550625"
+  }
+}

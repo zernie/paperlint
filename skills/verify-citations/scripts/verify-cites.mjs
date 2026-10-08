@@ -47,7 +47,13 @@
 
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, extname } from "node:path";
+import { dirname, join, extname, resolve } from "node:path";
+import { bibReader } from "#src/adapters/bibtex/index";
+import { latexReader } from "#src/adapters/latex/index";
+import { nodeFiles } from "#src/adapters/node/index";
+import { sourcesCodec } from "#src/adapters/sources-record/index";
+import { absolutePath } from "#src/domain/paths";
+import { bibliographyAt, bibliographyUnreadWhy } from "#src/paper-sources";
 import { createHash } from "node:crypto";
 import {
   consumerContactEmail,
@@ -588,116 +594,32 @@ export function reduceVerdict(citation, evidence, commitFlags = []) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// .bib PARSER — small, best-effort. Extracts @article/@inproceedings/... entries
-// and (loosely) \bibitem blocks. Not a full BibTeX grammar; enough to seed cites.
+// CITATIONS — from the entries the bibtex reader read (src/ports/bib-reader.ts).
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** A name of a name list, written out: `First von Last, Jr.`, or the literal it was. */
+const writtenName = (n) =>
+  n.name ??
+  [n.firstName, n.prefix, n.lastName, n.suffix].filter(Boolean).join(" ");
+
 /**
- * field(body, name) — extract a BibTeX field value from an entry body.
- *  (a) anchors `name` so `title` does NOT also match `booktitle` (S4a);
- *  (b) reads BRACE-delimited values with balanced-brace scanning, so a protected
- *      acronym `{Evaluating {LLM}-based ...}` is captured whole, not truncated at
- *      the inner `}` (S4b);
- *  also handles "quoted" and bare (numeric) values.
+ * The citations of a bibliography's entries, as the bibtex reader read them: the key as `id`, and
+ * the doi, title, year, authors and arXiv eprint each entry has.
  */
-function bibField(body, name) {
-  const re = new RegExp(`(?<![a-zA-Z])${name}\\s*=\\s*`, "i");
-  const fm = re.exec(body);
-  if (!fm) return undefined;
-  let i = fm.index + fm[0].length;
-  const ch = body[i];
-  if (ch === "{") {
-    let depth = 0;
-    let j = i;
-    for (; j < body.length; j++) {
-      if (body[j] === "{") depth++;
-      else if (body[j] === "}") {
-        depth--;
-        if (depth === 0) break;
-      }
-    }
-    return body
-      .slice(i + 1, j)
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-  if (ch === '"') {
-    let j = i + 1;
-    while (j < body.length && body[j] !== '"') j++;
-    return body
-      .slice(i + 1, j)
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-  // bare value (e.g. year = 2017,) — up to the next comma / newline / close brace
-  let j = i;
-  while (j < body.length && !/[,\n}]/.test(body[j])) j++;
-  const v = body.slice(i, j).replace(/\s+/g, " ").trim();
-  return v || undefined;
-}
-
-export function parseBib(text) {
-  const cites = [];
-  // @type{key,  — then read the entry body with BALANCED-BRACE scanning so that
-  // one-line entries and indented / same-line closing braces (`\n  }` or `...}`)
-  // are captured, not dropped by a `\n}`-at-column-0 requirement (S4c).
-  const headRe = /@(\w+)\s*\{\s*([^,\s}]+)\s*,/g;
-  let m;
-  while ((m = headRe.exec(text)) !== null) {
-    const type = m[1].toLowerCase();
-    if (type === "comment" || type === "string" || type === "preamble")
-      continue;
-    const key = m[2].trim();
-    // Balanced scan from just after the key's comma to the entry's closing brace.
-    let depth = 1; // the entry's opening `{` was already consumed by headRe
-    let j = headRe.lastIndex;
-    for (; j < text.length && depth > 0; j++) {
-      if (text[j] === "{") depth++;
-      else if (text[j] === "}") depth--;
-    }
-    const body = text.slice(headRe.lastIndex, j - 1);
-    headRe.lastIndex = j; // resume scanning AFTER this entry
-
-    const c = { id: key };
-    const doi = bibField(body, "doi");
-    const title = bibField(body, "title");
-    const year = bibField(body, "year");
-    const author = bibField(body, "author");
-    const eprint = bibField(body, "eprint");
-    const archive =
-      bibField(body, "archiveprefix") || bibField(body, "eprinttype");
-    if (doi) c.doi = normalizeDoi(doi);
-    if (title) c.title = title.replace(/[{}]/g, "");
-    if (year) c.year = year;
-    if (author) c.authors = author;
-    if (eprint && (!archive || /arxiv/i.test(archive)))
-      c.arxiv = normalizeArxiv(eprint);
-    cites.push(c);
-  }
-  if (cites.length > 0) return cites;
-
-  // Fallback: \bibitem — grab arXiv ids / DOIs out of each block, best-effort.
-  const itemRe =
-    /\\bibitem(?:\[[^\]]*\])?\{([^}]+)\}([\s\S]*?)(?=\\bibitem|\\end\{thebibliography\}|$)/g;
-  while ((m = itemRe.exec(text)) !== null) {
-    const key = m[1].trim();
-    const block = m[2];
-    const c = { id: key };
-    const doiM = block.match(/10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i);
-    const arxivM = block.match(/arXiv:\s*(\d{4}\.\d{4,5})/i);
-    const yearM = block.match(/\b(19|20)\d{2}\b/);
-    if (doiM) c.doi = normalizeDoi(doiM[0]);
-    if (arxivM) c.arxiv = normalizeArxiv(arxivM[1]);
-    if (yearM) c.year = yearM[0];
-    // crude title: longest quoted or {\em ...} run
-    const titleM =
-      block.match(/``([^']{6,}?)''/) ||
-      block.match(/\\emph\{([^}]{6,}?)\}/) ||
-      block.match(/\{\\em\s+([^}]{6,}?)\}/);
-    if (titleM) c.title = titleM[1].replace(/\s+/g, " ").trim();
-    cites.push(c);
-  }
-  return cites;
+export function citationsOf(entries) {
+  return entries.map((e) => {
+    const f = e.fields;
+    const c = { id: e.key };
+    if (f.doi) c.doi = normalizeDoi(f.doi);
+    if (f.title) c.title = f.title.replace(/\s+/g, " ").trim();
+    if (f.year) c.year = f.year;
+    const authors = (e.names.author ?? []).map(writtenName).join(" and ");
+    if (authors) c.authors = authors;
+    const archive = f.archiveprefix || f.eprinttype;
+    if (f.eprint && (!archive || /arxiv/i.test(archive)))
+      c.arxiv = normalizeArxiv(f.eprint);
+    return c;
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1212,11 +1134,23 @@ export async function verifyCitationLive(
 // CLI
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** What `bibliographyAt` needs to read a `.bib` (src/paper-sources.ts, the one answer for a path). */
+const DEPS = {
+  files: nodeFiles,
+  codec: sourcesCodec,
+  latex: latexReader,
+  bib: bibReader,
+};
+
 function loadInput(argv) {
   const path = argv.find((a) => !a.startsWith("-"));
+  if (path && extname(path).toLowerCase() === ".bib") {
+    const r = bibliographyAt(absolutePath(resolve(path)), DEPS);
+    if (!r.ok) throw new Error(bibliographyUnreadWhy(r.error));
+    return citationsOf(r.value.texts.flatMap((t) => t.entries));
+  }
   const raw =
     path && path !== "-" ? readFileSync(path, "utf8") : readFileSync(0, "utf8"); // stdin
-  if (path && extname(path).toLowerCase() === ".bib") return parseBib(raw);
   const parsed = JSON.parse(raw);
   return Array.isArray(parsed) ? parsed : [parsed];
 }

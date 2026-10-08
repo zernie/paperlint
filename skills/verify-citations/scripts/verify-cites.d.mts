@@ -5,14 +5,30 @@
 // Only what `src/` imports is declared. The `.mjs` is not typechecked, so a declaration nobody
 // compiles against would drift without anyone noticing.
 
-/** One entry as `parseBib` returns it: the BibTeX key as `id`, plus the fields it recognised. */
+/** One citation as `citationsOf` returns it: the BibTeX key as `id`, plus the fields it recognised. */
 export interface Citation {
   readonly id: string;
   readonly [field: string]: unknown;
 }
 
-/** Every entry of a BibTeX text, `@comment`/`@string`/`@preamble` skipped. */
-export declare function parseBib(text: string): Citation[];
+/** A name of a name list, in its parts (`BibName`). */
+export interface ReadName {
+  readonly lastName?: string;
+  readonly firstName?: string;
+  readonly prefix?: string;
+  readonly suffix?: string;
+  readonly name?: string;
+}
+
+/** An entry as the bibtex reader reads it (`BibEntry`, src/domain/paper-sources.ts), as far as citations use it. */
+export interface ReadEntry {
+  readonly key: string;
+  readonly fields: Readonly<Record<string, string>>;
+  readonly names: Readonly<Record<string, readonly ReadName[]>>;
+}
+
+/** The citations of a bibliography's entries, as the bibtex reader read them. */
+export declare function citationsOf(entries: readonly ReadEntry[]): Citation[];
 
 /** The title reduced to what identifies it: case, braces and punctuation removed. */
 export declare function titleIdentity(title: string): string;

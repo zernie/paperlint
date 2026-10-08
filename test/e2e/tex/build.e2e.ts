@@ -474,6 +474,8 @@ function referenceTests(services: {
     expect(recorded.entries.map((e) => [e.key, e.exists, e.authors])).toEqual([
       ["knuth84", "unresolvable", "skipped"],
     ]);
+    // What bibtex read is in _build/sources.json, written once from TeX's own files.
+    expect(recorded).not.toHaveProperty("bibtex");
   });
   it("cite: the answers landed in repro/references-cache.json — four registries and DBLP, dated", () => {
     const cache = ReferencesCache.parse(

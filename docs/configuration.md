@@ -79,7 +79,8 @@ where your papers are, and writes `{ "papersDir": … }` only when that is not `
 `papersDir` already declared is kept, and nothing is measured or asked.
 
 **Under `papersDir`, only the files paperlint's own rules are written for are linted:**
-`PIPELINE-STATUS.md`, `paper.tex` (and the files it includes), `reviews/*.md` and `siblings/*.md`.
+`PIPELINE-STATUS.md`, `paper.tex` (and the files TeX read for it in the last build), `reviews/*.md`
+and `siblings/*.md`.
 Everything else — a paper's `repro/` scripts, vendored JavaScript, data files — is never handed to
 ESLint, so it cannot fail the run. A file you name on the command line that is not one of these is
 refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
@@ -387,14 +388,21 @@ papers/my-paper
 - **inputs** — `TEXINPUTS` is the paper's directory, then paperlint's own venue files
   (`paper-guards.tex`, `<venue>.tex`), so `\input{paper-guards}` in a preamble resolves with no
   setup and a file of the paper's own wins over paperlint's of the same name. The system tree still
-  resolves after them. `paperlint lint` looks for an included file in the same places.
-- **compile** — `pdflatex -interaction=nonstopmode -halt-on-error -file-line-error`, then `bibtex`
+  resolves after them. `paperlint lint` does not look for included files at all: it reads which files
+  TeX read from the record the build writes (`_build/sources.json`).
+- **compile** — `pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -recorder`, then `bibtex`
   when the `.aux` names a bibliography, then pdflatex again until the `.aux`, `.toc`, `.out` and
   `.bbl` stop changing and the log stops asking for a rerun. bibtex runs again only when the cited
   keys or a `.bib` file changed. After that, one **final** pass defines `\finalpass`, which arms
   the reference guards in `paper-guards.tex`: an undefined `\ref` or `\cite` fails the build
   there instead of printing `??`. A document that still changes after five passes fails, naming
-  the file that kept changing.
+  the file that kept changing. After a green compile the step also writes
+  `_build/sources.json`, the record of what TeX read: every file of the paper directory its passes
+  opened (from the `.fls` that `-recorder` makes), whether each came before or after
+  `\begin{document}`, the `.bib` files TeX itself wrote, the databases and keys bibtex read, and a
+  SHA-256 of each file. Rules read that record instead of reading TeX source, and
+  [`paper/sources-fresh`](rules/paper/sources-fresh.md) reports a paper whose record is missing or
+  older than its files.
 - **measure** — after a green compile, the PDF is read with pdf.js and what it measures is written
   to `_build/paper.facts.json`: the page count, every font the pages draw text with (and whether
   its program is embedded, and whether it is Type 3), and the heights of the last page's two

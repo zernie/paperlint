@@ -1,0 +1,14 @@
+\documentclass{article}
+\begin{filecontents*}
+{refs.bib}
+@misc{nl2024,
+  title = {The Name on the Next Line},
+  author = {Doe, Jane},
+  year = {2024}
+}
+\end{filecontents*}
+\begin{document}
+Text that cites~\cite{nl2024}.
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}

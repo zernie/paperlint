@@ -15,6 +15,16 @@ import type {
   TitledHeading,
 } from "../domain/tex-document.ts";
 
+/** A `filecontents` block of a source: the file it writes, `[overwrite]`/`[force]` or not, where it is. */
+export interface Filecontents {
+  readonly writes: string;
+  readonly overwrite: boolean;
+  /** The whole environment, `\begin` to `\end`. */
+  readonly span: Span;
+  /** What it writes: from the line after `\begin{…}{…}` to `\end`. */
+  readonly body: Span;
+}
+
 export interface LatexReader {
   /** The source's `\documentclass`, as one of its states. */
   readonly documentClass: (src: string) => ClassLine;
@@ -55,4 +65,13 @@ export interface LatexReader {
   readonly withDocumentClass: (src: string, want: DocumentClass) => string;
   /** Every command that changes the page layout the class sets: margins, text block, line spacing. */
   readonly layoutOverrides: (src: string) => readonly LayoutOverride[];
+  /**
+   * Every live `filecontents` block of `src`, in source order, where each stands: a lookup of the text
+   * that wrote a `.bib`, never a decision of what TeX wrote (that is `_build/sources.json`). `jobname`
+   * is what `\jobname` names in a block's file name.
+   */
+  readonly filecontents: (
+    src: string,
+    jobname: string,
+  ) => readonly Filecontents[];
 }

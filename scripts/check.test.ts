@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { test } from "vitest";
+import { test, vi } from "vitest";
 import {
   GATES,
   NOT_COVERED,
@@ -120,6 +120,28 @@ test("🔴 runGates: a vitest gate that exits 0 but leaves no report is a FAILUR
       "E    v  (npm run -s test:e2e:x → exit 0, but no vitest JSON report to read skips from)",
     ],
   );
+});
+
+test("🔴 every gate runs with CI=true, as CI runs it — a local check is the CI check", () => {
+  // Libraries change behaviour under CI=true (typescript-eslint infers a single run and parses from
+  // disk): a gate run without it passed locally and failed in CI on 2026-10-07.
+  // Whatever the caller's shell says: on CI it is already "true", so the test sets it otherwise.
+  vi.stubEnv("CI", "false");
+  const seen: (string | undefined)[] = [];
+  runGates({
+    gates: [
+      { name: "a", job: "gates", run: ["true"] },
+      { name: "b", job: "gates", script: "build" },
+    ],
+    spawn: (_cmd, _args, options) => {
+      seen.push(options.env["CI"]);
+      return { status: 0 };
+    },
+    write: () => {},
+    ...capture().io,
+  });
+  vi.unstubAllEnvs();
+  assert.deepEqual(seen, ["true", "true"]);
 });
 
 test("run as a program with every gate passing: the plain verdict, exit 0", () => {

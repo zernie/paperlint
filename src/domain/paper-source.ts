@@ -9,12 +9,19 @@
  * answers about one file (the class, the outline, the rendered text, the body's passages) is
  * answered about the paper, unchanged. A subfile is a document of its own; only its body is spliced.
  *
+ * ── THE END OF AN INCLUDED FILE'S LAST LINE ─────────────────────────────────────
+ * TeX ends every line it reads with its end-of-line character, the last line of a file included:
+ * `a\input{f}b` with `f` holding `foo` and no final newline typesets "afoo b" (measured, TeX Live
+ * 2026), not "afoob". The splice does the same: an included file whose text does not end in a newline
+ * gets one, mapped to the end of that file; an empty file read no line and gets nothing. The main file
+ * is the caller's text and is left as given.
+ *
  * ── WHAT IS NOT DONE ─────────────────────────────────────────────────────────────
  * No macro is expanded, so a path built from a macro (`\input{\dir/intro}`) is read as written. A
- * file that cannot be found is left out and named in `missing`; a file that includes itself,
- * directly or through others, is spliced once.
+ * file the caller's `read` has none of contributes nothing; a file that includes itself, directly or
+ * through others, is spliced once.
  */
-import { extname, normalize } from "node:path";
+import { posix } from "node:path";
 import type { Span } from "./tex-document.ts";
 
 /** One `\input`, `\include` or `\subfile` in a source: the path as written and where the macro stands. */
@@ -46,27 +53,17 @@ export interface Segment {
   readonly via: Span | null;
 }
 
-/** An include whose file was not found, where it stands. */
-export interface MissingInclude {
-  readonly file: string;
-  readonly target: string;
-  readonly span: Span;
-  /** Where it stands in the main file (the include itself, or the one that brought its file in). */
-  readonly via: Span;
-}
-
-/** The paper as one text, the map back to its files, and the includes that were not found. */
+/** The paper as one text, and the map back to its files. */
 export interface PaperSource {
   readonly main: string;
   readonly text: string;
   readonly segments: readonly Segment[];
-  readonly missing: readonly MissingInclude[];
 }
 
 /** The paths TeX tries for a target: `name.tex`, then `name` — or the name alone if it has one. */
 const candidates = (target: string): readonly string[] => {
-  const t = normalize(target.trim());
-  return extname(t) === "" ? [`${t}.tex`, t] : [t];
+  const t = posix.normalize(target.trim());
+  return posix.extname(t) === "" ? [`${t}.tex`, t] : [t];
 };
 
 /** The first candidate path that exists, with its text. */
@@ -81,11 +78,10 @@ function found(
   return hits[0] ?? null;
 }
 
-/** An assembled piece of text: the text, its segments from 0, and the includes not found. */
+/** An assembled piece of text: the text and its segments from 0. */
 interface Piece {
   readonly text: string;
   readonly segments: readonly Segment[];
-  readonly missing: readonly MissingInclude[];
 }
 
 /** `segments` moved by `by` characters. */
@@ -111,11 +107,10 @@ const copied = ({ file, text, from, to, via }: Stretch): Piece => ({
     to > from
       ? [{ start: 0, end: to - from, file, source: text, from, via }]
       : [],
-  missing: [],
 });
 
 /** Nothing: an include left out. */
-const NOTHING: Piece = { text: "", segments: [], missing: [] };
+const NOTHING: Piece = { text: "", segments: [] };
 
 /** Pieces joined in order. */
 const joined = (pieces: readonly Piece[]): Piece =>
@@ -123,7 +118,6 @@ const joined = (pieces: readonly Piece[]): Piece =>
     (acc, p) => ({
       text: acc.text + p.text,
       segments: [...acc.segments, ...shifted(p.segments, acc.text.length)],
-      missing: [...acc.missing, ...p.missing],
     }),
     NOTHING,
   );
@@ -153,7 +147,7 @@ function spliced(file: string, text: string, range: Span, ctx: Context): Piece {
       pieces: [
         ...acc.pieces,
         at(acc.cursor, inc.span.start),
-        included(file, inc, ctx),
+        included(inc, ctx),
       ],
       cursor: inc.span.end,
     }),
@@ -162,23 +156,30 @@ function spliced(file: string, text: string, range: Span, ctx: Context): Piece {
   return joined([...pieces, at(cursor, range.end)]);
 }
 
-/** One include: the file it names, spliced, or — when not found — nothing, and a report. */
-function included(file: string, inc: Include, ctx: Context): Piece {
+/** TeX's end of line after the last line of `file`, standing where its text ends: one newline. */
+const endOfLine = (file: string, text: string, via: Span | null): Piece => ({
+  text: "\n",
+  segments: [{ start: 0, end: 1, file, source: text, from: text.length, via }],
+});
+
+/** One include: the file it names, spliced, or — when the reader has none of it — nothing. */
+function included(inc: Include, ctx: Context): Piece {
   const via = ctx.via ?? inc.span;
   const hit = found(inc.target, ctx.deps.read);
-  if (hit === null)
-    return {
-      ...NOTHING,
-      missing: [{ file, target: inc.target, span: inc.span, via }],
-    };
-  if (ctx.stack.includes(hit.path)) return NOTHING;
+  if (hit === null || ctx.stack.includes(hit.path)) return NOTHING;
   const body = inc.macro === "subfile" ? ctx.deps.documentBody(hit.text) : null;
-  return spliced(
-    hit.path,
-    hit.text,
-    body ?? { start: 0, end: hit.text.length },
-    { deps: ctx.deps, stack: [...ctx.stack, hit.path], via },
-  );
+  const range = body ?? { start: 0, end: hit.text.length };
+  const piece = spliced(hit.path, hit.text, range, {
+    deps: ctx.deps,
+    stack: [...ctx.stack, hit.path],
+    via,
+  });
+  // The last line of the file is read to its end; a subfile's body ends inside its last line.
+  const endsLine =
+    range.end === hit.text.length &&
+    hit.text !== "" &&
+    !hit.text.endsWith("\n");
+  return endsLine ? joined([piece, endOfLine(hit.path, hit.text, via)]) : piece;
 }
 
 /** The paper whose main file is `main` (a path relative to the paper directory) with `text`. */
@@ -193,12 +194,7 @@ export function assemblePaper(
     { start: 0, end: text.length },
     { deps, stack: [main], via: null },
   );
-  return {
-    main,
-    text: p.text,
-    segments: p.segments,
-    missing: p.missing,
-  };
+  return { main, text: p.text, segments: p.segments };
 }
 
 /** Where a span of the assembled text stands: in which file, at which offsets, and via which include. */

@@ -5,6 +5,7 @@
 import { absolutePath } from "../../domain/paths.ts";
 import type { Download } from "../../ports/download.ts";
 import type { Files } from "../../ports/files.ts";
+import type { ListDir } from "../../ports/talk-media.ts";
 import type { Command, ProcessExit, RunProcess } from "../../ports/process.ts";
 import type { NotAPromise, Scratch, Workspace } from "../../ports/workspace.ts";
 import { err, ok } from "../../domain/result.ts";
@@ -54,6 +55,22 @@ export function memoryFiles(
     writeAtomic: (p, b) => void map.set(p, b),
   };
 }
+
+/** `ListDir` over `memoryFiles`: the names directly under a directory, none when it holds no file. */
+export const memoryListDir =
+  (files: MemoryFiles): ListDir =>
+  (dir) => [
+    ...new Set(
+      [...files.map.keys()]
+        .filter((k) => k.startsWith(`${dir}/`))
+        .map((k) =>
+          k
+            .slice(dir.length + 1)
+            .split("/", 1)
+            .join(""),
+        ),
+    ),
+  ];
 
 export interface MemoryWorkspace extends Workspace {
   /** Every file written into a scratch directory, in order. */

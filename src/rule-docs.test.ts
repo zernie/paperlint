@@ -19,7 +19,6 @@ const PAGES = "https://github.com/zernie/paperlint/blob/main/";
 
 /** Rules shipped before per-rule pages, each waiting for its page in #131. Only ever shrinks. */
 const AWAITING_PAGE: ReadonlySet<string> = new Set([
-  "bib/reachable-entry",
   "paper/author-list",
   "paper/cite-exists",
   "paper/figure-ref-style",

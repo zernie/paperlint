@@ -40,10 +40,11 @@ by printing **which CI jobs it does not reproduce, and why**.
 that broke the suite: the gates were run afterwards and were green, but `npm test` and the
 install e2e were not among them, because there were eleven separate scripts and the only way
 to run them all was from memory. A subset flag re-creates exactly that — the cheap half gets run
-and reported as "the gates". If a step genuinely cannot run here, it says so out loud rather than
-being skipped quietly: an e2e test that finds no TeX or no pnpm is reported SKIPPED by vitest,
-and `npm run check` reads that count from vitest's JSON report and lists the gate as skipped
-instead of counting it as passed. The e2e areas also run alone: `npm run test:e2e:install`,
+and reported as "the gates". Every gate runs with `CI=true`, as in CI, so the local check is the
+CI check: libraries read it (typescript-eslint parses from disk in a single run; vitest refuses
+`.only` and writes no snapshot), and the e2e tests are strict — one that finds no TeX or no pnpm
+FAILS with what to install, as it does in CI. A test that still skips is read from vitest's JSON
+report and listed as skipped, never counted as passed. The e2e areas also run alone: `npm run test:e2e:install`,
 `npm run test:e2e:tex`, or both with `npm run test:e2e`.
 
 Each gate's command is listed in `scripts/check.ts`; run one of them directly while iterating on

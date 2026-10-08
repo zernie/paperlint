@@ -7,9 +7,13 @@
  * file at the include in `paper.tex` that brought it in — the one place ESLint can point to in this
  * file — with the included file, line and column at the front of the message.
  *
- * An include is looked for where the build tells TeX to look (`texSearchPath`): the paper's own
- * directory, then paperlint's inputs. `bodyFiles` names the files of the paper's BODY the author
- * wrote — what the rules over ESLint's own LaTeX text read one by one, each at its own path.
+ * 🔴 WHICH FILES ARE THE PAPER'S IS TEX'S ANSWER, NOT THIS MODULE'S (docs/design/paper-sources.md §1).
+ * `readPaper` splices only the files the build's record lists (`_build/sources.json`, `paperRecord`):
+ * the files of the paper directory TeX read. An include of a file the record does not list — behind
+ * `\iffalse`, never reached — contributes nothing, as it did to TeX. With no
+ * record, or a stale one, the paper is `paper.tex` alone, and `paper/sources-fresh` says the files it
+ * includes went unlinted. Where an include stands in the text is the only thing read from the text:
+ * whether the file it names is part of the paper is the record's to say, never the disk's.
  */
 import { basename, dirname, join } from "node:path";
 import {
@@ -21,8 +25,8 @@ import type { Span } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
 import type { Files } from "./ports/files.ts";
 import { callerPath } from "./caller-path.ts";
-import type { AbsolutePath } from "./domain/paths.ts";
-import { texSearchPath } from "./package-dirs.ts";
+import { paperRecord, type RecordReadDeps } from "./paper-record.ts";
+import { spelledIn } from "./domain/sources-record.ts";
 import type { Located, TexRuleContext } from "./tex-venue-rules.ts";
 
 /** What reading a paper needs: the disk, and the LaTeX reader. */
@@ -31,75 +35,41 @@ export interface PaperDeps {
   readonly latex: LatexReader;
 }
 
-/** The paper whose main file is `filename` with the text `src`, its includes spliced. */
+/** What `readPaper` needs: the disk, the LaTeX reader (where an include stands), and the record's schema. */
+export interface ProseDeps extends PaperDeps, RecordReadDeps {}
+
+/** The text of a file read from the disk, or null when there was none. */
+export const decoded = (b: Uint8Array | null): string | null =>
+  b === null ? null : new TextDecoder().decode(b);
+
+/**
+ * The paper whose main file is `filename` with the text `src`: the files the last build's record lists
+ * spliced where their includes stand. No record, or one the paper has outgrown, is `src` alone.
+ */
 export function readPaper(
   filename: string,
   src: string,
-  deps: PaperDeps,
+  deps: ProseDeps,
 ): PaperSource {
   const dir = dirname(filename);
+  const record = paperRecord(dir, deps);
+  const listed =
+    record.kind === "fresh" ? record.record.inputs.map((i) => i.path) : [];
   return assemblePaper(basename(filename), src, {
-    includes: deps.latex.includes,
+    // No record: no include is looked at, so there is nothing to splice.
+    includes: record.kind === "fresh" ? deps.latex.includes : () => [],
     documentBody: deps.latex.documentBody,
     read: (rel) => {
-      const at = located(dir, rel, deps.files);
-      const b = at === null ? null : deps.files.readBytes(at);
-      return b === null ? null : new TextDecoder().decode(b);
+      const recorded = spelledIn(listed, rel);
+      return recorded === null
+        ? null
+        : decoded(deps.files.readBytes(callerPath(join(dir, recorded))));
     },
   });
 }
 
-/** `rel` in the first directory of the paper's TeX search path that holds it, or null. */
-const located = (dir: string, rel: string, files: Files): AbsolutePath | null =>
-  texSearchPath(dir)
-    .map((d) => callerPath(join(d, rel)))
-    .find((p) => files.isFile(p)) ?? null;
-
-/** An include that resolved nowhere: the file that wrote it, and the path as written. */
-export interface Unread {
-  readonly file: string;
-  readonly target: string;
-}
-
-/**
- * The files of the body of the paper whose main file is `filename`: every file an include inside its
- * `document` environment brings in, nested ones too, found in the paper's own directory. Not a
- * preamble include (macros are not the body), and not a file found only in paperlint's inputs (not
- * the author's text). `missing` is every include, anywhere, that resolved nowhere.
- */
-export function bodyFiles(
-  filename: string,
-  src: string,
-  deps: PaperDeps,
-): {
-  readonly files: readonly AbsolutePath[];
-  readonly missing: readonly Unread[];
-} {
-  const dir = dirname(filename);
-  const paper = readPaper(filename, src, deps);
-  const body = deps.latex.documentBody(src);
-  const inBody = (via: Span | null): boolean =>
-    via !== null &&
-    (body === null || (via.start >= body.start && via.end <= body.end));
-  const own = (rel: string): AbsolutePath | null => {
-    const at = located(dir, rel, deps.files);
-    return at === callerPath(join(dir, rel)) ? at : null;
-  };
-  return {
-    files: [
-      ...new Set(
-        paper.segments
-          .filter((s) => s.file !== paper.main && inBody(s.via))
-          .map((s) => own(s.file))
-          .filter((f): f is AbsolutePath => f !== null),
-      ),
-    ],
-    missing: paper.missing.map(({ file, target }) => ({ file, target })),
-  };
-}
-
 /** Line and column (1-based) of an offset in a text. */
-function lineColumn(text: string, at: number): string {
+export function lineColumn(text: string, at: number): string {
   const line = text.slice(0, at).split("\n").length;
   const column = at - text.lastIndexOf("\n", at - 1);
   return `${String(line)}:${String(column)}`;

@@ -6,8 +6,9 @@
  *   presets/       the venue presets (`paperlint:<name>`) and their JSON Schema
  *   presets/tex/   the LaTeX inputs `paperlint build` puts on TEXINPUTS
  *
- * `texSearchPath` is where an `\input` is looked for, in order. The build hands it to TeX and the
- * lint rules read includes through it, so the two cannot disagree about which file a paper means.
+ * `texSearchPath` is where an `\input` is looked for, in order. The build hands it to TeX; lint does
+ * not search for an include at all — it reads the files TeX read, from the build's record
+ * (docs/design/paper-sources.md §1).
  */
 import { fileURLToPath } from "node:url";
 

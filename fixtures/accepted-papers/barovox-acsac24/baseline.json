@@ -2,10 +2,13 @@
   "$comment": [
     "What the rules say about this accepted paper today. Growth fails; a drop never does.",
     "Each count is classified in ../README.md, 'What the rules say about the corpus'.",
-    "Recorded when the paper joined the corpus, 2026-09-29."
+    "Recorded when the paper joined the corpus, 2026-09-29.",
+    "bib/reachable-entry over the databases bibtex opened (the record, tex-truth.json): 92 entries have no doi, url, arXiv id or \\url (55 of them cited in the committed paper.bbl, 37 uncited)."
   ],
   "findings": {
     "pdf/measured": 1,
-    "tex/claim-provenance": 28
+    "tex/claim-provenance": 28,
+    "paper/refs-checked": 1,
+    "bib/reachable-entry": 92
   }
 }

@@ -1,106 +1,162 @@
 /**
- * The reading every parse-tree rule shares (`readPaper`), the files of the paper's body that lint
- * reads on their own (`bodyFiles`), and where a finding of the assembled text is reported
- * (`reportInPaper`).
+ * The reading every parse-tree rule shares (`readPaper`): the paper's text with the files TeX read
+ * spliced in — the files the build's record lists, and no others — and where a finding of that text
+ * is reported (`reportInPaper`). The record fed to it is TeX's own answer for a planted paper
+ * (`fixtures/paper-sources/<name>/tex-truth.json`).
  */
 import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import { join } from "node:path";
 import { texInputsDir } from "./package-dirs.ts";
-import { bodyFiles, readPaper, reportInPaper } from "./tex-paper.ts";
+import { readPaper, reportInPaper } from "./tex-paper.ts";
+import {
+  builtFixture,
+  builtPaper,
+  fixtureFiles,
+} from "../test/recorded-fixture.ts";
 
-describe("readPaper — the paper as the rules read it", () => {
-  it("reads includes from the paper's own directory", () => {
-    const p = readPaper("/p/paper.tex", "x\\input{s/a}y", {
-      files: memoryFiles({ "/p/s/a.tex": "AAA" }),
-      latex: latexReader,
-    });
-    expect(p.text).toBe("xAAAy");
+/** What `readPaper` reads with: the files held in memory, the LaTeX reader, the record's schema. */
+const proseDeps = (files: Record<string, string>) => ({
+  files: memoryFiles(files),
+  latex: latexReader,
+  codec: sourcesCodec,
+});
+
+const MAIN = "/p/paper.tex";
+const textOf = (files: Record<string, string>): string => files[MAIN] ?? "";
+
+describe("readPaper — the paper as the rules read it, from the files TeX read", () => {
+  it("🔴 splices a file the record lists where its include stands, and TeX's end of line after it", () => {
+    // p1: TeX read sections/intro.tex, and the file's last line ends with a newline.
+    const files = builtFixture("p1", "/p");
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    const main = textOf(files);
+    const intro = files["/p/sections/intro.tex"] ?? "";
+    expect(p.text).toBe(main.replace("\\input{sections/intro}", intro));
     expect(p.main).toBe("paper.tex");
   });
 
-  it("an include the paper's directory lacks is found in paperlint's own inputs, as the build finds it", () => {
-    const p = readPaper("/p/paper.tex", "x\\input{guards}y", {
-      files: memoryFiles({ [join(texInputsDir(), "guards.tex")]: "G" }),
-      latex: latexReader,
-    });
-    expect({ text: p.text, missing: p.missing }).toEqual({
-      text: "xGy",
-      missing: [],
-    });
+  it("an include behind a comment or `\\iffalse` is not spliced: the record does not list it", () => {
+    const files = builtFixture("p1", "/p");
+    const { text } = readPaper(MAIN, textOf(files), proseDeps(files));
+    expect(text).not.toContain("Dead section");
+    expect(text).not.toContain("Parked section");
   });
 
-  it("the paper's directory comes first: its file wins over paperlint's of the same name", () => {
-    const p = readPaper("/p/paper.tex", "\\input{guards}", {
-      files: memoryFiles({
-        "/p/guards.tex": "mine",
-        [join(texInputsDir(), "guards.tex")]: "package",
-      }),
-      latex: latexReader,
-    });
-    expect(p.text).toBe("mine");
+  it("🔴 a file the text names after \\end{document} is not spliced: TeX never read it", () => {
+    // v23-parked-include: `\input{parked}` stands past the end of the document; parked.tex is on
+    // disk, and the record lists paper.tex alone.
+    const files = builtFixture("v23-parked-include", "/p");
+    expect(files["/p/parked.tex"]).toBeDefined();
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    expect(p.text).toBe(textOf(files));
+    expect(p.text).not.toContain("\\bibliography{old}");
+  });
+
+  it("🔴 a .tex a filecontents block wrote is spliced where the body \\input's it: TeX typeset its text", () => {
+    // v29-generated-input: the record lists body.tex, which the block in paper.tex wrote.
+    const files = builtFixture("v29-generated-input", "/p");
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    expect(p.text).toBe(
+      textOf(files).replace("\\input{body}", files["/p/body.tex"] ?? ""),
+    );
+    expect([...new Set(p.segments.map((s) => s.file))]).toEqual([
+      "paper.tex",
+      "body.tex",
+    ]);
+  });
+
+  it("🔴 with no record, the paper is paper.tex alone: its includes are not read", () => {
+    const files = fixtureFiles("p1", "/p");
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    expect(p.text).toBe(textOf(files));
+    expect(p.segments).toHaveLength(1);
+  });
+
+  it("🔴 with a stale record, the paper is paper.tex alone", () => {
+    const files = {
+      ...builtFixture("p1", "/p"),
+      "/p/sections/intro.tex": "\\section{Changed}\n",
+    };
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    expect(p.text).toBe(textOf(files));
   });
 });
 
-describe("bodyFiles — the files of the body lint reads on their own", () => {
-  const doc = (preamble: string, body: string): string =>
-    `\\documentclass{article}\n${preamble}\n\\begin{document}\n${body}\n\\end{document}\n`;
-  const files = (extra: Record<string, string> = {}) =>
-    memoryFiles({
-      "/p/macros.tex": "\\newcommand{\\x}{y}",
-      "/p/sections/a.tex": "A\n\\input{sections/b}\n",
-      "/p/sections/b.tex": "B",
+describe("readPaper — which files, in which order", () => {
+  it("a file the record lists that is not on disk (it was absent when recorded and still is) contributes nothing", () => {
+    const files = builtPaper("/p", { "paper.tex": "x\\input{gone}y" }, [
+      { path: "paper.tex", role: "body" },
+      { path: "gone.tex", role: "body" },
+    ]);
+    expect(readPaper(MAIN, textOf(files), proseDeps(files)).text).toBe("xy");
+  });
+
+  it("files are found in the paper's directory only: paperlint's inputs are not the paper's", () => {
+    const files = {
+      ...builtPaper("/p", { "paper.tex": "x\\input{guards}y" }, [
+        { path: "paper.tex", role: "body" },
+      ]),
       [join(texInputsDir(), "guards.tex")]: "G",
-      ...extra,
-    });
-
-  it("every file an include in the document body brings in, nested ones too, by absolute path", () => {
-    expect(
-      bodyFiles("/p/paper.tex", doc("", "\\input{sections/a}"), {
-        files: files(),
-        latex: latexReader,
-      }),
-    ).toEqual({
-      files: ["/p/sections/a.tex", "/p/sections/b.tex"],
-      missing: [],
-    });
+    };
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    expect(p.text).toBe("xy");
   });
 
-  it("not a preamble include (macros), and not a file found only in paperlint's inputs", () => {
-    expect(
-      bodyFiles(
-        "/p/paper.tex",
-        doc("\\input{macros}", "\\input{guards}\nText."),
-        { files: files(), latex: latexReader },
-      ),
-    ).toEqual({ files: [], missing: [] });
+  it("nested includes are spliced in the order TeX read them, each once", () => {
+    const files = builtPaper(
+      "/p",
+      {
+        "paper.tex": "A\n\\input{sections/a}\nZ\n",
+        "sections/a.tex": "a1\n\\input{sections/b}\na2\n",
+        "sections/b.tex": "b1",
+      },
+      [
+        { path: "paper.tex", role: "body" },
+        { path: "sections/a.tex", role: "body" },
+        { path: "sections/b.tex", role: "body" },
+      ],
+    );
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    expect(p.text).toBe("A\na1\nb1\n\na2\n\nZ\n");
+    expect([...new Set(p.segments.map((s) => s.file))]).toEqual([
+      "paper.tex",
+      "sections/a.tex",
+      "sections/b.tex",
+    ]);
   });
 
-  it("an include that resolves nowhere is named, with the file that wrote it", () => {
-    expect(
-      bodyFiles("/p/paper.tex", doc("", "\\input{gone}"), {
-        files: files(),
-        latex: latexReader,
-      }),
-    ).toEqual({ files: [], missing: [{ file: "paper.tex", target: "gone" }] });
-  });
-
-  it("a main file with no document environment: every include is the body", () => {
-    expect(
-      bodyFiles("/p/paper.tex", "\\input{sections/b}", {
-        files: files(),
-        latex: latexReader,
-      }),
-    ).toEqual({ files: ["/p/sections/b.tex"], missing: [] });
+  it("a preamble file the record lists is spliced too: it is a file of the paper", () => {
+    const files = builtPaper(
+      "/p",
+      {
+        "paper.tex": "\\input{macros}\n\\begin{document}\nText.\n",
+        "macros.tex": "\\newcommand{\\x}{y}\n",
+      },
+      [
+        { path: "paper.tex", role: "body" },
+        { path: "macros.tex", role: "preamble" },
+      ],
+    );
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    expect(p.text).toBe("\\newcommand{\\x}{y}\n\n\\begin{document}\nText.\n");
   });
 });
 
 describe("reportInPaper — where a finding of the assembled text is reported", () => {
-  const paper = readPaper("/p/paper.tex", "x\n\\input{a}\ny", {
-    files: memoryFiles({ "/p/a.tex": "one\ntwo" }),
-    latex: latexReader,
-  });
+  const main = "x\n\\input{a}\ny";
+  const paper = readPaper(
+    "/p/paper.tex",
+    main,
+    proseDeps(
+      builtPaper("/p", { "paper.tex": main, "a.tex": "one\ntwo" }, [
+        { path: "paper.tex", role: "body" },
+        { path: "a.tex", role: "body" },
+      ]),
+    ),
+  );
   const report = (
     at: { start: number; end: number } | null,
     messageId = "m",
@@ -144,5 +200,19 @@ describe("reportInPaper — where a finding of the assembled text is reported", 
     expect(report({ start: 6, end: 9 }, "unknown")).toEqual([
       { at: 2, message: "a.tex:2:1: unknown" },
     ]);
+  });
+});
+
+describe("readPaper — how an include names its file", () => {
+  it("🔴 an include spelled otherwise than the disk is the file the record names: TeX opened it by either spelling", () => {
+    const files = builtPaper(
+      "/p",
+      { "paper.tex": "x\\input{Sections/Intro}y", "sections/intro.tex": "I" },
+      [
+        { path: "paper.tex", role: "body" },
+        { path: "sections/intro.tex", role: "body" },
+      ],
+    );
+    expect(readPaper(MAIN, textOf(files), proseDeps(files)).text).toBe("xI\ny");
   });
 });

@@ -43,6 +43,7 @@ import type {
   AuthorFinding,
   BibEntry,
 } from "../../../skills/verify-citations/scripts/bib-authors.mjs";
+import { zip } from "remeda";
 import { messageOf } from "../../domain/text.ts";
 import { isRecord } from "../../domain/record.ts";
 
@@ -55,12 +56,13 @@ const describeAuthors = (f: AuthorFinding): string =>
     .filter(Boolean)
     .join("; ") + ` (DBLP: ${f.venue})`;
 
-const authorsOf = (key: string, a: AuthorBuckets): EntryVerdict["authors"] =>
-  a.findings.some((f) => f.key === key)
+/** bib-authors' answer for one entry, from its buckets for that entry alone. */
+const authorsOf = (a: AuthorBuckets): EntryVerdict["authors"] =>
+  a.findings.length > 0
     ? "mismatch"
-    : a.unchecked.some((u) => u.key === key)
+    : a.unchecked.length > 0
       ? "unchecked"
-      : a.matched.includes(key)
+      : a.matched.length > 0
         ? "match"
         : "skipped";
 
@@ -69,35 +71,44 @@ const authorsOf = (key: string, a: AuthorBuckets): EntryVerdict["authors"] =>
  * one, so "unresolvable" is not read as "every registry looked and found nothing". Nothing for a
  * confirmed work: a refusal after a confirmation changed nothing.
  */
-const unconfirmed = (
-  c: CiteVerdict | undefined,
-): readonly (string | undefined)[] =>
-  c && c.verdict !== "true"
+const unconfirmed = (c: CiteVerdict): readonly (string | undefined)[] =>
+  c.verdict !== "true"
     ? [c.reason, ...(c.refused ?? []).map((r) => `not asked: ${r}`)]
     : [];
 
-/** One entry's verdict from the two checkers' answers. */
-function entryVerdict(
-  key: string,
-  found: readonly CiteVerdict[],
-  a: AuthorBuckets,
-): EntryVerdict {
-  const c = found.find((x) => x.id === key);
-  const mismatch = a.findings.find((f) => f.key === key);
+/** One entry's verdict: verify-cites' answer for it, and bib-authors' buckets for it alone. */
+function entryVerdict(c: CiteVerdict, a: AuthorBuckets): EntryVerdict {
   const why = [
     ...unconfirmed(c),
-    mismatch ? describeAuthors(mismatch) : undefined,
-    a.unchecked.find((u) => u.key === key)?.why,
+    ...a.findings.map(describeAuthors),
+    ...a.unchecked.map((u) => u.why),
   ]
     .filter(Boolean)
     .join("; ");
   return {
-    key,
-    exists: c?.verdict ?? "unresolvable",
-    authors: authorsOf(key, a),
+    key: c.id,
+    exists: c.verdict,
+    authors: authorsOf(a),
     ...(why ? { why } : {}),
   };
 }
+
+/**
+ * bib-authors over each entry on its own, one after another as it would run them: its buckets name
+ * an entry by key, and two entries of a bibliography may share a key (two databases bibtex
+ * opened may each define it, with other metadata).
+ */
+const authorsOfEach = (
+  parsed: readonly BibEntry[],
+  d: Pick<ReturnType<typeof cachedDblp>, "lookup" | "pause">,
+): Promise<readonly AuthorBuckets[]> =>
+  parsed.reduce<Promise<readonly AuthorBuckets[]>>(
+    async (done, e) => [
+      ...(await done),
+      await authors.checkAuthors([e], { lookup: d.lookup, pause: d.pause }),
+    ],
+    Promise.resolve([]),
+  );
 
 /** Whether bib-authors will ask DBLP about this entry — the filter its `checkAuthors` applies. */
 const asksDblp = (e: BibEntry): boolean =>
@@ -212,8 +223,8 @@ export const referencesChecker =
   async (bib, cache) => {
     // Answers past MAX_AGE_DAYS are left out, so the run asks them again (and `grown` re-dates them).
     const usable = freshPart(cache, today());
-    const citations = cites.parseBib(bib);
-    const parsed = authors.parseBib(bib);
+    const citations = cites.citationsOf(bib);
+    const parsed = authors.authorEntries(bib);
     const store: Record<string, unknown> = Object.fromEntries(
       [...usable.citations].map(([k, v]) => [k, v.response]),
     );
@@ -237,16 +248,10 @@ export const referencesChecker =
           breaker,
         }),
       ),
-      authors.checkAuthors(parsed, {
-        lookup: d.lookup,
-        pause: d.pause,
-      }),
+      authorsOfEach(parsed, d),
     ]);
-    const keys = new Set([
-      ...found.map((c) => c.id),
-      ...a.findings.map((f) => f.key),
-    ]);
-    const entries = [...keys].map((key) => entryVerdict(key, found, a));
+    // Both lists are one per entry, in its order: so is the verdict list.
+    const entries = zip(found, a).map(([c, b]) => entryVerdict(c, b));
     return {
       check: { kind: "checked", entries },
       cache: grown({ cache, usable }, { store, dblp: d.dblp }, today),

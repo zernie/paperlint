@@ -48,7 +48,7 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
+import { basename, join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { z } from "zod";
 import {
@@ -57,6 +57,7 @@ import {
   recordedFindings,
   type Counts,
 } from "../../../fixtures/accepted-papers/baseline.ts";
+import { layRecord } from "../../recorded-fixture.ts";
 import { renderDetail } from "../../../lib/check.ts";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { check, missing } from "../need.ts";
@@ -864,23 +865,34 @@ function stepRerun(c: Consumer, view: SkillView, settings: Settings): void {
   }
 }
 
-// 🔴 "CLEAN" MEANS: EXIT 0, AND ONLY THE WARNINGS A CORRECT CORPUS MUST CARRY, one per paper:
-// the acmart paper extends agenticdev and is not built here, so `pdf/measured` says the venue
-// checks did not run; a paper made by `paperlint new` names no venue yet, and `pdf/measured`
-// says that. Their absence would be a green zero; any other finding is a false positive.
+// 🔴 "CLEAN" MEANS: EXIT 0, AND ONLY THE WARNINGS A CORRECT CORPUS MUST CARRY: no paper here is
+// built, so each paper.tex carries `paper/sources-fresh` saying what TeX reads is not recorded yet;
+// and the acmart paper extends agenticdev, so `pdf/measured` says the venue checks did not run, while
+// a paper made by `paperlint new` names no venue yet, and `pdf/measured` says that. Their absence
+// would be a green zero; any other finding is a false positive.
 const expectedWarnings =
   (papers: Record<string, RegExp>) =>
   (r: SpawnSyncReturns<string>): boolean => {
     try {
-      const ms = LintReport.parse(JSON.parse(r.stdout)).flatMap((f) =>
+      const report = LintReport.parse(JSON.parse(r.stdout));
+      const ms = report.flatMap((f) =>
         f.messages.map((m) => ({ ...m, file: f.filePath })),
       );
+      const isMain = (file: string): boolean => basename(file) === "paper.tex";
+      // Every paper of the corpus: one `paper/sources-fresh` on its paper.tex, saying it is not built.
+      const unbuilt = ms.filter((m) => m.ruleId === "paper/sources-fresh");
+      const rest = ms.filter((m) => m.ruleId !== "paper/sources-fresh");
       const want = Object.entries(papers);
       return (
         r.status === 0 &&
-        ms.length === want.length &&
+        unbuilt.length === report.filter((f) => isMain(f.filePath)).length &&
+        unbuilt.every(
+          (m) =>
+            m.severity === 1 && isMain(m.file) && NOT_BUILT.test(m.message),
+        ) &&
+        rest.length === want.length &&
         want.every(([paper, text]) =>
-          ms.some(
+          rest.some(
             (m) =>
               m.ruleId === "pdf/measured" &&
               m.severity === 1 &&
@@ -894,6 +906,8 @@ const expectedWarnings =
     }
   };
 const UNBUILT = /not built yet, so .*page limit/;
+/** `paper/sources-fresh` on a paper no build recorded: what TeX read is not known yet. */
+const NOT_BUILT = /the paper has not been built/;
 const NO_PRESET = /names no venue preset yet/;
 
 function stepLintClean(c: Consumer): void {
@@ -907,7 +921,7 @@ function stepLintClean(c: Consumer): void {
 
   // `paperlint new` from the INSTALLED package: the templates must have shipped in the tarball, and
   // what they scaffold must be what `paperlint lint` accepts — exit 0, not "missing
-  // PIPELINE-STATUS.md", with the one warning that no venue is chosen yet. Then the whole corpus
+  // PIPELINE-STATUS.md", with the warnings that no venue is chosen and nothing is built yet. Then the whole corpus
   // is linted again, now with the new paper in it.
   const fresh = sh(bin, ["new", "demo"], { cwd: consumer });
   if (
@@ -916,14 +930,15 @@ function stepLintClean(c: Consumer): void {
     existsSync(join(consumer, "papers", "demo", "paper.tex")) &&
     existsSync(join(consumer, "papers", "demo", "paperlint.json")) &&
     NO_PRESET.test(fresh.stdout) &&
-    /\(0 errors, 1 warning\)/.test(fresh.stdout)
+    NOT_BUILT.test(fresh.stdout) &&
+    /\(0 errors, 2 warnings\)/.test(fresh.stdout)
   ) {
     ok(
-      "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
+      "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the no-venue and not-built warnings",
     );
   } else {
     bad(
-      "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
+      "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the no-venue and not-built warnings",
       fresh.stdout + fresh.stderr,
     );
   }
@@ -957,6 +972,8 @@ function stepRealPaper(c: Consumer): void {
     recursive: true,
     verbatimSymlinks: true,
   });
+  // As a build leaves it: TeX's record of the files it read, from the snapshot beside the paper.
+  layRecord(join(consumer, "papers", REAL_PAPER));
   const realLint = sh(bin, ["lint", "--json"], { cwd: consumer });
   let found: Counts | null = null;
   try {

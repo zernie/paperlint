@@ -1,0 +1,205 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "IEEEtran.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "multirow.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "tcolorbox.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "ulem.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "mdframed.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "needspace.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "md-frame-0.mdf",
+      "role": "preamble"
+    },
+    {
+      "path": "soul.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "soul-ori.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "algorithmic.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "chat.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/secureBench.drawio.pdf",
+      "role": "body"
+    },
+    {
+      "path": "figures/confidence.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/open-closed.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/reasoning.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/reasoning-timing.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/variance.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/bias-no-context.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/bias-context.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/spearman.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/task-level.png",
+      "role": "body"
+    },
+    {
+      "path": "figures/asdfadf.png",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [
+    "references"
+  ],
+  "bibtex": {
+    "ran": true,
+    "databases": [
+      "references.bib"
+    ],
+    "keys": [
+      "gpt4",
+      "zaboli2023chatgpt",
+      "bubeck2023sparks",
+      "weidinger2021ethical",
+      "madaan2022text",
+      "wang2018glue",
+      "hendrycks2020measuring",
+      "liang2022holistic",
+      "yu2023kola",
+      "sei2024considerations",
+      "mitre-techniques",
+      "mitre-mitigations",
+      "cve2024",
+      "cwe1358",
+      "cisa_advisories",
+      "qi2023fine",
+      "gekhman2024does",
+      "gpt3.5",
+      "llama370b",
+      "llama38b",
+      "gemini",
+      "jiang2023mistral",
+      "mixtral8x7b",
+      "aghaei2022securebert",
+      "bayer2024cysecbert",
+      "team2024gemma",
+      "roziere2023code",
+      "shestov2024finetuning",
+      "ferrag2023securefalcon",
+      "fang2024llm",
+      "li2024llm",
+      "silva2023repairllama",
+      "guo2023owl",
+      "sultana2023towards",
+      "tihanyi2024cybermetric",
+      "liucyberbench",
+      "li2023seceval",
+      "liu2023secqa",
+      "miao2023empirical",
+      "liu2023opseval",
+      "ullah2024llms",
+      "alam2024ctibench",
+      "feigenbaum1977art",
+      "petroni2019language",
+      "collins2014knowledge",
+      "cao2022kqa",
+      "kim2023prometheus",
+      "zheng2024judging",
+      "gpt4o",
+      "mitreOrg",
+      "brown2020language",
+      "kojima2022large",
+      "cvss3",
+      "lin-2004-rouge",
+      "ChatArena",
+      "chen2023quantifying",
+      "adlakha2024evaluating",
+      "lewis2020retrieval",
+      "LangChain",
+      "emb2024mxbai",
+      "faiss",
+      "zhang2024scaling",
+      "commoncrawl",
+      "barbaresi-2021-trafilatura",
+      "wang2022self",
+      "gao2023retrieval",
+      "vaswani2017attention",
+      "gptapi"
+    ],
+    "exit": 0,
+    "errors": []
+  },
+  "sha256": {
+    "paper.tex": "24a6f5626279f19afddb025e4e896b2804cacd10073ae48bc18c26389a42d19a",
+    "IEEEtran.cls": "da751920a317ed318b7b5cd7fa585a6cc7d28502d457856382e9be24b10a3bd7",
+    "multirow.sty": "1ad428e46dc0b736132d2c6e87eccbf0947091ca7581733165cfee765cd0992c",
+    "tcolorbox.sty": "1662a33c8c9011e14532d00357289352734525ab4c56b91fda6f28f8b128b13f",
+    "ulem.sty": "c97c15736b46cf13071c52070c07aa933fc8253748422d0df56e97286b563685",
+    "mdframed.sty": "df0b50bc333789b0a5d67d8a5decbe97745926df500906d5216a540421c857d6",
+    "needspace.sty": "7ba1b3fbfa0c29b103f531acdbd8d1e73cf50d543d48c0b3fcc99beb59ba20f9",
+    "md-frame-0.mdf": "eb5b30fa6b459ce7c9f994d12379a8dd0c2d7dd5d46d61e2f7066bf54ec1c47b",
+    "soul.sty": "0bc2aecc16e0a261db88863dfc5e26b0745abf3fc02caa97fcd076f2e56bf940",
+    "soul-ori.sty": "842e46b91b146591ebde3348a684b04fae92d46d4508482bc5036e1805e57f9c",
+    "algorithmic.sty": "7fe47ed7f8222c56452bd73bf0682e72023ece06d59207653a02e080a341118d",
+    "chat.png": "10b0433b4f016605726efab2110d642fa75d56b1c3ddb26d3d351a168975bbf2",
+    "figures/secureBench.drawio.pdf": "86cf2fa5f658976438486e7f08aca0640c2ad888d797055ec28057233e973173",
+    "figures/confidence.png": "eb5a3d643668dc2bc77b8b6cb9b1ec5536f9a1289ac96367025d59363e383ce2",
+    "figures/open-closed.png": "c63b6e7214f0a8b8b49610cfdef3611ec6ec01bd724ad6d2f577eef26f1a9c11",
+    "figures/reasoning.png": "d0d895b797f09fa53e2085300adb04eafe20a13380533f54593d8cbc0663320a",
+    "figures/reasoning-timing.png": "d0d895b797f09fa53e2085300adb04eafe20a13380533f54593d8cbc0663320a",
+    "figures/variance.png": "a4544aa1c9cf957d5a422032a483222c808bd53eceb2ddc2f855024872c606fc",
+    "figures/bias-no-context.png": "c63b6e7214f0a8b8b49610cfdef3611ec6ec01bd724ad6d2f577eef26f1a9c11",
+    "figures/bias-context.png": "c63b6e7214f0a8b8b49610cfdef3611ec6ec01bd724ad6d2f577eef26f1a9c11",
+    "figures/spearman.png": "ffb5cdf350329b5f29fbaff2400b10aacba55a6751948fbd3459ef9f6f28af06",
+    "figures/task-level.png": "018f53b3e98a86ae7f3b7d8a9505a5e49c21c8850dd0914b87e8cace8c93b7b8",
+    "figures/asdfadf.png": "f84c99d14ca819f0c224c34f86906643e66742ea48855d983fbf6c834ad9754e",
+    "references.bib": "c2c30a1e5b49274f9e06cd2cd5d31de341890d2205b247fc2219a53b3c5ad2d9"
+  }
+}

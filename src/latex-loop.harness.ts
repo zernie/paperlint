@@ -51,6 +51,7 @@ const latex = (o: Partial<LatexPass> = {}): LatexPass => ({
   markers: [],
   bib: NO_BIB,
   errorLines: [],
+  fls: null,
   ...o,
 });
 const bibtex = (o: Partial<BibtexPass> = {}): BibtexPass => ({

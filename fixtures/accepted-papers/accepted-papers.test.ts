@@ -18,8 +18,10 @@ import { describe, expect, it } from "vitest";
 import { run } from "../../src/cli.ts";
 import { latexReader } from "../../src/adapters/latex/index.ts";
 import { nodeFiles } from "../../src/adapters/node/index.ts";
+import { sourcesCodec } from "../../src/adapters/sources-record/index.ts";
 import { judgeRegister, measureRegister } from "../../src/register.ts";
 import { readPaper } from "../../src/tex-paper.ts";
+import { layRecord, withRecord } from "../../test/recorded-fixture.ts";
 import { useTempDir, writeTree } from "../../test/support.ts";
 import {
   compareToBaseline,
@@ -43,6 +45,8 @@ async function lintPaper(name: string): Promise<Record<string, number>> {
     recursive: true,
     verbatimSymlinks: true,
   });
+  // The paper as a build left it: lint reads the files TeX read from the record, not from the text.
+  layRecord(join(dir, "papers", name));
   const out: string[] = [];
   await run(["lint", "--json"], {
     cwd: dir,
@@ -99,8 +103,9 @@ describe.each(PAPERS)("tex/register on the accepted paper %s", (name) => {
   const m = measureRegister(
     latexReader.bodyProse(
       readPaper(file, readFileSync(file, "utf8"), {
-        files: nodeFiles,
+        files: withRecord(nodeFiles, join(HERE, name)),
         latex: latexReader,
+        codec: sourcesCodec,
       }).text,
     ),
   );

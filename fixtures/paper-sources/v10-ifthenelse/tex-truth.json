@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [
+    "anon"
+  ],
+  "bibtex": {
+    "ran": true,
+    "databases": [
+      "anon.bib"
+    ],
+    "keys": [
+      "anonkey"
+    ],
+    "exit": 0,
+    "errors": []
+  },
+  "sha256": {
+    "paper.tex": "33fd7452738f9968e48e6f454b21338a79c6d236597bf2be0e8e128db1452aad",
+    "anon.bib": "e56856cc2aa71a1277cdee0b941843de7e64216a47690d62850ca657835232d4"
+  }
+}

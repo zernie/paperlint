@@ -122,10 +122,13 @@ describe("paperlint lint — a paper with no venue preset chosen", () => {
     return { code, messages };
   }
 
-  it("gets exactly one warning naming the file to set, and exits 0", async () => {
+  it("gets the warning naming the file to set, besides the one that it is not built, and exits 0", async () => {
     const { code, messages } = await lintNew(null);
     expect(code).toBe(0);
-    expect(messages).toHaveLength(1);
+    expect(messages.map((m) => m.ruleId)).toEqual([
+      "pdf/measured",
+      "paper/sources-fresh",
+    ]);
     expect(messages[0]?.ruleId).toBe("pdf/measured");
     expect(messages[0]?.severity).toBe(1);
     expect(messages[0]?.message).toMatch(/names no venue preset yet/);
@@ -254,10 +257,11 @@ describe("paperlint new --venue msr", () => {
       log: (s: string) => out.push(s),
       err: () => {},
     });
-    // Guards: what remains is the reminder that the PDF is not built yet — a warning, not a finding
-    // about the paper.
-    expect(out.join("\n")).toMatch(/\(0 errors, 1 warning\)/);
+    // Guards: what remains is the reminder that the paper is not built yet — two warnings, not a
+    // finding about the paper: no PDF measured, no record of what TeX read.
+    expect(out.join("\n")).toMatch(/\(0 errors, 2 warnings\)/);
     expect(out.join("\n")).toMatch(/pdf\/measured/);
+    expect(out.join("\n")).toMatch(/paper\/sources-fresh/);
     expect(code).toBe(0);
   });
 });

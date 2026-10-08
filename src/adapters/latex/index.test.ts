@@ -697,3 +697,76 @@ describe("bodyEmphasis — each style, and edge cases", () => {
     expect(e && src.slice(e.span.start, e.span.end)).toBe("\\textbf{see it}");
   });
 });
+
+describe("latexReader.filecontents — the blocks that write a file, where they stand", () => {
+  const SRC =
+    "\\documentclass{x}\n" +
+    "\\begin{filecontents*}[overwrite]{refs.bib}\n@misc{a, title={A}}\n\\end{filecontents*}\n" +
+    "\\begin{document}\n" +
+    "\\begin{filecontents}{\\jobname.bib}\n@misc{b, title={B}}\n\\end{filecontents}\n" +
+    "\\end{document}\n" +
+    "\\begin{filecontents}{late.bib}\n@misc{c}\n\\end{filecontents}\n";
+
+  it("each live block, in order: the file it writes (\\jobname expanded), [overwrite], its span and body", () => {
+    const blocks = latexReader.filecontents(SRC, "paper");
+    expect(
+      blocks.map((b) => [
+        b.writes,
+        b.overwrite,
+        SRC.slice(b.body.start, b.body.end),
+      ]),
+    ).toEqual([
+      ["refs.bib", true, "@misc{a, title={A}}\n"],
+      ["paper.bib", false, "@misc{b, title={B}}\n"],
+    ]);
+    expect(SRC.slice(blocks[0]?.span.start, blocks[0]?.span.end)).toMatch(
+      /^\\begin\{filecontents\*\}.*\\end\{filecontents\*\}$/s,
+    );
+  });
+
+  it("a block inside a comment, or after \\end{document}, is not one TeX runs", () => {
+    expect(
+      latexReader.filecontents(
+        "% \\begin{filecontents}{x.bib}\n% @misc{z}\n% \\end{filecontents}\n\\begin{document}\n\\end{document}\n",
+        "paper",
+      ),
+    ).toEqual([]);
+  });
+
+  it("a block that names no file writes none: a group after its body's first text is no name, and a body may hold none", () => {
+    expect(
+      [
+        "\\begin{filecontents}\n@misc{z}\n\\end{filecontents}\n",
+        "\\begin{filecontents}\nplain text\n\\end{filecontents}\n",
+      ].flatMap((block) =>
+        latexReader.filecontents(
+          `${block}\\begin{document}\n\\end{document}\n`,
+          "paper",
+        ),
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("latexReader.filecontents — a file name on a line of its own", () => {
+  it("🔴 a name on the line after \\begin, the option before it or not: TeX takes it, and the body starts on the line after the name", () => {
+    // Measured with pdflatex: `\\begin{filecontents*}` then `{refs.bib}` on the next line writes
+    // refs.bib from the lines after the name (fixtures/paper-sources/v30-name-next-line).
+    const src =
+      "\\begin{filecontents*}\n{refs.bib}\n@misc{a, title={A}}\n\\end{filecontents*}\n" +
+      "\\begin{filecontents}[overwrite]\n  {two.bib}\n@misc{b}\n\\end{filecontents}\n" +
+      "\\begin{document}\n\\end{document}\n";
+    expect(
+      latexReader
+        .filecontents(src, "paper")
+        .map((b) => [
+          b.writes,
+          b.overwrite,
+          src.slice(b.body.start, b.body.end),
+        ]),
+    ).toEqual([
+      ["refs.bib", false, "@misc{a, title={A}}\n"],
+      ["two.bib", true, "@misc{b}\n"],
+    ]);
+  });
+});

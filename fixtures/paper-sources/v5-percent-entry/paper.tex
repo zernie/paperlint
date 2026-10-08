@@ -1,0 +1,20 @@
+\documentclass{article}
+\begin{filecontents*}[overwrite]{refs.bib}
+@misc{inline2024,
+  title = {The Inline Entry},
+  author = {Doe, Jane},
+  year = {2024},
+  url = {https://example.org/inline}
+}
+% @misc{dead2020,
+%   title = {The Entry Behind a Percent Sign},
+%   author = {Moe, Max},
+%   year = {2020},
+%   url = {https://example.org/dead}
+% }
+\end{filecontents*}
+\begin{document}
+Text that cites~\cite{inline2024} and~\cite{dead2020}.
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}

@@ -13,9 +13,15 @@ import {
   checkAuthors,
   claimsPublished,
   dblpHits,
-  parseBib,
+  authorEntries,
   surnames,
 } from "./bib-authors.mjs";
+import { bibReader } from "#src/adapters/bibtex/index";
+import { absolutePath } from "#src/domain/paths";
+
+/** This check's entries of a BibTeX text, read by the one bibtex reader. */
+const entriesIn = (bib) =>
+  authorEntries(bibReader.readFile(absolutePath("/p/refs.bib"), bib).entries);
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -215,35 +221,27 @@ test("dblpHits: no hits is an empty list; 429 is retryable; other errors are not
   );
 });
 
-test("parseBib reads quoted and bare field values, and a field that is absent", () => {
+test("authorEntries: names written family first (`and others` kept), a quoted value, a field that is absent", () => {
   assert.deepEqual(
-    parseBib(
-      '@article{k, author = "Ada Lovelace", title = {T}, journal = J, }',
+    entriesIn(
+      '@article{k, author = "Ada Lovelace and van der Berg, Jan and others", title = {The {BERT} Model}, journal = {J}}\n@misc{untitled, author = {Hopper, Grace}}',
     ),
     [
       {
         type: "article",
         key: "k",
-        author: "Ada Lovelace",
-        title: "T",
+        author: "Lovelace, Ada and van der Berg, Jan and others",
+        title: "The BERT Model",
         booktitle: "",
         journal: "J",
       },
-    ],
-  );
-});
-
-test("parseBib: braces nested inside a value, and a bare last value with no comma after it", () => {
-  assert.deepEqual(
-    parseBib("@article{k, title = {The {BERT} Model}, journal = J}"),
-    [
       {
-        type: "article",
-        key: "k",
-        author: "",
-        title: "The {BERT} Model",
+        type: "misc",
+        key: "untitled",
+        author: "Hopper, Grace",
+        title: "",
         booktitle: "",
-        journal: "J",
+        journal: "",
       },
     ],
   );

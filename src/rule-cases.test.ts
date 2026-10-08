@@ -17,7 +17,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
-import { bibHash } from "./references.ts";
+import { recordText } from "../test/recorded-fixture.ts";
 import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -172,31 +172,83 @@ const built = (
 
 const BIB =
   "@article{a,\n  title = {A},\n  author = {Doe, J.},\n  year = {2026},\n  doi = {10.1/x}\n}\n";
-const sha = bibHash({ source: "refs.bib", text: BIB, offset: 0 });
-/** A paper citing refs.bib, with its references record (`status`, `entries`) or none. */
+/** The hash the build records for a bibliography that is BIB alone (`bibHash` over its one text). */
+const sha: string = sha256Hex(new TextEncoder().encode(BIB));
+/** The paper `cited` builds: it cites refs.bib. */
+const CITING = tex("See~\\cite{a}.\n\\bibliography{refs}");
+const digest = (text: string): string =>
+  sha256Hex(new TextEncoder().encode(text));
+/**
+ * A paper citing refs.bib that was built — TeX read paper.tex, bibtex opened refs.bib and typeset `a`
+ * — with its references record (`status`, `entries`) or none.
+ */
 const cited = (
   body: Record<string, unknown> | null,
   bibSha = sha,
 ): Record<string, string> =>
-  paper(tex("See~\\cite{a}.\n\\bibliography{refs}"), {
+  paper(CITING, {
     [`${P}/refs.bib`]: BIB,
+    [`${P}/_build/sources.json`]: JSON.stringify({
+      schema: 1,
+      inputs: [{ path: "paper.tex", role: "body" }],
+      written: [],
+      bibdata: ["refs"],
+      bibtex: {
+        ran: true,
+        databases: ["refs.bib"],
+        keys: ["a"],
+        exit: 0,
+        errors: [],
+      },
+      sha256: { "paper.tex": digest(CITING), "refs.bib": digest(BIB) },
+    }),
     ...(body === null
       ? {}
       : {
           [`${P}/_build/references.json`]: JSON.stringify({
-            schema: 1,
-            bib: { source: "refs.bib", sha256: bibSha },
+            schema: 3,
+            bib: { sources: ["refs.bib"], sha256: bibSha },
             ...body,
           }),
         }),
   });
-/** A paper whose bibliography is written inline, by `filecontents*`, as `bib/reachable-entry` reads it. */
+/** A paper whose bibliography is written inline, by `filecontents*[overwrite]`. */
 const inlineBib = (entry: string): string =>
-  `\\documentclass{article}\n\\begin{filecontents*}{refs.bib}\n${entry}\n\\end{filecontents*}\n\\begin{document}\nSee~\\cite{a}.\n\\bibliography{refs}\n\\end{document}\n`;
+  `\\documentclass{article}\n\\begin{filecontents*}[overwrite]{refs.bib}\n${entry}\n\\end{filecontents*}\n\\begin{document}\nSee~\\cite{a}.\n\\bibliography{refs}\n\\end{document}\n`;
+/** That paper as a build leaves it: the `.bib` TeX wrote from the block, and the record of the build. */
+const inlineBuilt = (entry: string): Record<string, string> => {
+  const paperTex = inlineBib(entry);
+  return paper(paperTex, {
+    [`${P}/refs.bib`]: `${entry}\n`,
+    [`${P}/_build/sources.json`]: recordText(
+      { "paper.tex": paperTex, "refs.bib": `${entry}\n` },
+      {
+        inputs: [["paper.tex", "body"]],
+        written: ["refs.bib"],
+        databases: ["refs.bib"],
+      },
+    ),
+  });
+};
 const checked = (exists: string, authors: string) => ({
   status: "checked",
   entries: [{ key: "a", exists, authors }],
 });
+
+// ── the build's record of the sources: what `paperlint build` would write after TeX read paper.tex ───
+
+/** A paper that was built: the record of its one file, hashed as it stands. */
+const sourced = (paperTex: string): Record<string, string> =>
+  paper(paperTex, {
+    [`${P}/_build/sources.json`]: JSON.stringify({
+      schema: 1,
+      inputs: [{ path: "paper.tex", role: "body" }],
+      written: [],
+      bibdata: [],
+      bibtex: { ran: false },
+      sha256: { "paper.tex": sha256Hex(new TextEncoder().encode(paperTex)) },
+    }),
+  });
 
 // ── a BlindConf paper, for the LaTeX venue rules ──────────────────────────────────────────────
 
@@ -517,7 +569,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       tree: cited(checked("true", "mismatch")),
       file: TEX_FILE,
       severity: 2,
-      line: 1,
+      line: 1, // refs.bib is a file the author keeps: the top of paper.tex, naming it
     },
     silent: cited(checked("true", "match")),
   },
@@ -526,7 +578,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       tree: cited(checked("false", "match")),
       file: TEX_FILE,
       severity: 2,
-      line: 1,
+      line: 1, // refs.bib is a file the author keeps: the top of paper.tex, naming it
     },
     silent: cited(checked("true", "match")),
   },
@@ -542,6 +594,10 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       line: 1,
     },
     silent: cited(checked("true", "match")),
+  },
+  "paper/sources-fresh": {
+    reports: { tree: paper(tex("x")), file: TEX_FILE, severity: 1, line: 1 },
+    silent: sourced(tex("x")),
   },
   "review/frontmatter": {
     reports: {
@@ -697,12 +753,12 @@ const CASES: Readonly<Record<string, RuleCases>> = {
   },
   "bib/reachable-entry": {
     reports: {
-      tree: paper(inlineBib("@book{a,\n  title = {A},\n  year = {2026}\n}")),
+      tree: inlineBuilt("@book{a,\n  title = {A},\n  year = {2026}\n}"),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: paper(inlineBib(BIB)),
+    silent: inlineBuilt(BIB.trimEnd()),
   },
   "pdf/fresh": {
     reports: onPdf(built({ pdf_sha256: "0".repeat(64) })),

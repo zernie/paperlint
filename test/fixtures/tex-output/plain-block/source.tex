@@ -1,0 +1,9 @@
+\documentclass{article}
+\begin{filecontents*}{refs.bib}
+@misc{plain2024, title={Plain}, author={Doe, Jane}, year={2024}}
+\end{filecontents*}
+\begin{document}
+Text~\cite{plain2024}.
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}

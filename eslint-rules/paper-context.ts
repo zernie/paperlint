@@ -4,9 +4,10 @@
  * ESLint lints one file at a time. A paper whose body is in `sections/*.tex` is several files, and
  * two questions are about the paper, not the file: which reference form (`Fig.` or `Figure`) the
  * paper uses most, and whether the build `paper.tex` declares is a review build. The CLI knows the
- * files (it resolves the includes the way the build does, `bodyFiles` in src/tex-paper.ts) and puts
- * them under `settings.paperlint.paper`
- * for `paper.tex` and for every file it includes. A rule reads the other files from disk.
+ * files — the `.tex` files TeX read after `\begin{document}` in the last build, from the record the
+ * build wrote (`paperBodies` in src/paper-includes.ts) — and puts them under
+ * `settings.paperlint.paper` for `paper.tex` and for every one of them. A rule reads the other files
+ * from disk. A paper with no record, or a stale one, is `paper.tex` alone.
  *
  * No setting — a file linted outside `paperlint lint` — means a paper of one file: every rule
  * decides on the file it was handed, as it did before.

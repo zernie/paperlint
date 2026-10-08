@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import {
   checkFrozen,
+  filesToLint,
   FROZEN_FILE,
   judge,
   main,
@@ -164,8 +165,9 @@ test("main: problems are listed and fail; a clean count passes", async () => {
   );
 });
 
-// Lints the whole of src/ with the real config: ~3 s alone, 5.6 s measured under c8 with the
-// suite running in parallel — past vitest's 5 s default, so the budget is stated here.
+// Loads the real config (about 2.5 s) and lints the src/ files that carry a directive (21 of 223),
+// measured 2026-10-07: 5.5 s alone, 10–11 s under c8 — past vitest's 5 s default, so the budget is
+// stated here. Linting all of src/ took 22–23 s under c8 and timed out with the suite in parallel.
 test(
   "checkFrozen on this repository: nothing new, nothing grown — and on a tree with no src/, ESLint refuses loudly",
   {
@@ -185,6 +187,43 @@ test(
     assert.deepEqual(here.counts, here.frozen);
   },
 );
+
+test("filesToLint: every src/ file whose text carries an eslint-disable directive, in any form — and no other", () => {
+  const root = useTempDir("layer-frozen-files-");
+  writeTree(root, {
+    "src/line.ts": "export const a = 1; // eslint-disable-line no-console\n",
+    "src/next.ts":
+      "// eslint-disable-next-line no-console\nexport const b = 1;\n",
+    "src/block.ts": "/* eslint-disable no-console */\nexport const c = 1;\n",
+    "src/deep/inner.ts":
+      "// eslint-disable-next-line x -- why\nexport const d = 1;\n",
+    "src/plain.ts": "export const e = 1;\n",
+    "lib/outside.ts": "// eslint-disable-next-line no-console\n",
+  });
+  assert.deepEqual(filesToLint(root), [
+    "src/block.ts",
+    "src/deep/inner.ts",
+    "src/line.ts",
+    "src/next.ts",
+  ]);
+});
+
+test("checkFrozen with the real ESLint on a tree: a new legacy directive in a file the list does not name still fails", async () => {
+  const root = useTempDir("layer-frozen-real-");
+  writeTree(root, {
+    [FROZEN_FILE]: JSON.stringify({ files: {} }),
+    "eslint.config.mjs":
+      'export default [{ files: ["src/**/*.ts"], rules: { "no-restricted-globals": ["error", "process"] } }];\n',
+    "src/plain.ts": "export const quiet = 1;\n",
+    "src/new.ts": `// eslint-disable-next-line no-restricted-globals -- ${IO}\nexport const env = process;\n`,
+  });
+  const r = await checkFrozen(root);
+  assert.deepEqual(r.counts, { "src/new.ts": { "no-restricted-globals": 1 } });
+  assert.match(
+    r.problems.join("\n"),
+    /^src\/new\.ts: a new legacy layer exemption/,
+  );
+});
 
 test("checkFrozen: a lint that returns no result reports that nothing was counted", async () => {
   const root = useTempDir("layer-frozen-empty-");

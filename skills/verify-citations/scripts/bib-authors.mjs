@@ -43,122 +43,60 @@
  * Usage:  node bib-authors.mjs <paper-dir-or-.bib-or-.tex> [--json]
  * Exit:   0 = no author-set/order differences   1 = differences found   2 = usage/IO error
  */
-import { readFileSync, existsSync, readdirSync } from "node:fs";
-import { join, extname } from "node:path";
+import { resolve } from "node:path";
+import { latexReader } from "#src/adapters/latex/index";
+import { nodeFiles } from "#src/adapters/node/index";
+import { sourcesCodec } from "#src/adapters/sources-record/index";
+import { absolutePath } from "#src/domain/paths";
+import { bibReader } from "#src/adapters/bibtex/index";
+import { bibliographyAt, bibliographyUnreadWhy } from "#src/paper-sources";
 import { isMain } from "../../paper-pipeline/scripts/consumer.mjs";
 
 const DBLP = "https://dblp.org/search/publ/api";
 
-/* ---------- input: a .bib, a .tex with filecontents, or a paper dir ---------- */
+/* ---------- input: the bibliography TeX reads, or a .bib named ---------- */
 
-function bibTextFrom(target) {
-  let file = target;
-  if (!existsSync(file)) die(`no such path: ${file}`);
-  if (!extname(file)) {
-    const names = readdirSync(file);
-    // 🔴 THE CANONICAL NAME FIRST, then the only candidate, and never "whichever
-    // turns up first" (review #189). It used to be `names.find(f => f.endsWith(".tex"))`,
-    // that is, the first in directory order. Measured: one of the papers in the corpus
-    // has FIVE drafts lying around (paper-CONSTRUCTIVE-…, paper-FOLDED-…, paper-SAFE-…),
-    // while PIPELINE-STATUS.md names `paper.tex` as the submitted source. The author
-    // check went off into a stale draft and printed a verdict about the WRONG
-    // bibliography — a gate that checks the wrong file is worse than a missing one,
-    // because it says "checked".
-    const pick = (ext) => {
-      const canon = names.find((f) => f === `paper${ext}`);
-      if (canon) return canon;
-      const all = names.filter((f) => f.endsWith(ext)).sort();
-      if (all.length === 1) return all[0];
-      if (all.length > 1) {
-        // We do not fail: a new check here would set up one more surface, and its
-        // home is decided by the ladder in the `CLAUDE.md` next to the papers, not by
-        // this script (the `frozen-checks` ratchet is what guards that). It is enough
-        // to SAY it out loud and to choose DETERMINISTICALLY — the header below prints
-        // which file was checked anyway, so the reader sees the choice.
-        console.error(
-          `⚠️ ${file} holds several ${ext} files and no canonical paper${ext}: ` +
-            `${all.join(", ")} — took ${all[0]}. If that is the wrong one, name the file explicitly.`,
-        );
-        return all[0];
-      }
-      return undefined;
-    };
-    const found = pick(".bib") || pick(".tex");
-    if (!found) die(`no .bib or .tex in ${file}`);
-    file = join(file, found);
-  }
-  const text = readFileSync(file, "utf-8");
-  if (file.endsWith(".bib")) return { text, file };
-  // Only a .bib and a .tex are read: any other file would fall through to the refs.bib beside it,
-  // and the report would name a file nobody asked about.
-  if (!file.endsWith(".tex"))
-    die(`${file} is not a .bib or a .tex — give the paper's .bib or paper.tex`);
-  // A .tex may carry the bibliography inline via filecontents — that is how our papers do it.
-  const m = text.match(
-    /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/,
-  );
-  if (m) return { text: m[1], file };
-  const sibling = join(file, "..", "refs.bib");
-  if (existsSync(sibling))
-    return { text: readFileSync(sibling, "utf-8"), file: sibling };
-  die(
-    `no bibliography found in ${file} (no filecontents block, no refs.bib beside it)`,
-  );
+const DEPS = {
+  files: nodeFiles,
+  codec: sourcesCodec,
+  latex: latexReader,
+  bib: bibReader,
+};
+
+/**
+ * The texts to read: a `.bib` as named; for a paper directory or a `.tex`, the databases the last
+ * build's bibtex opened (`_build/sources.json`) — `bibliographyAt` (src/paper-sources.ts) answers, and
+ * refuses in its words, "run `npx paperlint build` first" among them.
+ */
+function bibliographyFrom(target) {
+  const r = bibliographyAt(absolutePath(resolve(target)), DEPS);
+  if (!r.ok) die(bibliographyUnreadWhy(r.error));
+  const { texts } = r.value;
+  return { files: [...new Set(texts.map((x) => x.path))], texts };
 }
 
-/* ---------- a deliberately small bib reader ----------
- * Only three fields are needed (type, key, author, title, booktitle/journal), and a full
- * BibTeX grammar would be a second thing to maintain. Brace-depth counting is enough and
- * is exercised by the colocated test. */
-export function parseBib(text) {
-  const out = [];
-  const re = /@(\w+)\s*\{\s*([^,\s]+)\s*,/g;
-  let m;
-  while ((m = re.exec(text))) {
-    const [, type, key] = m;
-    let i = re.lastIndex,
-      depth = 1;
-    while (i < text.length && depth > 0) {
-      if (text[i] === "{") depth++;
-      else if (text[i] === "}") depth--;
-      i++;
-    }
-    const body = text.slice(re.lastIndex, i - 1);
-    out.push({ type: type.toLowerCase(), key, ...fields(body) });
-  }
-  return out;
-}
+/* ---------- entries: as the bibtex reader read them ---------- */
 
-function fields(body) {
-  const get = (name) => {
-    const r = new RegExp(`(?:^|[,\\s])${name}\\s*=\\s*`, "i");
-    const at = body.search(r);
-    if (at === -1) return "";
-    let i = body.indexOf("=", at) + 1;
-    while (/\s/.test(body[i])) i++;
-    if (body[i] === "{") {
-      let depth = 1,
-        j = i + 1;
-      while (j < body.length && depth > 0) {
-        if (body[j] === "{") depth++;
-        else if (body[j] === "}") depth--;
-        j++;
-      }
-      return body.slice(i + 1, j - 1);
-    }
-    if (body[i] === '"') {
-      const j = body.indexOf('"', i + 1);
-      return body.slice(i + 1, j);
-    }
-    const j = body.indexOf(",", i);
-    return body.slice(i, j === -1 ? undefined : j);
-  };
-  return {
-    author: get("author"),
-    title: get("title"),
-    booktitle: get("booktitle"),
-    journal: get("journal"),
-  };
+/** A name of a name list as BibTeX writes it, family part first: `von Last, First`, or the literal. */
+const writtenName = (n) =>
+  n.name ??
+  [[n.prefix, n.lastName].filter(Boolean).join(" "), n.firstName]
+    .filter(Boolean)
+    .join(", ");
+
+/**
+ * The entries this check reads, from the bibtex reader's (src/ports/bib-reader.ts): type, key, the
+ * author list written out (`and others` kept), title, booktitle and journal; "" for a field it lacks.
+ */
+export function authorEntries(entries) {
+  return entries.map((e) => ({
+    type: e.type,
+    key: e.key,
+    author: (e.names.author ?? []).map(writtenName).join(" and "),
+    title: e.fields.title ?? "",
+    booktitle: e.fields.booktitle ?? "",
+    journal: e.fields.journal ?? "",
+  }));
 }
 
 /* ---------- normalisation: surnames only, in order ---------- */
@@ -353,14 +291,22 @@ async function main() {
   if (!args[0])
     die("usage: bib-authors.mjs <paper-dir|file.bib|file.tex> [--json]");
 
-  const { text, file } = bibTextFrom(args[0]);
-  const parsed = parseBib(text);
+  const { files, texts } = bibliographyFrom(args[0]);
+  const file = files.join(", ");
+  const parsed = texts.flatMap((t) => authorEntries(t.entries));
   const entries = parsed.filter((e) => e.title && e.author);
   const { findings, skipped, unchecked } = await checkAuthors(parsed);
   if (asJson) {
     console.log(
       JSON.stringify(
-        { file, entries: entries.length, findings, skipped, unchecked },
+        {
+          file: files[0],
+          files,
+          entries: entries.length,
+          findings,
+          skipped,
+          unchecked,
+        },
         null,
         2,
       ),
