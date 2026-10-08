@@ -105,6 +105,13 @@ describe("paper/section-word", () => {
     expect(ids(await lint(src), "paper/section-word")).toEqual([]);
   });
 
+  it("🔴 silent on a bibliography whose file name stands on the line after \\begin{filecontents*}", async () => {
+    const src =
+      "\\documentclass{acmart}\n\\begin{filecontents*}\n{refs.bib}\n@misc{k, note = {see §5}, url = {https://x.org}}\n\\end{filecontents*}\n" +
+      "\\begin{document}\nSection~\\ref{a}.\n\\end{document}\n";
+    expect(ids(await lint(src), "paper/section-word")).toEqual([]);
+  });
+
   it("🔴 a cleveref name definition is not prose: silent, and --fix leaves it as written", async () => {
     const src =
       "\\documentclass{article}\n\\usepackage{cleveref}\n\\crefname{section}{§}{§§}\n\\Crefname{section}{§}{§§}\n" +

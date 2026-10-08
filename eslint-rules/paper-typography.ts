@@ -92,14 +92,16 @@ interface Run {
 }
 
 /**
- * The inline bibliography — a `filecontents` block writing a `.bib` — with its offsets: the span the
- * markup rules skip. Which bibliography TeX reads is the build's record (`_build/sources.json`, docs/design/paper-sources.md §1);
+ * The inline bibliography — a `filecontents` block writing a `.bib`, its name on the `\begin` line or
+ * after white space on a later one, as TeX takes it — with its offsets: the span the markup rules
+ * skip. Which bibliography TeX reads is the build's record (`_build/sources.json`,
+ * docs/design/paper-sources.md §1);
  * this range only says which bytes are not prose, and moves onto the one projection of live text
  * with the rest of `skippedRanges` (Q3, docs/design/paper-sources.md §10).
  */
 function bibRange(text: string): BibRange | null {
   const m =
-    /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/d.exec(
+    /\\begin\{filecontents\*?\}\s*(?:\[[^\]]*\]\s*)?\{[^}]*\.bib\}[^\n]*\n([\s\S]*?)\\end\{filecontents\*?\}/d.exec(
       text,
     );
   if (!m) return null;

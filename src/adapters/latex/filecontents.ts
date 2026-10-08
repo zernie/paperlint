@@ -6,7 +6,9 @@
  * (docs/design/paper-sources.md §1).
  *
  * unified-latex reads a `filecontents` environment as verbatim; its option and file name are the
- * first characters of that node, and its body starts on the next line, as LaTeX's own reader starts it.
+ * first things in that node, white space between them — a line break too: `\begin{filecontents*}` with
+ * `{refs.bib}` on the next line writes `refs.bib` (measured with pdflatex) — and its body starts on the
+ * line after the name, as LaTeX's own reader starts it.
  * A block is live when the tree keeps it: a comment is a node of its own, `\iffalse … \fi` is cut at
  * parse (`conditionals.ts`), and nothing after `\end{document}` is read (`liveRoot`).
  */
@@ -38,10 +40,21 @@ export const written = (name: Name): string =>
     .join("")
     .trim();
 
+/** The options of `[a, b]`, each trimmed. */
+const optionsOf = (option: string): readonly string[] =>
+  option
+    .replace(/^\[|\]$/g, "")
+    .split(",")
+    .map((o) => o.trim());
+
+/** What may stand before the name: nothing, or one `[options]` — anything else is a block with no name. */
+const OPTION = /^(?:\[[^\]]*\])?$/;
+
 /**
  * One verbatim `filecontents` node as a block: its name, option, and body. unified-latex reads the
- * whole environment as verbatim, so its first line — `[options]{name}` and what TeX ignores after
- * it — is parsed on its own, and the name read off that tree like a declaration's.
+ * whole environment as verbatim, so its text is parsed on its own and the name — the first group, with
+ * only white space and an option before it — read off that tree like a declaration's. The body starts
+ * on the line after the one the name ends on; what TeX ignores after the name on that line is no body.
  */
 export function blockOf(
   src: string,
@@ -52,22 +65,25 @@ export function blockOf(
     // The node runs from `\begin{env}` to past `\end{env}`.
     const headAt = span.start + `\\begin{${n.env}}`.length;
     const end = span.end - `\\end{${n.env}}`.length;
-    const line = src.slice(headAt, end).split("\n", 1).join("");
-    const nodes = parseLatex(line).root.content;
+    const nodes = parseLatex(src.slice(headAt, end)).root.content;
     const at = nodes.findIndex((x) => x.type === "group");
-    if (at < 0) return [];
-    const options = written(argumentPieces(nodes.slice(0, at), null))
-      .replace(/^\[|\]$/g, "")
-      .split(",")
-      .map((o) => o.trim());
-    return [
-      {
-        writes: written(argumentPieces(nodes.slice(at, at + 1), jobname)),
-        overwrite: options.includes("overwrite") || options.includes("force"),
-        span,
-        body: { start: Math.min(headAt + line.length + 1, end), end },
-      },
-    ];
+    const option = written(
+      argumentPieces(nodes.slice(0, Math.max(at, 0)), null),
+    );
+    const name = nodes[at];
+    if (name === undefined || !OPTION.test(option)) return [];
+    const options = optionsOf(option);
+    return inPlace(placeOf(name), (named) => {
+      const lineEnd = src.indexOf("\n", headAt + named.end);
+      return [
+        {
+          writes: written(argumentPieces([name], jobname)),
+          overwrite: options.includes("overwrite") || options.includes("force"),
+          span,
+          body: { start: lineEnd < 0 ? end : Math.min(lineEnd + 1, end), end },
+        },
+      ];
+    });
   });
 }
 
