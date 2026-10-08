@@ -224,3 +224,43 @@ describe("bibliographyAt on the planted papers, with the record TeX wrote for ea
     expect(at(disk, "/p")).toEqual(["/p", files]);
   });
 });
+
+describe("bibliographyAt — an @string one database defines and a later one uses", () => {
+  /** Each text read, with each entry's author and booktitle as the reader read them. */
+  const fieldsAt = (name: string) => {
+    const p = planted(name);
+    const r = bibliographyAt(
+      absolutePath("/p"),
+      depsOf(built("/p", leftByTeX(p), p.record)),
+    );
+    return r.ok
+      ? r.value.texts.map((t) => [
+          t.path,
+          t.entries.map((e) => [
+            e.key,
+            e.names["author"],
+            e.fields["booktitle"],
+          ]),
+        ])
+      : r.error;
+  };
+  const LATE = [
+    "late",
+    [{ lastName: "Lovelace", firstName: "Ada" }],
+    "Proceedings of the Shared Venue",
+  ];
+
+  it("🔴 v27-shared-string: references.bib's entry is read with the @strings abbreviations.bib defined, as bibtex read it", () => {
+    expect(fieldsAt("v27-shared-string")).toEqual([
+      ["/p/abbreviations.bib", []],
+      ["/p/references.bib", [LATE]],
+    ]);
+  });
+
+  it("🔴 v28-shared-string-block: a block that uses them is still the database TeX wrote, read where the author edits it", () => {
+    expect(fieldsAt("v28-shared-string-block")).toEqual([
+      ["/p/abbreviations.bib", []],
+      ["/p/paper.tex", [LATE]],
+    ]);
+  });
+});

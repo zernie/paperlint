@@ -1,0 +1,14 @@
+\documentclass{article}
+\begin{filecontents*}[overwrite]{refs.bib}
+@inproceedings{late,
+  author = who,
+  title = {A Title},
+  booktitle = venue,
+  year = 2020,
+}
+\end{filecontents*}
+\begin{document}
+Text that cites~\cite{late}.
+\bibliographystyle{plain}
+\bibliography{abbreviations,refs}
+\end{document}

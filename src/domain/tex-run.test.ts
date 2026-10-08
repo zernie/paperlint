@@ -79,6 +79,48 @@ describe("the .bib files TeX wrote", () => {
   });
 });
 
+describe("a .tex TeX wrote and then read — the paper's text, generated", () => {
+  it("🔴 a block that writes a .tex the body \\input's: the file is written AND an input, a body file — its text is in the PDF", () => {
+    // v29-generated-input: pass 1 writes body.tex and reads it after \begin{document}; the later
+    // passes find it there, read it in the preamble (the block's check) and again in the body.
+    const [first, last] = passes("v29-generated-input");
+    expect(first?.lines.filter((l) => l.path.endsWith("body.tex"))[0]).toEqual({
+      op: "OUTPUT",
+      path: "body.tex",
+    });
+    expect(
+      last?.lines.some((l) => l.op === "OUTPUT" && l.path === "body.tex"),
+    ).toBe(false);
+    expect(filesOfRun(passes("v29-generated-input"), BIBTEX_RAN)).toEqual({
+      inputs: [
+        { path: "paper.tex", role: "body" },
+        { path: "body.tex", role: "body" },
+      ],
+      written: ["body.tex"],
+    });
+  });
+
+  it("with [overwrite] the last pass writes it again before reading it: still an input", () => {
+    const fls = texOutput.fls(
+      [
+        "PWD /work/paper",
+        "INPUT paper.tex",
+        "INPUT ./body.tex",
+        "OUTPUT body.tex",
+        "OUTPUT paper.aux",
+        "INPUT ./body.tex",
+      ].join("\n"),
+    );
+    expect(filesOfRun([fls], BIBTEX_RAN)).toEqual({
+      inputs: [
+        { path: "paper.tex", role: "body" },
+        { path: "body.tex", role: "body" },
+      ],
+      written: ["body.tex"],
+    });
+  });
+});
+
 describe("what is not the paper's: its TeX tree, a sibling directory, what TeX writes", () => {
   it("the .bbl bibtex wrote is no input of the paper; with no bibtex run it is a file TeX read, and so is one", () => {
     const last = passes("v3-declared");

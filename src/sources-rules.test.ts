@@ -13,6 +13,7 @@ import {
   type SourcesRecord,
 } from "./domain/sources-record.ts";
 import { SOURCES_RULE_LEVELS, sourcesRules } from "./sources-rules.ts";
+import { builtFixture } from "../test/recorded-fixture.ts";
 
 const DIR = "/work/papers/p";
 const bytes = (s: string) => new TextEncoder().encode(s);
@@ -111,6 +112,27 @@ describe("paper/sources-fresh — reports", () => {
         "stale",
         "the paper changed since the last build (sections/a.tex edited) — run `npx paperlint build`; until then the files `paper.tex` includes are not linted, and the rules that read the bibliography say nothing",
       ],
+    ]);
+  });
+});
+
+describe("paper/sources-fresh — a .tex TeX wrote from a filecontents block", () => {
+  it("🔴 is a file of the paper: current as the build left it, stale once it is gone or edited", () => {
+    // v29-generated-input: the block in paper.tex wrote body.tex, and the body \input's it.
+    const built = builtFixture("v29-generated-input", DIR);
+    const cleaned = Object.fromEntries(
+      Object.entries(built).filter(([p]) => p !== `${DIR}/body.tex`),
+    );
+    expect([
+      lint(built),
+      lint(cleaned).map((r) => r.message),
+      lint({ ...built, [`${DIR}/body.tex`]: "edited\n" }).map(
+        (r) => r.messageId,
+      ),
+    ]).toEqual([
+      [],
+      [expect.stringContaining("(body.tex deleted)")],
+      ["stale"],
     ]);
   });
 });

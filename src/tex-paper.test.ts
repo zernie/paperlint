@@ -55,6 +55,19 @@ describe("readPaper — the paper as the rules read it, from the files TeX read"
     expect(p.text).not.toContain("\\bibliography{old}");
   });
 
+  it("🔴 a .tex a filecontents block wrote is spliced where the body \\input's it: TeX typeset its text", () => {
+    // v29-generated-input: the record lists body.tex, which the block in paper.tex wrote.
+    const files = builtFixture("v29-generated-input", "/p");
+    const p = readPaper(MAIN, textOf(files), proseDeps(files));
+    expect(p.text).toBe(
+      textOf(files).replace("\\input{body}", files["/p/body.tex"] ?? ""),
+    );
+    expect([...new Set(p.segments.map((s) => s.file))]).toEqual([
+      "paper.tex",
+      "body.tex",
+    ]);
+  });
+
   it("🔴 with no record, the paper is paper.tex alone: its includes are not read", () => {
     const files = fixtureFiles("p1", "/p");
     const p = readPaper(MAIN, textOf(files), proseDeps(files));

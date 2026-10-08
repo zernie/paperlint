@@ -266,6 +266,12 @@ describe("paperBodies — the body files of the record TeX's own build left", ()
     ).toEqual(["/papers/p/bibsetup.tex"]);
   });
 
+  it("🔴 a body .tex TeX wrote from a filecontents block is not handed to ESLint: its text is the block's, and a fix there is overwritten or splits it from the block", () => {
+    const files = builtFixture("v29-generated-input", "/papers/p");
+    expect(files["/papers/p/body.tex"]).toBeDefined();
+    expect(bodies(files)[0]?.files).toEqual([]);
+  });
+
   it("a directory without paper.tex is no paper", () => {
     expect(bodies({}, "/papers/none")).toEqual([]);
   });

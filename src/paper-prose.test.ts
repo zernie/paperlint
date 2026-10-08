@@ -3,7 +3,7 @@ import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import { paperProse } from "./paper-prose.ts";
-import { builtPaper } from "../test/recorded-fixture.ts";
+import { builtFixture, builtPaper } from "../test/recorded-fixture.ts";
 
 const SRC = [
   "\\documentclass{article}",
@@ -60,4 +60,19 @@ it("a citation stands as `[1]` and a cross-reference as `1`, so the sentence sti
       codec: sourcesCodec,
     }).body,
   ).toBe("It holds [1]. It is shown (Section 1).");
+});
+
+it("🔴 a .tex a filecontents block wrote and the body \\input's is prose once: spliced where TeX read it, the block's body no prose", () => {
+  // v29-generated-input: TeX recorded body.tex — written by the block, read after \begin{document}.
+  const files = builtFixture("v29-generated-input", "/p");
+  const src = files["/p/paper.tex"] ?? "";
+  const { body } = paperProse("/p/paper.tex", src, {
+    files: memoryFiles(files),
+    latex: latexReader,
+    codec: sourcesCodec,
+  });
+  expect(
+    body.match(/This sentence is typeset from a file a block wrote\./g),
+  ).toHaveLength(1);
+  expect(body).toMatch(/^Before the generated file\. This sentence/);
 });

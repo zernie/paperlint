@@ -111,3 +111,53 @@ describe("the bibtex reader — what a copy is compared on, and what it leaves t
     expect(read(text).entries.map((e) => e.key)).toEqual(["a1", "a3"]);
   });
 });
+
+describe("the bibtex reader — databases in sequence, as bibtex reads them", () => {
+  // bibtex reads the databases of `\\bibliography{abbreviations,references}` one after the other, and an
+  // `@string` the first defines is in force in the second (fixtures/paper-sources/v27-shared-string:
+  // its .bbl typesets the expanded author and booktitle).
+  const ABBR =
+    '@string{venue = "Proceedings of the {\\"O}ld Venue"}\n@string{who = "Lovelace, Ada"}\n';
+  const REFS =
+    "@inproceedings{late, author = who, booktitle = venue # {, Main}}\n";
+  const SECOND = absolutePath("/p/references.bib");
+
+  it("🔴 an @string an earlier database defined is in force in a later one: read as one file holding both", () => {
+    const first = read(ABBR);
+    const second = bibReader.readFile(SECOND, REFS, first.strings);
+    const whole = read(ABBR + REFS);
+    expect([
+      second.entries.map((e) => [e.fields, e.names]),
+      second.written,
+    ]).toEqual([whole.entries.map((e) => [e.fields, e.names]), whole.written]);
+    expect(second.written[0]?.fields).toEqual({
+      author: "Lovelace, Ada",
+      booktitle: 'Proceedings of the {\\"O}ld Venue, Main',
+    });
+  });
+
+  it("the @strings in force after a database are those before it and its own, a redefinition winning; a block reads with them too", () => {
+    const first = read(ABBR);
+    const second = bibReader.readFile(
+      SECOND,
+      '@string{venue = "Newer"}\n',
+      first.strings,
+    );
+    expect([second.inherited, second.strings]).toEqual([
+      first.strings,
+      { VENUE: "Newer", WHO: "Lovelace, Ada" },
+    ]);
+    const tex = `\\begin{filecontents*}{refs.bib}\n${REFS}\\end{filecontents*}\n`;
+    const body = { start: tex.indexOf("@"), end: tex.indexOf("\\end") };
+    expect(
+      bibReader.read(absolutePath("/p/paper.tex"), tex, body, second.strings)
+        .written[0]?.fields.booktitle,
+    ).toBe("Newer, Main");
+  });
+
+  it("read alone, a database has nothing inherited: a name no @string defines stays unresolved", () => {
+    const alone = bibReader.readFile(SECOND, REFS);
+    expect([alone.inherited, alone.strings]).toEqual([{}, {}]);
+    expect(alone.written[0]?.fields.author).not.toBe("Lovelace, Ada");
+  });
+});
