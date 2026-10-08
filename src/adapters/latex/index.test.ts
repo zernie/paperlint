@@ -733,6 +733,27 @@ describe("latexReader.filecontents — the blocks that write a file, where they 
     ).toEqual([]);
   });
 
+  it("🔴 a name on the line after \\begin, the option before it or not: TeX takes it, and the body starts on the line after the name", () => {
+    // Measured with pdflatex: `\\begin{filecontents*}` then `{refs.bib}` on the next line writes
+    // refs.bib from the lines after the name (fixtures/paper-sources/v30-name-next-line).
+    const src =
+      "\\begin{filecontents*}\n{refs.bib}\n@misc{a, title={A}}\n\\end{filecontents*}\n" +
+      "\\begin{filecontents}[overwrite]\n  {two.bib}\n@misc{b}\n\\end{filecontents}\n" +
+      "\\begin{document}\n\\end{document}\n";
+    expect(
+      latexReader
+        .filecontents(src, "paper")
+        .map((b) => [
+          b.writes,
+          b.overwrite,
+          src.slice(b.body.start, b.body.end),
+        ]),
+    ).toEqual([
+      ["refs.bib", false, "@misc{a, title={A}}\n"],
+      ["two.bib", true, "@misc{b}\n"],
+    ]);
+  });
+
   it("a block that names no file writes none", () => {
     expect(
       latexReader.filecontents(

@@ -68,15 +68,22 @@ export const fixtureFiles = (
   dir: string,
 ): Record<string, string> => under(dir, planted(name).files);
 
-/** The text each `filecontents` block of `tex` writes: its lines between `\begin{…}` and the `\end{…}` after. */
+/**
+ * The text each `filecontents` block of `tex` writes: its lines after the one that holds the file's name
+ * — the `\begin{…}` line, or a later one when the name stands on a line of its own — up to the
+ * `\end{…}` after.
+ */
 function blockBodies(tex: string): readonly string[] {
   const lines = tex.split("\n");
   return lines.flatMap((l, at) => {
     if (!l.startsWith("\\begin{filecontents")) return [];
+    const named = l.slice(l.indexOf("}") + 1).includes("{")
+      ? at
+      : lines.findIndex((e, n) => n > at && e.includes("{"));
     const end = lines.findIndex(
       (e, n) => n > at && e.startsWith("\\end{filecontents"),
     );
-    return [`${lines.slice(at + 1, end).join("\n")}\n`];
+    return [`${lines.slice(named + 1, end).join("\n")}\n`];
   });
 }
 
