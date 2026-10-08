@@ -9,6 +9,11 @@
  *   recorded     a current record, and the databases bibtex opened that are on disk now (none when
  *                bibtex ran none), and the names of those that are not
  *
+ * The databases are read in the order bibtex opened them, each with the `@string`s the ones before it
+ * left in force — bibtex keeps one table of them across its databases, so `\\bibliography{abbrev,refs}`
+ * expands an entry of `refs.bib` with a `@string` of `abbrev.bib`. A database that is not on disk adds
+ * none: its `@string`s are bibtex's alone.
+ *
  * WHERE A FINDING ABOUT AN ENTRY GOES (`entryReports`). ESLint lints `paper.tex` only, so every finding
  * is a place in it. An entry of a `.bib` TeX wrote (a `filecontents` block) is reported on its own line
  * in the block of `paper.tex` whose body bibtex takes as the same database (`sameDatabase`) — a lookup
@@ -22,6 +27,7 @@ import { callerPath } from "./caller-path.ts";
 import {
   sameDatabase,
   type BibEntry,
+  type BibStrings,
   type BibText,
 } from "./domain/paper-sources.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
@@ -77,6 +83,38 @@ export type RecordedBibliography =
       readonly unread: readonly string[];
     };
 
+/** A database bibtex opened, read as it read it — or null when it is not on disk. */
+interface Opened {
+  readonly name: string;
+  readonly bib: BibText | null;
+}
+
+/**
+ * The databases `names`, in this order, each read with the `@string`s the ones before it left in force,
+ * as bibtex reads them. One that is not on disk adds none.
+ */
+const readInSequence = (
+  dir: string,
+  names: readonly string[],
+  deps: RecordedReadDeps,
+): readonly Opened[] =>
+  names.reduce<{
+    readonly inForce: BibStrings;
+    readonly read: readonly Opened[];
+  }>(
+    (acc, name) => {
+      const path = callerPath(resolve(dir, name));
+      const text = decoded(deps.files.readBytes(path));
+      const bib =
+        text === null ? null : deps.bib.readFile(path, text, acc.inForce);
+      return {
+        inForce: bib?.strings ?? acc.inForce,
+        read: [...acc.read, { name, bib }],
+      };
+    },
+    { inForce: {}, read: [] },
+  ).read;
+
 /** The bibliography the last build of the paper in `dir` read. */
 export function recordedBibliography(
   dir: string,
@@ -85,19 +123,14 @@ export function recordedBibliography(
   const r = paperRecord(dir, deps);
   if (r.kind !== "fresh") return { kind: "unrecorded", record: r };
   const { bibtex, written } = r.record;
-  const opened = (bibtex.ran ? bibtex.databases : [])
-    .filter(
+  const opened = readInSequence(
+    dir,
+    (bibtex.ran ? bibtex.databases : []).filter(
       (d, i, all) =>
         all.findIndex((o) => resolve(dir, o) === resolve(dir, d)) === i,
-    )
-    .map((name) => {
-      const path = callerPath(resolve(dir, name));
-      const text = decoded(deps.files.readBytes(path));
-      return {
-        name,
-        bib: text === null ? null : deps.bib.readFile(path, text),
-      };
-    });
+    ),
+    deps,
+  );
   return {
     kind: "recorded",
     record: r.record,
@@ -183,9 +216,15 @@ const blockHolding = (
         .filecontents(holder.text, JOBNAME)
         // The block that wrote this database: its file, then its text.
         .filter((b) => spelledIn([posix.normalize(b.writes)], db.name) !== null)
+        // Read as bibtex read the database: with the `@string`s in force before it.
         .map((b) => ({
           holder,
-          bib: deps.bib.read(holder.path, holder.text, b.body),
+          bib: deps.bib.read(
+            holder.path,
+            holder.text,
+            b.body,
+            db.bib.inherited,
+          ),
         })),
     )
     .find((b) => sameDatabase(b.bib, db.bib)) ?? null;

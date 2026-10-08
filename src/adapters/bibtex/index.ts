@@ -12,6 +12,11 @@
  * bibtex read, and `paper/refs-checked` names such an entry (`src/references.ts`).
  *
  * The parser gives each entry's text (`input`), not its place: each is found in the body in order.
+ *
+ * A database read after others starts with the `@string`s they left in force (`inherited`), as bibtex
+ * reads a paper's databases in sequence with one table of them: the parser takes them as its table of
+ * predefined `@string`s, which the database's own definitions override from where they stand. Each
+ * database is still parsed as its own text, so every entry keeps its place in the file that holds it.
  */
 import {
   parse,
@@ -23,6 +28,7 @@ import {
 import type {
   BibEntry,
   BibName,
+  BibStrings,
   BibText,
   WrittenEntry,
 } from "../../domain/paper-sources.ts";
@@ -116,21 +122,34 @@ const writtenOf = (e: Readonly<Entry>): WrittenEntry => ({
   ),
 });
 
-/** The database in `body` of `text`, the text of the file at `path`. */
-function read(path: AbsolutePath, text: string, body: Span): BibText {
+/**
+ * The database in `body` of `text`, the text of the file at `path`, read with the `@string`s
+ * `inherited` in force. The parser is handed a copy of them: it writes into its own.
+ */
+function read(
+  path: AbsolutePath,
+  text: string,
+  body: Span,
+  inherited: BibStrings = {},
+): BibText {
   const source = text.slice(body.start, body.end);
-  const lib = parse(source, OPTIONS);
+  const lib = parse(source, { ...OPTIONS, strings: { ...inherited } });
+  const asWritten = parse(source, { ...AS_WRITTEN, strings: { ...inherited } });
   return {
     path,
     text,
     body,
     entries: placed(finished(lib), source, body.start),
-    written: finished(parse(source, AS_WRITTEN)).map(writtenOf),
+    written: finished(asWritten).map(writtenOf),
     preamble: lib.preamble,
+    inherited,
+    // Its own as bibtex takes them: the reading that keeps LaTeX as written.
+    strings: { ...inherited, ...asWritten.strings },
   };
 }
 
 export const bibReader: BibReader = {
   read,
-  readFile: (path, text) => read(path, text, { start: 0, end: text.length }),
+  readFile: (path, text, inherited) =>
+    read(path, text, { start: 0, end: text.length }, inherited),
 };

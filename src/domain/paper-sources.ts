@@ -20,6 +20,15 @@ export interface BibName {
   readonly name?: string;
 }
 
+/**
+ * The `@string`s in force: each name as bibtex folds it (upper case) → its value as bibtex takes it,
+ * the `@string`s it used expanded and its LaTeX as written. bibtex reads a paper's databases one after
+ * the other with one table of them, so a `@string` an earlier database defines is in force in a later
+ * one (measured: `\\bibliography{abbreviations,references}` typesets an entry of `references.bib` with
+ * the author and booktitle `abbreviations.bib` defines; in the other order both are undefined).
+ */
+export type BibStrings = Readonly<Record<string, string>>;
+
 /** One entry of a database. */
 export interface BibEntry {
   /** Lower-cased (`@Article` → `article`). */
@@ -46,6 +55,10 @@ export interface BibText {
   readonly written: readonly WrittenEntry[];
   /** The `@preamble` commands, as written, in order: bibtex writes them into the `.bbl`. */
   readonly preamble: readonly string[];
+  /** The `@string`s the databases bibtex read before this one left in force: none for one read alone. */
+  readonly inherited: BibStrings;
+  /** The `@string`s in force after it — `inherited` and its own, a later one winning: what the next database starts with. */
+  readonly strings: BibStrings;
 }
 
 /**

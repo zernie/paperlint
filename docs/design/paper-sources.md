@@ -77,9 +77,15 @@ consumers on the fixture with that record. TeX is the expectation and the input 
 
 ## 4. One bibtex reader
 
-The port is `BibReader` (`src/ports/bib-reader.ts`: `read(path, text, body)` for a block,
-`readFile(path, text)` for a `.bib`). The adapter, `src/adapters/bibtex/`, is the only code that
-knows `@retorquere/bibtex-parser`. It reads each database twice:
+The port is `BibReader` (`src/ports/bib-reader.ts`: `read(path, text, body, inherited?)` for a block,
+`readFile(path, text, inherited?)` for a `.bib`). bibtex reads a paper's databases in sequence with one
+table of `@string`s, so a `@string` of `abbrev.bib` expands an entry of `refs.bib` under
+`\bibliography{abbrev,refs}` (measured; in the other order bibtex warns it is undefined).
+`recordedBibliography` reads the databases in the order bibtex opened them, each with the `strings` the
+one before it left in force (`inherited`), and reads a block with the `@string`s its database was read
+with; each database is still parsed as its own text, so each entry keeps its place in its own file.
+
+The adapter, `src/adapters/bibtex/`, is the only code that knows `@retorquere/bibtex-parser`. It reads each database twice:
 
 - **`entries`** — LaTeX read into text (`{\"u}` → `ü`, `\url{x}` → a link), names split into parts,
   `@string`s expanded where they are used. What the checks judge.
