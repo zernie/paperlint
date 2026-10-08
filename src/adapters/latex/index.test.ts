@@ -733,6 +733,22 @@ describe("latexReader.filecontents — the blocks that write a file, where they 
     ).toEqual([]);
   });
 
+  it("a block that names no file writes none: a group after its body's first text is no name, and a body may hold none", () => {
+    expect(
+      [
+        "\\begin{filecontents}\n@misc{z}\n\\end{filecontents}\n",
+        "\\begin{filecontents}\nplain text\n\\end{filecontents}\n",
+      ].flatMap((block) =>
+        latexReader.filecontents(
+          `${block}\\begin{document}\n\\end{document}\n`,
+          "paper",
+        ),
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("latexReader.filecontents — a file name on a line of its own", () => {
   it("🔴 a name on the line after \\begin, the option before it or not: TeX takes it, and the body starts on the line after the name", () => {
     // Measured with pdflatex: `\\begin{filecontents*}` then `{refs.bib}` on the next line writes
     // refs.bib from the lines after the name (fixtures/paper-sources/v30-name-next-line).
@@ -752,14 +768,5 @@ describe("latexReader.filecontents — the blocks that write a file, where they 
       ["refs.bib", false, "@misc{a, title={A}}\n"],
       ["two.bib", true, "@misc{b}\n"],
     ]);
-  });
-
-  it("a block that names no file writes none", () => {
-    expect(
-      latexReader.filecontents(
-        "\\begin{filecontents}\n@misc{z}\n\\end{filecontents}\n\\begin{document}\n\\end{document}\n",
-        "paper",
-      ),
-    ).toEqual([]);
   });
 });

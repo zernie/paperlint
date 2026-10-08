@@ -184,22 +184,6 @@ describe("bibliographyAt — every refusal in one vocabulary, naming the path an
     );
   });
 
-  it("🔴 a build whose bibtex also opened a database outside the paper directory (BIBINPUTS) is refused, not read in part", () => {
-    // Measured: with BIBINPUTS=../shared, bibtex's .blg names `Database file #2: shared.bib` and the
-    // .bbl typesets its entry; the paper directory holds refs.bib only.
-    const partly = built(
-      "/r",
-      { "paper.tex": doc("\\bibliography{refs,shared}"), "refs.bib": A },
-      {
-        inputs: [["paper.tex", "body"]],
-        databases: ["refs.bib", "shared.bib"],
-      },
-    );
-    expect(at(partly, "/r")).toBe(
-      "bibtex opened shared.bib in the last build of /r from outside it (its search path, BIBINPUTS), and paperlint reads only the paper's own databases — copy it into /r, or name each .bib to read it alone",
-    );
-  });
-
   it("a build whose bibtex read no database, and one whose databases are gone, have nothing to read", () => {
     const none = built(
       "/q",
@@ -221,6 +205,24 @@ describe("bibliographyAt — every refusal in one vocabulary, naming the path an
     );
     expect(at(gone, "/s")).toBe(
       "bibtex opened gone.bib in the last build of /s, and none of them is on disk now",
+    );
+  });
+});
+
+describe("bibliographyAt — a bibliography it can read only in part", () => {
+  it("🔴 a build whose bibtex also opened a database outside the paper directory (BIBINPUTS) is refused, not read in part", () => {
+    // Measured: with BIBINPUTS=../shared, bibtex's .blg names `Database file #2: shared.bib` and the
+    // .bbl typesets its entry; the paper directory holds refs.bib only.
+    const partly = built(
+      "/r",
+      { "paper.tex": doc("\\bibliography{refs,shared}"), "refs.bib": A },
+      {
+        inputs: [["paper.tex", "body"]],
+        databases: ["refs.bib", "shared.bib"],
+      },
+    );
+    expect(at(partly, "/r")).toBe(
+      "bibtex opened shared.bib in the last build of /r from outside it (its search path, BIBINPUTS), and paperlint reads only the paper's own databases — copy it into /r, or name each .bib to read it alone",
     );
   });
 });
