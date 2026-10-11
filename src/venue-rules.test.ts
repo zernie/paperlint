@@ -1215,6 +1215,7 @@ describe("judgeBodyEnd, on a venue it does not apply to", () => {
     kindProblem: null,
     blind: false,
     identity: null,
+    shape: null,
   });
 
   it("a kind with no body limit, or no kind: nothing to count against", () => {

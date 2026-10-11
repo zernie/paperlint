@@ -1,0 +1,31 @@
+% A small acmart sigconf paper with a known shape, built to acm.pdf for the venue-shape counter on a
+% real pdf.js read: an abstract of 26 words, two figures, one table, five numbered references.
+% Rebuild: pdflatex acm.tex (twice).
+\documentclass[sigconf,review,anonymous]{acmart}
+\settopmatter{printacmref=false}
+\begin{document}
+\title{Counting the Shape of a Small Paper}
+\author{Anonymous Author}
+\begin{abstract}
+We count the words, figures, tables and references of a small paper, so that a counter can be
+checked against a document whose shape is known.
+\end{abstract}
+\ccsdesc[500]{Software and its engineering}
+\keywords{measurement, venues}
+\maketitle
+\section{Introduction}
+Accepted papers have a shape. This paper has two figures and one table, and cites five
+works~\cite{a,b,c,d,e}.
+\begin{figure}[h]\centering\rule{2cm}{1cm}\caption{The first figure.}\end{figure}
+\begin{figure}[h]\centering\rule{2cm}{1cm}\caption{The second figure.}\end{figure}
+\begin{table}[h]\centering\caption{The only table}\begin{tabular}{ll}a & b\\\end{tabular}\end{table}
+\section{Conclusion}
+The counter reads what the reader sees.
+\begin{thebibliography}{9}
+\bibitem{a} A. One. 2020. First.
+\bibitem{b} B. Two. 2021. Second.
+\bibitem{c} C. Three. 2022. Third.
+\bibitem{d} D. Four. 2023. Fourth.
+\bibitem{e} E. Five. 2024. Fifth.
+\end{thebibliography}
+\end{document}

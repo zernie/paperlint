@@ -106,6 +106,7 @@
     "eslint.config.mjs",
     "fixtures",
     "!fixtures/accepted-papers",
+    "!fixtures/venue-shape",
     "hooks",
     "lib",
     "presets",

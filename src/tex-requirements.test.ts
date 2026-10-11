@@ -64,8 +64,8 @@ test("a template family with a venue's name and url is refused, naming each key"
     }),
     [
       "f.jsonc does not match venue-profile.schema.json:",
-      '  a template family names no venue: drop "name" — "name" and "url" belong to the venue presets that extend it',
-      '  a template family names no venue: drop "url" — "name" and "url" belong to the venue presets that extend it',
+      '  a template family names no venue: drop "name" — a venue\'s "name", "url", accepted papers ("shape") and where to find them ("accepted") belong to the venue presets that extend it',
+      '  a template family names no venue: drop "url" — a venue\'s "name", "url", accepted papers ("shape") and where to find them ("accepted") belong to the venue presets that extend it',
       "  f.jsonc: .name boolean schema is false",
       "  f.jsonc: .url boolean schema is false",
       '  f.jsonc: (top level) should match "then" schema',
@@ -144,4 +144,126 @@ test("identityHints: Ajv's null errors give none; a hint two violations share is
   const hints = identityHints({ errors: [missing, missing] });
   assert.equal(hints.length, 1);
   assert.deepEqual(hints, [identityHint(missing)]);
+});
+
+// ── the venue's accepted papers: `shape` (read by pdf/venue-shape) and `accepted` (by a skill) ──
+
+const VENUE = {
+  type: "venue",
+  name: "X",
+  url: "https://x.org/cfp",
+  extends: "paperlint:acm-sigconf",
+};
+const ROW = {
+  paper: "A Paper",
+  url: "https://arxiv.org/pdf/2501.00001",
+  pages: 12,
+  body_words: 8000,
+  figures: 7,
+  tables: 3,
+  abstract_words: 210,
+  references: null,
+};
+
+test("a venue's `shape` is parsed into one shape per paper, a null kept as not counted", () => {
+  const shape = {
+    source: "X 2025 accepted papers",
+    url: "https://x.org/accepted",
+    measured: "2026-10-11",
+    papers: [ROW],
+  };
+  assert.deepEqual(
+    parsePreset(JSON.stringify({ ...VENUE, shape }), "p.jsonc").shape,
+    {
+      source: "X 2025 accepted papers",
+      url: "https://x.org/accepted",
+      measured: "2026-10-11",
+      papers: [
+        {
+          paper: "A Paper",
+          url: "https://arxiv.org/pdf/2501.00001",
+          pages: 12,
+          shape: {
+            body_words: 8000,
+            figures: 7,
+            tables: 3,
+            abstract_words: 210,
+            references: null,
+          },
+        },
+      ],
+    },
+  );
+  assert.equal(parsePreset(JSON.stringify(VENUE), "p.jsonc").shape, null);
+});
+
+test("a `shape` row missing a measure is refused: a row is written by the script, whole", () => {
+  const row = Object.fromEntries(
+    Object.entries(ROW).filter(([k]) => k !== "figures"),
+  );
+  assert.equal(
+    refusalOf("v.jsonc", {
+      ...VENUE,
+      shape: {
+        source: "s",
+        url: "https://x.org/a",
+        measured: "2026-10-11",
+        papers: [row],
+      },
+    }),
+    [
+      "v.jsonc does not match venue-profile.schema.json:",
+      "  v.jsonc: .shape.papers[0] should have required property 'figures'",
+    ].join("\n"),
+  );
+});
+
+test("an `accepted` block: the per-year list needs `{year}`, a proxy needs its limits", () => {
+  const accepted = {
+    list: "https://{year}.x.org/accepted",
+    dblp: { key: "conf/x", url: "https://dblp.org/db/conf/x/x{year}.html" },
+    editions: [{ year: 2025, template: "IEEEtran", current_template: true }],
+    strong: [
+      {
+        kind: "distinguished-paper",
+        name: "Distinguished Paper Award",
+        url: "https://x.org/awards",
+        limits: "no list for 2026",
+      },
+    ],
+    access: [{ host: "dl.acm.org", note: "a challenge page" }],
+  };
+  assert.equal(refusalOf("v.jsonc", { ...VENUE, accepted }), "");
+  assert.equal(refusalOf("v.jsonc", { ...VENUE, accepted: {} }), "");
+  assert.equal(
+    refusalOf("v.jsonc", {
+      ...VENUE,
+      accepted: {
+        list: "https://x.org/accepted-2025",
+        strong: [{ kind: "best-paper", name: "Best", url: "https://x.org" }],
+      },
+    }),
+    [
+      "v.jsonc does not match venue-profile.schema.json:",
+      '  v.jsonc: .accepted.list should match pattern "^https://\\S*\\{year\\}\\S*$"',
+      "  v.jsonc: .accepted.strong[0] should have required property 'limits'",
+    ].join("\n"),
+  );
+});
+
+test("a template family carries no venue data: `shape` and `accepted` are refused on it", () => {
+  const refusal = refusalOf("f.jsonc", {
+    type: "family",
+    extends: "paperlint:acm-sigconf",
+    accepted: {},
+  });
+  assert.equal(
+    refusal,
+    [
+      "f.jsonc does not match venue-profile.schema.json:",
+      '  a template family names no venue: drop "accepted" — a venue\'s "name", "url", accepted papers ("shape") and where to find them ("accepted") belong to the venue presets that extend it',
+      "  f.jsonc: .accepted boolean schema is false",
+      '  f.jsonc: (top level) should match "then" schema',
+    ].join("\n"),
+  );
 });

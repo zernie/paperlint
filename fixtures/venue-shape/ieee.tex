@@ -1,0 +1,31 @@
+% A small IEEEtran paper with a known shape, built to ieee.pdf for scripts/measure-venue-shape.test.ts
+% and src/domain/venue-shape's counter on a real pdf.js read: an abstract of 26 words, two figures,
+% one table, five numbered references. Rebuild: pdflatex ieee.tex (twice).
+\documentclass[10pt,conference]{IEEEtran}
+\begin{document}
+\title{Counting the Shape of a Small Paper}
+\author{\IEEEauthorblockN{Anonymous Author}}
+\maketitle
+\begin{abstract}
+We count the words, figures, tables and references of a small paper, so that a counter can be
+checked against a document whose shape is known.
+\end{abstract}
+\begin{IEEEkeywords}
+measurement, venues
+\end{IEEEkeywords}
+\section{Introduction}
+Accepted papers have a shape. This paper has two figures and one table, and cites five
+works~\cite{a,b,c,d,e}.
+\begin{figure}[h]\centering\rule{2cm}{1cm}\caption{The first figure.}\end{figure}
+\begin{figure}[h]\centering\rule{2cm}{1cm}\caption{The second figure.}\end{figure}
+\begin{table}[h]\centering\caption{The only table}\begin{tabular}{ll}a & b\\\end{tabular}\end{table}
+\section{Conclusion}
+The counter reads what the reader sees.
+\begin{thebibliography}{9}
+\bibitem{a} A. One, ``First,'' 2020.
+\bibitem{b} B. Two, ``Second,'' 2021.
+\bibitem{c} C. Three, ``Third,'' 2022.
+\bibitem{d} D. Four, ``Fourth,'' 2023.
+\bibitem{e} E. Five, ``Fifth,'' 2024.
+\end{thebibliography}
+\end{document}

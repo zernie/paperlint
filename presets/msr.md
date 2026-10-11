@@ -79,10 +79,28 @@ references is found by hyperref's anchor, and without it is counted as reference
 - **Names**: `MSR`, what `tex/venue-leftover` looks for in another venue's paper — only with a year
   beside it (`mentions: with-year`: «MSR 2027», «MSR'27»), since «MSR» is also Microsoft Research
   and an acronym papers define for themselves.
+- **The shape of the accepted papers** (`shape`): words before the references, figures, tables,
+  abstract words and references of 29 MSR 2025 Technical papers — the last edition in the IEEE
+  template — measured by paperlint's own counter on their open PDFs. The preset turns on
+  `pdf/venue-shape`, which warns when a built paper is outside their interquartile range, or its
+  abstract outside 1.5× their median ([`docs/rules/pdf/venue-shape.md`](../docs/rules/pdf/venue-shape.md)).
+  Measured 2026-10-11: lower quartile / median / upper quartile — words before the references
+  7604 / 7882 / 8219, figures 4 / 6 / 9, tables 2 / 4 / 7, abstract words 168 / 221 / 241,
+  references 44 / 56 / 67.
+- **Where the accepted papers are** (`accepted`), for the `study-accepted-papers` skill: the
+  accepted list per edition (`https://{year}.msrconf.org/track/msr-{year}-technical-papers`), DBLP
+  (`conf/msr`), the editions on the IEEE template (2025, 2027; 2026 was ACM), and the proxies for a
+  strong review score when reviews are not public, each with its limits — the ACM SIGSOFT
+  Distinguished Paper list in the [hall of fame](https://www.msrconf.org/hall-of-fame/) (2015–2025;
+  **no list published for 2026** as of 2026-10-11, and none for 2024 on its track page), the Most
+  Influential Paper and Foundational Contribution awards (long-term value, not that year's reviews),
+  the FOSS Impact award (another jury and criterion), and the EMSE special issue (list not public).
+  ACM DL answers automated requests with a Cloudflare challenge (403) and IEEE Xplore with 418: take
+  DOIs from DBLP and PDFs from arXiv or the authors' pages.
 - **Not encoded**: the capitalization of the title and headings (`tex/heading-case` stays off: the
-  IEEE guidelines' rule has not been read and quoted here), and the register of the body (no
-  accepted MSR paper in the IEEE template exists yet to anchor `tex/contrast-frames` and its
-  siblings).
+  IEEE guidelines' rule has not been read and quoted here), and the register of the body
+  (`tex/contrast-frames` and its siblings count on LaTeX source, and no accepted MSR paper's source
+  is in `fixtures/accepted-papers/` to anchor them).
 
 ## What the preset resolves to
 
@@ -92,7 +110,9 @@ references is found by hyperref's anchor, and without it is counted as reference
 
 **`paperlint:msr`** — venue preset for MSR · call for papers: <https://2027.msrconf.org/track/msr-2027-technical-papers> · extends `paperlint:ieee-conference`
 
-No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
+| rule | severity | options | set in |
+| --- | --- | --- | --- |
+| [`pdf/venue-shape`](../docs/rules/pdf/venue-shape.md) | warn | — | this preset |
 
 <!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->

@@ -274,6 +274,208 @@
         }
       }
     },
+    "shape": {
+      "description": "The SHAPE of the venue's accepted papers, as `pdf/venue-shape` compares a paper's built PDF with it: one row per accepted paper, each counted by paperlint's own counter on the text of that paper's PDF (src/domain/venue-shape.ts) — the counter the rule applies to the paper. Written by `scripts/measure-venue-shape.ts` in paperlint's repository, never by hand: the quartiles are derived from the rows on every run, so a row is the only number stored. A null is a measure the counter could not read in that PDF. A child preset's block replaces its parent's.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "url", "measured", "papers"],
+      "properties": {
+        "source": {
+          "description": "Which papers these are, in words: the venue, edition and track, and how they were chosen (`MSR 2025 Technical Papers, accepted full papers with an open PDF`). Messages quote it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "description": "The page that lists the accepted papers.",
+          "type": "string",
+          "pattern": "^https://[^\\s/]+[^\\s]*$"
+        },
+        "measured": {
+          "description": "The day the papers were measured, YYYY-MM-DD.",
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "papers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "paper",
+              "url",
+              "pages",
+              "body_words",
+              "figures",
+              "tables",
+              "abstract_words",
+              "references"
+            ],
+            "properties": {
+              "paper": {
+                "description": "The paper's title.",
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "description": "Where its PDF was read: an open copy (arXiv, the authors' page, open access).",
+                "type": "string",
+                "pattern": "^https?://[^\\s/]+[^\\s]*$"
+              },
+              "pages": {
+                "description": "Pages of that PDF.",
+                "type": "integer",
+                "minimum": 1
+              },
+              "body_words": {
+                "description": "Words before the references heading (tokens holding a letter).",
+                "type": ["integer", "null"],
+                "minimum": 0
+              },
+              "figures": {
+                "description": "Distinct numbered figure captions.",
+                "type": ["integer", "null"],
+                "minimum": 0
+              },
+              "tables": {
+                "description": "Distinct numbered table captions.",
+                "type": ["integer", "null"],
+                "minimum": 0
+              },
+              "abstract_words": {
+                "description": "Words of the abstract.",
+                "type": ["integer", "null"],
+                "minimum": 0
+              },
+              "references": {
+                "description": "Entries of a numbered bibliography (its highest [N]).",
+                "type": ["integer", "null"],
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "accepted": {
+      "description": "Where the venue's ACCEPTED papers are found, for the study-accepted-papers skill: the accepted list per edition, the DBLP stream, the proxies for a strong review score when reviews are not public, which editions share the current template and track, and what blocks automated access. Data an agent reads instead of re-deriving the sources on every run; no rule reads it. `{}` means not filled yet: the skill then asks the author for the sources and proposes the block as a patch. A child's block replaces its parent's.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "list": {
+          "description": "The accepted-papers page of one edition, with `{year}` for the edition's year.",
+          "type": "string",
+          "pattern": "^https://\\S*\\{year\\}\\S*$"
+        },
+        "dblp": {
+          "description": "The venue's DBLP stream: a stable list with DOIs.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["key", "url"],
+          "properties": {
+            "key": {
+              "description": "The stream key, `conf/msr`.",
+              "type": "string",
+              "pattern": "^(conf|journals)/[a-z0-9-]+$"
+            },
+            "url": {
+              "description": "One edition's table of contents, with `{year}`.",
+              "type": "string",
+              "pattern": "^https://dblp\\.org/\\S*\\{year\\}\\S*$"
+            }
+          }
+        },
+        "editions": {
+          "description": "Editions of this track and the template each used; `current_template: true` marks the ones whose papers share this preset's template — the ones to measure.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["year", "template", "current_template"],
+            "properties": {
+              "year": {
+                "type": "integer",
+                "minimum": 1950
+              },
+              "template": {
+                "description": "The document class the edition's papers used (`IEEEtran`, `acmart`).",
+                "type": "string",
+                "minLength": 1
+              },
+              "current_template": {
+                "type": "boolean"
+              },
+              "source": {
+                "description": "Where the template was read.",
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "strong": {
+          "description": "Proxies for 'reviewers rated it highly' when reviews are not public, each with its limits.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "name", "url", "limits"],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "distinguished-paper",
+                  "best-paper",
+                  "most-influential-paper",
+                  "hall-of-fame",
+                  "impact-award",
+                  "special-issue",
+                  "other"
+                ]
+              },
+              "name": {
+                "description": "The award or list as the venue names it.",
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https?://[^\\s/]+[^\\s]*$"
+              },
+              "years": {
+                "description": "Which editions it covers, as read (`2015–2025`).",
+                "type": "string",
+                "minLength": 1
+              },
+              "limits": {
+                "description": "What the proxy does NOT say, and what is missing from it (an edition with no published list, a different jury or criterion).",
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "access": {
+          "description": "What blocks automated access to the papers, as observed.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["host", "note"],
+            "properties": {
+              "host": {
+                "type": "string",
+                "minLength": 1
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
     "talk": {
       "description": "What the venue asks a presenter to send, judged by the talk/* rules on the finished files (src/talk-rules.ts). Read only for a paper whose paperlint.json declares `talk`. A child preset's block replaces its parent's whole. Durations in seconds.",
       "type": "object",
@@ -437,7 +639,12 @@
         "properties": { "type": { "const": "family" } }
       },
       "then": {
-        "properties": { "name": false, "url": false }
+        "properties": {
+          "name": false,
+          "url": false,
+          "shape": false,
+          "accepted": false
+        }
       }
     },
     {

@@ -97,10 +97,40 @@ const BLINDCONF = venuePreset("BlindConf", {
     ],
   },
 });
+/**
+ * ExampleConf with a measured shape (pdf/venue-shape, which it turns on): eight accepted papers of
+ * one shape, so every quartile is that paper's number and a paper of exactly `SHAPED_TEXT`'s shape
+ * is the only one inside the band.
+ */
+const SHAPECONF = venuePreset("ShapeConf", {
+  extends: "./exampleconf.jsonc",
+  shape: {
+    source: "ShapeConf 2025 accepted papers",
+    url: "https://example.org/accepted",
+    measured: "2026-10-11",
+    papers: Array.from({ length: 8 }, (_, i) => ({
+      paper: `Paper ${String(i)}`,
+      url: `https://example.org/${String(i)}.pdf`,
+      pages: 7,
+      body_words: 13,
+      figures: 2,
+      tables: 1,
+      abstract_words: 5,
+      references: 3,
+    })),
+  },
+  rules: { "pdf/venue-shape": "warn" },
+});
+/** Page texts of that shape: 13 words before the references, 2 figures, 1 table, a 5-word abstract, 3 references. */
+const SHAPED_TEXT = [
+  "Abstract—One two three four five\nIndex Terms—x\nFig. 1. a\nFig. 2. b\nTABLE I\n",
+  "References\n[1] A.\n[2] B.\n[3] C.\n",
+];
 /** The venue presets every built paper carries beside it, extended or not. */
 const VENUES = {
   [`${P}/exampleconf.jsonc`]: JSON.stringify(EXAMPLECONF),
   [`${P}/blindconf.jsonc`]: JSON.stringify(BLINDCONF),
+  [`${P}/shapeconf.jsonc`]: JSON.stringify(SHAPECONF),
 };
 /** A paper folder on BlindConf: the preset beside its `paperlint.json`. */
 const onBlindConf = (dir: string): Record<string, string> => ({
@@ -810,6 +840,26 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       line: 4,
     },
     silent: blind("\\vspace{-2mm}Text."),
+  },
+  "pdf/venue-shape": {
+    // The figures dropped: 0 figures under the venue's 2, and 9 words before the references.
+    reports: {
+      ...onPdf(
+        built(
+          {
+            pages_text: SHAPED_TEXT.map((t) =>
+              t.replace(/Fig\. \d\. \w\n/gu, ""),
+            ),
+          },
+          { ...EXAMPLE, extends: "./shapeconf.jsonc" },
+        ),
+      ),
+      severity: 1,
+    },
+    silent: built(
+      { pages_text: SHAPED_TEXT },
+      { ...EXAMPLE, extends: "./shapeconf.jsonc" },
+    ),
   },
   "pdf/last-page-balance": {
     reports: onPdf(

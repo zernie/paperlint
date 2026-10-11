@@ -29,6 +29,7 @@ import { presetsDir } from "./package-dirs.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { fieldOf } from "./domain/record.ts";
 import type { RegisterAnchor, RegisterMeasureName } from "./domain/register.ts";
+import type { ShapeMeasure, VenueShape } from "./domain/venue-shape.ts";
 import {
   venueTalkOf,
   type VenueTalk,
@@ -216,6 +217,8 @@ export interface PresetFile {
    * (a child's list replaces its parent's).
    */
   readonly registerAnchors: readonly RegisterAnchor[] | null;
+  /** The venue's accepted papers as `pdf/venue-shape` reads them; null when the file has no `shape` block. */
+  readonly shape: VenueShape | null;
   /** What the venue asks a presenter to send; null when the file has no `talk` block. */
   readonly talk: VenueTalk | null;
   /** Where the venue takes submissions (`paperlint submission`); null when the file does not say. */
@@ -276,6 +279,16 @@ interface PresetBodyJson {
       readonly paper: string;
       readonly words: number;
     } & Readonly<Record<RegisterMeasureName, number>>)[];
+  };
+  readonly shape?: {
+    readonly source: string;
+    readonly url: string;
+    readonly measured: string;
+    readonly papers: readonly ({
+      readonly paper: string;
+      readonly url: string;
+      readonly pages: number;
+    } & Readonly<Record<ShapeMeasure, number | null>>)[];
   };
   readonly talk?: VenueTalkJson;
   readonly portal?: VenuePortal;
@@ -347,7 +360,7 @@ export function identityHint(e: SchemaError): string | null {
   if (e.keyword === "required" && (missing === "name" || missing === "url"))
     return 'a venue preset names its venue and links its call for papers: "name": "<the venue, as its call spells it>", "url": "https://<the call for papers>"';
   if (e.keyword === "false schema")
-    return `a template family names no venue: drop "${e.dataPath.slice(1)}" — "name" and "url" belong to the venue presets that extend it`;
+    return `a template family names no venue: drop "${e.dataPath.slice(1)}" — a venue's "name", "url", accepted papers ("shape") and where to find them ("accepted") belong to the venue presets that extend it`;
   if (e.keyword === "maxProperties")
     return 'the TeX base set holds "type" and "tex" only — a venue\'s or a family\'s settings go in its own preset';
   return null;
@@ -393,6 +406,36 @@ const anchorsOf = (
           relation_markers: a.relation_markers,
         },
       }));
+
+/** A preset's `shape`, each paper's measures gathered; null when the file names none. */
+const shapeOf = (v: PresetJson["shape"]): VenueShape | null =>
+  v === undefined
+    ? null
+    : {
+        source: v.source,
+        url: v.url,
+        measured: v.measured,
+        papers: v.papers.map((p) => ({
+          paper: p.paper,
+          url: p.url,
+          pages: p.pages,
+          shape: {
+            body_words: p.body_words,
+            figures: p.figures,
+            tables: p.tables,
+            abstract_words: p.abstract_words,
+            references: p.references,
+          },
+        })),
+      };
+
+/** What a preset measured of its venue's accepted papers: the register anchors and the shape. */
+const measuredOf = (
+  j: PresetJson,
+): Pick<PresetFile, "registerAnchors" | "shape"> => ({
+  registerAnchors: anchorsOf(j.register),
+  shape: shapeOf(j.shape),
+});
 
 /** A preset's `portal`, or null when it names none. */
 const portalOf = (p: PresetJson["portal"]): Readonly<VenuePortal> | null =>
@@ -456,7 +499,7 @@ export function parsePreset(
     tex: texOf(j.tex),
     format: formatOf(j.format),
     rules: j.rules ?? {},
-    registerAnchors: anchorsOf(j.register),
+    ...measuredOf(j),
     talk: j.talk === undefined ? null : venueTalkOf(j.talk),
     portal: portalOf(j.portal),
     deadlines: deadlinesOf(j.deadlines, file),

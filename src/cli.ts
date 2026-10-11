@@ -70,6 +70,7 @@ import {
   pageLimitRules,
   VENUE_RULE_LEVELS,
   venueRules,
+  venueShapeRules,
 } from "./venue-rules.ts";
 import {
   FORMAT_RULE_LEVELS,
@@ -384,14 +385,16 @@ export function buildConfig(
     // The `pdf` plugin is registered for EVERY file. A consumer's block (`rules`, appended below)
     // may name its rules for a glob that also matches markdown files; with the plugin defined only
     // beside `paper.tex`, ESLint would refuse those files with "could not find plugin". Every rule
-    // in it acts on `paper.tex` only. `last-page-balance` is on for no file (optional); the venue
-    // rules are on for every `paper.tex`, in the block below.
+    // in it acts on `paper.tex` only. `last-page-balance` and `venue-shape` are on for no file
+    // (optional: a preset or a paper turns them on); the venue rules are on for every `paper.tex`,
+    // in the block below.
     {
       plugins: {
         pdf: {
           rules: {
             ...pdfRules.rules,
             ...venueRules({ files: nodeFiles, venuesDir: presetsDir() }),
+            ...venueShapeRules({ files: nodeFiles, venuesDir: presetsDir() }),
           },
         },
         anonymity: {

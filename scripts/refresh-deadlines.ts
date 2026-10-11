@@ -158,7 +158,7 @@ export function refreshReadings(
 }
 
 /** The top-level property `name` of a JSONC object, on its syntax tree; undefined when absent. */
-function property(
+export function property(
   file: ts.JsonSourceFile,
   name: string,
 ): ts.PropertyAssignment | undefined {

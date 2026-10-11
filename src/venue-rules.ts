@@ -7,6 +7,8 @@
  *   pdf/geometry   error  page size and column count match the preset
  *   pdf/body-size  error  body and reference font sizes within the preset's ranges
  *   pdf/measured   warn   the venue checks ran at all (a preset is named, facts exist, geometry measured)
+ *   pdf/venue-shape warn  OPTIONAL — words, figures, tables, abstract, references against the
+ *                         venue's measured accepted papers (src/venue-shape-rule.ts)
  *
  * and, in plugins named for the requirement rather than the input (paperlint#151):
  *
@@ -68,6 +70,8 @@ import {
 } from "./domain/body-pages.ts";
 import type { TextFacts } from "./facts-file.ts";
 import { effectiveBlind, isPorting } from "./domain/cycle.ts";
+import type { VenueShape } from "./domain/venue-shape.ts";
+import { judgeVenueShape, VENUE_SHAPE_META } from "./venue-shape-rule.ts";
 
 // ── the verdict's vocabulary ─────────────────────────────────────────────────────────
 
@@ -93,6 +97,8 @@ export interface Resolved {
   readonly blind: boolean;
   /** What identifies the authors (`identity` in paperlint.json), or null when undeclared. */
   readonly identity: readonly string[] | null;
+  /** The venue's measured accepted papers (`pdf/venue-shape`), or null when the preset has none. */
+  readonly shape: VenueShape | null;
 }
 
 /** Everything the rules need to know about one paper, decided once. */
@@ -198,6 +204,7 @@ const resolvedOf = (preset: Preset, settings: PaperSettings): Resolved => ({
   format: preset.format,
   ...kindOf(preset.label, preset.format, settings.kind),
   ...reviewOf(preset, settings),
+  shape: preset.shape,
 });
 
 /** One paper, assessed. Reads through `deps.files` only; never throws on a paper's files. */
@@ -629,6 +636,17 @@ const JUDGES: Readonly<Record<VenueRuleName, Judge>> = {
     a.kind === "ready" && a.facts.geometry
       ? judgeBodySize(a.facts.geometry, a.venue.format, a.venue.venue)
       : [],
+  "venue-shape": (a, { options }) =>
+    a.kind === "ready"
+      ? [
+          ...judgeVenueShape(
+            a.facts.text.pages,
+            a.venue.shape,
+            a.venue.venue,
+            options[0],
+          ),
+        ]
+      : [],
 };
 
 /** How far, in inches, a measured page dimension may be from the preset's. */
@@ -646,6 +664,10 @@ type Meta = Pick<VenueRuleModule["meta"], "docs" | "messages"> & {
 };
 
 const META: Readonly<Record<VenueRuleName, Meta>> = {
+  "venue-shape": {
+    ...VENUE_SHAPE_META,
+    docs: { ...VENUE_SHAPE_META.docs, url: rulePageUrl("pdf/venue-shape") },
+  },
   fresh: {
     docs: {
       description:
@@ -774,10 +796,17 @@ export type VenueRuleName =
   | "geometry"
   | "page-limit"
   | "body-size"
-  | "anonymity";
+  | "anonymity"
+  | "venue-shape";
 
-/** The venue rules of the `pdf` plugin; `page-limit` and `anonymity` live in their own. */
-export type PdfRuleName = Exclude<VenueRuleName, "page-limit" | "anonymity">;
+/**
+ * The venue rules of the `pdf` plugin that are on for every paper; `page-limit` and `anonymity` live
+ * in their own plugins, and `venue-shape` is optional (a preset with a `shape` turns it on).
+ */
+export type PdfRuleName = Exclude<
+  VenueRuleName,
+  "page-limit" | "anonymity" | "venue-shape"
+>;
 
 /**
  * The level each venue rule is on at in paperlint's own config, for every `paper.tex`. One owner:
@@ -859,6 +888,13 @@ export function venueRules(
     geometry: rule("geometry", deps),
     "body-size": rule("body-size", deps),
   };
+}
+
+/** The optional rule of the `pdf` plugin over the venue's measured accepted papers: on where a preset turns it on. */
+export function venueShapeRules(
+  deps: VenueRuleDeps,
+): Readonly<Record<"venue-shape", VenueRuleModule>> {
+  return { "venue-shape": rule("venue-shape", deps) };
 }
 
 /** The rule of the `anonymity` plugin: `identity`. */

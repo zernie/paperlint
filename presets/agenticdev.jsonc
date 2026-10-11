@@ -92,4 +92,10 @@
       { "title": "chicago-headline", "headings": "chicago-headline" },
     ],
   },
+
+  // WHERE THIS VENUE'S ACCEPTED PAPERS ARE, for the study-accepted-papers skill — not filled yet. The
+  // skill then asks the author which sources to use (the accepted list per edition, DBLP, the award
+  // lists that stand in for review scores, the editions on this template) and proposes this block as
+  // a patch. Its fields: venue-profile.schema.json, `accepted`; a filled one: msr.jsonc.
+  "accepted": {},
 }

@@ -13,6 +13,12 @@ import { memoryFiles } from "./adapters/memory/index.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { parsePreset } from "./tex-requirements.ts";
 import {
+  distributionOf,
+  judgeShape,
+  SHAPE_MEASURES,
+  type Shape,
+} from "./domain/venue-shape.ts";
+import {
   MAX_PRESET_DEPTH,
   SHIPPED_PREFIX,
   shippedPresets,
@@ -120,9 +126,42 @@ describe("shipped presets: paperlint:msr", () => {
         read: "2026-10-05",
       },
     ]);
-    // No rule turned on: the IEEE capitalization rule has not been read and quoted.
-    expect(r.value.rules).toEqual({});
+    // tex/heading-case stays off: the IEEE capitalization rule has not been read and quoted. The
+    // one rule on is the comparison with the accepted papers its `shape` measures.
+    expect(r.value.rules).toEqual({ "pdf/venue-shape": "warn" });
     expect(r.value.registerAnchors).toEqual([]);
+    expect([r.value.shape?.papers.length, r.value.shape?.measured]).toEqual([
+      29,
+      "2026-10-11",
+    ]);
+  });
+});
+
+describe("shipped presets: paperlint:msr's measured shape", () => {
+  it("its `shape`: the venue's median paper is inside every band (issue #170's acceptance), and each row is a full measurement", () => {
+    const r = resolve("paperlint:msr");
+    if (!r.ok || r.value.shape === null) throw new Error("msr has a shape");
+    const shape = r.value.shape;
+    const median = (m: (typeof SHAPE_MEASURES)[number]): number =>
+      distributionOf(shape.papers.flatMap((p) => p.shape[m] ?? []))?.median ??
+      Number.NaN;
+    const medianPaper: Shape = {
+      body_words: median("body_words"),
+      figures: median("figures"),
+      tables: median("tables"),
+      abstract_words: median("abstract_words"),
+      references: median("references"),
+    };
+    expect(
+      judgeShape(medianPaper, shape, {
+        measures: SHAPE_MEASURES,
+        abstractFactor: 1.5,
+      }),
+    ).toEqual([]);
+    // Every MSR 2025 PDF is numbered and has an abstract the counter found: no null in the rows.
+    expect(
+      shape.papers.filter((p) => Object.values(p.shape).includes(null)),
+    ).toEqual([]);
   });
 });
 

@@ -61,6 +61,7 @@ import {
 import { CONFIG_FILE } from "#lib/paper-config";
 import { messageOf } from "./domain/text.ts";
 import type { RegisterAnchor } from "./domain/register.ts";
+import type { VenueShape } from "./domain/venue-shape.ts";
 import type { VenueTalk } from "./domain/talk.ts";
 import type { VenuePortal } from "./domain/submission.ts";
 import type { Reading } from "./domain/deadline.ts";
@@ -120,6 +121,8 @@ export interface Preset {
   readonly ruleOrigins: Readonly<Record<string, string>>;
   /** The accepted papers the register rules measure a body against; empty when no file names any. */
   readonly registerAnchors: readonly RegisterAnchor[];
+  /** The venue's accepted papers as `pdf/venue-shape` reads them; null when no file of the chain has a `shape`. */
+  readonly shape: VenueShape | null;
   /** What the venue asks a presenter to send (`talk/*`); null when no file of the chain says. */
   readonly talk: VenueTalk | null;
   /** Where the venue takes submissions (`paperlint submission`); null when no file of the chain says. */
@@ -297,6 +300,7 @@ const NOTHING_MERGED: Merging = {
   rules: {},
   ruleOrigins: {},
   registerAnchors: [],
+  shape: null,
   talk: null,
   portal: null,
   deadlines: [],
@@ -308,10 +312,16 @@ const wholeBlocks = (
   p: PresetFile,
 ): Pick<
   Merging,
-  "requiredSections" | "registerAnchors" | "talk" | "portal" | "deadlines"
+  | "requiredSections"
+  | "registerAnchors"
+  | "shape"
+  | "talk"
+  | "portal"
+  | "deadlines"
 > => ({
   requiredSections: p.requiredSections ?? acc.requiredSections,
   registerAnchors: p.registerAnchors ?? acc.registerAnchors,
+  shape: p.shape ?? acc.shape,
   talk: p.talk ?? acc.talk,
   portal: p.portal ?? acc.portal,
   deadlines: p.deadlines ?? acc.deadlines,
