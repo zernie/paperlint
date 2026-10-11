@@ -80,7 +80,7 @@ Most of the package's rules run on users' papers and are described for users in
 files.
 
 One rule checks one requirement, and a rule that judges a venue requirement is validated on real
-accepted papers built to PDF — both in [`CLAUDE.md`](CLAUDE.md#the-rules-that-decide-what-may-live-here--and-what-may-not-be-written), rule 3.
+accepted papers built to PDF — both in [`eslint-rules/CLAUDE.md`](eslint-rules/CLAUDE.md), rule 3.
 
 A new rule ships with its page, `docs/rules/<group>/<rule>.md`, in these sections: What it
 catches · Why · Examples (failing / passing) · Options / preset fields · What it does not check ·
@@ -94,7 +94,7 @@ length, markers, hedges — drives papers toward clipped, unsignposted prose tha
 blog post, so a new one also has a floor, or measures the distance to accepted papers of the target
 venue, with its threshold measured by the same counter on those papers. What the parse tree can
 count is a rule; what needs reading (register, genre) is a skill criterion. The five principles are
-in [`CLAUDE.md`](CLAUDE.md#writing-checks--what-keeps-them-from-pushing-papers-toward-a-blog-post).
+in [`eslint-rules/CLAUDE.md`](eslint-rules/CLAUDE.md#a-rule-that-judges-prose).
 
 ## Maintainer docs
 

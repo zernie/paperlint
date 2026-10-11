@@ -49,3 +49,23 @@ against `process.cwd()`, so lint started from any other directory classifies not
 `checkAllOrigins: true`: without it no `module:` policy is evaluated, so axis B and the library bans
 report nothing — dropping it turns the fixtures `src/domain/reads-disk.ts` and
 `src/adapters/one/disk.ts` clean (measured).
+
+## Where the package is installed — rule 10
+
+**Checking logic never knows its own location, nor its distance from anything else.** The
+package's own data (`presets/`, `presets/tex/`) is found by `src/package-dirs.ts`, and nothing else
+computes where the package sits; the consumer's side is `skills/paper-pipeline/scripts/consumer.mjs`
+([`skills/CLAUDE.md`](../skills/CLAUDE.md)). `@retorquere/bibtex-parser` is the one `.bib` reader,
+behind `src/ports/bib-reader.ts`.
+
+<!-- vigiles:file package-dirs.ts -->
+<!-- vigiles:file ../skills/paper-pipeline/scripts/consumer.mjs -->
+
+## Before adding a CLI command — read the prior art
+
+[`docs/prior-art/`](../docs/prior-art/README.md) records how comparable tools solved the same
+problems (Quarto, Vale, Biome, Danger, reviewdog, Semgrep), each claim with the URL that was checked.
+🔴 "We need another command for X" is, in every tool examined, the CONFIG not declaring something —
+check that before adding a verb. Rejected on 2026-09-27: a separate `paperlint refs` command; the
+slowness it would have moved was a cache thrown away after every build
+([`docs/references.md`](../docs/references.md)).

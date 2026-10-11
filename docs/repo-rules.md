@@ -1,8 +1,9 @@
 # The rules of this repository — full text
 
-Moved verbatim from `CLAUDE.md` on 2026-10-11 (paperlint#202). `CLAUDE.md` loads on every turn,
-so it keeps one statement and the remedy for each rule; this file keeps the full text, the
-measurements and the history behind it. Rule numbers are stable: code comments and other docs cite
+Moved verbatim from `CLAUDE.md` on 2026-10-11 (paperlint#202). Each rule now lives, as one
+statement and its remedy, where it applies: the root `CLAUDE.md` for every change, and the
+`CLAUDE.md` of `eslint-rules/`, `hooks/`, `skills/`, `src/`, `plugin/` and `.github/` for work in
+that folder. This file keeps the full text, the measurements and the history behind each one. Rule numbers are stable: code comments and other docs cite
 them. A dated measurement is a record of that day, not a fact about today.
 
 > ⚠️ **Outdated on 2026-10-11, kept as the record:** rule 10's "Still owed: the install-path half"
