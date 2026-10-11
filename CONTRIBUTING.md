@@ -67,6 +67,7 @@ scripts/        this repo's own gates
 action.yml      the CI composite action
 fixtures/       inputs the harnesses lint
 docs/           evidence that would otherwise bloat CLAUDE.md:
+                  repo-rules.md  the full text of CLAUDE.md's rules
                   prior-art/  how comparable tools are shaped, and why this one is shaped so
                   incidents.md  what broke, measured
                   install.md  the install contract
@@ -79,7 +80,7 @@ Most of the package's rules run on users' papers and are described for users in
 files.
 
 One rule checks one requirement, and a rule that judges a venue requirement is validated on real
-accepted papers built to PDF — both in [`CLAUDE.md`](CLAUDE.md#the-ten-rules-that-decide-what-may-live-here--and-what-may-not-be-written), rule 3.
+accepted papers built to PDF — both in [`CLAUDE.md`](CLAUDE.md#the-rules-that-decide-what-may-live-here--and-what-may-not-be-written), rule 3.
 
 A new rule ships with its page, `docs/rules/<group>/<rule>.md`, in these sections: What it
 catches · Why · Examples (failing / passing) · Options / preset fields · What it does not check ·

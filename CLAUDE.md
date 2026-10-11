@@ -3,6 +3,10 @@
 Machine-checkable gates for writing a research paper in git, extracted from a private
 knowledge base.
 
+This file loads on every turn, so it carries each rule's claim and remedy. The full text, with the
+measurements and history behind each rule, is in [`docs/repo-rules.md`](docs/repo-rules.md); what
+broke, measured, is in [`docs/incidents.md`](docs/incidents.md).
+
 ## 🎯 THE GOAL, in one sentence
 
 **Move every paper-writing convention a machine can decide OUT of prose and INTO an engine
@@ -29,299 +33,126 @@ assumed. Two things that sound like limits and are not:
   already proven here: **a script PRODUCES facts into a JSON file, and ESLint JUDGES that
   file.** The verdict lands in the engine even though the work did not.
 
-## 📊 STATE — measured 2026-09-16 (re-measure, never cite)
-
-|                         |                                                                                            |
-| ----------------------- | -----------------------------------------------------------------------------------------: |
-| ESLint rules            | **5** — `latex-language` · `tex-build` · `papers` · `review-findings-cause` · `doc-fields` |
-| harnesses               |                                                                                     **57** |
-| skills                  |                                                                                     **24** |
-| hooks (runnable `.mjs`) |                                                                                      **5** |
-| repo-wide scripts       |                                                                                          5 |
-| files tracked / commits |                                                                                   308 / 43 |
-
 **A real consumer dogfoods this package on every CI run**, so a breaking change here turns a
-paper pipeline red somewhere else the same day. That is deliberate — it is the only thing
-keeping the extraction honest.
-
-⚠️ **This table is a SNAPSHOT, not a fact about today, and it has already gone stale once.**
-The line standing here until 2026-09-16 said "two ESLint rule modules" while six were shipped,
-24 skills had moved in, and hooks existed at all. Re-measure with `git ls-files` before
-repeating any number from it.
+paper pipeline red somewhere else the same day. Counts of rules, skills and hooks: measure with
+`git ls-files`, never cite a snapshot.
 
 ## First command in a fresh container
 
-```bash
-npm install
-```
+`npm install` — not optional: `vigiles` is a real dependency, and every harness, spec and hook
+resolves through it. Without it, failures look like broken code rather than a missing install.
 
-Not optional and not "when something breaks": `vigiles` is a real dependency, and every
-harness, spec and hook resolves through it. A container where `npm install` never ran fails
-in ways that look like broken code rather than a missing install.
+## The rules that decide what may live here — and what may not be written
 
-## The ten rules that decide what may live here — and what may not be written
+Numbers are stable; code comments cite them. Full text of each: [`docs/repo-rules.md`](docs/repo-rules.md).
 
-**1. Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule
-of ours, no fixture of ours — is machinery, and machinery belongs in
-[vigiles](https://github.com/zernie/vigiles). Ask it in two steps: is this mechanism or data?
-If mechanism — does it know about _this_ domain? If not, it is not ours.
+1. **Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule or
+   fixture of ours — is machinery, and belongs in [vigiles](https://github.com/zernie/vigiles).
+2. **A check over an AST is a LINT RULE, not a script.** Scripts are for corpus-wide questions
+   (index connectivity, ratios across many files), not for one file's nodes.
+3. **Every check needs BOTH halves**: it FIRES on a planted defect and stays QUIET on a clean
+   fixture; see the test go red before the fix lands ([`docs/testing.md`](docs/testing.md)). Also:
+   - **one rule, one requirement** — two checks with different reasons to switch them off are two rules;
+   - **a rule that judges a venue requirement is validated on real accepted papers** of that venue,
+     built to PDF, with the ground truth established independently of the rule;
+   - **a new rule ships with its page**, `docs/rules/<group>/<rule>.md`; `src/rule-docs.test.ts`
+     holds this, and its `AWAITING_PAGE` list only shrinks.
+4. **`exit 0` with empty output is NOT "clean".** A rule whose input set is empty must be loud
+   (the guard below).
+5. **"It can't be done in the engine" must be MEASURED, not assumed.** Each of these was stated
+   confidently on 2026-09-16 and fell to a single command:
 
-**2. A check over an AST is a LINT RULE, not a script.** If it walks `.ts`/`.js`/`.tex` and
-looks at declarations, names or nodes, write an ESLint rule: it fires in the editor on save,
-gets the AST for free, and has a suppression syntax people already know. Scripts are for
-corpus-wide questions — index connectivity, ratios across many files — not for one file's
-nodes.
+   | the claim                                                   | what one command showed                                                                      |
+   | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+   | "a lint rule can't know a git date, so this stays a script" | a rule is plain JS; `execFileSync("git", …)` is legal in it, and its real costs are solvable |
+   | "we need our own glob expander"                             | `fs.globSync` ships in Node 22 and returned the identical set                                |
+   | "the tool can't run a file that config excludes"            | it can, and says so: `matches exclude … — running because you named it`                      |
 
-**3. Every check needs BOTH halves, or it is not tested.** It must FIRE on a planted defect
-and stay QUIET on a clean fixture. A check that has only been seen quiet is
-indistinguishable from a dead one — silence is its success state. Prove the fire half by
-seeing the test go RED before the fix lands ([`docs/testing.md`](docs/testing.md)).
+   ⇒ Before writing machinery, **run the thing you are about to replace and paste its output.**
 
-**One rule, one requirement.** A rule checks one thing a user would want to switch off, or set a
-severity for, on its own; two checks with different reasons to disable them are two rules. Several
-messageIds for facets of one requirement are fine. Example: `pdf/limits` checked body pages,
-reference pages and the reference font size — the first two are one page budget and became
-`format/page-limit`; the font size is a different requirement and moved to `pdf/body-size`.
-
-**A rule that judges a venue requirement is validated on real accepted papers of that venue** (or
-of its parent venue, with the same template), built to PDF, with the ground truth established
-independently of the rule — rendered and looked at — plus variant fixtures derived from those real
-sources, one change each. Synthetic minimal fixtures alone are not enough: they are written by the
-same hand as the rule, and share its blind spots. Example: `format/page-limit`'s body count, on the
-built ACSAC papers in `fixtures/accepted-papers/` (`test/e2e/tex/page-count.e2e.ts`).
-
-**A new rule ships with its page**, `docs/rules/<group>/<rule>.md`, in these sections: What it
-catches · Why · Examples (failing / passing) · Options / preset fields · What it does not check ·
-How to fix. Its `meta.docs.url` points at that page, and its row in `docs/rules.md` is one line
-linking there. `src/rule-docs.test.ts` holds every rule the config registers to this; the rules
-older than the convention wait in its `AWAITING_PAGE` list, which only shrinks — #131 writes their
-pages.
-
-**4. `exit 0` with empty output is NOT "clean".** A rule whose glob matched no files reports
-exactly like a rule that passed. Any rule shipped here must be loud when its input set is
-empty. This is the specific defect that blocks stage 1 of the plan: in the source base a
-fresh clone yields RC=0, 652 findings, zero errors — because 19 rules saw no files at all.
-
-**5. "It can't be done in the engine" must be MEASURED, not assumed.** Every one of these was
-stated confidently on 2026-09-16 and every one fell to a single command:
-
-| the claim                                                   | what one command showed                                                                                                                                                                 |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "a lint rule can't know a git date, so this stays a script" | a rule is plain JS; `execFileSync("git", …)` is legal in it. The real costs (per-file invocation, `--cache` keyed on content) are solvable, so this was a preference dressed as a limit |
-| "we need our own glob expander"                             | `fs.globSync` ships in Node 22 and returned the identical set. 31 hand-written lines of regex existed for nothing                                                                       |
-| "the tool can't run a file that config excludes"            | it can, and says so: `matches exclude … — running because you named it`                                                                                                                 |
-
-⇒ Before writing machinery, **run the thing you are about to replace and paste its output.**
-"I couldn't get it to work" is data about the attempt, not about the tool.
-
-**6. A program shipped by this package MUST NOT depend on the consumer's cwd.** Measured
-2026-09-16: three hooks here read their config as `provide("pkg", "cat package.json")`. The
-consumer's session changed directory into a subfolder for unrelated reasons, `cat` failed, and
-the Bash gate — which fails closed, correctly — denied **every command in that session**,
-including the one that would undo it. The nudges next to it would have failed _silently_,
-which is worse.
-
-Resolve paths from the repository root (`git rev-parse --show-toplevel`) or from the module's
-own location, never from where the caller happens to stand. The blast radius of a cwd
-assumption is not this package — it is somebody else's whole session.
-
-**7. Do not describe what you have not opened.** A `README` here nearly shipped the line
-"MIT — see LICENSE" on 2026-09-16. There is no `LICENSE` file and `package.json` says
-`UNLICENSED`. Publishing is irreversible and this repo is public: every factual claim in a
-document meant for strangers gets checked against the disk in the same pass that writes it.
-
-**8. 🔴 NEVER WRITE A GLOB OR A REGEX INSIDE A BLOCK COMMENT.** An asterisk followed by a
-slash **ends the comment**, wherever it appears — in a path (a folder wildcard), in a regex
-whose last literal is an asterisk (one matching bold markup, for instance), in a quoted
-example. The rest of the comment becomes code, the file stops parsing, and the error points
-at a line further down that is perfectly fine.
-
-⚠️ Note this rule does not quote the sequence either, not even here. A documented example is
-the thing that gets copied into code — and that is exactly how the fourth occurrence
-happened: it was copied out of a comment written to explain the first three.
-
-This is not a hypothetical and not a rare slip. **It fired four times in a single session on
-2026-09-16** — three in the consumer, once here — and each time the diagnosis cost minutes
-because `SyntaxError: Unexpected token '.'` says nothing about comments.
-
-| instead of                              | write                                                 |
-| --------------------------------------- | ----------------------------------------------------- |
-| a glob with an asterisk and slash       | spell it: "every folder under papers"                 |
-| a regex with an asterisk before a slash | describe what it matched, in words                    |
-| an example needing both                 | put it in a line comment (two slashes), never a block |
-
-⇒ **In a block comment, prose describes the pattern; it never quotes it.** If the exact
-characters matter, they belong in the code or in a line comment beside it.
-
-**9. Measure the DEFECT before proposing the fix — and read "this is quick" as a warning.**
-Rule 5 is about the tool you are replacing; this one is about the order of work.
-
-1. **Show the defect**: command output, or a file quote with a line number. A proposed fix with
-   no exhibited defect is not a fix, it is a preference.
-2. **Name the layer and the channel** it touches: ESLint rule · skill · hook · CLI · CI action
-   · path resolution. More than one is a conversation, not a commit.
-3. **An adversarial second pass is encouraged, and it is not free.** Spend it on a fork in the
-   road, on anything that goes outward, and on a conclusion you are about to act on.
-4. **A quick fix is almost never quick** — it is quick to _propose_ precisely because nothing
-   was opened.
-
-Four proposals were made and withdrawn in one session on 2026-09-17 for exactly this reason —
-[`docs/incidents.md`](docs/incidents.md).
-
-**10. Effects live in adapters, and WHERE paperlint IS INSTALLED lives in ONE of them.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
-skills, hooks — must not know its own location, nor its distance from anything else. Every
-answer to _where_ comes from one of two modules, each for one side: the consumer (its root, the
-package's name) from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per channel — own
-checkout · `node_modules` · plugin cache · CI; the package's own data (`presets/`, `presets/tex/`)
-from `src/package-dirs.ts`. A skill naming a script by an install-specific path in its own prose
-walks around that door, and 208 such literals across 190 lines do exactly that.
+6. **A program shipped by this package MUST NOT depend on the consumer's cwd.** Resolve paths from
+   `git rev-parse --show-toplevel` or the module's own location. One cwd assumption once made a
+   fail-closed gate deny every command in somebody else's session.
+7. **Do not describe what you have not opened.** Every factual claim in a document meant for
+   strangers is checked against the disk in the same pass that writes it.
+8. **🔴 NEVER WRITE A GLOB OR A REGEX INSIDE A BLOCK COMMENT.** An asterisk followed by a slash
+   ends the comment wherever it appears. In a block comment, prose describes the pattern and never
+   quotes it; exact characters go in code or a line comment.
+9. **Measure the DEFECT before proposing the fix — read "this is quick" as a warning.** Show the
+   defect (output, or a quoted line), name the layer and channel (more than one is a conversation,
+   not a commit), and spend an adversarial pass on forks and on anything that goes outward.
+10. **Effects live in adapters, and WHERE paperlint IS INSTALLED lives in ONE of them.** The
+    consumer's side: `skills/paper-pipeline/scripts/consumer.mjs`; the package's own data:
+    `src/package-dirs.ts`. Checking logic never knows its own location. An install-specific path
+    literal elsewhere is flagged by `port/js-install-path` and `port/md-install-path` (`warn`).
+    Layer rules for `src/`: [`src/CLAUDE.md`](src/CLAUDE.md), enforced by the linter.
+11. **Installing and using paperlint must be as smooth as possible.** The target is `npm i` plus one
+    command; any further manual step is a paperlint defect, except a choice that really belongs to
+    the user, named when it is asked. An automatic step that can fail silently is worse than an
+    explicit one.
 
 <!-- The ports' paths above are resolved by `npm run check` (vigiles lint), since #67. -->
 <!-- vigiles:file skills/paper-pipeline/scripts/consumer.mjs -->
 <!-- vigiles:file src/package-dirs.ts -->
 
-The layer rules for `src/` live in [`src/CLAUDE.md`](src/CLAUDE.md) and are enforced by the linter.
-
-⏳ **Still owed: the install-path half** — a lint rule that makes an install-specific path literal
-outside `consumer.mjs` a finding. Prose will not hold this class — four silent breakages happened
-_while_ comments explaining the hazard sat directly above the code
-([`docs/incidents.md`](docs/incidents.md)).
-
-**11. Installing and using paperlint must be as smooth as possible.** Count the actions between "I
-want this" and "it works": every command to copy, flag to pass or file to edit is one more place
-to give up. The target is `npm i` plus one command. A per-paper script, a manual TeX install or a
-"now add this to your config" step is a defect in paperlint, not a user task. The only exception is a
-choice that really belongs to the user (irreversible, paid, privacy), and then it is named at the
-moment it is asked. The converse holds too: an automatic step that can fail silently is worse
-than an explicit one — it works, or it says loudly that it did not. Measured example of the
-converse: Tectonic installs as one file but silently replaced Times with Latin Modern on a plain
-`article` paper and still exited 0 (#35, #59).
-
 ## Before changing the command surface or a delivery channel — read the prior art
 
-[`docs/prior-art/`](docs/prior-art/README.md) records how comparable tools solved the same
-problems, each claim with the URL that was checked: Quarto and Vale (the domain and content
-analogues), Biome (one tool, one config, one command), Danger and reviewdog (who decides to
-fail a run), `unicorn/expiring-todo-comments` and Semgrep (checks that read a clock or a diff).
-
-It is here as a POINTER and stays a pointer: this file is read on every turn, so it carries
-the instruction and never the evidence — the same split as rules 9 and 10 and `docs/incidents.md`.
-
-🔴 The argument "we need another command for X" is, in every tool examined, an argument that
-the CONFIG is not declaring something. Check that before adding a verb.
-
-Rejected on 2026-09-27, so it is not proposed again: a separate `paperlint refs` command for the
-reference check. The slowness it would have moved (#107) was a cache thrown away after every build,
-not a missing verb. The fix keeps the check in `build` and commits what the services answered in
-`<paper>/repro/references-cache.json` — **raw responses, never verdicts**: verdicts are derived
-again on every build, so a checker fix reaches every paper ([`docs/references.md`](docs/references.md)).
+[`docs/prior-art/`](docs/prior-art/README.md) records how comparable tools solved the same problems,
+each claim with the URL that was checked. 🔴 "We need another command for X" is, in every tool
+examined, the CONFIG not declaring something — check that before adding a verb. Rejected on
+2026-09-27: a separate `paperlint refs` command ([`docs/references.md`](docs/references.md)).
 
 ## Distribution — one install path: npm, then `paperlint init`
 
-`npm i -D paperlint` brings all the code — rules, skills, hooks, scripts. `paperlint init`
-then does what only a command can, because it depends on the project it lands in: it finds the
-papers directory and declares it in a root `paperlint.json` when it is not the default `papers`, links each skill into `.claude/skills/`, writes
-the hook commands into `.claude/settings.json` (vigiles' `mergeRegistrations`, reading
-`plugin/hooks/hooks.json` as the one source), and offers a CI workflow that runs the action from
-`node_modules` after `npm ci`. `paperlint doctor` reads all of it back. Details: `docs/install.md`.
+`npm i -D paperlint` brings all the code. `paperlint init` finds the papers directory, links each
+skill into `.claude/skills/`, merges the hook commands from `plugin/hooks/hooks.json` into
+`.claude/settings.json`, and offers a CI workflow; `paperlint doctor` reads it all back
+([`docs/install.md`](docs/install.md)).
 
-**There is no Claude Code plugin or marketplace entry; it was removed in the release after 1.0.0
-(#82).** Do not bring it back without answering these, each measured:
-
-- **A plugin cannot carry the code.** Claude Code runs `npm ci --ignore-scripts` for a plugin only
-  when its root holds a `package.json` and a lockfile, with a 60-second timeout, and _"a failed or
-  skipped install never blocks the plugin"_: on a slow network the hooks load and fail with
-  `cannot find module vigiles`, silently.
-- **The skills need the npm package anyway.** 23 of 24 skills run scripts under
-  `paper-pipeline/scripts`, which resolve only through `node_modules/paperlint/`.
-  A plugin-only consumer got skills whose first command fails.
-- **Its manifests carried versions nothing updated** (0.0.1 and 0.1.0 while npm was at 1.0.0), and
-  Claude Code decides plugin updates from that number.
-
-`plugin/hooks/hooks.json` stays where it is: it is not a plugin any more, it is the hook wiring
-`paperlint init` merges into the consumer's settings.
+**There is no Claude Code plugin; it was removed after 1.0.0 (#82).** Do not bring it back without
+answering, measured, the three reasons in [`docs/repo-rules.md`](docs/repo-rules.md#distribution).
 
 ## Delivery — how this repo's contents reach a consumer
 
-Each line below was measured on a fixture; the measurements, and what was tried and dropped, are in
-[`docs/delivery.md`](docs/delivery.md).
+Each line was measured on a fixture; the measurements are in [`docs/delivery.md`](docs/delivery.md).
 
-- **Skills ship in `skills/`, never `.claude/skills/`.** `paperlint init` symlinks each one into the
-  consumer's `.claude/skills/<name>`; the link's directory name is the skill's name.
-- **Hooks ship as `.hook.mjs`, never `.hook.ts`, and there is no `.hook.ts` twin.** A `.ts` hook
-  inside `node_modules` fails to load and blocks every Bash command. `hooks/hooks.harness.ts` runs
-  `checkHookImports` on the shipped files; it is a text regex, so describe a forbidden import in
-  words, never write one, not even in a comment.
+- **Skills ship in `skills/`, never `.claude/skills/`**; `paperlint init` symlinks each one into the
+  consumer's `.claude/skills/<name>`.
+- **Hooks ship as `.hook.mjs`, never `.hook.ts`, with no `.hook.ts` twin.** `hooks/hooks.harness.ts`
+  runs `checkHookImports`, a text regex: describe a forbidden import in words, never write one.
 - **A shipped hook cannot import a sibling module**, so the papers-root resolver is repeated in each
   hook and the harness compares the copies.
-- **`vigiles` is a `dependency`** (`package.json`). Its pin here and the consumer's move together, in
-  one pass: a major mismatch makes `PreToolUse` refuse every command. `npm ls vigiles` checks
-  installed against the manifest, not against the registry.
+- **`vigiles` is a `dependency`**; its pin here and the consumer's move together, in one pass.
 - **`@retorquere/bibtex-parser` is the one `.bib` reader** (`src/ports/bib-reader.ts`).
-- **Dependabot runs monthly, with `vigiles` exempt from the cooldown** (`.github/dependabot.yml`); for
-  our own package the primary path is "merge in vigiles, bump every consumer in the same pass".
+- **Dependabot runs monthly, with `vigiles` exempt from the cooldown** (`.github/dependabot.yml`).
 
 ## The guard against a green zero
 
-Rule 4 is enforced, not asserted: `scripts/rules-see-files.mjs` loads `eslint.config.mjs`,
-lints the repository, and asks ESLint for the effective config of every linted file. A rule
-enabled for **zero** files is named and the script exits 1.
-
-```bash
-node scripts/rules-see-files.mjs   # also part of npm run check
-```
-
-It is per RULE, not per glob, and that distinction is the point: a rule can be enabled in one
-block whose glob is empty while a different block is busy, so "some glob matched something" is
-not evidence about the rule you care about. Both halves are tested
-(`scripts/rules-see-files.harness.mjs`), under-reporting and over-reporting each by an
-assertion of its own.
+`node scripts/rules-see-files.mjs` (part of `npm run check`) asks ESLint for the effective config of
+every linted file and fails on a rule enabled for **zero** files — per rule, not per glob. Both
+halves are tested in `scripts/rules-see-files.harness.mjs`.
 
 ## Cost
 
-⛽ **This repository is PUBLIC, so its Actions minutes are FREE.** Verified against the API on
-2026-09-17: `"private": false`, `"visibility": "public"`, and three active workflows — `ci`,
-`dependabot auto-merge`, and Dependabot's own updates runner.
-
-🔴 **This paragraph said the exact opposite until now, and the correction is the lesson, not the
-fact.** It read «This is a **private** repository … Until then there is no CI here, and that is
-deliberate» — both halves false, and false in the file an agent loads FIRST. The flip to public
-happened on 2026-09-12 and _was_ recorded, at `.github/workflows/ci.yml:8-9`, which is a file
-nobody opens before deciding whether there is any CI to check. Reported as issue #6.
-
-⚠️ So the rule this leaves behind is about WHERE a correction lands: a measurement written into
-the artifact it describes is not written down for the reader who needs it. **Status that changes
-what a session DOES belongs in this file**; the workflow header can carry the detail.
-
-What stays true, because the reasoning outlives the flip: minutes on a **private** repo come out
-of the account-wide 3000/month shared with every other private repo, and the budget is decided
-**before** the first workflow file, not after the first bill. **If this repository is ever made
-private again, this section and `.github/dependabot.yml` are revisited together** — the bot is
-justified two hundred lines above precisely by these minutes being free.
+⛽ **This repository is PUBLIC; its Actions minutes were verified free on 2026-09-17.** If it is
+ever made private again, revisit this section and `.github/dependabot.yml` together. Status that
+changes what a session DOES belongs in this file, not in a workflow header
+([history](docs/repo-rules.md#cost)).
 
 ## Writing checks — what keeps them from pushing papers toward a blog post
 
-The rules and skills that judge a paper's prose follow five principles. A new rule, or a new
-criterion in a skill, is held to them.
+A new rule, or a new criterion in a skill that judges prose, is held to five principles
+([full text](docs/repo-rules.md#writing-checks)):
 
-1. **Every writing check is two-sided.** A check with only a ceiling — too long, too many markers,
-   too many of X — pushes every paper toward clipped, unsignposted prose, and the one equilibrium of
-   a set of ceilings is a blog post. A new check has a floor as well, or measures the distance to a
-   reference (accepted papers of the target venue); never only "less is better".
-2. **Rules count, skills judge.** What is countable on the parse tree — a density, a number with no
-   owner (`tex/claim-provenance`), a missing section — is a lint rule. What needs reading — register
-   relative to a venue, genre, whether a claim changed strength — is a skill criterion. A skill does
-   not grep prose for what a rule can count; a rule is not asked to judge register.
-3. **The model reader is the venue's reviewer, not only a smart outsider.** A check that simulates a
-   reader includes a skimming reviewer who reads the abstract, the introduction and the conclusion,
-   and judges whether it reads as a paper at that venue and whose result each sentence states.
-4. **Thresholds are calibrated, not borrowed.** A threshold is set with the same counter on real
-   accepted papers, never taken from a published figure measured by a different counter. Those
-   papers are [`fixtures/accepted-papers/`](fixtures/accepted-papers/README.md), and every rule's
-   count on them is recorded there.
-5. **A rewrite is accepted on what reviewers see.** That is the combined count of every surface form
-   of a tic (a narrow rule is gamed by rewording), plus a claims-preservation check that no claim was
-   softened or strengthened — not the one pattern the triggering rule matched.
+1. **Every writing check is two-sided**: a floor as well as a ceiling, or the distance to accepted
+   papers of the target venue — a set of ceilings alone converges on a blog post.
+2. **Rules count, skills judge.** Countable on the parse tree → a lint rule; needs reading → a skill.
+3. **The model reader is the venue's reviewer**, including one who skims the abstract, introduction
+   and conclusion.
+4. **Thresholds are calibrated, not borrowed**: the same counter, on
+   [`fixtures/accepted-papers/`](fixtures/accepted-papers/README.md).
+5. **A rewrite is accepted on what reviewers see**: every surface form of a tic, plus a check that
+   no claim was softened or strengthened.
 
 ## Testing
 
@@ -334,29 +165,23 @@ criterion in a skill, is held to them.
 
 Red first · assert the whole value · test what the code does, never what its source says · no test
 touches the real network · 100% coverage, no `c8 ignore`. **Before every push: `npm run check`,
-exit code read without a pipe.** Everything else — where files live, how fakes are injected, the
-`--min=1` trap: [`docs/testing.md`](docs/testing.md).
+exit code read without a pipe.** Everything else: [`docs/testing.md`](docs/testing.md).
 
 **A new rule** needs unit tests beside it and a reporting and a silent case in
-`src/rule-cases.test.ts`, which runs every registered rule through real ESLint and fails on one
-without cases. An e2e fixture only when [`docs/e2e.md`](docs/e2e.md)'s triggers say so.
+`src/rule-cases.test.ts`. An e2e fixture only when [`docs/e2e.md`](docs/e2e.md)'s triggers say so.
 
-**New code is functional.** In `src/`, `eslint-rules/` and `lib/` (tests aside) there is no
-`let`, no mutation, no loop, and types are read-only (`eslint-plugin-functional`); a `switch` over a
-union names every member. Collections go through [Remeda](https://remedajs.com/) — `lodash`,
-`lodash-es` and `ramda` are refused by `npm run lint`. Old code is listed in
-`eslint-suppressions.json`, ESLint's own bulk suppressions, which may only shrink: fixing a listed
-site without `npx eslint . --prune-suppressions` fails lint, and #134 burns the list down.
+**New code is functional.** In `src/`, `eslint-rules/` and `lib/` (tests aside): no `let`, no
+mutation, no loop, read-only types (`eslint-plugin-functional`); a `switch` over a union names every
+member. Collections go through [Remeda](https://remedajs.com/); `lodash`, `lodash-es` and `ramda`
+are refused by `npm run lint`. Old code sits in `eslint-suppressions.json`, which may only shrink:
+fixing a listed site without `npx eslint . --prune-suppressions` fails lint.
 
 ## Commits
 
 Conventional-commit subject, body says what was MEASURED, not what was intended. A number in
 a commit message that no command produced is the thing this repo exists to make impossible.
 
-**The subject is also the release.** Every push to `main` runs semantic-release
-(`.github/workflows/release.yml`), and it reads the squash commit, which is the PR title:
-`feat:` → minor, `fix:` or `perf:` → patch, `!` or a `BREAKING CHANGE:` footer → major,
-`docs:` `chore:` `ci:` `test:` `refactor:` → no release. `pr-title.yml` rejects a title without
-a conventional prefix, and for a one-commit PR checks the commit subject too, since GitHub
-squashes to that. npm, the git tag and the GitHub Release always carry the same version. Never
-`npm publish` by hand.
+**The subject is also the release.** Every push to `main` runs semantic-release, reading the squash
+commit, which is the PR title: `feat:` → minor, `fix:` or `perf:` → patch, `!` or a
+`BREAKING CHANGE:` footer → major, `docs:` `chore:` `ci:` `test:` `refactor:` → no release.
+`pr-title.yml` rejects a title without a conventional prefix. Never `npm publish` by hand.
