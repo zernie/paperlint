@@ -34,7 +34,7 @@
  * The decision of the LaTeX loop is `latex-loop.ts`, reading the log is `latex-log.ts`; both are
  * pure. This file is the shell: it runs processes through the injected `run` (the existing port —
  * `spawnSync` by default) and reads the files a pass left behind. Where paperlint's own files live is
- * answered by `package-dirs.ts`, the one module allowed to know it (rule 10).
+ * answered by `package-dirs.ts`, the one module allowed to know it (src/CLAUDE.md).
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";

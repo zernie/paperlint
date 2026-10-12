@@ -5,9 +5,9 @@ knowledge base.
 
 This file loads on every turn, so it holds only what applies to **any** change here. A rule that
 applies to one kind of work lives in that folder's `CLAUDE.md`, which loads when a file there is
-read or edited (table below). The full text of every rule, with the measurements and history behind
-it, is in [`docs/repo-rules.md`](docs/repo-rules.md); what broke is in
-[`docs/incidents.md`](docs/incidents.md).
+read or edited (table below); a fact a machine checks lives beside that check. What broke is in
+[`docs/incidents.md`](docs/incidents.md); the measurements behind the rules are in
+[git](https://github.com/zernie/paperlint/blob/b4a3dc3a81d436186f41db2d69b65fd93f1af3b6/CLAUDE.md#L62-L199).
 
 ## 🎯 THE GOAL, in one sentence
 
@@ -46,33 +46,31 @@ resolves through it. Without it, failures look like broken code rather than a mi
 
 ## Rules for every change
 
-Numbers are stable; code comments cite them.
+- **Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule or
+  fixture of ours — is machinery, and belongs in [vigiles](https://github.com/zernie/vigiles).
+- **"It can't be done in the engine" must be MEASURED, not assumed.** Each of these was stated
+  confidently on 2026-09-16 and fell to a single command:
 
-1. **Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule or
-   fixture of ours — is machinery, and belongs in [vigiles](https://github.com/zernie/vigiles).
-2. **"It can't be done in the engine" must be MEASURED, not assumed.** Each of these was stated
-   confidently on 2026-09-16 and fell to a single command:
+  | the claim                                                   | what one command showed                                                                      |
+  | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+  | "a lint rule can't know a git date, so this stays a script" | a rule is plain JS; `execFileSync("git", …)` is legal in it, and its real costs are solvable |
+  | "we need our own glob expander"                             | `fs.globSync` ships in Node 22 and returned the identical set                                |
+  | "the tool can't run a file that config excludes"            | it can, and says so: `matches exclude … — running because you named it`                      |
 
-   | the claim                                                   | what one command showed                                                                      |
-   | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-   | "a lint rule can't know a git date, so this stays a script" | a rule is plain JS; `execFileSync("git", …)` is legal in it, and its real costs are solvable |
-   | "we need our own glob expander"                             | `fs.globSync` ships in Node 22 and returned the identical set                                |
-   | "the tool can't run a file that config excludes"            | it can, and says so: `matches exclude … — running because you named it`                      |
+  ⇒ Before writing machinery, **run the thing you are about to replace and paste its output.**
 
-   ⇒ Before writing machinery, **run the thing you are about to replace and paste its output.**
-
-3. **Do not describe what you have not opened.** Every factual claim in a document meant for
-   strangers is checked against the disk in the same pass that writes it.
-4. **🔴 NEVER WRITE A GLOB OR A REGEX INSIDE A BLOCK COMMENT.** An asterisk followed by a slash
-   ends the comment wherever it appears. In a block comment, prose describes the pattern and never
-   quotes it; exact characters go in code or a line comment.
-5. **Measure the DEFECT before proposing the fix — read "this is quick" as a warning.** Show the
-   defect (output, or a quoted line), name the layer and channel (more than one is a conversation,
-   not a commit), and spend an adversarial pass on forks and on anything that goes outward.
-6. **Installing and using paperlint must be as smooth as possible.** The target is `npm i` plus one
-   command; any further manual step is a paperlint defect, except a choice that really belongs to
-   the user, named when it is asked. An automatic step that can fail silently is worse than an
-   explicit one.
+- **Do not describe what you have not opened.** Every factual claim in a document meant for
+  strangers is checked against the disk in the same pass that writes it.
+- **🔴 NEVER WRITE A GLOB OR A REGEX INSIDE A BLOCK COMMENT.** An asterisk followed by a slash
+  ends the comment wherever it appears. In a block comment, prose describes the pattern and never
+  quotes it; exact characters go in code or a line comment.
+- **Measure the DEFECT before proposing the fix — read "this is quick" as a warning.** Show the
+  defect (output, or a quoted line), name the layer and channel (more than one is a conversation,
+  not a commit), and spend an adversarial pass on forks and on anything that goes outward.
+- **Installing and using paperlint must be as smooth as possible.** The target is `npm i` plus one
+  command; any further manual step is a paperlint defect, except a choice that really belongs to
+  the user, named when it is asked. An automatic step that can fail silently is worse than an
+  explicit one.
 
 **New code is functional.** In `src/`, `eslint-rules/` and `lib/`: no `let`, no mutation, no loop,
 read-only types; collections through [Remeda](https://remedajs.com/). `npm run lint` holds it, and
@@ -80,15 +78,15 @@ read-only types; collections through [Remeda](https://remedajs.com/). `npm run l
 
 ## Where the other rules live
 
-| when you are…                                     | read                                                               | holds                                                                                     |
-| ------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| writing a lint rule, or a check that judges prose | [`eslint-rules/CLAUDE.md`](eslint-rules/CLAUDE.md)                 | rules 2–4: lint rule over script, both halves, a rule's page, the five writing principles |
-| writing or changing a hook                        | [`hooks/CLAUDE.md`](hooks/CLAUDE.md)                               | rule 6 (never the consumer's cwd), how hooks ship                                         |
-| writing or changing a skill                       | [`skills/CLAUDE.md`](skills/CLAUDE.md)                             | rule 10 for skills (where paperlint is installed), how skills ship                        |
-| in `src/`, or adding a CLI command                | [`src/CLAUDE.md`](src/CLAUDE.md)                                   | the two layer axes, rule 10 for the package's data, the prior art before a new command    |
-| thinking of a Claude Code plugin                  | [`plugin/CLAUDE.md`](plugin/CLAUDE.md)                             | why there is none, and what must be measured to bring it back                             |
-| changing CI, Dependabot or the release            | [`.github/CLAUDE.md`](.github/CLAUDE.md)                           | cost, Dependabot cadence, release from the PR title                                       |
-| writing a test                                    | [`docs/testing.md`](docs/testing.md), [`docs/e2e.md`](docs/e2e.md) | which kind of test, fakes, the e2e triggers                                               |
+| when you are…                                     | read                                                               | holds                                                                               |
+| ------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| writing a lint rule, or a check that judges prose | [`eslint-rules/CLAUDE.md`](eslint-rules/CLAUDE.md)                 | lint rule over script, both halves, a rule's page, the five writing principles      |
+| writing or changing a hook                        | [`hooks/CLAUDE.md`](hooks/CLAUDE.md)                               | never the consumer's cwd, how hooks ship                                            |
+| writing or changing a skill                       | [`skills/CLAUDE.md`](skills/CLAUDE.md)                             | where paperlint is installed, how skills ship                                       |
+| in `src/`, or adding a CLI command                | [`src/CLAUDE.md`](src/CLAUDE.md)                                   | the two layer axes, where the package's data is, the prior art before a new command |
+| thinking of a Claude Code plugin                  | [`plugin/CLAUDE.md`](plugin/CLAUDE.md)                             | why there is none, and what must be measured to bring it back                       |
+| changing CI, Dependabot or the release            | [`.github/CLAUDE.md`](.github/CLAUDE.md)                           | cost, Dependabot cadence, release from the PR title                                 |
+| writing a test                                    | [`docs/testing.md`](docs/testing.md), [`docs/e2e.md`](docs/e2e.md) | which kind of test, fakes, the e2e triggers                                         |
 
 ## Before every push
 

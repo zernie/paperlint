@@ -17,7 +17,7 @@
  * of every violation, it is never read as "no packages".
  *
  * Where the profiles live is answered by `presetsDir()` in `package-dirs.ts` — the one module
- * allowed to know where this package's data is installed (rule 10).
+ * allowed to know where this package's data is installed (src/CLAUDE.md).
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { readFileSync, readdirSync } from "node:fs";

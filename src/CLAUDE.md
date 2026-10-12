@@ -50,7 +50,7 @@ against `process.cwd()`, so lint started from any other directory classifies not
 report nothing — dropping it turns the fixtures `src/domain/reads-disk.ts` and
 `src/adapters/one/disk.ts` clean (measured).
 
-## Where the package is installed — rule 10
+## Where the package is installed
 
 **Checking logic never knows its own location, nor its distance from anything else.** The
 package's own data (`presets/`, `presets/tex/`) is found by `src/package-dirs.ts`, and nothing else

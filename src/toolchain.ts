@@ -3,7 +3,7 @@
  * declare, into paperlint's own cache, and banal (the page-geometry script HotCRP runs) at its pinned
  * commit (`adapters/banal/`). `paperlint build` offers the TeX Live install on a terminal.
  *
- * 🔴 WHY paperlint INSTALLS TeX AT ALL (rule 11). "Install TeX Live yourself" was a manual step with a
+ * 🔴 WHY paperlint INSTALLS TeX AT ALL (root CLAUDE.md: installing must be smooth). "Install TeX Live yourself" was a manual step with a
  * trap in it: the distribution packages cost 2.1 GB, and a smaller hand-picked set silently typeset
  * acmart papers in Computer Modern. The engine decision (2026-09-24) is TeX Live's pdflatex,
  * installed the way Playwright installs browsers: one command, a cache directory, idempotent.

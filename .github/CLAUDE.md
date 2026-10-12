@@ -1,6 +1,7 @@
 # CLAUDE.md — `.github/`
 
-Loaded when working under `.github/`. History: [`docs/repo-rules.md`](../docs/repo-rules.md#cost).
+Loaded when working under `.github/`. Why Dependabot runs the way it does is in the comments of
+`dependabot.yml`.
 
 - **This repository is public; its Actions minutes were verified free on 2026-09-17.** If it is ever
   made private, revisit this file and `dependabot.yml` together: private minutes come out of an

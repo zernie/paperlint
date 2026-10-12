@@ -1,5 +1,5 @@
 /**
- * Rule 10's mechanical half: nothing outside the port may name a file by WHERE IT IS
+ * The install-location rule's mechanical half (skills/CLAUDE.md): nothing outside the port may name a file by WHERE IT IS
  * INSTALLED.
  *
  * The class this exists for has broken this repository five times, silently every time, and
@@ -47,7 +47,7 @@ const PORT = "skills/paper-pipeline/scripts/consumer.mjs";
 const MESSAGES: Readonly<Record<string, string>> = {
   installPath:
     "This names a file by where it is INSTALLED ('{{prefix}}'), so it resolves in one " +
-    "delivery channel and does not exist in another. Rule 10: every answer to *where* comes " +
+    "delivery channel and does not exist in another. Every answer to *where* comes " +
     `from the port, ${PORT}. In a skill, use the substitution the harness performs ` +
     "(CLAUDE_SKILL_DIR / CLAUDE_PLUGIN_ROOT); in a module, ask the port.",
 };
@@ -58,7 +58,7 @@ const mdInstallPath = {
     type: "problem" as const,
     docs: {
       description:
-        "a skill must not name its scripts by an install-specific path — rule 10, the port owns where",
+        "a skill must not name its scripts by an install-specific path — the port owns where",
     },
     schema: [],
     messages: MESSAGES,
@@ -81,7 +81,7 @@ const jsInstallPath = {
     type: "problem" as const,
     docs: {
       description:
-        "a shipped module must not carry an install-specific path literal — rule 10, the port owns where",
+        "a shipped module must not carry an install-specific path literal — the port owns where",
     },
     schema: [],
     messages: MESSAGES,

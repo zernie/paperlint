@@ -4,7 +4,7 @@
 else. The measurement that produced a rule lives here, and is read only when someone argues
 with the rule or wants to know how it was found.
 
-Two things never move into this file: a measurement that **is** the rule (rule 5's table of
+Two things never move into this file: a measurement that **is** the rule (the root `CLAUDE.md`'s table of
 claims that fell to one command — without it the rule reads "measure things", which nobody
 obeys), and evidence that already lives in a code comment beside the code it explains. Those
 get a pointer, never a copy.
@@ -13,7 +13,7 @@ Entries are append-only and dated. A superseded entry is marked, not deleted.
 
 ---
 
-## 2026-09-17 — four fixes proposed and withdrawn in one session (rule 9)
+## 2026-09-17 — four fixes proposed and withdrawn in one session (measure the defect first)
 
 Each was proposed before the defect it claimed to fix had been exhibited, and each fell to a
 single command:
@@ -33,7 +33,7 @@ make the path resolve.
 
 Cost of the pattern: the four proposals took more of the session than the work they proposed.
 
-## 2026-09-17 — the install-location class, four silent breakages (rule 10)
+## 2026-09-17 — the install-location class, four silent breakages (where paperlint is installed)
 
 One class — _code that knows where it is on disk_ — has broken this repository four times, and
 not one of the four announced itself:
@@ -50,8 +50,8 @@ The first three are documented in the code they broke, and that is where the det
 `skills/paper-pipeline/scripts/consumer.mjs` (`ledgerPath`, three steps).
 
 🔴 The load-bearing observation is not the count. All four repetitions happened **while
-comments explaining the exact hazard sat directly above the code** — which is why rule 10 owes
-a lint rule and not another paragraph.
+comments explaining the exact hazard sat directly above the code** — which is why that rule got
+a lint rule (`eslint-rules/install-path-literals.ts`) and not another paragraph.
 
 A fifth instance of the same class was measured the same day and is not yet fixed: the guard
 in `ledgerPath` asks `insideNodeModules(hereDir)`, and a plugin cache is not `node_modules`, so

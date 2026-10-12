@@ -19,7 +19,7 @@ import markdown from "@eslint/markdown";
 import { recordCheck } from "vigiles";
 import port, { PORT } from "./install-path-literals.ts";
 
-// Resolved from THIS file, never from the caller's cwd — rule 6, and the mistake this very
+// Resolved from THIS file, never from the caller's cwd (hooks/CLAUDE.md), and the mistake this very
 // class of bug is about.
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");

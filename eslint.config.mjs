@@ -681,7 +681,7 @@ export default [
     languageOptions: { ecmaVersion: 2024, sourceType: "module" },
     plugins: { local: localRules, port: portRules },
     rules: {
-      // Rule 10's mechanical half, code side. `warn` and not `error`, unlike its neighbour
+      // The install-location rule's mechanical half (skills/CLAUDE.md), code side. `warn` and not `error`, unlike its neighbour
       // above: this one does NOT open on a clean corpus. Two shipped modules print a command
       // for a human that names an install-specific path, and neither is fixable by the
       // answer the skills get — a printed command has to be resolved through the port at
@@ -741,7 +741,7 @@ export default [
     rules: { "n/no-missing-import": "error" },
   },
   /**
-   * Rule 10's mechanical half, prose side — and this is where the debt actually is: 76
+   * The install-location rule's mechanical half (skills/CLAUDE.md), prose side — and this is where the debt actually is: 76
    * findings across 29 skills on a healthy checkout, every one of them a command that
    * resolves in one delivery channel and is absent in another.
    *
@@ -789,7 +789,7 @@ export default [
     // ⚠️ `npx eslint .` therefore reports six warnings on a healthy checkout: the four defect
     // fixtures are DEFECTIVE ON PURPOSE, and that is what makes the fire half of every harness
     // real. Do not silence them by adding an ignore — a rule that lints only clean inputs is
-    // one whose firing path nothing exercises, which is rule 4 wearing a different hat. The
+    // one whose firing path nothing exercises, which is the green zero of scripts/rules-see-files.mjs wearing a different hat. The
     // pass/fail signal lives in `npm test`, not in the warning count of `npm run lint`.
   },
   {

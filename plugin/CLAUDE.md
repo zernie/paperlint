@@ -5,7 +5,7 @@ into the consumer's `.claude/settings.json`, and it is the only source of that w
 
 **There is no Claude Code plugin or marketplace entry; it was removed in the release after 1.0.0
 (#82).** Do not bring it back without answering each of these, measured
-([full text](../docs/repo-rules.md#distribution)):
+([`docs/install.md`](../docs/install.md), "Why it is shaped this way"):
 
 - **A plugin cannot carry the code.** Claude Code installs a plugin's dependencies with a 60-second
   timeout, and a failed install never blocks the plugin: the hooks load and fail with
