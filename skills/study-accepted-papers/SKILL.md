@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:03ff4d9234d476eb compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:96eba1d4bd4a11c0 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — what this venue rewards, measured on its own papers
 
@@ -21,7 +21,7 @@ It answers a different question from its neighbours:
 - **`study-accepted-papers`: what does it take to be *strong* at THIS venue, judged by its own papers?**
 
 **Two entry points, one skill.** In `paper-pipeline` it sits in SETUP, right after `find-venue`: the
-venue's bar is worth most before the study is designed, when it can still decide what the oracle is and
+venue's standard is worth most before the study is designed, when it can still decide what the oracle is and
 which belief the claim targets. It comes back once text exists, to score the draft. Run it only late
 and its main findings arrive after they could change the design.
 
@@ -109,9 +109,9 @@ as judgement, against the base rates of `references/base-rates.md`; simulated pa
 | what | where | why there |
 |---|---|---|
 | **the venue corpus** | `<papers-root>/venues/<venue>/` (the papers directory from the project's `paperlint.json`) | **shared by every paper that targets the venue**, collected once and reused by every later mode. `MANIFEST.md` (sources, years, what was capped, the proxy and its base rate), the winner and ordinary lists, `measurements.json` (L0/L1 codes, one row per paper), `text/` extractions, the scripts, `deep-reads/` (one file per paper, reusable by any paper). Corpus 2 goes in its own labelled subfolder. **PDFs are not committed**: record the IDs and the command. |
-| **the scorecard** | the section **"Venue-bar scorecard (M1–M10)"** of the paper's `PIPELINE-STATUS.md` | a row per mechanism: status (pass / partial / fail), evidence (`file:line`), owner, plan or "accept ceiling". **The only place the verdicts live**; update it there. |
+| **the scorecard** | the section **"Strong-accept scorecard (M1–M10)"** of the paper's `PIPELINE-STATUS.md` | a row per mechanism: status (pass / partial / fail), evidence (`file:line`), owner, plan or "accept ceiling". **The only place the verdicts live**; update it there. |
 | **the reasoning** | `<paper>/reviews/<YYYY-MM-DD>-study-accepted-<venue>-<mode>.md` | a dated report per run, with frontmatter (below). It keeps the reasoning, the selection and the per-mechanism argument, and **points to the scorecard section; it never copies the table**. |
-| **the stage** | the `venuebar` row of `PIPELINE-STATUS.md` (SETUP) | status, date, the mode and depth run, and a link to the report. One row, updated by every mode. |
+| **the stage** | the SETUP row with id `venuebar` in `PIPELINE-STATUS.md` (the id is kept for existing scorecards) | status, date, the mode and depth run, and a link to the report. One row, updated by every mode. |
 | **the generic list** | `references/` beside this skill | M1–M10 and the base-rate sources. A mechanism your venue adds, or one that does not hold there, goes in the venue corpus's `MANIFEST.md`; the ids stay stable. |
 
 The paper folder has **no corpus folder of its own**: `paper/folder-layout` reports one, and the hook
@@ -131,7 +131,7 @@ mode: C
 depth: [L2, L3]
 proxy: "distinguished-paper award, <k> of <n> accepted, <years>"
 corpus: <papers-root>/venues/<venue>/
-scorecard: PIPELINE-STATUS.md#venue-bar-scorecard-m1m10
+scorecard: PIPELINE-STATUS.md#strong-accept-scorecard-m1m10
 ---
 ```
 

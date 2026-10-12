@@ -30,11 +30,11 @@ stages:
 Everything about a paper that is _live_ (true now, and rewritten when it changes) is a section of this
 one file, so there is one place to read and nothing to keep in step:
 
-| section                          | holds                                                                                                                                          | written by                                                     |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| **Plan / now**                   | what is being done now and next, the decisions in force (who, when, a link to the record), the schedule                                        | whoever changes the plan, in the same commit                   |
-| **Venue-bar scorecard (M1–M10)** | a row per strong-accept mechanism: status (`pass` / `partial` / `fail` / `—`), evidence as `file:line`, owner, plan or `accept ceiling: <why>` | `study-accepted-papers` (mode C: every row; mode D: M2 and M4) |
-| **Stages** (SETUP … AFTER)       | a row per unit of pipeline work                                                                                                                | the skill that ran it                                          |
+| section                              | holds                                                                                                                                          | written by                                                     |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Plan / now**                       | what is being done now and next, the decisions in force (who, when, a link to the record), the schedule                                        | whoever changes the plan, in the same commit                   |
+| **Strong-accept scorecard (M1–M10)** | a row per strong-accept mechanism: status (`pass` / `partial` / `fail` / `—`), evidence as `file:line`, owner, plan or `accept ceiling: <why>` | `study-accepted-papers` (mode C: every row; mode D: M2 and M4) |
+| **Stages** (SETUP … AFTER)           | a row per unit of pipeline work                                                                                                                | the skill that ran it                                          |
 
 - **No `PLAN.md` beside it.** A plan in a second file drifts from the status it plans against;
   `paper/folder-layout` reports a `PLAN.md` at the paper's root. A decision's _history_ (why it was

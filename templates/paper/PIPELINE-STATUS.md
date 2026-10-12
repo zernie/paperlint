@@ -13,7 +13,7 @@ Updated: <ISO>
 **Readiness verdict:** <one line — submit-ready? if not, the WORST failing gate first. Any failing
 gate caps "ready"; an accept probability alone is not a verdict.>
 
-**Gates at a glance (worst first — mark any failing gate ✗):** readability(persona stalls) <density/verdict> · structure(tighten-paper) <verdict> · claims-honest(claims) <clean?> · defects(panel) <accept-prob/decision> · writing <NN/60> · content(venue bar) <run?/levers>
+**Gates at a glance (worst first — mark any failing gate ✗):** readability(persona stalls) <density/verdict> · structure(tighten-paper) <verdict> · claims-honest(claims) <clean?> · defects(panel) <accept-prob/decision> · writing <NN/60> · content(strong-accept scorecard) <run?/mode>
 
 ## Plan / now
 
@@ -25,7 +25,7 @@ decision's history goes to `research/` as a dated record.
 - **Decisions in force:** <the decision — who made it, ISO date, link to the record>
 - **Schedule:** <ISO date — milestone, in the author's own zone>
 
-## Venue-bar scorecard (M1–M10)
+## Strong-accept scorecard (M1–M10)
 
 Filled by `study-accepted-papers`: mode C scores every row, mode D checks M2 and M4 again. What each
 mechanism is, and what it is not, is that skill's `references/mechanisms.md`. The verdicts live only
@@ -56,7 +56,7 @@ Status: `pass` · `partial` · `fail` · `—` (not scored). A `fail` names an o
 | idea       | Validate idea                     | research-ideate       | ☐      | —    | —                                                                                                 | —         |
 | priorwork  | Map competitors                   | map-prior-work        | ☐      | —    | —                                                                                                 | siblings/ |
 | venue      | Pick venue                        | find-venue            | ☐      | —    | —                                                                                                 | —         |
-| venuebar   | Venue bar / levers                | study-accepted-papers | ☐      | —    | —                                                                                                 | —         |
+| venuebar   | What the venue rewards            | study-accepted-papers | ☐      | —    | —                                                                                                 | —         |
 | **access** | 🔴 **Can you physically submit?** | plan-paper-timeline   | ☐      | —    | account · profile ACTIVE since <ISO> · portal reachable · form fields known · artifact host known | —         |
 | schedule   | Schedule + calendar               | plan-paper-timeline   | ☐      | —    | —                                                                                                 | —         |
 | **frame**  | **Claim stated before the runs**  | argument-arc (frame)  | ☐      | —    | one paragraph: what will this paper claim?                                                        | —         |
