@@ -73,7 +73,7 @@ Things that exist only in the render, every one of which produces a real stall:
 - how much of page 1 is numbers, which is what a reviewer's first impression is actually made of;
 - line numbers and two-column measure, which change where the eye stops.
 
-\`repro/build-submission.sh\` produces the PDF; \`render-paper\` turns pages into images. Judge from
+\`repro/tools/build-submission.sh\` produces the PDF; \`render-paper\` turns pages into images. Judge from
 those. If only the source is available, say so in the report — a stall inventory taken from source
 is a weaker artifact and must not be presented as the same thing.
 

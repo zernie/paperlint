@@ -303,13 +303,13 @@ const cacheText = (files: Files): string | null => {
   return b === null ? null : new TextDecoder().decode(b);
 };
 
-describe("the lookup cache — <paper>/repro/references-cache.json", () => {
+describe("the lookup cache — <paper>/repro/data/references-cache.json", () => {
   it("a build that fetched writes the cache; the next build is handed it and writes nothing", async () => {
     const f = fetching("crossref:doi:10.1/x");
     const { files, out } = await build(ordinary(), f.check);
     expect(out).toEqual({
       ok: true,
-      note: "references: 1 checked, 0 failing → _build/references.json; 1 new answer → repro/references-cache.json",
+      note: "references: 1 checked, 0 failing → _build/references.json; 1 new answer → repro/data/references-cache.json",
     });
     const written = cacheText(files);
     expect(written).toBe(
@@ -350,7 +350,7 @@ describe("the lookup cache — counting", () => {
     const { out } = await build(ordinary(), two);
     expect(out).toEqual({
       ok: true,
-      note: "references: 1 checked, 0 failing → _build/references.json; 2 new answers → repro/references-cache.json",
+      note: "references: 1 checked, 0 failing → _build/references.json; 2 new answers → repro/data/references-cache.json",
     });
   });
 
@@ -381,7 +381,7 @@ describe("the lookup cache — counting", () => {
     expect({ again, file: cacheText(files) }).toEqual({
       again: {
         ok: true,
-        note: "references: 1 checked, 0 failing → _build/references.json; 1 new answer → repro/references-cache.json",
+        note: "references: 1 checked, 0 failing → _build/references.json; 1 new answer → repro/data/references-cache.json",
       },
       file: serializeLookupCache({
         citations: new Map([["a", ANSWER]]),
@@ -402,7 +402,7 @@ describe("the lookup cache — refusing", () => {
     });
     expect(out).toEqual({
       ok: true,
-      note: "references NOT checked — repro/references-cache.json cannot be read (schema 7: this paperlint reads schema 1) — fix it, or delete it to ask every question again; lint will say so",
+      note: "references NOT checked — repro/data/references-cache.json cannot be read (schema 7: this paperlint reads schema 1) — fix it, or delete it to ask every question again; lint will say so",
     });
     expect(f.seen).toEqual([]);
     expect(cacheText(files)).toBe('{"schema": 7}');

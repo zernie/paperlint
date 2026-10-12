@@ -192,14 +192,14 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 
 ## 🔍 Lint and build
 
-|        | `paperlint build`                                                                                       | `paperlint lint`                                                                                      |
-| ------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| needs  | Node, TeX Live, the network                                                                             | Node                                                                                                  |
-| does   | compiles `paper.tex`, measures the PDF, checks each reference online (exists, right authors)            | checks the source, and judges what build recorded: page limit, fonts, the reference results — offline |
-| writes | `paper.pdf`, in `_build/` the measurements and the reference results, and `repro/references-cache.json` | nothing (`--fix`: the three fixable slips)                                                            |
+|        | `paperlint build`                                                                                            | `paperlint lint`                                                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| needs  | Node, TeX Live, the network                                                                                  | Node                                                                                                  |
+| does   | compiles `paper.tex`, measures the PDF, checks each reference online (exists, right authors)                 | checks the source, and judges what build recorded: page limit, fonts, the reference results — offline |
+| writes | `paper.pdf`, in `_build/` the measurements and the reference results, and `repro/data/references-cache.json` | nothing (`--fix`: the three fixable slips)                                                            |
 
 - If `paper.pdf` or the bibliography changed since the last build, lint fails and tells you to rebuild.
-- Commit `repro/references-cache.json`: it keeps what the citation services answered, so a build
+- Commit `repro/data/references-cache.json`: it keeps what the citation services answered, so a build
   asks only about new or edited entries (and answers older than 30 days), so an unchanged
   bibliography usually builds without the network ([`docs/references.md`](docs/references.md)).
 - A paper whose body is in other files (`\input{sections/intro}`) is linted file by file: a finding

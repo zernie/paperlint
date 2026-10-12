@@ -4,7 +4,7 @@ description: Use when asking "does this paper read well?" / "is the writing any 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:d24f7dd420a32ea5 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:2dbb93cd7e4a3ba5 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
@@ -67,7 +67,7 @@ Things that exist only in the render, every one of which produces a real stall:
 - how much of page 1 is numbers, which is what a reviewer's first impression is actually made of;
 - line numbers and two-column measure, which change where the eye stops.
 
-`repro/build-submission.sh` produces the PDF; `render-paper` turns pages into images. Judge from
+`repro/tools/build-submission.sh` produces the PDF; `render-paper` turns pages into images. Judge from
 those. If only the source is available, say so in the report — a stall inventory taken from source
 is a weaker artifact and must not be presented as the same thing.
 

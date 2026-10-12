@@ -42,7 +42,7 @@
  * 🔴 AND THE SAME FALSE-POSITIVE DISCIPLINE AS THE REVERSE COVERAGE LEG. `repro/` is mostly not
  * analysis code, so an ignore set is unavoidable — and an ignore set applied in silence is how a
  * check becomes a green light. Every structural rule prints the names it swallowed, and
- * `repro/generated-code-grandfathered.txt` prints every row and every reason, on every run,
+ * `repro/tools/generated-code-grandfathered.txt` prints every row and every reason, on every run,
  * findings or none. Same reasoning as `check_grandfather` in `repro/paper_numbers.py`.
  */
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
@@ -161,7 +161,7 @@ const files = [];
 })(repro, 1);
 
 // ── the allow file ─────────────────────────────────────────────────────────────────────────────
-const allowPath = join(repro, "generated-code-grandfathered.txt");
+const allowPath = join(repro, "tools", "generated-code-grandfathered.txt");
 const allowed = new Map();
 if (existsSync(allowPath)) {
   for (const line of readFileSync(allowPath, "utf8").split("\n")) {
@@ -305,7 +305,7 @@ for (const [rule, names] of swallowed) {
     );
 }
 ledger.push(
-  `   • ${ignored.length} row(s) in repro/generated-code-grandfathered.txt — every row, every reason:`,
+  `   • ${ignored.length} row(s) in repro/tools/generated-code-grandfathered.txt — every row, every reason:`,
 );
 for (const [key, reason] of ignored) ledger.push(`       ${key}  →  ${reason}`);
 if (!ignored.length) ledger.push("       (nothing is being waved through)");

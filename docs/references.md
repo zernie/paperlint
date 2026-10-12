@@ -61,14 +61,14 @@ is stale and `paper/sources-fresh` says so: build again to write it. A database 
 the paper directory, on its search path (`BIBINPUTS`), is not read: the step says which and
 `paper/refs-checked` warns.
 
-## `repro/references-cache.json` — commit it
+## `repro/data/references-cache.json` — commit it
 
 Asking five services about every entry is slow. DBLP asks clients to pause between requests, and a
 slow service is retried. Before this cache existed, a 27-reference paper spent 217 seconds on the
 check, on every build, and a 51-reference paper did not finish inside a 12-minute CI job
 ([#107](https://github.com/zernie/paperlint/issues/107)).
 
-So the build keeps every answer it receives in `<paper>/repro/references-cache.json`, and the next
+So the build keeps every answer it receives in `<paper>/repro/data/references-cache.json`, and the next
 build asks only what that file cannot answer:
 
 - An unchanged bibliography whose answers are under 30 days old asks nothing and makes no network request at all, not even the check

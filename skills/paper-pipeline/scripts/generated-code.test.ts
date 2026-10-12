@@ -46,7 +46,7 @@ test("repro/: a dangling link is passed over; skipped trees are named, more than
     "repro/__pycache__/x.py": "",
     // Draws randomness unseeded: a NO_SEED finding, which the reasonless row below waves through.
     "repro/exp/run.py": "import random\nprint(random.random())\n",
-    "repro/generated-code-grandfathered.txt": "exp/run.py\t*\n",
+    "repro/tools/generated-code-grandfathered.txt": "exp/run.py\t*\n",
   });
   symlinkSync(join(root, "gone"), join(dir, "repro", "dangling.py"));
   const out = run(dir).stdout;

@@ -4,7 +4,7 @@ description: Answer "what's the status of the paper?" in one pass — MEASURE wh
 allowed-tools: [Bash, Read, Grep, Glob]
 ---
 
-<!-- vigiles:sha256:c90bd362b565fa22 compiled from skills/paper-status/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c28cf2904fc2aaeb compiled from skills/paper-status/SKILL.md.spec.ts -->
 
 # paper-status — state, measured before it is narrated
 
@@ -51,7 +51,7 @@ status; the status is what that measurement makes possible next.
 
 ```bash
 cd <paper-dir>
-bash repro/build-submission.sh 2>&1 | grep -Ei 'body pages|VERDICT|Overfull|undefined|anonymity'
+bash repro/tools/build-submission.sh 2>&1 | grep -Ei 'body pages|VERDICT|Overfull|undefined|anonymity'
 git status --porcelain                      # uncommitted work
 git log --oneline @{u}..HEAD                # unpushed commits
 ```

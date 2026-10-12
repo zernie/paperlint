@@ -57,7 +57,7 @@ status; the status is what that measurement makes possible next.
 
 \`\`\`bash
 cd <paper-dir>
-bash repro/build-submission.sh 2>&1 | grep -Ei 'body pages|VERDICT|Overfull|undefined|anonymity'
+bash repro/tools/build-submission.sh 2>&1 | grep -Ei 'body pages|VERDICT|Overfull|undefined|anonymity'
 git status --porcelain                      # uncommitted work
 git log --oneline @{u}..HEAD                # unpushed commits
 \`\`\`

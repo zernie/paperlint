@@ -311,7 +311,7 @@ Over {{corpus.n}} real rules files, with the extractor's proposed mapping
 taken as if an author had written it, {{annotated.failedContradicted}} fail admission.
 \`\`\`
 
-\`<paper>/repro/numbers.tsv\` gives each name its value, the JSON path or **formula** that recomputes
+\`<paper>/repro/data/numbers.tsv\` gives each name its value, the JSON path or **formula** that recomputes
 it, and two guards. The build refuses a PDF unless: the name resolves · the value still matches the
 data · the **paragraph** names the arm (\`requires\`) · the **sentence** does not claim a different one
 (\`forbids\`). Requires and forbids are separate on purpose — the pairing is auditing's, where a control
@@ -327,7 +327,7 @@ binds every row from now on, and the existing rows are *enumerated rather than e
 says out loud how many figures still have no machine-checked path to data. On the paper that has it:
 7 guarded, 248 grandfathered. That ratio is a finding, not a score.
 
-**Adopting it in another paper:** copy \`repro/paper_numbers.py\`, \`repro/paper_numbers.selftest.py\`
+**Adopting it in another paper:** copy \`repro/tools/paper_numbers.py\`, \`repro/tools/paper_numbers.selftest.py\`
 and the build step that calls \`expand()\` on \`paper.tex\` before \`pdflatex\`; generate the
 grandfather list from the current draft; register the numbers a reviewer will actually check first.
 
@@ -367,7 +367,7 @@ printing two unrelated 22s broke it the same hour. Key on the occurrence.
 🔴 **Hand the gate to a red team the same day you build it.** This one was, and seven holes came
 back, the worst being that the original defect could simply be **retyped as digits** — its value was
 grandfathered, so the guard applied to the macro and not to the claim. Every hole is now a case in
-\`repro/paper_numbers.selftest.py\` (18/18, including three that must stay **quiet** — a gate that
+\`repro/tools/paper_numbers.selftest.py\` (18/18, including three that must stay **quiet** — a gate that
 fires on ordinary writing gets muted, and then its silence reads as coverage).
 
 ## 🔴 The page limit is a SUBMISSION gate, not an EDIT gate

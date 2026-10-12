@@ -19,7 +19,7 @@
  * stale when it changes (`pdf_sha256`); these are about the databases and are stale when THEY
  * change (`bib.sha256`). One staleness key per file, the way `pdf/fresh` already works.
  *
- * 🔴 WHAT THE CHECKERS ANSWERED IS KEPT, COMMITTED, IN `<paper>/repro/references-cache.json`
+ * 🔴 WHAT THE CHECKERS ANSWERED IS KEPT, COMMITTED, IN `<paper>/repro/data/references-cache.json`
  * (`domain/lookup-cache.ts`). Loaded before the check and saved after it — only when something new
  * was fetched, a refreshed answer included — so a build asks each question at most once every
  * MAX_AGE_DAYS, not once per build (#107: 217 s for 27 references, every build). The verdicts above are NOT cached: they are derived from the cached
@@ -77,7 +77,7 @@ export const REFERENCES_SCHEMA = 3;
 export const REFERENCES_FILE = "references.json";
 
 /** The lookup cache's place in a paper: committed, beside the paper's other reproduction files. */
-export const LOOKUP_CACHE_FILE = "repro/references-cache.json";
+export const LOOKUP_CACHE_FILE = "repro/data/references-cache.json";
 
 export const lookupCachePath = (paperDir: string): string =>
   join(paperDir, LOOKUP_CACHE_FILE);

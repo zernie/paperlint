@@ -109,7 +109,7 @@ const RecordedReferences = z.looseObject({
   ),
 });
 
-/** `repro/references-cache.json`: the answers per registry, each dated. */
+/** `repro/data/references-cache.json`: the answers per registry, each dated. */
 const ReferencesCache = z.looseObject({
   schema: z.unknown().optional(),
   citations: z.record(
@@ -480,9 +480,9 @@ function referenceTests(services: {
     // What bibtex read is in _build/sources.json, written once from TeX's own files.
     expect(recorded).not.toHaveProperty("bibtex");
   });
-  it("cite: the answers landed in repro/references-cache.json — four registries and DBLP, dated", () => {
+  it("cite: the answers landed in repro/data/references-cache.json — four registries and DBLP, dated", () => {
     const cache = ReferencesCache.parse(
-      readJson(join(cite, "repro", "references-cache.json")),
+      readJson(join(cite, "repro", "data", "references-cache.json")),
     );
     expect(cache.schema).toBe(1);
     expect(Object.keys(cache.citations)).toHaveLength(4);

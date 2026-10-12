@@ -105,7 +105,7 @@ at all** — and it has four rungs:
 Type A lives on rung 3 and sometimes 2. **Rung 1 is not in their taxonomy at all**, and it is the
 rung we are actually best at:
 
-- `repro/paper_numbers.py` — a registered quantity is written `{{annotated.failedContradicted}}`, not
+- `repro/tools/paper_numbers.py` — a registered quantity is written `{{annotated.failedContradicted}}`, not
   `22`. The build refuses to emit a PDF when the name does not resolve, when the value has drifted
   from the data, or when the paragraph does not declare which experimental arm it is reporting. This
   is not a gate that judges the number. **The wrong number has no representation in the source.**
@@ -117,12 +117,12 @@ not to find a second model family we do not have — it is to ask whether the qu
 or rung-1-shaped surrogate.** For measurement papers it very often does, and every time we found one
 it caught a defect the judgement gates had passed:
 
-| the taste question                              | the surrogate we built                                                                              | what it caught                                                                                 |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| does this number support this sentence          | `repro/numbers.tsv` guards — the arm word the paragraph must name, the condition it must not claim  | the 2026-08-05 abstract defect, 29 hours before a deadline; five judgement gates had passed it |
-| is this quantity really bound to its data       | `repro/arm_permutation.py` — permute the arm labels, rebuild, an unchanged quantity was never bound | a whole class the artifact reviewer recomputes and passes, because the number is _correct_     |
-| did the number survive into the delivered paper | `repro/delivered_pdf.py` — read the built PDF back                                                  | a superscript minus lost in typesetting                                                        |
-| is this reference real                          | `extract-ref-facts.mjs` + rules `refs/*` — arXiv / CrossRef                                         | nine fabricated titles carrying correct arXiv ids, and one invented award                      |
+| the taste question                              | the surrogate we built                                                                                    | what it caught                                                                                 |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| does this number support this sentence          | `repro/data/numbers.tsv` guards — the arm word the paragraph must name, the condition it must not claim   | the 2026-08-05 abstract defect, 29 hours before a deadline; five judgement gates had passed it |
+| is this quantity really bound to its data       | `repro/tools/arm_permutation.py` — permute the arm labels, rebuild, an unchanged quantity was never bound | a whole class the artifact reviewer recomputes and passes, because the number is _correct_     |
+| did the number survive into the delivered paper | `repro/tools/delivered_pdf.py` — read the built PDF back                                                  | a superscript minus lost in typesetting                                                        |
+| is this reference real                          | `extract-ref-facts.mjs` + rules `refs/*` — arXiv / CrossRef                                               | nine fabricated titles carrying correct arXiv ids, and one invented award                      |
 
 ---
 
@@ -248,16 +248,16 @@ Everything in `.claude/skills/paper-pipeline/scripts/`, `.claude/lib/` and `<pap
 construction — that is why it is trustworthy, and it is not a coincidence but a selection effect: a
 program is what you can write only when the question is Type A.
 
-| unit                                                 | question                                                        | rung                                                                                                                  |
-| ---------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `repro/report-submission.py`                         | body pages, overfull boxes, unresolved refs, dropped characters | A (3)                                                                                                                 |
-| `repro/check-anon.sh`, `check-figure.sh`             | deanonymising strings; does the figure fit the column           | A (3)                                                                                                                 |
-| `prose-lint.mjs`                                     | thresholds with published baselines                             | A (3) — _measuring_ a B question, which is legitimate and is not the same as answering it                             |
-| rules `refs/*` (facts by `extract-ref-facts.mjs`)    | does the registry have this record                              | A (3), **external adjudicator**                                                                                       |
-| `paper-lint.mjs`                                     | appendix ratio, shaved passages                                 | A (3)                                                                                                                 |
-| `repro/arm_permutation.py`, `repro/delivered_pdf.py` | is the quantity bound to its arm; did it survive typesetting    | A (3), metamorphic                                                                                                    |
-| **`repro/paper_numbers.py` + `numbers.tsv`**         | —                                                               | **rung 1: no PDF exists in which the number is wrong**                                                                |
-| `paper-edit-guard.hook.ts`                           | writing to a paper from Bash                                    | rung 2 — **leaky**, an interpreter reading its program from stdin still gets through (`papers/CLAUDE.md`, 2026-08-06) |
+| unit                                                             | question                                                        | rung                                                                                                                  |
+| ---------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `repro/tools/report-submission.py`                               | body pages, overfull boxes, unresolved refs, dropped characters | A (3)                                                                                                                 |
+| `repro/tools/check-anon.sh`, `check-figure.sh`                   | deanonymising strings; does the figure fit the column           | A (3)                                                                                                                 |
+| `prose-lint.mjs`                                                 | thresholds with published baselines                             | A (3) — _measuring_ a B question, which is legitimate and is not the same as answering it                             |
+| rules `refs/*` (facts by `extract-ref-facts.mjs`)                | does the registry have this record                              | A (3), **external adjudicator**                                                                                       |
+| `paper-lint.mjs`                                                 | appendix ratio, shaved passages                                 | A (3)                                                                                                                 |
+| `repro/tools/arm_permutation.py`, `repro/tools/delivered_pdf.py` | is the quantity bound to its arm; did it survive typesetting    | A (3), metamorphic                                                                                                    |
+| **`repro/tools/paper_numbers.py` + `numbers.tsv`**               | —                                                               | **rung 1: no PDF exists in which the number is wrong**                                                                |
+| `paper-edit-guard.hook.ts`                                       | writing to a paper from Bash                                    | rung 2 — **leaky**, an interpreter reading its program from stdin still gets through (`papers/CLAUDE.md`, 2026-08-06) |
 
 `prose-lint.mjs` deserves its note. It puts a **number with a threshold** on a question that is
 Type B — is this sentence readable. That is not
