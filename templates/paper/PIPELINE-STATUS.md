@@ -34,7 +34,7 @@ here; the dated report in `reviews/` keeps the reasoning and points here.
 Status: `pass` · `partial` · `fail` · `—` (not scored). A `fail` names an owner and either a plan or
 `accept ceiling: <why>`.
 
-| id  | mechanism                                       | status | evidence (file:line) | owner | plan or accept ceiling |
+| #   | mechanism                                       | status | evidence (file:line) | owner | plan or accept ceiling |
 | --- | ----------------------------------------------- | ------ | -------------------- | ----- | ---------------------- |
 | M1  | a non-model oracle under the headline           | —      | —                    | —     | —                      |
 | M2  | the claim is aimed at a belief stated on record | —      | —                    | —     | —                      |

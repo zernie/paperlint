@@ -16,7 +16,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { existsSync } from "node:fs";
-import { newPaper, OVERRIDE_DIR, reportNewPaper } from "./new-paper.ts";
+import {
+  newPaper,
+  OVERRIDE_DIR,
+  PACKAGE_TEMPLATES,
+  reportNewPaper,
+} from "./new-paper.ts";
 import { parsePaperSettings } from "./paper-settings.ts";
 import { chooseVenue, run } from "./cli.ts";
 import { shippedPresets } from "./presets.ts";
@@ -517,5 +522,37 @@ describe("a project's own template", () => {
     expect(
       lines.filter((l) => l.endsWith("(from the package template)")).length,
     ).toBeGreaterThan(0);
+  });
+});
+
+describe("the PIPELINE-STATUS template — only stage tables are headed `id`", () => {
+  // A consumer's stage-table parser reads every table whose first column is `id` as stage rows, and a
+  // row under a heading that names no stage section is an error there: a fix-list table headed `id`
+  // gave a real paper two such errors (2026-10-12). Every other table starts with `#` or a word.
+  const SECTIONS = ["SETUP", "LOOP", "CONTINUOUS", "GATES", "AFTER"];
+  const text = readFileSync(
+    join(PACKAGE_TEMPLATES, "PIPELINE-STATUS.md"),
+    "utf8",
+  );
+  const idTablesUnder = text
+    .split("\n")
+    .reduce<{ heading: string; found: readonly string[] }>(
+      (acc, line) =>
+        line.startsWith("#")
+          ? { ...acc, heading: line.replace(/^#+\s*/, "") }
+          : /^\|\s*id\s*\|/.test(line)
+            ? { ...acc, found: [...acc.found, acc.heading] }
+            : acc,
+      { heading: "", found: [] },
+    ).found;
+
+  it("has stage tables at all", () => {
+    expect(idTablesUnder.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("puts each one under a stage section's heading", () => {
+    expect(
+      idTablesUnder.filter((h) => !SECTIONS.includes(h.split(/\s/)[0] ?? "")),
+    ).toEqual([]);
   });
 });

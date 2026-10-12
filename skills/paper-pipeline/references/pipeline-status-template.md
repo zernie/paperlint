@@ -44,6 +44,10 @@ one file, so there is one place to read and nothing to keep in step:
   truth to update. The mechanisms themselves, with what each is not, are in
   `study-accepted-papers/references/mechanisms.md`. Nothing checks the table mechanically yet: keep its
   columns as the template has them.
+- 🔴 **Only stage tables have a first column headed `id`.** A stage-table parser reads every
+  `id`-headed table as stage rows, and a row under a heading that names no stage section is an error
+  there: a fix-list table headed `id` gave a real paper two such errors (2026-10-12). Head every other
+  table with `#` or a word, as the scorecard does. `src/new-paper.test.ts` holds the template to it.
 
 ## The row ids, and what each one runs
 
