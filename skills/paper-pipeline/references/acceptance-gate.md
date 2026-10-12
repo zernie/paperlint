@@ -57,7 +57,7 @@ drive**.
 - ❌ this section earns its place
 - ❌ the reader could follow that sentence
 - ❌ the delta over the nearest prior work is real
-- ❌ the draft sits at this venue's bar
+- ❌ the draft passes the strong-accept scorecard
 - ❌ the idea is worth doing
 - ❌ the arc carries the reader end to end
 - ❌ the accept probability is 88%
@@ -188,7 +188,7 @@ we want more of.
 | `tighten-paper`            | a cover-to-cover read produced no action                                                         | **B**                                 | ❌ drive only                                                                                                         |
 | `grade-paper-writing`      | the stall inventory came back empty                                                              | **B**                                 | ❌ drive only                                                                                                         |
 | `analyze-sibling-paper`    | the delta is real and no text has to change                                                      | **B**                                 | ❌ drive only                                                                                                         |
-| `study-accepted-papers`    | the draft already sits at the venue's bar                                                        | **B**                                 | ❌ drive only (the corpus is external; the comparison is ours)                                                        |
+| `study-accepted-papers`    | the draft already passes the strong-accept scorecard                                             | **B**                                 | ❌ drive only (the corpus is external; the comparison is ours)                                                        |
 | `paper-adversarial-review` | a hostile read found nothing                                                                     | **B**                                 | ❌ drive only                                                                                                         |
 | `pc-panel-review`          | accept with no must-fix                                                                          | **B**                                 | ❌ drive only — the flagship offender                                                                                 |
 | `harden-paper`             | every gate green and every axis PASS/FIXED — _the only verdict that hands off to `submit-paper`_ | **A over B**                          | ❌ the wrapper is A, the thing wrapped is B; the handoff is an acquittal                                              |

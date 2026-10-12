@@ -525,7 +525,7 @@ const D_SUBORDINATION = [
   "harden-paper (which calls it), ",
 ];
 const D_NEGATION = [
-  " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers).",
+  " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers).",
 ];
 const D_MACHINERY = [
   " (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue)",
@@ -559,7 +559,7 @@ const D_PERSONA_ONLY = [
   " Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each.",
   " whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper)",
   " Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`).",
-  " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers).",
+  " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers).",
   " Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.",
 ];
 

@@ -130,7 +130,7 @@ again at rebuttal. **A close sibling with no file in \`<paper-dir>/siblings/\` i
 ## Compose with
 - \`verify-citations\` — surfaces the nearest-neighbor works; hand each genuine sibling to this skill.
 - \`harden-paper\` — its nearest-neighbor-scoop axis (axis 3) calls this for each close competitor.
-- \`study-accepted-papers\` — venue-corpus levers (different axis: the venue's bar, not a specific rival).
+- \`study-accepted-papers\` — venue-corpus levers (different axis: what the venue rewards, not a specific rival).
 - \`extend-paper\` — a scooped angle, or the un-scooped remainder, can become the next paper's pivot.
 
 ## Provenance

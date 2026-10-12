@@ -49,7 +49,7 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
   prestige (a bonus, not a gate). **Non-archival ⇒ credit-weight ≈ 0** — it earns no authorship credit,
   so it sinks to the bottom no matter how nice the CFP reads.
 - **topic-fit** — how squarely the paper matches the CFP scope (a stretch fit raises reject risk).
-- **accept-probability** — realistic odds given the paper's maturity and the venue's bar.
+- **accept-probability** — realistic odds given the paper's maturity and how selective the venue is.
 - **deadline-feasibility** — can the paper (and artifact) be ready by the deadline? A great venue you
   miss is a zero.
 - **remote-friendliness** — remote-OK is a real weight here, not a footnote.

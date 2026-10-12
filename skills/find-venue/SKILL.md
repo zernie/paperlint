@@ -4,7 +4,7 @@ description: "Discover and rank real venues for a given paper, scored by authors
 allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:8b332cbc072b46ee compiled from skills/find-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:cafd3c1173f20456 compiled from skills/find-venue/SKILL.md.spec.ts -->
 
 # find-venue — rank real venues by what earns the credit, then keep or switch
 
@@ -43,7 +43,7 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
   prestige (a bonus, not a gate). **Non-archival ⇒ credit-weight ≈ 0** — it earns no authorship credit,
   so it sinks to the bottom no matter how nice the CFP reads.
 - **topic-fit** — how squarely the paper matches the CFP scope (a stretch fit raises reject risk).
-- **accept-probability** — realistic odds given the paper's maturity and the venue's bar.
+- **accept-probability** — realistic odds given the paper's maturity and how selective the venue is.
 - **deadline-feasibility** — can the paper (and artifact) be ready by the deadline? A great venue you
   miss is a zero.
 - **remote-friendliness** — remote-OK is a real weight here, not a footnote.

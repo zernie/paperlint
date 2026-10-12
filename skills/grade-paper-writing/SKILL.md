@@ -1,17 +1,17 @@
 ---
 name: grade-paper-writing
-description: Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
+description: Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:21c8899648c9b223 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d24f7dd420a32ea5 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
-The review skills hunt scientific defects; `study-accepted-papers` checks whether the contribution clears
-the venue's bar. Neither tells you the paper is a slog to read. This skill does exactly that: it grades
-the **writing craft** against how the best-written papers actually read, and turns each low score into a
-concrete, sentence-level fix. Its target failure mode is the common one — *"a wall of text and jargon that
+The review skills hunt scientific defects; `study-accepted-papers` scores the contribution on the
+strong-accept scorecard. Neither tells you the paper is a slog to read. This skill does exactly that: it
+grades the **writing craft** against how the best-written papers actually read, and turns each low score
+into a concrete, sentence-level fix. Its target failure mode is the common one — *"a wall of text and jargon that
 doesn't drive home how crazy the situation is"* — which is a writing problem, not a science problem, and
 which the defect-hunting skills will pass right over.
 
