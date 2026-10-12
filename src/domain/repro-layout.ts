@@ -27,7 +27,7 @@
  * Pure: the caller lists the folder and says which study folders hold a `README.md`.
  */
 import { extname } from "node:path";
-import type { LayoutEntry } from "./paper-layout.ts";
+import { leaf, renderTree, type TreeNode } from "./layout-tree.ts";
 
 /** The folder this layout governs, at the paper folder's root. */
 export const REPRO_DIR = "repro";
@@ -36,12 +36,53 @@ export const REPRO_DIR = "repro";
 export const README = "README.md";
 
 /** The files `repro/` may hold at its top, by exact name. */
-export const REPRO_FILES: readonly string[] = [README, ".gitignore"];
+export const REPRO_FILE_NOTES: readonly {
+  readonly name: string;
+  readonly note: string;
+}[] = [
+  { name: README, note: "the index: one line per study" },
+  { name: ".gitignore", note: "keeps the scripts' byproducts out of git" },
+];
+export const REPRO_FILES: readonly string[] = REPRO_FILE_NOTES.map(
+  (f) => f.name,
+);
 
 /** The shared folders `repro/` may hold besides its study folders. */
 export const TOOLS_DIR = "tools";
 export const DATA_DIR = "data";
-export const REPRO_DIRS: readonly string[] = [TOOLS_DIR, DATA_DIR];
+export const REPRO_DIR_NOTES: readonly {
+  readonly name: string;
+  readonly note: string;
+}[] = [
+  {
+    name: TOOLS_DIR,
+    note: "scripts used across the paper (numbers, figures, anonymity check, harnesses)",
+  },
+  { name: DATA_DIR, note: "shared data (tables, caches)" },
+];
+export const REPRO_DIRS: readonly string[] = REPRO_DIR_NOTES.map((d) => d.name);
+
+/** The study folder as the layout draws it: the name pattern, and the README.md it must hold. */
+const STUDY_NODE: TreeNode = {
+  name: "<slug>-YYYY-MM-DD/",
+  note: "one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)",
+  children: [
+    leaf(README, "required: what it asks, how to run it, what it found"),
+  ],
+};
+
+/** The layout of `repro/`, entry by entry. */
+export const REPRO_NODES: readonly TreeNode[] = [
+  ...REPRO_FILE_NOTES.map((f) => leaf(f.name, f.note)),
+  ...REPRO_DIR_NOTES.map((d) => leaf(`${d.name}/`, d.note)),
+  STUDY_NODE,
+];
+
+/** The drawing of `repro/`'s layout: the rule's message, the hook's refusal, the rule's page. */
+export const REPRO_LAYOUT_TREE: string = renderTree(
+  `${REPRO_DIR}/`,
+  REPRO_NODES,
+);
 
 /**
  * What interpreters, package managers, test runners and the operating system write into the folder
@@ -204,7 +245,9 @@ const folderCure = (name: string): string =>
   `rename it to \`${suggestedStudyName(name)}\`, one folder per study or spike, named for what it is and the date it began — the date of its first commit is a fine default (\`git log --reverse --format=%as -- repro/${name} | head -1\`, run in the paper folder) — and give it a README.md; if it holds scripts or data shared across the paper instead, move them into repro/tools/ or repro/data/`;
 
 /** An entry at the top of `repro/`: a file or a folder, and for a folder whether it holds a README.md. */
-export interface ReproEntry extends LayoutEntry {
+export interface ReproEntry {
+  readonly name: string;
+  readonly kind: "file" | "dir";
   readonly hasReadme: boolean;
 }
 
@@ -257,12 +300,12 @@ export function judgeRepro(
 export function reproMessage(f: ReproFinding): string {
   const head =
     f.problem === "stray"
-      ? `\`${f.path}\` is loose at the top of the paper's repro/ folder, which holds only an index, the shared tools and data, and one dated folder per study.`
-      : `\`${f.path}\` is a study folder without a ${README}, and every study in repro/ has one.`;
+      ? `\`${f.path}\` is loose at the top of the paper's repro/ folder, which holds only an index, the shared tools and data, and one dated folder per study. Where it goes: ${f.cure}.`
+      : `\`${f.path}\` is a study folder without a ${README}, and every study in repro/ has one. What to do: ${f.cure}.`;
   return [
     head,
-    `${f.problem === "stray" ? "Where it goes" : "What to do"}: ${f.cure}.`,
-    `Allowed at the top of repro/ — files: ${README} (the index, one line per study), .gitignore; folders: tools/ (scripts used across the paper), data/ (shared data and caches), and one folder per study or spike named <slug>-YYYY-MM-DD or <slug>-YYYY-MM, with a ${README} inside.`,
+    "What repro/ holds (what interpreters and package managers leave there, like __pycache__/ and node_modules/, is never reported):",
+    REPRO_LAYOUT_TREE,
     `Rule paper/repro-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/repro-layout.md`,
-  ].join(" ");
+  ].join("\n");
 }

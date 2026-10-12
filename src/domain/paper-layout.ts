@@ -10,7 +10,7 @@
  *
  * ── WHERE THE SET COMES FROM ─────────────────────────────────────────────────────
  * Each entry is a file or folder paperlint itself writes or reads, or one its skills name at the
- * paper root (docs/rules/paper/folder-layout.md has the reason per entry):
+ * paper root (each carries its note below, which the drawing of the layout shows):
  *   - what `paperlint new` scaffolds: `PIPELINE-STATUS.md`, `paper.tex`, `paperlint.json`;
  *   - what the build writes: `paper.pdf` and `_build/`, and TeX's own byproducts beside `paper.tex`
  *     (pdflatex runs in the paper folder without `-output-directory`), which are never reported;
@@ -30,6 +30,8 @@
  * root is allowed beside the fixed set (`Declared.roots`); this module does not read settings.
  */
 import { extname } from "node:path";
+import { leaf, renderTree, type TreeNode } from "./layout-tree.ts";
+import { REPRO_DIR, REPRO_NODES } from "./repro-layout.ts";
 
 /** One entry at the paper folder's root: its name, and whether it is a folder. */
 export interface LayoutEntry {
@@ -56,34 +58,58 @@ export interface Stray {
 /** The one folder whose content is not judged. */
 export const ESCAPE_HATCH = "extra";
 
+/** An allowed entry's name, with what it is for — the note the layout's drawing shows beside it. */
+export interface Noted {
+  readonly name: string;
+  readonly note: string;
+}
+
+/** The files the root may hold, by exact name, each with what it is for. */
+export const ROOT_FILE_NOTES: readonly Noted[] = [
+  {
+    name: "PIPELINE-STATUS.md",
+    note: "the paper's one live-state file: stages, plan, scorecard",
+  },
+  { name: "paper.tex", note: "the source; `paperlint build` compiles it" },
+  { name: "paperlint.json", note: "the paper's settings" },
+  { name: "README.md", note: "what the paper is" },
+  { name: "CLAUDE.md", note: "the paper's agent rules" },
+  { name: "CLAIMS.md", note: "the claims ledger" },
+  {
+    name: "NOTES.md",
+    note: "each number in the paper → the data it comes from",
+  },
+  {
+    name: "SUBMIT-CHECKLIST.md",
+    note: "the venue's format and submission mechanics",
+  },
+  { name: ".gitignore", note: "keeps the build's byproducts out of git" },
+  { name: "paper.pdf", note: "the built PDF" },
+];
+
 /** The files the root may hold, by exact name. */
-export const ROOT_FILES: readonly string[] = [
-  "PIPELINE-STATUS.md",
-  "paper.tex",
-  "paperlint.json",
-  "README.md",
-  "CLAUDE.md",
-  "CLAIMS.md",
-  "NOTES.md",
-  "SUBMIT-CHECKLIST.md",
-  ".gitignore",
-  "paper.pdf",
+export const ROOT_FILES: readonly string[] = ROOT_FILE_NOTES.map((f) => f.name);
+
+/** The folders the root may hold, by exact name, each with what it holds. */
+export const ROOT_DIR_NOTES: readonly Noted[] = [
+  { name: "_build", note: "the facts `paperlint build` writes" },
+  { name: "versions", note: "each stage's frozen PDF and source" },
+  { name: "reviews", note: "dated reviews and pass reports" },
+  { name: "siblings", note: "the cards of competing papers" },
+  { name: "research", note: "dated research and decision records" },
+  { name: REPRO_DIR, note: "the reproduction artifact" },
+  { name: "figures", note: "graphics and their sources" },
+  { name: "sections", note: "the body, when it is split" },
+  { name: "talk", note: "the talk's files" },
+  {
+    name: "submission",
+    note: "forms, portal records, mail with the venue, the anonymized upload",
+  },
+  { name: ESCAPE_HATCH, note: "anything; never judged" },
 ];
 
 /** The folders the root may hold, by exact name. */
-export const ROOT_DIRS: readonly string[] = [
-  "_build",
-  "versions",
-  "reviews",
-  "siblings",
-  "research",
-  "repro",
-  "figures",
-  "sections",
-  "talk",
-  "submission",
-  ESCAPE_HATCH,
-];
+export const ROOT_DIRS: readonly string[] = ROOT_DIR_NOTES.map((d) => d.name);
 
 /**
  * The files TeX and bibtex look up in the folder they run in, which is the paper's root: a fragment
@@ -205,18 +231,33 @@ export function judgeLayout(
     }));
 }
 
+/** The paper folder's layout, entry by entry, `repro/` drawn with its own layout inside. */
+export const PAPER_NODES: readonly TreeNode[] = [
+  ...ROOT_FILE_NOTES.map((f) => leaf(f.name, f.note)),
+  leaf(
+    TEX_INPUT_EXTENSIONS.map((e) => `*${e}`).join(" "),
+    "what TeX and bibtex look up beside paper.tex",
+  ),
+  ...ROOT_DIR_NOTES.map((d) => ({
+    name: `${d.name}/`,
+    note: d.note,
+    children: d.name === REPRO_DIR ? REPRO_NODES : [],
+  })),
+];
+
+/** The drawing of the paper folder's layout: the rule's message, the hook's refusal, the rule's page. */
+export const PAPER_LAYOUT_TREE: string = renderTree("<paper>/", PAPER_NODES);
+
 /**
  * The one text a stray entry is reported with, by the rule `paper/folder-layout` and by the hook that
- * fires when such an entry is written. It stands alone: it names what is allowed and where the entry
- * goes, for a reader who knows nothing of paperlint.
+ * refuses to create such an entry. It stands alone: where the entry goes, and the whole layout drawn,
+ * for a reader who knows nothing of paperlint.
  */
 export function strayMessage(s: Stray): string {
-  const files = ROOT_FILES.join(", ");
-  const dirs = ROOT_DIRS.map((d) => `${d}/`).join(", ");
   return [
-    `\`${s.name}\` is at the root of a paper folder (the folder holding PIPELINE-STATUS.md), and that root holds only paperlint's layout.`,
-    `Where it goes: ${s.cure}.`,
-    `Allowed at the root — files: ${files}, the TeX inputs *${TEX_INPUT_EXTENSIONS.join(", *")}, and the build's paper.* byproducts; folders: ${dirs} (${ESCAPE_HATCH}/ takes anything and is never judged).`,
+    `\`${s.name}\` is at the root of a paper folder (the folder holding PIPELINE-STATUS.md), and that root holds only paperlint's layout. Where it goes: ${s.cure}.`,
+    `The layout (${ESCAPE_HATCH}/ takes anything and is never judged; the build's paper.* byproducts are never reported):`,
+    PAPER_LAYOUT_TREE,
     `Rule paper/folder-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/folder-layout.md`,
-  ].join(" ");
+  ].join("\n");
 }

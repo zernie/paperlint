@@ -6,7 +6,11 @@
 import { describe, expect, it } from "vitest";
 import {
   CURE_BY_KIND,
+  KNOWN_CURES,
   NOTHING_DECLARED,
+  PAPER_LAYOUT_TREE,
+  ROOT_DIRS,
+  ROOT_FILES,
   judgeLayout,
   strayMessage,
   type LayoutEntry,
@@ -167,15 +171,34 @@ describe("strayMessage — stands alone for a reader with no context", () => {
   const [plan] = judgeLayout([file("PLAN.md")], NOTHING_DECLARED);
   const text = plan === undefined ? "" : strayMessage(plan);
 
-  it("names the entry, where it goes, what is allowed, and the rule's page", () => {
-    expect(text).toMatch(/^`PLAN\.md` is at the root of a paper folder/);
-    expect(text).toContain("Where it goes: a section of PIPELINE-STATUS.md");
-    expect(text).toContain(
-      "folders: _build/, versions/, reviews/, siblings/, research/, repro/, figures/, sections/, talk/, submission/, extra/",
+  it("names the entry, where it goes, draws the whole layout, and links the rule's page", () => {
+    expect(text.split("\n")).toEqual([
+      `\`PLAN.md\` is at the root of a paper folder (the folder holding PIPELINE-STATUS.md), and that root holds only paperlint's layout. Where it goes: ${KNOWN_CURES[0]?.cure ?? ""}.`,
+      "The layout (extra/ takes anything and is never judged; the build's paper.* byproducts are never reported):",
+      ...PAPER_LAYOUT_TREE.split("\n"),
+      "Rule paper/folder-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/folder-layout.md",
+    ]);
+  });
+
+  it("the layout it draws holds every allowed root entry, repro/'s own layout inside", () => {
+    const lines = PAPER_LAYOUT_TREE.split("\n");
+    expect(lines[0]).toBe("<paper>/");
+    const drawn = new Set(
+      lines.map((l) =>
+        l
+          .replace(/^[│ ]*[├└]── /u, "")
+          .split(" ", 1)
+          .join(""),
+      ),
     );
-    expect(text).toContain(
-      "files: PIPELINE-STATUS.md, paper.tex, paperlint.json",
+    expect(
+      [...ROOT_FILES, ...ROOT_DIRS.map((d) => `${d}/`)].filter(
+        (name) => !drawn.has(name),
+      ),
+    ).toEqual([]);
+    expect(lines).toContain(
+      "│   └── <slug>-YYYY-MM-DD/         ← one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)",
     );
-    expect(text).toMatch(/docs\/rules\/paper\/folder-layout\.md$/);
+    expect(lines.at(-1)).toMatch(/^└── extra\/ +← anything; never judged$/);
   });
 });

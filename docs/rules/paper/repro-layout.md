@@ -10,21 +10,19 @@ An entry at the top of a paper's `repro/` that is not part of its layout, and a 
 without a `README.md`. `repro/` holds an index, the tools and data the whole paper shares, and one
 dated folder per study:
 
+<!-- layout:begin — drawn from src/domain/repro-layout.ts (REPRO_LAYOUT_TREE); src/layout-docs.test.ts fails when this block differs -->
+
 ```text
 repro/
-├── README.md                ← index: one line per study
-├── <slug>-YYYY-MM-DD/       ← one folder per study or spike; README.md required inside
-├── tools/                   ← scripts used across the paper (numbers, figures, anonymity check, harnesses)
-└── data/                    ← shared data (tables, caches)
+├── README.md           ← the index: one line per study
+├── .gitignore          ← keeps the scripts' byproducts out of git
+├── tools/              ← scripts used across the paper (numbers, figures, anonymity check, harnesses)
+├── data/               ← shared data (tables, caches)
+└── <slug>-YYYY-MM-DD/  ← one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)
+    └── README.md       ← required: what it asks, how to run it, what it found
 ```
 
-| allowed at the top of `repro/`            | why it is there                                                                                         |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `README.md`                               | the index: one line per study, so a reader finds the study behind a number without opening every folder |
-| `.gitignore`                              | to keep the scripts' byproducts out of git                                                              |
-| `tools/`                                  | the scripts the whole paper uses: the numbers, the figures, the anonymity check, the harnesses          |
-| `data/`                                   | the data the whole paper shares: tables, caches (`paperlint build` keeps `references-cache.json` here)  |
-| `<slug>-YYYY-MM-DD/` or `<slug>-YYYY-MM/` | one study or spike: its scripts, its data, its output, and a `README.md` saying what it asks and found  |
+<!-- layout:end -->
 
 A loose note belongs in the folder of the study it is about, or in the paper's `research/` when it is
 research or a decision rather than the record of a run.
@@ -56,10 +54,14 @@ papers/agent-rule-drift/PIPELINE-STATUS.md
               only an index, the shared tools and data, and one dated folder per study. Where it
               goes: repro/tools/ — the scripts used across the paper (numbers, figures, the anonymity
               check, harnesses); a script only one study runs goes in that study's folder instead.
-              Allowed at the top of repro/ — … paper/repro-layout
+What repro/ holds (what interpreters and package managers leave there, like __pycache__/ and node_modules/, is never reported):
+repro/
+├── README.md           ← the index: one line per study
+…
+Rule paper/repro-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/repro-layout.md  paper/repro-layout
 ```
 
-Each message names the entry, where it goes, and what `repro/` holds, so it reads on its own. Where
+Each message names the entry and where it goes, and draws the layout above, so it reads on its own. Where
 an entry goes depends on what it is:
 
 | entry                                                                                                                          | where it goes                                                                                         |

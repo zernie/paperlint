@@ -193,7 +193,18 @@ describe("reproMessage — stands alone", () => {
         cure: SCRIPT_CURE,
       }),
     ).toBe(
-      `\`repro/run.py\` is loose at the top of the paper's repro/ folder, which holds only an index, the shared tools and data, and one dated folder per study. Where it goes: ${SCRIPT_CURE}. Allowed at the top of repro/ — files: README.md (the index, one line per study), .gitignore; folders: tools/ (scripts used across the paper), data/ (shared data and caches), and one folder per study or spike named <slug>-YYYY-MM-DD or <slug>-YYYY-MM, with a README.md inside. Rule paper/repro-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/repro-layout.md`,
+      [
+        `\`repro/run.py\` is loose at the top of the paper's repro/ folder, which holds only an index, the shared tools and data, and one dated folder per study. Where it goes: ${SCRIPT_CURE}.`,
+        "What repro/ holds (what interpreters and package managers leave there, like __pycache__/ and node_modules/, is never reported):",
+        "repro/",
+        "├── README.md           ← the index: one line per study",
+        "├── .gitignore          ← keeps the scripts' byproducts out of git",
+        "├── tools/              ← scripts used across the paper (numbers, figures, anonymity check, harnesses)",
+        "├── data/               ← shared data (tables, caches)",
+        "└── <slug>-YYYY-MM-DD/  ← one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)",
+        "    └── README.md       ← required: what it asks, how to run it, what it found",
+        "Rule paper/repro-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/repro-layout.md",
+      ].join("\n"),
     );
   });
 
@@ -205,7 +216,7 @@ describe("reproMessage — stands alone", () => {
         cure: "add it",
       }),
     ).toMatch(
-      /^`repro\/x-2026-10\/` is a study folder without a README\.md, and every study in repro\/ has one\. What to do: add it\. Allowed at the top of repro\//,
+      /^`repro\/x-2026-10\/` is a study folder without a README\.md, and every study in repro\/ has one\. What to do: add it\.\nWhat repro\/ holds/,
     );
   });
 });

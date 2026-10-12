@@ -9,30 +9,41 @@ A file or folder at the root of a paper folder that is not part of paperlint's l
 holds a small, known set; every kind of material has one folder; anything else goes into `extra/`,
 which is never judged.
 
-| allowed at the root                         | why it is there                                                                                                                                                                 |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PIPELINE-STATUS.md`                        | the paper's one live-state file: stages, plan ("Plan / now"), scorecard. `paperlint lint` requires it, `paperlint new` writes it                                                |
-| `paper.tex`                                 | the source; `paperlint build` compiles it, `paperlint new` writes it                                                                                                            |
-| `paperlint.json`                            | the paper's settings; `paperlint new` writes it                                                                                                                                 |
-| `README.md`                                 | what the paper is                                                                                                                                                               |
-| `CLAUDE.md`                                 | the paper's agent rules; Claude Code loads it only from the folder it governs                                                                                                   |
-| `CLAIMS.md`                                 | the claims ledger the `paper-status` and `argument-arc` skills read                                                                                                             |
-| `NOTES.md`                                  | each number in the paper → the data file it comes from                                                                                                                          |
-| `SUBMIT-CHECKLIST.md`                       | the venue's format and submission mechanics; the `paper-status` skill reads it at the root                                                                                      |
-| `.gitignore`                                | to ignore the build's byproducts below                                                                                                                                          |
-| `paper.pdf`                                 | the built PDF: `paperlint build` writes it here, the `pdf/` facts and `paperlint submission show` read it here                                                                  |
-| `*.tex`, `*.bib`, `*.cls`, `*.sty`, `*.bst` | TeX and bibtex look these up in the folder they run in, which is the paper's root: a fragment the body `\input`s, a database, a vendored class, a package, a bibliography style |
-| `_build/`                                   | the facts `paperlint build` writes (`paper.facts.json`, `sources.json`, `references.json`)                                                                                      |
-| `versions/`                                 | the frozen PDF and source of each stage, read by `paper/stages`                                                                                                                 |
-| `reviews/`                                  | dated reviews and pass reports, read by `review/frontmatter`                                                                                                                    |
-| `siblings/`                                 | the cards of competing papers, read by `sibling/frontmatter`                                                                                                                    |
-| `research/`                                 | dated research and decision records; where the paper skills save theirs                                                                                                         |
-| `repro/`                                    | the reproduction artifact: an index, `tools/`, `data/` and one dated folder per study, judged by [`paper/repro-layout`](repro-layout.md)                                        |
-| `figures/`                                  | graphics and figure sources, reached by a relative path from the TeX                                                                                                            |
-| `sections/`                                 | the body when it is split: `\input{sections/intro}`                                                                                                                             |
-| `talk/`                                     | the talk's files, the `talk/` rules' default folder                                                                                                                             |
-| `submission/`                               | everything about sending the paper: forms field by field, portal records, mail with the venue, decision evidence, camera-ready forms                                            |
-| `extra/`                                    | the escape hatch: anything, never judged                                                                                                                                        |
+<!-- layout:begin — drawn from src/domain/paper-layout.ts (PAPER_LAYOUT_TREE); src/layout-docs.test.ts fails when this block differs -->
+
+```text
+<paper>/
+├── PIPELINE-STATUS.md             ← the paper's one live-state file: stages, plan, scorecard
+├── paper.tex                      ← the source; `paperlint build` compiles it
+├── paperlint.json                 ← the paper's settings
+├── README.md                      ← what the paper is
+├── CLAUDE.md                      ← the paper's agent rules
+├── CLAIMS.md                      ← the claims ledger
+├── NOTES.md                       ← each number in the paper → the data it comes from
+├── SUBMIT-CHECKLIST.md            ← the venue's format and submission mechanics
+├── .gitignore                     ← keeps the build's byproducts out of git
+├── paper.pdf                      ← the built PDF
+├── *.tex *.bib *.cls *.sty *.bst  ← what TeX and bibtex look up beside paper.tex
+├── _build/                        ← the facts `paperlint build` writes
+├── versions/                      ← each stage's frozen PDF and source
+├── reviews/                       ← dated reviews and pass reports
+├── siblings/                      ← the cards of competing papers
+├── research/                      ← dated research and decision records
+├── repro/                         ← the reproduction artifact
+│   ├── README.md                  ← the index: one line per study
+│   ├── .gitignore                 ← keeps the scripts' byproducts out of git
+│   ├── tools/                     ← scripts used across the paper (numbers, figures, anonymity check, harnesses)
+│   ├── data/                      ← shared data (tables, caches)
+│   └── <slug>-YYYY-MM-DD/         ← one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)
+│       └── README.md              ← required: what it asks, how to run it, what it found
+├── figures/                       ← graphics and their sources
+├── sections/                      ← the body, when it is split
+├── talk/                          ← the talk's files
+├── submission/                    ← forms, portal records, mail with the venue, the anonymized upload
+└── extra/                         ← anything; never judged
+```
+
+<!-- layout:end -->
 
 Never reported: the byproducts `paperlint build` leaves beside `paper.tex` (`paper.aux`, `.log`,
 `.bbl`, `.blg`, `.out`, `.fls`, `.toc`, `.lof`, `.lot`, and an editor's or latexmk's `.synctex.gz`,
@@ -68,11 +79,15 @@ papers/agent-rule-drift/PIPELINE-STATUS.md
               and that root holds only paperlint's layout. Where it goes: a section of
               PIPELINE-STATUS.md — the paper's one live-state file holds its stages, its plan
               ("Plan / now") and its scorecard; move what is still live there and delete the file.
-              Allowed at the root — files: PIPELINE-STATUS.md, paper.tex, paperlint.json, …
-              paper/folder-layout
+The layout (extra/ takes anything and is never judged; the build's paper.* byproducts are never reported):
+<paper>/
+├── PIPELINE-STATUS.md             ← the paper's one live-state file: stages, plan, scorecard
+…
+└── extra/                         ← anything; never judged
+Rule paper/folder-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/folder-layout.md  paper/folder-layout
 ```
 
-Each message names the entry, where it goes, and the whole allowed set, so it reads on its own. A
+Each message names the entry and where it goes, and draws the whole layout above, so it reads on its own. A
 name met in real paper folders has one destination:
 
 | entry                      | where it goes                                                                                              |
