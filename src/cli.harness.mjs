@@ -1243,7 +1243,6 @@ check(
     const paper = join(root, "papers", "p");
     mkdirSync(paper, { recursive: true });
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), "# S\n");
-    writeFileSync(join(paper, "PLAN.md"), "x");
     const hook = (file) =>
       spawnSync(
         process.execPath,
@@ -1260,9 +1259,9 @@ check(
       );
     const stray = hook(join(paper, "PLAN.md"));
     check(
-      "the layout hook answers a stray PLAN.md on stdout as PostToolUse additionalContext, exit 0",
+      "the layout hook refuses a new stray PLAN.md on stdout as a PreToolUse deny, exit 0",
       stray.status === 0 &&
-        /^\{"hookSpecificOutput":\{"hookEventName":"PostToolUse","additionalContext":"`PLAN\.md` is at the root/.test(
+        /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"`PLAN\.md` is at the root/.test(
           stray.stdout,
         ),
     );

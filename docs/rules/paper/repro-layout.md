@@ -97,6 +97,14 @@ No rule options.
 - `repro/` itself: whether the paper has one is `paper/folder-layout`'s concern, and that rule never
   looks inside it. Each entry is judged by exactly one of the two rules.
 
+## The hook
+
+The hook `paper-folder-layout` refuses, before it is written, a new file that would add an entry
+this rule reports — a loose file at the top of `repro/`, an undated folder, or a study folder whose
+first file is not its `README.md` — with this rule's message as the reason. It never refuses a file
+that already exists, and it cannot see a shell `mv` or `cp`: the lint is the guarantee. What it does
+and does not do is on [`paper/folder-layout`'s page](folder-layout.md#the-hook-a-new-stray-entry-is-refused-before-it-is-written).
+
 ## How to fix
 
 Move or rename the entry where its message says, and update whatever names its path:

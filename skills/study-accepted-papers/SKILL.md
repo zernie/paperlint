@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:a6999cbbeabcc674 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:09f67cfce7f0e475 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — what this venue rewards, measured on its own papers
 
@@ -115,7 +115,7 @@ as judgement, against the base rates of `references/base-rates.md`; simulated pa
 | **the generic list** | `references/` beside this skill | M1–M10 and the base-rate sources. A mechanism your venue adds, or one that does not hold there, goes in the venue corpus's `MANIFEST.md`; the ids stay stable. |
 
 The paper folder has **no corpus folder of its own**: `paper/folder-layout` reports one, and the hook
-says so the moment it is written. A venue's format facts (page limit, template, required sections) go
+refuses to create one. A venue's format facts (page limit, template, required sections) go
 in its preset and venue card (`presets/<venue>.jsonc` and `.md` in the package, or the project's
 own), with their source quote, not here.
 

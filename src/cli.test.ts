@@ -200,12 +200,11 @@ test("runHook: a runtime with no cli.js beside it, and a hook killed by a signal
   );
 });
 
-test("runHook paper-folder-layout: in-process, on the real disk — stdout on a stray file, nothing on an allowed one, a complaint and exit 0 on a broken payload", () => {
+test("runHook paper-folder-layout: in-process, on the real disk — a refusal on stdout for a new stray file, nothing for an allowed one, a complaint and exit 0 on a broken payload", () => {
   const dir = join(root, "layout-hook");
   writeTree(dir, {
     "papers/p/PIPELINE-STATUS.md": "# status\n",
     "papers/p/paper.tex": "x",
-    "papers/p/PLAN.md": "x",
     "papers/p/NOTES.md": "x",
   });
   const hook = (payload: string) => {
@@ -227,7 +226,7 @@ test("runHook paper-folder-layout: in-process, on the real disk — stdout on a 
   assert.equal(stray.code, 0);
   assert.match(
     stray.out.join(""),
-    /^\{"hookSpecificOutput":\{"hookEventName":"PostToolUse","additionalContext":"`PLAN\.md` is at the root of a paper folder/,
+    /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"`PLAN\.md` is at the root of a paper folder/,
   );
   assert.deepEqual(hook(write("papers/p/NOTES.md")), {
     code: 0,
@@ -244,10 +243,7 @@ test("runHook paper-folder-layout: in-process, on the real disk — stdout on a 
 
 test("runHook paper-folder-layout: by default its output goes to stdout, where Claude Code reads it", () => {
   const dir = join(root, "layout-hook-stdout");
-  writeTree(dir, {
-    "papers/p/PIPELINE-STATUS.md": "# status\n",
-    "papers/p/PLAN.md": "x",
-  });
+  writeTree(dir, { "papers/p/PIPELINE-STATUS.md": "# status\n" });
   const write = vi
     .spyOn(process.stdout, "write")
     .mockImplementation(() => true);
@@ -261,7 +257,7 @@ test("runHook paper-folder-layout: by default its output goes to stdout, where C
     assert.equal(code, 0);
     assert.match(
       String(write.mock.calls[0]?.[0]),
-      /^\{"hookSpecificOutput":\{"hookEventName":"PostToolUse"/,
+      /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny"/,
     );
   } finally {
     write.mockRestore();

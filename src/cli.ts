@@ -1112,7 +1112,10 @@ interface HookIo {
 const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
   "paper-folder-layout": ({ err, stdin, out }) => {
     try {
-      const said = folderLayoutHook(JSON.parse(stdin()), nodeFiles);
+      const said = folderLayoutHook(JSON.parse(stdin()), {
+        files: nodeFiles,
+        listDir: nodeListDir,
+      });
       if (said !== null) out(`${JSON.stringify(said)}\n`);
     } catch (e) {
       err(

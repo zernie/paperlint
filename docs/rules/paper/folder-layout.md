@@ -119,22 +119,40 @@ No rule options. The paper's `pdf`, `talk.dir` and own preset files add what the
   passes. Old versions of the source belong in `versions/`.
 - A folder without `PIPELINE-STATUS.md`: it is not a paper to paperlint.
 
-## The hook: the same message when the file is written
+## The hook: a new stray entry is refused before it is written
 
-`paperlint init` also wires the hook `paper-folder-layout` (PostToolUse on `Edit|Write|MultiEdit`,
-`plugin/hooks/hooks.json`). When an agent writes a file at a paper folder's root that the layout does
-not allow, or inside a root folder it does not allow, the hook adds this rule's message to the
-agent's context as `additionalContext`, so the file is moved in the same turn rather than at the next
-lint. The text comes from the function the rule reports with (`strayTexts`,
-`src/folder-layout-rule.ts`); there is no second list. It cannot tell a new file from one written
-again, so a stray file is named on every write until it moves.
+`paperlint init` also wires the hook `paper-folder-layout` (PreToolUse on `Edit|Write|MultiEdit`,
+`plugin/hooks/hooks.json`). When an agent is about to create a file that would add an entry the
+layout does not allow — at a paper folder's root, or at the top of its `repro/`
+([`paper/repro-layout`](repro-layout.md)) — the hook denies the call, and the reason it gives is the
+rule's own message: where the entry goes, and the layout drawn. The agent writes the file where it
+belongs instead, in the same turn. The text comes from the functions the rules report with
+(`strayTexts`, `reproTexts`); there is no second list.
 
-Its first step is cheap: it looks for the nearest folder above the written file that holds
-`PIPELINE-STATUS.md`, one file check per ancestor, and says nothing when there is none — no git, no
-settings, no lint before that. Measured on 2026-10-12: that step takes about 19 µs. The process
+What it never refuses:
+
+- **a file that already exists** — editing is never blocked, wherever the file is, so a paper whose
+  folder predates the layout keeps working and the rule reports what is out of place;
+- a new file inside an entry that already exists, even a stray one: the entry is not new, and the
+  rule names it once;
+- anything outside a paper folder.
+
+A new study folder in `repro/` is started with its `README.md`; any other first file in it is
+refused with `paper/repro-layout`'s "without a README.md" message.
+
+🔴 **What it cannot see: the shell.** `mv`, `cp`, `git mv`, or a script that writes files are not an
+Edit or a Write, so the hook never sees them. The guarantee is the lint: both rules fail `paperlint
+lint`, and CI, whatever wrote the entry. The hook only saves the round trip. It does not read the
+paper's `rules` either: a paper that switched a layout rule off is still refused a new stray entry
+(an existing one is never refused).
+
+Its first step is cheap: it looks for the nearest folder above the target file that holds
+`PIPELINE-STATUS.md`, one file check per ancestor, and allows the call when there is none — no git,
+no settings, no lint before that. Measured on 2026-10-12: that step takes about 19 µs. The process
 around it is what every `paperlint hook` costs, the CLI's import: about 650 ms per write on the
 measuring machine, with or without a paper folder (`paper-skills-nudge`, a vigiles hook, measured 730
-to 850 ms on the same machine).
+to 850 ms on the same machine). The hook fails open: a payload it cannot read is reported on stderr
+and the call goes ahead.
 
 A project whose papers all live under one folder can skip the process for every other write by
 giving the hook's entry in its own `.claude/settings.json` an `if`, Claude Code's permission-rule
