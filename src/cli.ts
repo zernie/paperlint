@@ -170,6 +170,10 @@ import {
   FOLDER_VENUE_RULE_LEVELS,
   folderVenueRules,
 } from "./folder-venue-rule.ts";
+import {
+  FOLDER_LAYOUT_RULE_LEVELS,
+  folderLayoutRules,
+} from "./folder-layout-rule.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
 import reviewFrontmatter from "#eslint-rules/review-frontmatter";
@@ -409,6 +413,7 @@ export function buildConfig(
           rules: {
             ...paperStages.rules,
             ...folderVenueRules({ files: nodeFiles, venuesDir: presetsDir() }),
+            ...folderLayoutRules({ files: nodeFiles, listDir: nodeListDir }),
           },
         },
         cycle: { rules: CYCLE_STATUS_RULES },
@@ -418,6 +423,7 @@ export function buildConfig(
         "paper/stages": "error",
         "paper/source": "error",
         ...FOLDER_VENUE_RULE_LEVELS,
+        ...FOLDER_LAYOUT_RULE_LEVELS,
         ...CYCLE_RULE_LEVELS,
       },
     },

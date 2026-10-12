@@ -693,6 +693,20 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       ...onBlindConf("papers/blindconf-2026"),
     },
   },
+  // A plan beside the paper: the root holds only paperlint's own files and folders.
+  "paper/folder-layout": {
+    reports: {
+      tree: paper(tex("x"), { [`${P}/PLAN.md`]: "# plan\n" }),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 2,
+      line: 1,
+    },
+    // The same material where the layout puts it.
+    silent: paper(tex("x"), {
+      [`${P}/research/plan.md`]: "# plan\n",
+      [`${P}/extra/PLAN.md`]: "# plan\n",
+    }),
+  },
   // EMNLP, a shipped venue's name (REALM's conference), in a BlindConf paper's text.
   "tex/venue-leftover": {
     reports: {

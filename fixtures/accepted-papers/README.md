@@ -73,6 +73,12 @@ the count is not yet classified.
 | barovox-acsac24 | `bib/reachable-entry` | 92 | real / known | entries with no doi, url, arXiv id or `\url`: 55 are cited in the committed `paper.bbl` (real — the reader has nothing to follow), 37 are not cited (known: the rule judges every entry of the database, and bibtex prints only cited ones) |
 | rr-dataset-quality-acsac24 | `bib/reachable-entry` | 11 | real | all 11 are cited in `paper.bbl` (`chen2022neural`, `fu2022vulrepair`, …) |
 | secure-acsac24 | `bib/reachable-entry` | 77 | real / known | 18 cited (real); 59 uncited — the paper's `references.bib` carries ACM's sample entries (`Kosiur01`, `JCohen96`), which it never cites (known, as above) |
+| all six | `paper/folder-layout` | 2–3 | known | the fixture's own files at the paper root — `baseline.json`, and `tex-truth.json`, `page-count.json` or `record-by-hand.json` — are statements about the fixture, not part of the paper |
+| barovox-acsac24 | `paper/folder-layout` | 3 | real | arXiv-source layout, not paperlint's: `Chapters/` (the body; paperlint's is `sections/`), `newPDF/` and `newestPDF/` (figures; paperlint's is `figures/`) |
+| leaking-queries-acsac25 | `paper/folder-layout` | 3 | real | `Figures/` (paperlint's is `figures/`, names compared exactly), `sections_full_version/` (the body), `listings.cfg` at the root |
+| llm-splained-acsac25 | `paper/folder-layout` | 1 | real | `bibs/`: the paper's databases in a folder of their own; paperlint keeps a `.bib` at the root, where bibtex looks |
+| rr-dataset-quality-acsac24 | `paper/folder-layout` | 1 | real | `beam_size.png` at the root (paperlint's figures go in `figures/`) |
+| secure-acsac24 | `paper/folder-layout` | 2 | real | `chat.png` and `md-frame-0.mdf` (mdframed's output) at the root |
 | llm-splained-acsac25 | `paper/refs-checked`, `bib/reachable-entry` | 0 | known | the paper uses biblatex with biber, so bibtex never runs and the record lists no database: neither rule has one to judge. Measured on 2026-09-29, when `bib/reachable-entry` read the `.bib` files the paper declares: 55 entries with no doi, url, arXiv id or `\url` — a count nobody re-measures while the paper does not build |
 
 One limit the corpus shows and no count records:
