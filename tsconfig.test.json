@@ -9,6 +9,7 @@
     "customConditions": ["paperlint-source"]
   },
   "include": ["**/*.ts", "**/*.mts"],
+  "files": [".github/CLAUDE.md.spec.ts", "plugin/CLAUDE.md.spec.ts"],
   "exclude": [
     "node_modules",
     "dist",

@@ -1,51 +1,23 @@
 /**
- * plan-paper-timeline — the EFFECTS tier. What the run can actually reach, not what
- * SKILL.md says it reaches.
+ * plan-paper-timeline — the EFFECTS tier. What the run actually does, not what
+ * SKILL.md says it does.
  *
  * SIBLING, NOT REPLACEMENT. `plan-paper-timeline.harness.mjs` next door is static
  * (`checkSkill()`): frontmatter, wiring, script paths, verdict vocabulary. It is untouched.
  * This file runs the REAL `claude` CLI against a SCRIPTED MOCK MODEL (`runHarnessTest`),
- * so it costs $0 and no API key — and observes the one thing static analysis structurally
- * cannot: whether the tools this skill DECLARES EXIST WHERE IT RUNS.
+ * so it costs $0 and no API key.
  *
- * ── WHY THIS SKILL FOR THIS CHANNEL ──────────────────────────────────────────────
- * It is the only skill in the corpus whose core step is an MCP call. §3 says, literally,
- * «Use `mcp__Google_Calendar__create_event` … 🔴 Read the zone, do not assume it». Four of its ten
- * declared entries are MCP calendar tools. A declaration naming a tool that is not there is
- * invisible to every static check in this repo and to `vigiles audit`, which scores this
- * corpus Structure 100.
+ * Run A: the skill activates, its body reaches the model, and a declared, granted tool
+ * (`Read`) works. Run B: §3's prescribed `create_event` call, parsed out of SKILL.md,
+ * replayed against a strict calendar double.
  *
- * ── SAFETY: WHY THIS CANNOT TOUCH A REAL CALENDAR ───────────────────────────
- * Measured before this file was written, not assumed. The probe below is `list_events`,
- * which is READ-ONLY; `create_event`/`update_event` are NEVER called here, on purpose,
- * even though the surface turns out to be absent. The run also happens in a `mkdtemp`
- * work dir the runner deletes. If a future CLI ever exposes the calendar headlessly, the
- * read-only probe starts PASSING and this test FAILS loudly — which is the point of
- * pinning it, and is a far better way to learn it than a created event.
- *
- * ── WHAT THIS PINS (a characterization test, deliberately) ───────────────────────
- * Under `claude -p` at `CHARACTERIZED_CLI` (`lib/agent-cli-version.mjs`, 2.1.227) the whole
- * `mcp__*` surface is ABSENT, and so is `ToolSearch`.
- *
- * 🔴 THAT NUMBER IS A VALUE, NOT PROSE, and it was prose until issue #7. The probe below used
- * to run with `stdio: "ignore"`, so the version the CLI printed was never read — this tier
- * characterized whatever the runner installed that day while this paragraph kept saying 2.1.227.
- * Measured: 2.1.273 on the reporter's machine and on this one, forty-six patch releases of drift
- * that nothing in a green log could show. The version is now OBSERVED, reported in the summary
- * below, and named in every failure message — so a red says which version it characterized.
- * That means:
- *   1. §3 of this skill is UNEXECUTABLE in any headless / CI context. It is an
- *      interactive-session-only step. Nothing in the file says so.
- *   2. 🔴 THE RECORDED `ToolSearch` FINDING DOES NOT REPRODUCE HERE, AND THE CORRECTION
- *      MATTERS. `.claude/lib/skill-effects-results/README.md` (2026-08-10, $0.82)
- *      recorded "the model called ToolSearch … it isn't in allowed-tools," with the caveat
- *      that it might be an artifact of the headless environment. It is the opposite:
- *      headless has NO ToolSearch to call. Adding `ToolSearch` to `allowed-tools` would
- *      therefore fix nothing here. The reachability of these four tools is a property of
- *      the ENVIRONMENT, not of the declaration.
- *
- * If either fact changes, this file fails and says which one — that is its whole job.
- * It is not asserting that absence is good.
+ * ── WHY RUN A NO LONGER PROBES THE CALENDAR ─────────────────────────────────────
+ * It used to call `mcp__Google_Calendar__list_events` and `ToolSearch` and pin "No such
+ * tool available" as a finding about headless runs. It was a finding about the FIXTURE:
+ * the run happens in an empty `mkdtemp` with no MCP server configured, so the calendar
+ * tool is missing by construction, whatever the CLI can do. vigiles 38 refuses a
+ * scripted call to a tool the CLI does not have, for exactly this reason. Run B is
+ * where the calendar step is tested, with the surface supplied.
  *
  * Cost: $0 (scripted mock model, no API key). Wall clock ~30-60s for one CLI spawn.
  */
@@ -114,37 +86,19 @@ const r = await runHarnessTest({
   transcript: true,
   timeoutMs: 180_000,
   prompt: "plan the AISec timeline",
-  // The SESSION grant. Deliberately WIDER than the skill's declaration for `Read`, and
-  // deliberately missing `Bash` — that asymmetry is what turns the two probes below into
-  // a control and a measurement inside ONE permission configuration.
-  allowedTools: ["Read", "Write", "Skill", "ToolSearch", ...declaredMcp],
+  // The SESSION grant: the tools the script below calls, and no others.
+  allowedTools: ["Read", "Skill"],
   files: { "cfp.md": "AISec 2026 — submission 24 Jul AoE\n" },
   model: [
     { tool: "Skill", input: { skill: "plan-paper-timeline" } },
-    // CONTROL: a tool that is present and permitted. If this failed, every "absent"
-    // verdict below would be a broken run, not a finding.
+    // CONTROL: a tool that is present and permitted.
     { tool: "Read", input: { file_path: "cfp.md" } },
-    // READ-ONLY calendar probe. Never create_event / update_event — see header.
-    {
-      tool: "mcp__Google_Calendar__list_events",
-      input: { calendarId: "primary" },
-    },
-    // The tool the 2026-08-10 sweep said was missing from the declaration.
-    {
-      tool: "ToolSearch",
-      input: {
-        query: "select:mcp__Google_Calendar__create_event",
-        max_results: 1,
-      },
-    },
     { text: "done" },
   ],
 });
 
 try {
   const call = (name) => r.toolCalls.find((c) => c.name === name);
-  const absent = (c) =>
-    c !== undefined && c.isError && /No such tool available/.test(c.resultText);
 
   // ── 1. The run actually happened and the skill actually loaded ──────────────────
   // Asserted FIRST and separately from everything below. A confident "nothing was
@@ -172,48 +126,14 @@ try {
     throw new Error(
       `POSITIVE CONTROL FAILED: Read — a tool this skill declares and the session grants — ` +
         `did not succeed (${ctrl ? ctrl.resultText.slice(0, 160) : "never called"}). ` +
-        `Until this passes, no "tool absent" result below can be believed.`,
+        `The skill loaded but the run cannot use the tools it declares.`,
     );
 
-  // ── 2. The pinned environment fact: the declared MCP surface is not there ───────
-  const cal = call("mcp__Google_Calendar__list_events");
-  if (!absent(cal))
-    throw new Error(
-      `THE ENVIRONMENT CHANGED — and this is good news that must be read, not silenced. ` +
-        `Observed \`claude\` ${cli.version} (characterized against ${cli.characterized}). ` +
-        `\`mcp__Google_Calendar__list_events\` is now REACHABLE from \`claude -p\` ` +
-        `(result: ${cal ? cal.resultText.slice(0, 200) : "no call recorded"}). ` +
-        `Consequences: (a) §3 of this skill is now executable headlessly, so it can finally be ` +
-        `tested for real instead of characterized; (b) 🔴 every future run of this tier can now ` +
-        `WRITE A REAL CALENDAR — re-check the safety argument in this file's header BEFORE ` +
-        `adding a create_event probe; (c) update this assertion deliberately, do not delete it.`,
-    );
-
-  const ts = call("ToolSearch");
-  if (!absent(ts))
-    throw new Error(
-      `\`ToolSearch\` is now available under \`claude -p\` ${cli.version} ` +
-        `(characterized against ${cli.characterized}) (result: ` +
-        `${ts ? ts.resultText.slice(0, 200) : "no call recorded"}). The 2026-08-10 sweep recorded ` +
-        `"ToolSearch missing from allowed-tools" as a finding about THIS SKILL; measured on ` +
-        `2026-08-11 it was a fact about the ENVIRONMENT (headless had no ToolSearch at all). ` +
-        `If it exists now, that finding becomes actionable again: add it to allowed-tools.`,
-    );
-
-  // ── 3. What that means, stated once, where a reader will see it ────────────────
+  // ── 2. The version goes in the REPORT, not only into failures ──────────────────
   console.log(
     `✓ plan-paper-timeline [effects]: skill activated and its body reached the model; ` +
       `Read (declared+granted) works — the run is live.\n` +
-      // 🔴 The version goes in the REPORT, not only into failures. A characterization test that
-      // silently still holds is indistinguishable from one nobody re-checked, so the run says
-      // which version it held against — and says it whether or not the numbers agree.
-      `  CLI: ${cli.note}\n` +
-      `  PINNED: ${String(declaredMcp.length)} of its 10 declared entries are MCP calendar tools, ` +
-      `and the whole mcp__* surface is ABSENT under \`claude -p\`; \`ToolSearch\` is absent too.\n` +
-      `  → §3 ("Create the calendar events") is an INTERACTIVE-SESSION-ONLY step. Nothing in ` +
-      `SKILL.md says so, and no static check can see it.\n` +
-      `  → Corrects the 2026-08-10 sweep: the ToolSearch gap was environmental, not a defect ` +
-      `in this declaration.`,
+      `  CLI: ${cli.note}`,
   );
 } finally {
   r.cleanup();
@@ -222,9 +142,8 @@ try {
 // ════════════════════════════════════════════════════════════════════════════════
 // RUN B — §3 EXECUTED, not characterized
 //
-// Run A above pins that the calendar surface is absent from a headless session, which
-// is true and worth knowing and also means the skill's CENTRAL STEP has never been
-// checked by anything. Run B supplies the surface with a stand-in
+// A headless run in an empty work dir has no calendar surface, so without a stand-in
+// the skill's CENTRAL STEP is checked by nothing. Run B supplies the surface with a stand-in
 // (`fixtures/fake-google-calendar.ts`) carrying the REAL API's required-field sets,
 // so the step becomes executable for the first time.
 //

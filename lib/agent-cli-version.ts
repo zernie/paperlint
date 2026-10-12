@@ -95,7 +95,7 @@ export function observeAgentCli({
 
   // ⚠️ EXIT 0 AND NOTHING ON STDOUT IS NOT A CLEAN OBSERVATION — it is exactly what the discarded
   // probe looked like, and reporting `characterized against ""` would be the same lie in a new
-  // place. This is rule 4 of CLAUDE.md applied to the check that enforces it.
+  // place. This is the green zero of scripts/rules-see-files.mjs, applied to the check that enforces it.
   if (version === "")
     throw new Error(
       `\`${program} --version\` exited 0 but printed no version on stdout (got ${JSON.stringify(raw)}` +

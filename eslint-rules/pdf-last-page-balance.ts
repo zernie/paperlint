@@ -11,7 +11,7 @@
  *   { "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] } }
  *
  * (That is a line comment's worth of JSON in a block comment only because it has no asterisk
- * followed by a slash; see rule 8 of CLAUDE.md before editing it.)
+ * followed by a slash; see the block-comment rule in the root CLAUDE.md before editing it.)
  *
  * ── WHAT IT READS: THE FACTS THE BUILD WROTE, NOT THE PDF ───────────────────────
  * `paperlint build` measures the PDF with pdf.js and writes `<paper>/_build/paper.facts.json`. This rule

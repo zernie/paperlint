@@ -16,7 +16,7 @@
  *      Libertine and Biolinum and not one Computer Modern face (read with paperlint's own pdf.js reader).
  *
  * It needs `PAPERLINT_TEXLIVE_DIR`: installing ~270 MB into a developer's home as a side effect of
- * `npm run check` would be exactly the unasked install rule 11 forbids. Without it the tests are
+ * `npm run check` would be exactly the unasked install the root CLAUDE.md forbids. Without it the tests are
  * skipped; under CI that is a failure (`../need.ts`).
  *
  *   PAPERLINT_TEXLIVE_DIR=/some/dir npm run test:e2e:tex

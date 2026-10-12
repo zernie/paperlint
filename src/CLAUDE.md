@@ -1,8 +1,14 @@
-# CLAUDE.md — `src/`
+<!-- vigiles:sha256:f51051aae2ef09f8 compiled from src/CLAUDE.md.spec.ts -->
+
+# CLAUDE.md
+
+## `src/`
 
 The package's TypeScript: the CLI, the build, the toolchain installer, and the measuring that feeds
 the facts file. Loaded when working under `src/`; the repository-wide rules are in the root
 `CLAUDE.md`.
+
+## The two layer axes
 
 **`src/` is hexagonal on two axes, and the linter enforces both** (`eslint.config.mjs`; fixtures in
 `test/fixtures/layers/`, run by `test/eslint-layers.test.ts`; issue #76).
@@ -49,3 +55,19 @@ against `process.cwd()`, so lint started from any other directory classifies not
 `checkAllOrigins: true`: without it no `module:` policy is evaluated, so axis B and the library bans
 report nothing — dropping it turns the fixtures `src/domain/reads-disk.ts` and
 `src/adapters/one/disk.ts` clean (measured).
+
+## Readers and commands
+
+`@retorquere/bibtex-parser` is the one `.bib` reader, behind `src/ports/bib-reader.ts`.
+Rejected on 2026-09-27, so not proposed again: a separate `paperlint refs` command; the slowness it
+would have moved was a cache thrown away after every build (`docs/references.md`).
+
+## Rules
+
+### Layers
+
+**Enforced by:** `eslint/boundaries/dependencies`
+
+### Effect Globals
+
+**Enforced by:** `eslint/no-restricted-globals`

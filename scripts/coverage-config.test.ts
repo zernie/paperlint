@@ -400,8 +400,9 @@ test("the exclude list is exactly the justified set", () => {
     "**/*.test.*",
     // PAID LLM evaluations, never run by `npm test`
     "**/*.eval.mjs",
-    // skill sources vigiles compiles into SKILL.md
+    // skill and CLAUDE.md sources vigiles compiles; a glob's `**` skips a dot directory
     "**/*.spec.ts",
+    ".github/*.spec.ts",
     // type declarations
     "**/*.d.ts",
     "**/*.d.mts",

@@ -137,7 +137,7 @@ be paperlint's own cache, because the runner has no other.
 within seconds; `--check` must exit 0; then the `acmart` fixture is built with PATH holding `node`
 only, so no other TeX Live and no PDF tool can stand in, and the PDF must carry Libertine and Biolinum
 and no Computer Modern face. Without `PAPERLINT_TEXLIVE_DIR` its tests are skipped: installing ~270 MB
-into a home directory as a side effect of `npm run check` is the unasked install rule 11 forbids.
+into a home directory as a side effect of `npm run check` is the unasked install the root `CLAUDE.md` forbids.
 `src/toolchain.harness.mjs` covers the installer's logic (mirror fallback, archive check, time
 limit, verification, idempotence) against a fake mirror on disk, without the network.
 

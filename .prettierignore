@@ -7,6 +7,10 @@
 # The spec (SKILL.md.spec.ts) IS formatted.
 skills/*/SKILL.md
 
+# Every CLAUDE.md (the root and each folder's) is compiled from the CLAUDE.md.spec.ts beside it,
+# for the same reason.
+CLAUDE.md
+
 # Test inputs: the rules under test read these bytes, and some are judged against a
 # recorded baseline. Reflowing a fixture changes what the test measures. The fixture
 # CODE (harnesses, the baseline reader) is formatted. `**/` because fixtures also live
