@@ -1,13 +1,17 @@
-# CLAUDE.md — paperlint
+<!-- vigiles:sha256:96e4b53a1a1fe20e compiled from CLAUDE.md.spec.ts -->
 
-Machine-checkable gates for writing a research paper in git, extracted from a private
-knowledge base.
+# CLAUDE.md
+
+## Paperlint
+
+Machine-checkable gates for writing a research paper in git, extracted from a private knowledge base.
 
 This file loads on every turn, so it holds only what applies to **any** change here. A rule that
 applies to one kind of work lives in that folder's `CLAUDE.md`, which loads when a file there is
-read or edited (table below); a fact a machine checks lives beside that check. What broke is in
-[`docs/incidents.md`](docs/incidents.md); the measurements behind the rules are in
-[git](https://github.com/zernie/paperlint/blob/b4a3dc3a81d436186f41db2d69b65fd93f1af3b6/CLAUDE.md#L62-L199).
+read or edited (table below); a fact a machine checks lives beside that check. Every `CLAUDE.md`
+here is compiled from the `CLAUDE.md.spec.ts` beside it: edit the spec, then
+`npx vigiles compile`. What broke is in `docs/incidents.md`; the measurements behind
+the rules are in [git](https://github.com/zernie/paperlint/blob/b4a3dc3a81d436186f41db2d69b65fd93f1af3b6/CLAUDE.md#L62-L199).
 
 ## 🎯 THE GOAL, in one sentence
 
@@ -16,24 +20,15 @@ that fails the build** — and keep everything else honestly labelled as prose. 
 ESLint. The unit of progress is "one more verdict decided by the engine instead of by a
 hand-written script".
 
-That last clause is the whole direction, and it is the part that keeps being forgotten:
-
 ```
  prose in a guideline   →   hand-written script   →   ESLint rule in the engine
  rots silently              runs, but is OURS         editor-time · free AST · suppressible
- ← where this started       ← where most of it is     ← where it is going
 ```
 
-🔴 **A hand-written script is a WAYPOINT, not a destination.** Writing a new one is allowed
-only when the engine genuinely cannot express the check — and "cannot" means MEASURED, not
-assumed. Two things that sound like limits and are not:
-
-- _"ESLint only sees one file"_ — true of its AST, false of the rule: a rule is an ordinary
-  JS module and may call `execFileSync("git", …)` or read a sibling file. If the reason to
-  stay a script is "it needs git", that reason is weak; measure the real cost before using it.
-- _"this runs programs, not lints files"_ — that is a real limit, and the answer is the seam
-  already proven here: **a script PRODUCES facts into a JSON file, and ESLint JUDGES that
-  file.** The verdict lands in the engine even though the work did not.
+🔴 **A hand-written script is a WAYPOINT, not a destination.** A new one is allowed only when the
+engine genuinely cannot express the check, and "cannot" means MEASURED. A rule is an ordinary JS
+module and may call `execFileSync("git", …)` or read a sibling file. When the work has to run a
+program, **a script PRODUCES facts into a JSON file, and ESLint JUDGES that file.**
 
 **A real consumer dogfoods this package on every CI run**, so a breaking change here turns a
 paper pipeline red somewhere else the same day. CI runs on every pull request
@@ -41,58 +36,24 @@ paper pipeline red somewhere else the same day. CI runs on every pull request
 
 ## First command in a fresh container
 
-`npm install` — not optional: `vigiles` is a real dependency, and every harness, spec and hook
-resolves through it. Without it, failures look like broken code rather than a missing install.
-
-## Rules for every change
-
-- **Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule or
-  fixture of ours — is machinery, and belongs in [vigiles](https://github.com/zernie/vigiles).
-- **"It can't be done in the engine" must be MEASURED, not assumed.** Each of these was stated
-  confidently on 2026-09-16 and fell to a single command:
-
-  | the claim                                                   | what one command showed                                                                      |
-  | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-  | "a lint rule can't know a git date, so this stays a script" | a rule is plain JS; `execFileSync("git", …)` is legal in it, and its real costs are solvable |
-  | "we need our own glob expander"                             | `fs.globSync` ships in Node 22 and returned the identical set                                |
-  | "the tool can't run a file that config excludes"            | it can, and says so: `matches exclude … — running because you named it`                      |
-
-  ⇒ Before writing machinery, **run the thing you are about to replace and paste its output.**
-
-- **Do not describe what you have not opened.** Every factual claim in a document meant for
-  strangers is checked against the disk in the same pass that writes it.
-- **🔴 NEVER WRITE A GLOB OR A REGEX INSIDE A BLOCK COMMENT.** An asterisk followed by a slash
-  ends the comment wherever it appears. In a block comment, prose describes the pattern and never
-  quotes it; exact characters go in code or a line comment.
-- **Measure the DEFECT before proposing the fix — read "this is quick" as a warning.** Show the
-  defect (output, or a quoted line), name the layer and channel (more than one is a conversation,
-  not a commit), and spend an adversarial pass on forks and on anything that goes outward.
-- **Installing and using paperlint must be as smooth as possible.** The target is `npm i` plus one
-  command; any further manual step is a paperlint defect, except a choice that really belongs to
-  the user, named when it is asked. An automatic step that can fail silently is worse than an
-  explicit one.
-
-**New code is functional.** In `src/`, `eslint-rules/` and `lib/`: no `let`, no mutation, no loop,
-read-only types; collections through [Remeda](https://remedajs.com/). `npm run lint` holds it, and
-`eslint-suppressions.json` (old code) may only shrink.
+`npm install` — not optional: `vigiles` is a real dependency, and every harness, spec and hook resolves through it. Without it, failures look like broken code rather than a missing install.
 
 ## Where the other rules live
 
-| when you are…                                     | read                                                               | holds                                                                               |
-| ------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| writing a lint rule, or a check that judges prose | [`eslint-rules/CLAUDE.md`](eslint-rules/CLAUDE.md)                 | lint rule over script, both halves, a rule's page, the five writing principles      |
-| writing or changing a hook                        | [`hooks/CLAUDE.md`](hooks/CLAUDE.md)                               | never the consumer's cwd, how hooks ship                                            |
-| writing or changing a skill                       | [`skills/CLAUDE.md`](skills/CLAUDE.md)                             | where paperlint is installed, how skills ship                                       |
-| in `src/`, or adding a CLI command                | [`src/CLAUDE.md`](src/CLAUDE.md)                                   | the two layer axes, where the package's data is, the prior art before a new command |
-| thinking of a Claude Code plugin                  | [`plugin/CLAUDE.md`](plugin/CLAUDE.md)                             | why there is none, and what must be measured to bring it back                       |
-| changing CI, Dependabot or the release            | [`.github/CLAUDE.md`](.github/CLAUDE.md)                           | cost, Dependabot cadence, release from the PR title                                 |
-| writing a test                                    | [`docs/testing.md`](docs/testing.md), [`docs/e2e.md`](docs/e2e.md) | which kind of test, fakes, the e2e triggers                                         |
+| when you are… | read | holds |
+| --- | --- | --- |
+| writing a lint rule, or a check that judges prose | [`eslint-rules/CLAUDE.md`](eslint-rules/CLAUDE.md) | lint rule over script, both halves, a rule's page, the five writing principles |
+| writing or changing a hook | [`hooks/CLAUDE.md`](hooks/CLAUDE.md) | never the consumer's cwd, how hooks ship |
+| writing or changing a skill | [`skills/CLAUDE.md`](skills/CLAUDE.md) | where paperlint is installed, how skills ship |
+| in `src/`, or adding a CLI command | [`src/CLAUDE.md`](src/CLAUDE.md) | the two layer axes, where the package's data is, the prior art before a new command |
+| thinking of a Claude Code plugin | [`plugin/CLAUDE.md`](plugin/CLAUDE.md) | why there is none, and what must be measured to bring it back |
+| changing CI, Dependabot or the release | [`.github/CLAUDE.md`](.github/CLAUDE.md) | cost, Dependabot cadence, release from the PR title |
+| writing a test | [`docs/testing.md`](docs/testing.md), [`docs/e2e.md`](docs/e2e.md) | which kind of test, fakes, the e2e triggers |
 
 ## Before every push
 
-`npm run check`, exit code read without a pipe. Red first · assert the whole value · no test touches
-the real network · 100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e
-gate fails, and it says so; `npx paperlint toolchain` installs it.
+`npm run check`, exit code read without a pipe. Red first · assert the whole value · no test touches the real network ·
+100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e gate fails, and it says so; `npx paperlint toolchain` installs it.
 
 ## Commits
 
@@ -101,4 +62,44 @@ a commit message that no command produced is the thing this repo exists to make 
 
 **The subject is also the release**: semantic-release reads the squash commit, which is the PR
 title. `feat:` → minor, `fix:` or `perf:` → patch, `!` or a `BREAKING CHANGE:` footer → major,
-`docs:` `chore:` `ci:` `test:` `refactor:` → no release.
+`docs:` `chore:` `ci:` `test:` `refactor:` → no release. `.github/workflows/pr-title.yml`
+rejects a title without a conventional prefix.
+
+## Rules
+
+### Mechanism Goes To Vigiles
+
+**Guidance only** — A file that names nothing local — no rule or fixture of ours — is machinery, and belongs in [vigiles](https://github.com/zernie/vigiles); data stays here.
+
+### Measure Before Calling It Impossible
+
+**Guidance only** — "It can't be done in the engine" must be MEASURED, not assumed. Each of these was stated confidently on 2026-09-16 and fell to a single command:
+
+| the claim | what one command showed |
+| --- | --- |
+| "a lint rule can't know a git date, so this stays a script" | a rule is plain JS; `execFileSync("git", …)` is legal in it, and its real costs are solvable |
+| "we need our own glob expander" | `fs.globSync` ships in Node 22 and returned the identical set |
+| "the tool can't run a file that config excludes" | it can, and says so: `matches exclude … — running because you named it` |
+
+Before writing machinery, **run the thing you are about to replace and paste its output.**
+
+### Do Not Describe What You Have Not Opened
+
+**Guidance only** — Every factual claim in a document meant for strangers is checked against the disk in the same pass that writes it.
+
+### No Glob Or Regex In A Block Comment
+
+**Guidance only** — 🔴 An asterisk followed by a slash ends the comment wherever it appears. In a block comment, prose describes the pattern and never quotes it; exact characters go in code or a line comment.
+
+### Measure The Defect Before The Fix
+
+**Guidance only** — Read "this is quick" as a warning. Show the defect (output, or a quoted line), name the layer and channel (more than one is a conversation, not a commit), and spend an adversarial pass on forks and on anything that goes outward.
+
+### Installing Paperlint Is Smooth
+
+**Guidance only** — The target is `npm i` plus one command; any further manual step is a paperlint defect, except a choice that really belongs to the user, named when it is asked. An automatic step that can fail silently is worse than an explicit one.
+
+### New Code Is Functional
+
+**Enforced by:** `eslint/functional/no-let`
+**Why:** In `src/`, `eslint-rules/` and `lib/`: no `let`, no mutation, no loop, read-only types; collections through [Remeda](https://remedajs.com/). `functional/immutable-data`, `functional/no-loop-statements` and `functional/prefer-immutable-types` hold the rest, and `eslint-suppressions.json` (old code) may only shrink.

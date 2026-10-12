@@ -250,6 +250,9 @@ const ROOT = { file: { categories: "root" } };
  */
 export const layerBoundaries = (root) => ({
   files: ["src/**/*.ts"],
+  // The source of src/CLAUDE.md sits beside it because `vigiles compile` requires that; it is an
+  // instruction file, not a layer of the package.
+  ignores: ["src/CLAUDE.md.spec.ts"],
   plugins: { boundaries },
   settings: {
     "boundaries/root-path": root,

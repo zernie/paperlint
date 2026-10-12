@@ -1,8 +1,14 @@
-# CLAUDE.md — `src/`
+<!-- vigiles:sha256:23fcdb191abe7967 compiled from src/CLAUDE.md.spec.ts -->
+
+# CLAUDE.md
+
+## `src/`
 
 The package's TypeScript: the CLI, the build, the toolchain installer, and the measuring that feeds
 the facts file. Loaded when working under `src/`; the repository-wide rules are in the root
 `CLAUDE.md`.
+
+## The two layer axes
 
 **`src/` is hexagonal on two axes, and the linter enforces both** (`eslint.config.mjs`; fixtures in
 `test/fixtures/layers/`, run by `test/eslint-layers.test.ts`; issue #76).
@@ -58,9 +64,6 @@ computes where the package sits; the consumer's side is `skills/paper-pipeline/s
 ([`skills/CLAUDE.md`](../skills/CLAUDE.md)). `@retorquere/bibtex-parser` is the one `.bib` reader,
 behind `src/ports/bib-reader.ts`.
 
-<!-- vigiles:file package-dirs.ts -->
-<!-- vigiles:file ../skills/paper-pipeline/scripts/consumer.mjs -->
-
 ## Before adding a CLI command — read the prior art
 
 [`docs/prior-art/`](../docs/prior-art/README.md) records how comparable tools solved the same
@@ -69,3 +72,13 @@ problems (Quarto, Vale, Biome, Danger, reviewdog, Semgrep), each claim with the 
 check that before adding a verb. Rejected on 2026-09-27: a separate `paperlint refs` command; the
 slowness it would have moved was a cache thrown away after every build
 ([`docs/references.md`](../docs/references.md)).
+
+## Rules
+
+### Layers
+
+**Enforced by:** `eslint/boundaries/dependencies`
+
+### Effect Globals
+
+**Enforced by:** `eslint/no-restricted-globals`
