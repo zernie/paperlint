@@ -174,6 +174,7 @@ import {
   FOLDER_LAYOUT_RULE_LEVELS,
   folderLayoutRules,
 } from "./folder-layout-rule.ts";
+import { folderLayoutHook } from "./folder-layout-hook.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
 import reviewFrontmatter from "#eslint-rules/review-frontmatter";
@@ -1090,6 +1091,32 @@ export function toPaths(papers: unknown): string[] {
   return [];
 }
 
+/** What an in-process hook is handed: the payload, and where its output and complaints go. */
+interface HookIo {
+  readonly err: typeof console.error;
+  readonly stdin: () => string;
+  readonly out: (text: string) => void;
+}
+
+/**
+ * Hooks that run inside this process instead of as a vigiles program, each because it must call the
+ * package's own code (`src/folder-layout-hook.ts` says why for its one). Advisory: whatever goes
+ * wrong, the tool call has already happened, so it says so on stderr and exits 0.
+ */
+const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
+  "paper-folder-layout": ({ err, stdin, out }) => {
+    try {
+      const said = folderLayoutHook(JSON.parse(stdin()), nodeFiles);
+      if (said !== null) out(`${JSON.stringify(said)}\n`);
+    } catch (e) {
+      err(
+        `paperlint: the paper-folder-layout hook did not run: ${messageOf(e)}`,
+      );
+    }
+    return 0;
+  },
+};
+
 /**
  * `paperlint hook <name>` — run an editor hook. It exists for ONE thing: so that the wiring does not
  * address the runtime from the project root.
@@ -1131,6 +1158,10 @@ export function runHook(
     // the very file the package itself declares as its `bin`.
     resolve = (spec: string): string =>
       createRequire(import.meta.url).resolve(spec),
+    stdin = (): string => readFileSync(0, "utf8"),
+    out = (text: string): void => {
+      process.stdout.write(text);
+    },
   }: {
     err?: typeof console.error;
     /** Runs the hook with the terminal's streams: `spawnSync` is one, and only its status is read. */
@@ -1140,12 +1171,18 @@ export function runHook(
       options: { readonly stdio: "inherit" },
     ) => { readonly status: number | null };
     resolve?: (spec: string) => string;
+    /** The hook's payload, as Claude Code sends it on stdin. */
+    stdin?: () => string;
+    /** Where an in-process hook's output goes: stdout, which Claude Code reads. */
+    out?: (text: string) => void;
   } = {},
 ): number {
   if (!name) {
     err(`\`hook\` needs a name, e.g. \`paperlint hook paper-edit-guard\``);
     return 2;
   }
+  const inProcess = IN_PROCESS_HOOKS[name];
+  if (inProcess !== undefined) return inProcess({ err, stdin, out });
   const program = fileURLToPath(
     new URL(`../hooks/${name}.hook.mjs`, import.meta.url),
   );

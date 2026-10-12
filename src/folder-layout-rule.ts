@@ -97,6 +97,18 @@ const entriesOf = (
     kind: deps.files.isFile(callerPath(join(dir, name))) ? "file" : "dir",
   }));
 
+/**
+ * The text of each stray entry among `entries` of the paper folder `dir` — THE one function behind
+ * both the rule and the `paper-folder-layout` hook (`src/folder-layout-hook.ts`), so the two cannot
+ * disagree about what is allowed or what to say.
+ */
+export const strayTexts = (
+  dir: string,
+  entries: readonly LayoutEntry[],
+  files: Files,
+): readonly string[] =>
+  judgeLayout(entries, { roots: declaredRoots(dir, files) }).map(strayMessage);
+
 const META: FolderRuleModule["meta"] = {
   type: "suggestion",
   docs: {
@@ -125,15 +137,15 @@ export function folderLayoutRules(
           root() {
             const dir = dirname(context.filename);
             const at = context.sourceCode.getLocFromIndex(0);
-            judgeLayout(entriesOf(dir, deps), {
-              roots: declaredRoots(dir, deps.files),
-            }).forEach((s) => {
-              context.report({
-                loc: { start: at, end: at },
-                messageId: "stray",
-                data: { text: strayMessage(s) },
-              });
-            });
+            strayTexts(dir, entriesOf(dir, deps), deps.files).forEach(
+              (text) => {
+                context.report({
+                  loc: { start: at, end: at },
+                  messageId: "stray",
+                  data: { text },
+                });
+              },
+            );
           },
         };
       },

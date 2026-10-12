@@ -200,6 +200,48 @@ test("runHook: a runtime with no cli.js beside it, and a hook killed by a signal
   );
 });
 
+test("runHook paper-folder-layout: in-process, on the real disk — stdout on a stray file, nothing on an allowed one, a complaint and exit 0 on a broken payload", () => {
+  const dir = join(root, "layout-hook");
+  writeTree(dir, {
+    "papers/p/PIPELINE-STATUS.md": "# status\n",
+    "papers/p/paper.tex": "x",
+    "papers/p/PLAN.md": "x",
+    "papers/p/NOTES.md": "x",
+  });
+  const hook = (payload: string) => {
+    const out: string[] = [];
+    const err: string[] = [];
+    const code = runHook("paper-folder-layout", {
+      stdin: () => payload,
+      out: (t) => out.push(t),
+      err: (m: string) => err.push(m),
+      run: () => {
+        throw new Error("an in-process hook spawns nothing");
+      },
+    });
+    return { code, out, err };
+  };
+  const write = (file: string) =>
+    JSON.stringify({ tool_input: { file_path: join(dir, file) } });
+  const stray = hook(write("papers/p/PLAN.md"));
+  assert.equal(stray.code, 0);
+  assert.match(
+    stray.out.join(""),
+    /^\{"hookSpecificOutput":\{"hookEventName":"PostToolUse","additionalContext":"`PLAN\.md` is at the root of a paper folder/,
+  );
+  assert.deepEqual(hook(write("papers/p/NOTES.md")), {
+    code: 0,
+    out: [],
+    err: [],
+  });
+  const broken = hook("{ not json");
+  assert.equal(broken.code, 0);
+  assert.match(
+    broken.err.join(""),
+    /^paperlint: the paper-folder-layout hook did not run: /,
+  );
+});
+
 test("chooseVenue: a preset by path (inside and outside the paper), by prefixed name, and a broken one", async () => {
   const dir = join(root, "venues");
   writeTree(dir, {

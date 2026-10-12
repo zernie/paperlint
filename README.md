@@ -102,7 +102,7 @@ REALM.
 
 2. Set up. `init` asks three questions: where your papers live (default `papers/`), whether to
    install TeX Live now, and whether to add a CI workflow. With Claude Code it also installs the
-   skills and three hooks ([what they do](docs/install.md)).
+   skills and four hooks ([what they do](docs/install.md)).
 
    ```sh
    npx paperlint init

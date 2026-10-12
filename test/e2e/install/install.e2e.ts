@@ -202,10 +202,15 @@ function stageCorpus(root: string): void {
   // The real LaTeX half. Copied from this repository's own fixture rather than written inline:
   // a second inline copy of an acmart preamble would drift from the one the build e2e compiles,
   // and then the two tests would disagree about what a paper looks like.
+  // Its `expect.json` is the build e2e's statement about the fixture, not part of the paper, and a
+  // paper's root holds only paperlint's layout (`paper/folder-layout`), so it stays behind.
   cpSync(
     join(ROOT, "fixtures", "build-e2e", "acmart"),
     join(root, "papers", "acmart"),
-    { recursive: true },
+    {
+      recursive: true,
+      filter: (src) => basename(src) !== "expect.json",
+    },
   );
 }
 

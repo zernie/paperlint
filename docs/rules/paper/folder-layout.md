@@ -103,6 +103,28 @@ No rule options. The paper's `pdf`, `talk.dir` and own preset files add what the
   passes. Old versions of the source belong in `versions/`.
 - A folder without `PIPELINE-STATUS.md`: it is not a paper to paperlint.
 
+## The hook: the same message when the file is written
+
+`paperlint init` also wires the hook `paper-folder-layout` (PostToolUse on `Edit|Write|MultiEdit`,
+`plugin/hooks/hooks.json`). When an agent writes a file at a paper folder's root that the layout does
+not allow, or inside a root folder it does not allow, the hook adds this rule's message to the
+agent's context as `additionalContext`, so the file is moved in the same turn rather than at the next
+lint. The text comes from the function the rule reports with (`strayTexts`,
+`src/folder-layout-rule.ts`); there is no second list. It cannot tell a new file from one written
+again, so a stray file is named on every write until it moves.
+
+Its first step is cheap: it looks for the nearest folder above the written file that holds
+`PIPELINE-STATUS.md`, one file check per ancestor, and says nothing when there is none — no git, no
+settings, no lint before that. Measured on 2026-10-12: that step takes about 19 µs. The process
+around it is what every `paperlint hook` costs, the CLI's import: about 650 ms per write on the
+measuring machine, with or without a paper folder (`paper-skills-nudge`, a vigiles hook, measured 730
+to 850 ms on the same machine).
+
+A project whose papers all live under one folder can skip the process for every other write by
+giving the hook's entry in its own `.claude/settings.json` an `if`, Claude Code's permission-rule
+filter, for example `"if": "Write(**/papers/**)"`. paperlint does not write one: where papers live is
+a project's choice, and a filter that misses a papers folder would make the hook silently dead there.
+
 ## How to fix
 
 Move the entry where its message says, and update whatever names its path:
