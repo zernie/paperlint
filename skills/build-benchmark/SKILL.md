@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:a4e4174f842f08d6 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3dd17b0b5f989911 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
 
 # build-benchmark — the study + the artifact reviewers can run
 
@@ -50,6 +50,15 @@ is the *inverse* of the flaw:
   disaster battery — never run the guard or the attack. See Safety below; this is non-negotiable.
 
 Write the design as the answer to "what would make the critiqued pitfall impossible here?"
+
+**Declare the population, the screens and the coverage before freezing the sample.** Each screen
+between the population and the sample (fits one excerpt, one classifier lane, a model-picked item)
+changes what the sample can say, not only its size; screens that are reasonable one by one can leave a
+sample nobody meets in practice. So, before the draw is frozen, the study's `prereg.json` says what
+the claim is about, what each screen removed per stratum and what share the sample can represent; then
+show the author the drawn **units** (the rules or cases, not the items made from them) and ask: *is
+this what you meet in practice?* The fields are the rule `paper/prereg-coverage`
+(`docs/rules/paper/prereg-coverage.md`); `paperlint lint` fails until they are there.
 
 ## 2. Honest statistics — the part reviewers attack first
 
