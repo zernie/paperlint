@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:0b91129ca6a6b2a3 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a4e4174f842f08d6 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
 
 # build-benchmark — the study + the artifact reviewers can run
 
@@ -156,6 +156,8 @@ Before submitting, verify the artifact you built with the reviewer-side reproduc
 - **argument-arc (frame mode)** — 🔴 **hard input.** Owns row `frame`, the stated claim. No `frame`, no study.
 - **research-ideate** (upstream) — supplies the contribution and the pitfall to invert; this skill turns
   it into evidence.
+- **build-label-page** — when the study needs a person to label items (gold labels, a blind review of
+  outputs): it builds the page, publishes it and exports the answers into the study's `data/`.
 - **draft-paper** — the study's stats, bound, and artifact-number table feed Methods/Results/Availability.
 - **pc-panel-review** — its artifact-runner reviewer `cd`s in and re-executes every harness; build so
   that pass is deterministic.

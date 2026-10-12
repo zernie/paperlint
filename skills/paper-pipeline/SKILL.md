@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:b21c1928675e4b93 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:cb2eecdb81ba766d compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -170,6 +170,8 @@ No numbers. Nothing here happens once, and nothing here is "next".
 
 - **`build-benchmark`** — a design that inverts the pitfall; honest stats; a self-checking artifact
   (`references/artifact-checklist.md`).
+- **`build-label-page`** — when the study needs a person to label items (gold labels, a blind review):
+  a phone page with a shared answer store, the answers exported into the study's `data/`.
 - **`draft-paper`** — section skeleton + the accept-and-get-cited properties
   (`references/writing-craft.md`).
 - **`argument-arc`** — 🔴 **does the draft carry the reader to ONE conclusion?** One sentence per

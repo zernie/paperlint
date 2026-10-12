@@ -187,6 +187,8 @@ No numbers. Nothing here happens once, and nothing here is "next".
 
 - **\`build-benchmark\`** — a design that inverts the pitfall; honest stats; a self-checking artifact
   (\`references/artifact-checklist.md\`).
+- **\`build-label-page\`** — when the study needs a person to label items (gold labels, a blind review):
+  a phone page with a shared answer store, the answers exported into the study's \`data/\`.
 - **\`draft-paper\`** — section skeleton + the accept-and-get-cited properties
   (\`references/writing-craft.md\`).
 - **\`argument-arc\`** — 🔴 **does the draft carry the reader to ONE conclusion?** One sentence per

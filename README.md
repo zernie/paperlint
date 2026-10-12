@@ -182,6 +182,7 @@ what it does — "is this idea worth a paper?", "find me a venue for this". `ini
 
 - **A go / no-go on your idea, with the reason.** `research-ideate`
 - **A ranked list of venues that fit** — deadline, page limit, indexing. `find-venue`
+- **A page to label the study's items on your phone**, blind, with the answers exported into the paper's folder. `build-label-page`
 - **A first draft from your results.** `draft-paper`
 - **A hostile review before the real one.** `paper-adversarial-review`
 - **A ready / not ready verdict before you submit**, worst problem first. `harden-paper`

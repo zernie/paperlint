@@ -36,9 +36,10 @@ the skill whose description matches starts. `paperlint init` installs them into
 
 ## 3 · Study
 
-| you get                                                                                    | skill             |
-| ------------------------------------------------------------------------------------------ | ----------------- |
-| a study design with honest statistics, and a reproduction artifact that checks its numbers | `build-benchmark` |
+| you get                                                                                    | skill              |
+| ------------------------------------------------------------------------------------------ | ------------------ |
+| a study design with honest statistics, and a reproduction artifact that checks its numbers | `build-benchmark`  |
+| a page you label items on from a phone, and the answers exported into the study folder     | `build-label-page` |
 
 ## 4 · Draft
 

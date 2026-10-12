@@ -162,6 +162,8 @@ Before submitting, verify the artifact you built with the reviewer-side reproduc
 - **argument-arc (frame mode)** — 🔴 **hard input.** Owns row \`frame\`, the stated claim. No \`frame\`, no study.
 - **research-ideate** (upstream) — supplies the contribution and the pitfall to invert; this skill turns
   it into evidence.
+- **build-label-page** — when the study needs a person to label items (gold labels, a blind review of
+  outputs): it builds the page, publishes it and exports the answers into the study's \`data/\`.
 - **draft-paper** — the study's stats, bound, and artifact-number table feed Methods/Results/Availability.
 - **pc-panel-review** — its artifact-runner reviewer \`cd\`s in and re-executes every harness; build so
   that pass is deterministic.
