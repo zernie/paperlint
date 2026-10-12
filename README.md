@@ -208,7 +208,8 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
   and not an included `.bbl` (a tool's output, read only as part of the whole paper). A paper that
   was not built, or changed since, is linted as `paper.tex` alone, and `paper/sources-fresh` says so.
 - Lint also checks the pipeline's own records: `PIPELINE-STATUS.md`, reviews, notes on related
-  papers ([`docs/rules.md`](docs/rules.md)).
+  papers ([`docs/rules.md`](docs/rules.md)), and the paper folder's layout: what stands at its root,
+  and at the top of its `repro/` (an index, `tools/`, `data/`, one dated folder per study).
 - The rules run on ESLint, so a deliberate exception is a comment on the line above:
   `% eslint-disable-next-line paper/leading-zero -- quoted from the reviewer`.
 - Errors fail the run; warnings only print, unless you pass `--max-warnings <n>`.

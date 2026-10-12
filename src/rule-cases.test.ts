@@ -707,6 +707,21 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       [`${P}/extra/PLAN.md`]: "# plan\n",
     }),
   },
+  // A loose script at the top of repro/: it belongs in repro/tools/.
+  "paper/repro-layout": {
+    reports: {
+      tree: paper(tex("x"), { [`${P}/repro/run.py`]: "print(1)\n" }),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 2,
+      line: 1,
+    },
+    // The same script where the layout puts it, and a dated study with its README.md.
+    silent: paper(tex("x"), {
+      [`${P}/repro/README.md`]: "# repro\n",
+      [`${P}/repro/tools/run.py`]: "print(1)\n",
+      [`${P}/repro/ablation-2026-10-12/README.md`]: "# ablation\n",
+    }),
+  },
   // EMNLP, a shipped venue's name (REALM's conference), in a BlindConf paper's text.
   "tex/venue-leftover": {
     reports: {

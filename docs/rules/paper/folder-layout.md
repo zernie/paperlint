@@ -27,7 +27,7 @@ which is never judged.
 | `reviews/`                                  | dated reviews and pass reports, read by `review/frontmatter`                                                                                                                    |
 | `siblings/`                                 | the cards of competing papers, read by `sibling/frontmatter`                                                                                                                    |
 | `research/`                                 | dated research and decision records; where the paper skills save theirs                                                                                                         |
-| `repro/`                                    | the reproduction artifact: scripts, data, its build, the anonymized upload copy                                                                                                 |
+| `repro/`                                    | the reproduction artifact: an index, `tools/`, `data/` and one dated folder per study, judged by [`paper/repro-layout`](repro-layout.md)                                        |
 | `figures/`                                  | graphics and figure sources, reached by a relative path from the TeX                                                                                                            |
 | `sections/`                                 | the body when it is split: `\input{sections/intro}`                                                                                                                             |
 | `talk/`                                     | the talk's files, the `talk/` rules' default folder                                                                                                                             |
@@ -80,7 +80,8 @@ name met in real paper folders has one destination:
 | `PLAN.md`, `plans/`        | a section of `PIPELINE-STATUS.md` ("Plan / now")                                                           |
 | `DECISION-LOG.md`          | `research/`                                                                                                |
 | `EMAILS.md`                | `submission/`                                                                                              |
-| `data/`, `artifact/`       | `repro/`                                                                                                   |
+| `data/`                    | `repro/data/`                                                                                              |
+| `artifact/`                | `repro/` (scripts in `repro/tools/`, data in `repro/data/`); the anonymized upload copy in `submission/`   |
 | `archive/`                 | `versions/` for frozen PDFs, `submission/` for an earlier attempt's forms and mails, `extra/` for the rest |
 | `venue-corpus/`, `venues/` | `<papers-root>/venues/<venue>/`, outside the paper folder                                                  |
 
@@ -97,8 +98,8 @@ No rule options. The paper's `pdf`, `talk.dir` and own preset files add what the
 
 ## What it does not check
 
-- What is inside the allowed folders. `reviews/` and `siblings/` have their own rules; the rest are
-  free.
+- What is inside the allowed folders. `reviews/`, `siblings/` and `repro/` have their own rules
+  ([`paper/repro-layout`](repro-layout.md) for `repro/`); the rest are free.
 - Whether a `.tex` at the root is included by anything: a fragment the body no longer `\input`s
   passes. Old versions of the source belong in `versions/`.
 - A folder without `PIPELINE-STATUS.md`: it is not a paper to paperlint.

@@ -1,0 +1,268 @@
+/**
+ * THE LAYOUT OF A PAPER'S `repro/` — what may stand at its top, and nothing else.
+ *
+ * `repro/` is where a paper's evidence lives, and it fills up the way a desk does: one real paper had
+ * 120 entries at its top, about 70 study folders (some with no date) and about 50 loose scripts, data
+ * files and notes. Nobody could say which script produces which number, which study is current, or
+ * where a new run goes. The layout gives each kind of material one place:
+ *
+ *   repro/
+ *   ├── README.md              the index: one line per study
+ *   ├── <slug>-YYYY-MM-DD/     one folder per study or spike, with a README.md inside
+ *   ├── tools/                 scripts used across the paper (numbers, figures, anonymity check, harnesses)
+ *   └── data/                  shared data (tables, caches)
+ *
+ * plus `.gitignore`. A loose note belongs in its study's folder or in the paper's `research/`.
+ *
+ * ── THE DATE IN A STUDY'S NAME ────────────────────────────────────────────────────
+ * `<slug>-YYYY-MM-DD` is the day the study began. `<slug>-YYYY-MM` is accepted too: a study that ran
+ * over weeks (labelling, a reading of a corpus) has a month as its honest date, and both forms sort
+ * by time. The date must be a real one (no month 13, no 30 February). The slug is lowercase letters
+ * and digits in words joined by single hyphens.
+ *
+ * ── NEVER REPORTED ───────────────────────────────────────────────────────────────
+ * What interpreters, package managers and the operating system leave in any folder they run in
+ * (`__pycache__/`, `node_modules/`, `.DS_Store`, …): the scripts' byproducts, not the author's.
+ *
+ * Pure: the caller lists the folder and says which study folders hold a `README.md`.
+ */
+import { extname } from "node:path";
+import type { LayoutEntry } from "./paper-layout.ts";
+
+/** The folder this layout governs, at the paper folder's root. */
+export const REPRO_DIR = "repro";
+
+/** The index at the top of `repro/`, and the file every study folder holds. */
+export const README = "README.md";
+
+/** The files `repro/` may hold at its top, by exact name. */
+export const REPRO_FILES: readonly string[] = [README, ".gitignore"];
+
+/** The shared folders `repro/` may hold besides its study folders. */
+export const TOOLS_DIR = "tools";
+export const DATA_DIR = "data";
+export const REPRO_DIRS: readonly string[] = [TOOLS_DIR, DATA_DIR];
+
+/**
+ * What interpreters, package managers, test runners and the operating system write into the folder
+ * they run in. Never reported, whether a file or a folder.
+ */
+export const REPRO_BYPRODUCTS: readonly string[] = [
+  "__pycache__",
+  ".pytest_cache",
+  ".mypy_cache",
+  ".ruff_cache",
+  ".ipynb_checkpoints",
+  "node_modules",
+  ".venv",
+  ".DS_Store",
+  "Thumbs.db",
+];
+
+/** A study's name: a slug, then the year, the month, and optionally the day it began. */
+const STUDY_NAME = /^([a-z0-9]+(?:-[a-z0-9]+)*)-(\d{4})-(\d{2})(?:-(\d{2}))?$/u;
+
+const isLeapYear = (y: number): boolean =>
+  (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+
+/** The days in month `m` (1–12) of year `y`. */
+const daysIn = (y: number, m: number): number =>
+  m === 2 ? (isLeapYear(y) ? 29 : 28) : [4, 6, 9, 11].includes(m) ? 30 : 31;
+
+/** Whether `name` is a study folder's: `<slug>-YYYY-MM-DD` or `<slug>-YYYY-MM`, a real date. */
+export function isStudyName(name: string): boolean {
+  const m = STUDY_NAME.exec(name);
+  if (m === null) return false;
+  const year = Number(m[2]);
+  const month = Number(m[3]);
+  const day = m[4] === undefined ? 1 : Number(m[4]);
+  return month >= 1 && month <= 12 && day >= 1 && day <= daysIn(year, month);
+}
+
+/**
+ * The study name to suggest for a folder named `name`: its name as a slug, with the date to fill in.
+ * A name that becomes a study name once lowercased and hyphenated is suggested as it is.
+ */
+export function suggestedStudyName(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, "-")
+    .replace(/^-+|-+$/gu, "");
+  if (isStudyName(slug)) return slug;
+  const base = slug.replace(/(?:^|-)\d{4}(?:-\d{1,2}){0,2}$/u, "");
+  return `${base === "" ? "<slug>" : base}-YYYY-MM-DD`;
+}
+
+/** The extensions of a script: what a study or the paper's build runs. */
+export const SCRIPT_EXTENSIONS: readonly string[] = [
+  ".py",
+  ".ipynb",
+  ".sh",
+  ".bash",
+  ".zsh",
+  ".js",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".mts",
+  ".cts",
+  ".r",
+  ".jl",
+  ".rb",
+  ".pl",
+  ".awk",
+  ".sql",
+];
+
+/** Names without a script's extension that still say how the tools run. */
+export const TOOL_FILES: readonly string[] = [
+  "Makefile",
+  "Dockerfile",
+  "requirements.txt",
+  "pyproject.toml",
+  "uv.lock",
+  "package.json",
+  "package-lock.json",
+];
+
+/** The extensions of data: tables, records, caches, archives, raw output. */
+export const DATA_EXTENSIONS: readonly string[] = [
+  ".tsv",
+  ".csv",
+  ".json",
+  ".jsonl",
+  ".ndjson",
+  ".yaml",
+  ".yml",
+  ".xml",
+  ".txt",
+  ".log",
+  ".parquet",
+  ".sqlite",
+  ".db",
+  ".xlsx",
+  ".npy",
+  ".npz",
+  ".pkl",
+  ".gz",
+  ".zip",
+  ".tar",
+];
+
+/** The extensions of a note. */
+export const NOTE_EXTENSIONS: readonly string[] = [".md", ".markdown"];
+
+/** Where a script goes. */
+export const SCRIPT_CURE =
+  "repro/tools/ — the scripts used across the paper (numbers, figures, the anonymity check, harnesses); a script only one study runs goes in that study's folder instead";
+
+/** Where data goes. */
+export const DATA_CURE =
+  "repro/data/ — the data shared across the paper (tables, caches); what one study's run produced goes in that study's folder instead";
+
+/** Where a note goes. */
+export const NOTE_CURE =
+  "the dated folder of the study it is about (repro/<slug>-YYYY-MM-DD/), or the paper's research/ when it is research or a decision rather than the record of a run";
+
+/** Where a file of any other kind goes. */
+export const FILE_CURE_BY_KIND =
+  "decide by what it is — a script → repro/tools/; data → repro/data/; a note → the dated folder of its study, or the paper's research/; what one study produced → that study's folder";
+
+/** The files paperlint itself once kept at the top of `repro/`, each with where it is read now. */
+export const MOVED_FILES: readonly {
+  readonly name: string;
+  readonly cure: string;
+}[] = [
+  {
+    name: "references-cache.json",
+    cure: "repro/data/references-cache.json, where `paperlint build` reads and writes the citation services' answers (`git mv repro/references-cache.json repro/data/`); until it is moved, the next build asks every service again",
+  },
+  {
+    name: "refs-cache.json",
+    cure: "repro/data/refs-cache.json, where the paper-pipeline's extract-ref-facts script keeps its raw answers (`git mv repro/refs-cache.json repro/data/`)",
+  },
+  {
+    name: "generated-code-grandfathered.txt",
+    cure: "repro/tools/generated-code-grandfathered.txt, where the paper-pipeline's generated-code check reads it (`git mv repro/generated-code-grandfathered.txt repro/tools/`)",
+  },
+];
+
+/** Where a stray file goes: a file paperlint moved, else by the kind its name says. */
+function fileCure(name: string): string {
+  const moved = MOVED_FILES.find((f) => f.name === name);
+  if (moved !== undefined) return moved.cure;
+  const ext = extname(name).toLowerCase();
+  if (TOOL_FILES.includes(name) || SCRIPT_EXTENSIONS.includes(ext))
+    return SCRIPT_CURE;
+  if (DATA_EXTENSIONS.includes(ext)) return DATA_CURE;
+  if (NOTE_EXTENSIONS.includes(ext)) return NOTE_CURE;
+  return FILE_CURE_BY_KIND;
+}
+
+/** Where a folder with no study name goes: renamed as a study, or emptied into the shared folders. */
+const folderCure = (name: string): string =>
+  `rename it to \`${suggestedStudyName(name)}\`, one folder per study or spike, named for what it is and the date it began — the date of its first commit is a fine default (\`git log --reverse --format=%as -- repro/${name} | head -1\`, run in the paper folder) — and give it a README.md; if it holds scripts or data shared across the paper instead, move them into repro/tools/ or repro/data/`;
+
+/** An entry at the top of `repro/`: a file or a folder, and for a folder whether it holds a README.md. */
+export interface ReproEntry extends LayoutEntry {
+  readonly hasReadme: boolean;
+}
+
+/** What is wrong with an entry at the top of `repro/`. */
+export interface ReproFinding {
+  /** The entry's path from the paper folder; a folder's ends in a slash. */
+  readonly path: string;
+  /** `stray`: not part of the layout. `no-readme`: a study folder without its README.md. */
+  readonly problem: "stray" | "no-readme";
+  /** Where it goes, or what to add. */
+  readonly cure: string;
+}
+
+const isAllowed = (e: ReproEntry): boolean =>
+  REPRO_BYPRODUCTS.includes(e.name) ||
+  (e.kind === "file"
+    ? REPRO_FILES.includes(e.name)
+    : REPRO_DIRS.includes(e.name) || isStudyName(e.name));
+
+/** The one finding for `e`, or null when it is in its place. */
+function judgeEntry(e: ReproEntry): ReproFinding | null {
+  const path = `${REPRO_DIR}/${e.name}${e.kind === "dir" ? "/" : ""}`;
+  if (!isAllowed(e))
+    return {
+      path,
+      problem: "stray",
+      cure: e.kind === "dir" ? folderCure(e.name) : fileCure(e.name),
+    };
+  if (e.kind === "dir" && isStudyName(e.name) && !e.hasReadme)
+    return {
+      path,
+      problem: "no-readme",
+      cure: `add ${path}${README} — what the study asks, how to run it, what it found — and a line for it in repro/${README}`,
+    };
+  return null;
+}
+
+/** The entries at the top of `repro/` that are out of place, at most one finding each, in order. Pure. */
+export function judgeRepro(
+  entries: readonly ReproEntry[],
+): readonly ReproFinding[] {
+  return entries.map(judgeEntry).filter((f): f is ReproFinding => f !== null);
+}
+
+/**
+ * The one text a finding is reported with, by the rule `paper/repro-layout` and by the hook that fires
+ * when such an entry is written. It stands alone: what is wrong, where the entry goes, and what
+ * `repro/` holds, for a reader who knows nothing of paperlint.
+ */
+export function reproMessage(f: ReproFinding): string {
+  const head =
+    f.problem === "stray"
+      ? `\`${f.path}\` is loose at the top of the paper's repro/ folder, which holds only an index, the shared tools and data, and one dated folder per study.`
+      : `\`${f.path}\` is a study folder without a ${README}, and every study in repro/ has one.`;
+  return [
+    head,
+    `${f.problem === "stray" ? "Where it goes" : "What to do"}: ${f.cure}.`,
+    `Allowed at the top of repro/ — files: ${README} (the index, one line per study), .gitignore; folders: tools/ (scripts used across the paper), data/ (shared data and caches), and one folder per study or spike named <slug>-YYYY-MM-DD or <slug>-YYYY-MM, with a ${README} inside.`,
+    `Rule paper/repro-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/repro-layout.md`,
+  ].join(" ");
+}

@@ -75,12 +75,15 @@ async function lint(
 const linted = (stdout: string): string[] =>
   lintReport(stdout).map((r) => r.filePath);
 
-/** Vendored code under a paper: a syntax error, an unknown rule in a directive, plain CommonJS. */
+/**
+ * Vendored code under a paper: a syntax error, an unknown rule in a directive, plain CommonJS — in
+ * `repro/tools/`, where `paper/repro-layout` puts a paper's scripts.
+ */
 const VENDORED = {
-  "papers/a/repro/x.js": "return 1;\n",
-  "papers/a/repro/y.mjs":
+  "papers/a/repro/tools/x.js": "return 1;\n",
+  "papers/a/repro/tools/y.mjs":
     "// eslint-disable-next-line import/no-nodejs-modules\nimport fs from 'node:fs';\n",
-  "papers/a/repro/lib/z.cjs": "module.exports = 1;\n",
+  "papers/a/repro/tools/lib/z.cjs": "module.exports = 1;\n",
 };
 
 describe("paperlint lint — lints only the files paperlint owns", () => {
@@ -125,10 +128,10 @@ describe("paperlint lint — lints only the files paperlint owns", () => {
 
   it("a file named on the command line that paperlint does not lint is refused by name", async () => {
     const root = project(VENDORED);
-    const r = await lint(root, ["papers/a/repro/x.js"]);
+    const r = await lint(root, ["papers/a/repro/tools/x.js"]);
     expect(r.code).toBe(2);
     expect(r.err).toMatch(
-      /papers\/a\/repro\/x\.js is not a file paperlint lints/,
+      /papers\/a\/repro\/tools\/x\.js is not a file paperlint lints/,
     );
     expect(r.err).toMatch(/PIPELINE-STATUS\.md/);
   });

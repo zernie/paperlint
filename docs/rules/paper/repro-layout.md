@@ -1,0 +1,112 @@
+# paper/repro-layout
+
+**Level:** error · **Reads:** the listing of the paper's `repro/`, and whether each study folder in
+it holds a `README.md` · **Reported on:** the first line of the paper's `PIPELINE-STATUS.md`, once
+per misplaced entry
+
+## What it catches
+
+An entry at the top of a paper's `repro/` that is not part of its layout, and a study folder there
+without a `README.md`. `repro/` holds an index, the tools and data the whole paper shares, and one
+dated folder per study:
+
+```text
+repro/
+├── README.md                ← index: one line per study
+├── <slug>-YYYY-MM-DD/       ← one folder per study or spike; README.md required inside
+├── tools/                   ← scripts used across the paper (numbers, figures, anonymity check, harnesses)
+└── data/                    ← shared data (tables, caches)
+```
+
+| allowed at the top of `repro/`            | why it is there                                                                                         |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `README.md`                               | the index: one line per study, so a reader finds the study behind a number without opening every folder |
+| `.gitignore`                              | to keep the scripts' byproducts out of git                                                              |
+| `tools/`                                  | the scripts the whole paper uses: the numbers, the figures, the anonymity check, the harnesses          |
+| `data/`                                   | the data the whole paper shares: tables, caches (`paperlint build` keeps `references-cache.json` here)  |
+| `<slug>-YYYY-MM-DD/` or `<slug>-YYYY-MM/` | one study or spike: its scripts, its data, its output, and a `README.md` saying what it asks and found  |
+
+A loose note belongs in the folder of the study it is about, or in the paper's `research/` when it is
+research or a decision rather than the record of a run.
+
+**The date in a study's name** is the day the study began: `ablation-2026-10-12`. A month is
+accepted too, `human-labels-2026-10`: a study that ran over weeks (labelling, reading a corpus) has a
+month as its honest date, and both forms sort by time. The date must be a real one — no month 13, no
+30 February. The slug is lowercase letters and digits, words joined by single hyphens.
+
+Never reported: what interpreters, package managers, test runners and the operating system leave in
+the folder they run in — `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`,
+`.ipynb_checkpoints/`, `node_modules/`, `.venv/`, `.DS_Store`, `Thumbs.db`.
+
+## Why
+
+`repro/` is where the evidence for every number lives, and it fills up like a desk. One real paper
+had 120 entries at its top: about 70 study folders, some with no date, and about 50 loose scripts,
+data files and notes. Nobody could say which script produces which number, which study is current,
+or where a new run goes. Each kind of material now has one place, and each study says, in its
+`README.md`, what it is.
+
+## Examples
+
+Failing: a script loose at the top.
+
+```text
+papers/agent-rule-drift/PIPELINE-STATUS.md
+  1:1  error  `repro/paper_numbers.py` is loose at the top of the paper's repro/ folder, which holds
+              only an index, the shared tools and data, and one dated folder per study. Where it
+              goes: repro/tools/ — the scripts used across the paper (numbers, figures, the anonymity
+              check, harnesses); a script only one study runs goes in that study's folder instead.
+              Allowed at the top of repro/ — … paper/repro-layout
+```
+
+Each message names the entry, where it goes, and what `repro/` holds, so it reads on its own. Where
+an entry goes depends on what it is:
+
+| entry                                                                                                                          | where it goes                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| a script (`.py`, `.ipynb`, `.sh`, `.js`, `.mjs`, `.ts`, `.r`, `.jl`, `.sql` …), `Makefile`, `requirements.txt`, `package.json` | `repro/tools/`, or the folder of the one study that runs it                                           |
+| data (`.tsv`, `.csv`, `.json`, `.jsonl`, `.yaml`, `.txt`, `.log`, `.parquet`, `.zip` …)                                        | `repro/data/`, or the folder of the one study that produced it                                        |
+| a note (`.md`)                                                                                                                 | the dated folder of the study it is about, or the paper's `research/`                                 |
+| a folder whose name is not `<slug>-YYYY-MM-DD`                                                                                 | rename it to `<slug>-YYYY-MM-DD` and give it a `README.md`; its first commit's date is a fine default |
+| a study folder without `README.md`                                                                                             | add one: what the study asks, how to run it, what it found; and a line in `repro/README.md`           |
+| anything else                                                                                                                  | by what it is, as above                                                                               |
+
+Three files paperlint itself once kept at the top of `repro/` are named with their new place and the
+command that moves them: `references-cache.json` → `repro/data/` (read by `paperlint build`),
+`refs-cache.json` → `repro/data/`, `generated-code-grandfathered.txt` → `repro/tools/`.
+
+To date a folder by its first commit, run in the paper folder:
+
+```sh
+git log --reverse --format=%as -- repro/old-baseline | head -1
+```
+
+Passing: a paper with no `repro/`, and a `repro/` holding only the entries above.
+
+## Options / preset fields
+
+No rule options.
+
+## What it does not check
+
+- What is inside `tools/`, `data/` and the study folders.
+- Whether `repro/README.md` exists, or has a line for every study.
+- What a study's `README.md` says.
+- `repro/` itself: whether the paper has one is `paper/folder-layout`'s concern, and that rule never
+  looks inside it. Each entry is judged by exactly one of the two rules.
+
+## How to fix
+
+Move or rename the entry where its message says, and update whatever names its path:
+
+```sh
+git mv papers/agent-rule-drift/repro/paper_numbers.py papers/agent-rule-drift/repro/tools/
+git mv papers/agent-rule-drift/repro/baseline papers/agent-rule-drift/repro/baseline-2026-08-05
+```
+
+To switch the rule off for one paper — say, one whose `repro/` predates the layout — set it in that
+paper's `paperlint.json`; `paper/folder-layout` still judges the paper's root:
+
+```json
+{ "rules": { "paper/repro-layout": "off" } }
+```

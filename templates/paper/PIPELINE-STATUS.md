@@ -63,11 +63,11 @@ Status: `pass` · `partial` · `fail` · `—` (not scored). A `fail` names an o
 
 ### LOOP
 
-| id    | Work             | Skill           | Status | Date | Result | Open |
-| ----- | ---------------- | --------------- | ------ | ---- | ------ | ---- |
-| study | Study + artifact | build-benchmark | ☐      | —    | —      | —    |
-| draft | Draft            | draft-paper     | ☐      | —    | —      | —    |
-| arc   | Argument arc     | argument-arc    | ☐      | —    | —      | —    |
+| id    | Work             | Skill           | Status | Date | Result | Open   |
+| ----- | ---------------- | --------------- | ------ | ---- | ------ | ------ |
+| study | Study + artifact | build-benchmark | ☐      | —    | —      | repro/ |
+| draft | Draft            | draft-paper     | ☐      | —    | —      | —      |
+| arc   | Argument arc     | argument-arc    | ☐      | —    | —      | —      |
 
 ### CONTINUOUS
 

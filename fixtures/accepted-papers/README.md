@@ -79,6 +79,7 @@ the count is not yet classified.
 | llm-splained-acsac25 | `paper/folder-layout` | 1 | real | `bibs/`: the paper's databases in a folder of their own; paperlint keeps a `.bib` at the root, where bibtex looks |
 | rr-dataset-quality-acsac24 | `paper/folder-layout` | 1 | real | `beam_size.png` at the root (paperlint's figures go in `figures/`) |
 | secure-acsac24 | `paper/folder-layout` | 2 | real | `chat.png` and `md-frame-0.mdf` (mdframed's output) at the root |
+| all six | `paper/repro-layout` | 0 | — | no paper in the corpus ships a `repro/` (arXiv sources carry none), so there is nothing to judge and nothing is recorded; the rule's both halves are held by its own fixtures (`src/repro-layout-rule.test.ts`, `src/rule-cases.test.ts`) |
 | llm-splained-acsac25 | `paper/refs-checked`, `bib/reachable-entry` | 0 | known | the paper uses biblatex with biber, so bibtex never runs and the record lists no database: neither rule has one to judge. Measured on 2026-09-29, when `bib/reachable-entry` read the `.bib` files the paper declares: 55 entries with no doi, url, arXiv id or `\url` — a count nobody re-measures while the paper does not build |
 
 One limit the corpus shows and no count records:

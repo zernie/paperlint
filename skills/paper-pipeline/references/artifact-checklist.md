@@ -27,6 +27,11 @@ the 140-run `reproduce.py` (AgenticDev) and the 46-guard `evaluate.py`/`mutate.p
 
 ## Contents (mirror this file map)
 
+In the paper folder the artifact lives in `repro/`, laid out as `paper/repro-layout` requires: the
+scripts the whole paper uses in `repro/tools/`, shared data in `repro/data/`, each study in
+`repro/<slug>-YYYY-MM-DD/` with its `README.md`, and `repro/README.md` as the index. The shipped
+zip below is built from it; the anonymized copy that was uploaded goes in the paper's `submission/`.
+
 - `reproduce.py` / the harness scripts — self-check, print `RESULT: PASS`, exit non-zero on drift.
 - `data/…` — the raw measurements the numbers derive from.
 - `README.md` — a **"what reproduces which paper number"** table (paper location → the line that prints

@@ -148,11 +148,15 @@ export const KNOWN_CURES: readonly {
     kind: "file",
     cure: "submission/ (mail with the venue is about submitting)",
   },
-  { name: "data", kind: "dir", cure: "repro/ (the data behind the numbers)" },
+  {
+    name: "data",
+    kind: "dir",
+    cure: "repro/data/ (the data behind the numbers)",
+  },
   {
     name: "artifact",
     kind: "dir",
-    cure: "repro/ (the reproduction artifact, the anonymized upload copy included)",
+    cure: "repro/ — its scripts in repro/tools/, its data in repro/data/; the anonymized copy uploaded for review is about submitting and goes in submission/",
   },
   {
     name: "archive",
