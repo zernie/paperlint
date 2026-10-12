@@ -49,7 +49,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -144,9 +144,12 @@ function consumer(): string {
   const work = realpathSync(
     mkdtempSync(join(tmpdir(), "paperlint-build-e2e-")),
   );
+  // Each fixture's `expect.json` is this test's statement about it, not part of the paper, and a
+  // paper's root holds only paperlint's layout (`paper/folder-layout`), so it stays behind.
   cpSync(FIXTURES, join(work, "papers"), {
     recursive: true,
     verbatimSymlinks: true,
+    filter: (src) => basename(src) !== "expect.json",
   });
   for (const f of fixtures)
     if (f.expect.ok && f.expect.value.build.outcome === "failed")
