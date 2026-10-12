@@ -133,5 +133,10 @@ describe("the cheap first step: the nearest folder holding PIPELINE-STATUS.md", 
       writtenPath({ tool_input: { notebook_path: "n.ipynb" }, cwd: "/w" }),
     ).toBe("/w/n.ipynb");
     expect(writtenPath({ tool_input: {} })).toBeNull();
+    // A relative path needs an absolute cwd to mean anything: never the process's own.
+    expect(writtenPath({ tool_input: { file_path: "a.md" } })).toBeNull();
+    expect(
+      writtenPath({ tool_input: { file_path: "a.md" }, cwd: "w" }),
+    ).toBeNull();
   });
 });

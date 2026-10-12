@@ -20,14 +20,7 @@
  * entry at the root; each such entry is allowed while the settings name it. Settings that do not parse
  * add nothing: `paperlint lint` refuses them before ESLint runs, and `pdf/profile` names the problem.
  */
-import {
-  basename,
-  dirname,
-  isAbsolute,
-  join,
-  posix,
-  relative,
-} from "node:path";
+import { basename, dirname, join, posix, relative, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
   judgeLayout,
@@ -53,9 +46,8 @@ export interface FolderLayoutDeps {
 
 /** The first segment of `p`, relative to the paper folder `dir`; null when it is not inside it. */
 function rootOf(dir: string, p: string): string | null {
-  const rel = relative(dir, isAbsolute(p) ? p : join(dir, p));
-  const first = rel.split(/[\\/]/)[0] ?? "";
-  return rel === "" || first === ".." || isAbsolute(rel) ? null : first;
+  const first = relative(dir, resolve(dir, p)).split(/[\\/]/, 1).join("");
+  return first === "" || first === ".." ? null : first;
 }
 
 /** A preset spec that names a file (`./venue.jsonc`), not a shipped preset (`paperlint:aidc`). */

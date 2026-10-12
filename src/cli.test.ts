@@ -9,7 +9,7 @@ import { spawn } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
-import { test } from "vitest";
+import { test, vi } from "vitest";
 import {
   runNode,
   useTempDir,
@@ -240,6 +240,32 @@ test("runHook paper-folder-layout: in-process, on the real disk — stdout on a 
     broken.err.join(""),
     /^paperlint: the paper-folder-layout hook did not run: /,
   );
+});
+
+test("runHook paper-folder-layout: by default its output goes to stdout, where Claude Code reads it", () => {
+  const dir = join(root, "layout-hook-stdout");
+  writeTree(dir, {
+    "papers/p/PIPELINE-STATUS.md": "# status\n",
+    "papers/p/PLAN.md": "x",
+  });
+  const write = vi
+    .spyOn(process.stdout, "write")
+    .mockImplementation(() => true);
+  try {
+    const code = runHook("paper-folder-layout", {
+      stdin: () =>
+        JSON.stringify({
+          tool_input: { file_path: join(dir, "papers/p/PLAN.md") },
+        }),
+    });
+    assert.equal(code, 0);
+    assert.match(
+      String(write.mock.calls[0]?.[0]),
+      /^\{"hookSpecificOutput":\{"hookEventName":"PostToolUse"/,
+    );
+  } finally {
+    write.mockRestore();
+  }
 });
 
 test("chooseVenue: a preset by path (inside and outside the paper), by prefixed name, and a broken one", async () => {

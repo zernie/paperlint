@@ -213,6 +213,16 @@ describe("declaredRoots — nothing to add", () => {
     expect(declaredRoots(DIR, memoryFiles({}))).toEqual([]);
   });
 
+  it("an absolute path inside the folder counts; the folder itself, or a path outside it, does not", () => {
+    expect(
+      roots({
+        pdf: `${DIR}/out/paper.pdf`,
+        talk: { mode: "remote-video", dir: "." },
+      }),
+    ).toEqual(["out"]);
+    expect(roots({ pdf: "/elsewhere/paper.pdf" })).toEqual([]);
+  });
+
   it("a shipped preset names no file", () => {
     expect(roots({ extends: "paperlint:aidc" })).toEqual([]);
   });
