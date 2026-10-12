@@ -722,6 +722,46 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       [`${P}/repro/ablation-2026-10-12/README.md`]: "# ablation\n",
     }),
   },
+  // A study's prereg.json that declares none of population, strata, screens, coverage, author_check.
+  "paper/prereg-coverage": {
+    reports: {
+      tree: paper(tex("x"), {
+        [`${P}/repro/README.md`]: "# repro\n",
+        [`${P}/repro/draw-2026-10-12/README.md`]: "# draw\n",
+        [`${P}/repro/draw-2026-10-12/prereg.json`]: JSON.stringify({
+          hypotheses: ["H1"],
+        }),
+      }),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 2,
+      line: 1,
+    },
+    // The same study, declaring them.
+    silent: paper(tex("x"), {
+      [`${P}/repro/README.md`]: "# repro\n",
+      [`${P}/repro/draw-2026-10-12/README.md`]: "# draw\n",
+      [`${P}/repro/draw-2026-10-12/prereg.json`]: JSON.stringify({
+        hypotheses: ["H1"],
+        population: {
+          about: "rules in instruction files",
+          source: "a census, 2026-07-28",
+          size: 4210,
+        },
+        strata: { by: "rule type", values: ["crisp", "vague"] },
+        screens: [
+          { name: "fits one excerpt", removed: { crisp: 10, vague: 300 } },
+        ],
+        coverage: { share: 0.3, unreachable: ["vague"] },
+        author_check: {
+          who: "first author",
+          when: "2026-10-12",
+          units_seen: 12,
+          units_drawn: 12,
+          verdict: "representative",
+        },
+      }),
+    }),
+  },
   // EMNLP, a shipped venue's name (REALM's conference), in a BlindConf paper's text.
   "tex/venue-leftover": {
     reports: {

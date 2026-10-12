@@ -164,6 +164,7 @@ export { init };
 export { nextSteps } from "./init.ts";
 
 import paperStages from "#eslint-rules/paper-stages";
+import preregCoverage from "#eslint-rules/prereg-coverage";
 import cycleStage from "#eslint-rules/cycle-stage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import {
@@ -417,6 +418,7 @@ export function buildConfig(
         paper: {
           rules: {
             ...paperStages.rules,
+            ...preregCoverage.rules,
             ...folderVenueRules({ files: nodeFiles, venuesDir: presetsDir() }),
             ...folderLayoutRules({ files: nodeFiles, listDir: nodeListDir }),
             ...reproLayoutRules({ files: nodeFiles, listDir: nodeListDir }),
@@ -427,6 +429,7 @@ export function buildConfig(
       ...md,
       rules: {
         "paper/stages": "error",
+        "paper/prereg-coverage": "error",
         "paper/source": "error",
         ...FOLDER_VENUE_RULE_LEVELS,
         ...FOLDER_LAYOUT_RULE_LEVELS,
