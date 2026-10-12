@@ -684,7 +684,7 @@ export default [
     languageOptions: { ecmaVersion: 2024, sourceType: "module" },
     plugins: { local: localRules, port: portRules },
     rules: {
-      // The install-location rule's mechanical half (skills/CLAUDE.md), code side. `warn` and not `error`, unlike its neighbour
+      // The install-location rule's mechanical half (root CLAUDE.md), code side. `warn` and not `error`, unlike its neighbour
       // above: this one does NOT open on a clean corpus. Two shipped modules print a command
       // for a human that names an install-specific path, and neither is fixable by the
       // answer the skills get — a printed command has to be resolved through the port at
@@ -744,7 +744,7 @@ export default [
     rules: { "n/no-missing-import": "error" },
   },
   /**
-   * The install-location rule's mechanical half (skills/CLAUDE.md), prose side — and this is where the debt actually is: 76
+   * The install-location rule's mechanical half (root CLAUDE.md), prose side — and this is where the debt actually is: 76
    * findings across 29 skills on a healthy checkout, every one of them a command that
    * resolves in one delivery channel and is absent in another.
    *

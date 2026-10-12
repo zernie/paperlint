@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:96e4b53a1a1fe20e compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:e445489aca0dd970 compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -6,33 +6,20 @@
 
 Machine-checkable gates for writing a research paper in git, extracted from a private knowledge base.
 
-This file loads on every turn, so it holds only what applies to **any** change here. A rule that
-applies to one kind of work lives in that folder's `CLAUDE.md`, which loads when a file there is
-read or edited (table below); a fact a machine checks lives beside that check. Every `CLAUDE.md`
-here is compiled from the `CLAUDE.md.spec.ts` beside it: edit the spec, then
-`npx vigiles compile`. What broke is in `docs/incidents.md`; the measurements behind
-the rules are in [git](https://github.com/zernie/paperlint/blob/b4a3dc3a81d436186f41db2d69b65fd93f1af3b6/CLAUDE.md#L62-L199).
+This file loads on every turn, so it holds only what applies to **any** change here. A rule that applies to one kind of work lives in that folder's `CLAUDE.md`, which loads when a file there is read or edited (table below); a fact a machine checks lives beside that check. Every `CLAUDE.md` here is compiled from the `CLAUDE.md.spec.ts` beside it: edit the spec, then `npx vigiles compile`. What broke is in `docs/incidents.md`; the measurements behind the rules are in [git](https://github.com/zernie/paperlint/blob/b4a3dc3a81d436186f41db2d69b65fd93f1af3b6/CLAUDE.md#L62-L199).
 
 ## 🎯 THE GOAL, in one sentence
 
-**Move every paper-writing convention a machine can decide OUT of prose and INTO an engine
-that fails the build** — and keep everything else honestly labelled as prose. The engine is
-ESLint. The unit of progress is "one more verdict decided by the engine instead of by a
-hand-written script".
+**Move every paper-writing convention a machine can decide OUT of prose and INTO an engine that fails the build** — and keep everything else honestly labelled as prose. The engine is ESLint. The unit of progress is "one more verdict decided by the engine instead of by a hand-written script".
 
 ```
  prose in a guideline   →   hand-written script   →   ESLint rule in the engine
  rots silently              runs, but is OURS         editor-time · free AST · suppressible
 ```
 
-🔴 **A hand-written script is a WAYPOINT, not a destination.** A new one is allowed only when the
-engine genuinely cannot express the check, and "cannot" means MEASURED. A rule is an ordinary JS
-module and may call `execFileSync("git", …)` or read a sibling file. When the work has to run a
-program, **a script PRODUCES facts into a JSON file, and ESLint JUDGES that file.**
+🔴 **A hand-written script is a WAYPOINT, not a destination.** A new one is allowed only when the engine genuinely cannot express the check, and "cannot" means MEASURED. A rule is an ordinary JS module and may call `execFileSync("git", …)` or read a sibling file. When the work has to run a program, **a script PRODUCES facts into a JSON file, and ESLint JUDGES that file.**
 
-**A real consumer dogfoods this package on every CI run**, so a breaking change here turns a
-paper pipeline red somewhere else the same day. CI runs on every pull request
-(`.github/workflows/ci.yml`). Counts of rules, skills and hooks: measure with `git ls-files`.
+**A real consumer dogfoods this package on every CI run**, so a breaking change here turns a paper pipeline red somewhere else the same day. CI runs on every pull request (`.github/workflows/ci.yml`). Counts of rules, skills and hooks: measure with `git ls-files`.
 
 ## First command in a fresh container
 
@@ -42,28 +29,24 @@ paper pipeline red somewhere else the same day. CI runs on every pull request
 
 | when you are… | read | holds |
 | --- | --- | --- |
-| writing a lint rule, or a check that judges prose | [`eslint-rules/CLAUDE.md`](eslint-rules/CLAUDE.md) | lint rule over script, both halves, a rule's page, the five writing principles |
-| writing or changing a hook | [`hooks/CLAUDE.md`](hooks/CLAUDE.md) | never the consumer's cwd, how hooks ship |
-| writing or changing a skill | [`skills/CLAUDE.md`](skills/CLAUDE.md) | where paperlint is installed, how skills ship |
-| in `src/`, or adding a CLI command | [`src/CLAUDE.md`](src/CLAUDE.md) | the two layer axes, where the package's data is, the prior art before a new command |
+| writing a lint rule, or a check that judges prose | [`eslint-rules/CLAUDE.md`](eslint-rules/CLAUDE.md) | lint rule over script, what holds each requirement of a new rule, the five writing principles |
+| writing or changing a hook | [`hooks/CLAUDE.md`](hooks/CLAUDE.md) | how hooks ship, and what was rejected |
+| writing or changing a skill | [`skills/CLAUDE.md`](skills/CLAUDE.md) | how skills ship |
+| in `src/` | [`src/CLAUDE.md`](src/CLAUDE.md) | the two layer axes |
 | thinking of a Claude Code plugin | [`plugin/CLAUDE.md`](plugin/CLAUDE.md) | why there is none, and what must be measured to bring it back |
 | changing CI, Dependabot or the release | [`.github/CLAUDE.md`](.github/CLAUDE.md) | cost, Dependabot cadence, release from the PR title |
 | writing a test | [`docs/testing.md`](docs/testing.md), [`docs/e2e.md`](docs/e2e.md) | which kind of test, fakes, the e2e triggers |
 
 ## Before every push
 
-`npm run check`, exit code read without a pipe. Red first · assert the whole value · no test touches the real network ·
-100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e gate fails, and it says so; `npx paperlint toolchain` installs it.
+`npm run check`, exit code read without a pipe. Red first · assert the whole value · no test touches the real network · 100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e gate fails, and it says so; `npx paperlint toolchain` installs it.
 
 ## Commits
 
-Conventional-commit subject, body says what was MEASURED, not what was intended. A number in
-a commit message that no command produced is the thing this repo exists to make impossible.
+Conventional-commit subject, body says what was MEASURED, not what was intended. A number in a commit message that no command produced is the thing this repo exists to make impossible.
 
-**The subject is also the release**: semantic-release reads the squash commit, which is the PR
-title. `feat:` → minor, `fix:` or `perf:` → patch, `!` or a `BREAKING CHANGE:` footer → major,
-`docs:` `chore:` `ci:` `test:` `refactor:` → no release. `.github/workflows/pr-title.yml`
-rejects a title without a conventional prefix.
+**The subject is also the release**: semantic-release reads the squash commit, which is the PR title. `feat:` → minor, `fix:` or `perf:` → patch, `!` or a `BREAKING CHANGE:` footer → major,
+`docs:` `chore:` `ci:` `test:` `refactor:` → no release. `.github/workflows/pr-title.yml` rejects a title without a conventional prefix.
 
 ## Rules
 
@@ -99,7 +82,23 @@ Before writing machinery, **run the thing you are about to replace and paste its
 
 **Guidance only** — The target is `npm i` plus one command; any further manual step is a paperlint defect, except a choice that really belongs to the user, named when it is asked. An automatic step that can fail silently is worse than an explicit one.
 
+### Every Check Has Both Halves
+
+**Guidance only** — Every check — lint rule, script, hook, harness — fires on a planted defect AND stays quiet on a clean fixture, and the test goes red before the fix lands. A check only ever seen quiet is indistinguishable from a dead one. [Details](docs/testing.md)
+
+### Never The Callers Cwd
+
+**Guidance only** — No program this package ships (`bin/`, `lib/`, hooks, skill scripts) depends on the directory it is started from: resolve from `git rev-parse --show-toplevel` or from the module's own location.
+
+### One Module Knows Where Paperlint Is Installed
+
+**Guidance only** — Lint rules, skills, hooks and scripts never compute where paperlint is installed: the package's own data comes from `src/package-dirs.ts`, the consumer's side from `skills/paper-pipeline/scripts/consumer.mjs`. `port/js-install-path` and `port/md-install-path` flag a literal. [Details](eslint-rules/install-path-literals.ts)
+
+### Prior Art Before A Command Or A Channel
+
+**Guidance only** — Before adding a CLI command or changing a delivery channel (skill links, hook wiring, the composite action, the npm package), read how comparable tools did it. "We need another command for X" has, in every tool examined, been the CONFIG not declaring something. [Details](docs/prior-art/README.md)
+
 ### New Code Is Functional
 
 **Enforced by:** `eslint/functional/no-let`
-**Why:** In `src/`, `eslint-rules/` and `lib/`: no `let`, no mutation, no loop, read-only types; collections through [Remeda](https://remedajs.com/). `functional/immutable-data`, `functional/no-loop-statements` and `functional/prefer-immutable-types` hold the rest, and `eslint-suppressions.json` (old code) may only shrink.
+**Why:** In `src/`, `eslint-rules/` and `lib/`, tests and harnesses aside: no `let`, no mutation, no loop, read-only types; collections through [Remeda](https://remedajs.com/). `functional/immutable-data`, `functional/no-loop-statements` and `functional/prefer-immutable-types` hold the rest, and `eslint-suppressions.json` (old code) may only shrink.

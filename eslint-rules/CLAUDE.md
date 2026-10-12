@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:1ab97e0017ca54d7 compiled from eslint-rules/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:5231f736e3b1a263 compiled from eslint-rules/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -12,7 +12,7 @@ that file's header.
 
 | requirement | held by |
 | --- | --- |
-| **Both halves**: it fires on a planted defect and stays quiet on a clean fixture; the test goes red before the fix lands | `src/rule-cases.test.ts` fails on a registered rule with no cases |
+| **Both halves** (root `CLAUDE.md`), for every registered rule | `src/rule-cases.test.ts` fails on a registered rule with no cases |
 | **One rule, one requirement**: two checks with different reasons to switch them off are two rules | review |
 | **A venue requirement is validated on real accepted papers** of that venue, built to PDF, with the ground truth established independently | review; the papers are in `fixtures/accepted-papers/README.md` |
 | **Its page**, `docs/rules/<group>/<rule>.md`, and `meta.docs.url` pointing at it | `src/rule-docs.test.ts`; its `AWAITING_PAGE` list only shrinks |

@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:33bf7868b748c461 compiled from skills/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:e0aa2cec8926b04f compiled from skills/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -13,10 +13,6 @@ package's location come from `skills/paper-pipeline/scripts/consumer.mjs`; the l
 ### Skills Ship In Skills
 
 **Guidance only** — Skills ship in `skills/`, never `.claude/skills/`. `paperlint init` symlinks each one into the consumer's `.claude/skills/<name>`; the link's directory name is the skill's name. `skills/` is the npm layout: of 855 packages scanned, 336 shipped `skills/` against 15 `.claude/skills/`. Rejected: leaving the skills for Claude Code to find inside `node_modules` (`docs/install.md`); a symlink loads at startup, deterministically.
-
-### Never Name Where Paperlint Is Installed
-
-**Guidance only** — A skill never names a file by where paperlint is installed. `consumer.mjs` adapts per channel: own checkout · `node_modules` · plugin cache · CI. An install-specific path literal is flagged by `port/md-install-path` in markdown and `port/js-install-path` in scripts (`warn`).
 
 ### A Criterion That Judges Prose
 

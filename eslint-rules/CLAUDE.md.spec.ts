@@ -12,7 +12,7 @@ that file's header.`,
 
     "What a new rule ships with, and what holds it": prose`| requirement | held by |
 | --- | --- |
-| **Both halves**: it fires on a planted defect and stays quiet on a clean fixture; the test goes red before the fix lands | ${file("src/rule-cases.test.ts")} fails on a registered rule with no cases |
+| **Both halves** (root \`CLAUDE.md\`), for every registered rule | ${file("src/rule-cases.test.ts")} fails on a registered rule with no cases |
 | **One rule, one requirement**: two checks with different reasons to switch them off are two rules | review |
 | **A venue requirement is validated on real accepted papers** of that venue, built to PDF, with the ground truth established independently | review; the papers are in ${file("fixtures/accepted-papers/README.md")} |
 | **Its page**, \`docs/rules/<group>/<rule>.md\`, and \`meta.docs.url\` pointing at it | ${file("src/rule-docs.test.ts")}; its \`AWAITING_PAGE\` list only shrinks |

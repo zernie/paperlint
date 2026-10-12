@@ -11,9 +11,6 @@ fails closed, so a hook that cannot read its config denies every command, includ
 would undo it.`,
   },
   rules: {
-    "never-the-consumers-cwd": guidance(
-      "Resolve paths from `git rev-parse --show-toplevel` or from the module's own location; a session that changes directory must not change what a hook reads.",
-    ),
     "ship-hook-mjs-never-hook-ts": guidance(
       "A `.ts` hook inside `node_modules` fails to load and blocks every Bash command. Rejected, so not proposed again: a `.hook.ts` twin compiled to the `.mjs` (a twin drifts from its build, and nothing would notice), and a thin `.hook.ts` in the consumer importing the logic from here (`vigiles compile` refuses the import, so the hook can never be re-stamped, and the runtime fails closed on the stale stamp). [Measurements](https://github.com/zernie/paperlint/blob/b4a3dc3a81d436186f41db2d69b65fd93f1af3b6/CLAUDE.md#L272-L357).",
     ),

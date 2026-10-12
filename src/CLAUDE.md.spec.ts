@@ -53,18 +53,9 @@ against \`process.cwd()\`, so lint started from any other directory classifies n
 report nothing — dropping it turns the fixtures \`src/domain/reads-disk.ts\` and
 \`src/adapters/one/disk.ts\` clean (measured).`,
 
-    "Where the package is installed": prose`**Checking logic never knows its own location, nor its distance from anything else.** The
-package's own data (\`presets/\`, \`presets/tex/\`) is found by ${file("src/package-dirs.ts")}, and nothing else
-computes where the package sits; the consumer's side is ${file("skills/paper-pipeline/scripts/consumer.mjs")}
-([\`skills/CLAUDE.md\`](../skills/CLAUDE.md)). \`@retorquere/bibtex-parser\` is the one \`.bib\` reader,
-behind ${file("src/ports/bib-reader.ts")}.`,
-
-    "Before adding a CLI command — read the prior art": prose`[\`docs/prior-art/\`](../docs/prior-art/README.md) records how comparable tools solved the same
-problems (Quarto, Vale, Biome, Danger, reviewdog, Semgrep), each claim with the URL that was checked.
-🔴 "We need another command for X" is, in every tool examined, the CONFIG not declaring something —
-check that before adding a verb. Rejected on 2026-09-27: a separate \`paperlint refs\` command; the
-slowness it would have moved was a cache thrown away after every build
-([\`docs/references.md\`](../docs/references.md)).`,
+    "Readers and commands": prose`\`@retorquere/bibtex-parser\` is the one \`.bib\` reader, behind ${file("src/ports/bib-reader.ts")}.
+Rejected on 2026-09-27, so not proposed again: a separate \`paperlint refs\` command; the slowness it
+would have moved was a cache thrown away after every build (${file("docs/references.md")}).`,
   },
   rules: {
     layers: enforce(

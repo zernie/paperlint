@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:3bf71080c5cdfe55 compiled from hooks/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:0407b53b2036133e compiled from hooks/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -12,10 +12,6 @@ fails closed, so a hook that cannot read its config denies every command, includ
 would undo it.
 
 ## Rules
-
-### Never The Consumers Cwd
-
-**Guidance only** — Resolve paths from `git rev-parse --show-toplevel` or from the module's own location; a session that changes directory must not change what a hook reads.
 
 ### Ship Hook Mjs Never Hook Ts
 

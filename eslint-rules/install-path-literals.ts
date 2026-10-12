@@ -1,5 +1,5 @@
 /**
- * The install-location rule's mechanical half (skills/CLAUDE.md): nothing outside the port may name a file by WHERE IT IS
+ * The install-location rule's mechanical half (root CLAUDE.md): nothing outside the port may name a file by WHERE IT IS
  * INSTALLED.
  *
  * The class this exists for has broken this repository five times, silently every time, and
