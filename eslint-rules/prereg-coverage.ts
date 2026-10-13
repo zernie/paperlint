@@ -238,7 +238,7 @@ const removedProblems = (
   values: readonly string[],
 ): readonly Problem[] => [
   ...values
-    .filter((v) => !(v in removed))
+    .filter((v) => !Object.hasOwn(removed, v))
     .map((v) => ({
       at: `screens[${String(i)}].removed.${v}`,
       text: `is missing — every screen states how many candidates it removed in each declared stratum value (${values.join(", ")}), 0 where it removed none`,

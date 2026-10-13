@@ -186,6 +186,21 @@ describe("judgePrereg: across fields", () => {
   it("no screens at all is a declaration, not an omission: silent", () => {
     expect(judged({ ...GOOD, screens: [] })).toEqual([]);
   });
+
+  it("🔴 a stratum value that Object.prototype also has must be counted in `removed` itself", () => {
+    expect(
+      judged({
+        ...GOOD,
+        strata: { by: "kind", values: ["constructor", "toString"] },
+        screens: [{ name: "R1", removed: {} }],
+      }),
+    ).toEqual(
+      ["constructor", "toString"].map(
+        (v) =>
+          `screens[0].removed.${v}: is missing — every screen states how many candidates it removed in each declared stratum value (constructor, toString), 0 where it removed none`,
+      ),
+    );
+  });
 });
 
 describe("judgePrereg: the coverage", () => {
