@@ -6,6 +6,7 @@ README style — keep it scannable, not a wall of text:
 - Tables for comparisons (commands, venues, checks). Code blocks for every command and file.
 - A blank line between every block. Bold only for the one phrase a skimmer must see.
 - Mechanics and edge cases live in docs/, linked — not inline.
+- Budgets, held by test/readme-shape.test.ts: ≤ 300 lines, no ## section over 60, the install command in the first 90 lines. Over budget → move material to docs/ and link it; raising a budget is a decision, not a fix.
 - A reader must be able to answer "what is it, which venues, how do I start" from the first screen.
 - Sparse emoji are fine where they help rhythm and scanning (e.g. one per section heading or feature bullet); never decorative, never several in a row.
 - One name per thing, everywhere (lint, build, venue preset, kind, skill, papersDir), each explained once, before it is used.
