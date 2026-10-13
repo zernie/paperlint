@@ -130,6 +130,8 @@ const Exported = z.object({
       source: z.string().nullable(),
       complete: z.boolean(),
       source_id: z.string(),
+      answers: z.record(z.string(), z.string().nullable()),
+      invalid_answers: z.record(z.string(), z.unknown()),
     }),
   ),
 });
@@ -233,6 +235,74 @@ test("rebuilding keeps every id; a new item takes the next one", () => {
       .status,
     0,
   );
+});
+
+test("🔴 build refuses an option without a usable value or label, and names the question and the option", () => {
+  const bad: readonly (readonly [string, unknown])[] = [
+    ["no-value", { label: "Maybe" }],
+    ["null-value", { value: null, label: "Maybe" }],
+    ["empty-value", { value: "", label: "Maybe" }],
+    ["no-label", { value: "maybe" }],
+    ["empty-label", { value: "maybe", label: "  " }],
+    ["not-an-object", "maybe"],
+  ];
+  for (const [name, option] of bad) {
+    const questions = [
+      QUESTIONS[0],
+      {
+        ...QUESTIONS[1],
+        options: [...(QUESTIONS[1]?.options ?? []), option],
+      },
+    ];
+    const dir = setup(`option-${name}`, config({ questions }));
+    const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+    assert.notEqual(r.status, 0, `${name} must stop the build`);
+    assert.match(r.out, /REFUSED.*question boundary.*option #3/s, r.out);
+  }
+});
+
+test("🔴 export does not count an answer outside the question's allowed values; it marks the item incomplete and names it", () => {
+  const dir = setup("export-typo", config());
+  const { key } = build(dir);
+  const [a, b, c] = Object.keys(key.ids);
+  assert.ok(a !== undefined && b !== undefined && c !== undefined);
+  const dump = {
+    answers: {
+      [a]: { answers: { label: "yes", boundary: "clear" }, source: "page" },
+      // a typo from a chat answer: "yse" is not one of yes/no
+      [b]: { answers: { label: "yse", boundary: "clear" }, source: "chat" },
+      // options changed between builds: "maybe" is not offered any more
+      [c]: { answers: { label: "no", boundary: "maybe" }, source: "page" },
+    },
+  };
+  writeFileSync(join(dir, "dump.json"), JSON.stringify(dump));
+  const r = run([
+    "export",
+    join(dir, "dump.json"),
+    join(dir, "out", "key.json"),
+    join(dir, "data"),
+    "--date",
+    "2026-01-02",
+  ]);
+  assert.equal(r.status, 0, r.out);
+  assert.match(r.out, new RegExp(`invalid ${b}: label='yse'`), r.out);
+  assert.match(r.out, new RegExp(`invalid ${c}: boundary='maybe'`), r.out);
+  const file = Exported.parse(
+    JSON.parse(
+      readFileSync(
+        join(dir, "data", "demo-gold-labels-2026-01-02.json"),
+        "utf8",
+      ),
+    ),
+  );
+  assert.equal(file.complete_items, 1, "only the valid item is complete");
+  assert.equal(file.items.find((i) => i.id === b)?.complete, false);
+  assert.equal(file.items.find((i) => i.id === c)?.complete, false);
+  assert.deepEqual(file.items.find((i) => i.id === b)?.invalid_answers, {
+    label: "yse",
+  });
+  assert.equal(file.items.find((i) => i.id === b)?.answers["label"], null);
+  assert.equal(file.items.find((i) => i.id === b)?.source, "chat");
 });
 
 test("the page script parses, saves on click, and has nothing that needs scrolling or a toast", () => {

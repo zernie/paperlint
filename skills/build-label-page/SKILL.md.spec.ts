@@ -104,8 +104,9 @@ The full text, each with its reason and its check, is
    python3 make_label_page.py export dump.json label-page/key.json data
    \`\`\`
 
-   It writes \`data/<study>-labels-<date>.json\` and prints every incomplete item and every group with
-   no familiarity answer. Commit the file in the same pass, and add the line "labels →
+   It writes \`data/<study>-labels-<date>.json\` and prints every incomplete item, every answer that is
+   not one of the question's options (not counted; correct it in the dump and export again) and every
+   group with no familiarity answer. Commit the file in the same pass, and add the line "labels →
    \`data/<study>-labels-<date>.json\`" to the paper's \`NOTES.md\` for the numbers that use them.
 
 ## When the page misbehaves

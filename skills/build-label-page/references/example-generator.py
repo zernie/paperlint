@@ -11,7 +11,8 @@ allow-list, keep the guards. Standard library only. No network.
 
 `build` makes a page that stores each answer in the artifact's `db` store (the `db` capability of a
 claude.ai Artifact; publish page.html with `capabilities: {db: {}}`). `export` turns what the store
-holds into one JSON file for the study's data/ folder. `dump.json` is the store's two collections:
+holds into one JSON file for the study's data/ folder. Answers outside a question's options are not
+counted: the item is marked incomplete and reported (`invalid_answers`). `dump.json` is the store's two collections:
 
     {"answers": {"G001": {"answers": {"q": "v"}, "savedAt": "...", "source": "page"}, ...},
      "groups":  {"python": {"familiarity": "well", "savedAt": "...", "source": "page"}, ...}}
@@ -87,14 +88,27 @@ def check_config(cfg):
         fail("`questions` must be a non-empty list")
     seen = set()
     for q in questions:
-        if not NAME.match(str(q.get("id", ""))) or q["id"] in seen:
-            fail(f"question id {q.get('id')!r} is missing, malformed or repeated")
+        if not isinstance(q, dict) or not NAME.match(str(q.get("id", ""))) or q["id"] in seen:
+            fail(f"question id {q.get('id') if isinstance(q, dict) else q!r} is missing, malformed or repeated")
         seen.add(q["id"])
-        values = [o.get("value") for o in q.get("options", [])]
-        if len(values) < 2 or len(set(values)) != len(values):
-            fail(f"question {q['id']}: needs two or more options with distinct values")
         if not q.get("text"):
             fail(f"question {q['id']} has no text")
+        options = q.get("options")
+        if not isinstance(options, list) or len(options) < 2:
+            fail(f"question {q['id']}: needs two or more options")
+        # Every option is checked before anything is built. The page saves `value` on a tap and
+        # treats a missing or null one as "unanswered", so an option without a usable value is a
+        # button that can never complete an item; a blank label is a button nobody can read.
+        for n, o in enumerate(options, start=1):
+            if not isinstance(o, dict):
+                fail(f"question {q['id']}, option #{n}: must be an object with `value` and `label`, got {o!r}")
+            for field in ("value", "label"):
+                v = o.get(field)
+                if not isinstance(v, str) or not v.strip():
+                    fail(f"question {q['id']}, option #{n}: `{field}` must be a non-empty string, got {v!r}")
+        values = [o["value"] for o in options]
+        if len(set(values)) != len(values):
+            fail(f"question {q['id']}: option values must be distinct, got {values}")
 
 
 def check_items(cfg):
@@ -198,6 +212,9 @@ def build(config_path, out_dir):
         "study": cfg["study"],
         "seed": cfg["seed"],
         "questions": [q["id"] for q in cfg["questions"]],
+        # What each question accepts. `export` checks every stored answer against this, so it is
+        # the build's options that decide what counts as an answer, not whatever the store holds.
+        "allowed": {q["id"]: [o["value"] for o in q["options"]] for q in cfg["questions"]},
         "ids": {
             nid: {"source_id": sid, "group": group_of[sid], "on_page": nid in shown}
             for sid, nid in sorted(ids.items(), key=lambda kv: kv[1])
@@ -219,6 +236,10 @@ def export(dump_path, key_path, out_dir, day):
     answers = dump.get("answers", {})
     groups = dump.get("groups", {})
     qids = key["questions"]
+    allowed = key.get("allowed")
+    if not isinstance(allowed, dict) or any(q not in allowed for q in qids):
+        fail(f"{key_path} has no `allowed` values for every question (made by an older build). "
+             f"Run `build` again with the same items.json and seed: ids are kept, the key gains them.")
     stray = sorted(set(answers) - set(key["ids"]))
     if stray:
         fail(f"the store holds answers for ids the key does not know: {', '.join(stray)}")
@@ -232,12 +253,21 @@ def export(dump_path, key_path, out_dir, day):
         if not meta["on_page"]:
             continue
         doc = answers.get(nid, {})
-        given = {q: doc.get("answers", {}).get(q) for q in qids}
+        raw = {q: doc.get("answers", {}).get(q) for q in qids}
+        # An answer outside the question's allowed values (a typo in a chat answer, an option that
+        # was removed or renamed between builds) is MARKED, not refused and not dropped: the item is
+        # incomplete, the raw value is kept under `invalid_answers`, and the report names the item.
+        # Refusing would hold every good label hostage to one typo at the moment the export must
+        # happen (checklist rule 6); dropping it would lose what the labeller said. A clear report
+        # beats both, and the fix is one line in the dump (`"source": "chat"` stays as it was).
+        invalid = {q: v for q, v in raw.items() if v is not None and v not in allowed[q]}
+        given = {q: (None if q in invalid else v) for q, v in raw.items()}
         items.append({
             "id": nid,
             "source_id": meta["source_id"],
             "group": meta["group"],
             "answers": given,
+            "invalid_answers": invalid,
             "complete": all(v is not None for v in given.values()),
             "source": doc.get("source", "page") if doc else None,
             "saved_at": doc.get("savedAt"),
@@ -256,6 +286,7 @@ def export(dump_path, key_path, out_dir, day):
             for g in group_ids
         },
         "complete_items": sum(i["complete"] for i in items),
+        "invalid_items": sum(bool(i["invalid_answers"]) for i in items),
         "total_items": len(items),
     }
     target = Path(out_dir)
@@ -264,9 +295,12 @@ def export(dump_path, key_path, out_dir, day):
     path.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"wrote {path}: {out['complete_items']} of {out['total_items']} items complete")
     for i in items:
+        for q, v in i["invalid_answers"].items():
+            print(f"  invalid {i['id']}: {q}={v!r} is not one of {', '.join(allowed[q])} (not counted)")
         if not i["complete"]:
-            missing = [q for q, v in i["answers"].items() if v is None]
-            print(f"  incomplete {i['id']}: missing {', '.join(missing)}")
+            missing = [q for q, v in i["answers"].items() if v is None and q not in i["invalid_answers"]]
+            if missing:
+                print(f"  incomplete {i['id']}: missing {', '.join(missing)}")
     for g, v in out["groups"].items():
         if v["familiarity"] is None:
             print(f"  group {g}: no familiarity answer")

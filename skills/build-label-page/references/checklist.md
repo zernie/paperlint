@@ -100,6 +100,11 @@ every group.
   (`<study>-labels-YYYY-MM-DD.json`), and commit it in the same pass.
 - Answers the labeller gives in chat go into the same file with `source: "chat"`; answers from the
   page carry `source: "page"`. The two are never mixed up afterwards.
+- The build refuses an option without a non-empty `value` and `label`, and records each question's
+  allowed values in `key.json`. The export counts an answer only if it is one of them: a typo from a
+  chat answer, or a value from an earlier build's options, is not counted. The item is marked
+  incomplete, the raw value is kept under `invalid_answers`, and the report names the item. Fix it in
+  the dump and export again.
 - If the page fails, take the last answers in chat. Patch the page blind at most once.
 
 **Why.** The store lives with the artifact: not in the repository, not in the paper's history, and
