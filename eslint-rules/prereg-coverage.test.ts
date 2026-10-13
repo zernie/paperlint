@@ -188,19 +188,7 @@ describe("judgePrereg: across fields", () => {
   });
 });
 
-describe("judgePrereg: within the strata, the coverage and the check", () => {
-  it("a stratum value named twice", () => {
-    expect(
-      judged({
-        ...GOOD,
-        strata: { by: "rule type", values: ["crisp", "vague", "crisp"] },
-        screens: [],
-      }),
-    ).toEqual([
-      "strata.values: names «crisp» more than once — each stratum value once",
-    ]);
-  });
-
+describe("judgePrereg: the coverage", () => {
   it("a null share needs its reason; with one it is silent", () => {
     expect(judged(withField("coverage", { share: null }))).toEqual([
       "coverage.reason: is missing — `share` is null, so say why the share cannot be stated",
@@ -213,6 +201,31 @@ describe("judgePrereg: within the strata, the coverage and the check", () => {
         }),
       ),
     ).toEqual([]);
+  });
+
+  it("a share of 1 with strata it cannot reach contradicts itself; a share below 1 may list them", () => {
+    expect(
+      judged(withField("coverage", { share: 1, unreachable: ["vague"] })),
+    ).toEqual([
+      "coverage.unreachable: contradicts `share` 1 — a sample that cannot reach «vague» does not represent the whole population: lower `share`, or empty the list",
+    ]);
+    expect(
+      judged(withField("coverage", { share: 0.7, unreachable: ["vague"] })),
+    ).toEqual([]);
+  });
+});
+
+describe("judgePrereg: within the strata and the check", () => {
+  it("a stratum value named twice", () => {
+    expect(
+      judged({
+        ...GOOD,
+        strata: { by: "rule type", values: ["crisp", "vague", "crisp"] },
+        screens: [],
+      }),
+    ).toEqual([
+      "strata.values: names «crisp» more than once — each stratum value once",
+    ]);
   });
 
   it("more units seen than drawn", () => {

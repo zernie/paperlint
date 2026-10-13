@@ -288,6 +288,11 @@ export function crossProblems(p: Readonly<Prereg>): readonly Problem[] {
       "coverage.reason",
       "is missing — `share` is null, so say why the share cannot be stated",
     ),
+    ...problemIf(
+      p.coverage.share === 1 && p.coverage.unreachable.length > 0,
+      "coverage.unreachable",
+      `contradicts \`share\` 1 — a sample that cannot reach ${p.coverage.unreachable.map((u) => `«${u}»`).join(", ")} does not represent the whole population: lower \`share\`, or empty the list`,
+    ),
     ...checkProblems(p.author_check),
   ];
 }
