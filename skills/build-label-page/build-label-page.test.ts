@@ -257,6 +257,11 @@ test("🔴 build refuses an option without a usable value or label, and names th
     ["no-label", { value: "maybe" }],
     ["empty-label", { value: "maybe", label: "  " }],
     ["not-an-object", "maybe"],
+    // a different value behind a button that reads the same: the answer cannot be interpreted
+    [
+      "same-label",
+      { value: "maybe", label: ` ${QUESTIONS[1]?.options[0]?.label ?? ""} ` },
+    ],
   ];
   for (const [name, option] of bad) {
     const questions = [
@@ -806,6 +811,16 @@ test("export refuses a source it does not know, and an id the key does not know"
     run(["export", join(dir, "d2.json"), keyPath, join(dir, "data")]).status,
     0,
   );
+  // A familiarity merged under a misspelled group would be dropped, and its group exported unrated.
+  writeFileSync(
+    join(dir, "d3.json"),
+    JSON.stringify({
+      groups: { pyhton: { familiarity: "well", source: "chat" } },
+    }),
+  );
+  const r3 = run(["export", join(dir, "d3.json"), keyPath, join(dir, "data")]);
+  assert.notEqual(r3.status, 0, r3.out);
+  assert.match(r3.out, /groups the key does not know: pyhton/, r3.out);
 });
 
 test("🔴 export refuses a stored answer or familiarity without a source, and names it: a missing one is not relabelled as the page's", () => {

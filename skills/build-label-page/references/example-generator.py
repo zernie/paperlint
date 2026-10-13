@@ -213,6 +213,14 @@ def check_config(cfg):
         values = [o["value"] for o in q["options"]]
         if len(set(values)) != len(values):
             fail(f"questions[{qn}].options: values must be distinct, got {values}")
+        # Two buttons that read the same store different answers no one can tell apart afterwards.
+        shown = {}
+        for i, o in enumerate(q["options"]):
+            label = o["label"].strip().casefold()
+            if label in shown:
+                fail(f"questions[{qn}].options[{i}].label: {o['label']!r} reads the same as "
+                     f"options[{shown[label]}].label — each button needs its own label")
+            shown[label] = i
 
 
 def check_items(cfg):
@@ -343,6 +351,10 @@ def export(dump_path, key_path, out_dir, day):
     stray = sorted(set(answers) - set(key["ids"]))
     if stray:
         fail(f"the store holds answers for ids the key does not know: {', '.join(stray)}")
+    # Same for familiarity: a group misspelled in a chat merge would be dropped without a word.
+    stray_groups = sorted(set(groups) - {meta["group"] for meta in key["ids"].values()})
+    if stray_groups:
+        fail(f"the store holds familiarity for groups the key does not know: {', '.join(stray_groups)}")
     # Every stored document says where it came from. The page always writes `source: "page"`, so a
     # document without one was merged by hand, and calling it "page" would export a false provenance.
     for kind, docs in (("answers", answers), ("groups", groups)):
