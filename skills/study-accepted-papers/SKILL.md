@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:09f67cfce7f0e475 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:bc573aefd768b6f3 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — what this venue rewards, measured on its own papers
 
@@ -113,6 +113,9 @@ as judgement, against the base rates of `references/base-rates.md`; simulated pa
 | **the reasoning** | `<paper>/reviews/<YYYY-MM-DD>-study-accepted-<venue>-<mode>.md` | a dated report per run, with frontmatter (below). It keeps the reasoning, the selection and the per-mechanism argument, and **points to the scorecard section; it never copies the table**. |
 | **the stage** | the SETUP row with id `venuebar` in `PIPELINE-STATUS.md` (the id is kept for existing scorecards) | status, date, the mode and depth run, and a link to the report. One row, updated by every mode. |
 | **the generic list** | `references/` beside this skill | M1–M10 and the base-rate sources. A mechanism your venue adds, or one that does not hold there, goes in the venue corpus's `MANIFEST.md`; the ids stay stable. |
+
+The corpus, its modes and who reads it: `docs/venues.md` in the paperlint package; every place a stage
+writes, and what checks it: `docs/layout.md`.
 
 The paper folder has **no corpus folder of its own**: `paper/folder-layout` reports one, and the hook
 refuses to create one. A venue's format facts (page limit, template, required sections) go

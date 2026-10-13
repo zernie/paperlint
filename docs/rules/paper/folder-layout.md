@@ -9,6 +9,10 @@ A file or folder at the root of a paper folder that is not part of paperlint's l
 holds a small, known set; every kind of material has one folder; anything else goes into `extra/`,
 which is never judged.
 
+It runs on every `paperlint lint` and in CI, from the moment `paperlint new` creates the folder; a
+hook refuses a new stray entry before it is written. Which stage writes each place, and what checks
+it: [the map](../../layout.md).
+
 <!-- layout:begin — drawn from src/domain/paper-layout.ts (PAPER_LAYOUT_TREE); src/layout-docs.test.ts fails when this block differs -->
 
 ```text
@@ -53,7 +57,7 @@ the list follows latexmk's clean lists; only under the job name `paper`), and th
 `.DS_Store` and `Thumbs.db`.
 
 A venue's corpus of accepted papers is not in the paper folder at all: it is shared by every paper
-that targets the venue, in `<papers-root>/venues/<venue>/`.
+that targets the venue, in `<papers-root>/venues/<venue>/` ([what it holds](../../venues.md)).
 
 The paper's settings can move three entries, and what they name at the root is allowed while they
 name it: `pdf` (the built PDF under another path), `talk.dir` (another talk folder), and a preset

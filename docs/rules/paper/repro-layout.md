@@ -8,7 +8,9 @@ per misplaced entry
 
 An entry at the top of a paper's `repro/` that is not part of its layout, and a study folder there
 without a `README.md`. `repro/` holds an index, the tools and data the whole paper shares, and one
-dated folder per study:
+dated folder per study. Stage 3 of the pipeline, the study, writes here; the rule runs on every
+`paperlint lint` and in CI, and a hook refuses a new loose entry before it is written. The whole map:
+[`layout.md`](../../layout.md).
 
 <!-- layout:begin — drawn from src/domain/repro-layout.ts (REPRO_LAYOUT_TREE); src/layout-docs.test.ts fails when this block differs -->
 

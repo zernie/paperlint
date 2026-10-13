@@ -66,7 +66,8 @@ The full text, each with its reason and its check, is
    fine on their own.
 2. **Copy the generator into the study and write the items.** The study folder is
    \`<paper-dir>/repro/<slug>-YYYY-MM-DD/\` (\`gold-labels-2026-10-12\`; \`paper/repro-layout\` wants the
-   date, a \`README.md\` in it saying what the study asks, and a line in \`repro/README.md\`).
+   date, a \`README.md\` in it saying what the study asks, and a line in \`repro/README.md\`; where this
+   sits in stage 3, and what checks each place: \`docs/layout.md\` in the paperlint package).
    \`items.json\` follows the header of the generator. Source ids in \`items.json\` are the study's own;
    the page never shows them.
 

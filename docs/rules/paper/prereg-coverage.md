@@ -25,6 +25,12 @@ passes: the rule asks that the decision be made and written down, not which way 
 
 A study folder without a `prereg.json` owes nothing here.
 
+**When it acts.** Inside stage 3, the study: `build-benchmark` writes the `prereg.json` before the
+sample is drawn, the author checks the drawn units, and only then the run and any labelling
+(`build-label-page`) follow. The rule runs on every `paperlint lint` and in CI, so a study whose
+pre-registration lacks a field fails from the moment the file exists. The flow and the map:
+[`layout.md`](../../layout.md).
+
 ## Why
 
 A measurement study of how language models read coding rules drew its rules from three pools, kept

@@ -278,6 +278,38 @@ export const PAPER_NODES: readonly TreeNode[] = [
 /** The drawing of the paper folder's layout: the rule's message, the hook's refusal, the rule's page. */
 export const PAPER_LAYOUT_TREE: string = renderTree("<paper>/", PAPER_NODES);
 
+/** The folder beside the paper folders that holds one corpus of accepted papers per venue. */
+export const VENUES_DIR = "venues";
+
+/**
+ * The papers directory as the README and `docs/layout.md` draw it: the venues' corpora beside the
+ * paper folders, and each paper folder with its layout. Only the paper folder's part is enforced (by
+ * the two layout rules); `venues/` is drawn so a reader sees where a corpus goes, and no rule reads it.
+ */
+export const PAPERS_NODES: readonly TreeNode[] = [
+  {
+    name: `${VENUES_DIR}/`,
+    note: "outside every paper folder: one folder per venue",
+    children: [
+      leaf(
+        "<venue>/",
+        "that venue's accepted papers, shared by every paper aimed at it",
+      ),
+    ],
+  },
+  {
+    name: "<paper>/",
+    note: "one folder per paper, named after the work; its root holds only what is below",
+    children: PAPER_NODES,
+  },
+];
+
+/** The drawing of the papers directory: the README's and `docs/layout.md`'s map of where things live. */
+export const PAPERS_LAYOUT_TREE: string = renderTree(
+  "<papers-root>/",
+  PAPERS_NODES,
+);
+
 /**
  * The one text a stray entry is reported with, by the rule `paper/folder-layout` and by the hook that
  * refuses to create such an entry. It stands alone: where the entry goes, and the whole layout drawn,

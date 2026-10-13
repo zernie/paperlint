@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:804301e1d653b201 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:6657605a7582d7fa compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -56,7 +56,8 @@ The full text, each with its reason and its check, is
    fine on their own.
 2. **Copy the generator into the study and write the items.** The study folder is
    `<paper-dir>/repro/<slug>-YYYY-MM-DD/` (`gold-labels-2026-10-12`; `paper/repro-layout` wants the
-   date, a `README.md` in it saying what the study asks, and a line in `repro/README.md`).
+   date, a `README.md` in it saying what the study asks, and a line in `repro/README.md`; where this
+   sits in stage 3, and what checks each place: `docs/layout.md` in the paperlint package).
    `items.json` follows the header of the generator. Source ids in `items.json` are the study's own;
    the page never shows them.
 

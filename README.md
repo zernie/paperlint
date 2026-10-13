@@ -38,6 +38,8 @@ before you submit.** It comes in two parts:
 ## Contents
 
 - [The pipeline](#-the-pipeline)
+  - [The flow](#the-flow)
+  - [Where things live](#where-things-live)
 - [Supported venues](#-supported-venues)
 - [Getting started](#-getting-started)
   - [A new paper](#a-new-paper)
@@ -54,20 +56,114 @@ before you submit.** It comes in two parts:
 ## 🧭 The pipeline
 
 ```text
-stage           what you get                          skills  linter
-1 idea          a go / no-go, with the reason         yes
-2 venue         venues ranked, deadlines planned      yes
-3 study         a study design, honest statistics     yes
-4 draft         a first draft, then a tighter one     yes     lint
-5 review        the objections, before the reviewers  yes     lint
-6 submit        a PDF within the limit, recorded      yes     build, lint
-7 camera-ready  the final, de-anonymised PDF          yes     build, lint
-8 extend        a plan for the next paper             yes
+stage           what you get                          where it goes
+1 idea          a go / no-go, with the reason         siblings/
+2 venue         venues ranked, deadlines planned      paperlint.json, the venue's corpus
+3 study         a study design, honest statistics     repro/<study>/
+4 draft         a first draft, then a tighter one     paper.tex, sections/, figures/
+5 review        the objections, before the reviewers  reviews/, PIPELINE-STATUS.md
+6 submit        a PDF within the limit, recorded      paper.pdf, versions/, submission/
+7 camera-ready  the final, de-anonymised PDF          versions/, talk/
+8 extend        a plan for the next paper             a new paper folder
 
-skills: optional, with Claude Code
-lint:   every edit and every CI run, once the paper exists (paperlint new)
-build:  compiles and measures the PDF; lint then checks pages, fonts, references
+skills: every stage; optional, with Claude Code
+lint:   any stage once the paper folder exists (paperlint new) — when you run it, and in CI
+build:  stages 6–7; compiles and measures the PDF, and lint then checks pages, fonts, references
+hook:   with Claude Code, refuses a new file in the wrong place before it is written
 ```
+
+### The flow
+
+Each box names the stage's skills, what it writes, and what checks it. Stage 3 is drawn from the
+inside: a study's pre-registration and its human labels are made there.
+
+```mermaid
+flowchart TB
+  N["<b>paperlint new</b><br/>creates the paper folder<br/>checked from here on:<br/>every lint · paper/folder-layout<br/>every new file · hook paper-folder-layout"]
+  S1["<b>1 · idea</b><br/>research-ideate · map-prior-work<br/>analyze-sibling-paper<br/>writes: siblings/<br/>checked by: sibling/frontmatter"]
+  S2["<b>2 · venue</b><br/>find-venue · plan-paper-timeline<br/>study-accepted-papers, mode A or B<br/>writes: paperlint.json, a report in reviews/<br/>checked by: review/frontmatter"]
+  V[("<b>#lt;papers-root#gt;/venues/#lt;venue#gt;/</b><br/>beside the papers, not in one:<br/>the venue's accepted papers,<br/>shared by every paper aimed at it<br/>checked by: nothing")]
+  subgraph S3["3 · study: repro/#lt;slug#gt;-YYYY-MM-DD/"]
+    direction TB
+    D["<b>design</b> · build-benchmark<br/>writes: the study's README.md<br/>checked by: paper/repro-layout"]
+    P["<b>pre-register</b> · build-benchmark<br/>writes: prereg.json, before the draw<br/>checked by: paper/prereg-coverage"]
+    A["<b>author check</b> · you see the drawn units<br/>writes: author_check in prereg.json<br/>checked by: paper/prereg-coverage"]
+    R["<b>run</b> · your scripts<br/>writes: the study folder,<br/>repro/tools/, repro/data/<br/>checked by: paper/repro-layout"]
+    L["<b>labels</b> · build-label-page<br/>a phone page; the answers go<br/>into the study's data/"]
+    Y["<b>analysis</b> · build-benchmark<br/>writes: the numbers, NOTES.md"]
+    D --> P --> A --> R --> L --> Y
+  end
+  S4["<b>4 · draft</b><br/>draft-paper · argument-arc · tighten-paper<br/>writes: paper.tex, sections/, figures/<br/>checked by: the tex/* rules<br/>hook paper-edit-guard: no shell writes"]
+  S5["<b>5 · review</b><br/>grade-paper-writing · verify-citations<br/>pc-panel-review · harden-paper<br/>study-accepted-papers, mode C or D<br/>writes: reviews/, the scorecard<br/>in PIPELINE-STATUS.md<br/>checked by: review/frontmatter"]
+  S6["<b>6 · submit</b><br/>paperlint build · submit-paper<br/>writes: paper.pdf, _build/,<br/>versions/, submission/<br/>checked by: format/page-limit, pdf/*,<br/>anonymity/identity, paper/stages"]
+  S7["<b>7 · camera-ready</b><br/>camera-ready<br/>writes: versions/, talk/<br/>checked by: paper/stages, talk/*"]
+  S8["<b>8 · extend</b><br/>extend-paper<br/>writes: a new paper folder"]
+  N --> S1 --> S2 --> D
+  Y --> S4 --> S5 --> S6 --> S7 --> S8
+  S2 -. fills .-> V
+  V -. read again .-> S5
+```
+
+The cylinder is a venue's corpus of accepted papers: it lives beside the papers, not inside one
+([`docs/venues.md`](docs/venues.md)). Every check and hook, and the moment it runs:
+[`docs/layout.md`](docs/layout.md#what-runs-when).
+
+### Where things live
+
+`paperlint new` creates a paper folder in the papers directory (`papersDir`, default `papers/`).
+Everything a stage writes has one place:
+
+<!-- layout:begin — drawn from src/domain/paper-layout.ts (PAPERS_LAYOUT_TREE); src/layout-docs.test.ts fails when this block differs -->
+
+```text
+<papers-root>/
+├── venues/                            ← outside every paper folder: one folder per venue
+│   └── <venue>/                       ← that venue's accepted papers, shared by every paper aimed at it
+└── <paper>/                           ← one folder per paper, named after the work; its root holds only what is below
+    ├── PIPELINE-STATUS.md             ← the paper's one live-state file: stages, plan, scorecard
+    ├── paper.tex                      ← the source; `paperlint build` compiles it
+    ├── paperlint.json                 ← the paper's settings
+    ├── README.md                      ← what the paper is
+    ├── CLAUDE.md                      ← the paper's agent rules
+    ├── CLAIMS.md                      ← the claims ledger
+    ├── NOTES.md                       ← each number in the paper → the data it comes from
+    ├── SUBMIT-CHECKLIST.md            ← the venue's format and submission mechanics
+    ├── .gitignore                     ← keeps the build's byproducts out of git
+    ├── paper.pdf                      ← the built PDF
+    ├── *.tex *.bib *.cls *.sty *.bst  ← what TeX and bibtex look up beside paper.tex
+    ├── _build/                        ← the facts `paperlint build` writes
+    ├── versions/                      ← each stage's frozen PDF and source
+    ├── reviews/                       ← dated reviews and pass reports
+    ├── siblings/                      ← the cards of competing papers
+    ├── research/                      ← dated research and decision records
+    ├── repro/                         ← the reproduction artifact
+    │   ├── README.md                  ← the index: one line per study
+    │   ├── .gitignore                 ← keeps the scripts' byproducts out of git
+    │   ├── tools/                     ← scripts used across the paper (numbers, figures, anonymity check, harnesses)
+    │   ├── data/                      ← shared data (tables, caches)
+    │   └── <slug>-YYYY-MM-DD/         ← one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)
+    │       └── README.md              ← required: what it asks, how to run it, what it found
+    ├── figures/                       ← graphics and their sources
+    ├── sections/                      ← the body, when it is split
+    ├── talk/                          ← the talk's files
+    ├── submission/                    ← forms, portal records, mail with the venue, the anonymized upload
+    └── extra/                         ← anything; never judged
+```
+
+<!-- layout:end -->
+
+| place                             | details                                                                                                                       |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `venues/<venue>/`                 | [what a venue's corpus holds, when it is made, who reads it](docs/venues.md)                                                  |
+| the paper folder's root           | [what may stand there, and where anything else goes](docs/rules/paper/folder-layout.md)                                       |
+| `PIPELINE-STATUS.md`, `versions/` | [the stages, and the frozen PDF of each](docs/rules.md#the-scorecards-bytes-and-sourcebytes)                                  |
+| `reviews/`, `siblings/`           | [the record each file keeps in its frontmatter](docs/configuration.md#records-in-frontmatter-checked-by-shipped-json-schemas) |
+| `repro/` and its study folders    | [the index, `tools/`, `data/`, one dated folder per study](docs/rules/paper/repro-layout.md)                                  |
+| `repro/<study>/prereg.json`       | [what a study's pre-registration must declare](docs/rules/paper/prereg-coverage.md)                                           |
+| `paper.pdf`, `_build/`            | [how `paperlint build` compiles and measures](docs/configuration.md#how-paperlint-build-compiles-a-paper)                     |
+| `submission/`                     | [the submission on the venue's portal](docs/submission.md)                                                                    |
+| `talk/`                           | [the talk's files and what is checked](docs/talk.md)                                                                          |
+| every place                       | [which stage writes it, which skill, which check](docs/layout.md)                                                             |
 
 ## 🎯 Supported venues
 
@@ -332,6 +428,8 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 ## 📚 Docs
 
 - [`docs/skills.md`](docs/skills.md) — every skill, by stage
+- [`docs/layout.md`](docs/layout.md) — where each stage writes, and what checks it when
+- [`docs/venues.md`](docs/venues.md) — a venue's corpus of accepted papers, presets and cards: three places, three jobs
 - [`docs/install.md`](docs/install.md) — what `init` does, the hooks, package managers, troubleshooting
 - [`docs/configuration.md`](docs/configuration.md) — every setting, how `build` compiles, using your own ESLint
 - [`docs/rules.md`](docs/rules.md) — every check, venue presets, recording a submitted PDF

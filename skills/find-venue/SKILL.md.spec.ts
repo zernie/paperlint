@@ -90,7 +90,9 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
 - the venue cards, \`presets/<venue>.md\` in the paperlint package beside each venue preset (e.g.
   \`agenticdev.md\`, \`aisec.md\`) — the winner gets a card with its HotCRP quirks beside its preset;
   for a venue with no shipped preset, the project's own \`./venues/<name>.md\` beside its
-  \`./venues/<name>.jsonc\`. Plain data, not a new skill.
+  \`./venues/<name>.jsonc\`. Plain data, not a new skill. That \`./venues/\` is not the venue's corpus
+  of accepted papers, \`<papers-root>/venues/<venue>/\` (\`study-accepted-papers\`): the three places are
+  told apart in \`docs/venues.md\` in the paperlint package.
 - \`extend-paper\` — the prestige-upgrade target this skill names but defers.
 
 ## Provenance
