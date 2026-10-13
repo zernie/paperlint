@@ -359,6 +359,9 @@ const FRAGMENT_RULES = {
   "heading-case": REGISTER_AND_CASE_RULES["heading-case"],
 };
 
+/** What the two layout rules read with: the disk and its directory listings. */
+const LAYOUT_RULE_DEPS = { files: nodeFiles, listDir: nodeListDir };
+
 /** What the talk rules read with: the disk, the shipped presets, and the three media readers. */
 const TALK_RULE_DEPS = {
   files: nodeFiles,
@@ -422,12 +425,10 @@ export function buildConfig(
           rules: {
             ...paperStages.rules,
             ...folderVenueRules({ files: nodeFiles, venuesDir: presetsDir() }),
-            ...folderLayoutRules({ files: nodeFiles, listDir: nodeListDir }),
+            ...folderLayoutRules(LAYOUT_RULE_DEPS),
           },
         },
-        repro: {
-          rules: reproLayoutRules({ files: nodeFiles, listDir: nodeListDir }),
-        },
+        repro: { rules: reproLayoutRules(LAYOUT_RULE_DEPS) },
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
       },
