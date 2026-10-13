@@ -142,6 +142,7 @@ describe("judgeLayout — the build's byproducts", () => {
     "toc",
     "lof",
     "lot",
+    "loa",
     "lol",
     "bbl",
     "blg",

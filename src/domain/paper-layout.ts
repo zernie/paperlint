@@ -128,9 +128,10 @@ export const TEX_INPUT_EXTENSIONS: readonly string[] = [
  * the union of latexmk's clean lists (`@generated_exts`, `$clean_ext` and `$clean_full_ext` in the
  * latexmk documentation, the files `latexmk -c` and `-C` delete) and the outputs of the tools
  * `paperlint build` and a hand run use on the same job: pdflatex (`aux log out toc lof lot lol fls
- * xdv dvi`, `synctex.gz` with `-synctex`), bibtex (`bbl blg`), makeindex (`idx ind ilg`), glossaries
- * and nomencl (`glo gls glg acn acr alg ist nlo nls`), biber and biblatex (`bcf run.xml`), beamer
- * (`nav snm vrb`), and latexmk's own `fdb_latexmk`. A missing extension is added here, not
+ * xdv dvi`, `synctex.gz` with `-synctex`), the algorithm packages' `\listofalgorithms` (`loa`),
+ * bibtex (`bbl blg`), makeindex (`idx ind ilg`), glossaries and nomencl (`glo gls glg acn acr alg ist
+ * nlo nls`), biber and biblatex (`bcf run.xml`), beamer (`nav snm vrb`), and latexmk's own
+ * `fdb_latexmk`. A missing extension is added here, not
  * special-cased where the rule is judged.
  */
 const BYPRODUCT_EXTENSIONS: readonly string[] = [
@@ -141,6 +142,7 @@ const BYPRODUCT_EXTENSIONS: readonly string[] = [
   "lof",
   "lot",
   "lol",
+  "loa",
   "fls",
   "xdv",
   "dvi",

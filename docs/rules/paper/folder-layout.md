@@ -60,7 +60,7 @@ competitor's card), `sections/` (when the body is split), `talk/` (when the pape
 `PIPELINE-STATUS.md`, is not taken for a second paper.
 
 Never reported: the byproducts a TeX run leaves beside `paper.tex` (`paper.aux`, `.log`, `.out`,
-`.toc`, `.lof`, `.lot`, `.lol`, `.fls`, `.xdv`, `.dvi`, `.synctex.gz`; bibtex's `.bbl`, `.blg`;
+`.toc`, `.lof`, `.lot`, `.lol`, `.loa`, `.fls`, `.xdv`, `.dvi`, `.synctex.gz`; bibtex's `.bbl`, `.blg`;
 makeindex's `.idx`, `.ind`, `.ilg`; glossaries' `.glo`, `.gls`, `.glg`, `.acn`, `.acr`, `.alg`, `.ist`,
 `.nlo`, `.nls`; biber's `.bcf`, `.run.xml`; beamer's `.nav`, `.snm`, `.vrb`; latexmk's `.fdb_latexmk`;
 the list follows latexmk's clean lists; only under the job name `paper`), the `.aux` that
