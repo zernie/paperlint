@@ -1,8 +1,43 @@
 # Where things live, and what checks them when
 
-A paper moves through eight stages ([the flow](../README.md#the-flow)). Each stage writes into one
+A paper moves through eight stages ([the flow](#the-flow)). Each stage writes into one
 place, and a check guards that place. This page is the map: the places, who writes each one, and the
 moment each check runs. The skills, stage by stage: [`skills.md`](skills.md).
+
+## The flow
+
+Each box names the stage's skills, what it writes, and what checks it. Stage 3 is drawn from the
+inside: a study's pre-registration and its human labels are made there.
+
+```mermaid
+flowchart TB
+  N["<b>paperlint new</b><br/>creates the paper folder<br/>checked from here on:<br/>every lint · paper/allowed-files-only<br/>every new file · hook paper-folder-layout"]
+  S1["<b>1 · idea</b><br/>research-ideate · map-prior-work<br/>analyze-sibling-paper<br/>writes: siblings/<br/>checked by: sibling/frontmatter"]
+  S2["<b>2 · venue</b><br/>find-venue · plan-paper-timeline<br/>study-accepted-papers, mode A or B<br/>writes: paperlint.json, a report in reviews/<br/>checked by: review/frontmatter"]
+  V[("<b>#lt;papers-root#gt;/venues/#lt;venue#gt;/</b><br/>beside the papers, not in one:<br/>the venue's accepted papers,<br/>shared by every paper aimed at it<br/>checked by: nothing")]
+  subgraph S3["3 · study: repro/#lt;slug#gt;-YYYY-MM-DD/"]
+    direction TB
+    D["<b>design</b> · build-benchmark<br/>writes: the study's README.md<br/>checked by: repro/allowed-files-only"]
+    P["<b>pre-register</b> · build-benchmark<br/>writes: prereg.json, before the draw<br/>checked by: study/declare-sample (experimental, off)"]
+    A["<b>author check</b> · you see the drawn units<br/>writes: author_check in prereg.json<br/>checked by: study/declare-sample (experimental, off)"]
+    R["<b>run</b> · your scripts<br/>writes: the study folder,<br/>repro/tools/, repro/data/<br/>checked by: repro/allowed-files-only"]
+    L["<b>labels</b> · build-label-page<br/>a phone page; the answers go<br/>into the study's data/"]
+    Y["<b>analysis</b> · build-benchmark<br/>writes: the numbers, NOTES.md"]
+    D --> P --> A --> R --> L --> Y
+  end
+  S4["<b>4 · draft</b><br/>draft-paper · argument-arc · tighten-paper<br/>writes: paper.tex, sections/, figures/<br/>checked by: the tex/* rules<br/>hook paper-edit-guard: no shell writes"]
+  S5["<b>5 · review</b><br/>grade-paper-writing · verify-citations<br/>pc-panel-review · harden-paper<br/>study-accepted-papers, mode C or D<br/>writes: reviews/, the scorecard<br/>in PIPELINE-STATUS.md<br/>checked by: review/frontmatter"]
+  S6["<b>6 · submit</b><br/>paperlint build · submit-paper<br/>writes: paper.pdf, _build/,<br/>versions/, submission/<br/>checked by: format/page-limit, pdf/*,<br/>anonymity/identity, paper/stages"]
+  S7["<b>7 · camera-ready</b><br/>camera-ready<br/>writes: versions/, talk/<br/>checked by: paper/stages, talk/*"]
+  S8["<b>8 · extend</b><br/>extend-paper<br/>writes: a new paper folder"]
+  N --> S1 --> S2 --> D
+  Y --> S4 --> S5 --> S6 --> S7 --> S8
+  S2 -. fills .-> V
+  V -. read again .-> S5
+```
+
+The cylinder is a venue's corpus of accepted papers: it lives beside the papers, not inside one
+([`venues.md`](venues.md)).
 
 ## The map
 
@@ -59,7 +94,7 @@ Both are explained in [`venues.md`](venues.md).
 
 ## Each place: who writes it, and what checks it
 
-"Stage" is the stage of [the pipeline](../README.md#-the-pipeline) that writes the place first.
+"Stage" is the stage of [the pipeline](#the-flow) that writes the place first.
 "Checked by" is the rule `paperlint lint` runs over it; "nothing" means no rule reads its content.
 
 | place                                 | stage            | written by                                                                                                                                                                                       | checked by                                                                                                                           |

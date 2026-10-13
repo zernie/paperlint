@@ -229,7 +229,7 @@ const writeLayout = (dir: string, layout: readonly ScaffoldFile[]): void => {
   });
 };
 
-// Documented in README.md#getting-started — update it when this changes.
+// Documented in README.md#-getting-started — update it when this changes.
 export function newPaper(
   papersRoot: string,
   name: string,
