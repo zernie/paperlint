@@ -11,8 +11,9 @@ allow-list, keep the guards. Standard library only. No network.
 
 `build` makes a page that stores each answer in the artifact's `db` store (the `db` capability of a
 claude.ai Artifact; publish page.html with `capabilities: {db: {}}`). `export` turns what the store
-holds into one JSON file for the study's data/ folder. Answers outside a question's options are not
-counted: the item is marked incomplete and reported (`invalid_answers`). `dump.json` is the store's two collections:
+holds into one JSON file for the study's data/ folder. Answers and familiarity values outside the
+offered options are not counted (page and export read the same `allowed` lists): the item or group is
+marked incomplete and reported (`invalid_answers`, `invalid_familiarity`). `dump.json` is the store's two collections:
 
     {"answers": {"G001": {"answers": {"q": "v"}, "savedAt": "...", "source": "page"}, ...},
      "groups":  {"python": {"familiarity": "well", "savedAt": "...", "source": "page"}, ...}}
@@ -59,6 +60,16 @@ FAMILIARITY = (
 )
 NAME = re.compile(r"^[A-Za-z0-9_-]+$")
 SOURCES = ("page", "chat")
+
+
+def allowed_values(questions):
+    """THE definition of a valid answer: the values the build offers, per question and for familiarity.
+    The page script (`DATA.allowed`) and the exporter (`key.json`) both read this one result, so a
+    stored value counts as an answer on the page exactly when it counts in the export."""
+    return {
+        "questions": {q["id"]: [o["value"] for o in q["options"]] for q in questions},
+        "familiarity": [o["value"] for o in FAMILIARITY],
+    }
 
 
 def fail(message):
@@ -198,6 +209,7 @@ def build(config_path, out_dir):
         "groups": [{"id": g, "label": cfg["groups"][g]} for g in used],
         "familiarity_question": cfg.get("familiarity_question", "How well do you know {group}?"),
         "familiarity": list(FAMILIARITY),
+        "allowed": allowed_values(cfg["questions"]),
         "questions": cfg["questions"],
         "items": [{"id": nid, **fields} for nid, fields in shown.items()],
     }
@@ -212,9 +224,10 @@ def build(config_path, out_dir):
         "study": cfg["study"],
         "seed": cfg["seed"],
         "questions": [q["id"] for q in cfg["questions"]],
-        # What each question accepts. `export` checks every stored answer against this, so it is
-        # the build's options that decide what counts as an answer, not whatever the store holds.
-        "allowed": {q["id"]: [o["value"] for o in q["options"]] for q in cfg["questions"]},
+        # What counts as an answer: the same dict the page was given (`allowed_values`). `export`
+        # checks every stored answer and familiarity against it, so the build's options decide, not
+        # whatever the store holds.
+        "allowed": allowed_values(cfg["questions"]),
         "ids": {
             nid: {"source_id": sid, "group": group_of[sid], "on_page": nid in shown}
             for sid, nid in sorted(ids.items(), key=lambda kv: kv[1])
@@ -237,8 +250,9 @@ def export(dump_path, key_path, out_dir, day):
     groups = dump.get("groups", {})
     qids = key["questions"]
     allowed = key.get("allowed")
-    if not isinstance(allowed, dict) or any(q not in allowed for q in qids):
-        fail(f"{key_path} has no `allowed` values for every question (made by an older build). "
+    if (not isinstance(allowed, dict) or "familiarity" not in allowed
+            or any(q not in allowed.get("questions", {}) for q in qids)):
+        fail(f"{key_path} has no `allowed` values for every question and for familiarity (made by an older build). "
              f"Run `build` again with the same items.json and seed: ids are kept, the key gains them.")
     stray = sorted(set(answers) - set(key["ids"]))
     if stray:
@@ -260,7 +274,7 @@ def export(dump_path, key_path, out_dir, day):
         # Refusing would hold every good label hostage to one typo at the moment the export must
         # happen (checklist rule 6); dropping it would lose what the labeller said. A clear report
         # beats both, and the fix is one line in the dump (`"source": "chat"` stays as it was).
-        invalid = {q: v for q, v in raw.items() if v is not None and v not in allowed[q]}
+        invalid = {q: v for q, v in raw.items() if v is not None and v not in allowed["questions"][q]}
         given = {q: (None if q in invalid else v) for q, v in raw.items()}
         items.append({
             "id": nid,
@@ -274,19 +288,25 @@ def export(dump_path, key_path, out_dir, day):
         })
         if meta["group"] not in group_ids:
             group_ids.append(meta["group"])
+    # Same rule as for item answers: a familiarity outside the options is marked, not counted as rated.
+    bad_fam = {g: groups[g]["familiarity"] for g in group_ids
+               if g in groups and groups[g].get("familiarity") is not None
+               and groups[g]["familiarity"] not in allowed["familiarity"]}
     out = {
         "study": key["study"],
         "exported": day,
         "questions": qids,
         "items": items,
         "groups": {
-            g: {"familiarity": groups.get(g, {}).get("familiarity"),
+            g: {"familiarity": None if g in bad_fam else groups.get(g, {}).get("familiarity"),
+                "invalid_familiarity": bad_fam.get(g),
                 "source": groups.get(g, {}).get("source", "page") if g in groups else None,
                 "saved_at": groups.get(g, {}).get("savedAt")}
             for g in group_ids
         },
         "complete_items": sum(i["complete"] for i in items),
         "invalid_items": sum(bool(i["invalid_answers"]) for i in items),
+        "invalid_groups": len(bad_fam),
         "total_items": len(items),
     }
     target = Path(out_dir)
@@ -296,13 +316,16 @@ def export(dump_path, key_path, out_dir, day):
     print(f"wrote {path}: {out['complete_items']} of {out['total_items']} items complete")
     for i in items:
         for q, v in i["invalid_answers"].items():
-            print(f"  invalid {i['id']}: {q}={v!r} is not one of {', '.join(allowed[q])} (not counted)")
+            print(f"  invalid {i['id']}: {q}={v!r} is not one of {', '.join(allowed['questions'][q])} (not counted)")
         if not i["complete"]:
             missing = [q for q, v in i["answers"].items() if v is None and q not in i["invalid_answers"]]
             if missing:
                 print(f"  incomplete {i['id']}: missing {', '.join(missing)}")
     for g, v in out["groups"].items():
-        if v["familiarity"] is None:
+        if g in bad_fam:
+            print(f"  invalid group {g}: familiarity={bad_fam[g]!r} is not one of "
+                  f"{', '.join(allowed['familiarity'])} (not counted as rated)")
+        elif v["familiarity"] is None:
             print(f"  group {g}: no familiarity answer")
 
 
@@ -387,15 +410,18 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
     var d = state.answers[id];
     return d && d.answers ? d.answers : {};
   }
+  // A stored value is an answer only if the build offers it (DATA.allowed, the same lists the
+  // export reads from key.json): after a rebuild that removed an option, or a typo merged from chat,
+  // the question is unanswered again and says so.
+  function valid(allowed, v) { return allowed.indexOf(v) !== -1; }
   function missingFor(id) {
     var a = answersOf(id);
-    return DATA.questions.filter(function (q) { return a[q.id] === undefined || a[q.id] === null; });
+    return DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
   }
   function itemDone(id) { return missingFor(id).length === 0; }
   function familiarity(g) {
-    if (state.mine["group:" + g]) return state.mine["group:" + g].familiarity;
-    var d = state.groups[g];
-    return d ? d.familiarity : undefined;
+    var d = state.mine["group:" + g] || state.groups[g];
+    return d && valid(DATA.allowed.familiarity, d.familiarity) ? d.familiarity : undefined;
   }
   function groupItems(g) { return DATA.items.filter(function (i) { return i.group === g; }); }
   function groupDone(g) { return familiarity(g) !== undefined && groupItems(g).every(function (i) { return itemDone(i.id); }); }

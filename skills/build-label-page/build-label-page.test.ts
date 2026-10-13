@@ -107,9 +107,14 @@ function build(dir: string): { page: string; key: KeyFile } {
   };
 }
 
+const Allowed = z.object({
+  questions: z.record(z.string(), z.array(z.string())),
+  familiarity: z.array(z.string()),
+});
 const Key = z.object({
   seed: z.number(),
   questions: z.array(z.string()),
+  allowed: Allowed,
   ids: z.record(
     z.string(),
     z.object({
@@ -124,6 +129,13 @@ type KeyFile = z.infer<typeof Key>;
 const Exported = z.object({
   complete_items: z.number(),
   total_items: z.number(),
+  groups: z.record(
+    z.string(),
+    z.object({
+      familiarity: z.string().nullable(),
+      invalid_familiarity: z.unknown(),
+    }),
+  ),
   items: z.array(
     z.object({
       id: z.string(),
@@ -303,6 +315,139 @@ test("🔴 export does not count an answer outside the question's allowed values
   });
   assert.equal(file.items.find((i) => i.id === b)?.answers["label"], null);
   assert.equal(file.items.find((i) => i.id === b)?.source, "chat");
+});
+
+/** A DOM just big enough for the page script: nodes with children and text. */
+class FakeNode {
+  children: FakeNode[] = [];
+  className = "";
+  disabled = false;
+  type = "";
+  style: Record<string, string> = {};
+  private own = "";
+  get textContent(): string {
+    return this.own + this.children.map((c) => c.textContent).join("\n");
+  }
+  set textContent(v: string) {
+    this.own = v;
+    this.children = [];
+  }
+  appendChild(c: FakeNode): FakeNode {
+    this.children.push(c);
+    return c;
+  }
+  setAttribute(): void {}
+  addEventListener(): void {}
+}
+
+/** Open the built page against a fake store holding `answers` and `groups`; return what it shows. */
+async function showPage(
+  page: string,
+  answers: Record<string, unknown>,
+  groups: Record<string, unknown>,
+): Promise<string> {
+  const script = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)][0]?.[1];
+  const json =
+    /<script type="application\/json" id="data">([\s\S]*?)<\/script>/.exec(
+      page,
+    )?.[1];
+  assert.ok(script !== undefined && json !== undefined);
+  const app = new FakeNode();
+  const data = new FakeNode();
+  data.textContent = json.replace(/<\\\//g, "</");
+  const docsOf = (m: Record<string, unknown>) => ({
+    docs: Object.entries(m).map(([id, d]) => ({ id, data: () => d })),
+  });
+  const store = {
+    collection: (name: string) => ({
+      onSnapshot: (cb: (snap: unknown) => void) => {
+        cb(docsOf(name === "answers" ? answers : groups));
+      },
+      doc: () => ({ set: () => Promise.resolve() }),
+    }),
+  };
+  runInNewContext(script, {
+    document: {
+      getElementById: (id: string) => (id === "data" ? data : app),
+      createElement: () => new FakeNode(),
+    },
+    window: { claude: { use: () => Promise.resolve(store) } },
+    localStorage: { getItem: () => "next", setItem: () => undefined },
+    Promise,
+    JSON,
+    Date,
+    Object,
+    String,
+    isNaN,
+  });
+  await new Promise((r) => setTimeout(r, 0));
+  return app.textContent;
+}
+
+test("🔴 the page and the export share one definition of a valid answer: a stored value outside the options is unanswered in both", async () => {
+  const dir = setup("stale", config());
+  const { page, key } = build(dir);
+  const [a, b, c] = Object.keys(key.ids);
+  assert.ok(a !== undefined && b !== undefined && c !== undefined);
+  const answers = {
+    [a]: { answers: { label: "yes", boundary: "clear" }, source: "page" },
+    // options changed between builds: neither value is offered any more
+    [b]: { answers: { label: "yes", boundary: "maybe" }, source: "page" },
+    [c]: { answers: { label: "yse", boundary: "clear" }, source: "chat" },
+  };
+  const groups = {
+    python: { familiarity: "somewhatt", source: "chat" },
+    go: { familiarity: "well", source: "page" },
+  };
+  const shown = await showPage(page, answers, groups);
+  assert.match(shown, /1 of 12 items complete/, shown);
+  assert.match(shown, new RegExp(`${b} needs boundary`), shown);
+  assert.match(shown, new RegExp(`${c} needs correct\\?`), shown);
+  assert.match(shown, /Python: how well you know it/, shown);
+  assert.doesNotMatch(shown, /Go: how well you know it/, shown);
+
+  writeFileSync(join(dir, "dump.json"), JSON.stringify({ answers, groups }));
+  const r = run([
+    "export",
+    join(dir, "dump.json"),
+    join(dir, "out", "key.json"),
+    join(dir, "data"),
+    "--date",
+    "2026-01-02",
+  ]);
+  assert.equal(r.status, 0, r.out);
+  const file = Exported.parse(
+    JSON.parse(
+      readFileSync(
+        join(dir, "data", "demo-gold-labels-2026-01-02.json"),
+        "utf8",
+      ),
+    ),
+  );
+  assert.equal(
+    file.complete_items,
+    1,
+    "the export counts what the page counts",
+  );
+  assert.match(r.out, /invalid group python: familiarity='somewhatt'/, r.out);
+  const { python, go } = file.groups;
+  assert.equal(python.familiarity, null);
+  assert.equal(python.invalid_familiarity, "somewhatt");
+  assert.equal(go.familiarity, "well");
+});
+
+test("the page's allowed values are the key's: both are written from the same definition", () => {
+  const { page, key } = build(setup("one-source", config()));
+  const json =
+    /<script type="application\/json" id="data">([\s\S]*?)<\/script>/.exec(
+      page,
+    )?.[1];
+  assert.ok(json !== undefined);
+  const data = z
+    .object({ allowed: Allowed })
+    .parse(JSON.parse(json.replace(/<\\\//g, "</")));
+  assert.deepEqual(data.allowed, key.allowed);
+  assert.deepEqual(key.allowed.familiarity, ["well", "somewhat", "not_really"]);
 });
 
 test("the page script parses, saves on click, and has nothing that needs scrolling or a toast", () => {
