@@ -133,6 +133,56 @@ describe("judgeLayout — reports", () => {
   });
 });
 
+describe("judgeLayout — the build's byproducts", () => {
+  // What pdflatex, bibtex, makeindex, biber, glossaries, beamer and latexmk write next to paper.tex.
+  const byproducts = [
+    "aux",
+    "log",
+    "out",
+    "toc",
+    "lof",
+    "lot",
+    "lol",
+    "bbl",
+    "blg",
+    "idx",
+    "ind",
+    "ilg",
+    "glo",
+    "gls",
+    "glg",
+    "nlo",
+    "nls",
+    "fls",
+    "fdb_latexmk",
+    "synctex.gz",
+    "run.xml",
+    "bcf",
+    "nav",
+    "snm",
+    "vrb",
+    "xdv",
+    "dvi",
+  ];
+
+  it("a root holding paper.idx, paper.ind, paper.ilg and the rest of the job's outputs reports nothing", () => {
+    expect(
+      judgeLayout(
+        byproducts.map((ext) => file(`paper.${ext}`)),
+        NOTHING_DECLARED,
+      ),
+    ).toEqual([]);
+  });
+
+  it("only under the paper's own job name: draft.idx is reported", () => {
+    expect(
+      judgeLayout([file("draft.idx"), file("paper.idx")], NOTHING_DECLARED).map(
+        (s) => s.name,
+      ),
+    ).toEqual(["draft.idx"]);
+  });
+});
+
 describe("judgeLayout — reports by name, exactly", () => {
   it("a PDF other than the built one, a dotfile, another job's byproduct", () => {
     expect(

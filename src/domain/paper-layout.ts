@@ -124,27 +124,57 @@ export const TEX_INPUT_EXTENSIONS: readonly string[] = [
 ];
 
 /**
- * What a `paperlint build` leaves beside `paper.tex`: pdflatex and bibtex run in the paper folder and
- * name every output after the job, `paper`. Never reported — they are the build's, not the author's.
- * The list is the outputs of pdflatex with `-recorder`, bibtex, hyperref, and the tables of contents
- * and figures; `synctex.gz`, `fdb_latexmk`, `bcf` and `run.xml` are an editor's or latexmk's or
- * biber's, run on the same job by hand.
+ * The extensions of what a TeX run writes next to its main file, named after the job. The list is
+ * the union of latexmk's clean lists (`@generated_exts`, `$clean_ext` and `$clean_full_ext` in the
+ * latexmk documentation, the files `latexmk -c` and `-C` delete) and the outputs of the tools
+ * `paperlint build` and a hand run use on the same job: pdflatex (`aux log out toc lof lot lol fls
+ * xdv dvi`, `synctex.gz` with `-synctex`), bibtex (`bbl blg`), makeindex (`idx ind ilg`), glossaries
+ * and nomencl (`glo gls glg acn acr alg ist nlo nls`), biber and biblatex (`bcf run.xml`), beamer
+ * (`nav snm vrb`), and latexmk's own `fdb_latexmk`. A missing extension is added here, not
+ * special-cased where the rule is judged.
  */
-export const BUILD_BYPRODUCTS: readonly string[] = [
+const BYPRODUCT_EXTENSIONS: readonly string[] = [
   "aux",
   "log",
-  "bbl",
-  "blg",
   "out",
-  "fls",
   "toc",
   "lof",
   "lot",
+  "lol",
+  "fls",
+  "xdv",
+  "dvi",
   "synctex.gz",
-  "fdb_latexmk",
+  "bbl",
+  "blg",
+  "idx",
+  "ind",
+  "ilg",
+  "glo",
+  "gls",
+  "glg",
+  "acn",
+  "acr",
+  "alg",
+  "ist",
+  "nlo",
+  "nls",
   "bcf",
   "run.xml",
-].map((ext) => `paper.${ext}`);
+  "nav",
+  "snm",
+  "vrb",
+  "fdb_latexmk",
+];
+
+/**
+ * What a `paperlint build` leaves beside `paper.tex`: pdflatex and bibtex run in the paper folder and
+ * name every output after the job, `paper`, so only `paper.<extension>` is the build's. Never
+ * reported — they are the build's, not the author's. Another job name (`draft.aux`) is the author's.
+ */
+export const BUILD_BYPRODUCTS: readonly string[] = BYPRODUCT_EXTENSIONS.map(
+  (ext) => `paper.${ext}`,
+);
 
 /** Files the operating system writes into any folder it shows. Never reported. */
 export const OS_FILES: readonly string[] = [".DS_Store", "Thumbs.db"];

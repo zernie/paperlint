@@ -45,9 +45,11 @@ which is never judged.
 
 <!-- layout:end -->
 
-Never reported: the byproducts `paperlint build` leaves beside `paper.tex` (`paper.aux`, `.log`,
-`.bbl`, `.blg`, `.out`, `.fls`, `.toc`, `.lof`, `.lot`, and an editor's or latexmk's `.synctex.gz`,
-`.fdb_latexmk`, `.bcf`, `.run.xml`; only under the job name `paper`), and the operating system's
+Never reported: the byproducts a TeX run leaves beside `paper.tex` (`paper.aux`, `.log`, `.out`,
+`.toc`, `.lof`, `.lot`, `.lol`, `.fls`, `.xdv`, `.dvi`, `.synctex.gz`; bibtex's `.bbl`, `.blg`;
+makeindex's `.idx`, `.ind`, `.ilg`; glossaries' `.glo`, `.gls`, `.glg`, `.acn`, `.acr`, `.alg`, `.ist`,
+`.nlo`, `.nls`; biber's `.bcf`, `.run.xml`; beamer's `.nav`, `.snm`, `.vrb`; latexmk's `.fdb_latexmk`;
+the list follows latexmk's clean lists; only under the job name `paper`), and the operating system's
 `.DS_Store` and `Thumbs.db`.
 
 A venue's corpus of accepted papers is not in the paper folder at all: it is shared by every paper
