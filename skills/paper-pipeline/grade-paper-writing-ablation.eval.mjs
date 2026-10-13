@@ -381,6 +381,7 @@ import {
   realpathSync,
 } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { frontmatterBlock } from "#lib/markdown";
 import { parseFm } from "../../lib/skill-corpus.mjs";
 import { installedSkills } from "./scripts/consumer.mjs";
@@ -396,9 +397,7 @@ const PARENT = join(
   "paper-pipeline",
   "framing-vs-vocabulary.eval.mjs",
 );
-const SCRATCH =
-  process.env.ABLATION_SCRATCH ??
-  "/tmp/claude-0/-home-user-mine/8268acb1-66a2-55ac-858e-2b9e3c81f84e/scratchpad/gpw-ablation";
+const SCRATCH = process.env.ABLATION_SCRATCH ?? join(tmpdir(), "gpw-ablation");
 const NS = "vigiles-loose-skills";
 const TARGET = "grade-paper-writing";
 const STEM = "2026-08-08-grade-paper-writing-ablation";

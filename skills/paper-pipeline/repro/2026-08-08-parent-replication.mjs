@@ -38,13 +38,13 @@
 
 import { readFileSync, writeFileSync, mkdirSync, symlinkSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-const ROOT = process.env.CLAUDE_PROJECT_DIR ?? "/home/user/mine";
+const ROOT = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
 const PARENT = join(ROOT, ".claude", "skills", "paper-pipeline", "framing-vs-vocabulary.eval.mjs");
 const SCRATCH =
-  process.env.ABLATION_SCRATCH ??
-  "/tmp/claude-0/-home-user-mine/8268acb1-66a2-55ac-858e-2b9e3c81f84e/scratchpad/parent-repl";
+  process.env.ABLATION_SCRATCH ?? join(tmpdir(), "parent-repl");
 
 const src = readFileSync(PARENT, "utf-8");
 
