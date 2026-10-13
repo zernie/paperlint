@@ -60,7 +60,7 @@ The full text, each with its reason and its check, is
    with access to the artifact, so the labeller is the owner or has been shared as a Contributor.
    If the study design is not written yet, \`build-benchmark\` comes first.
    If the items come from a drawn sample, the study's \`prereg.json\` declares the population, the
-   screens and the coverage before the sample is frozen (rule \`study/declare-sample\`), and the
+   screens and the coverage before the sample is frozen (the experimental rule \`study/declare-sample\` checks it, off by default), and the
    author has been shown the drawn **units** (the rules or cases, not the items) with "is this what
    you meet in practice?". The labelling page is not that check: items made from easy units each look
    fine on their own.

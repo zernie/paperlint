@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:aa95575a2cafe82b compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:894d8a2df3f5c319 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -50,7 +50,7 @@ The full text, each with its reason and its check, is
    with access to the artifact, so the labeller is the owner or has been shared as a Contributor.
    If the study design is not written yet, `build-benchmark` comes first.
    If the items come from a drawn sample, the study's `prereg.json` declares the population, the
-   screens and the coverage before the sample is frozen (rule `study/declare-sample`), and the
+   screens and the coverage before the sample is frozen (the experimental rule `study/declare-sample` checks it, off by default), and the
    author has been shown the drawn **units** (the rules or cases, not the items) with "is this what
    you meet in practice?". The labelling page is not that check: items made from easy units each look
    fine on their own.

@@ -86,8 +86,8 @@ flowchart TB
   subgraph S3["3 · study: repro/#lt;slug#gt;-YYYY-MM-DD/"]
     direction TB
     D["<b>design</b> · build-benchmark<br/>writes: the study's README.md<br/>checked by: repro/allowed-files-only"]
-    P["<b>pre-register</b> · build-benchmark<br/>writes: prereg.json, before the draw<br/>checked by: study/declare-sample"]
-    A["<b>author check</b> · you see the drawn units<br/>writes: author_check in prereg.json<br/>checked by: study/declare-sample"]
+    P["<b>pre-register</b> · build-benchmark<br/>writes: prereg.json, before the draw<br/>checked by: study/declare-sample (experimental, off)"]
+    A["<b>author check</b> · you see the drawn units<br/>writes: author_check in prereg.json<br/>checked by: study/declare-sample (experimental, off)"]
     R["<b>run</b> · your scripts<br/>writes: the study folder,<br/>repro/tools/, repro/data/<br/>checked by: repro/allowed-files-only"]
     L["<b>labels</b> · build-label-page<br/>a phone page; the answers go<br/>into the study's data/"]
     Y["<b>analysis</b> · build-benchmark<br/>writes: the numbers, NOTES.md"]
@@ -159,7 +159,7 @@ folders every paper uses (an empty one holds a `.gitkeep`). Everything a stage w
 | `PIPELINE-STATUS.md`, `versions/` | [the stages, and the frozen PDF of each](docs/rules.md#the-scorecards-bytes-and-sourcebytes)                                  |
 | `reviews/`, `siblings/`           | [the record each file keeps in its frontmatter](docs/configuration.md#records-in-frontmatter-checked-by-shipped-json-schemas) |
 | `repro/` and its study folders    | [the index, `tools/`, `data/`, one dated folder per study](docs/rules/repro/allowed-files-only.md)                            |
-| `repro/<study>/prereg.json`       | [what a study's pre-registration must declare](docs/rules/study/declare-sample.md)                                            |
+| `repro/<study>/prereg.json`       | [what a study's pre-registration must declare (experimental, off by default)](docs/rules/study/declare-sample.md)             |
 | `paper.pdf`, `_build/`            | [how `paperlint build` compiles and measures](docs/configuration.md#how-paperlint-build-compiles-a-paper)                     |
 | `submission/`                     | [the submission on the venue's portal](docs/submission.md)                                                                    |
 | `talk/`                           | [the talk's files and what is checked](docs/talk.md)                                                                          |

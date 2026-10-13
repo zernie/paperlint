@@ -138,7 +138,12 @@ import {
   init,
   processInteractivity,
 } from "./init.ts";
-import { newPaper, reportNewPaper, type VenueSetting } from "./new-paper.ts";
+import {
+  newPaper,
+  reportNewPaper,
+  STATUS_FILE,
+  type VenueSetting,
+} from "./new-paper.ts";
 // The one source for the consumer's config key lives in lib/ (the ESLint rules and the skill scripts
 // import it too). It is imported compiled, from dist/, the one path that resolves the same from src/
 // and from dist/ — see CONTRIBUTING.md.
@@ -429,13 +434,13 @@ export function buildConfig(
           },
         },
         repro: { rules: reproLayoutRules(LAYOUT_RULE_DEPS) },
+        // Registered, on for no paper: `"study/declare-sample": "error"` in paperlint.json turns it on.
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
       },
       ...md,
       rules: {
         "paper/stages": "error",
-        "study/declare-sample": "error",
         "paper/source": "error",
         ...FOLDER_VENUE_RULE_LEVELS,
         ...FOLDER_LAYOUT_RULE_LEVELS,
@@ -669,7 +674,7 @@ export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
  * 🔴 AN OPTIONAL RULE THAT IS ON AND REACHES NO PAPER IS A GREEN ZERO. A `files` glob that matches
  * nothing — a typo, a path relative to the wrong directory — leaves the rule never invoked, and a
  * rule that never runs reports exactly like a rule that passed. So for every optional rule the
- * consumer turned on, some `paper.tex` must actually have it enabled; the ones none has are
+ * consumer turned on, some paper's `paper.tex` or `PIPELINE-STATUS.md` must actually have it enabled; the ones none has are
  * returned, for the caller to refuse.
  *
  * `files` is every `paper.tex` the guard may count: the ones this run linted AND every paper of the
@@ -696,13 +701,19 @@ export async function silentOptionalRules(
   );
   const reached = new Set<string>();
   for (const f of new Set(files.filter((p) => basename(p) === MAIN))) {
-    // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
-    const cfg = ComputedConfig.parse(await eslint.calculateConfigForFile(f));
-    // Reached is "some block names the rule for this paper", on OR off: a paper that turns off what
-    // its venue preset turned on is the documented way out, and reads the same as a glob that missed
-    // only if "off" is counted as "not there" — which refused every such paper.
-    for (const id of turnedOn)
-      if (cfg?.rules?.[id] !== undefined) reached.add(id);
+    // A paper's rules reach it through two files: `paper.tex` and the `PIPELINE-STATUS.md` beside
+    // it, where the rules about the paper folder itself run. Undefined for a file outside ESLint's
+    // cwd or scope: it reaches nothing.
+    for (const probe of [f, join(dirname(f), STATUS_FILE)]) {
+      const cfg = ComputedConfig.parse(
+        await eslint.calculateConfigForFile(probe),
+      );
+      // Reached is "some block names the rule for this paper", on OR off: a paper that turns off what
+      // its venue preset turned on is the documented way out, and reads the same as a glob that missed
+      // only if "off" is counted as "not there" — which refused every such paper.
+      for (const id of turnedOn)
+        if (cfg?.rules?.[id] !== undefined) reached.add(id);
+    }
   }
   return [...turnedOn].filter((id) => !reached.has(id));
 }

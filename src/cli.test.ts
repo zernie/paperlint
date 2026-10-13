@@ -511,6 +511,26 @@ test("silentOptionalRules: a rule no block names for any paper is silent — a g
   );
 });
 
+test("silentOptionalRules: a rule that runs on the paper's PIPELINE-STATUS.md is reached through it", async () => {
+  const eslint = {
+    calculateConfigForFile: (f: string) =>
+      Promise.resolve(
+        f.endsWith("PIPELINE-STATUS.md")
+          ? { rules: { "study/declare-sample": [2] } }
+          : { rules: {} },
+      ),
+  };
+  const sampleOn = {
+    rules: [
+      { basePath: ".", rules: { "study/declare-sample": "error" as const } },
+    ],
+  };
+  assert.deepEqual(
+    await silentOptionalRules(eslint, ["p/paper.tex"], sampleOn),
+    [],
+  );
+});
+
 test("init with no path sets up the current directory, and its first paper is paper.tex", async () => {
   const dir = writeTree(join(root, "init-here"), { "package.json": "{}" });
   const r = await cli(["init", "--yes", "--no-hooks", "--paper", "first"], dir);

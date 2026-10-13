@@ -39,6 +39,14 @@ const paper = (
   ...extra,
 });
 
+/** `study/declare-sample` is off by default; a paper turns it on in its `paperlint.json`. */
+const DECLARE_SAMPLE_ON: Readonly<Record<string, string>> = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: null,
+    rules: { "study/declare-sample": "error" },
+  }),
+};
+
 // ── the venues: presets of the tree's own, never the shipped ones ──────────────────────────────
 //
 // A case judges a RULE, so every number it is sized against is written here, beside the facts and
@@ -723,9 +731,11 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     }),
   },
   // A study's prereg.json that declares none of population, strata, screens, coverage, author_check.
+  // Off by default: the paper turns it on, as both trees do.
   "study/declare-sample": {
     reports: {
       tree: paper(tex("x"), {
+        ...DECLARE_SAMPLE_ON,
         [`${P}/repro/README.md`]: "# repro\n",
         [`${P}/repro/draw-2026-10-12/README.md`]: "# draw\n",
         [`${P}/repro/draw-2026-10-12/prereg.json`]: JSON.stringify({
@@ -738,6 +748,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     // The same study, declaring them.
     silent: paper(tex("x"), {
+      ...DECLARE_SAMPLE_ON,
       [`${P}/repro/README.md`]: "# repro\n",
       [`${P}/repro/draw-2026-10-12/README.md`]: "# draw\n",
       [`${P}/repro/draw-2026-10-12/prereg.json`]: JSON.stringify({
@@ -1010,6 +1021,24 @@ describe("every registered rule has cases, and every case names a registered rul
         (id) => !registered.includes(id),
       ),
     ).toEqual([]);
+  });
+});
+
+describe("study/declare-sample is off by default", () => {
+  it("is silent on an empty prereg.json until the paper turns it on", async () => {
+    const study = {
+      [`${P}/repro/README.md`]: "# repro\n",
+      [`${P}/repro/draw-2026-10-12/README.md`]: "# draw\n",
+      [`${P}/repro/draw-2026-10-12/prereg.json`]: "{}",
+    };
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    expect(await ids(paper(tex("x"), study))).not.toContain(
+      "study/declare-sample",
+    );
+    expect(
+      await ids(paper(tex("x"), { ...study, ...DECLARE_SAMPLE_ON })),
+    ).toContain("study/declare-sample");
   });
 });
 

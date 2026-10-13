@@ -1,6 +1,10 @@
 # study/declare-sample
 
-**Level:** error · **Reads:** `repro/<study>/prereg.json`, for every study folder at the top of the
+> Experimental, off by default. Whether this belongs in a lint rule or in the study skills is open:
+> see [#214](https://github.com/zernie/paperlint/issues/214).
+
+**Level:** off unless turned on; a paper turns it on with `"rules": { "study/declare-sample": "error" }`
+in its `paperlint.json` · **Reads:** `repro/<study>/prereg.json`, for every study folder at the top of the
 paper's `repro/` that holds one (every folder there but the shared `tools/` and `data/`, whatever
 its name) · **Reported on:** the first line of the paper's
 `PIPELINE-STATUS.md`, once per problem
@@ -27,7 +31,7 @@ A study folder without a `prereg.json` owes nothing here.
 
 **When it acts.** Inside stage 3, the study: `build-benchmark` writes the `prereg.json` before the
 sample is drawn, the author checks the drawn units, and only then the run and any labelling
-(`build-label-page`) follow. The rule runs on every `paperlint lint` and in CI, so a study whose
+(`build-label-page`) follow. Once a paper turns the rule on, it runs on every `paperlint lint` and in CI, so a study whose
 pre-registration lacks a field fails from the moment the file exists. The flow and the map:
 [`layout.md`](../../layout.md).
 
@@ -49,7 +53,7 @@ by one.
 
 ## Examples
 
-Failing: a pre-registration with hypotheses and arms, and none of the five fields.
+Failing, with the rule turned on: a pre-registration with hypotheses and arms, and none of the five fields.
 
 ```text
 papers/rule-reading/PIPELINE-STATUS.md
@@ -138,5 +142,5 @@ Add the five fields to the study's `prereg.json` before the sample is frozen: co
 removed per stratum value from the screening script's own output, and show the author the drawn
 units with the question "is this what you meet in practice?". A pre-registration already frozen and
 run gets the fields as a dated addendum, with the values measured now; a paper that cannot give them
-turns the rule off for itself in its `paperlint.json`
-(`"rules": { "study/declare-sample": "off" }`), which says so in the record.
+leaves the rule off, which is the default; one that turned it on and cannot give them sets it back
+to `"off"` in its `paperlint.json`, which says so in the record.

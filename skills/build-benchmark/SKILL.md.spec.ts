@@ -63,8 +63,10 @@ changes what the sample can say, not only its size; screens that are reasonable 
 sample nobody meets in practice. So, before the draw is frozen, the study's \`prereg.json\` says what
 the claim is about, what each screen removed per stratum and what share the sample can represent; then
 show the author the drawn **units** (the rules or cases, not the items made from them) and ask: *is
-this what you meet in practice?* The fields are the rule \`study/declare-sample\`
-(\`docs/rules/study/declare-sample.md\`); \`paperlint lint\` fails until they are there.
+this what you meet in practice?* The fields are the experimental rule
+\`study/declare-sample\` (\`docs/rules/study/declare-sample.md\`), off by default: do this step either way,
+and turn the check on with \`"rules": { "study/declare-sample": "error" }\` in the paper's \`paperlint.json\`
+for \`paperlint lint\` to fail until they are there.
 
 ## 2. Honest statistics — the part reviewers attack first
 
