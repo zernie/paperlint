@@ -63,8 +63,9 @@ Never reported: the byproducts a TeX run leaves beside `paper.tex` (`paper.aux`,
 `.toc`, `.lof`, `.lot`, `.lol`, `.fls`, `.xdv`, `.dvi`, `.synctex.gz`; bibtex's `.bbl`, `.blg`;
 makeindex's `.idx`, `.ind`, `.ilg`; glossaries' `.glo`, `.gls`, `.glg`, `.acn`, `.acr`, `.alg`, `.ist`,
 `.nlo`, `.nls`; biber's `.bcf`, `.run.xml`; beamer's `.nav`, `.snm`, `.vrb`; latexmk's `.fdb_latexmk`;
-the list follows latexmk's clean lists; only under the job name `paper`), and the operating system's
-`.DS_Store` and `Thumbs.db`.
+the list follows latexmk's clean lists; only under the job name `paper`), the `.aux` that
+`\include{chapter}` writes beside a root `chapter.tex`, and the operating system's `.DS_Store` and
+`Thumbs.db`.
 
 A venue's corpus of accepted papers is not in the paper folder at all: it is shared by every paper
 that targets the venue, in `<papers-root>/venues/<venue>/` ([what it holds](../../venues.md)).

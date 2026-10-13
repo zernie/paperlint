@@ -181,6 +181,15 @@ describe("judgeLayout — the build's byproducts", () => {
       ),
     ).toEqual(["draft.idx"]);
   });
+
+  it("🔴 the .aux that \\include writes beside a root source: chapter.aux with chapter.tex is the build's; alone it is reported", () => {
+    expect(
+      judgeLayout(
+        [file("chapter.tex"), file("chapter.aux"), file("orphan.aux")],
+        NOTHING_DECLARED,
+      ).map((s) => s.name),
+    ).toEqual(["orphan.aux"]);
+  });
 });
 
 describe("judgeLayout — reports by name, exactly", () => {

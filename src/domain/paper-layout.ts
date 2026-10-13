@@ -29,7 +29,7 @@
  * (another talk folder) and a preset file of its own named by `extends`. What the settings name at the
  * root is allowed beside the fixed set (`Declared.roots`); this module does not read settings.
  */
-import { extname } from "node:path";
+import { basename, extname } from "node:path";
 import { leaf, renderTree, type TreeNode } from "./layout-tree.ts";
 import { REPRO_DIR, REPRO_NODES } from "./repro-layout.ts";
 
@@ -252,8 +252,17 @@ export function judgeLayout(
   entries: readonly LayoutEntry[],
   declared: Declared,
 ): readonly Stray[] {
+  // `\include{chapter}` makes pdflatex write chapter.aux beside chapter.tex, under that file's own
+  // name, not the job's: the build's for every source at the root, the author's without one.
+  const includeAux = entries
+    .filter((e) => e.kind === "file" && extname(e.name) === ".tex")
+    .map((e) => `${basename(e.name, ".tex")}.aux`);
   return entries
-    .filter((e) => !isAllowed(e, declared))
+    .filter(
+      (e) =>
+        !isAllowed(e, declared) &&
+        !(e.kind === "file" && includeAux.includes(e.name)),
+    )
     .map((e) => ({
       name: e.kind === "dir" ? `${e.name}/` : e.name,
       kind: e.kind,
