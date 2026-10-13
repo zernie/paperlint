@@ -18,6 +18,10 @@ marked incomplete and reported (`invalid_answers`, `invalid_familiarity`). `dump
     {"answers": {"G001": {"answers": {"q": "v"}, "savedAt": "...", "source": "page"}, ...},
      "groups":  {"python": {"familiarity": "well", "savedAt": "...", "source": "page"}, ...}}
 
+items.json is checked once against the declared CONFIG_SCHEMA (`python3 example-generator.py schema`
+prints it): every field's type, required or optional, non-empty strings, ids as strings of letters,
+digits, - and _. A bad field stops the build and is named by its path, e.g. `questions[0].options[1].label`.
+
 items.json:
 
     {
@@ -58,8 +62,114 @@ FAMILIARITY = (
     {"value": "somewhat", "label": "Somewhat"},
     {"value": "not_really", "label": "Not really"},
 )
-NAME = re.compile(r"^[A-Za-z0-9_-]+$")
+NAME_PATTERN = r"[A-Za-z0-9_-]+"
 SOURCES = ("page", "chat")
+
+# ── THE CONFIG SCHEMA ──────────────────────────────────────────────────────────────────────────
+# items.json is checked ONCE, against this declaration, before anything is built: every field's
+# type, whether it is required, non-empty strings, ids as strings matching NAME_PATTERN. A refusal
+# names the field's path (`questions[0].options[1].label`). A NEW FIELD IS A NEW LINE HERE; the
+# build-label-page test walks this very table (`schema` prints it) with a wrong type, null and an
+# empty value for each path, so a field without a line is a test failure, not a later review finding.
+# The leak guard on items (ALLOWED_FIELDS) stays separate and stays closed.
+
+
+def string(required=True, pattern=None):
+    node = {"kind": "string", "required": required}
+    return {**node, "pattern": pattern} if pattern else node
+
+
+def integer(required=True):
+    return {"kind": "integer", "required": required}
+
+
+def array(items, required=True, min=0):
+    return {"kind": "array", "required": required, "min": min, "items": items}
+
+
+def mapping(values, key_pattern, required=True, min=0):
+    return {"kind": "map", "required": required, "min": min, "key_pattern": key_pattern, "values": values}
+
+
+def obj(fields, required=True, closed=True):
+    return {"kind": "object", "required": required, "closed": closed, "fields": fields}
+
+
+ITEM_SCHEMA = obj(
+    {
+        "source_id": string(),
+        **{f: string(required=f in ("group", "body")) for f in PAGE_FIELDS},
+    },
+    closed=False,  # an unlisted item field is the leak guard's refusal, with its own message
+)
+OPTION_SCHEMA = obj({"value": string(), "label": string()})
+QUESTION_SCHEMA = obj(
+    {
+        "id": string(pattern=NAME_PATTERN),
+        "text": string(),
+        "short": string(required=False),
+        "options": array(OPTION_SCHEMA, min=2),
+    }
+)
+CONFIG_SCHEMA = obj(
+    {
+        "study": string(pattern=NAME_PATTERN),  # becomes a file name
+        "title": string(),
+        "intro": string(required=False),
+        "seed": integer(),
+        "groups": mapping(string(), NAME_PATTERN, min=1),  # ids become store document ids
+        "labeller_knows": array(string(pattern=NAME_PATTERN), required=False),
+        "familiarity_question": string(required=False),
+        "questions": array(QUESTION_SCHEMA, min=1),
+        "items": array(ITEM_SCHEMA, min=1),
+    }
+)
+
+
+def at(path, name):
+    return f"{path}.{name}" if path else name
+
+
+def check_value(value, node, path):
+    """Refuse the first place `value` departs from `node`; the message starts with the field's path."""
+    where = path or "items.json"
+    kind = node["kind"]
+    if kind == "string":
+        if not isinstance(value, str) or not value.strip():
+            fail(f"{where}: must be a non-empty string, got {value!r}")
+        if "pattern" in node and not re.fullmatch(node["pattern"], value):
+            fail(f"{where}: {value!r} must be letters, digits, - and _ only")
+    elif kind == "integer":
+        if not isinstance(value, int) or isinstance(value, bool):
+            fail(f"{where}: must be an integer, got {value!r}")
+    elif kind == "array":
+        if not isinstance(value, list):
+            fail(f"{where}: must be a list, got {value!r}")
+        if len(value) < node["min"]:
+            fail(f"{where}: needs {node['min']} or more entries, has {len(value)}")
+        for n, entry in enumerate(value):
+            check_value(entry, node["items"], f"{path}[{n}]")
+    elif kind == "map":
+        if not isinstance(value, dict):
+            fail(f"{where}: must be an object, got {value!r}")
+        if len(value) < node["min"]:
+            fail(f"{where}: needs {node['min']} or more entries, has {len(value)}")
+        for key, entry in value.items():
+            if not re.fullmatch(node["key_pattern"], key):
+                fail(f"{at(path, key)}: key must be letters, digits, - and _ only")
+            check_value(entry, node["values"], at(path, key))
+    else:
+        if not isinstance(value, dict):
+            fail(f"{where}: must be an object, got {value!r}")
+        for name, sub in node["fields"].items():
+            if name in value:
+                check_value(value[name], sub, at(path, name))
+            elif sub["required"]:
+                fail(f"{at(path, name)}: is required and missing")
+        if node["closed"]:
+            for name in value:
+                if name not in node["fields"]:
+                    fail(f"{at(path, name)}: not a known field (known: {', '.join(node['fields'])})")
 
 
 def allowed_values(questions):
@@ -84,50 +194,25 @@ def read_json(path):
 
 
 def check_config(cfg):
-    for key in ("study", "title", "seed", "groups", "questions", "items"):
-        if key not in cfg:
-            fail(f"items.json has no `{key}`")
-    if not NAME.match(str(cfg["study"])):
-        fail("`study` must be letters, digits, - and _ (it becomes a file name)")
-    if not isinstance(cfg["groups"], dict) or not cfg["groups"]:
-        fail("`groups` must map a group id to its label")
-    for gid in cfg["groups"]:
-        if not NAME.match(gid):
-            fail(f"group id {gid!r}: letters, digits, - and _ only (it becomes a store document id)")
-    questions = cfg["questions"]
-    if not isinstance(questions, list) or not questions:
-        fail("`questions` must be a non-empty list")
+    check_value(cfg, CONFIG_SCHEMA, "")
+    # What a schema cannot say: references between fields, and values that must differ.
+    for n, gid in enumerate(cfg.get("labeller_knows", [])):
+        if gid not in cfg["groups"]:
+            fail(f"labeller_knows[{n}]: {gid!r} is not in `groups`")
     seen = set()
-    for q in questions:
-        if not isinstance(q, dict) or not NAME.match(str(q.get("id", ""))) or q["id"] in seen:
-            fail(f"question id {q.get('id') if isinstance(q, dict) else q!r} is missing, malformed or repeated")
+    for qn, q in enumerate(cfg["questions"]):
+        if q["id"] in seen:
+            fail(f"questions[{qn}].id: {q['id']!r} is repeated")
         seen.add(q["id"])
-        if not q.get("text"):
-            fail(f"question {q['id']} has no text")
-        options = q.get("options")
-        if not isinstance(options, list) or len(options) < 2:
-            fail(f"question {q['id']}: needs two or more options")
-        # Every option is checked before anything is built. The page saves `value` on a tap and
-        # treats a missing or null one as "unanswered", so an option without a usable value is a
-        # button that can never complete an item; a blank label is a button nobody can read.
-        for n, o in enumerate(options, start=1):
-            if not isinstance(o, dict):
-                fail(f"question {q['id']}, option #{n}: must be an object with `value` and `label`, got {o!r}")
-            for field in ("value", "label"):
-                v = o.get(field)
-                if not isinstance(v, str) or not v.strip():
-                    fail(f"question {q['id']}, option #{n}: `{field}` must be a non-empty string, got {v!r}")
-        values = [o["value"] for o in options]
+        values = [o["value"] for o in q["options"]]
         if len(set(values)) != len(values):
-            fail(f"question {q['id']}: option values must be distinct, got {values}")
+            fail(f"questions[{qn}].options: values must be distinct, got {values}")
 
 
 def check_items(cfg):
-    """The leak guard, and the shape of every item. Refuses; never drops a field quietly."""
+    """The leak guard, and the references between items and the config. Refuses; never drops a field quietly."""
     ids = set()
     for n, item in enumerate(cfg["items"]):
-        if not isinstance(item, dict):
-            fail(f"item #{n} is not an object")
         extra = sorted(set(item) - ALLOWED_FIELDS)
         if extra:
             fail(
@@ -136,17 +221,12 @@ def check_items(cfg):
                 f"nothing about the answer or the source. Remove the field from items.json; add it to "
                 f"PAGE_FIELDS only if it is safe for the labeller to see."
             )
-        sid = item.get("source_id")
-        if not isinstance(sid, str) or not sid or sid in ids:
-            fail(f"item #{n}: `source_id` is missing or repeated")
+        sid = item["source_id"]
+        if sid in ids:
+            fail(f"items[{n}].source_id: {sid!r} is repeated")
         ids.add(sid)
-        if item.get("group") not in cfg["groups"]:
-            fail(f"item {sid}: group {item.get('group')!r} is not in `groups`")
-        if not isinstance(item.get("body"), str) or not item["body"].strip():
-            fail(f"item {sid}: `body` is empty")
-        for f in PAGE_FIELDS:
-            if f in item and not isinstance(item[f], str):
-                fail(f"item {sid}: `{f}` must be a string")
+        if item["group"] not in cfg["groups"]:
+            fail(f"items[{n}].group: {item['group']!r} is not in `groups`")
     # A source id typed into a visible field gives the source away as well as a field would.
     # Short ids ("7") would match ordinary text, so only ids of four characters or more are looked for.
     for item in cfg["items"]:
@@ -626,13 +706,16 @@ def main(argv):
     b = sub.add_parser("build", help="items.json -> page.html + key.json")
     b.add_argument("items")
     b.add_argument("out")
+    sub.add_parser("schema", help="print the declared items.json schema as JSON")
     e = sub.add_parser("export", help="a dump of the store -> <study>-labels-<date>.json")
     e.add_argument("dump")
     e.add_argument("key")
     e.add_argument("out")
     e.add_argument("--date", default=date.today().isoformat())
     args = p.parse_args(argv)
-    if args.cmd == "build":
+    if args.cmd == "schema":
+        print(json.dumps(CONFIG_SCHEMA, indent=2))
+    elif args.cmd == "build":
         build(args.items, args.out)
     else:
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", args.date):

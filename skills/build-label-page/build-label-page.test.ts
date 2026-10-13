@@ -269,7 +269,7 @@ test("🔴 build refuses an option without a usable value or label, and names th
     const dir = setup(`option-${name}`, config({ questions }));
     const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
     assert.notEqual(r.status, 0, `${name} must stop the build`);
-    assert.match(r.out, /REFUSED.*question boundary.*option #3/s, r.out);
+    assert.match(r.out, /REFUSED.*questions\[1\]\.options\[2\]/s, r.out);
   }
 });
 
@@ -315,6 +315,260 @@ test("🔴 export does not count an answer outside the question's allowed values
   });
   assert.equal(file.items.find((i) => i.id === b)?.answers["label"], null);
   assert.equal(file.items.find((i) => i.id === b)?.source, "chat");
+});
+
+/** A node of the declared config schema, as `example-generator.py schema` prints it. */
+const Node: z.ZodType<SchemaNode> = z.lazy(() =>
+  z.object({
+    kind: z.enum(["string", "integer", "map", "array", "object"]),
+    required: z.boolean(),
+    pattern: z.string().optional(),
+    key_pattern: z.string().optional(),
+    min: z.number().optional(),
+    closed: z.boolean().optional(),
+    items: Node.optional(),
+    values: Node.optional(),
+    fields: z.record(z.string(), Node).optional(),
+  }),
+);
+interface SchemaNode {
+  readonly kind: "string" | "integer" | "map" | "array" | "object";
+  readonly required: boolean;
+  readonly pattern?: string | undefined;
+  readonly key_pattern?: string | undefined;
+  readonly min?: number | undefined;
+  readonly closed?: boolean | undefined;
+  readonly items?: SchemaNode | undefined;
+  readonly values?: SchemaNode | undefined;
+  readonly fields?: Readonly<Record<string, SchemaNode>> | undefined;
+}
+
+const Doc = z.json();
+type Doc = z.infer<typeof Doc>;
+interface DocObject {
+  readonly [key: string]: Doc;
+}
+const isObject = (v: Doc | undefined): v is DocObject =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
+/** A config with EVERY optional field present, so every schema path has a value to spoil. */
+const FULL: DocObject = (() => {
+  const doc = Doc.parse(
+    config({
+      intro: "Label these.",
+      labeller_knows: ["python", "go", "rust"],
+      familiarity_question: "How well do you know {group}?",
+      items: ITEMS.map((i, n) =>
+        n === 0 ? { ...i, title: "T", code: "c = 1", context: "ctx" } : i,
+      ),
+    }),
+  );
+  assert.ok(isObject(doc));
+  return doc;
+})();
+
+interface Leaf {
+  readonly path: string;
+  readonly node: SchemaNode;
+  /** An array entry or a map value: it is not "a field", so it cannot be missing. */
+  readonly member: boolean;
+}
+
+/** The leaves one level down from `node`, whose value in the config is `value`. */
+function children(
+  node: SchemaNode,
+  value: Doc | undefined,
+  path: string,
+): readonly Leaf[] {
+  if (isObject(value)) {
+    return node.kind === "object"
+      ? Object.entries(node.fields ?? {}).flatMap(([name, sub]) =>
+          leaves(
+            sub,
+            value[name],
+            path === "" ? name : `${path}.${name}`,
+            false,
+          ),
+        )
+      : mapChildren(node, value, path);
+  }
+  if (Array.isArray(value) && node.kind === "array" && node.items) {
+    return leaves(node.items, value[0], `${path}[0]`, true);
+  }
+  return [];
+}
+
+function mapChildren(
+  node: SchemaNode,
+  value: DocObject,
+  path: string,
+): readonly Leaf[] {
+  if (node.kind !== "map" || !node.values) return [];
+  const [k, v] = Object.entries(value)[0] ?? ["", undefined];
+  return leaves(node.values, v, `${path}.${k}`, true);
+}
+
+/** Every concrete path of `value` under `node`, with the node that governs it. */
+function leaves(
+  node: SchemaNode,
+  value: Doc | undefined,
+  path: string,
+  member: boolean,
+): readonly Leaf[] {
+  return [{ path, node, member }, ...children(node, value, path)];
+}
+
+/** `doc` with the value at `steps` replaced, or removed when `bad` is `undefined`. */
+function put(
+  doc: Doc,
+  steps: readonly (string | number)[],
+  bad: Doc | undefined,
+): Doc {
+  const [head, ...rest] = steps;
+  if (head === undefined) return bad ?? null;
+  if (Array.isArray(doc) && typeof head === "number") {
+    return doc.map((v, i) => (i === head ? put(v, rest, bad) : v));
+  }
+  if (isObject(doc) && typeof head === "string") {
+    if (rest.length === 0 && bad === undefined) {
+      return Object.fromEntries(
+        Object.entries(doc).filter(([k]) => k !== head),
+      );
+    }
+    return { ...doc, [head]: put(doc[head] ?? null, rest, bad) };
+  }
+  return doc;
+}
+
+const stepsOf = (path: string): readonly (string | number)[] =>
+  [...path.matchAll(/([^.[\]]+)|\[(\d+)\]/g)].map((m) =>
+    m[2] !== undefined ? Number(m[2]) : (m[1] ?? ""),
+  );
+
+/** The config with the value at `path` replaced (or removed when `bad` is `undefined`). */
+function spoil(path: string, bad: Doc | undefined): DocObject {
+  const doc = put(FULL, stepsOf(path), bad);
+  assert.ok(isObject(doc));
+  return doc;
+}
+
+const WRONG_TYPES: Readonly<Record<SchemaNode["kind"], readonly Doc[]>> = {
+  string: [null, 1, true, ["x"], {}, "", "   "],
+  integer: [null, "7", true, 7.5, []],
+  map: [null, "x", ["x"], 1],
+  array: [null, "x", {}, 1],
+  object: [null, "x", ["x"], 1],
+};
+
+/** Build `doc`; the exit status and output. */
+function tryBuild(name: string, doc: DocObject): ReturnType<typeof run> {
+  const dir = setup(name, doc);
+  return run(["build", join(dir, "items.json"), join(dir, "out")]);
+}
+
+type BadCase = readonly [label: string, value: Doc | undefined];
+const bad = (label: string, value: Doc | undefined): BadCase => [label, value];
+
+/** The values that must be refused at `leaf`: wrong type, null, empty, a malformed id, missing. */
+function badCases({ node, member }: Leaf): readonly BadCase[] {
+  const wrongType = WRONG_TYPES[node.kind]
+    // an empty list is a legal value where nothing is required of it
+    .filter((v) => !(Array.isArray(v) && node.kind === "array"))
+    .map((v) => bad(JSON.stringify(v), v));
+  const extra: readonly BadCase[] = [
+    ...(node.pattern === undefined ? [] : [bad("bad id!", "bad id!")]),
+    ...(node.kind === "array" && node.min ? [bad("[]", [])] : []),
+    ...(node.kind === "map" && node.min ? [bad("{}", {})] : []),
+    ...(node.required && !member ? [bad("(missing)", undefined)] : []),
+  ];
+  return [...wrongType, ...extra];
+}
+
+/** Spoil `leaf` each way in `badCases`; every one must stop the build and name the path. */
+function expectRefused(leaf: Leaf): void {
+  badCases(leaf).forEach(([label, value], i) => {
+    const name = `schema-${leaf.path.replace(/\W/g, "_")}-${String(i)}`;
+    const r = tryBuild(name, spoil(leaf.path, value));
+    const what = `${leaf.path} = ${label}`;
+    assert.notEqual(r.status, 0, `${what} must stop the build`);
+    assert.ok(
+      r.out.includes(`REFUSED: ${leaf.path}`),
+      `${what}: the refusal must name the path\n${r.out}`,
+    );
+    assert.doesNotMatch(r.out, /Traceback/, `${what}\n${r.out}`);
+  });
+  if (!leaf.node.required && !leaf.member) {
+    const r = tryBuild(
+      `schema-${leaf.path.replace(/\W/g, "_")}-absent`,
+      spoil(leaf.path, undefined),
+    );
+    assert.equal(r.status, 0, `${leaf.path} is optional: ${r.out}`);
+  }
+}
+
+const DOCUMENTED_FIELDS = [
+  "study",
+  "title",
+  "intro",
+  "seed",
+  "groups",
+  "labeller_knows",
+  "familiarity_question",
+  "questions",
+  "items",
+];
+
+test("🔴 the config is checked against one declared schema: every field, with a wrong type, null or empty, is refused and named by its path", () => {
+  const printed = run(["schema"]);
+  assert.equal(printed.status, 0, printed.out);
+  const schema = Node.parse(JSON.parse(printed.out));
+  assert.equal(
+    tryBuild("schema-ok", FULL).status,
+    0,
+    "the full config must build before it is spoiled",
+  );
+  const all = leaves(schema, FULL, "", false).filter((l) => l.path !== "");
+  assert.ok(
+    all.length > 25,
+    `the schema walk found ${String(all.length)} fields`,
+  );
+  all.forEach(expectRefused);
+  // A key the schema does not know, in each closed object, is refused by path.
+  const closed = [{ path: "", node: schema, member: false }, ...all].filter(
+    (l) => l.node.kind === "object" && l.node.closed !== false,
+  );
+  assert.ok(
+    closed.length >= 3,
+    "the root, a question and an option are closed",
+  );
+  closed.forEach(({ path }, i) => {
+    const where = path === "" ? "zzz" : `${path}.zzz`;
+    const r = tryBuild(`schema-unknown-${String(i)}`, spoil(where, 1));
+    assert.notEqual(r.status, 0, `${where} must stop the build`);
+    assert.ok(r.out.includes(`REFUSED: ${where}`), `${where}\n${r.out}`);
+  });
+  // Every field the docstring documents has a line in the schema.
+  const paths = new Set(all.map((l) => l.path));
+  for (const f of DOCUMENTED_FIELDS) {
+    assert.ok(paths.has(f), `${f} is in the schema`);
+  }
+}, 120_000);
+
+test("🔴 a numeric question id is refused at build: JSON keys are strings, so it would be stored under one name and keyed under another", () => {
+  const questions = [{ ...QUESTIONS[0], id: 1 }, QUESTIONS[1]];
+  const dir = setup("numeric-id", config({ questions }));
+  const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+  assert.notEqual(r.status, 0);
+  assert.match(r.out, /REFUSED: questions\[0\]\.id/, r.out);
+});
+
+test("🔴 a familiarity_question that is not a string is refused at build, not a page that throws when it renders", () => {
+  for (const bad of [null, 5, ["x"]]) {
+    const dir = setup("fam-q", config({ familiarity_question: bad }));
+    const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+    assert.notEqual(r.status, 0, JSON.stringify(bad));
+    assert.match(r.out, /REFUSED: familiarity_question/, r.out);
+  }
 });
 
 /** A DOM just big enough for the page script: nodes with children and text. */
@@ -431,6 +685,7 @@ test("🔴 the page and the export share one definition of a valid answer: a sto
   );
   assert.match(r.out, /invalid group python: familiarity='somewhatt'/, r.out);
   const { python, go } = file.groups;
+  assert.ok(python !== undefined && go !== undefined);
   assert.equal(python.familiarity, null);
   assert.equal(python.invalid_familiarity, "somewhatt");
   assert.equal(go.familiarity, "well");
