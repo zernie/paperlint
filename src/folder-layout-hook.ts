@@ -39,8 +39,9 @@
  * file that holds `PIPELINE-STATUS.md` — the file every paper has and the rules are reported on — with
  * one `isFile` per ancestor and nothing else: no git, no lint. No such folder: no output.
  */
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { callerPath } from "./caller-path.ts";
+import { ESCAPE_HATCH } from "./domain/paper-layout.ts";
 import { README, REPRO_DIR, isStudyName } from "./domain/repro-layout.ts";
 import { fieldOf } from "./domain/record.ts";
 import { strayTexts, type FolderLayoutDeps } from "./folder-layout-rule.ts";
@@ -69,8 +70,14 @@ export function writtenPath(payload: unknown): string | null {
   return typeof cwd === "string" && isAbsolute(cwd) ? resolve(cwd, raw) : null;
 }
 
-/** The nearest folder above `file` holding `PIPELINE-STATUS.md`, up to the root; null when none. */
+/**
+ * The nearest folder above `file` holding `PIPELINE-STATUS.md`, up to the root; null when none, and
+ * null for anything under a folder named `extra/`, which lint never reads: an archived paper kept
+ * there carries its own status file and is not a paper to hold to the layout.
+ */
 export function paperFolderOf(file: string, files: Files): string | null {
+  // The same reach as lint's `**/extra/` ignore: a folder named extra/ anywhere above the file.
+  if (dirname(file).split(sep).includes(ESCAPE_HATCH)) return null;
   const up = (dir: string): string | null => {
     if (files.isFile(callerPath(join(dir, STATUS_FILE)))) return dir;
     const parent = dirname(dir);

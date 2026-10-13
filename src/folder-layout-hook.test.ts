@@ -158,6 +158,17 @@ describe("paper-folder-layout hook — allows", () => {
     ).toBeNull();
   });
 
+  it("🔴 anything under extra/, an archived paper with its own PIPELINE-STATUS.md included: lint never reads it", () => {
+    const snapshot = { [`${DIR}/extra/old/PIPELINE-STATUS.md`]: "# old\n" };
+    expect(reason(`${DIR}/extra/old/notes.txt`, snapshot)).toBeNull();
+    expect(
+      paperFolderOf(
+        `${DIR}/extra/old/notes.txt`,
+        memoryFiles({ ...PAPER, ...snapshot }),
+      ),
+    ).toBeNull();
+  });
+
   it("a file outside every paper folder", () => {
     expect(reason("/work/README.md")).toBeNull();
     expect(reason("/work/papers/notes.md")).toBeNull();
