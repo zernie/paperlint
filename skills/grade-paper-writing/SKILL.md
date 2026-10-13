@@ -1,10 +1,10 @@
 ---
 name: grade-paper-writing
-description: Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
+description: Grade how a paper reads and fix it sentence by sentence. Use when asked if a paper reads well or to grade the prose, or when the writing is a wall of text, jargon-heavy, or reads like a blog post. Returns 1–5 scores, the sentences cold readers could not follow, and a rewrite for each. Not for cuts (tighten-paper), one edited paragraph (cold-read-diff), scientific flaws (paper-adversarial-review, pc-panel-review), submit readiness (harden-paper) or what the venue rewards (study-accepted-papers).
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:2dbb93cd7e4a3ba5 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:1897016b69f3f9b8 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 

@@ -1,0 +1,81 @@
+
+26 skills installed → 25 competitors per run
+
+ARMS — description length, word-set delta vs A0, mean prompt overlap
+arm label                               chars  words     −   +   ovAH   ovSH
+A0  baseline (verbatim)                  1371    103     0   0   0.85   0.78
+A1  short (sentences 1-2 only)            618     51    52   0   0.71   0.78
+A2  no-subordination                     1189     94     9   0   0.85   0.78
+A3  no-negation                          1141     92    11   0   0.85   0.78
+A4  no-machinery                          670     45    58   0   0.44   0.35
+A5  renamed (description identical)      1371    103     0   0   0.85   0.78
+A6  persona-only (A1's mirror)            298     28    75   0   0.23   0.42
+
+⚠ ovAH/ovSH FALL AS TEXT IS DELETED — caveat 2 in the header, quantified. The deletion arms carry
+  a vocabulary handicap against the parent's dominant factor. A rising deletion arm rose DESPITE it;
+  a flat one may be a real gain cancelled by it, and this design cannot tell. A5 is the only arm
+  with zero handicap (identical word set).
+
+WORD-SET DELTAS (stemmed content words removed from A0 — none may be added)
+
+  A0 baseline (verbatim)
+     removed (0): —
+     added   (0): —
+
+  A1 short (sentences 1-2 only)
+     removed (52): run cold stall pas committ persona non academic engineer per section workshop reviewer skimm introduction conclusion inventory rubric number readability gate skill consume panel review adversarial harden default blind multi grader mandate claim preservation diff row content defect structural cut plan tighten first bloat strength reward study compose call generative counterpart render
+     added   (0): —
+
+  A2 no-subordination
+     removed (9): inventory rubric number readability gate skill consume harden call
+     added   (0): —
+
+  A3 no-negation
+     removed (11): content defect structural cut plan tighten first bloat strength reward study
+     added   (0): —
+
+  A4 no-machinery
+     removed (58): title abstract intro architecture structure prose clarity discipline land point figure economy honesty without hedge stack register distance peyton jone mcenerney gopen swan exemplar trust carlini greshake cold stall pas committ persona non academic engineer per section workshop reviewer skimm introduction conclusion inventory rubric number readability gate skill consume default blind multi grader mandate claim preservation diff row
+     added   (0): —
+
+  A5 renamed (description identical)
+     removed (0): —
+     added   (0): —
+
+  A6 persona-only (A1's mirror)
+     removed (75): grade craft ten dimension title intro architecture structure prose clarity discipline land point figure economy honesty without hedge stack register distance target venue best written peyton jone mcenerney gopen swan exemplar trust carlini greshake accept nam offend sentence fix inventory rubric number readability gate skill consume panel review adversarial harden default blind multi grader mandate claim preservation diff row content defect structural cut plan tighten first bloat strength reward study compose call generative counterpart render
+     added   (0): —
+
+RESULTING DESCRIPTIONS
+
+  ── A0 (grade-paper-writing, 1371 chars)
+  Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
+
+  ── A1 (grade-paper-writing, 618 chars)
+  Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each.
+
+  ── A2 (grade-paper-writing, 1189 chars)
+  Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers). Compose with draft-paper (generative counterpart), render-paper.
+
+  ── A3 (grade-paper-writing, 1141 chars)
+  Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
+
+  ── A4 (grade-paper-writing, 670 chars)
+  Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 against how the best-written papers read AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
+
+  ── A5 (paper-readability-review, 1371 chars)
+  Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
+
+  ── A6 (grade-paper-writing, 298 chars)
+  Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" on a draft. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion).
+
+building each arm's skills dir under <scratch>/gpw-ablation (no real file is written) …
+  A0 → <scratch>/gpw-ablation/arm-A0
+  A1 → <scratch>/gpw-ablation/arm-A1
+  A2 → <scratch>/gpw-ablation/arm-A2
+  A3 → <scratch>/gpw-ablation/arm-A3
+  A4 → <scratch>/gpw-ablation/arm-A4
+  A5 → <scratch>/gpw-ablation/arm-A5
+  A6 → <scratch>/gpw-ablation/arm-A6
+
+ALL PREFLIGHT GUARDS PASSED. No tokens spent. Run --mode main next.
