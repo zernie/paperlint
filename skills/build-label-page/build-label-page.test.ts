@@ -869,3 +869,52 @@ test("🔴 export refuses a stored answer or familiarity without a source, and n
     assert.match(r.out, new RegExp(`${path}: no source`), r.out);
   }
 });
+
+test("🔴 build refuses two groups whose headings read the same: the labeller could not tell which one a familiarity is for", () => {
+  const dir = setup(
+    "group-labels",
+    config({ groups: { python: "Python", python3: " python ", go: "Go" } }),
+  );
+  const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+  assert.notEqual(r.status, 0, r.out);
+  assert.match(r.out, /groups\.python3/, r.out);
+});
+
+test("🔴 export refuses an answer kept for an item a rebuild took off the page, instead of dropping it", () => {
+  const dir = setup("off-page", config());
+  const before = build(dir).key;
+  writeFileSync(
+    join(dir, "items.json"),
+    JSON.stringify(config({ labeller_knows: ["python"] })),
+  );
+  const after = build(dir).key;
+  const gone = Object.keys(after.ids).find(
+    (id) =>
+      before.ids[id]?.on_page === true && after.ids[id]?.on_page === false,
+  );
+  assert.ok(gone !== undefined, "the rebuild must take an item off the page");
+  const group = after.ids[gone]?.group ?? "";
+  const cases = {
+    [`answers/${gone}`]: {
+      answers: { [gone]: { answers: { label: "yes" }, source: "page" } },
+    },
+    [`groups/${group}`]: {
+      groups: { [group]: { familiarity: "well", source: "page" } },
+    },
+  };
+  Object.entries(cases).forEach(([path, dump], i) => {
+    const file = join(dir, `off-${String(i)}.json`);
+    writeFileSync(file, JSON.stringify(dump));
+    const r = run([
+      "export",
+      file,
+      join(dir, "out", "key.json"),
+      join(dir, "data"),
+    ]);
+    assert.notEqual(r.status, 0, `${path}: ${r.out}`);
+    assert.ok(
+      r.out.includes(`${path}: `) && r.out.includes("no longer on the page"),
+      r.out,
+    );
+  });
+});

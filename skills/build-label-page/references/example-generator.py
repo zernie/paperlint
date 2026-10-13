@@ -202,6 +202,14 @@ def read_json(path):
 def check_config(cfg):
     check_value(cfg, CONFIG_SCHEMA, "")
     # What a schema cannot say: references between fields, and values that must differ.
+    # The page heads each group with its label: two that read the same are two familiarity questions
+    # the labeller cannot tell apart, exported under different group ids.
+    heading = {}
+    for gid, label in cfg["groups"].items():
+        seen_as = label.strip().casefold()
+        if seen_as in heading:
+            fail(f"groups.{gid}: {label!r} reads the same as groups.{heading[seen_as]} — each group needs its own label")
+        heading[seen_as] = gid
     for n, gid in enumerate(cfg.get("labeller_knows", [])):
         if gid not in cfg["groups"]:
             fail(f"labeller_knows[{n}]: {gid!r} is not in `groups`")
@@ -343,7 +351,8 @@ GROUP_DOC_FIELDS = ("familiarity", "savedAt", "source")
 
 def check_dump(dump, key):
     """The whole store against the key, ONCE, before anything is read from it. Every name in it must be
-    one the key knows: an item id, a group, a question id, a field of the document. A name the export
+    one the key knows: an item id, a group, a question id, a field of the document; an item or group
+    must also still be on the page, or a rebuild that left it out would drop its stored answer. A name the export
     does not read would otherwise be dropped without a word — a misspelled question key in a chat merge
     (`boundry`), a misspelled group (`pyhton`) — and its answer lost from the labels. Refuses, naming the
     path; the fix is one edit in the dump. Every document also says where it came from: the page always
@@ -352,6 +361,11 @@ def check_dump(dump, key):
         "answers": (set(key["ids"]), ANSWER_DOC_FIELDS),
         "groups": ({meta["group"] for meta in key["ids"].values()}, GROUP_DOC_FIELDS),
     }
+    shown = [meta for meta in key["ids"].values() if meta["on_page"]]
+    on_page = {
+        "answers": {nid for nid, meta in key["ids"].items() if meta["on_page"]},
+        "groups": {meta["group"] for meta in shown},
+    }
     for top in sorted(set(dump) - set(known)):
         fail(f"{top}: the store has no such collection (expected {', '.join(known)})")
     for kind, (names, fields) in known.items():
@@ -359,6 +373,9 @@ def check_dump(dump, key):
             at = f"{kind}/{name}"
             if name not in names:
                 fail(f"{at}: the key does not know this {kind[:-1]} ({', '.join(sorted(names))})")
+            if name not in on_page[kind]:
+                fail(f"{at}: stored, but no longer on the page (a rebuild left it out), so the export would "
+                     f"drop it; rebuild with it on the page, or take it out of the dump on purpose")
             if not isinstance(doc, dict):
                 fail(f"{at}: must be an object with {', '.join(fields)}")
             for field in sorted(set(doc) - set(fields)):
