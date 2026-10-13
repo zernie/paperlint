@@ -79,8 +79,13 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     mkdirSync(join(d, at, "artifact-anon", dirname(p)), { recursive: true });
     writeFileSync(join(d, at, "artifact-anon", p), src);
   }
-  if (allow !== null)
-    writeFileSync(join(d, at, "generated-code-grandfathered.txt"), allow);
+  if (allow !== null) {
+    mkdirSync(join(d, at, "tools"), { recursive: true });
+    writeFileSync(
+      join(d, at, "tools", "generated-code-grandfathered.txt"),
+      allow,
+    );
+  }
   return d;
 }
 

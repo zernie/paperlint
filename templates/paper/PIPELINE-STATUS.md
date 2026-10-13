@@ -13,7 +13,41 @@ Updated: <ISO>
 **Readiness verdict:** <one line — submit-ready? if not, the WORST failing gate first. Any failing
 gate caps "ready"; an accept probability alone is not a verdict.>
 
-**Gates at a glance (worst first — mark any failing gate ✗):** readability(persona stalls) <density/verdict> · structure(tighten-paper) <verdict> · claims-honest(claims) <clean?> · defects(panel) <accept-prob/decision> · writing <NN/60> · content(venue bar) <run?/levers>
+**Gates at a glance (worst first — mark any failing gate ✗):** readability(persona stalls) <density/verdict> · structure(tighten-paper) <verdict> · claims-honest(claims) <clean?> · defects(panel) <accept-prob/decision> · writing <NN/60> · content(strong-accept scorecard) <run?/mode>
+
+## Plan / now
+
+The paper's live plan: this file is the paper's one live-state file, so the plan lives here, not in a
+`PLAN.md` beside it (`paper/allowed-files-only` reports one). Rewrite this section as the plan changes; a
+decision's history goes to `research/` as a dated record.
+
+- **Now (<ISO date>):** <what is being worked on, and the next step>
+- **Decisions in force:** <the decision — who made it, ISO date, link to the record>
+- **Schedule:** <ISO date — milestone, in the author's own zone>
+
+## Strong-accept scorecard (M1–M10)
+
+Filled by `study-accepted-papers`: mode C scores every row, mode D checks M2 and M4 again. What each
+mechanism is, and what it is not, is that skill's `references/mechanisms.md`. The verdicts live only
+here; the dated report in `reviews/` keeps the reasoning and points here.
+
+Status: `pass` · `partial` · `fail` · `—` (not scored). A `fail` names an owner and either a plan or
+`accept ceiling: <why>`.
+
+| #   | mechanism                                       | status | evidence (file:line) | owner | plan or accept ceiling |
+| --- | ----------------------------------------------- | ------ | -------------------- | ----- | ---------------------- |
+| M1  | a non-model oracle under the headline           | —      | —                    | —     | —                      |
+| M2  | the claim is aimed at a belief stated on record | —      | —                    | —     | —                      |
+| M3  | the construct is the claim                      | —      | —                    | —     | —                      |
+| M4  | the denominator in the claim sentence, no drift | —      | —                    | —     | —                      |
+| M5  | a negative or "X alone" claim shape             | —      | —                    | —     | —                      |
+| M6  | the generalised-over factor is a column         | —      | —                    | —     | —                      |
+| M7  | the phenomenon measured directly                | —      | —                    | —     | —                      |
+| M8  | a reusable thing the field pays for once        | —      | —                    | —     | —                      |
+| M9  | relevance to every reviewer on the PC           | —      | —                    | —     | —                      |
+| M10 | where the paper's own result loses              | —      | —                    | —     | —                      |
+
+## Stages
 
 ### SETUP
 
@@ -22,18 +56,18 @@ gate caps "ready"; an accept probability alone is not a verdict.>
 | idea       | Validate idea                     | research-ideate       | ☐      | —    | —                                                                                                 | —         |
 | priorwork  | Map competitors                   | map-prior-work        | ☐      | —    | —                                                                                                 | siblings/ |
 | venue      | Pick venue                        | find-venue            | ☐      | —    | —                                                                                                 | —         |
-| venuebar   | Venue bar / levers                | study-accepted-papers | ☐      | —    | —                                                                                                 | —         |
+| venuebar   | What the venue rewards            | study-accepted-papers | ☐      | —    | —                                                                                                 | —         |
 | **access** | 🔴 **Can you physically submit?** | plan-paper-timeline   | ☐      | —    | account · profile ACTIVE since <ISO> · portal reachable · form fields known · artifact host known | —         |
 | schedule   | Schedule + calendar               | plan-paper-timeline   | ☐      | —    | —                                                                                                 | —         |
 | **frame**  | **Claim stated before the runs**  | argument-arc (frame)  | ☐      | —    | one paragraph: what will this paper claim?                                                        | —         |
 
 ### LOOP
 
-| id    | Work             | Skill           | Status | Date | Result | Open |
-| ----- | ---------------- | --------------- | ------ | ---- | ------ | ---- |
-| study | Study + artifact | build-benchmark | ☐      | —    | —      | —    |
-| draft | Draft            | draft-paper     | ☐      | —    | —      | —    |
-| arc   | Argument arc     | argument-arc    | ☐      | —    | —      | —    |
+| id    | Work             | Skill           | Status | Date | Result | Open   |
+| ----- | ---------------- | --------------- | ------ | ---- | ------ | ------ |
+| study | Study + artifact | build-benchmark | ☐      | —    | —      | repro/ |
+| draft | Draft            | draft-paper     | ☐      | —    | —      | —      |
+| arc   | Argument arc     | argument-arc    | ☐      | —    | —      | —      |
 
 ### CONTINUOUS
 

@@ -57,6 +57,17 @@ is the *inverse* of the flaw:
 
 Write the design as the answer to "what would make the critiqued pitfall impossible here?"
 
+**Declare the population, the screens and the coverage before freezing the sample.** Each screen
+between the population and the sample (fits one excerpt, one classifier lane, a model-picked item)
+changes what the sample can say, not only its size; screens that are reasonable one by one can leave a
+sample nobody meets in practice. So, before the draw is frozen, the study's \`prereg.json\` says what
+the claim is about, what each screen removed per stratum and what share the sample can represent; then
+show the author the drawn **units** (the rules or cases, not the items made from them) and ask: *is
+this what you meet in practice?* The fields are the experimental rule
+\`study/declare-sample\` (\`docs/rules/study/declare-sample.md\`), off by default: do this step either way,
+and turn the check on with \`"rules": { "study/declare-sample": "error" }\` in the paper's \`paperlint.json\`
+for \`paperlint lint\` to fail until they are there.
+
 ## 2. Honest statistics — the part reviewers attack first
 
 - **Paired where the design is paired; Welch where variances differ.** Use a **paired-t** when the same
@@ -162,6 +173,8 @@ Before submitting, verify the artifact you built with the reviewer-side reproduc
 - **argument-arc (frame mode)** — 🔴 **hard input.** Owns row \`frame\`, the stated claim. No \`frame\`, no study.
 - **research-ideate** (upstream) — supplies the contribution and the pitfall to invert; this skill turns
   it into evidence.
+- **build-label-page** — when the study needs a person to label items (gold labels, a blind review of
+  outputs): it builds the page, publishes it and exports the answers into the study's \`data/\`.
 - **draft-paper** — the study's stats, bound, and artifact-number table feed Methods/Results/Availability.
 - **pc-panel-review** — its artifact-runner reviewer \`cd\`s in and re-executes every harness; build so
   that pass is deterministic.

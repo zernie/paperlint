@@ -49,4 +49,4 @@ ru-original    67%    53%  -13pp   (10/15 vs 8/15)
 No gate: this file measures an effect, it does not enforce one. Read OVERALL first, then SPLIT BY ORIGIN — a gap that appears only on translated Russian is a finding about translation, not about Russian.
 
 total spend: $9.53 API-equivalent
-no baseline at /home/user/mine/.claude/skills/paper-pipeline/pipeline-language.baseline.json — record one with --update-baseline
+no baseline at <project>/.claude/skills/paper-pipeline/pipeline-language.baseline.json — record one with --update-baseline

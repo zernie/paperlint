@@ -16,13 +16,28 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { existsSync } from "node:fs";
-import { newPaper, OVERRIDE_DIR, reportNewPaper } from "./new-paper.ts";
+import {
+  newPaper,
+  OVERRIDE_DIR,
+  PACKAGE_TEMPLATES,
+  reportNewPaper,
+} from "./new-paper.ts";
 import { parsePaperSettings } from "./paper-settings.ts";
 import { chooseVenue, run } from "./cli.ts";
 import { shippedPresets } from "./presets.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { lintReport } from "../test/lint-report.ts";
 import { z } from "zod";
+import { judgeLayout } from "./domain/paper-layout.ts";
+import {
+  GITKEEP,
+  NOT_SCAFFOLDED,
+  SCAFFOLD_DIRS,
+  SCAFFOLD_FILES,
+} from "./domain/scaffold-layout.ts";
+import { ROOT_DIRS } from "./domain/paper-layout.ts";
+import { judgeRepro, REPRO_DIR } from "./domain/repro-layout.ts";
+import { statSync } from "node:fs";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -395,11 +410,13 @@ describe("paperlint new --allow-venue-name", () => {
     const r = await newIn(["--allow-venue-name"], {}, "realm-of-agents");
     expect(r.code).toBe(0);
     expect(r.out).not.toMatch(/venue really belongs|names a venue/);
-    expect(readdirSync(r.dir).sort()).toEqual([
-      "PIPELINE-STATUS.md",
-      "paper.tex",
-      "paperlint.json",
-    ]);
+    expect(readdirSync(r.dir)).toEqual(
+      expect.arrayContaining([
+        "PIPELINE-STATUS.md",
+        "paper.tex",
+        "paperlint.json",
+      ]),
+    );
   });
 
   it.each<{
@@ -517,5 +534,281 @@ describe("a project's own template", () => {
     expect(
       lines.filter((l) => l.endsWith("(from the package template)")).length,
     ).toBeGreaterThan(0);
+  });
+});
+
+describe("the PIPELINE-STATUS template — only stage tables are headed `id`", () => {
+  // A consumer's stage-table parser reads every table whose first column is `id` as stage rows, and a
+  // row under a heading that names no stage section is an error there: a fix-list table headed `id`
+  // gave a real paper two such errors (2026-10-12). Every other table starts with `#` or a word.
+  const SECTIONS = ["SETUP", "LOOP", "CONTINUOUS", "GATES", "AFTER"];
+  const text = readFileSync(
+    join(PACKAGE_TEMPLATES, "PIPELINE-STATUS.md"),
+    "utf8",
+  );
+  const idTablesUnder = text
+    .split("\n")
+    .reduce<{ heading: string; found: readonly string[] }>(
+      (acc, line) =>
+        line.startsWith("#")
+          ? { ...acc, heading: line.replace(/^#+\s*/, "") }
+          : /^\|\s*id\s*\|/.test(line)
+            ? { ...acc, found: [...acc.found, acc.heading] }
+            : acc,
+      { heading: "", found: [] },
+    ).found;
+
+  it("has stage tables at all", () => {
+    expect(idTablesUnder.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("puts each one under a stage section's heading", () => {
+    expect(
+      idTablesUnder.filter((h) => !SECTIONS.includes(h.split(/\s/)[0] ?? "")),
+    ).toEqual([]);
+  });
+});
+
+/** Every file under `dir`, as a path from it, sorted. */
+const filesUnder = (dir: string, at = ""): string[] =>
+  readdirSync(join(dir, at), { withFileTypes: true })
+    .flatMap((e) =>
+      e.isDirectory() ? filesUnder(dir, `${at}${e.name}/`) : [`${at}${e.name}`],
+    )
+    .sort();
+
+describe("paperlint new — the layout is scaffolded", () => {
+  const EXPECTED = [
+    "PIPELINE-STATUS.md",
+    "figures/.gitkeep",
+    "paper.tex",
+    "paperlint.json",
+    "repro/README.md",
+    "repro/data/.gitkeep",
+    "repro/tools/.gitkeep",
+    "research/.gitkeep",
+    "reviews/.gitkeep",
+    "submission/.gitkeep",
+    "versions/.gitkeep",
+  ];
+
+  it("a new paper has exactly the expected tree", () => {
+    const papers = join(tmp(), "papers");
+    const r = newPaper(papers, "demo", { venues: [] });
+    expect(r.ok && r.layout).toEqual(SCAFFOLD_FILES.map((f) => f.path));
+    expect(filesUnder(join(papers, "demo"))).toEqual(EXPECTED);
+  });
+
+  it("derives from the layout constants: every root folder is scaffolded or excused, and an excuse names a folder the layout has", () => {
+    const excused = NOT_SCAFFOLDED.map((n) => n.name);
+    expect([...SCAFFOLD_DIRS, ...excused].sort()).toEqual(
+      [...ROOT_DIRS].sort(),
+    );
+    expect(excused.filter((n) => !ROOT_DIRS.includes(n))).toEqual([]);
+    expect(NOT_SCAFFOLDED.filter((n) => n.why.length < 20)).toEqual([]);
+    // The optional folders are decided, not forgotten: these four are not made.
+    expect(excused).toEqual(
+      expect.arrayContaining(["siblings", "sections", "talk", "extra"]),
+    );
+  });
+
+  it(".gitkeep stands in an empty folder only, and no folder is empty but for it", () => {
+    const papers = join(tmp(), "papers");
+    newPaper(papers, "demo", { venues: [] });
+    const dir = join(papers, "demo");
+    const folders = new Set(
+      filesUnder(dir)
+        .filter((p) => p.includes("/"))
+        .map((p) => p.slice(0, p.lastIndexOf("/"))),
+    );
+    for (const f of folders) {
+      const names = readdirSync(join(dir, f)).filter((n) =>
+        statSync(join(dir, f, n)).isFile(),
+      );
+      const subdirs = readdirSync(join(dir, f)).length - names.length;
+      // A folder holds a .gitkeep alone, or real entries and no .gitkeep.
+      expect(
+        names.includes(GITKEEP) ? names.length === 1 && subdirs === 0 : true,
+        f,
+      ).toBe(true);
+    }
+    // repro/ holds its index and folders, so it has no placeholder of its own.
+    expect(existsSync(join(dir, REPRO_DIR, GITKEEP))).toBe(false);
+    expect(existsSync(join(dir, GITKEEP))).toBe(false);
+  });
+});
+
+describe("paperlint new — what the scaffold writes fits the layout", () => {
+  it("the folders it makes are the layout's: nothing it writes is a stray, at the root or in repro/", () => {
+    const papers = join(tmp(), "papers");
+    newPaper(papers, "demo", { venues: [] });
+    const dir = join(papers, "demo");
+    const entries = (d: string) =>
+      readdirSync(d, { withFileTypes: true }).map((e) => ({
+        name: e.name,
+        kind: e.isDirectory() ? ("dir" as const) : ("file" as const),
+      }));
+    expect(judgeLayout(entries(dir), { roots: [] })).toEqual([]);
+    expect(
+      judgeRepro(
+        entries(join(dir, REPRO_DIR)).map((e) => ({
+          ...e,
+          hasReadme: false,
+        })),
+      ),
+    ).toEqual([]);
+  });
+
+  it("repro/README.md is a stub index: one line saying one line per study", () => {
+    const papers = join(tmp(), "papers");
+    newPaper(papers, "demo", { venues: [] });
+    expect(
+      readFileSync(join(papers, "demo", "repro", "README.md"), "utf8"),
+    ).toMatch(/One line per study/);
+  });
+
+  it("the report names the folders in one line", () => {
+    const papers = join(tmp(), "papers");
+    const lines = reportNewPaper(
+      newPaper(papers, "demo", { venues: [] }),
+      (p) => p,
+    );
+    expect(lines.filter((l) => l.includes(GITKEEP))).toEqual([
+      "      + versions/ reviews/ research/ repro/ repro/tools/ repro/data/ figures/ submission/  (the paper's layout; an empty folder holds a .gitkeep, so git keeps it)",
+    ]);
+  });
+});
+
+describe("paperlint new — the scaffold on a folder that is not new", () => {
+  it("a second run changes nothing: all kept, no layout, same tree", () => {
+    const papers = join(tmp(), "papers");
+    newPaper(papers, "demo", { venues: [] });
+    const before = filesUnder(join(papers, "demo"));
+    const again = newPaper(papers, "demo", { venues: [] });
+    expect(again.ok && again.layout).toEqual([]);
+    expect(again.ok && again.files.every((f) => f.status === "kept")).toBe(
+      true,
+    );
+    expect(filesUnder(join(papers, "demo"))).toEqual(before);
+  });
+
+  it("a folder that holds something gets only its missing three files, no layout", () => {
+    const papers = join(tmp(), "papers");
+    mkdirSync(join(papers, "old"), { recursive: true });
+    writeFileSync(join(papers, "old", "paper.tex"), "mine\n");
+    const r = newPaper(papers, "old", { venues: [] });
+    expect(r.ok && r.layout).toEqual([]);
+    expect(filesUnder(join(papers, "old"))).toEqual([
+      "PIPELINE-STATUS.md",
+      "paper.tex",
+      "paperlint.json",
+    ]);
+    expect(readFileSync(join(papers, "old", "paper.tex"), "utf8")).toBe(
+      "mine\n",
+    );
+  });
+
+  it("an empty folder made by hand is new: it gets the layout", () => {
+    const papers = join(tmp(), "papers");
+    mkdirSync(join(papers, "made"), { recursive: true });
+    const r = newPaper(papers, "made", { venues: [] });
+    expect(r.ok && !r.fresh).toBe(true);
+    expect(filesUnder(join(papers, "made"))).toContain("reviews/.gitkeep");
+  });
+
+  it("🔴 a folder the author emptied of its placeholder is not given it back, and a file in one stays", () => {
+    const papers = join(tmp(), "papers");
+    newPaper(papers, "demo", { venues: [] });
+    const dir = join(papers, "demo");
+    rmSync(join(dir, "reviews", GITKEEP));
+    writeFileSync(join(dir, "reviews", "2026-10-13-pass.md"), "x\n");
+    rmSync(join(dir, "figures"), { recursive: true });
+    newPaper(papers, "demo", { venues: [] });
+    expect(readdirSync(join(dir, "reviews"))).toEqual(["2026-10-13-pass.md"]);
+    expect(existsSync(join(dir, "figures"))).toBe(false);
+  });
+
+  it("an existing repro/README.md is never overwritten", () => {
+    const papers = join(tmp(), "papers");
+    mkdirSync(join(papers, "p", "repro"), { recursive: true });
+    writeFileSync(join(papers, "p", "repro", "README.md"), "mine\n");
+    newPaper(papers, "p", { venues: [] });
+    expect(readFileSync(join(papers, "p", "repro", "README.md"), "utf8")).toBe(
+      "mine\n",
+    );
+  });
+});
+
+/** A consumer project with one scaffolded paper and `added` files in it, linted: the rule ids found. */
+async function lintScaffold(added: Record<string, string> = {}) {
+  const root = tmp();
+  writeFileSync(
+    join(root, "package.json"),
+    JSON.stringify({ name: "c", private: true }),
+  );
+  newPaper(join(root, "papers"), "demo", { venues: [] });
+  for (const [p, text] of Object.entries(added)) {
+    mkdirSync(join(root, "papers", "demo", p, ".."), { recursive: true });
+    writeFileSync(join(root, "papers", "demo", p), text);
+  }
+  const out: string[] = [];
+  const code = await run(["lint", "--json"], {
+    cwd: root,
+    log: (s: string) => out.push(s),
+    err: () => {},
+  });
+  return {
+    code,
+    ids: lintReport(out.join("\n")).flatMap((r) =>
+      r.messages.map((m) => m.ruleId),
+    ),
+  };
+}
+
+describe("paperlint lint — a scaffolded paper has no layout finding", () => {
+  const LAYOUT_RULES = [
+    "paper/allowed-files-only",
+    "repro/allowed-files-only",
+    "review/frontmatter",
+    "sibling/frontmatter",
+    "paper/stages",
+    "study/declare-sample",
+  ];
+
+  it("none of the rules that read the layout's folders reports it; only the not-built warnings remain", async () => {
+    const { code, ids } = await lintScaffold();
+    expect(ids.filter((id) => LAYOUT_RULES.includes(id ?? ""))).toEqual([]);
+    expect(ids).toEqual(["pdf/measured", "paper/sources-fresh"]);
+    expect(code).toBe(0);
+  });
+
+  it("🔴 a .gitkeep beside real entries, in any folder the rules read, is not reported either", async () => {
+    const { ids } = await lintScaffold({
+      "siblings/.gitkeep": "",
+      "talk/.gitkeep": "",
+      "sections/.gitkeep": "",
+      "repro/some-study-2026-10-13/README.md": "# s\n",
+      "repro/some-study-2026-10-13/.gitkeep": "",
+    });
+    expect(ids.filter((id) => LAYOUT_RULES.includes(id ?? ""))).toEqual([]);
+  });
+});
+
+describe("paperlint lint — extra/ is never read", () => {
+  // An archived snapshot of an older paper carries every marker a paper does. Under extra/ it is
+  // spillover the layout promises never to judge; anywhere else its folder reads as a paper root.
+  const SNAPSHOT = (dir: string) => ({
+    [`${dir}/PIPELINE-STATUS.md`]: "# Pipeline status\n",
+    [`${dir}/notes.txt`]: "x\n",
+  });
+
+  it("🔴 an archived paper under extra/ is never linted, by any rule", async () => {
+    const { ids } = await lintScaffold(SNAPSHOT("extra/old-2025"));
+    expect(ids).toEqual(["pdf/measured", "paper/sources-fresh"]);
+  });
+
+  it("the same snapshot outside extra/ is reported, so the test above can fail", async () => {
+    const { ids } = await lintScaffold(SNAPSHOT("research/old-2025"));
+    expect(ids).toContain("paper/allowed-files-only");
   });
 });

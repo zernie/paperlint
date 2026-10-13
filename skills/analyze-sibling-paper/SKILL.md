@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [WebSearch, WebFetch, Read, Write, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:238796152df07749 compiled from skills/analyze-sibling-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:834f128ace92288a compiled from skills/analyze-sibling-paper/SKILL.md.spec.ts -->
 
 # analyze-sibling-paper — settle "isn't this just X?" before a reviewer does
 
@@ -115,7 +115,7 @@ again at rebuttal. **A close sibling with no file in `<paper-dir>/siblings/` is 
 ## Compose with
 - `verify-citations` — surfaces the nearest-neighbor works; hand each genuine sibling to this skill.
 - `harden-paper` — its nearest-neighbor-scoop axis (axis 3) calls this for each close competitor.
-- `study-accepted-papers` — venue-corpus levers (different axis: the venue's bar, not a specific rival).
+- `study-accepted-papers` — venue-corpus levers (different axis: what the venue rewards, not a specific rival).
 - `extend-paper` — a scooped angle, or the un-scooped remainder, can become the next paper's pivot.
 
 ## Provenance

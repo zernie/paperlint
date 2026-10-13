@@ -1,0 +1,22 @@
+  Spent: 1,807,963 tokens (88 in · 12.6k out · 1562.4k cache) · ~$1.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+
+grade-paper-writing — prose craft — the sentence is the unit, NOT the section [model: sonnet]
+trigger-rate: 88% (8 runs)
+  1.00  оцени как написано — читается как стена жаргона
+  1.00  is the writing any good or does it read like shit
+  1.00  abstract звучит криво хотя по смыслу всё на месте, дай оценк
+  1.00  grade the craft: title, abstract, sentence clarity, hedge st
+  0.00  прочитай черновик и скажи честно, нормально ли он читается
+  1.00  the reviewer says our paper reads like a blog post — is he r
+  1.00  каждое предложение по отдельности понятно, а абзацы всё равн
+  1.00  grade the prose in section 3 and give me the sentences to re
+false-positive: 0%  precision: 100%
+  0.00  [irrelevant] статья раздулась, середина провисает — что резат
+  0.00  [irrelevant] does the paper actually carry a reader to one co
+  0.00  [irrelevant] поправил формулировки в 4.2, прогони свежим чита
+  0.00  [irrelevant] what is our desk reject risk and where do we ove
+  0.00  [irrelevant] какая вероятность принятия у этой статьи, если ч
+  0.00  [irrelevant] статья готова к сабмиту или нет
+  0.00  [irrelevant] посмотри что принимали на этой площадке и чем те
+whole-harness: measured against 25 competing skill(s)

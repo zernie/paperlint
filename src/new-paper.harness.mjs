@@ -9,6 +9,8 @@
  *     and a placeholder stage would be a red `paper/stages` on the very first run;
  *   - the scorecard carries the `**Readiness verdict:**` line the status hook surfaces on every
  *     paper edit — without it the hook reports that the paper cannot say whether it is ready;
+ *   - a new folder also holds the layout (folders with a `.gitkeep`, `repro/README.md`), and lint
+ *     still reports no finding on it: the rules that read those folders do not see the placeholders;
  *   - it never overwrites, and on an existing folder adds only what is missing;
  *   - the project's `<papers>/.template/` wins over the package, file by file.
  *
@@ -82,6 +84,11 @@ try {
       `\`${dot}\` is refused — discovery skips dot-directories, so it would never be linted`,
       /starting with a dot/.test(nameProblem(dot, []) ?? ""),
     );
+  for (const reserved of ["venues", "extra"])
+    check(
+      `\`${reserved}\` is refused — the papers directory's own folder, which no paper may take`,
+      /reserved/.test(nameProblem(reserved, []) ?? ""),
+    );
   check(
     "a refused name creates nothing",
     newPaper(work, "Bad", { venues: [] }).ok === false &&
@@ -119,6 +126,20 @@ try {
       /2 problems \(0 errors, 2 warnings\)/.test(l.text),
   );
 
+  check(
+    "🔴 the layout is there: the five folders every paper uses, `repro/` with an index, tools/ and data/ — and none of the optional ones",
+    ["reviews", "research", "figures", "versions", "submission"].every((d) =>
+      existsSync(join(papers, "demo", d, ".gitkeep")),
+    ) &&
+      existsSync(join(papers, "demo", "repro", "README.md")) &&
+      existsSync(join(papers, "demo", "repro", "tools", ".gitkeep")) &&
+      existsSync(join(papers, "demo", "repro", "data", ".gitkeep")) &&
+      !existsSync(join(papers, "demo", "repro", ".gitkeep")) &&
+      ["siblings", "sections", "talk", "extra", "_build"].every(
+        (d) => !existsSync(join(papers, "demo", d)),
+      ),
+  );
+
   // What the status hook reads on every paper edit: the verdict line.
   check(
     "the scorecard carries the `**Readiness verdict:**` line the status hook surfaces",
@@ -135,7 +156,8 @@ try {
     again.ok &&
       !again.fresh &&
       read(papers, "demo", STATUS_FILE) === "mine\n" &&
-      again.files.every((f) => f.status === "kept"),
+      again.files.every((f) => f.status === "kept") &&
+      again.layout.length === 0,
   );
   writeFileSync(join(papers, "afile"), "x");
   check(

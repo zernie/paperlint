@@ -1,174 +1,176 @@
 ---
 name: study-accepted-papers
-description: "Mine a target venue's ACCEPTED-paper corpus to learn what makes papers STRONG there, then turn that into concrete strengthening levers for your own draft — the move from a plain \"Accept\" toward \"Strong Accept\". Fetch 8-12 real recently-accepted papers at the venue (ACM DL / IEEE Xplore / venue program pages / arXiv), prioritizing the same paper-type and topic as yours (measurement/benchmark/SoK/security-critique), and for each extract WHAT MADE IT STRONG (adaptive evaluation, explicit threat model, reusable released artifact, real-world grounding, a memorable framing/coined handle, a released dataset, honest limitations). Cross-read the venue CFP + PC-chair research tastes + any best-paper criteria. Then diff your draft against those patterns and emit ranked levers split into CHEAP (framing/prose/citation, safe before a deadline) vs EXPENSIVE (new experiments/data). Use when a paper is drafted and you want venue-specific polish grounded in what actually lands there — NOT generic writing advice. Distinct from find-venue (picks WHERE), research-ideate (validates the idea), and pc-panel-review / paper-adversarial-review (red-team YOUR draft): this one studies the VENUE's own bar. Compose with those + harden-paper + verify-citations + extend-paper."
+description: "Learn what a target venue rewards from its own accepted papers and award winners, and turn it into requirements for your study or a diagnosis of your draft. Use EARLY, in SETUP right after find-venue and before the study is designed, so what the venue rewards shapes the experiment (mode A idea, mode B design); and LATE, once text exists (mode C draft: score the paper against the strong-accept mechanisms M1–M10 with line references, blockers, owners and a plan; mode D final: the abstract and introduction, sentence by sentence). Always asks which mode, suggesting one from what exists, and asks the claim, breadth, depth (L0–L3) and budget up front, each with a default and a time estimate. Keeps one corpus per venue in <papers-root>/venues/<venue>/, shared by every paper that targets it; the venue's winners vs its ordinary papers and award papers on the topic at other venues are two corpora, labelled apart. Names the proxy for 'strong accept' and its base rate before any probability. Distinct from find-venue (picks WHERE), research-ideate (is the idea worth doing), map-prior-work and analyze-sibling-paper (your rivals, not what the venue rewards), and pc-panel-review / paper-adversarial-review (red-team your draft)."
 context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:b68bde442319a605 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:607eaf7930ecaf30 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
-# study-accepted-papers — learn the venue's bar from its own accepted corpus, then lever your draft up
+# study-accepted-papers — what this venue rewards, measured on its own papers
 
-Reviewers don't score in a vacuum — they score against the papers that got in last cycle. This skill
-makes that reference standard explicit: pull the venue's **actually-accepted** papers of your type,
-extract the concrete properties that separated the strong ones from the weak-accepts, and diff your
-draft against them to produce **specific, sourced levers** — not "add more rigor" but "AISec strong
-accepts in this lane all carry an adaptive-attacker evaluation; yours has static mutation only — here's
-the cheap version you can add and the expensive version you can't."
+Reviewers score against the papers that got in before. This skill makes that standard explicit, from
+the venue's **accepted papers and award winners**, and turns it into something the author can act on:
+requirements for a study not yet run, or a scored diagnosis of a draft.
 
-It answers a different question than the neighboring skills:
-- `find-venue` → *where* should this go? (ranks venues)
-- `research-ideate` → is the *idea* worth doing? (go/no-go on the contribution)
-- `pc-panel-review` / `paper-adversarial-review` → what's wrong with *my draft*? (red-team your text)
-- **`study-accepted-papers` → what does it take to be *strong* at THIS venue, judged by its own accepted papers?**
+It answers a different question from its neighbours:
+- `find-venue`: *where* should this go?
+- `research-ideate`: is the *idea* worth doing?
+- `map-prior-work` / `analyze-sibling-paper`: who are the *rivals*, and is the delta real?
+- `pc-panel-review` / `paper-adversarial-review`: what is wrong with *my draft*?
+- **`study-accepted-papers`: what does it take to be *strong* at THIS venue, judged by its own papers?**
 
-Grounding: the authorship criterion — why a *strong* accept at an indexed venue is
-worth more to the dossier than a borderline one — reviewer enthusiasm shows up in the acceptance and in
-letters), and the venue's card `presets/<venue>.md` in the paperlint package if one exists.
+**Two entry points, one skill.** In `paper-pipeline` it sits in SETUP, right after `find-venue`: the
+venue's standard is worth most before the study is designed, when it can still decide what the oracle is and
+which belief the claim targets. It comes back once text exists, to score the draft. Run it only late
+and its main findings arrive after they could change the design.
 
-## Step 1 — pin the venue's stated bar (fetch, don't guess)
+Two references beside this file, read before any level above L0:
+- [`references/mechanisms.md`](references/mechanisms.md): the mechanisms M1–M10 that separated award
+  winners from ordinary accepted papers in the run this skill was rebuilt from, with what supports each
+  and what each is not. Form (figures, length, title shape) did **not** separate them.
+- [`references/base-rates.md`](references/base-rates.md): the proxies for "strong accept" and the only
+  public score data found for software-engineering venues.
 
-`WebFetch` the current CFP and, if separate, the reviewer-guidelines / call-for-benchmark-papers page.
-Capture what the venue *says* it rewards, in its own words:
-- **Track requirements** — e.g. a benchmark track that demands a functional artifact link, a named
-  reusable benchmark, a metric definition, a leaderboard. Missing a *required* element of your track is
-  a desk-reject, never a weak-accept — check these first.
-- **Stated review criteria / scoring rubric** — novelty vs systematization vs reproducibility weighting.
-- **Best-paper / distinguished-artifact criteria** if published — these name the top-end bar directly.
-- **PC chairs + steering committee + recent PC** — look up their research areas. A PC heavy on
-  adversarial-ML will punish a non-adaptive evaluation; a PC heavy on systems will want real deployment
-  grounding. Taste is a real, findable signal.
+## Step 0 — ask before spending (always)
 
-## Step 2 — pull the corpus. **Measure ALL of it; deep-read 8-12.**
+**Ask which mode. Always.** Look at what exists first, then suggest one; do not pick silently, and do
+not start until the author answers (or the caller already passed a mode).
 
-🔴 **Two tiers, and the first one is not optional.** The single most valuable output of this skill is
-a *denominator* — "33 of 34 accepted papers have at least one figure", "confidence intervals appear
-in 1 of 34", "control arms in 0 of 34". **A sample of 8-12 cannot produce a denominator.** It gives
-you impressions; the whole point of this skill is to replace impressions with the venue's own
-distribution.
+| mode | what exists | it compares | it produces | default depth |
+|---|---|---|---|---|
+| **A idea** | an idea and a target venue; no paper source | the venue's winners against its ordinary papers | what this venue rewards, written as **requirements for the study**: what the oracle is, which stated belief the claim targets, which factor must be a column | L1 (+ L0) |
+| **B design** | a planned claim and measurements (the `frame` row, a design note in `research/`); no text | the planned claim and evidence against M1–M10 | **design gaps before anything runs** ("the headline rests on model labels", "no named belief") | L1 + the M1–M10 check of the plan |
+| **C draft** | the paper's text | the draft against M1–M10 and the deep reads | the **scorecard**: pass / partial / fail per mechanism with `file:line`, blockers with cost and owner, a plan, probabilities against stated base rates | L2 + L3 |
+| **D final** | near-final text, the deadline close | the abstract and introduction, sentence by sentence, against the closest winners | **wording**: the denominator in every claim sentence, the named belief, no drift between abstract and body | L3, wording only |
 
-| tier | how many | what you get |
+Suggest from the project: no `paper.tex` → A, or B if a claim is already written down; `paper.tex`
+with a body → C; the current cycle's submission deadline within about a week → D. Say why you suggest it
+("C: paper.tex has a full body, and the deadline is 20 days away"), and let the author override.
+
+**Then the four questions, in one message, each with its default and its time.** The author may answer
+"defaults" to all of them.
+
+1. **The claim**, in one paragraph. Default: the `frame` row of `PIPELINE-STATUS.md`, else the
+   abstract. *Without it the deep-read selection is blind.* (Author: about 5 minutes.)
+2. **Breadth.** Default: **two corpora, labelled apart**: (1) the venue's own award winners against its
+   ordinary accepted papers, over 5–7 years; (2) award papers on the author's topic at other venues.
+   Corpus 1 says what *this* committee rewards; corpus 2 says how strong papers on this topic make a
+   broad claim convincing, which matters when the venue has no winner on the topic. Never pool them.
+3. **Depth**, L0–L3 (below). Default: the mode's row above.
+4. **Budget**: agent time, money, and the author's own hours. Default: the sum of the chosen levels.
+   Ask again before going over it.
+
+## The depth levels
+
+| level | what it does | rough cost (from the run) | answers |
+|---|---|---|---|
+| **L0 form** | count body words, figures, tables, research questions, abstract length, statistics markers, artifact links across the venue's accepted papers | minutes | formal fit only. Say that form did **not** separate winners in the run (`references/mechanisms.md`) |
+| **L1 winner corpus** | every award winner the venue lists over 5–7 years against the ordinary accepted papers of the same years; code form **and** substance per paper: the oracle under the headline (execution / developer action / human / model-only), a belief the field stated on record, the claim shape, a controlled design, the contribution sentence verbatim | about 30 min of agents | what does this venue reward? |
+| **L2 deep reads** | a judge, briefed with the author's claim, picks 8–12 papers: winners closest to the claim plus **award / no-award pairs on the same question or dataset** (the pairs were the most informative part of the run); one agent per paper, full text, one shared reading brief | about 1 h of agents (parallel readers) | how do strong papers on this topic make a broad claim convincing? |
+| **L3 diagnosis** | score the author's plan or draft on each mechanism; blockers with cost and owner; a plan; probabilities against the base rates | about 30 min | can this paper reach strong accept, and what stands in the way? |
+
+Each level states **its proxy for "strong accept" and its base rate**, and which conclusions rest on
+fewer than ten papers.
+
+### L0 — measure all of the accepted set
+
+The value of L0 is a **denominator** ("33 of 34 accepted papers have a figure"). A sample of 8–12 cannot
+give one. A workshop's accepted volume is 30–60 papers: take all of them. For a main conference, take
+the track or the topic, capped at about 100, and **state the cap and why**; a silently truncated corpus
+gives denominators that are quietly wrong. Cross accepted papers with archival status before calibrating:
+an oral that is non-archival is not the paper your archival submission competes with.
+
+### L1 — the winner corpus
+
+Take the venue's award list (its hall of fame, the awards page of each year's program) for 5–7 years,
+not one year: a single year of five winners produced a "winners have many figures" pattern that vanished
+over seven years. Code every winner and every ordinary paper of the same years with the same fields, so
+each "winners do X" has an ordinary-paper count beside it. Report k/n for both groups and a test with a
+correction for the number of features; a non-significant difference is reported as such.
+
+### L2 — the deep reads
+
+The selection is part of the result: save it with the reason for each pick, and say how many came from
+corpus 2 and why ("the venue has no winner on this topic"). One agent per paper, full text, every page.
+The shared brief asks three questions: what is the single claim and why does a reviewer believe it; what
+makes it stronger than its ordinary neighbours; what in it maps onto the author's claim. Each reading
+quotes verbatim with page numbers.
+
+### L3 — the diagnosis
+
+Score the paper against M1–M10 (`references/mechanisms.md`), with evidence as `file:line` in the paper
+source. Every `fail` gets an owner and either a plan or an explicit **"accept ceiling"** with the
+reason: a ceiling written down is a decision, a silent fail is a hole. Probabilities are a band, marked
+as judgement, against the base rates of `references/base-rates.md`; simulated panels run hot.
+
+## Where the results go — one home per fact
+
+| what | where | why there |
 |---|---|---|
-| **measure** | **all of them** | figure count · table count · page count · section word counts · greps for confidence intervals, statistical tests, control/placebo arms, artifact URLs · abstract length. Mechanical, scriptable, cheap. |
-| **deep-read** | **8-12**, chosen by relevance | contribution, what made it strong, framing, how limitations are handled. Judgement, expensive. |
+| **the venue corpus** | `<papers-root>/venues/<venue>/` (the papers directory from the project's `paperlint.json`) | **shared by every paper that targets the venue**, collected once and reused by every later mode. `MANIFEST.md` (sources, years, what was capped, the proxy and its base rate), the winner and ordinary lists, `measurements.json` (L0/L1 codes, one row per paper), `text/` extractions, the scripts, `deep-reads/` (one file per paper, reusable by any paper). Corpus 2 goes in its own labelled subfolder. **PDFs are not committed**: record the IDs and the command. |
+| **the scorecard** | the section **"Strong-accept scorecard (M1–M10)"** of the paper's `PIPELINE-STATUS.md` | a row per mechanism: status (pass / partial / fail), evidence (`file:line`), owner, plan or "accept ceiling". **The only place the verdicts live**; update it there. |
+| **the reasoning** | `<paper>/reviews/<YYYY-MM-DD>-study-accepted-<venue>-<mode>.md` | a dated report per run, with frontmatter (below). It keeps the reasoning, the selection and the per-mechanism argument, and **points to the scorecard section; it never copies the table**. |
+| **the stage** | the SETUP row with id `venuebar` in `PIPELINE-STATUS.md` (the id is kept for existing scorecards) | status, date, the mode and depth run, and a link to the report. One row, updated by every mode. |
+| **the generic list** | `references/` beside this skill | M1–M10 and the base-rate sources. A mechanism your venue adds, or one that does not hold there, goes in the venue corpus's `MANIFEST.md`; the ids stay stable. |
 
-**How many is "all"?** A workshop's accepted volume is **30-60 papers** — download the lot, it costs
-minutes and a few hundred MB. For a main conference (1000+), "all" means *all in your track or topic*,
-capped at ~100, and **you must state what you capped and why** — a silently truncated corpus produces
-denominators that are quietly wrong.
+The corpus, its modes and who reads it: `docs/venues.md` in the paperlint package; every place a stage
+writes, and what checks it: `docs/layout.md`.
 
-**Cross tier with archival status before calibrating.** Oral/spotlight/poster and archival/non-archival
-are different axes, and they interact: at REALM 2025 most orals were **non-archival**, so the honest
-"what a strong archival paper looks like" set was **six** papers, not eleven. Calibrating against the
-wrong subset is worse than not calibrating.
+The paper folder has **no corpus folder of its own**: `paper/allowed-files-only` reports one, and the hook
+refuses to create one. A venue's format facts (page limit, template, required sections) go
+in its preset and venue card (`presets/<venue>.jsonc` and `.md` in the package, or the project's
+own), with their source quote, not here.
 
-**Do not quote an acceptance rate unless the venue publishes the submission count.** Accepted counts
-are public; submitted counts usually are not. An invented rate is the kind of number that gets
-repeated for weeks — it was, on `compile-rules-2026`, by this pipeline, until the corpus pass
-checked.
+The report's frontmatter (it lives under `reviews/`, so `review/frontmatter` validates it; a
+`findings` list is optional and follows that schema):
 
-🔴 **Save the corpus WITH the paper, not in a scratchpad.** See "Where the output lives" below. A run
-that returns only prose has destroyed its own evidence.
+```yaml
+---
+title: "<venue>: what it rewards, and where this paper stands (mode C, L2+L3)"
+created: 2026-10-12
+venue: <venue>
+mode: C
+depth: [L2, L3]
+proxy: "distinguished-paper award, <k> of <n> accepted, <years>"
+corpus: <papers-root>/venues/<venue>/
+scorecard: PIPELINE-STATUS.md#strong-accept-scorecard-m1m10
+---
+```
 
-`WebSearch` / `WebFetch` the venue's recent proceedings (ACM DL, IEEE Xplore, the venue program pages,
-or arXiv copies). For the **deep-read** tier select **8-12 actually-accepted papers**, prioritizing:
-1. Same **paper type** as yours (measurement / benchmark / SoK / empirical-critique / defense-eval).
-2. Same **topic lane** (for a security venue: LLM/agent security, guardrail evaluation, jailbreak
-   robustness, "X is security theater"-style critiques).
-3. Any **best-paper / award / highly-cited** ones — these are the calibrated top of the distribution.
+## Before any level: pin the venue's stated bar
 
-For **each** paper, extract not just the contribution but **what made it strong** — the property a
-reviewer would have written in the "strengths" box:
-- adaptive / adversarial evaluation (an *adaptive attacker*, not just static perturbation);
-- an explicit, scoped **threat model** stated up front;
-- a **reusable, released artifact / dataset** (not a one-off script);
-- **real-world grounding** (real incidents, real deployed tools, a real corpus vs hand-built toys);
-- a **memorable framing or coined handle** that makes the paper travel (and get cited);
-- **baseline comparisons** against the obvious prior defenses/benchmarks;
-- **honest, self-aware limitations** that pre-empt the reviewer's objection.
-
-Record each as a row: `title | year | contribution | what made it STRONG`. Never invent a paper or a
-citation — if you can't verify it exists, drop it or mark it VERIFY.
-
-## Step 3 — diff your draft against the pattern
-
-Lay your draft's properties beside the strong-accept pattern from Step 2. For every property the strong
-papers share that yours lacks or does weakly, that's a **lever**. Rank levers by how much *this venue's*
-PC weights the axis (from Step 1's chairs/rubric), not by generic importance. For a security venue,
-weight **adaptive evaluation** and **threat-model clarity** heavily — they are the usual difference
-between 4/5 and 5/5, and the usual reason an empirical security paper is held at weak-accept.
-
-## Step 4 — split levers CHEAP vs EXPENSIVE (respect the deadline and the anti-cram rule)
-
-Every lever gets tagged:
-- **CHEAP** — framing, prose, a reordered abstract, a coined handle, an explicit threat-model paragraph,
-  a missing-but-expected citation, promoting an existing number into the abstract, making an already-run
-  robustness result read as "adaptive". Safe to land days before a deadline.
-- **EXPENSIVE** — needs new experiments, a bigger/external corpus, an actual adaptive-attacker study, a
-  new baseline run. These usually **do NOT belong in a near-done paper under deadline pressure** — the
-  anti-cram rule (two clean accepted works beat one overstuffed one) means an
-  expensive lever is normally an **`extend-paper` task for the follow-on**, not a pre-deadline edit.
-  Say so explicitly; don't let a tempting expensive lever destabilize a shippable Accept.
-
-## Output
-
-1. **Venue-bar summary** — what this venue rewards, its track requirements, its PC's taste (2-4 lines,
-   each sourced).
-2. **Strong-accepted-paper table** — `title | year | contribution | what made it STRONG`, with URLs.
-3. **Ranked levers for your draft** — each: the gap, the strong-paper precedent it's drawn from,
-   CHEAP/EXPENSIVE tag, and the concrete edit (or the extend-paper deferral). Most-impactful first.
-4. **Citation gaps** — specific real papers (arXiv id / DOI) a reviewer at this venue would expect and
-   ding you for missing, each with why. Hand these to `verify-citations`.
-5. **Corpus-level distribution** — the denominators, each traceable to the measurement file: how many
-   papers have a figure and the median count, how many report confidence intervals, how many run a
-   statistical test, how many have a control or placebo arm, section-length norms, abstract-length
-   range. **These are what change decisions**, because they say whether your draft is normal, an
-   outlier, or quietly ahead.
-
-## 🔴 Where the output lives — three homes, and all three are required
-
-A run that returns only a write-up has destroyed its own evidence. Observed on `compile-rules-2026`
-2026-08-03: the pass measured 34 PDFs and returned excellent prose, and what survived into the repo
-was **two scripts, 16 KB**. The corpus, the extracted text and the measurement table were in a
-scratchpad that gets wiped. Every denominator in the write-up was, an hour later, unverifiable.
-
-| home | what goes there | why there |
-|---|---|---|
-| **`<paper-dir>/venue-corpus/`** | `measurements.json` (one row per paper — the denominators' source) · `text/*.txt` (extractions: the quotable primary source) · the fetch/measure scripts · `MANIFEST.md` | data. **PDFs are NOT committed** — they regenerate from the proceedings; record the IDs and the command instead. Text extractions ARE committed: a few MB, and they are what makes a quote re-checkable. |
-| **`<paper-dir>/reviews/<date>-study-accepted-<venue>.md`** | the full analysis: per-paper reading, the whole lever list, the reasoning | the record. **The EXPENSIVE levers are the `extend-paper` roadmap** and are worthless if they evaporate. |
-| 🔴 **`<paper-dir>/CLAUDE.md`** | **the 3-5 findings that change decisions while writing**, plus an explicit "what NOT to do" | **it auto-loads whenever anyone works on this paper.** A finding in `reviews/` is read when someone goes looking; a finding here is read *every time the draft is edited*. That is the difference between knowing the venue's bar and applying it. |
-
-Then link all three from `PIPELINE-STATUS.md` (**`venuebar`** row — "venue bar / levers", in SETUP).
-
-**What belongs in `<paper-dir>/CLAUDE.md` and what does not.** It is not a summary of the analysis —
-it is the operative subset: the structural mismatch to fix, the strength being under-sold, the norm
-being violated, and the **things previously believed that the corpus disproved** (those are the most
-valuable lines in the file, because without them the pipeline re-derives the wrong belief). Keep it
-short enough that it survives being loaded into every session.
+`WebFetch` the current call for papers and, if separate, the reviewer guidelines. Capture in the
+venue's own words: the **track requirements** (a missing required element is a desk reject, never a
+weak accept, so check these first); the **review criteria**; the **award criteria** if published; the
+**PC chairs and members**, whose research areas are a findable signal of taste.
 
 ## Rules
-- **Fetch real accepted papers.** Never fabricate a title, author, or "what made it strong". Unverifiable → drop or mark VERIFY.
-- **A lever-proposed citation is not written into the `.tex`/bib until `verify-citations` confirms it** (real
-  arXiv-id/DOI + correct author/title/venue). If added provisionally, mark `% VERIFY` at the cite site; a
-  surviving `% VERIFY` at submit is a bug. Order: propose → verify → then add — never propose → add.
-- **"Accepted" is the reference, but "strong" is the target** — don't just describe what got in; isolate what got in *enthusiastically*. Awards and heavy citation are your calibration for the top end.
-- **Venue-specific, not generic.** A lever only counts if it's grounded in this venue's rubric, PC taste, or its own accepted papers. Generic "tighten the writing" is out of scope (that's `grade-paper-writing` / `tighten-paper`).
-- **Security venues:** treat adaptive-attacker evaluation and an explicit threat model as first-class — they are the most common weak-accept→strong-accept axis and the most common reviewer complaint.
-- **Respect the anti-cram rule.** Flag expensive levers as extension material by default; protect a shippable Accept from deadline-driven destabilization.
-- Convert any newly-surfaced deadline to the author's own zone and hand it to `plan-paper-timeline`.
+
+- **Fetch real papers.** Never fabricate a title, an author, or "what made it strong". Unverifiable →
+  drop it or mark VERIFY.
+- **Evidence levels on every finding**: quoted from a paper or file · counted from the corpus · judgement.
+  A judgement is never written as a count.
+- **Do not quote an acceptance rate** unless the venue published the number of submissions.
+- **A citation this skill proposes is not written into the source until `verify-citations` confirms it.**
+  If added provisionally, mark `% VERIFY` at the cite; a surviving `% VERIFY` at submit is a bug.
+- **"Accepted" is the reference, "strong" is the target.** Isolate what got in enthusiastically, against
+  ordinary papers of the same years, not what got in.
+- **Venue-specific, not generic.** A lever counts only if this venue's papers, rubric or committee ground
+  it. Prose craft is `grade-paper-writing` and `tighten-paper`.
+- **Cheap or expensive, and the deadline.** Tag every lever: CHEAP (framing, a scoped sentence, a cited
+  belief, a missing citation) or EXPENSIVE (a new oracle, a new column, a new corpus). In mode C or D an
+  expensive lever is normally an `extend-paper` task or an accepted ceiling, said explicitly; in modes A
+  and B it is exactly what the study should include.
+- Convert any deadline that surfaces to the author's own zone and hand it to `plan-paper-timeline`.
 
 ## Compose with
-- `harden-paper` — the multi-axis pre-submit gate; this skill feeds it the venue-specific axis (what *this* PC rewards) that a generic hardening pass misses.
-- `pc-panel-review` / `paper-adversarial-review` — run those to red-team the draft; run this to learn the bar the red-team should hold it to. Complementary, not redundant.
-- `verify-citations` — consumes the Step-4 citation gaps.
-- `extend-paper` — the natural home for every EXPENSIVE lever this skill surfaces.
-- the venue card (`presets/<venue>.md` in the paperlint package, or the project's own `./venues/<name>.md` beside its preset) — save durable venue-bar findings there as data, not as a new skill per venue.
-- the paper's `<paper>/paperlint.json` (`{ "extends": "paperlint:<venue>", "kind": "<kind>" }`) — which venue preset the `pdf/*` rules check the built PDF against; a venue with no shipped preset extends a family (`paperlint:acm-sigconf`) or the project's own `./venues/<name>.jsonc`. Findings about the venue's page limit or format belong in that preset, with their source quote.
 
-## Provenance
-Built from the **AISec 2026 @ ACM CCS** polish run (2026-07): the "Safety Theater in Agentic Coding /
-GateBench" paper sat at ~Accept (pc-panel ~0.72), and the task was to find what would push it toward a
-strong accept without cramming new contributions before the 2026-07-24 deadline. The workflow that
-produced the levers — pull AISec's accepted measurement/benchmark security papers, isolate the
-adaptive-evaluation + threat-model + reusable-artifact pattern that the strong ones share, then split
-fixes into cheap-prose vs expensive-experiment — is exactly what this skill encodes.
+- `find-venue` (upstream) → this skill in mode A; `argument-arc` (frame mode) takes its requirements.
+- `build-benchmark` — takes mode A/B requirements (the oracle, the column) into the study design.
+- `harden-paper` — the pre-submit gate; this skill gives it the venue-specific content axis.
+- `pc-panel-review` / `paper-adversarial-review` — red-team the draft; this skill says which bar the
+  red-team should hold it to.
+- `analyze-sibling-paper` — a deep read that turns out to be a rival goes there for the scoop question.
+- `verify-citations` — takes the citation gaps.
+- `extend-paper` — the home of every expensive lever deferred past this submission.

@@ -25,6 +25,35 @@ stages:
 ---
 ```
 
+## One live-state file: the plan, the scorecard, the stages
+
+Everything about a paper that is _live_ (true now, and rewritten when it changes) is a section of this
+one file, so there is one place to read and nothing to keep in step:
+
+| section                              | holds                                                                                                                                          | written by                                                     |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Plan / now**                       | what is being done now and next, the decisions in force (who, when, a link to the record), the schedule                                        | whoever changes the plan, in the same commit                   |
+| **Strong-accept scorecard (M1–M10)** | a row per strong-accept mechanism: status (`pass` / `partial` / `fail` / `—`), evidence as `file:line`, owner, plan or `accept ceiling: <why>` | `study-accepted-papers` (mode C: every row; mode D: M2 and M4) |
+| **Stages** (SETUP … AFTER)           | a row per unit of pipeline work                                                                                                                | the skill that ran it                                          |
+
+- **No `PLAN.md` beside it.** A plan in a second file drifts from the status it plans against;
+  `paper/allowed-files-only` reports a `PLAN.md` at the paper's root. A decision's _history_ (why it was
+  taken, what was rejected) is a record, not live state: it goes to `research/` as a dated file.
+- **Each study gets a dated folder in `repro/`.** The `study` stage's runs go in
+  `repro/<slug>-YYYY-MM-DD/` (or `<slug>-YYYY-MM` for one that ran over weeks), with a `README.md`
+  saying what it asks, how to run it and what it found, and a line in `repro/README.md`. Scripts the
+  whole paper uses go in `repro/tools/`, shared data in `repro/data/`; `repro/allowed-files-only` reports
+  anything else at the top of `repro/`.
+- **The scorecard's verdicts live only here.** The dated report `study-accepted-papers` writes under
+  `reviews/` keeps the reasoning and links to this section; it never copies the table, so there is one
+  truth to update. The mechanisms themselves, with what each is not, are in
+  `study-accepted-papers/references/mechanisms.md`. Nothing checks the table mechanically yet: keep its
+  columns as the template has them.
+- 🔴 **Only stage tables have a first column headed `id`.** A stage-table parser reads every
+  `id`-headed table as stage rows, and a row under a heading that names no stage section is an error
+  there: a fix-list table headed `id` gave a real paper two such errors (2026-10-12). Head every other
+  table with `#` or a word, as the scorecard does. `src/new-paper.test.ts` holds the template to it.
+
 ## The row ids, and what each one runs
 
 The `id` cell is the **join key** — the same string appears in this template, in every paper's
@@ -36,7 +65,7 @@ the scorecard explains itself where it lives:
 | `idea`        | SETUP      | is the idea worth a paper?                                                | `research-ideate`               |
 | `priorwork`   | SETUP      | full competitor sweep, before drafting                                    | `map-prior-work`                |
 | `venue`       | SETUP      | pick where it goes                                                        | `find-venue`                    |
-| `venuebar`    | SETUP      | what this venue rewards; strengthening levers                             | `study-accepted-papers`         |
+| `venuebar`    | SETUP      | what this venue rewards (modes A/B), and later the draft scored (C/D)     | `study-accepted-papers`         |
 | `access`      | SETUP      | 🔴 _can you physically upload?_ — account, ACTIVE profile, portal, form   | `plan-paper-timeline`           |
 | `schedule`    | SETUP      | the backwards plan and its calendar events                                | `plan-paper-timeline`           |
 | `frame`       | SETUP      | the claim, stated **before** the runs                                     | `argument-arc` (frame mode)     |

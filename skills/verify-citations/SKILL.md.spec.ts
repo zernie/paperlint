@@ -150,7 +150,7 @@ built and records the verdicts, with the SHA-256 of the bibliography it checked,
 changed since, and \`paper/refs-checked\` warns when nothing was recorded or the build had no network. The
 step never fails the build.
 
-What the services ANSWERED is kept in \`<paper>/repro/references-cache.json\` — **commit it**. A build asks
+What the services ANSWERED is kept in \`<paper>/repro/data/references-cache.json\` — **commit it**. A build asks
 only the questions that file cannot answer (a new or edited entry, or an answer older than 30 days), so an
 unchanged bibliography builds with no network at all, in CI too, until its answers age out. It holds responses, never verdicts: the verdicts are derived again on
 every build. A service that refuses (429, HTML instead of JSON, a timeout) is not asked again for the rest of the

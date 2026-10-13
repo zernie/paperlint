@@ -615,7 +615,7 @@ export const measureStep: BuildStep = {
  * `_build/references.json` for the offline lint rules (`reference-rules.ts`). OPTIONAL and NEVER
  * FAILING: without network the PDF is still built, and the record says `not-checked`.
  *
- * What the services answered is read from and added to `<paper>/repro/references-cache.json`
+ * What the services answered is read from and added to `<paper>/repro/data/references-cache.json`
  * (`references.ts`, `domain/lookup-cache.ts`), committed with the paper, so only a new or edited
  * entry is asked, and an unchanged bibliography is checked with no network at all (#107).
  */

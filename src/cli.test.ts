@@ -9,7 +9,7 @@ import { spawn } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
-import { test } from "vitest";
+import { test, vi } from "vitest";
 import {
   runNode,
   useTempDir,
@@ -198,6 +198,70 @@ test("runHook: a runtime with no cli.js beside it, and a hook killed by a signal
       messages: ["paperlint: the hook runtime (vigiles) is not resolvable"],
     },
   );
+});
+
+test("runHook paper-folder-layout: in-process, on the real disk — a refusal on stdout for a new stray file, nothing for an allowed one, a complaint and exit 0 on a broken payload", () => {
+  const dir = join(root, "layout-hook");
+  writeTree(dir, {
+    "papers/p/PIPELINE-STATUS.md": "# status\n",
+    "papers/p/paper.tex": "x",
+    "papers/p/NOTES.md": "x",
+  });
+  const hook = (payload: string) => {
+    const out: string[] = [];
+    const err: string[] = [];
+    const code = runHook("paper-folder-layout", {
+      stdin: () => payload,
+      out: (t) => out.push(t),
+      err: (m: string) => err.push(m),
+      run: () => {
+        throw new Error("an in-process hook spawns nothing");
+      },
+    });
+    return { code, out, err };
+  };
+  const write = (file: string) =>
+    JSON.stringify({ tool_input: { file_path: join(dir, file) } });
+  const stray = hook(write("papers/p/PLAN.md"));
+  assert.equal(stray.code, 0);
+  assert.match(
+    stray.out.join(""),
+    /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"`PLAN\.md` is at the root of a paper folder/,
+  );
+  assert.deepEqual(hook(write("papers/p/NOTES.md")), {
+    code: 0,
+    out: [],
+    err: [],
+  });
+  const broken = hook("{ not json");
+  assert.equal(broken.code, 0);
+  assert.match(
+    broken.err.join(""),
+    /^paperlint: the paper-folder-layout hook did not run: /,
+  );
+});
+
+test("runHook paper-folder-layout: by default its output goes to stdout, where Claude Code reads it", () => {
+  const dir = join(root, "layout-hook-stdout");
+  writeTree(dir, { "papers/p/PIPELINE-STATUS.md": "# status\n" });
+  const write = vi
+    .spyOn(process.stdout, "write")
+    .mockImplementation(() => true);
+  try {
+    const code = runHook("paper-folder-layout", {
+      stdin: () =>
+        JSON.stringify({
+          tool_input: { file_path: join(dir, "papers/p/PLAN.md") },
+        }),
+    });
+    assert.equal(code, 0);
+    assert.match(
+      String(write.mock.calls[0]?.[0]),
+      /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny"/,
+    );
+  } finally {
+    write.mockRestore();
+  }
 });
 
 test("chooseVenue: a preset by path (inside and outside the paper), by prefixed name, and a broken one", async () => {
@@ -447,14 +511,34 @@ test("silentOptionalRules: a rule no block names for any paper is silent — a g
   );
 });
 
+test("silentOptionalRules: a rule that runs on the paper's PIPELINE-STATUS.md is reached through it", async () => {
+  const eslint = {
+    calculateConfigForFile: (f: string) =>
+      Promise.resolve(
+        f.endsWith("PIPELINE-STATUS.md")
+          ? { rules: { "study/declare-sample": [2] } }
+          : { rules: {} },
+      ),
+  };
+  const sampleOn = {
+    rules: [
+      { basePath: ".", rules: { "study/declare-sample": "error" as const } },
+    ],
+  };
+  assert.deepEqual(
+    await silentOptionalRules(eslint, ["p/paper.tex"], sampleOn),
+    [],
+  );
+});
+
 test("init with no path sets up the current directory, and its first paper is paper.tex", async () => {
   const dir = writeTree(join(root, "init-here"), { "package.json": "{}" });
   const r = await cli(["init", "--yes", "--no-hooks", "--paper", "first"], dir);
-  assert.deepEqual(
-    readdirSync(join(dir, "papers", "first")).sort(),
-    ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"],
-    r.out + r.err,
-  );
+  const made = readdirSync(join(dir, "papers", "first"));
+  // The three files, then the layout's folders (src/new-paper.test.ts holds the exact tree).
+  for (const f of ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"])
+    assert.ok(made.includes(f), `${f} is missing:\n${r.out + r.err}`);
+  assert.equal(made.includes("main.tex"), false);
 });
 
 test("init and doctor with a declaration that names no directory: nothing to compare", async () => {

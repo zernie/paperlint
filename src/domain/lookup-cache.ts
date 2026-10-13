@@ -1,5 +1,5 @@
 /**
- * THE LOOKUP CACHE — `<paper>/repro/references-cache.json`: what the citation services ANSWERED,
+ * THE LOOKUP CACHE — `<paper>/repro/data/references-cache.json`: what the citation services ANSWERED,
  * kept so that a build asks each question at most once every MAX_AGE_DAYS, not once per build (#107).
  *
  *   { "schema": 1,
@@ -15,7 +15,7 @@
  * responses on every build, by the current version of the checkers. A cached verdict would freeze
  * whatever the checker believed the day it ran — a bug fixed in the comparison would never reach a
  * paper whose entries are cached. A cached response is evidence: it cannot be made up, only
- * refetched. The precedent is `extract-ref-facts.mjs`'s `repro/refs-cache.json` ("the cache is
+ * refetched. The precedent is `extract-ref-facts.mjs`'s `repro/data/refs-cache.json` ("the cache is
  * evidence, not a second declaration").
  *
  * 🔴 COMMITTED, so CI and every other clone start warm: a build whose entries are all here makes no

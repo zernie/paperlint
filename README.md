@@ -6,6 +6,7 @@ README style — keep it scannable, not a wall of text:
 - Tables for comparisons (commands, venues, checks). Code blocks for every command and file.
 - A blank line between every block. Bold only for the one phrase a skimmer must see.
 - Mechanics and edge cases live in docs/, linked — not inline.
+- Budgets, held by test/readme-shape.test.ts: ≤ 300 lines, no ## section over 60, the install command in the first 90 lines. Over budget → move material to docs/ and link it; raising a budget is a decision, not a fix.
 - A reader must be able to answer "what is it, which venues, how do I start" from the first screen.
 - Sparse emoji are fine where they help rhythm and scanning (e.g. one per section heading or feature bullet); never decorative, never several in a row.
 - One name per thing, everywhere (lint, build, venue preset, kind, skill, papersDir), each explained once, before it is used.
@@ -37,37 +38,15 @@ before you submit.** It comes in two parts:
 
 ## Contents
 
-- [The pipeline](#-the-pipeline)
 - [Supported venues](#-supported-venues)
 - [Getting started](#-getting-started)
-  - [A new paper](#a-new-paper)
-  - [A paper you already have](#a-paper-you-already-have)
+- [The pipeline](#-the-pipeline)
 - [Commands](#-commands)
 - [Skills](#-skills)
 - [Lint and build](#-lint-and-build)
-- [Configuration](#-configuration)
-  - [Add a venue that isn't listed](#-add-a-venue-that-isnt-listed)
+- [Configuration](#-configuration) · [add a venue](#-add-a-venue-that-isnt-listed)
 - [Run it in CI](#-run-it-in-ci)
-- [FAQ](#-faq)
-- [Docs](#-docs)
-
-## 🧭 The pipeline
-
-```text
-stage           what you get                          skills  linter
-1 idea          a go / no-go, with the reason         yes
-2 venue         venues ranked, deadlines planned      yes
-3 study         a study design, honest statistics     yes
-4 draft         a first draft, then a tighter one     yes     lint
-5 review        the objections, before the reviewers  yes     lint
-6 submit        a PDF within the limit, recorded      yes     build, lint
-7 camera-ready  the final, de-anonymised PDF          yes     build, lint
-8 extend        a plan for the next paper             yes
-
-skills: optional, with Claude Code
-lint:   every edit and every CI run, once the paper exists (paperlint new)
-build:  compiles and measures the PDF; lint then checks pages, fonts, references
-```
+- [FAQ](#-faq) · [Docs](#-docs)
 
 ## 🎯 Supported venues
 
@@ -94,24 +73,18 @@ REALM.
 
 <!-- `vigiles:symbol src/init.ts#init` — `npm run check` fails if this function is renamed or removed. -->
 
-1. Install (Node 22.13 or newer):
+1. Install (Node 22.13 or newer) and set up. `init` asks where your papers live (default
+   `papers/`), whether to install TeX Live now, and whether to add a CI workflow; with Claude Code
+   it also installs the skills and four hooks ([what they do](docs/install.md)).
 
    ```sh
    npm i -D paperlint
-   ```
-
-2. Set up. `init` asks three questions: where your papers live (default `papers/`), whether to
-   install TeX Live now, and whether to add a CI workflow. With Claude Code it also installs the
-   skills and three hooks ([what they do](docs/install.md)).
-
-   ```sh
    npx paperlint init
    ```
 
-3. Create a paper. `--venue` names its venue preset from the table above, `--kind` which of its page
-   limits applies. Name the folder after the work, not the venue: a rejected paper moves to another
-   venue and keeps its folder, so `new` refuses a name like `aisec-2026` (`--allow-venue-name` when
-   the word really is the work's):
+2. Create a paper. `--venue` names its venue preset from the table above, `--kind` which of its page
+   limits applies. Name the folder after the work, not the venue: a rejected paper moves on and keeps
+   its folder, so `new` refuses a name like `aisec-2026`.
 
    <!-- `vigiles:symbol src/new-paper.ts#newPaper` — `npm run check` fails if this function is renamed or removed. -->
    <!-- `vigiles:symbol src/new-paper.ts#ALLOW_VENUE_NAME` — the flag's one spelling; `npm run check` fails if it is renamed or removed. -->
@@ -120,25 +93,19 @@ REALM.
    npx paperlint new my-paper --venue agenticdev --kind short
    ```
 
-   It writes `papers/my-paper/` (in the folder you gave `init`) with three files:
-   - `paper.tex` — your paper;
-   - `paperlint.json` — its venue preset and kind;
-   - `PIPELINE-STATUS.md` — which stage the paper is at; the skills read and update it.
+   It writes `papers/my-paper/` with `paper.tex`, `paperlint.json` (venue and kind),
+   `PIPELINE-STATUS.md` (the stage the paper is at) and the empty folders of the
+   [layout](docs/layout.md#the-map).
 
-4. Build the PDF. **This needs TeX Live, a ~270 MB download (~3 min, once).** If you said no in
-   `init`, run `npx paperlint toolchain` first.
+3. Build the PDF. **This needs TeX Live, a ~270 MB download (~3 min, once)**; if you said no in
+   `init`, run `npx paperlint toolchain` first. Then check it:
 
    ```sh
    npx paperlint build papers/my-paper
-   ```
-
-5. Check it:
-
-   ```sh
    npx paperlint lint
    ```
 
-   On the stub from step 3 the first run already catches something (output shortened):
+   On the stub from step 2 the first run already catches something (output shortened):
 
    ```text
    papers/my-paper/paper.tex
@@ -152,13 +119,34 @@ REALM.
 
 ### A paper you already have
 
-paperlint finds a paper by its folder: `<papersDir>/<name>/`, with the main file named `paper.tex`.
+Put it at `papers/my-paper/paper.tex` (or [set `papersDir`](#-configuration) to where your papers
+live), then run the same `new` command: on a folder that holds anything it only adds the missing
+`paperlint.json` and `PIPELINE-STATUS.md`, and never touches `paper.tex`. Build and lint as above.
 
-1. Put the paper there — for example `papers/my-paper/paper.tex`, the rest of its files beside it. If
-   your paper folders already live elsewhere, say `thesis/`, [set `papersDir`](#-configuration) instead.
-2. Run `npx paperlint new my-paper --venue <preset> --kind <kind>`. On an existing folder it only
-   adds the missing `paperlint.json` and `PIPELINE-STATUS.md`; it never touches `paper.tex`.
-3. Build and lint, as above.
+## 🧭 The pipeline
+
+A paper goes through eight stages. The skills help at each one; lint checks the folder from the
+moment it exists.
+
+```text
+stage           what you get                          where it goes
+1 idea          a go / no-go, with the reason         siblings/
+2 venue         venues ranked, deadlines planned      paperlint.json, the venue's corpus
+3 study         a study design, honest statistics     repro/<study>/
+4 draft         a first draft, then a tighter one     paper.tex, sections/, figures/
+5 review        the objections, before the reviewers  reviews/, PIPELINE-STATUS.md
+6 submit        a PDF within the limit, recorded      paper.pdf, versions/, submission/
+7 camera-ready  the final, de-anonymised PDF          versions/, talk/
+8 extend        a plan for the next paper             a new paper folder
+
+skills: every stage; optional, with Claude Code
+lint:   any stage once the paper folder exists (paperlint new) — when you run it, and in CI
+build:  stages 6–7; compiles and measures the PDF, and lint then checks pages, fonts, references
+hook:   with Claude Code, refuses a new file in the wrong place before it is written
+```
+
+Each stage's skills, what it writes and what checks it, drawn as one flow, with the folder layout:
+[`docs/layout.md`](docs/layout.md).
 
 ## 🧰 Commands
 
@@ -182,6 +170,7 @@ what it does — "is this idea worth a paper?", "find me a venue for this". `ini
 
 - **A go / no-go on your idea, with the reason.** `research-ideate`
 - **A ranked list of venues that fit** — deadline, page limit, indexing. `find-venue`
+- **A page to label the study's items on your phone**, blind, with the answers exported into the paper's folder. `build-label-page`
 - **A first draft from your results.** `draft-paper`
 - **A hostile review before the real one.** `paper-adversarial-review`
 - **A ready / not ready verdict before you submit**, worst problem first. `harden-paper`
@@ -192,52 +181,34 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 
 ## 🔍 Lint and build
 
-|        | `paperlint build`                                                                                       | `paperlint lint`                                                                                      |
-| ------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| needs  | Node, TeX Live, the network                                                                             | Node                                                                                                  |
-| does   | compiles `paper.tex`, measures the PDF, checks each reference online (exists, right authors)            | checks the source, and judges what build recorded: page limit, fonts, the reference results — offline |
-| writes | `paper.pdf`, in `_build/` the measurements and the reference results, and `repro/references-cache.json` | nothing (`--fix`: the three fixable slips)                                                            |
+|        | `paperlint build`                                                                            | `paperlint lint`                                                                          |
+| ------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| needs  | Node, TeX Live, the network                                                                  | Node                                                                                      |
+| does   | compiles `paper.tex`, measures the PDF, checks each reference online (exists, right authors) | checks the source, and judges what build recorded: page limit, fonts, references; offline |
+| writes | `paper.pdf`, `_build/`, `repro/data/references-cache.json` (commit it)                       | nothing (`--fix`: the three fixable slips)                                                |
 
 - If `paper.pdf` or the bibliography changed since the last build, lint fails and tells you to rebuild.
-- Commit `repro/references-cache.json`: it keeps what the citation services answered, so a build
-  asks only about new or edited entries (and answers older than 30 days), so an unchanged
-  bibliography usually builds without the network ([`docs/references.md`](docs/references.md)).
-- A paper whose body is in other files (`\input{sections/intro}`) is linted file by file: a finding
-  lands at the file and line it is in, and `--fix` edits that file. The files are the ones TeX read
-  after `\begin{document}` in the last build (`_build/sources.json`) — not every `.tex` beside it,
-  and not an included `.bbl` (a tool's output, read only as part of the whole paper). A paper that
-  was not built, or changed since, is linted as `paper.tex` alone, and `paper/sources-fresh` says so.
-- Lint also checks the pipeline's own records: `PIPELINE-STATUS.md`, reviews, notes on related
-  papers ([`docs/rules.md`](docs/rules.md)).
-- The rules run on ESLint, so a deliberate exception is a comment on the line above:
+- Lint also checks the pipeline's own records (`PIPELINE-STATUS.md`, reviews, notes on related
+  papers) and the paper folder's layout.
+- A deliberate exception is a comment on the line above:
   `% eslint-disable-next-line paper/leading-zero -- quoted from the reviewer`.
-- Errors fail the run; warnings only print, unless you pass `--max-warnings <n>`.
 
 Every check: [`docs/rules.md`](docs/rules.md). How build compiles:
 [`docs/configuration.md`](docs/configuration.md#how-paperlint-build-compiles-a-paper).
 
 ## 🧩 Configuration
 
-Two levels, one file name, both optional:
+Two levels, one file name, both optional; a paper's file overrides the project's key by key, and
+**an unknown key is an error**, so a typo cannot silently turn a setting off.
 
 ```
-paperlint.json                   the project: papersDir, rules, defaults for every paper
+paperlint.json                   the project: papersDir (default papers), rules, defaults for every paper
 papers/my-paper/paperlint.json   one paper: its venue preset ("extends"), its kind, its own rules
 ```
 
-- `papersDir` is the folder that holds your paper folders; it defaults to `papers`.
-- The paper's venue preset is its `"extends"` key — the one `new --venue` writes.
-- A paper's `paperlint.json` overrides the project's, key by key.
-- **An unknown key is an error**, so a typo cannot silently turn a setting off.
-- A paper that moves between venues keeps a list of attempts, `cycles`, instead of `"extends"`; each
-  records its deadlines as read from the portal and the call, plus any override the chairs granted,
-  and the earlier reading binds ([`docs/configuration.md`](docs/configuration.md#deadlines)).
-- **Deadlines of a shipped venue preset stay current on their own:** paperlint's repository re-reads
-  each preset's portal daily and releases a patch when a date moves, so your normal dependency update
-  (Dependabot, Renovate) brings it. `paperlint lint` itself never reads the clock or the network.
-
-Every key: [`docs/configuration.md`](docs/configuration.md). Already use ESLint for other files? See
-[`docs/configuration.md`](docs/configuration.md#using-the-rules-from-an-existing-eslint-config).
+Shipped venue presets keep their deadlines current: a date that moves is released as a patch, so your
+normal dependency update brings it. Every key, a paper that moves between venues (`cycles`), and
+using the rules from your own ESLint config: [`docs/configuration.md`](docs/configuration.md).
 
 ### ➕ Add a venue that isn't listed
 
@@ -267,51 +238,17 @@ Give the path from where you run the command; `new` rewrites it relative to the 
 
 ## 🤖 Run it in CI
 
-Two options:
-
-| job                        | time                          | checks                                     |
-| -------------------------- | ----------------------------- | ------------------------------------------ |
-| build, then lint           | ~3 min first run, then cached | everything                                 |
-| lint only (`init` adds it) | seconds                       | the source; not pages, fonts or references |
-
-Lint judges pages, fonts and references from what build measured, so the full job builds first:
+`init` offers a lint-only workflow (seconds; skips pages, fonts and references). The full job builds
+first (~3 min, then cached) and checks everything:
 
 ```yaml
-name: papers
-on: [push, pull_request]
-jobs:
-  papers:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: npm ci
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/paperlint/texlive
-          key: texlive-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      - run: npx paperlint toolchain
-      - run: npx paperlint build --all
-      - run: npx paperlint lint
+- run: npm ci
+- run: npx paperlint toolchain
+- run: npx paperlint build --all
+- run: npx paperlint lint
 ```
 
-Lint only — each paper then gets one warning that it was not built. Call the action from the
-installed package, after `npm ci`: the action and the CLI it runs are then one revision, pinned by
-your lockfile.
-
-```yaml
-steps:
-  - uses: actions/checkout@v4
-  - uses: actions/setup-node@v4
-    with:
-      node-version: 22
-  - run: npm ci
-  - uses: ./node_modules/paperlint
-```
-
-With no `paths` it lints the `papersDir` of your `paperlint.json`; pass `paths:` only to lint less.
+Both workflows in full, with the TeX Live cache: [`docs/ci.md`](docs/ci.md).
 
 ## ❓ FAQ
 
@@ -329,6 +266,9 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 ## 📚 Docs
 
 - [`docs/skills.md`](docs/skills.md) — every skill, by stage
+- [`docs/layout.md`](docs/layout.md) — the pipeline's flow, where each stage writes, and what checks it when
+- [`docs/venues.md`](docs/venues.md) — a venue's corpus of accepted papers, presets and cards: three places, three jobs
+- [`docs/ci.md`](docs/ci.md) — the two CI workflows, in full
 - [`docs/install.md`](docs/install.md) — what `init` does, the hooks, package managers, troubleshooting
 - [`docs/configuration.md`](docs/configuration.md) — every setting, how `build` compiles, using your own ESLint
 - [`docs/rules.md`](docs/rules.md) — every check, venue presets, recording a submitted PDF

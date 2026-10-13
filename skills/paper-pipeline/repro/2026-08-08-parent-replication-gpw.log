@@ -2,8 +2,8 @@ patched: filter the MAIN LOOP to grade-paper-writing, cells AH+SH (guards untouc
 patched: redirect the JSON output so the parent's own result file survives
 
 running the PARENT'S code, grade-paper-writing AH+SH only, 3 trials = 24 runs
-  parent : /home/user/mine/.claude/skills/paper-pipeline/framing-vs-vocabulary.eval.mjs
-  patched: /tmp/claude-0/-home-user-mine/8268acb1-66a2-55ac-858e-2b9e3c81f84e/scratchpad/parent-repl/replication.mjs
+  parent : <project>/.claude/skills/paper-pipeline/framing-vs-vocabulary.eval.mjs
+  patched: <scratch>/parent-repl/replication.mjs
 
 
 37 skills installed → 36 competitors per run

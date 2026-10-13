@@ -236,7 +236,9 @@ test("online: hits are fetched and cached, a transport failure is named and stay
       stdout: r.stdout,
       stderr: r.stderr,
       cached: Object.keys(
-        JSON.parse(readFileSync(join(root, "paper/repro/refs-cache.json"))),
+        JSON.parse(
+          readFileSync(join(root, "paper/repro/data/refs-cache.json")),
+        ),
       ),
     },
     {
@@ -265,7 +267,7 @@ test("the paper file itself as the target, with --cache, --out and --offline", (
   const r = cli([
     join(root, "paper/refs.bib"),
     "--offline",
-    `--cache=${join(root, "paper/repro/refs-cache.json")}`,
+    `--cache=${join(root, "paper/repro/data/refs-cache.json")}`,
     `--out=${join(root, "out/facts.json")}`,
   ]);
   assert.deepEqual(r, {

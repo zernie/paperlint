@@ -1233,6 +1233,48 @@ check(
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// `paperlint hook paper-folder-layout` the way Claude Code runs it: the payload on stdin, the answer
+// on stdout, through the real bin. The in-process tests inject both streams; this is the one place
+// the defaults are read and written for real.
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-hook-")));
+  try {
+    const paper = join(root, "papers", "p");
+    mkdirSync(paper, { recursive: true });
+    writeFileSync(join(paper, "PIPELINE-STATUS.md"), "# S\n");
+    const hook = (file) =>
+      spawnSync(
+        process.execPath,
+        [
+          join(HERE, "..", "bin", "paperlint.mjs"),
+          "hook",
+          "paper-folder-layout",
+        ],
+        {
+          cwd: root,
+          encoding: "utf8",
+          input: JSON.stringify({ tool_input: { file_path: file } }),
+        },
+      );
+    const stray = hook(join(paper, "PLAN.md"));
+    check(
+      "the layout hook refuses a new stray PLAN.md on stdout as a PreToolUse deny, exit 0",
+      stray.status === 0 &&
+        /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"`PLAN\.md` is at the root/.test(
+          stray.stdout,
+        ),
+    );
+    const outside = hook(join(root, "notes.md"));
+    check(
+      "and says nothing about a file outside every paper folder",
+      outside.status === 0 && outside.stdout === "",
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
 console.log(
   `✓ ${String(check.count)} assertions passed — paperlint lint, one command instead of hand-rolled config`,
 );

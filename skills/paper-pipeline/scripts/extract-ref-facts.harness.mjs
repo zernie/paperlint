@@ -400,7 +400,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "e2e");
-  mkdirSync(join(dir, "repro"), { recursive: true });
+  mkdirSync(join(dir, "repro", "data"), { recursive: true });
   const paper =
     "@misc{lovelace2025,\n  author={Lovelace, Ada and Hopper, Grace},\n  title={A Study},\n" +
     "  note={arXiv:2503.09002},\n  year={2025}}\n";
@@ -411,7 +411,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   );
   built(dir);
   writeFileSync(
-    join(dir, "repro", "refs-cache.json"),
+    join(dir, "repro", "data", "refs-cache.json"),
     JSON.stringify({
       "arxiv:2503.09002": {
         httpStatus: 200,

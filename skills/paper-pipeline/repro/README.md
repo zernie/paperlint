@@ -25,6 +25,10 @@ the session.
 | `2026-08-08-parent-replication.mjs` | the replication driver | Runs `framing-vs-vocabulary.eval.mjs` **itself** with two asserted patches (main loop → this skill + AH/SH; output path), everything else untouched, against the real `.claude/skills`. Written because the ablation's control contradicted the parent. |
 | `2026-08-08-parent-replication-gpw.log` | that driver's run | 🔴 **The parent's own code returns AH 9/12 + SH 3/12 = 12/24 (50%)** hours after the same code returned 3/12 + 2/12 = 5/24 (21%). |
 | `2026-08-08-parent-replication-gpw.json` | per-run rows for the above | The parent's own row schema, so it diffs directly against `2026-08-08-framing-vs-vocabulary.json`. |
+| `2026-10-13-grade-paper-writing-trigger.log` | `grade-paper-writing/grade-paper-writing.eval.mjs`, the rewritten 499-char description (ledger `description_sha` dc41f0994474b368) | 1 trial, sonnet, 25 competing skills. Recall **7/8 (88%)**: the four measured prompts 4/4, the four new ones 3/4 (missed: «прочитай черновик и скажи честно, нормально ли он читается»). False positives **0/7**, one prompt from each collider. One trial is a smoke run, not a rate. |
+| `2026-10-13-grade-paper-writing-trigger.jsonl` | per-prompt rows for the above | The kit's `VIGILES_RESULTS` row: rate per should-fire prompt. |
+| `2026-10-13-grade-paper-writing-ablation-preflight-before.log`, `…-after.log` | `grade-paper-writing-ablation.eval.mjs --mode preflight`, **free**, before and after its A0 was pinned | Byte-identical: every arm builds from the same text after the live description was rewritten. Scratch paths replaced by `<scratch>`. |
+| `2026-10-13-grade-paper-writing-ablation-setupdiff.log` | the same file's `--mode setupdiff`, **free**, after the pin | Passes; the parent-vs-A0 row-by-row is the recorded 2026-08-08 data, unchanged. |
 
 ## How to read these, and the trap in them
 

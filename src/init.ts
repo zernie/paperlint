@@ -691,7 +691,7 @@ function papersLines(decl: DeclarationResult, why: string): string[] {
   ];
 }
 
-// Documented in README.md#install-and-set-up — update it when this changes.
+// Documented in README.md#-getting-started and docs/install.md — update them when this changes.
 export async function init(
   dir: string,
   opts: InitOptions = {},

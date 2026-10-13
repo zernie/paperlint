@@ -138,7 +138,12 @@ import {
   init,
   processInteractivity,
 } from "./init.ts";
-import { newPaper, reportNewPaper, type VenueSetting } from "./new-paper.ts";
+import {
+  newPaper,
+  reportNewPaper,
+  STATUS_FILE,
+  type VenueSetting,
+} from "./new-paper.ts";
 // The one source for the consumer's config key lives in lib/ (the ESLint rules and the skill scripts
 // import it too). It is imported compiled, from dist/, the one path that resolves the same from src/
 // and from dist/ — see CONTRIBUTING.md.
@@ -164,12 +169,22 @@ export { init };
 export { nextSteps } from "./init.ts";
 
 import paperStages from "#eslint-rules/paper-stages";
+import preregCoverage from "#eslint-rules/prereg-coverage";
 import cycleStage from "#eslint-rules/cycle-stage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import {
   FOLDER_VENUE_RULE_LEVELS,
   folderVenueRules,
 } from "./folder-venue-rule.ts";
+import {
+  FOLDER_LAYOUT_RULE_LEVELS,
+  folderLayoutRules,
+} from "./folder-layout-rule.ts";
+import { folderLayoutHook } from "./folder-layout-hook.ts";
+import {
+  REPRO_LAYOUT_RULE_LEVELS,
+  reproLayoutRules,
+} from "./repro-layout-rule.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
 import reviewFrontmatter from "#eslint-rules/review-frontmatter";
@@ -177,6 +192,7 @@ import siblingFrontmatter from "#eslint-rules/sibling-frontmatter";
 import pdfRules from "#eslint-rules/pdf-last-page-balance";
 import { messageOf } from "./domain/text.ts";
 import { isRecord } from "./domain/record.ts";
+import { ESCAPE_HATCH } from "./domain/paper-layout.ts";
 
 /** The shipped venue presets, read from the package's venues directory — the one list. */
 const SHIPPED_VENUES = (): string[] => shippedPresets(presetsDir());
@@ -348,6 +364,9 @@ const FRAGMENT_RULES = {
   "heading-case": REGISTER_AND_CASE_RULES["heading-case"],
 };
 
+/** What the two layout rules read with: the disk and its directory listings. */
+const LAYOUT_RULE_DEPS = { files: nodeFiles, listDir: nodeListDir };
+
 /** What the talk rules read with: the disk, the shipped presets, and the three media readers. */
 const TALK_RULE_DEPS = {
   files: nodeFiles,
@@ -380,7 +399,9 @@ export function buildConfig(
     // its files carry every marker a paper does. Flat config does NOT ignore dot-directories by
     // default (only `node_modules/` and `.git/`), so without this block `paperlint lint` would lint the
     // template as a paper — and a richer template with placeholder stages would fail the run.
-    { ignores: ["**/.template/"] },
+    // The same for a paper's `extra/`: the layout promises it is never judged, and an archived
+    // snapshot there carries a paper's markers too, so its folder read as a paper root with strays.
+    { ignores: ["**/.template/", `**/${ESCAPE_HATCH}/`] },
     // The `pdf` plugin is registered for EVERY file. A consumer's block (`rules`, appended below)
     // may name its rules for a glob that also matches markdown files; with the plugin defined only
     // beside `paper.tex`, ESLint would refuse those files with "could not find plugin". Every rule
@@ -409,8 +430,12 @@ export function buildConfig(
           rules: {
             ...paperStages.rules,
             ...folderVenueRules({ files: nodeFiles, venuesDir: presetsDir() }),
+            ...folderLayoutRules(LAYOUT_RULE_DEPS),
           },
         },
+        repro: { rules: reproLayoutRules(LAYOUT_RULE_DEPS) },
+        // Registered, on for no paper: `"study/declare-sample": "error"` in paperlint.json turns it on.
+        study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
       },
       ...md,
@@ -418,6 +443,8 @@ export function buildConfig(
         "paper/stages": "error",
         "paper/source": "error",
         ...FOLDER_VENUE_RULE_LEVELS,
+        ...FOLDER_LAYOUT_RULE_LEVELS,
+        ...REPRO_LAYOUT_RULE_LEVELS,
         ...CYCLE_RULE_LEVELS,
       },
     },
@@ -647,7 +674,7 @@ export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
  * 🔴 AN OPTIONAL RULE THAT IS ON AND REACHES NO PAPER IS A GREEN ZERO. A `files` glob that matches
  * nothing — a typo, a path relative to the wrong directory — leaves the rule never invoked, and a
  * rule that never runs reports exactly like a rule that passed. So for every optional rule the
- * consumer turned on, some `paper.tex` must actually have it enabled; the ones none has are
+ * consumer turned on, some paper's `paper.tex` or `PIPELINE-STATUS.md` must actually have it enabled; the ones none has are
  * returned, for the caller to refuse.
  *
  * `files` is every `paper.tex` the guard may count: the ones this run linted AND every paper of the
@@ -673,9 +700,16 @@ export async function silentOptionalRules(
     ),
   );
   const reached = new Set<string>();
-  for (const f of new Set(files.filter((p) => basename(p) === MAIN))) {
+  // A paper's rules reach it through two files: `paper.tex` and the `PIPELINE-STATUS.md` beside it,
+  // where the rules about the paper folder itself run.
+  const probes = [
+    ...new Set(files.filter((p) => basename(p) === MAIN)),
+  ].flatMap((f) => [f, join(dirname(f), STATUS_FILE)]);
+  for (const probe of probes) {
     // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
-    const cfg = ComputedConfig.parse(await eslint.calculateConfigForFile(f));
+    const cfg = ComputedConfig.parse(
+      await eslint.calculateConfigForFile(probe),
+    );
     // Reached is "some block names the rule for this paper", on OR off: a paper that turns off what
     // its venue preset turned on is the documented way out, and reads the same as a glob that missed
     // only if "off" is counted as "not there" — which refused every such paper.
@@ -1084,6 +1118,35 @@ export function toPaths(papers: unknown): string[] {
   return [];
 }
 
+/** What an in-process hook is handed: the payload, and where its output and complaints go. */
+interface HookIo {
+  readonly err: typeof console.error;
+  readonly stdin: () => string;
+  readonly out: (text: string) => void;
+}
+
+/**
+ * Hooks that run inside this process instead of as a vigiles program, each because it must call the
+ * package's own code (`src/folder-layout-hook.ts` says why for its one). Advisory: whatever goes
+ * wrong, the tool call has already happened, so it says so on stderr and exits 0.
+ */
+const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
+  "paper-folder-layout": ({ err, stdin, out }) => {
+    try {
+      const said = folderLayoutHook(JSON.parse(stdin()), {
+        files: nodeFiles,
+        listDir: nodeListDir,
+      });
+      if (said !== null) out(`${JSON.stringify(said)}\n`);
+    } catch (e) {
+      err(
+        `paperlint: the paper-folder-layout hook did not run: ${messageOf(e)}`,
+      );
+    }
+    return 0;
+  },
+};
+
 /**
  * `paperlint hook <name>` — run an editor hook. It exists for ONE thing: so that the wiring does not
  * address the runtime from the project root.
@@ -1125,6 +1188,10 @@ export function runHook(
     // the very file the package itself declares as its `bin`.
     resolve = (spec: string): string =>
       createRequire(import.meta.url).resolve(spec),
+    stdin = (): string => readFileSync(0, "utf8"),
+    out = (text: string): void => {
+      process.stdout.write(text);
+    },
   }: {
     err?: typeof console.error;
     /** Runs the hook with the terminal's streams: `spawnSync` is one, and only its status is read. */
@@ -1134,12 +1201,18 @@ export function runHook(
       options: { readonly stdio: "inherit" },
     ) => { readonly status: number | null };
     resolve?: (spec: string) => string;
+    /** The hook's payload, as Claude Code sends it on stdin. */
+    stdin?: () => string;
+    /** Where an in-process hook's output goes: stdout, which Claude Code reads. */
+    out?: (text: string) => void;
   } = {},
 ): number {
   if (!name) {
     err(`\`hook\` needs a name, e.g. \`paperlint hook paper-edit-guard\``);
     return 2;
   }
+  const inProcess = IN_PROCESS_HOOKS[name];
+  if (inProcess !== undefined) return inProcess({ err, stdin, out });
   const program = fileURLToPath(
     new URL(`../hooks/${name}.hook.mjs`, import.meta.url),
   );

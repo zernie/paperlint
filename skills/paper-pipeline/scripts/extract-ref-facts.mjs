@@ -46,7 +46,7 @@
  * only one that returns a STRUCTURED name; with any other the surname would have to be cut out by
  * hand, that is, we would be writing ourselves the very half that was broken.
  *
- * 🔴 THE CACHE IS EVIDENCE, NOT A SECOND DECLARATION. `<paper>/repro/refs-cache.json` keeps the RAW
+ * 🔴 THE CACHE IS EVIDENCE, NOT A SECOND DECLARATION. `<paper>/repro/data/refs-cache.json` keeps the RAW
  * BODIES of the registries' responses and is committed (for `<paper-a>` it has been in git since
  * 16.08). It cannot be made up — only refreshed from the registry. The facts in `_build/` are
  * derived from it and from the bibliography, which is why `_build/` is in `.gitignore` while the
@@ -450,7 +450,7 @@ async function main(argv) {
   const { paperDir, texts } = found;
   const cachePath = opt("cache")
     ? resolve(opt("cache"))
-    : join(paperDir, "repro", "refs-cache.json");
+    : join(paperDir, "repro", "data", "refs-cache.json");
   const out = opt("out")
     ? resolve(opt("out"))
     : join(paperDir, "_build", "refs.facts.json");

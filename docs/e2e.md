@@ -54,8 +54,8 @@ depend on each other — and drives the installed binary:
   publishes, once each — and says they need `npm install` in a fresh clone; a second `init`
   leaves that file byte-identical
 - `paperlint lint` passes the staged corpus
-- `paperlint new demo` scaffolds a paper from the templates that shipped in the tarball, its own lint is
-  clean, and `paperlint lint` stays clean with it in the corpus
+- `paperlint new demo` scaffolds a paper from the templates that shipped in the tarball (and the
+  layout's folders), its own lint is clean, and `paperlint lint` stays clean with it in the corpus
 - `hooks.json` arrived and parses, and every hook command named in it resolves to a file
 - every skill arrived, and every script path named inside a skill resolves **in the consumer**
 

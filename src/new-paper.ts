@@ -12,20 +12,34 @@
  *   - the name is validated, because it becomes a path and, through the hooks, a shell argument.
  *
  * The only substitution is `{{name}}` → the folder name. Nothing else in a template is touched.
+ *
+ * Beside the three files, a NEW paper folder gets the layout the rules enforce (`SCAFFOLD_FILES`,
+ * src/domain/scaffold-layout.ts): its folders, each with a `.gitkeep` or a first file, so the layout
+ * is visible from the first commit. That is for a folder that is absent or empty. On a folder that
+ * holds anything, `new` adds only the missing three files, as before: a paper that already has its
+ * own shape is not given folders it did not choose, and one whose author deleted an empty folder
+ * does not get it back.
  */
 /* eslint-disable boundaries/dependencies -- legacy I/O, moves behind a port in #76 */
 import {
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   statSync,
   writeFileSync,
 } from "node:fs";
 /* eslint-enable boundaries/dependencies */
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { isRecord } from "./domain/record.ts";
+import { ESCAPE_HATCH, VENUES_DIR } from "./domain/paper-layout.ts";
+import {
+  GITKEEP,
+  SCAFFOLD_FILES,
+  type ScaffoldFile,
+} from "./domain/scaffold-layout.ts";
 import {
   venuesNamedBy,
   withoutVenues,
@@ -51,10 +65,14 @@ export const SOURCE_FILE = "paper.tex";
 /** The flag that lets `paperlint new` create a folder whose name names a venue. */
 export const ALLOW_VENUE_NAME = "--allow-venue-name";
 
+/** Names the papers directory's layout already gives a meaning to (src/domain/paper-layout.ts). */
+const RESERVED_NAMES: readonly string[] = [VENUES_DIR, ESCAPE_HATCH];
+
 /**
  * Why a name is refused, or null. `[a-z0-9._-]+` is the charset; a LEADING dot is refused on top
  * of it, because discovery skips dot-directories — a paper named `.x` would be created and then
- * never linted, which is worse than a refusal.
+ * never linted, which is worse than a refusal. `venues` and `extra` are refused for the same reason:
+ * the first is the venues' corpus beside the papers, the second is never linted.
  *
  * A name that names a venue — one of `venues`' names as whole words (`aisec-2026`) — is refused
  * too, the paper's own venue included: a paper that is rejected goes to another venue and keeps its
@@ -71,6 +89,8 @@ export function nameProblem(
     return `\`${name}\` — a paper name may hold only a-z, 0-9, dot, underscore and hyphen (it becomes a path and a shell argument)`;
   if (name.startsWith("."))
     return `\`${name}\` — a name starting with a dot is skipped by paper discovery, so it would never be linted`;
+  if (RESERVED_NAMES.includes(name))
+    return `\`${name}\` — reserved: \`${VENUES_DIR}/\` beside the papers holds the venues' corpora, and lint never reads a folder named \`${ESCAPE_HATCH}/\`, so a paper by either name would be taken for something else or never linted`;
   const named = venuesNamedBy(name, venues);
   if (named.length === 0) return null;
   const which = named.map((n) => `"${n.name}"`).join(", ");
@@ -96,6 +116,8 @@ export type NewPaperResult =
       /** The folder did not exist before this run. */
       readonly fresh: boolean;
       readonly files: readonly FileOutcome[];
+      /** The layout files written into a folder that was absent or empty, relative to it; none otherwise. */
+      readonly layout: readonly string[];
     }
   | { readonly ok: false; readonly reason: string };
 
@@ -195,7 +217,19 @@ export interface NewPaperOptions {
   readonly venues: readonly NamedVenue[];
 }
 
-// Documented in README.md#getting-started — update it when this changes.
+/** The layout files `dir` is given: all of them when it holds nothing (absent, or made by hand and still empty), else none. */
+const layoutFor = (dir: string, fresh: boolean): readonly ScaffoldFile[] =>
+  fresh || readdirSync(dir).length === 0 ? SCAFFOLD_FILES : [];
+
+/** Writes the layout files under `dir`; `wx` fails rather than overwrite, as for the three files. */
+const writeLayout = (dir: string, layout: readonly ScaffoldFile[]): void => {
+  layout.forEach(({ path, text }) => {
+    mkdirSync(dirname(join(dir, path)), { recursive: true });
+    writeFileSync(join(dir, path), text, { encoding: "utf8", flag: "wx" });
+  });
+};
+
+// Documented in README.md#-getting-started — update it when this changes.
 export function newPaper(
   papersRoot: string,
   name: string,
@@ -225,6 +259,7 @@ export function newPaper(
     if (!planned.ok) return planned;
     toWrite.push(planned.value);
   }
+  const scaffold = layoutFor(dir, fresh);
   // Read every template before writing any file, so a missing one leaves no half-made folder.
   mkdirSync(dir, { recursive: true });
   for (const { file, text, from } of toWrite) {
@@ -232,8 +267,14 @@ export function newPaper(
     writeFileSync(join(dir, file), text, { encoding: "utf8", flag: "wx" });
     files.push({ file, status: "created", from });
   }
-  return { ok: true, dir, fresh, files };
+  writeLayout(dir, scaffold);
+  return { ok: true, dir, fresh, files, layout: scaffold.map((f) => f.path) };
 }
+
+/** The folders the layout files sit in, each once, in order: `reviews/`, `repro/tools/`, … */
+const layoutFolders = (paths: readonly string[]): readonly string[] => [
+  ...new Set(paths.map((p) => `${dirname(p)}/`)),
+];
 
 /** The report lines, shared by `paperlint new` and the first-paper offer in `paperlint init`. */
 export function reportNewPaper(
@@ -250,5 +291,10 @@ export function reportNewPaper(
         ? `      + ${f.file}  (from the ${f.from === "project" ? `project's ${OVERRIDE_DIR}/` : "package"} template)`
         : `      = ${f.file}  (kept — never overwritten)`,
     );
-  return out;
+  return result.layout.length === 0
+    ? out
+    : [
+        ...out,
+        `      + ${layoutFolders(result.layout).join(" ")}  (the paper's layout; an empty folder holds a ${GITKEEP}, so git keeps it)`,
+      ];
 }

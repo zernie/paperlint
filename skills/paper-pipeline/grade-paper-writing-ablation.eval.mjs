@@ -233,8 +233,9 @@
  *      renamed from two-letter codes to words (`Hn` → `claims`) because the two-letter space had
  *      collided. The target's description carried one such
  *      reference, so "…mandates the Hn claim-preservation diff." became "…mandates the
- *      claims-preservation diff (row `claims`)." A0 is still read from disk and every guard still
- *      passes; the numbers below were measured on the pre-rename bytes and are left as recorded.
+ *      claims-preservation diff (row `claims`)." Every guard still passes on A0, which is pinned in
+ *      this file since the live description was rewritten (2026-10-13); the numbers below were
+ *      measured on the pre-rename bytes and are left as recorded.
  *
  *      measurement                                            AH        SH       total
  *      parent, this morning                                3/12 25%  2/12 17%   5/24  21%
@@ -380,6 +381,7 @@ import {
   realpathSync,
 } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { frontmatterBlock } from "#lib/markdown";
 import { parseFm } from "../../lib/skill-corpus.mjs";
 import { installedSkills } from "./scripts/consumer.mjs";
@@ -395,9 +397,7 @@ const PARENT = join(
   "paper-pipeline",
   "framing-vs-vocabulary.eval.mjs",
 );
-const SCRATCH =
-  process.env.ABLATION_SCRATCH ??
-  "/tmp/claude-0/-home-user-mine/8268acb1-66a2-55ac-858e-2b9e3c81f84e/scratchpad/gpw-ablation";
+const SCRATCH = process.env.ABLATION_SCRATCH ?? join(tmpdir(), "gpw-ablation");
 const NS = "vigiles-loose-skills";
 const TARGET = "grade-paper-writing";
 const STEM = "2026-08-08-grade-paper-writing-ablation";
@@ -493,7 +493,18 @@ const allPrompts = CELLS.flatMap((k) =>
   PROMPTS[k].map((p) => ({ cell: k, prompt: p })),
 );
 
-// ── the baseline description, read from disk (never hardcoded — it would drift) ──
+// ── the baseline description, PINNED ─────────────────────────────────────────
+// This used to be read from the installed SKILL.md, so the arms followed every edit of it. On
+// 2026-10-13 the description was rewritten (499 chars: what it does, when, when not, what it
+// returns), and every arm below is a set of EXACT SUBSTRING DELETIONS: cut from the new text, they
+// find nothing to delete and the file throws before preflight. The arms are an experiment on THIS
+// text, so the text is pinned and the arms build exactly as before. It is the last description the
+// deletion strings were written against (1371 chars), which already differs from the 1174 chars the
+// 2026-08-08 result measured (see "A0 IS TWO TOKENS OFF" in the header, and the register clauses
+// added since). How the LIVE description fires is measured by
+// `grade-paper-writing/grade-paper-writing.eval.mjs` on the shared trigger cases, not here.
+const A0 =
+  'Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.';
 if (!existsSync(join(SKILLS_DIR, TARGET, "SKILL.md")))
   throw new Error(`${TARGET} is not installed under ${SKILLS_DIR}`);
 // READING a field is a parser's job. The hand-rolled version below used a lookahead
@@ -511,7 +522,6 @@ const parseDesc = (md) =>
     .trim();
 const parseName = (md) => fmOf(md).name;
 const BASE_MD = readFileSync(join(SKILLS_DIR, TARGET, "SKILL.md"), "utf-8");
-const A0 = parseDesc(BASE_MD);
 if (parseName(BASE_MD) !== TARGET)
   throw new Error(`${TARGET}/SKILL.md declares name: ${parseName(BASE_MD)}`);
 
@@ -525,7 +535,7 @@ const D_SUBORDINATION = [
   "harden-paper (which calls it), ",
 ];
 const D_NEGATION = [
-  " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers).",
+  " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers).",
 ];
 const D_MACHINERY = [
   " (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue)",
@@ -559,7 +569,7 @@ const D_PERSONA_ONLY = [
   " Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each.",
   " whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper)",
   " Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`).",
-  " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers).",
+  " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT content strength against what the venue rewards (study-accepted-papers).",
   " Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.",
 ];
 

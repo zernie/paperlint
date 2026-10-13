@@ -8,6 +8,8 @@ the skill whose description matches starts. `paperlint init` installs them into
 `.claude/skills/` ([`install.md`](install.md)). Each one's full instructions are its
 `skills/<name>/SKILL.md`.
 
+Where each stage writes, and the check that guards each place: [`layout.md`](layout.md).
+
 `test/skills-catalog.test.ts` fails when this list and the shipped `skills/` directory disagree.
 
 ## Across every stage
@@ -36,9 +38,10 @@ the skill whose description matches starts. `paperlint init` installs them into
 
 ## 3 · Study
 
-| you get                                                                                    | skill             |
-| ------------------------------------------------------------------------------------------ | ----------------- |
-| a study design with honest statistics, and a reproduction artifact that checks its numbers | `build-benchmark` |
+| you get                                                                                    | skill              |
+| ------------------------------------------------------------------------------------------ | ------------------ |
+| a study design with honest statistics, and a reproduction artifact that checks its numbers | `build-benchmark`  |
+| a page you label items on from a phone, and the answers exported into the study folder     | `build-label-page` |
 
 ## 4 · Draft
 

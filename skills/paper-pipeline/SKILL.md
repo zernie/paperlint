@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:67a3989629952dc1 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:cb2eecdb81ba766d compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -150,7 +150,7 @@ Ordered, because each really does gate the next. Two pairs run in parallel; that
 | **Validate the idea** | **`research-ideate`** | Is it a reusable method (survives review) in your lane, and does it feed the credit criteria? Go/no-go + the MVP finding. |
 | **Map the competition** ‖ | **`map-prior-work`** | 🔴 **Who already did this?** Multi-angle sweep; date each hit against your submission (5 months = prior, not concurrent); triage by which layer of your claim it threatens; deep-read the dangerous ones. Output: **what you can still claim** + a related-work skeleton. *Added 2026-07-27 after a five-month-older paper surfaced at T−10 days on a finished draft.* |
 | **Pick the venue** ‖ | **`find-venue`** | Rank by credit-weight (peer-reviewed + indexed) × fit × accept-odds × deadline × remote. |
-| **Learn the venue's bar** | **`study-accepted-papers`** | 🔴 **What does an ACCEPTED paper look like HERE?** Measure the venue's whole accepted volume, deep-read 8–12 of your contribution type, and extract what made them strong: evidence scale, figures, artifact release, how the abstract is built. File the venue card (`presets/<venue>.md` in the package, or the project's own beside its preset) and confirm family rules (`references/acl-venue-rules.md`). *Promoted to its own step 2026-08-03: on `compile-rules-2026` every judgement of the paper's quality — rubric, persona, simulated panel, accept probability — came from instruments this pipeline itself generated, with no external grounding, and the author had to say so at T−3 days. A closed loop optimises against its own model of a reviewer.* |
+| **Learn what the venue rewards** | **`study-accepted-papers`** (mode A idea, B design) | 🔴 **What does this venue REWARD, before the study is designed?** The venue's award winners against its ordinary accepted papers over 5–7 years (plus award papers on the topic at other venues, labelled apart), coded for substance as well as form, written as **requirements for the study**: what the oracle under the headline is, which belief stated on record the claim targets, which factor is a column. The corpus goes to `<papers-root>/venues/<venue>/`, shared by every paper for that venue; the stage is row `venuebar`. **The same skill comes back once text exists** (mode C draft: the strong-accept scorecard, M1–M10, in `PIPELINE-STATUS.md`; mode D final: the abstract and introduction). The skill always asks which mode. Venue format facts go in its preset (`presets/<venue>.jsonc` in the package, or the project's own) and the venue card beside it (`presets/<venue>.md`); confirm family rules (`references/acl-venue-rules.md`). *Promoted to its own step 2026-08-03: every judgement of a paper's quality had come from instruments this pipeline itself generated, with no external grounding. Moved to modes on 2026-10-12 (#207): run only on a draft, its main findings arrived after they could change the design.* |
 | 🔴 **Can you physically submit?** | **`plan-paper-timeline`** | **The step that owns the question no stage used to own.** Create the portal account NOW; drive the profile to **ACTIVE**, not "pending moderation"; confirm the form's fields and the artifact-hosting requirement. OpenReview moderation runs **up to two weeks**, and an author with no institutional email has no expedite route. Scorecard row `access`. *Added 2026-08-03, when this was the sole critical-path item on a finished paper at T−4 days: the science was done and there was nowhere to put it.* |
 | **Schedule it** | **`plan-paper-timeline`** | Deadlines → calendar with buffers, in the author's own zone (AoE − 12h ≠ your clock). Space papers apart. |
 | 🔴 **State the claim** | **`argument-arc`** (frame mode) | **One paragraph: what will this paper claim, and what would have to be true?** Before any run. The frame decides which results matter, and reframing after the data is collected is how experiments get thrown away — observed on `compile-rules-2026`, and the reason `argument-arc` has a rebuild mode at all. Costs a paragraph; saves a study. Scorecard row `frame`. |
@@ -170,6 +170,8 @@ No numbers. Nothing here happens once, and nothing here is "next".
 
 - **`build-benchmark`** — a design that inverts the pitfall; honest stats; a self-checking artifact
   (`references/artifact-checklist.md`).
+- **`build-label-page`** — when the study needs a person to label items (gold labels, a blind review):
+  a phone page with a shared answer store, the answers exported into the study's `data/`.
 - **`draft-paper`** — section skeleton + the accept-and-get-cited properties
   (`references/writing-craft.md`).
 - **`argument-arc`** — 🔴 **does the draft carry the reader to ONE conclusion?** One sentence per
@@ -221,7 +223,7 @@ Use an atom for a quick spot-check; **run the panel for the decision.**
 skill: 🔴 **argument architecture** — does the whole thing carry the reader to one conclusion
 (`argument-arc`, in the LOOP; the axis that failed on `compile-rules-2026` precisely because it was
 nobody's) · **content strength** — does the contribution clear *this venue's* bar (`study-accepted-papers`,
-mines the accepted corpus for Accept→Strong levers; in SETUP, before the prose is set) ·
+from the venue's own award winners: in SETUP as requirements for the study, and again on the draft as the strong-accept scorecard, M1–M10) ·
 **scientific defects** — what a hostile reviewer attacks (`paper-adversarial-review` / `pc-panel-review`)
 · **writing craft** — does it read like a human wrote it (`grade-paper-writing`, the 10-dim rubric in
 `references/writing-craft.md`; called by `harden-paper`). A paper can ace one and fail another — grade all four.
@@ -294,7 +296,7 @@ Over {{corpus.n}} real rules files, with the extractor's proposed mapping
 taken as if an author had written it, {{annotated.failedContradicted}} fail admission.
 ```
 
-`<paper>/repro/numbers.tsv` gives each name its value, the JSON path or **formula** that recomputes
+`<paper>/repro/data/numbers.tsv` gives each name its value, the JSON path or **formula** that recomputes
 it, and two guards. The build refuses a PDF unless: the name resolves · the value still matches the
 data · the **paragraph** names the arm (`requires`) · the **sentence** does not claim a different one
 (`forbids`). Requires and forbids are separate on purpose — the pairing is auditing's, where a control
@@ -310,7 +312,7 @@ binds every row from now on, and the existing rows are *enumerated rather than e
 says out loud how many figures still have no machine-checked path to data. On the paper that has it:
 7 guarded, 248 grandfathered. That ratio is a finding, not a score.
 
-**Adopting it in another paper:** copy `repro/paper_numbers.py`, `repro/paper_numbers.selftest.py`
+**Adopting it in another paper:** copy `repro/tools/paper_numbers.py`, `repro/tools/paper_numbers.selftest.py`
 and the build step that calls `expand()` on `paper.tex` before `pdflatex`; generate the
 grandfather list from the current draft; register the numbers a reviewer will actually check first.
 
@@ -350,7 +352,7 @@ printing two unrelated 22s broke it the same hour. Key on the occurrence.
 🔴 **Hand the gate to a red team the same day you build it.** This one was, and seven holes came
 back, the worst being that the original defect could simply be **retyped as digits** — its value was
 grandfathered, so the guard applied to the macro and not to the claim. Every hole is now a case in
-`repro/paper_numbers.selftest.py` (18/18, including three that must stay **quiet** — a gate that
+`repro/tools/paper_numbers.selftest.py` (18/18, including three that must stay **quiet** — a gate that
 fires on ordinary writing gets muted, and then its silence reads as coverage).
 
 ## 🔴 The page limit is a SUBMISSION gate, not an EDIT gate

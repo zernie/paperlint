@@ -50,9 +50,9 @@ question (Ctrl+D) also takes the default.
 | what                                                                 | where                   | when                                                                                                                                                                              |
 | -------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `{ "papersDir": … }` naming your papers directory                    | `paperlint.json`        | only when it is not the default `papers`                                                                                                                                          |
-| the three hook commands, merged in beside your own entries           | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
+| the four hook commands, merged in beside your own entries            | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
 | a GitHub Actions workflow: `npm ci`, then `./node_modules/paperlint` | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                 |
-| a first paper, via `paperlint new`                                   | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
+| a first paper, via `paperlint new`, with its layout's folders        | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
 | one relative symlink per shipped skill, into the installed package   | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
 
 It installs no software you did not say yes to, and touches nothing else. Commit `.claude/settings.json` so every clone
@@ -61,9 +61,11 @@ gets the hooks; the hook commands run files inside `node_modules`, so a fresh cl
 
 ## Why it is shaped this way
 
-**One file, at the project root.** A hook cannot import code or walk up a tree looking for a
-config; it can only read a path it can spell, and `$CLAUDE_PROJECT_DIR/paperlint.json` is one. The
-same file is read by the CLI, the three hooks, `eslint-rules/papers.mjs`,
+**One file, at the project root.** A vigiles hook cannot import code or walk up a tree looking for
+a config; it can only read a path it can spell, and `$CLAUDE_PROJECT_DIR/paperlint.json` is one.
+(`paper-folder-layout` is not a vigiles hook: it runs inside the CLI, because it must call the
+function its rule reports with.) The same file is read by the CLI, the three vigiles hooks,
+`eslint-rules/papers.mjs`,
 `lib/skill-trigger-cases.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`. It is optional:
 absent, every reader takes the same defaults.
 
@@ -147,17 +149,19 @@ are probably smaller now; re-measure before quoting them.
 | of which `typescript` (via `vigiles`)  |      23 MB |
 | of which `vigiles` itself              |       6 MB |
 
-Neither `paperlint lint` nor any of the three hooks loads `@ast-grep` or `typescript` (traced);
-`vigiles` itself is loaded.
+Neither `paperlint lint` nor any of the four hooks loads `@ast-grep` or `typescript` (traced;
+`paper-folder-layout` on 2026-10-12: 223 CommonJS modules, none from either); `vigiles` itself is
+loaded.
 
 ## Troubleshooting
 
-| symptom                                                      | cause and fix                                                                                                                                                                          |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init`: skills "nothing linked", or hooks that fail to start | the package is not installed in this project (`npx` ran a temporary copy). Run `npm i -D paperlint`, then `npx paperlint init` again                                                   |
-| `paperlint lint`: `no papers in papers/`                     | there is no paper where `papersDir` points. Create one with `npx paperlint new <name>`, or set `"papersDir"` in `paperlint.json`                                                       |
-| hooks fail with `Cannot find module` in a fresh clone        | the hook commands run files in `node_modules`: run `npm install`                                                                                                                       |
-| `paperlint: not built`                                       | installed from git with `--ignore-scripts`, or a clone before building: run `npm run build` in the package                                                                             |
-| a skill does not show up in Claude Code                      | its name was already taken in `.claude/skills/`. `init` names it and leaves it alone; rename or remove yours and run `npx paperlint init` again                                        |
-| **every** shell command is blocked in Claude Code            | `paper-edit-guard` cannot parse the root `paperlint.json` (merge-conflict markers, a typo), and refuses rather than guess. Fix it with a normal file edit — file edits are not blocked |
-| anything else                                                | `npx paperlint doctor` — it checks the setup and exits non-zero on anything miswired                                                                                                   |
+| symptom                                                                                                                       | cause and fix                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `init`: skills "nothing linked", or hooks that fail to start                                                                  | the package is not installed in this project (`npx` ran a temporary copy). Run `npm i -D paperlint`, then `npx paperlint init` again                                                                     |
+| `paperlint lint`: `no papers in papers/`                                                                                      | there is no paper where `papersDir` points. Create one with `npx paperlint new <name>`, or set `"papersDir"` in `paperlint.json`                                                                         |
+| hooks fail with `Cannot find module` in a fresh clone                                                                         | the hook commands run files in `node_modules`: run `npm install`                                                                                                                                         |
+| `paperlint: not built`                                                                                                        | installed from git with `--ignore-scripts`, or a clone before building: run `npm run build` in the package                                                                                               |
+| a skill does not show up in Claude Code                                                                                       | its name was already taken in `.claude/skills/`. `init` names it and leaves it alone; rename or remove yours and run `npx paperlint init` again                                                          |
+| **every** shell command is blocked in Claude Code                                                                             | `paper-edit-guard` cannot parse the root `paperlint.json` (merge-conflict markers, a typo), and refuses rather than guess. Fix it with a normal file edit — file edits are not blocked                   |
+| a Write of a new file is denied: "… is at the root of a paper folder" or "… is loose at the top of the paper's repro/ folder" | `paper-folder-layout` refuses to create an entry the paper layout does not allow; the reason says where it goes. Write it there. Existing files are never refused, and the hook does not see shell moves |
+| anything else                                                                                                                 | `npx paperlint doctor` — it checks the setup and exits non-zero on anything miswired                                                                                                                     |

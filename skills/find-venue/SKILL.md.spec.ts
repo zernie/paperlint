@@ -49,7 +49,7 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
   prestige (a bonus, not a gate). **Non-archival ⇒ credit-weight ≈ 0** — it earns no authorship credit,
   so it sinks to the bottom no matter how nice the CFP reads.
 - **topic-fit** — how squarely the paper matches the CFP scope (a stretch fit raises reject risk).
-- **accept-probability** — realistic odds given the paper's maturity and the venue's bar.
+- **accept-probability** — realistic odds given the paper's maturity and how selective the venue is.
 - **deadline-feasibility** — can the paper (and artifact) be ready by the deadline? A great venue you
   miss is a zero.
 - **remote-friendliness** — remote-OK is a real weight here, not a footnote.
@@ -90,7 +90,9 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
 - the venue cards, \`presets/<venue>.md\` in the paperlint package beside each venue preset (e.g.
   \`agenticdev.md\`, \`aisec.md\`) — the winner gets a card with its HotCRP quirks beside its preset;
   for a venue with no shipped preset, the project's own \`./venues/<name>.md\` beside its
-  \`./venues/<name>.jsonc\`. Plain data, not a new skill.
+  \`./venues/<name>.jsonc\`. Plain data, not a new skill. That \`./venues/\` is not the venue's corpus
+  of accepted papers, \`<papers-root>/venues/<venue>/\` (\`study-accepted-papers\`): the three places are
+  told apart in \`docs/venues.md\` in the paperlint package.
 - \`extend-paper\` — the prestige-upgrade target this skill names but defers.
 
 ## Provenance
