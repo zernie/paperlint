@@ -97,8 +97,12 @@ const repro = roots[0];
 // model synthesised and is the most literal reading of "generated code" there is. Below that are
 // fixtures, working clones and raw transcripts; going deeper buys tens of thousands of files and no
 // analysis. This is a SCOPE and therefore a blind spot, and it is printed as one.
+// `repro/tools/` (the paper's shared scripts, by the repro/ layout) is a root of its own: the layout
+// moved `repro/<pkg>/src/…` to `repro/tools/<pkg>/src/…`, and counting tools/ as a level would have
+// dropped that code out of the scan.
 const EXT = /\.(py|mjs|cjs|js)$/;
 const MAX_DEPTH = 3;
+const TOOLS_DIR = "tools";
 const swallowed = new Map([
   [
     "the released bundle — `check-anon.sh` cat. 5 owns it, and it asks a different question there " +
@@ -155,13 +159,13 @@ const files = [];
         swallowed.get(RULE[2]).push(relative(repro, p));
         continue;
       }
-      walk(p, depth + 1);
+      walk(p, abs === repro && name === TOOLS_DIR ? depth : depth + 1);
     } else if (EXT.test(name)) files.push(p);
   }
 })(repro, 1);
 
 // ── the allow file ─────────────────────────────────────────────────────────────────────────────
-const allowPath = join(repro, "tools", "generated-code-grandfathered.txt");
+const allowPath = join(repro, TOOLS_DIR, "generated-code-grandfathered.txt");
 const allowed = new Map();
 if (existsSync(allowPath)) {
   for (const line of readFileSync(allowPath, "utf8").split("\n")) {

@@ -60,3 +60,17 @@ test("repro/: a dangling link is passed over; skipped trees are named, more than
   );
   assert.match(out, / {7}exp\/run\.py · NO_SEED {2}→ {2}\(NO REASON GIVEN\)/);
 });
+
+test("🔴 shared code under repro/tools/ is scanned as deep as a study's: tools/ is a root of its own, not a level of the scan", () => {
+  const dir = writeTree(join(root, "paper-tools"), {
+    // `repro/<pkg>/src/check.py` was scanned before the layout moved shared code under tools/.
+    "repro/tools/pkg/src/check.py": "import random\nprint(random.random())\n",
+    "repro/tools/pkg/src/deeper/x.py": "print(1)\n",
+  });
+  const out = run(dir).stdout;
+  assert.match(out, /NO_SEED {3}repro\/tools\/pkg\/src\/check\.py — /);
+  assert.match(
+    out,
+    /• 1 tree\(s\) not entered — nested deeper than 3 levels[^\n]*\n {7}tools\/pkg\/src\/deeper/,
+  );
+});
