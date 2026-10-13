@@ -34,6 +34,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { isRecord } from "./domain/record.ts";
+import { ESCAPE_HATCH, VENUES_DIR } from "./domain/paper-layout.ts";
 import {
   GITKEEP,
   SCAFFOLD_FILES,
@@ -64,10 +65,14 @@ export const SOURCE_FILE = "paper.tex";
 /** The flag that lets `paperlint new` create a folder whose name names a venue. */
 export const ALLOW_VENUE_NAME = "--allow-venue-name";
 
+/** Names the papers directory's layout already gives a meaning to (src/domain/paper-layout.ts). */
+const RESERVED_NAMES: readonly string[] = [VENUES_DIR, ESCAPE_HATCH];
+
 /**
  * Why a name is refused, or null. `[a-z0-9._-]+` is the charset; a LEADING dot is refused on top
  * of it, because discovery skips dot-directories — a paper named `.x` would be created and then
- * never linted, which is worse than a refusal.
+ * never linted, which is worse than a refusal. `venues` and `extra` are refused for the same reason:
+ * the first is the venues' corpus beside the papers, the second is never linted.
  *
  * A name that names a venue — one of `venues`' names as whole words (`aisec-2026`) — is refused
  * too, the paper's own venue included: a paper that is rejected goes to another venue and keeps its
@@ -84,6 +89,8 @@ export function nameProblem(
     return `\`${name}\` — a paper name may hold only a-z, 0-9, dot, underscore and hyphen (it becomes a path and a shell argument)`;
   if (name.startsWith("."))
     return `\`${name}\` — a name starting with a dot is skipped by paper discovery, so it would never be linted`;
+  if (RESERVED_NAMES.includes(name))
+    return `\`${name}\` — reserved: \`${VENUES_DIR}/\` beside the papers holds the venues' corpora, and lint never reads a folder named \`${ESCAPE_HATCH}/\`, so a paper by either name would be taken for something else or never linted`;
   const named = venuesNamedBy(name, venues);
   if (named.length === 0) return null;
   const which = named.map((n) => `"${n.name}"`).join(", ");

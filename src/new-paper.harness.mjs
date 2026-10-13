@@ -84,6 +84,11 @@ try {
       `\`${dot}\` is refused — discovery skips dot-directories, so it would never be linted`,
       /starting with a dot/.test(nameProblem(dot, []) ?? ""),
     );
+  for (const reserved of ["venues", "extra"])
+    check(
+      `\`${reserved}\` is refused — the papers directory's own folder, which no paper may take`,
+      /reserved/.test(nameProblem(reserved, []) ?? ""),
+    );
   check(
     "a refused name creates nothing",
     newPaper(work, "Bad", { venues: [] }).ok === false &&
