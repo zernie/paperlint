@@ -110,8 +110,8 @@ The cylinder is a venue's corpus of accepted papers: it lives beside the papers,
 
 ### Where things live
 
-`paperlint new` creates a paper folder in the papers directory (`papersDir`, default `papers/`).
-Everything a stage writes has one place:
+`paperlint new` creates a paper folder in the papers directory (`papersDir`, default `papers/`), with the
+folders every paper uses (an empty one holds a `.gitkeep`). Everything a stage writes has one place:
 
 <!-- layout:begin — drawn from src/domain/paper-layout.ts (PAPERS_LAYOUT_TREE); src/layout-docs.test.ts fails when this block differs -->
 
@@ -219,7 +219,14 @@ REALM.
    It writes `papers/my-paper/` (in the folder you gave `init`) with three files:
    - `paper.tex` — your paper;
    - `paperlint.json` — its venue preset and kind;
-   - `PIPELINE-STATUS.md` — which stage the paper is at; the skills read and update it.
+   - `PIPELINE-STATUS.md` — which stage the paper is at; the skills read and update it;
+
+   and the folders every paper uses, so the layout that `paper/folder-layout` and `paper/repro-layout`
+   enforce is visible from the first commit: `reviews/`, `research/`, `figures/`, `versions/`,
+   `submission/`, and `repro/` with an index (`README.md`: one line per study), `tools/` and `data/`.
+   An empty folder holds a `.gitkeep` so git keeps it; delete the `.gitkeep` once the folder has a
+   real file. Not made, because they depend on the work: `siblings/` (the first competing paper's
+   card), `sections/` (a split body), `talk/` (a declared talk) and `extra/` (the never-judged spillover).
 
 4. Build the PDF. **This needs TeX Live, a ~270 MB download (~3 min, once).** If you said no in
    `init`, run `npx paperlint toolchain` first.
@@ -252,8 +259,9 @@ paperlint finds a paper by its folder: `<papersDir>/<name>/`, with the main file
 
 1. Put the paper there — for example `papers/my-paper/paper.tex`, the rest of its files beside it. If
    your paper folders already live elsewhere, say `thesis/`, [set `papersDir`](#-configuration) instead.
-2. Run `npx paperlint new my-paper --venue <preset> --kind <kind>`. On an existing folder it only
-   adds the missing `paperlint.json` and `PIPELINE-STATUS.md`; it never touches `paper.tex`.
+2. Run `npx paperlint new my-paper --venue <preset> --kind <kind>`. On a folder that holds
+   anything it only adds the missing `paperlint.json` and `PIPELINE-STATUS.md` (no layout folders: your
+   paper keeps its own shape); it never touches `paper.tex`.
 3. Build and lint, as above.
 
 ## 🧰 Commands

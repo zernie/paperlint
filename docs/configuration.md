@@ -13,6 +13,8 @@ papers/
     paper.tex
     PIPELINE-STATUS.md
     paperlint.json           THIS PAPER: its venue preset, its kind, its own rules — `paperlint new` writes it
+    reviews/ research/ figures/ versions/ submission/ repro/
+                             the paper's layout — `paperlint new` makes them (an empty one holds a `.gitkeep`)
 venues/usenix-sec.jsonc      (optional, your own) a VENUE PRESET: format, page limits, TeX packages, rules
 ```
 

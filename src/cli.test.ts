@@ -514,11 +514,11 @@ test("silentOptionalRules: a rule no block names for any paper is silent — a g
 test("init with no path sets up the current directory, and its first paper is paper.tex", async () => {
   const dir = writeTree(join(root, "init-here"), { "package.json": "{}" });
   const r = await cli(["init", "--yes", "--no-hooks", "--paper", "first"], dir);
-  assert.deepEqual(
-    readdirSync(join(dir, "papers", "first")).sort(),
-    ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"],
-    r.out + r.err,
-  );
+  const made = readdirSync(join(dir, "papers", "first"));
+  // The three files, then the layout's folders (src/new-paper.test.ts holds the exact tree).
+  for (const f of ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"])
+    assert.ok(made.includes(f), `${f} is missing:\n${r.out + r.err}`);
+  assert.equal(made.includes("main.tex"), false);
 });
 
 test("init and doctor with a declaration that names no directory: nothing to compare", async () => {

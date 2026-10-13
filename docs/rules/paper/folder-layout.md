@@ -49,6 +49,12 @@ it: [the map](../../layout.md).
 
 <!-- layout:end -->
 
+`paperlint new` makes the folders a paper uses from its first day: `versions/`, `reviews/`, `research/`,
+`repro/` (with its index, `tools/` and `data/`), `figures/` and `submission/`, each empty one with a
+`.gitkeep` so the layout is in the first commit. It leaves out `siblings/` (made with the first
+competitor's card), `sections/` (when the body is split), `talk/` (when the paper declares a talk),
+`extra/` (never judged) and `_build/` (the build's). No rule reports a `.gitkeep` inside these folders.
+
 Never reported: the byproducts a TeX run leaves beside `paper.tex` (`paper.aux`, `.log`, `.out`,
 `.toc`, `.lof`, `.lot`, `.lol`, `.fls`, `.xdv`, `.dvi`, `.synctex.gz`; bibtex's `.bbl`, `.blg`;
 makeindex's `.idx`, `.ind`, `.ilg`; glossaries' `.glo`, `.gls`, `.glg`, `.acn`, `.acr`, `.alg`, `.ist`,

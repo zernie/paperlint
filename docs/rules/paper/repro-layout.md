@@ -26,6 +26,10 @@ repro/
 
 <!-- layout:end -->
 
+`paperlint new` makes `repro/README.md` (a stub index), `repro/tools/` and `repro/data/` (each with a
+`.gitkeep` until it holds a file). `repro/` itself gets no `.gitkeep`: its top allows only the entries
+above, and it already holds the index.
+
 A loose note belongs in the folder of the study it is about, or in the paper's `research/` when it is
 research or a decision rather than the record of a run.
 
