@@ -337,6 +337,40 @@ def escape(text):
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+ANSWER_DOC_FIELDS = ("answers", "savedAt", "source")
+GROUP_DOC_FIELDS = ("familiarity", "savedAt", "source")
+
+
+def check_dump(dump, key):
+    """The whole store against the key, ONCE, before anything is read from it. Every name in it must be
+    one the key knows: an item id, a group, a question id, a field of the document. A name the export
+    does not read would otherwise be dropped without a word — a misspelled question key in a chat merge
+    (`boundry`), a misspelled group (`pyhton`) — and its answer lost from the labels. Refuses, naming the
+    path; the fix is one edit in the dump. Every document also says where it came from: the page always
+    writes `source: "page"`, so a document without one was merged by hand."""
+    known = {
+        "answers": (set(key["ids"]), ANSWER_DOC_FIELDS),
+        "groups": ({meta["group"] for meta in key["ids"].values()}, GROUP_DOC_FIELDS),
+    }
+    for top in sorted(set(dump) - set(known)):
+        fail(f"{top}: the store has no such collection (expected {', '.join(known)})")
+    for kind, (names, fields) in known.items():
+        for name, doc in sorted(dump.get(kind, {}).items()):
+            at = f"{kind}/{name}"
+            if name not in names:
+                fail(f"{at}: the key does not know this {kind[:-1]} ({', '.join(sorted(names))})")
+            if not isinstance(doc, dict):
+                fail(f"{at}: must be an object with {', '.join(fields)}")
+            for field in sorted(set(doc) - set(fields)):
+                fail(f"{at}/{field}: not a field of a stored {kind[:-1]} ({', '.join(fields)})")
+            if "source" not in doc:
+                fail(f"{at}: no source; add \"source\": \"chat\" or \"page\" (one of {SOURCES})")
+            if doc["source"] not in SOURCES:
+                fail(f"{at}: source {doc['source']!r}; expected one of {SOURCES}")
+            for q in sorted(set(doc.get("answers", {})) - set(key["questions"])):
+                fail(f"{at}/answers/{q}: not a question of the key ({', '.join(key['questions'])})")
+
+
 def export(dump_path, key_path, out_dir, day):
     dump = read_json(dump_path)
     key = read_json(key_path)
@@ -348,21 +382,7 @@ def export(dump_path, key_path, out_dir, day):
             or any(q not in allowed.get("questions", {}) for q in qids)):
         fail(f"{key_path} has no `allowed` values for every question and for familiarity (made by an older build). "
              f"Run `build` again with the same items.json and seed: ids are kept, the key gains them.")
-    stray = sorted(set(answers) - set(key["ids"]))
-    if stray:
-        fail(f"the store holds answers for ids the key does not know: {', '.join(stray)}")
-    # Same for familiarity: a group misspelled in a chat merge would be dropped without a word.
-    stray_groups = sorted(set(groups) - {meta["group"] for meta in key["ids"].values()})
-    if stray_groups:
-        fail(f"the store holds familiarity for groups the key does not know: {', '.join(stray_groups)}")
-    # Every stored document says where it came from. The page always writes `source: "page"`, so a
-    # document without one was merged by hand, and calling it "page" would export a false provenance.
-    for kind, docs in (("answers", answers), ("groups", groups)):
-        for name, doc in docs.items():
-            if "source" not in doc:
-                fail(f"{kind}/{name}: no source; add \"source\": \"chat\" or \"page\" (one of {SOURCES})")
-            if doc["source"] not in SOURCES:
-                fail(f"{kind}/{name}: source {doc['source']!r}; expected one of {SOURCES}")
+    check_dump(dump, key)
 
     items, group_ids = [], []
     for nid, meta in key["ids"].items():

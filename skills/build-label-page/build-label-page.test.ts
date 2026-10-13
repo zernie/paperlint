@@ -820,7 +820,37 @@ test("export refuses a source it does not know, and an id the key does not know"
   );
   const r3 = run(["export", join(dir, "d3.json"), keyPath, join(dir, "data")]);
   assert.notEqual(r3.status, 0, r3.out);
-  assert.match(r3.out, /groups the key does not know: pyhton/, r3.out);
+  assert.match(
+    r3.out,
+    /groups\/pyhton: the key does not know this group/,
+    r3.out,
+  );
+});
+
+test("🔴 export checks every name in the store against the key: a stray one is refused by its path, never dropped", () => {
+  const dir = setup("export-stray", config());
+  build(dir);
+  const keyPath = join(dir, "out", "key.json");
+  const doc = { answers: { label: "yes" }, source: "chat" };
+  const cases: readonly (readonly [string, unknown])[] = [
+    [
+      "answers/G001/answers/boundry",
+      { answers: { G001: { ...doc, answers: { boundry: "clear" } } } },
+    ],
+    ["answers/G001/note", { answers: { G001: { ...doc, note: "x" } } }],
+    [
+      "groups/python/familarity",
+      { groups: { python: { familarity: "well", source: "chat" } } },
+    ],
+    ["answer: the store has no such collection", { answer: {} }],
+  ];
+  cases.forEach(([path, dump], i) => {
+    const file = join(dir, `stray-${String(i)}.json`);
+    writeFileSync(file, JSON.stringify(dump));
+    const r = run(["export", file, keyPath, join(dir, "data")]);
+    assert.notEqual(r.status, 0, `${path}: ${r.out}`);
+    assert.ok(r.out.includes(path), `${path} must be named\n${r.out}`);
+  });
 });
 
 test("🔴 export refuses a stored answer or familiarity without a source, and names it: a missing one is not relabelled as the page's", () => {
