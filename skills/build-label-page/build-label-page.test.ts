@@ -476,7 +476,11 @@ function badCases({ node, member }: Leaf): readonly BadCase[] {
     .filter((v) => !(Array.isArray(v) && node.kind === "array"))
     .map((v) => bad(JSON.stringify(v), v));
   const extra: readonly BadCase[] = [
-    ...(node.pattern === undefined ? [] : [bad("bad id!", "bad id!")]),
+    // `__proto__` matches the id pattern, but the page stores answers in plain JavaScript objects,
+    // where assigning it sets the prototype instead of an answer: every tap would save nothing.
+    ...(node.pattern === undefined
+      ? []
+      : [bad("bad id!", "bad id!"), bad("__proto__", "__proto__")]),
     ...(node.kind === "array" && node.min ? [bad("[]", [])] : []),
     ...(node.kind === "map" && node.min ? [bad("{}", {})] : []),
     ...(node.required && !member ? [bad("(missing)", undefined)] : []),

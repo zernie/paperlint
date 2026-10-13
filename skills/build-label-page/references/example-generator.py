@@ -62,7 +62,13 @@ FAMILIARITY = (
     {"value": "somewhat", "label": "Somewhat"},
     {"value": "not_really", "label": "Not really"},
 )
-NAME_PATTERN = r"[A-Za-z0-9_-]+"
+# An id is a key of a plain JavaScript object on the page, so a name Object.prototype already has
+# is refused: `answers["__proto__"] = v` sets the prototype and saves nothing, and an unanswered
+# `answers["constructor"]` reads back a function instead of nothing.
+RESERVED_NAMES = ("__proto__", "constructor", "prototype", "hasOwnProperty", "isPrototypeOf",
+                  "propertyIsEnumerable", "toLocaleString", "toString", "valueOf",
+                  "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__")
+NAME_PATTERN = r"(?!(?:" + "|".join(RESERVED_NAMES) + r")$)[A-Za-z0-9_-]+"
 SOURCES = ("page", "chat")
 
 # ── THE CONFIG SCHEMA ──────────────────────────────────────────────────────────────────────────
