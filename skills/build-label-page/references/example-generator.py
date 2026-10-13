@@ -337,10 +337,14 @@ def export(dump_path, key_path, out_dir, day):
     stray = sorted(set(answers) - set(key["ids"]))
     if stray:
         fail(f"the store holds answers for ids the key does not know: {', '.join(stray)}")
+    # Every stored document says where it came from. The page always writes `source: "page"`, so a
+    # document without one was merged by hand, and calling it "page" would export a false provenance.
     for kind, docs in (("answers", answers), ("groups", groups)):
         for name, doc in docs.items():
-            if doc.get("source", "page") not in SOURCES:
-                fail(f"{kind}/{name}: source {doc.get('source')!r}; expected one of {SOURCES}")
+            if "source" not in doc:
+                fail(f"{kind}/{name}: no source; add \"source\": \"chat\" or \"page\" (one of {SOURCES})")
+            if doc["source"] not in SOURCES:
+                fail(f"{kind}/{name}: source {doc['source']!r}; expected one of {SOURCES}")
 
     items, group_ids = [], []
     for nid, meta in key["ids"].items():
@@ -363,7 +367,7 @@ def export(dump_path, key_path, out_dir, day):
             "answers": given,
             "invalid_answers": invalid,
             "complete": all(v is not None for v in given.values()),
-            "source": doc.get("source", "page") if doc else None,
+            "source": doc["source"] if doc else None,
             "saved_at": doc.get("savedAt"),
         })
         if meta["group"] not in group_ids:
@@ -380,7 +384,7 @@ def export(dump_path, key_path, out_dir, day):
         "groups": {
             g: {"familiarity": None if g in bad_fam else groups.get(g, {}).get("familiarity"),
                 "invalid_familiarity": bad_fam.get(g),
-                "source": groups.get(g, {}).get("source", "page") if g in groups else None,
+                "source": groups[g]["source"] if g in groups else None,
                 "saved_at": groups.get(g, {}).get("savedAt")}
             for g in group_ids
         },

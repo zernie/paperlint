@@ -746,7 +746,11 @@ test("export: one file named by the date, chat answers kept, incomplete items na
       },
     },
     groups: {
-      python: { familiarity: "well", savedAt: "2026-01-02T03:04:00Z" },
+      python: {
+        familiarity: "well",
+        savedAt: "2026-01-02T03:04:00Z",
+        source: "page",
+      },
     },
   };
   writeFileSync(join(dir, "dump.json"), JSON.stringify(dump));
@@ -798,4 +802,21 @@ test("export refuses a source it does not know, and an id the key does not know"
     run(["export", join(dir, "d2.json"), keyPath, join(dir, "data")]).status,
     0,
   );
+});
+
+test("🔴 export refuses a stored answer or familiarity without a source, and names it: a missing one is not relabelled as the page's", () => {
+  const dir = setup("export-no-source", config());
+  build(dir);
+  const keyPath = join(dir, "out", "key.json");
+  const dumps = {
+    "answers/G001": { answers: { G001: { answers: { label: "yes" } } } },
+    "groups/python": { groups: { python: { familiarity: "well" } } },
+  };
+  for (const [path, dump] of Object.entries(dumps)) {
+    const file = join(dir, `${path.replace("/", "-")}.json`);
+    writeFileSync(file, JSON.stringify(dump));
+    const r = run(["export", file, keyPath, join(dir, "data")]);
+    assert.notEqual(r.status, 0, r.out);
+    assert.match(r.out, new RegExp(`${path}: no source`), r.out);
+  }
 });
