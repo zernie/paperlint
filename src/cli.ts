@@ -187,6 +187,7 @@ import siblingFrontmatter from "#eslint-rules/sibling-frontmatter";
 import pdfRules from "#eslint-rules/pdf-last-page-balance";
 import { messageOf } from "./domain/text.ts";
 import { isRecord } from "./domain/record.ts";
+import { ESCAPE_HATCH } from "./domain/paper-layout.ts";
 
 /** The shipped venue presets, read from the package's venues directory — the one list. */
 const SHIPPED_VENUES = (): string[] => shippedPresets(presetsDir());
@@ -390,7 +391,9 @@ export function buildConfig(
     // its files carry every marker a paper does. Flat config does NOT ignore dot-directories by
     // default (only `node_modules/` and `.git/`), so without this block `paperlint lint` would lint the
     // template as a paper — and a richer template with placeholder stages would fail the run.
-    { ignores: ["**/.template/"] },
+    // The same for a paper's `extra/`: the layout promises it is never judged, and an archived
+    // snapshot there carries a paper's markers too, so its folder read as a paper root with strays.
+    { ignores: ["**/.template/", `**/${ESCAPE_HATCH}/`] },
     // The `pdf` plugin is registered for EVERY file. A consumer's block (`rules`, appended below)
     // may name its rules for a glob that also matches markdown files; with the plugin defined only
     // beside `paper.tex`, ESLint would refuse those files with "could not find plugin". Every rule

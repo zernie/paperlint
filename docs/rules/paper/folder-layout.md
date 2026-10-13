@@ -55,6 +55,10 @@ it: [the map](../../layout.md).
 competitor's card), `sections/` (when the body is split), `talk/` (when the paper declares a talk),
 `extra/` (never judged) and `_build/` (the build's). No rule reports a `.gitkeep` inside these folders.
 
+`extra/` is never judged by any rule, not only this one: `paperlint lint` does not read a folder named
+`extra/`, wherever it is. An archived snapshot of an older paper kept there, with its own
+`PIPELINE-STATUS.md`, is not taken for a second paper.
+
 Never reported: the byproducts a TeX run leaves beside `paper.tex` (`paper.aux`, `.log`, `.out`,
 `.toc`, `.lof`, `.lot`, `.lol`, `.fls`, `.xdv`, `.dvi`, `.synctex.gz`; bibtex's `.bbl`, `.blg`;
 makeindex's `.idx`, `.ind`, `.ilg`; glossaries' `.glo`, `.gls`, `.glg`, `.acn`, `.acr`, `.alg`, `.ist`,

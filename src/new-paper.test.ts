@@ -739,6 +739,32 @@ describe("paperlint new — the scaffold on a folder that is not new", () => {
   });
 });
 
+/** A consumer project with one scaffolded paper and `added` files in it, linted: the rule ids found. */
+async function lintScaffold(added: Record<string, string> = {}) {
+  const root = tmp();
+  writeFileSync(
+    join(root, "package.json"),
+    JSON.stringify({ name: "c", private: true }),
+  );
+  newPaper(join(root, "papers"), "demo", { venues: [] });
+  for (const [p, text] of Object.entries(added)) {
+    mkdirSync(join(root, "papers", "demo", p, ".."), { recursive: true });
+    writeFileSync(join(root, "papers", "demo", p), text);
+  }
+  const out: string[] = [];
+  const code = await run(["lint", "--json"], {
+    cwd: root,
+    log: (s: string) => out.push(s),
+    err: () => {},
+  });
+  return {
+    code,
+    ids: lintReport(out.join("\n")).flatMap((r) =>
+      r.messages.map((m) => m.ruleId),
+    ),
+  };
+}
+
 describe("paperlint lint — a scaffolded paper has no layout finding", () => {
   const LAYOUT_RULES = [
     "paper/folder-layout",
@@ -748,31 +774,6 @@ describe("paperlint lint — a scaffolded paper has no layout finding", () => {
     "paper/stages",
     "paper/prereg-coverage",
   ];
-
-  async function lintScaffold(extra: Record<string, string> = {}) {
-    const root = tmp();
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({ name: "c", private: true }),
-    );
-    newPaper(join(root, "papers"), "demo", { venues: [] });
-    for (const [p, text] of Object.entries(extra)) {
-      mkdirSync(join(root, "papers", "demo", p, ".."), { recursive: true });
-      writeFileSync(join(root, "papers", "demo", p), text);
-    }
-    const out: string[] = [];
-    const code = await run(["lint", "--json"], {
-      cwd: root,
-      log: (s: string) => out.push(s),
-      err: () => {},
-    });
-    return {
-      code,
-      ids: lintReport(out.join("\n")).flatMap((r) =>
-        r.messages.map((m) => m.ruleId),
-      ),
-    };
-  }
 
   it("none of the rules that read the layout's folders reports it; only the not-built warnings remain", async () => {
     const { code, ids } = await lintScaffold();
@@ -790,5 +791,24 @@ describe("paperlint lint — a scaffolded paper has no layout finding", () => {
       "repro/some-study-2026-10-13/.gitkeep": "",
     });
     expect(ids.filter((id) => LAYOUT_RULES.includes(id ?? ""))).toEqual([]);
+  });
+});
+
+describe("paperlint lint — extra/ is never read", () => {
+  // An archived snapshot of an older paper carries every marker a paper does. Under extra/ it is
+  // spillover the layout promises never to judge; anywhere else its folder reads as a paper root.
+  const SNAPSHOT = (dir: string) => ({
+    [`${dir}/PIPELINE-STATUS.md`]: "# Pipeline status\n",
+    [`${dir}/notes.txt`]: "x\n",
+  });
+
+  it("🔴 an archived paper under extra/ is never linted, by any rule", async () => {
+    const { ids } = await lintScaffold(SNAPSHOT("extra/old-2025"));
+    expect(ids).toEqual(["pdf/measured", "paper/sources-fresh"]);
+  });
+
+  it("the same snapshot outside extra/ is reported, so the test above can fail", async () => {
+    const { ids } = await lintScaffold(SNAPSHOT("research/old-2025"));
+    expect(ids).toContain("paper/folder-layout");
   });
 });
