@@ -371,6 +371,11 @@ def check_dump(dump, key):
         "answers": {nid for nid, meta in key["ids"].items() if meta["on_page"]},
         "groups": {meta["group"] for meta in shown},
     }
+    if not isinstance(dump, dict):
+        fail(f"store: {type(dump).__name__} — must be an object {{answers, groups}}")
+    for kind in known:
+        if kind in dump and not isinstance(dump[kind], dict):
+            fail(f"{kind}: {type(dump[kind]).__name__} — must be an object {{id: stored document}}")
     for top in sorted(set(dump) - set(known)):
         fail(f"{top}: the store has no such collection (expected {', '.join(known)})")
     for kind, (names, fields) in known.items():
@@ -403,8 +408,6 @@ def check_dump(dump, key):
 def export(dump_path, key_path, out_dir, day):
     dump = read_json(dump_path)
     key = read_json(key_path)
-    answers = dump.get("answers", {})
-    groups = dump.get("groups", {})
     qids = key["questions"]
     allowed = key.get("allowed")
     if (not isinstance(allowed, dict) or "familiarity" not in allowed
@@ -412,6 +415,8 @@ def export(dump_path, key_path, out_dir, day):
         fail(f"{key_path} has no `allowed` values for every question and for familiarity (made by an older build). "
              f"Run `build` again with the same items.json and seed: ids are kept, the key gains them.")
     check_dump(dump, key)
+    answers = dump.get("answers", {})
+    groups = dump.get("groups", {})
 
     items, group_ids = [], []
     for nid, meta in key["ids"].items():

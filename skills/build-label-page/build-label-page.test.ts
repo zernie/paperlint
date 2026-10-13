@@ -944,6 +944,9 @@ test("🔴 export refuses a stored field of the wrong type by its path, never a 
       "answers/G001/source",
       { answers: { G001: { answers: {}, source: ["chat"] } } },
     ],
+    ["answers", { answers: [], groups: {} }],
+    ["groups", { groups: "python" }],
+    ["store", []],
   ];
   cases.forEach(([path, dump], i) => {
     const file = join(dir, `type-${String(i)}.json`);
