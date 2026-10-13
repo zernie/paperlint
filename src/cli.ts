@@ -700,20 +700,21 @@ export async function silentOptionalRules(
     ),
   );
   const reached = new Set<string>();
-  for (const f of new Set(files.filter((p) => basename(p) === MAIN))) {
-    // A paper's rules reach it through two files: `paper.tex` and the `PIPELINE-STATUS.md` beside
-    // it, where the rules about the paper folder itself run. Undefined for a file outside ESLint's
-    // cwd or scope: it reaches nothing.
-    for (const probe of [f, join(dirname(f), STATUS_FILE)]) {
-      const cfg = ComputedConfig.parse(
-        await eslint.calculateConfigForFile(probe),
-      );
-      // Reached is "some block names the rule for this paper", on OR off: a paper that turns off what
-      // its venue preset turned on is the documented way out, and reads the same as a glob that missed
-      // only if "off" is counted as "not there" — which refused every such paper.
-      for (const id of turnedOn)
-        if (cfg?.rules?.[id] !== undefined) reached.add(id);
-    }
+  // A paper's rules reach it through two files: `paper.tex` and the `PIPELINE-STATUS.md` beside it,
+  // where the rules about the paper folder itself run.
+  const probes = [
+    ...new Set(files.filter((p) => basename(p) === MAIN)),
+  ].flatMap((f) => [f, join(dirname(f), STATUS_FILE)]);
+  for (const probe of probes) {
+    // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
+    const cfg = ComputedConfig.parse(
+      await eslint.calculateConfigForFile(probe),
+    );
+    // Reached is "some block names the rule for this paper", on OR off: a paper that turns off what
+    // its venue preset turned on is the documented way out, and reads the same as a glob that missed
+    // only if "off" is counted as "not there" — which refused every such paper.
+    for (const id of turnedOn)
+      if (cfg?.rules?.[id] !== undefined) reached.add(id);
   }
   return [...turnedOn].filter((id) => !reached.has(id));
 }
