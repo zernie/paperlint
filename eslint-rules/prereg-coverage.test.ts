@@ -381,6 +381,14 @@ describe("which files are judged: through a link", () => {
     );
     expect(preregFiles(dir)).toEqual(["repro/s-2026-10-01/prereg.json"]);
   });
+
+  it("a link in repro/ to nothing is passed over, not a crash", () => {
+    const dir = writeTree(join(root, "dangling"), {
+      "repro/README.md": "# repro\n",
+    });
+    symlinkSync(join(dir, "gone"), join(dir, "repro", "s-2026-10-02"));
+    expect(preregFiles(dir)).toEqual([]);
+  });
 });
 
 describe("the rule, on the status file of a paper", () => {
