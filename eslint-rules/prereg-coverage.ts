@@ -359,13 +359,23 @@ export function preregFiles(paperDir: string): readonly string[] {
     : [];
 }
 
+/** A `prereg.json` that is not a regular file (a folder, a socket): reading it would abort the run. */
+const NOT_A_FILE: readonly Problem[] = [
+  {
+    at: "",
+    text: "is not a file — the declaration is one JSON file; move what the folder holds elsewhere",
+  },
+];
+
 /** Every finding for the paper folder `paperDir`, one text each. */
 export const paperFindings = (paperDir: string): readonly string[] =>
-  preregFiles(paperDir).flatMap((rel) =>
-    preregProblems(readFileSync(join(paperDir, rel), "utf8")).map((p) =>
-      problemMessage(rel, p),
-    ),
-  );
+  preregFiles(paperDir).flatMap((rel) => {
+    const path = join(paperDir, rel);
+    const problems = statSync(path).isFile()
+      ? preregProblems(readFileSync(path, "utf8"))
+      : NOT_A_FILE;
+    return problems.map((p) => problemMessage(rel, p));
+  });
 
 export default {
   rules: {

@@ -357,6 +357,15 @@ describe("which files are judged", () => {
       `\`repro/bad-2026-10-02/prereg.json\`: \`coverage.reason\` is missing — \`share\` is null, so say why the share cannot be stated. ${WHY} Rule paper/prereg-coverage: ${PAGE}`,
     ]);
   });
+
+  it("🔴 a prereg.json that is a folder is a finding, not a crash of the whole lint run", () => {
+    const dir = writeTree(join(root, "folder-prereg"), {
+      "repro/s-2026-10-01/prereg.json/x.txt": "",
+    });
+    expect(paperFindings(dir)).toEqual([
+      `\`repro/s-2026-10-01/prereg.json\` is not a file — the declaration is one JSON file; move what the folder holds elsewhere. ${WHY} Rule paper/prereg-coverage: ${PAGE}`,
+    ]);
+  });
 });
 
 describe("the rule, on the status file of a paper", () => {
