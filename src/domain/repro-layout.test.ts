@@ -203,7 +203,7 @@ describe("reproMessage — stands alone", () => {
         "├── data/               ← shared data (tables, caches)",
         "└── <slug>-YYYY-MM-DD/  ← one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)",
         "    └── README.md       ← required: what it asks, how to run it, what it found",
-        "Rule paper/repro-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/repro-layout.md",
+        "Rule repro/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/allowed-files-only.md",
       ].join("\n"),
     );
   });

@@ -60,12 +60,12 @@ The full text, each with its reason and its check, is
    with access to the artifact, so the labeller is the owner or has been shared as a Contributor.
    If the study design is not written yet, \`build-benchmark\` comes first.
    If the items come from a drawn sample, the study's \`prereg.json\` declares the population, the
-   screens and the coverage before the sample is frozen (rule \`paper/prereg-coverage\`), and the
+   screens and the coverage before the sample is frozen (rule \`study/declare-sample\`), and the
    author has been shown the drawn **units** (the rules or cases, not the items) with "is this what
    you meet in practice?". The labelling page is not that check: items made from easy units each look
    fine on their own.
 2. **Copy the generator into the study and write the items.** The study folder is
-   \`<paper-dir>/repro/<slug>-YYYY-MM-DD/\` (\`gold-labels-2026-10-12\`; \`paper/repro-layout\` wants the
+   \`<paper-dir>/repro/<slug>-YYYY-MM-DD/\` (\`gold-labels-2026-10-12\`; \`repro/allowed-files-only\` wants the
    date, a \`README.md\` in it saying what the study asks, and a line in \`repro/README.md\`; where this
    sits in stage 3, and what checks each place: \`docs/layout.md\` in the paperlint package).
    \`items.json\` follows the header of the generator. Source ids in \`items.json\` are the study's own;

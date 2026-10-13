@@ -1,8 +1,8 @@
 /**
- * `paper/folder-layout` — the root of a paper folder holds only paperlint's own files and folders.
+ * `paper/allowed-files-only` — the root of a paper folder holds only paperlint's own files and folders.
  *
  * What may stand there, and why each entry, is `src/domain/paper-layout.ts` (the one list) and
- * docs/rules/paper/folder-layout.md. This file reads the folder and the paper's settings, and reports.
+ * docs/rules/paper/allowed-files-only.md. This file reads the folder and the paper's settings, and reports.
  *
  * ── WHY A RULE THAT LISTS A DIRECTORY ───────────────────────────────────────────
  * A structure linter over file NAMES (ls-lint, ESLint's `project-structure`) judges the files handed
@@ -106,7 +106,7 @@ const META: FolderRuleModule["meta"] = {
   docs: {
     description:
       "the paper folder's root holds only paperlint's own files and folders; anything else goes into the folder for its kind, or extra/",
-    url: rulePageUrl("paper/folder-layout"),
+    url: rulePageUrl("paper/allowed-files-only"),
   },
   schema: [],
   messages: {
@@ -119,9 +119,9 @@ const META: FolderRuleModule["meta"] = {
 /** The rule, reading the folder and the paper's settings through `deps`. */
 export function folderLayoutRules(
   deps: FolderLayoutDeps,
-): Readonly<Record<"folder-layout", FolderRuleModule>> {
+): Readonly<Record<"allowed-files-only", FolderRuleModule>> {
   return {
-    "folder-layout": {
+    "allowed-files-only": {
       meta: META,
       create(context: FolderRuleContext) {
         if (basename(context.filename) !== STATUS_FILE) return {};
@@ -147,5 +147,5 @@ export function folderLayoutRules(
 
 /** The level it is on at in paperlint's own config, for every paper's `PIPELINE-STATUS.md`. */
 export const FOLDER_LAYOUT_RULE_LEVELS: Readonly<
-  Record<"paper/folder-layout", "error">
-> = { "paper/folder-layout": "error" };
+  Record<"paper/allowed-files-only", "error">
+> = { "paper/allowed-files-only": "error" };

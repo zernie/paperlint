@@ -77,7 +77,7 @@ const linted = (stdout: string): string[] =>
 
 /**
  * Vendored code under a paper: a syntax error, an unknown rule in a directive, plain CommonJS — in
- * `repro/tools/`, where `paper/repro-layout` puts a paper's scripts.
+ * `repro/tools/`, where `repro/allowed-files-only` puts a paper's scripts.
  */
 const VENDORED = {
   "papers/a/repro/tools/x.js": "return 1;\n",

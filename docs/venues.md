@@ -82,7 +82,7 @@ it acts only inside a paper folder.
 
 What is checked is the other side: a corpus started **inside** a paper folder. A `venues/` or
 `venue-corpus/` folder at a paper's root is reported, with this place as where it goes
-([the paper folder's layout](rules/paper/folder-layout.md)), and the hook refuses to create one.
+([the paper folder's layout](rules/paper/allowed-files-only.md)), and the hook refuses to create one.
 
 ## Where the venue's other facts go
 

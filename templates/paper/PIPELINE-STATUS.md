@@ -18,7 +18,7 @@ gate caps "ready"; an accept probability alone is not a verdict.>
 ## Plan / now
 
 The paper's live plan: this file is the paper's one live-state file, so the plan lives here, not in a
-`PLAN.md` beside it (`paper/folder-layout` reports one). Rewrite this section as the plan changes; a
+`PLAN.md` beside it (`paper/allowed-files-only` reports one). Rewrite this section as the plan changes; a
 decision's history goes to `research/` as a dated record.
 
 - **Now (<ISO date>):** <what is being worked on, and the next step>

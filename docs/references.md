@@ -73,7 +73,7 @@ build asks only what that file cannot answer:
 
 - An unchanged bibliography whose answers are under 30 days old asks nothing and makes no network request at all, not even the check
   for whether the services can be reached.
-- A cache at the old place, `repro/references-cache.json`, is not read: `paper/repro-layout` reports
+- A cache at the old place, `repro/references-cache.json`, is not read: `repro/allowed-files-only` reports
   it with the command that moves it (`git mv repro/references-cache.json repro/data/`). Until it is
   moved, the build asks every question again.
 - Adding or editing an entry asks only about that entry. Answers are stored per identifier (DOI,

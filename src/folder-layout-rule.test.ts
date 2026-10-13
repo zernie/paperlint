@@ -1,5 +1,5 @@
 /**
- * `paper/folder-layout` (`src/folder-layout-rule.ts`) on paper folders held in memory, run the way
+ * `paper/allowed-files-only` (`src/folder-layout-rule.ts`) on paper folders held in memory, run the way
  * ESLint runs it: `create`, then `root`. Both halves: a stray file or folder at the paper's root is
  * reported once each, on the first line of `PIPELINE-STATUS.md`; the scaffold, and what the paper's
  * settings name at its root, are not.
@@ -35,7 +35,7 @@ function lint(
   const rule = folderLayoutRules({
     files,
     listDir: memoryListDir(files),
-  })["folder-layout"];
+  })["allowed-files-only"];
   const out: Reported[] = [];
   const visitor = rule.create({
     filename: file,
@@ -53,7 +53,7 @@ function lint(
   return out;
 }
 
-describe("paper/folder-layout — reports", () => {
+describe("paper/allowed-files-only — reports", () => {
   it("a stray file at the root, once, on the first line, with the one stray text", () => {
     expect(lint({ ...SCAFFOLD, [`${DIR}/PLAN.md`]: "x" })).toEqual([
       {
@@ -100,7 +100,7 @@ describe("paper/folder-layout — reports", () => {
   });
 });
 
-describe("paper/folder-layout — silent", () => {
+describe("paper/allowed-files-only — silent", () => {
   it("on the scaffold `paperlint new` writes", () => {
     expect(lint(SCAFFOLD)).toEqual([]);
   });
@@ -229,5 +229,7 @@ describe("declaredRoots — nothing to add", () => {
 });
 
 it("is on at error in paperlint's own config", () => {
-  expect(FOLDER_LAYOUT_RULE_LEVELS).toEqual({ "paper/folder-layout": "error" });
+  expect(FOLDER_LAYOUT_RULE_LEVELS).toEqual({
+    "paper/allowed-files-only": "error",
+  });
 });

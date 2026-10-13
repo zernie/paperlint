@@ -694,7 +694,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
   },
   // A plan beside the paper: the root holds only paperlint's own files and folders.
-  "paper/folder-layout": {
+  "paper/allowed-files-only": {
     reports: {
       tree: paper(tex("x"), { [`${P}/PLAN.md`]: "# plan\n" }),
       file: `${P}/PIPELINE-STATUS.md`,
@@ -708,7 +708,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     }),
   },
   // A loose script at the top of repro/: it belongs in repro/tools/.
-  "paper/repro-layout": {
+  "repro/allowed-files-only": {
     reports: {
       tree: paper(tex("x"), { [`${P}/repro/run.py`]: "print(1)\n" }),
       file: `${P}/PIPELINE-STATUS.md`,
@@ -723,7 +723,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     }),
   },
   // A study's prereg.json that declares none of population, strata, screens, coverage, author_check.
-  "paper/prereg-coverage": {
+  "study/declare-sample": {
     reports: {
       tree: paper(tex("x"), {
         [`${P}/repro/README.md`]: "# repro\n",

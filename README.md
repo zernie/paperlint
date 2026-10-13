@@ -79,16 +79,16 @@ inside: a study's pre-registration and its human labels are made there.
 
 ```mermaid
 flowchart TB
-  N["<b>paperlint new</b><br/>creates the paper folder<br/>checked from here on:<br/>every lint · paper/folder-layout<br/>every new file · hook paper-folder-layout"]
+  N["<b>paperlint new</b><br/>creates the paper folder<br/>checked from here on:<br/>every lint · paper/allowed-files-only<br/>every new file · hook paper-folder-layout"]
   S1["<b>1 · idea</b><br/>research-ideate · map-prior-work<br/>analyze-sibling-paper<br/>writes: siblings/<br/>checked by: sibling/frontmatter"]
   S2["<b>2 · venue</b><br/>find-venue · plan-paper-timeline<br/>study-accepted-papers, mode A or B<br/>writes: paperlint.json, a report in reviews/<br/>checked by: review/frontmatter"]
   V[("<b>#lt;papers-root#gt;/venues/#lt;venue#gt;/</b><br/>beside the papers, not in one:<br/>the venue's accepted papers,<br/>shared by every paper aimed at it<br/>checked by: nothing")]
   subgraph S3["3 · study: repro/#lt;slug#gt;-YYYY-MM-DD/"]
     direction TB
-    D["<b>design</b> · build-benchmark<br/>writes: the study's README.md<br/>checked by: paper/repro-layout"]
-    P["<b>pre-register</b> · build-benchmark<br/>writes: prereg.json, before the draw<br/>checked by: paper/prereg-coverage"]
-    A["<b>author check</b> · you see the drawn units<br/>writes: author_check in prereg.json<br/>checked by: paper/prereg-coverage"]
-    R["<b>run</b> · your scripts<br/>writes: the study folder,<br/>repro/tools/, repro/data/<br/>checked by: paper/repro-layout"]
+    D["<b>design</b> · build-benchmark<br/>writes: the study's README.md<br/>checked by: repro/allowed-files-only"]
+    P["<b>pre-register</b> · build-benchmark<br/>writes: prereg.json, before the draw<br/>checked by: study/declare-sample"]
+    A["<b>author check</b> · you see the drawn units<br/>writes: author_check in prereg.json<br/>checked by: study/declare-sample"]
+    R["<b>run</b> · your scripts<br/>writes: the study folder,<br/>repro/tools/, repro/data/<br/>checked by: repro/allowed-files-only"]
     L["<b>labels</b> · build-label-page<br/>a phone page; the answers go<br/>into the study's data/"]
     Y["<b>analysis</b> · build-benchmark<br/>writes: the numbers, NOTES.md"]
     D --> P --> A --> R --> L --> Y
@@ -155,11 +155,11 @@ folders every paper uses (an empty one holds a `.gitkeep`). Everything a stage w
 | place                             | details                                                                                                                       |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `venues/<venue>/`                 | [what a venue's corpus holds, when it is made, who reads it](docs/venues.md)                                                  |
-| the paper folder's root           | [what may stand there, and where anything else goes](docs/rules/paper/folder-layout.md)                                       |
+| the paper folder's root           | [what may stand there, and where anything else goes](docs/rules/paper/allowed-files-only.md)                                  |
 | `PIPELINE-STATUS.md`, `versions/` | [the stages, and the frozen PDF of each](docs/rules.md#the-scorecards-bytes-and-sourcebytes)                                  |
 | `reviews/`, `siblings/`           | [the record each file keeps in its frontmatter](docs/configuration.md#records-in-frontmatter-checked-by-shipped-json-schemas) |
-| `repro/` and its study folders    | [the index, `tools/`, `data/`, one dated folder per study](docs/rules/paper/repro-layout.md)                                  |
-| `repro/<study>/prereg.json`       | [what a study's pre-registration must declare](docs/rules/paper/prereg-coverage.md)                                           |
+| `repro/` and its study folders    | [the index, `tools/`, `data/`, one dated folder per study](docs/rules/repro/allowed-files-only.md)                            |
+| `repro/<study>/prereg.json`       | [what a study's pre-registration must declare](docs/rules/study/declare-sample.md)                                            |
 | `paper.pdf`, `_build/`            | [how `paperlint build` compiles and measures](docs/configuration.md#how-paperlint-build-compiles-a-paper)                     |
 | `submission/`                     | [the submission on the venue's portal](docs/submission.md)                                                                    |
 | `talk/`                           | [the talk's files and what is checked](docs/talk.md)                                                                          |
@@ -221,7 +221,7 @@ REALM.
    - `paperlint.json` — its venue preset and kind;
    - `PIPELINE-STATUS.md` — which stage the paper is at; the skills read and update it;
 
-   and the folders every paper uses, so the layout that `paper/folder-layout` and `paper/repro-layout`
+   and the folders every paper uses, so the layout that `paper/allowed-files-only` and `repro/allowed-files-only`
    enforce is visible from the first commit: `reviews/`, `research/`, `figures/`, `versions/`,
    `submission/`, and `repro/` with an index (`README.md`: one line per study), `tools/` and `data/`.
    An empty folder holds a `.gitkeep` so git keeps it; delete the `.gitkeep` once the folder has a

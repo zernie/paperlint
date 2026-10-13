@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:bc573aefd768b6f3 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:607eaf7930ecaf30 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — what this venue rewards, measured on its own papers
 
@@ -117,7 +117,7 @@ as judgement, against the base rates of `references/base-rates.md`; simulated pa
 The corpus, its modes and who reads it: `docs/venues.md` in the paperlint package; every place a stage
 writes, and what checks it: `docs/layout.md`.
 
-The paper folder has **no corpus folder of its own**: `paper/folder-layout` reports one, and the hook
+The paper folder has **no corpus folder of its own**: `paper/allowed-files-only` reports one, and the hook
 refuses to create one. A venue's format facts (page limit, template, required sections) go
 in its preset and venue card (`presets/<venue>.jsonc` and `.md` in the package, or the project's
 own), with their source quote, not here.

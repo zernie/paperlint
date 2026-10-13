@@ -1,19 +1,19 @@
 /**
- * `paper/repro-layout` — the top of a paper's `repro/` holds an index, the shared `tools/` and
+ * `repro/allowed-files-only` — the top of a paper's `repro/` holds an index, the shared `tools/` and
  * `data/`, and one dated folder per study, each with a `README.md`.
  *
- * What may stand there, and why, is `src/domain/repro-layout.ts` and docs/rules/paper/repro-layout.md.
+ * What may stand there, and why, is `src/domain/repro-layout.ts` and docs/rules/repro/allowed-files-only.md.
  * This file lists the folder and reports.
  *
- * ── WHY A RULE OF ITS OWN, NOT MORE OF `paper/folder-layout` ─────────────────────
- * Each entry is judged by exactly one rule: `paper/folder-layout` judges the paper folder's root,
+ * ── WHY A RULE OF ITS OWN, NOT MORE OF `paper/allowed-files-only` ─────────────────────
+ * Each entry is judged by exactly one rule: `paper/allowed-files-only` judges the paper folder's root,
  * where `repro/` is allowed, and this rule judges what is inside `repro/`. Neither reports an entry
  * the other does, so a stray entry gets one message. A rule of its own also has its own page and its
  * own switch: a paper whose `repro/` predates the layout can turn this one off and keep its root
  * judged.
  *
  * ── WHICH FILE IT REPORTS ON ─────────────────────────────────────────────────────
- * `PIPELINE-STATUS.md`, first line, like `paper/folder-layout`: every paper has it, and `repro/` may
+ * `PIPELINE-STATUS.md`, first line, like `paper/allowed-files-only`: every paper has it, and `repro/` may
  * have no file ESLint lints at all.
  */
 import { basename, dirname, join } from "node:path";
@@ -77,7 +77,7 @@ const META: FolderRuleModule["meta"] = {
   docs: {
     description:
       "the top of a paper's repro/ holds README.md, .gitignore, tools/, data/ and one <slug>-YYYY-MM-DD folder per study, each with a README.md",
-    url: rulePageUrl("paper/repro-layout"),
+    url: rulePageUrl("repro/allowed-files-only"),
   },
   schema: [],
   messages: {
@@ -89,9 +89,9 @@ const META: FolderRuleModule["meta"] = {
 /** The rule, reading the folder through `deps`. */
 export function reproLayoutRules(
   deps: FolderLayoutDeps,
-): Readonly<Record<"repro-layout", FolderRuleModule>> {
+): Readonly<Record<"allowed-files-only", FolderRuleModule>> {
   return {
-    "repro-layout": {
+    "allowed-files-only": {
       meta: META,
       create(context: FolderRuleContext) {
         if (basename(context.filename) !== STATUS_FILE) return {};
@@ -117,5 +117,5 @@ export function reproLayoutRules(
 
 /** The level it is on at in paperlint's own config, for every paper's `PIPELINE-STATUS.md`. */
 export const REPRO_LAYOUT_RULE_LEVELS: Readonly<
-  Record<"paper/repro-layout", "error">
-> = { "paper/repro-layout": "error" };
+  Record<"repro/allowed-files-only", "error">
+> = { "repro/allowed-files-only": "error" };

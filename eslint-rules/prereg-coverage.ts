@@ -1,5 +1,5 @@
 /**
- * `paper/prereg-coverage` — a study's pre-registration says which population the paper's claim is
+ * `study/declare-sample` — a study's pre-registration says which population the paper's claim is
  * about, what the screens between that population and the sample removed, what share of it the
  * sample can represent, and that the author looked at the drawn units before the run.
  *
@@ -14,7 +14,7 @@
  * of rules. The four fields below are those statements, and this rule makes them part of the record.
  *
  * ── WHERE IT LOOKS ───────────────────────────────────────────────────────────────
- * A study lives in a folder at the top of the paper's `repro/` (`paper/repro-layout` names the
+ * A study lives in a folder at the top of the paper's `repro/` (`repro/allowed-files-only` names the
  * layout); `tools/` and `data/` beside them are shared, not studies. Every study folder that holds a
  * `prereg.json` is judged; a study without one owes nothing here. The findings are reported on the paper's `PIPELINE-STATUS.md`, first line, as the other rules
  * about a paper's folders are: `prereg.json` is not a file paperlint lints, and every paper has a
@@ -40,7 +40,7 @@ import type { RuleContext } from "./rule-context.ts";
 
 /**
  * The folder of a paper that holds its studies, the folders in it that are shared rather than a
- * study's, and the file a study pre-registers in. The first two are `paper/repro-layout`'s
+ * study's, and the file a study pre-registers in. The first two are `repro/allowed-files-only`'s
  * (`src/domain/repro-layout.ts`, `REPRO_DIR` and `REPRO_DIRS`), copied because a module here is
  * compiled before `src/`; the test beside this file holds the copies equal.
  */
@@ -49,7 +49,7 @@ export const SHARED_DIRS: readonly string[] = ["tools", "data"];
 export const PREREG_FILE = "prereg.json";
 const STATUS_FILE = "PIPELINE-STATUS.md";
 const PAGE =
-  "https://github.com/zernie/paperlint/blob/main/docs/rules/paper/prereg-coverage.md";
+  "https://github.com/zernie/paperlint/blob/main/docs/rules/study/declare-sample.md";
 
 /** The one sentence every finding ends with: why the fields exist. */
 export const WHY =
@@ -340,20 +340,20 @@ export const problemMessage = (file: string, p: Problem): string =>
       ? `\`${file}\` ${p.text}.`
       : `\`${file}\`: \`${p.at}\` ${p.text}.`,
     WHY,
-    `Rule paper/prereg-coverage: ${PAGE}`,
+    `Rule study/declare-sample: ${PAGE}`,
   ].join(" ");
 
 /**
  * The `prereg.json` of every study folder at the top of `<paperDir>/repro/`, relative to the paper:
  * every folder there but the shared ones, whatever its name — a study folder misnamed is
- * `paper/repro-layout`'s finding, and its pre-registration is still judged here.
+ * `repro/allowed-files-only`'s finding, and its pre-registration is still judged here.
  */
 export function preregFiles(paperDir: string): readonly string[] {
   const repro = join(paperDir, REPRO_DIR);
   return existsSync(repro) && statSync(repro).isDirectory()
     ? readdirSync(repro, { withFileTypes: true })
         // stat, not the entry's own type: a study folder linked into repro/ is a folder to
-        // paper/repro-layout too, and must not escape the check by being a link
+        // repro/allowed-files-only too, and must not escape the check by being a link
         .filter(
           (e) =>
             !SHARED_DIRS.includes(e.name) &&
@@ -388,7 +388,7 @@ export const paperFindings = (paperDir: string): readonly string[] =>
 
 export default {
   rules: {
-    "prereg-coverage": {
+    "declare-sample": {
       meta: {
         type: "problem" as const,
         docs: {

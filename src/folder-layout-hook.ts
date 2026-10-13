@@ -1,5 +1,5 @@
 /**
- * The `paper-folder-layout` hook — `paper/folder-layout` and `paper/repro-layout` BEFORE a file is
+ * The `paper-folder-layout` hook — `paper/allowed-files-only` and `repro/allowed-files-only` BEFORE a file is
  * created, not at the next lint. PreToolUse on `Edit|Write|MultiEdit` (`plugin/hooks/hooks.json`):
  * when the file about to be written does not exist yet and would add an entry the layout does not
  * allow — at a paper folder's root, or at the top of its `repro/` — the call is denied, and the
@@ -13,7 +13,7 @@
  *   not new, and the rule reports it once, by name. Only a NEW entry is refused.
  * - Anything outside a paper folder (no `PIPELINE-STATUS.md` above it).
  * A new study folder in `repro/` is created with its `README.md` first: any other first file in it
- * is refused with `paper/repro-layout`'s "without a README.md" message.
+ * is refused with `repro/allowed-files-only`'s "without a README.md" message.
  *
  * ── WHAT IT CANNOT SEE ───────────────────────────────────────────────────────────
  * A shell command (`mv`, `cp`, a script writing files) is not an Edit or a Write, and this hook never

@@ -236,7 +236,7 @@ describe("strayMessage — stands alone for a reader with no context", () => {
       `\`PLAN.md\` is at the root of a paper folder (the folder holding PIPELINE-STATUS.md), and that root holds only paperlint's layout. Where it goes: ${KNOWN_CURES[0]?.cure ?? ""}.`,
       "The layout (extra/ takes anything and is never judged; the build's paper.* byproducts are never reported):",
       ...PAPER_LAYOUT_TREE.split("\n"),
-      "Rule paper/folder-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/folder-layout.md",
+      "Rule paper/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/allowed-files-only.md",
     ]);
   });
 

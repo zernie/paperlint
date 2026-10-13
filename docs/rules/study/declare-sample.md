@@ -1,4 +1,4 @@
-# paper/prereg-coverage
+# study/declare-sample
 
 **Level:** error · **Reads:** `repro/<study>/prereg.json`, for every study folder at the top of the
 paper's `repro/` that holds one (every folder there but the shared `tools/` and `data/`, whatever
@@ -58,8 +58,8 @@ papers/rule-reading/PIPELINE-STATUS.md
               there are (`size`). Why: a study once screened its sample down to rules that are easy
               to judge — its labeller found 93 % of the items designed as borderline clear-cut — and
               nothing in its design made anyone state what share of the real population the sample
-              covered or which screens removed which kinds of units. Rule paper/prereg-coverage: …
-              paper/prereg-coverage
+              covered or which screens removed which kinds of units. Rule study/declare-sample: …
+              study/declare-sample
   1:1  error  … `strata` is missing …
   1:1  error  … `screens` is missing …
   1:1  error  … `coverage` is missing …
@@ -129,7 +129,7 @@ No rule options.
 - That the paper's text matches `population.about` or names what `coverage.unreachable` lists. That
   is reading, and the paper skills do it (`build-benchmark`, `draft-paper`'s threats section).
 - A `prereg.json` deeper than a study folder's top (`repro/<study>/sub/prereg.json`), at the top of
-  `repro/` itself, or under any other name. The study's folder and its name are `paper/repro-layout`'s.
+  `repro/` itself, or under any other name. The study's folder and its name are `repro/allowed-files-only`'s.
 - A study without a `prereg.json`.
 
 ## How to fix
@@ -139,4 +139,4 @@ removed per stratum value from the screening script's own output, and show the a
 units with the question "is this what you meet in practice?". A pre-registration already frozen and
 run gets the fields as a dated addendum, with the values measured now; a paper that cannot give them
 turns the rule off for itself in its `paperlint.json`
-(`"rules": { "paper/prereg-coverage": "off" }`), which says so in the record.
+(`"rules": { "study/declare-sample": "off" }`), which says so in the record.

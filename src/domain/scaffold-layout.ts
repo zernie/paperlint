@@ -2,7 +2,7 @@
  * WHAT `paperlint new` PUTS IN A NEW PAPER FOLDER BESIDE ITS THREE FILES — the layout, visible from the
  * first commit.
  *
- * The rules `paper/folder-layout` and `paper/repro-layout` say where every kind of material goes. A
+ * The rules `paper/allowed-files-only` and `repro/allowed-files-only` say where every kind of material goes. A
  * paper that starts with three files shows none of it, and the first reviewer's report, the first
  * figure and the first script each land loose at the root. So a new folder already holds the places.
  *
@@ -17,7 +17,7 @@
  * scaffolding. A folder that holds nothing else gets a `.gitkeep`; a folder that holds a real file
  * (`repro/` with its README.md) gets none. `.gitkeep` is the convention, not a paperlint file, and no
  * rule reads it: `paper/stages` looks for `*.pdf` in `versions/`, the review and sibling rules lint
- * `*.md`, `paper/repro-layout` judges the top of `repro/` only, and neither `tools/` nor `data/` is
+ * `*.md`, `repro/allowed-files-only` judges the top of `repro/` only, and neither `tools/` nor `data/` is
  * listed by any rule.
  *
  * Pure: a list of paths and texts, written by `new-paper.ts`.

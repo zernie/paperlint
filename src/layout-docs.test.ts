@@ -19,8 +19,8 @@ import { REPRO_LAYOUT_TREE } from "./domain/repro-layout.ts";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const PAGES: readonly (readonly [string, string])[] = [
-  ["docs/rules/paper/folder-layout.md", PAPER_LAYOUT_TREE],
-  ["docs/rules/paper/repro-layout.md", REPRO_LAYOUT_TREE],
+  ["docs/rules/paper/allowed-files-only.md", PAPER_LAYOUT_TREE],
+  ["docs/rules/repro/allowed-files-only.md", REPRO_LAYOUT_TREE],
   ["README.md", PAPERS_LAYOUT_TREE],
   ["docs/layout.md", PAPERS_LAYOUT_TREE],
 ];

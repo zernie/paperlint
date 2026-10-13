@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:3dd17b0b5f989911 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:96bdb4cd2fd2f2f5 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
 
 # build-benchmark — the study + the artifact reviewers can run
 
@@ -57,8 +57,8 @@ changes what the sample can say, not only its size; screens that are reasonable 
 sample nobody meets in practice. So, before the draw is frozen, the study's `prereg.json` says what
 the claim is about, what each screen removed per stratum and what share the sample can represent; then
 show the author the drawn **units** (the rules or cases, not the items made from them) and ask: *is
-this what you meet in practice?* The fields are the rule `paper/prereg-coverage`
-(`docs/rules/paper/prereg-coverage.md`); `paperlint lint` fails until they are there.
+this what you meet in practice?* The fields are the rule `study/declare-sample`
+(`docs/rules/study/declare-sample.md`); `paperlint lint` fails until they are there.
 
 ## 2. Honest statistics — the part reviewers attack first
 

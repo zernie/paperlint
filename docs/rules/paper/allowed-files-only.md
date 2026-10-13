@@ -1,4 +1,4 @@
-# paper/folder-layout
+# paper/allowed-files-only
 
 **Level:** error · **Reads:** the paper folder's root (a directory listing), its `paperlint.json` ·
 **Reported on:** the first line of the paper's `PIPELINE-STATUS.md`, once per stray entry
@@ -101,7 +101,7 @@ The layout (extra/ takes anything and is never judged; the build's paper.* bypro
 ├── PIPELINE-STATUS.md             ← the paper's one live-state file: stages, plan, scorecard
 …
 └── extra/                         ← anything; never judged
-Rule paper/folder-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/folder-layout.md  paper/folder-layout
+Rule paper/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/allowed-files-only.md  paper/allowed-files-only
 ```
 
 Each message names the entry and where it goes, and draws the whole layout above, so it reads on its own. A
@@ -131,7 +131,7 @@ No rule options. The paper's `pdf`, `talk.dir` and own preset files add what the
 ## What it does not check
 
 - What is inside the allowed folders. `reviews/`, `siblings/` and `repro/` have their own rules
-  ([`paper/repro-layout`](repro-layout.md) for `repro/`); the rest are free.
+  ([`repro/allowed-files-only`](../repro/allowed-files-only.md) for `repro/`); the rest are free.
 - Whether a `.tex` at the root is included by anything: a fragment the body no longer `\input`s
   passes. Old versions of the source belong in `versions/`.
 - A folder without `PIPELINE-STATUS.md`: it is not a paper to paperlint.
@@ -141,7 +141,7 @@ No rule options. The paper's `pdf`, `talk.dir` and own preset files add what the
 `paperlint init` also wires the hook `paper-folder-layout` (PreToolUse on `Edit|Write|MultiEdit`,
 `plugin/hooks/hooks.json`). When an agent is about to create a file that would add an entry the
 layout does not allow — at a paper folder's root, or at the top of its `repro/`
-([`paper/repro-layout`](repro-layout.md)) — the hook denies the call, and the reason it gives is the
+([`repro/allowed-files-only`](../repro/allowed-files-only.md)) — the hook denies the call, and the reason it gives is the
 rule's own message: where the entry goes, and the layout drawn. The agent writes the file where it
 belongs instead, in the same turn. The text comes from the functions the rules report with
 (`strayTexts`, `reproTexts`); there is no second list.
@@ -155,7 +155,7 @@ What it never refuses:
 - anything outside a paper folder.
 
 A new study folder in `repro/` is started with its `README.md`; any other first file in it is
-refused with `paper/repro-layout`'s "without a README.md" message.
+refused with `repro/allowed-files-only`'s "without a README.md" message.
 
 🔴 **What it cannot see: the shell.** `mv`, `cp`, `git mv`, or a script that writes files are not an
 Edit or a Write, so the hook never sees them. The guarantee is the lint: both rules fail `paperlint
@@ -188,5 +188,5 @@ To keep something as it is, move it under `extra/`. To switch the rule off for o
 that paper's `paperlint.json`:
 
 ```json
-{ "rules": { "paper/folder-layout": "off" } }
+{ "rules": { "paper/allowed-files-only": "off" } }
 ```

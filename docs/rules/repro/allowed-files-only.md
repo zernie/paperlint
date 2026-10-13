@@ -1,4 +1,4 @@
-# paper/repro-layout
+# repro/allowed-files-only
 
 **Level:** error · **Reads:** the listing of the paper's `repro/`, and whether each study folder in
 it holds a `README.md` · **Reported on:** the first line of the paper's `PIPELINE-STATUS.md`, once
@@ -64,7 +64,7 @@ What repro/ holds (what interpreters and package managers leave there, like __py
 repro/
 ├── README.md           ← the index: one line per study
 …
-Rule paper/repro-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/repro-layout.md  paper/repro-layout
+Rule repro/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/allowed-files-only.md  repro/allowed-files-only
 ```
 
 Each message names the entry and where it goes, and draws the layout above, so it reads on its own. Where
@@ -100,7 +100,7 @@ No rule options.
 - What is inside `tools/`, `data/` and the study folders.
 - Whether `repro/README.md` exists, or has a line for every study.
 - What a study's `README.md` says.
-- `repro/` itself: whether the paper has one is `paper/folder-layout`'s concern, and that rule never
+- `repro/` itself: whether the paper has one is `paper/allowed-files-only`'s concern, and that rule never
   looks inside it. Each entry is judged by exactly one of the two rules.
 
 ## The hook
@@ -109,7 +109,7 @@ The hook `paper-folder-layout` refuses, before it is written, a new file that wo
 this rule reports — a loose file at the top of `repro/`, an undated folder, or a study folder whose
 first file is not its `README.md` — with this rule's message as the reason. It never refuses a file
 that already exists, and it cannot see a shell `mv` or `cp`: the lint is the guarantee. What it does
-and does not do is on [`paper/folder-layout`'s page](folder-layout.md#the-hook-a-new-stray-entry-is-refused-before-it-is-written).
+and does not do is on [`paper/allowed-files-only`'s page](../paper/allowed-files-only.md#the-hook-a-new-stray-entry-is-refused-before-it-is-written).
 
 ## How to fix
 
@@ -121,8 +121,8 @@ git mv papers/agent-rule-drift/repro/baseline papers/agent-rule-drift/repro/base
 ```
 
 To switch the rule off for one paper — say, one whose `repro/` predates the layout — set it in that
-paper's `paperlint.json`; `paper/folder-layout` still judges the paper's root:
+paper's `paperlint.json`; `paper/allowed-files-only` still judges the paper's root:
 
 ```json
-{ "rules": { "paper/repro-layout": "off" } }
+{ "rules": { "repro/allowed-files-only": "off" } }
 ```

@@ -59,10 +59,10 @@ function ruleSays(tree: Record<string, string>): string[] {
   const at = { getLocFromIndex: () => ({ line: 1, column: 0 }) };
   const filename = `${DIR}/PIPELINE-STATUS.md`;
   folderLayoutRules(deps)
-    ["folder-layout"].create({ filename, sourceCode: at, report })
+    ["allowed-files-only"].create({ filename, sourceCode: at, report })
     .root?.();
   reproLayoutRules(deps)
-    ["repro-layout"].create({ filename, sourceCode: at, report })
+    ["allowed-files-only"].create({ filename, sourceCode: at, report })
     .root?.();
   return out;
 }

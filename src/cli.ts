@@ -421,18 +421,20 @@ export function buildConfig(
         paper: {
           rules: {
             ...paperStages.rules,
-            ...preregCoverage.rules,
             ...folderVenueRules({ files: nodeFiles, venuesDir: presetsDir() }),
             ...folderLayoutRules({ files: nodeFiles, listDir: nodeListDir }),
-            ...reproLayoutRules({ files: nodeFiles, listDir: nodeListDir }),
           },
         },
+        repro: {
+          rules: reproLayoutRules({ files: nodeFiles, listDir: nodeListDir }),
+        },
+        study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
       },
       ...md,
       rules: {
         "paper/stages": "error",
-        "paper/prereg-coverage": "error",
+        "study/declare-sample": "error",
         "paper/source": "error",
         ...FOLDER_VENUE_RULE_LEVELS,
         ...FOLDER_LAYOUT_RULE_LEVELS,

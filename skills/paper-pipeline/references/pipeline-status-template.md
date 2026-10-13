@@ -37,12 +37,12 @@ one file, so there is one place to read and nothing to keep in step:
 | **Stages** (SETUP … AFTER)           | a row per unit of pipeline work                                                                                                                | the skill that ran it                                          |
 
 - **No `PLAN.md` beside it.** A plan in a second file drifts from the status it plans against;
-  `paper/folder-layout` reports a `PLAN.md` at the paper's root. A decision's _history_ (why it was
+  `paper/allowed-files-only` reports a `PLAN.md` at the paper's root. A decision's _history_ (why it was
   taken, what was rejected) is a record, not live state: it goes to `research/` as a dated file.
 - **Each study gets a dated folder in `repro/`.** The `study` stage's runs go in
   `repro/<slug>-YYYY-MM-DD/` (or `<slug>-YYYY-MM` for one that ran over weeks), with a `README.md`
   saying what it asks, how to run it and what it found, and a line in `repro/README.md`. Scripts the
-  whole paper uses go in `repro/tools/`, shared data in `repro/data/`; `paper/repro-layout` reports
+  whole paper uses go in `repro/tools/`, shared data in `repro/data/`; `repro/allowed-files-only` reports
   anything else at the top of `repro/`.
 - **The scorecard's verdicts live only here.** The dated report `study-accepted-papers` writes under
   `reviews/` keeps the reasoning and links to this section; it never copies the table, so there is one

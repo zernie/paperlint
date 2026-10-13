@@ -293,7 +293,7 @@ export function judgeRepro(
 }
 
 /**
- * The one text a finding is reported with, by the rule `paper/repro-layout` and by the hook that fires
+ * The one text a finding is reported with, by the rule `repro/allowed-files-only` and by the hook that fires
  * when such an entry is written. It stands alone: what is wrong, where the entry goes, and what
  * `repro/` holds, for a reader who knows nothing of paperlint.
  */
@@ -306,6 +306,6 @@ export function reproMessage(f: ReproFinding): string {
     head,
     "What repro/ holds (what interpreters and package managers leave there, like __pycache__/ and node_modules/, is never reported):",
     REPRO_LAYOUT_TREE,
-    `Rule paper/repro-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/repro-layout.md`,
+    `Rule repro/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/allowed-files-only.md`,
   ].join("\n");
 }

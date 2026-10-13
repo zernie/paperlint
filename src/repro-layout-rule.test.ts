@@ -1,5 +1,5 @@
 /**
- * `paper/repro-layout` (`src/repro-layout-rule.ts`) on paper folders held in memory, run the way
+ * `repro/allowed-files-only` (`src/repro-layout-rule.ts`) on paper folders held in memory, run the way
  * ESLint runs it: `create`, then `root`. Both halves: each misplaced entry at the top of `repro/` is
  * reported once, on the first line of `PIPELINE-STATUS.md`; the layout, a paper with no `repro/`, and
  * any file but the scorecard are not.
@@ -31,7 +31,7 @@ function lint(
 ): Reported[] {
   const files = memoryFiles(tree);
   const rule = reproLayoutRules({ files, listDir: memoryListDir(files) })[
-    "repro-layout"
+    "allowed-files-only"
   ];
   const out: Reported[] = [];
   const visitor = rule.create({
@@ -50,7 +50,7 @@ function lint(
   return out;
 }
 
-describe("paper/repro-layout — reports", () => {
+describe("repro/allowed-files-only — reports", () => {
   it("a loose script, once, on the first line, with the one text", () => {
     expect(lint({ ...SCAFFOLD, [`${DIR}/repro/run.py`]: "x" })).toEqual([
       {
@@ -76,7 +76,7 @@ describe("paper/repro-layout — reports", () => {
   });
 });
 
-describe("paper/repro-layout — silent", () => {
+describe("repro/allowed-files-only — silent", () => {
   it("on the layout, whatever tools/, data/ and the studies hold", () => {
     expect(
       lint({
@@ -105,8 +105,10 @@ describe("paper/repro-layout — silent", () => {
   });
 });
 
-describe("paper/repro-layout — level", () => {
+describe("repro/allowed-files-only — level", () => {
   it("is an error from the start", () => {
-    expect(REPRO_LAYOUT_RULE_LEVELS).toEqual({ "paper/repro-layout": "error" });
+    expect(REPRO_LAYOUT_RULE_LEVELS).toEqual({
+      "repro/allowed-files-only": "error",
+    });
   });
 });

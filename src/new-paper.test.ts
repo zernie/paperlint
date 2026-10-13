@@ -767,12 +767,12 @@ async function lintScaffold(added: Record<string, string> = {}) {
 
 describe("paperlint lint — a scaffolded paper has no layout finding", () => {
   const LAYOUT_RULES = [
-    "paper/folder-layout",
-    "paper/repro-layout",
+    "paper/allowed-files-only",
+    "repro/allowed-files-only",
     "review/frontmatter",
     "sibling/frontmatter",
     "paper/stages",
-    "paper/prereg-coverage",
+    "study/declare-sample",
   ];
 
   it("none of the rules that read the layout's folders reports it; only the not-built warnings remain", async () => {
@@ -809,6 +809,6 @@ describe("paperlint lint — extra/ is never read", () => {
 
   it("the same snapshot outside extra/ is reported, so the test above can fail", async () => {
     const { ids } = await lintScaffold(SNAPSHOT("research/old-2025"));
-    expect(ids).toContain("paper/folder-layout");
+    expect(ids).toContain("paper/allowed-files-only");
   });
 });

@@ -322,7 +322,7 @@ export const PAPERS_LAYOUT_TREE: string = renderTree(
 );
 
 /**
- * The one text a stray entry is reported with, by the rule `paper/folder-layout` and by the hook that
+ * The one text a stray entry is reported with, by the rule `paper/allowed-files-only` and by the hook that
  * refuses to create such an entry. It stands alone: where the entry goes, and the whole layout drawn,
  * for a reader who knows nothing of paperlint.
  */
@@ -331,6 +331,6 @@ export function strayMessage(s: Stray): string {
     `\`${s.name}\` is at the root of a paper folder (the folder holding PIPELINE-STATUS.md), and that root holds only paperlint's layout. Where it goes: ${s.cure}.`,
     `The layout (${ESCAPE_HATCH}/ takes anything and is never judged; the build's paper.* byproducts are never reported):`,
     PAPER_LAYOUT_TREE,
-    `Rule paper/folder-layout: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/folder-layout.md`,
+    `Rule paper/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/allowed-files-only.md`,
   ].join("\n");
 }

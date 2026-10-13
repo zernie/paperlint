@@ -1,5 +1,5 @@
 /**
- * `paper/prereg-coverage`: the declaration a study's `prereg.json` carries — population, strata,
+ * `study/declare-sample`: the declaration a study's `prereg.json` carries — population, strata,
  * screens, coverage, the author's check — judged field by field, then across fields, then through
  * ESLint on a paper's `PIPELINE-STATUS.md` with study folders beside it.
  */
@@ -24,7 +24,7 @@ import preregCoverage, {
 } from "./prereg-coverage.ts";
 
 const PAGE =
-  "https://github.com/zernie/paperlint/blob/main/docs/rules/paper/prereg-coverage.md";
+  "https://github.com/zernie/paperlint/blob/main/docs/rules/study/declare-sample.md";
 
 /** A declaration that passes: a sample screened down, saying so, and checked by its author. */
 const GOOD = {
@@ -302,12 +302,12 @@ describe("preregProblems and the message", () => {
         text: "is missing — add it",
       }),
     ).toBe(
-      `\`repro/s-2026-10-12/prereg.json\`: \`coverage\` is missing — add it. ${WHY} Rule paper/prereg-coverage: ${PAGE}`,
+      `\`repro/s-2026-10-12/prereg.json\`: \`coverage\` is missing — add it. ${WHY} Rule study/declare-sample: ${PAGE}`,
     );
     expect(
       problemMessage("repro/s/prereg.json", { at: "", text: "is broken" }),
     ).toBe(
-      `\`repro/s/prereg.json\` is broken. ${WHY} Rule paper/prereg-coverage: ${PAGE}`,
+      `\`repro/s/prereg.json\` is broken. ${WHY} Rule study/declare-sample: ${PAGE}`,
     );
   });
 });
@@ -315,7 +315,7 @@ describe("preregProblems and the message", () => {
 const root = useTempDir("prereg-coverage-");
 
 describe("which files are judged", () => {
-  it("repro/ and its shared folders are the ones paper/repro-layout names", () => {
+  it("repro/ and its shared folders are the ones repro/allowed-files-only names", () => {
     expect(REPRO_DIR).toBe(LAYOUT_REPRO_DIR);
     expect(SHARED_DIRS).toEqual(REPRO_DIRS);
   });
@@ -355,7 +355,7 @@ describe("which files are judged", () => {
       ),
     });
     expect(paperFindings(dir)).toEqual([
-      `\`repro/bad-2026-10-02/prereg.json\`: \`coverage.reason\` is missing — \`share\` is null, so say why the share cannot be stated. ${WHY} Rule paper/prereg-coverage: ${PAGE}`,
+      `\`repro/bad-2026-10-02/prereg.json\`: \`coverage.reason\` is missing — \`share\` is null, so say why the share cannot be stated. ${WHY} Rule study/declare-sample: ${PAGE}`,
     ]);
   });
 
@@ -364,7 +364,7 @@ describe("which files are judged", () => {
       "repro/s-2026-10-01/prereg.json/x.txt": "",
     });
     expect(paperFindings(dir)).toEqual([
-      `\`repro/s-2026-10-01/prereg.json\` is not a file — the declaration is one JSON file; move what the folder holds elsewhere. ${WHY} Rule paper/prereg-coverage: ${PAGE}`,
+      `\`repro/s-2026-10-01/prereg.json\` is not a file — the declaration is one JSON file; move what the folder holds elsewhere. ${WHY} Rule study/declare-sample: ${PAGE}`,
     ]);
   });
 });
@@ -392,7 +392,7 @@ describe("which files are judged: through a link", () => {
 });
 
 describe("the rule, on the status file of a paper", () => {
-  const rule = preregCoverage.rules["prereg-coverage"];
+  const rule = preregCoverage.rules["declare-sample"];
   /** What the rule reports for `file` in `dir`, each finding with its line and its whole text. */
   const lint = (dir: string, file = "PIPELINE-STATUS.md") => {
     const out: { line: number; messageId: string; message: string }[] = [];
@@ -429,7 +429,7 @@ describe("the rule, on the status file of a paper", () => {
       {
         line: 1,
         messageId: "coverage",
-        message: `\`repro/s-2026-10-12/prereg.json\` is not valid — it must be a JSON object holding \`population\`, \`strata\`, \`screens\`, \`coverage\` and \`author_check\`. ${WHY} Rule paper/prereg-coverage: ${PAGE}`,
+        message: `\`repro/s-2026-10-12/prereg.json\` is not valid — it must be a JSON object holding \`population\`, \`strata\`, \`screens\`, \`coverage\` and \`author_check\`. ${WHY} Rule study/declare-sample: ${PAGE}`,
       },
     ]);
   });

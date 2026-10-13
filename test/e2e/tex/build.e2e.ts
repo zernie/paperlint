@@ -145,7 +145,7 @@ function consumer(): string {
     mkdtempSync(join(tmpdir(), "paperlint-build-e2e-")),
   );
   // Each fixture's `expect.json` is this test's statement about it, not part of the paper, and a
-  // paper's root holds only paperlint's layout (`paper/folder-layout`), so it stays behind.
+  // paper's root holds only paperlint's layout (`paper/allowed-files-only`), so it stays behind.
   cpSync(FIXTURES, join(work, "papers"), {
     recursive: true,
     verbatimSymlinks: true,
