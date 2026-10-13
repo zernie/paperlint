@@ -347,6 +347,11 @@ def escape(text):
 
 ANSWER_DOC_FIELDS = ("answers", "savedAt", "source")
 GROUP_DOC_FIELDS = ("familiarity", "savedAt", "source")
+DOC_FIELD_TYPES = (
+    ("answers", lambda v: isinstance(v, dict), "an object {question: value}"),
+    ("familiarity", lambda v: v is None or isinstance(v, str), "a familiarity value (a string) or null"),
+    ("savedAt", lambda v: v is None or isinstance(v, str), "a timestamp string or null"),
+)
 
 
 def check_dump(dump, key):
@@ -382,10 +387,17 @@ def check_dump(dump, key):
                 fail(f"{at}/{field}: not a field of a stored {kind[:-1]} ({', '.join(fields)})")
             if "source" not in doc:
                 fail(f"{at}: no source; add \"source\": \"chat\" or \"page\" (one of {SOURCES})")
-            if doc["source"] not in SOURCES:
-                fail(f"{at}: source {doc['source']!r}; expected one of {SOURCES}")
-            for q in sorted(set(doc.get("answers", {})) - set(key["questions"])):
-                fail(f"{at}/answers/{q}: not a question of the key ({', '.join(key['questions'])})")
+            if not isinstance(doc["source"], str) or doc["source"] not in SOURCES:
+                fail(f"{at}/source: {doc['source']!r}; expected one of {SOURCES}")
+            # The types the export reads, so a hand merge is refused by path rather than crashing it.
+            for field, ok, what in DOC_FIELD_TYPES:
+                if field in doc and not ok(doc[field]):
+                    fail(f"{at}/{field}: {doc[field]!r} — must be {what}")
+            for q, v in sorted(doc.get("answers", {}).items()):
+                if q not in key["questions"]:
+                    fail(f"{at}/answers/{q}: not a question of the key ({', '.join(key['questions'])})")
+                if v is not None and not isinstance(v, str):
+                    fail(f"{at}/answers/{q}: {v!r} — must be an option value (a string) or null")
 
 
 def export(dump_path, key_path, out_dir, day):

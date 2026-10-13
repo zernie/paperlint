@@ -918,3 +918,39 @@ test("🔴 export refuses an answer kept for an item a rebuild took off the page
     );
   });
 });
+
+test("🔴 export refuses a stored field of the wrong type by its path, never a Python traceback", () => {
+  const dir = setup("export-types", config());
+  build(dir);
+  const keyPath = join(dir, "out", "key.json");
+  const cases: readonly (readonly [string, unknown])[] = [
+    [
+      "answers/G001/answers",
+      { answers: { G001: { answers: [], source: "chat" } } },
+    ],
+    [
+      "answers/G001/answers/label",
+      { answers: { G001: { answers: { label: 5 }, source: "chat" } } },
+    ],
+    [
+      "answers/G001/savedAt",
+      { answers: { G001: { answers: {}, savedAt: 1, source: "chat" } } },
+    ],
+    [
+      "groups/python/familiarity",
+      { groups: { python: { familiarity: 3, source: "chat" } } },
+    ],
+    [
+      "answers/G001/source",
+      { answers: { G001: { answers: {}, source: ["chat"] } } },
+    ],
+  ];
+  cases.forEach(([path, dump], i) => {
+    const file = join(dir, `type-${String(i)}.json`);
+    writeFileSync(file, JSON.stringify(dump));
+    const r = run(["export", file, keyPath, join(dir, "data")]);
+    assert.notEqual(r.status, 0, `${path}: ${r.out}`);
+    assert.doesNotMatch(r.out, /Traceback/, `${path}\n${r.out}`);
+    assert.ok(r.out.includes(`${path}: `), `${path} must be named\n${r.out}`);
+  });
+});
