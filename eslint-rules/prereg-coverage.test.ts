@@ -3,6 +3,7 @@
  * screens, coverage, the author's check — judged field by field, then across fields, then through
  * ESLint on a paper's `PIPELINE-STATUS.md` with study folders beside it.
  */
+import { symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -365,6 +366,20 @@ describe("which files are judged", () => {
     expect(paperFindings(dir)).toEqual([
       `\`repro/s-2026-10-01/prereg.json\` is not a file — the declaration is one JSON file; move what the folder holds elsewhere. ${WHY} Rule paper/prereg-coverage: ${PAGE}`,
     ]);
+  });
+});
+
+describe("which files are judged: through a link", () => {
+  it("🔴 a study folder linked into repro/ is judged like any other: the layout rule follows the link too", () => {
+    const dir = writeTree(join(root, "linked"), {
+      "elsewhere/s-2026-10-01/prereg.json": "{}",
+      "repro/README.md": "# repro\n",
+    });
+    symlinkSync(
+      join(dir, "elsewhere", "s-2026-10-01"),
+      join(dir, "repro", "s-2026-10-01"),
+    );
+    expect(preregFiles(dir)).toEqual(["repro/s-2026-10-01/prereg.json"]);
   });
 });
 

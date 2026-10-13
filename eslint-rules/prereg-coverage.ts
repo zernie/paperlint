@@ -352,7 +352,16 @@ export function preregFiles(paperDir: string): readonly string[] {
   const repro = join(paperDir, REPRO_DIR);
   return existsSync(repro) && statSync(repro).isDirectory()
     ? readdirSync(repro, { withFileTypes: true })
-        .filter((e) => e.isDirectory() && !SHARED_DIRS.includes(e.name))
+        // stat, not the entry's own type: a study folder linked into repro/ is a folder to
+        // paper/repro-layout too, and must not escape the check by being a link
+        .filter(
+          (e) =>
+            !SHARED_DIRS.includes(e.name) &&
+            (statSync(join(repro, e.name), {
+              throwIfNoEntry: false,
+            })?.isDirectory() ??
+              false),
+        )
         .map((e) => `${REPRO_DIR}/${e.name}/${PREREG_FILE}`)
         .filter((rel) => existsSync(join(paperDir, rel)))
         .sort()
