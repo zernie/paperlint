@@ -1,11 +1,13 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "composite": true,
     "rootDir": "skills",
     "outDir": "skills",
-    "declaration": false,
+    "declarationDir": "dist/skills",
     "declarationMap": false,
-    "sourceMap": false
+    "sourceMap": false,
+    "tsBuildInfoFile": "dist/.tsbuildinfo/skills.tsbuildinfo"
   },
   "include": ["skills/*/scripts/*.ts"],
   "exclude": ["**/*.test.ts", "**/*.harness.ts", "**/*.d.ts"]
