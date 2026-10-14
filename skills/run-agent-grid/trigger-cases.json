@@ -1,0 +1,10 @@
+{
+  "why": "RUN a paid or counted agent grid: registry gate, sandbox probe, smoke, locked driver, overlap audit, committed runs",
+  "prompts": [
+    "запускаю платную сетку прогонов агента — что проверить до первого запуска",
+    "the grid driver died halfway, how do I resume without re-running the counted cells",
+    "два драйвера писали в одну рабочую папку, какие прогоны теперь испорчены",
+    "gate every agent run on the approved sample and a hard budget cap before we spend money"
+  ],
+  "collides": ["build-benchmark", "build-label-page", "label-agent-runs"]
+}

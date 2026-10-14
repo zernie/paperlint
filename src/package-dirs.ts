@@ -16,6 +16,10 @@ import { fileURLToPath } from "node:url";
 export const presetsDir = (): string =>
   fileURLToPath(new URL("../presets", import.meta.url));
 
+/** The skills the package ships, one directory each (`skills/<name>/SKILL.md`). */
+export const skillsDir = (): string =>
+  fileURLToPath(new URL("../skills", import.meta.url));
+
 /** The LaTeX inputs a paper `\input`s by name (`paper-guards`, a venue's numbers). */
 export const texInputsDir = (): string =>
   fileURLToPath(new URL("../presets/tex", import.meta.url));

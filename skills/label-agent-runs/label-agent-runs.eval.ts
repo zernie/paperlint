@@ -1,9 +1,10 @@
 /**
  * label-agent-runs — the PAID tier: does this skill's description actually fire?
  *
- * The prompts live in `lib/skill-trigger-cases.mjs` beside every other skill's, so collisions with
+ * The prompts live beside this file, in `trigger-cases.json` (read through `lib/skill-trigger-cases.mjs`,
+ * which resolves each collider's prompts from its own colocated file or the shared table). Collisions with
  * `build-label-page` (the page a person labels on), `build-benchmark` (the statistics) and
- * `run-agent-grid` (running the grid) are visible in one table. Measures recall on its own
+ * `run-agent-grid` (running the grid) are declared there. Measures recall on its own
  * territory and precision against those siblings, against the real harness.
  *
  * ⚠️ NEVER RUN. Written with the skill; its rate is UNKNOWN, not assumed good.

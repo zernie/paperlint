@@ -138,7 +138,10 @@ does not strip types there.
 
 `npm run build` is one `tsc` over two projects into one `dist/`: `tsconfig.json` builds `src/` to
 `dist/*.js`, and `tsconfig.pkg.json` builds `lib/` and `eslint-rules/` to `dist/lib/` and
-`dist/eslint-rules/`. Everything else imports those two through the package's subpath imports,
+`dist/eslint-rules/`. A third project, `tsconfig.skills.json`, compiles a skill's scripts
+(`skills/*/scripts/*.ts`) to a `.js` BESIDE each, gitignored and shipped through `files`: a skill
+names its script as `${CLAUDE_SKILL_DIR}/scripts/<name>.js`, and only a path inside the skill's own
+directory resolves the same through the consumer's `.claude/skills/<name>` link and in this checkout. Everything else imports those two through the package's subpath imports,
 `#lib/<name>` and `#eslint-rules/<name>` (`"imports"` in `package.json`): the default target is the
 build, which is what an install runs; the `paperlint-source` condition points at the `.ts` instead,
 and `npm test` (so `npm run coverage` and `npm run check` too) and `tsconfig.test.json` set it so

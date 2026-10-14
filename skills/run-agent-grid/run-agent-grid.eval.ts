@@ -1,8 +1,9 @@
 /**
  * run-agent-grid — the PAID tier: does this skill's description actually fire?
  *
- * The prompts live in `lib/skill-trigger-cases.mjs` beside every other skill's, so collisions with
- * `build-benchmark` (the design) and `build-label-page` (the hand labels) are visible in one table.
+ * The prompts live beside this file, in `trigger-cases.json` (read through `lib/skill-trigger-cases.mjs`,
+ * which resolves each collider's prompts from its own colocated file or the shared table). Collisions with
+ * `build-benchmark` (the design) and `build-label-page` (the hand labels) are declared there.
  * Measures recall on its own territory and precision against those siblings, against the real
  * harness.
  *
