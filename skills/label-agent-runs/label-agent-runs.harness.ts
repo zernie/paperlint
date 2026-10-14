@@ -5,26 +5,27 @@
  * Runs the REAL `claude` CLI against a SCRIPTED MOCK MODEL (`runHarnessTest`): $0, no API key.
  * The script: activate the skill, then — through the Bash tool, as §2 and §4 tell an agent to —
  * compare two raters' label files (the report must carry kappa and the disagreement), and have a
- * pair that labels different runs refused.
+ * pair that labels different runs refused. The commands call the COMPILED `labels.js` under the
+ * skill's link, which is what runs from `node_modules` (`npm run build` makes it).
  *
- * Also, without the CLI: the shared per-skill checks (`checkSkill`), and every `labels.mjs`
+ * Also, without the CLI: the shared per-skill checks (`checkSkill`), and every `labels.js`
  * command the skill and its reference instruct names a command the script accepts.
  *
  * What it does NOT prove: that a real model reads the uncertain runs in full. That is for
- * `label-agent-runs.eval.mjs` and a real labelling pass.
+ * `label-agent-runs.eval.ts` and a real labelling pass.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runHarnessTest, skip } from "vigiles";
+import { runHarnessTest, skip, type ToolCall } from "vigiles";
 import { createChecker } from "../../lib/check.ts";
 import { checkSkill } from "../../lib/skill-checks.mjs";
 import { observeAgentCli } from "#lib/agent-cli-version";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const check = createChecker();
-const SCRIPT = join(HERE, "scripts", "labels.mjs");
+const SCRIPT = join(HERE, "scripts", "labels.ts");
 
 await checkSkill("label-agent-runs");
 
@@ -34,9 +35,9 @@ const instructed = [
     ["SKILL.md", "references/formats.md"].flatMap((f) =>
       [
         ...readFileSync(join(HERE, f), "utf8").matchAll(
-          /labels\.mjs (validate|agree|[a-z-]+)\b/g,
+          /labels\.js ([a-z-]+)\b/g,
         ),
-      ].map((m) => m[1]),
+      ].map((m) => String(m[1])),
     ),
   ),
 ];
@@ -46,36 +47,38 @@ check(
   JSON.stringify(instructed),
 );
 for (const cmd of instructed) {
-  // A known command with missing arguments and an unknown one both print usage; a known one
-  // given the shape it needs gets past the dispatch and fails on the missing file instead.
+  // A known command given the shape it needs gets past the dispatch and fails on the missing
+  // file; an unknown one prints usage.
   const args =
     cmd === "agree" ? [cmd, "a", "b"] : [cmd, "x.tsv", "--codebook", "c"];
   const r = spawnSync(process.execPath, [SCRIPT, ...args], {
     encoding: "utf8",
   });
   check(
-    `labels.mjs accepts "${cmd}"`,
-    /ENOENT/.test(r.stderr),
+    `labels.js accepts "${cmd}"`,
+    r.stderr.includes("ENOENT"),
     r.stderr.slice(0, 200),
   );
 }
 
 // ── 2. Through the real CLI: agreement, as the skill tells an agent to compute it ───────────
-const REPO = (() => {
-  for (let dir = HERE; ; dir = dirname(dir)) {
-    if (existsSync(resolve(dir, ".claude"))) return dir;
-    if (dirname(dir) === dir)
-      throw new Error(`no root with a .claude directory above ${HERE}`);
-  }
-})();
+/** The directory above HERE that holds `.claude`, found by walking up rather than by counting. */
+function repoRoot(dir: string): string {
+  if (existsSync(resolve(dir, ".claude"))) return dir;
+  if (dirname(dir) === dir)
+    throw new Error(`no root with a .claude directory above ${HERE}`);
+  return repoRoot(dirname(dir));
+}
+const REPO = repoRoot(HERE);
 const LINK = join(REPO, ".claude", "skills", "label-agent-runs");
 const cli = observeAgentCli({ spawnSync });
 if (!cli.present) skip(`label-agent-runs effects: ${cli.note}`);
 
-const head = "agent\tmodel\tcell\tlabel";
-const row = (cell, label) => `cli\tm1\t${cell}\t${label}`;
-const file = (...rows) => [head, ...rows, ""].join("\n");
-const l = `node ${LINK}/scripts/labels.mjs`;
+const row = (cell: string, label: string): string =>
+  `cli\tm1\t${cell}\t${label}`;
+const file = (...rows: string[]): string =>
+  ["agent\tmodel\tcell\tlabel", ...rows, ""].join("\n");
+const l = `node ${LINK}/scripts/labels.js`;
 const r = await runHarnessTest({
   pluginDir: join(REPO, ".claude"),
   // bubblewrap is absent here; the code loaded is this repository's own `.claude`.
@@ -105,13 +108,24 @@ const r = await runHarnessTest({
   ],
 });
 
+const shown = (c: ToolCall | undefined): string =>
+  c ? c.resultText.slice(0, 400) : "never called";
+/** Did this call run, with this error flag, and print every one of `parts`? */
+const ran = (
+  c: ToolCall | undefined,
+  isError: boolean,
+  parts: readonly string[],
+): boolean =>
+  c !== undefined &&
+  c.isError === isError &&
+  parts.every((p) => c.resultText.includes(p));
+
 try {
-  const calls = r.toolCalls;
-  const activation = calls.find((c) => c.name === "Skill");
+  const activation = r.toolCalls.find((c) => c.name === "Skill");
   check(
     "the skill activated",
-    Boolean(activation) && !activation.isError,
-    activation ? activation.resultText : "no Skill call",
+    activation !== undefined && !activation.isError,
+    shown(activation),
   );
   const reached = r.modelRequests
     .map((q) => [q.system, ...q.messages.map((m) => m.text)].join("\n"))
@@ -121,24 +135,20 @@ try {
     reached.includes("The automatic classifier is a pre-sort, not a label"),
     `${String(r.modelRequests.length)} requests`,
   );
-  const [same, different] = calls.filter((c) => c.name === "Bash");
+  const [same, different] = r.toolCalls.filter((c) => c.name === "Bash");
   check(
     "agreement is reported with kappa and the disagreement",
-    Boolean(same) &&
-      !same.isError &&
-      same.resultText.includes("agreement 2/3") &&
-      same.resultText.includes("cohen kappa 0.000") &&
-      same.resultText.includes(
-        "disagree cli m1 u2/control/1: deferred | solved",
-      ),
-    same ? same.resultText.slice(0, 400) : "never called",
+    ran(same, false, [
+      "agreement 2/3",
+      "cohen kappa 0.000",
+      "disagree cli m1 u2/control/1: deferred | solved",
+    ]),
+    shown(same),
   );
   check(
     "raters who labelled different runs are refused",
-    Boolean(different) &&
-      different.isError &&
-      different.resultText.includes("label different cells"),
-    different ? different.resultText.slice(0, 400) : "never called",
+    ran(different, true, ["label different cells"]),
+    shown(different),
   );
   console.log(
     `✓ label-agent-runs [effects]: skill activated; agreement reported, mismatched raters refused.\n  CLI: ${cli.note}`,

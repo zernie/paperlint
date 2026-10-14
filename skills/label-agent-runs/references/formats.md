@@ -1,6 +1,6 @@
 # Formats — codebook, label file, notes, rater instruction
 
-`labels.mjs` is `scripts/labels.mjs` in this skill.
+`labels.js` is `scripts/labels.js` in this skill.
 
 ## Codebook — `codebook.json`, committed before the first label
 

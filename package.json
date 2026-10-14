@@ -5,8 +5,8 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -p tsconfig.pkg.json && tsc",
-    "prepare": "tsc -p tsconfig.pkg.json && tsc",
+    "build": "tsc -p tsconfig.pkg.json && tsc && tsc -p tsconfig.skills.json",
+    "prepare": "tsc -p tsconfig.pkg.json && tsc && tsc -p tsconfig.skills.json",
     "test": "node scripts/test.ts",
     "test:e2e": "vitest run --project 'e2e-*'",
     "test:e2e:install": "vitest run --project e2e-install",

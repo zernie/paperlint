@@ -1,5 +1,5 @@
 /**
- * labels.mjs, run as a process. Each check both ways: silent on a correct label file, firing on a
+ * labels.ts, run as a process. Each check both ways: silent on a correct label file, firing on a
  * planted defect — a wrong header, an unknown label, a duplicate cell, a cell without a run, a run
  * without a label, a codebook committed after the labels, a relabel after the analysis without a
  * dated, quoted note. Agreement is checked on a table whose kappa is known by hand: 50 cells,
@@ -19,7 +19,7 @@ import {
   type ScriptResult,
 } from "../../../test/support.ts";
 
-const SCRIPT = join(import.meta.dirname, "labels.mjs");
+const SCRIPT = join(import.meta.dirname, "labels.ts");
 const WORK = useTempDir("labels-");
 const GIT_ENV = {
   GIT_AUTHOR_NAME: "t",
@@ -124,7 +124,7 @@ const GOOD = tsv(
   ["cli", "m1", "u1/treatment/1", "deferred"],
 );
 const USAGE =
-  "usage: labels.mjs validate <labels.tsv> --codebook <f> [--ledger <f>] [--analysed-at <rev> --notes <f>] | agree <a.tsv> <b.tsv>";
+  "usage: labels.js validate <labels.tsv> --codebook <f> [--ledger <f>] [--analysed-at <rev> --notes <f>] | agree <a.tsv> <b.tsv>";
 
 test("a file that cannot be read is an error, exit 1", () => {
   const f = join(WORK, "absent.tsv");

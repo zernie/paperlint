@@ -3,7 +3,7 @@ import { experimental_skill } from "vigiles/spec";
 export default experimental_skill({
   name: "run-agent-grid",
   description:
-    "Run a paid or counted agent experiment grid end to end — units × arms × seeds (× agent stacks), one agent CLI run per cell in a fresh working copy, scored by an outcome oracle — without the failures that silently spoil one: an unapproved or hand-picked sample, a timeout that kills a slower model, two drivers sharing a working copy, secrets in transcripts, a classifier that mislabels outcomes, a session cap that kills the run, results lost from scratch space. Use when a study design exists and you are about to spend money or count runs: the registry and approval gate, the sandbox and secret probe, the smoke per model, the locked detached driver, the overlap audit, hand labels and the commit of finished runs. Ships grid-guard.mjs (lock, gate, overlap audit, env probe, key scan, pre-commit). Composes with build-benchmark (the design, upstream), build-label-page (hand labels) and osf-artifact-upload (the artifact).",
+    "Run a paid or counted agent experiment grid end to end — units × arms × seeds (× agent stacks), one agent CLI run per cell in a fresh working copy, scored by an outcome oracle — without the failures that silently spoil one: an unapproved or hand-picked sample, a timeout that kills a slower model, two drivers sharing a working copy, secrets in transcripts, a classifier that mislabels outcomes, a session cap that kills the run, results lost from scratch space. Use when a study design exists and you are about to spend money or count runs: the registry and approval gate, the sandbox and secret probe, the smoke per model, the locked detached driver, the overlap audit, hand labels and the commit of finished runs. Ships grid-guard.js (lock, gate, overlap audit, env probe, key scan, pre-commit). Composes with build-benchmark (the design, upstream), build-label-page (hand labels) and osf-artifact-upload (the artifact).",
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "Agent"],
   body: `
 # run-agent-grid — running a counted agent grid without spoiling it
@@ -15,7 +15,7 @@ the study and the artifact; this skill is the **operational procedure for runnin
 first paid call to the last committed run.
 
 Every rule below was paid for by a failure. Each is stated with that failure and with what HOLDS it:
-a refusal in \`scripts/grid-guard.mjs\`, a commit hook, a probe — or, said plainly, **prose only**,
+a refusal in \`scripts/grid-guard.js\`, a commit hook, a probe — or, said plainly, **prose only**,
 which means it holds only as long as someone reads this. The full catalog, one entry per failure:
 [\`references/failure-catalog.md\`](references/failure-catalog.md). The registry, the attempt ledger
 and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](references/registry-and-ledger.md).
@@ -66,7 +66,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
 - **Held by:** run inside the sandbox, as the agent would run —
 
   \`\`\`bash
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.mjs env-probe --git
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js env-probe --git
   \`\`\`
 
   It prints secret-looking variable NAMES (never values) and exits 1; \`--allow NAME\` accepts one by
@@ -94,8 +94,8 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
   root**.
 
   \`\`\`bash
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.mjs lock <root> --owner <driver-id> --pid $$
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.mjs release <root> --owner <driver-id>
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js lock <root> --owner <driver-id> --pid $$
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js release <root> --owner <driver-id>
   \`\`\`
 
   The lock is a file beside the root. A live holder → refused. A holder whose process is gone on
@@ -104,7 +104,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
   skip it. That makes a killed driver resumable: run it again and it continues.
 
   \`\`\`bash
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.mjs gate --registry grid.json --ledger attempts.jsonl --unit <u> --arm <a> --model <m> --seed <s>
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js gate --registry grid.json --ledger attempts.jsonl --unit <u> --arm <a> --model <m> --seed <s>
   \`\`\`
 
 - **Never delete shared inputs from a step.** Templates, fixtures and pinned states are read-only
@@ -119,7 +119,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
 ### 6. After any incident — and before reporting — the overlap audit (catalog 6)
 
 \`\`\`bash
-node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.mjs overlap attempts.jsonl
+node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js overlap attempts.jsonl
 \`\`\`
 
 Lists every pair of attempts that shared a root at the same time (an attempt with no end overlaps
@@ -146,12 +146,12 @@ numbers are reported.
 - Every committed artifact is scanned for key-shaped strings, by a pre-commit hook:
 
   \`\`\`bash
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.mjs precommit --runs runs --done done.json
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js precommit --runs runs --done done.json
   \`\`\`
 
   It reads the **staged** content (the index is what commits), refuses key-shaped strings by file and
   line without printing them, and refuses a staged run folder that has no completion record. Before
-  an artifact leaves the repository: \`node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.mjs scan-keys <dir>\`.
+  an artifact leaves the repository: \`node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js scan-keys <dir>\`.
 - **Report the spend**: total, per model, against the cap.
 
 ## When something goes wrong mid-grid

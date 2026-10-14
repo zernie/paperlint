@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "skills",
+    "outDir": "skills",
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["skills/*/scripts/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.harness.ts", "**/*.d.ts"]
+}

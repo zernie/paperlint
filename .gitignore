@@ -18,6 +18,9 @@ _build/
 !fixtures/accepted-papers/*/*.bbl
 
 dist/
+# A skill's TypeScript scripts compiled beside themselves (tsconfig.skills.json): a consumer runs
+# them from node_modules, where Node does not strip types. Built by `npm run build` / `prepare`.
+skills/*/scripts/*.js
 # c8's report and raw V8 data (`npm run coverage`).
 coverage/
 

@@ -1,7 +1,7 @@
 # The registry, the attempt ledger, and a driver that obeys the guard
 
-`grid-guard` is `scripts/grid-guard.mjs` in this skill; every command below is run with
-`node ${CLAUDE_SKILL_DIR}/scripts/grid-guard.mjs`. Exit codes: 0 allowed or clean, 1 refused or a
+`grid-guard` is `scripts/grid-guard.js` in this skill; every command below is run with
+`node ${CLAUDE_SKILL_DIR}/scripts/grid-guard.js`. Exit codes: 0 allowed or clean, 1 refused or a
 finding, 2 usage, 3 (`gate`) already counted.
 
 ## The registry — `grid.json`, committed
@@ -99,7 +99,7 @@ The outcome itself lives in the run folder (`runs/<attempt>/`), whose completion
 ```bash
 #!/usr/bin/env bash
 set -uo pipefail
-G="node ${CLAUDE_SKILL_DIR}/scripts/grid-guard.mjs"
+G="node ${CLAUDE_SKILL_DIR}/scripts/grid-guard.js"
 ROOT=/scratch/w1            # this driver's own working-copy root
 $G lock "$ROOT" --owner "driver-w1" --pid $$ || exit 1
 trap '$G release "$ROOT" --owner driver-w1' EXIT
@@ -130,7 +130,7 @@ setsid nohup ./driver.sh > driver.log 2>&1 < /dev/null &
 
 ```bash
 #!/usr/bin/env bash
-exec node "<path to this skill>/scripts/grid-guard.mjs" precommit --runs runs --done done.json
+exec node "<path to this skill>/scripts/grid-guard.js" precommit --runs runs --done done.json
 ```
 
 A hook in `.git/hooks/` is not versioned; record in the study's README that it is installed, and

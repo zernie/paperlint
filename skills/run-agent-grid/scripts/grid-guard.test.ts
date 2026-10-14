@@ -1,5 +1,5 @@
 /**
- * grid-guard.mjs, run as a process the way a driver or a commit hook runs it. Each check is shown
+ * grid-guard.ts, run as a process the way a driver or a commit hook runs it. Each check is shown
  * BOTH ways: silent (exit 0) on correct input, and firing on a planted defect — a live lock
  * holder, a stale one, two attempts sharing a root, an uncommitted registry change, a staged key.
  * Every expectation is the whole result: exit code, stdout and stderr.
@@ -21,7 +21,7 @@ import {
   type ScriptResult,
 } from "../../../test/support.ts";
 
-const SCRIPT = join(import.meta.dirname, "grid-guard.mjs");
+const SCRIPT = join(import.meta.dirname, "grid-guard.ts");
 const WORK = useTempDir("grid-guard-");
 const GIT_ENV = {
   GIT_AUTHOR_NAME: "t",
@@ -65,7 +65,7 @@ const lockFile = (root: string): Record<string, unknown> =>
     .record(z.string(), z.unknown())
     .parse(parseJson(readFileSync(`${root}.lock`, "utf8")));
 const USAGE =
-  "usage: grid-guard.mjs <lock|release|gate|overlap|env-probe|scan-keys|precommit> … (see the header of this file)";
+  "usage: grid-guard.js <lock|release|gate|overlap|env-probe|scan-keys|precommit> … (see the header of this file)";
 
 test("usage: no command, an unknown one, an unknown flag, a missing option, a missing path", () => {
   assert.deepEqual(guard([]), no(2, USAGE));

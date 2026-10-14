@@ -541,13 +541,16 @@ export default [
   // them invites the next reader to tidy an unused import — and then the file on disk is no longer
   // the file that produced the number it backs.
   // `dist/` is tsc's OUTPUT (gitignored): its declaration files are generated from `src/`, so
-  // linting them would report every finding twice and blame a file nobody edits.
+  // linting them would report every finding twice and blame a file nobody edits. The same holds for
+  // a skill's compiled scripts (`skills/*/scripts/*.js`, gitignored, from tsconfig.skills.json): the
+  // `.ts` beside each is what is linted.
   {
     ignores: [
       ".tmp-stages-src-*/",
       "fixtures/.tmp-*/",
       "docs/prior-art/repro/",
       "dist/",
+      "skills/*/scripts/*.js",
     ],
   },
   // 🔴 THE PACKAGE'S TYPESCRIPT, and before 2026-09-24 no block matched it — the same silent

@@ -9,7 +9,7 @@
  * ⚠️ NEVER RUN. Written with the skill; its rate is UNKNOWN, not assumed good.
  *
  * Costs money; not CI.
- *   node skills/run-agent-grid/run-agent-grid.eval.mjs [trials]
+ *   node skills/run-agent-grid/run-agent-grid.eval.ts [trials]
  */
 import { runSkillTriggerEval } from "../../lib/skill-eval-kit.mjs";
 

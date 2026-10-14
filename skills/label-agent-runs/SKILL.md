@@ -1,10 +1,10 @@
 ---
 name: label-agent-runs
-description: "Label the outcomes of an agent experiment grid so the labels survive review: a codebook fixed before the first label (each label with a definition and a borderline example), the automatic classifier used only as a pre-sort, every run without artifact-level evidence read in full and labelled by hand, auto-vs-hand disagreements reported, a blind second rater on a different model with agreement (Cohen's kappa, percent with a CI), labels kept as data and never edited after the analysis without a dated note. Use after the runs of a grid are in and before any outcome number is computed: \"label the runs\", \"the classifier missed some outcomes\", \"second rater\", \"inter-rater agreement on the transcripts\". Ships labels.mjs (validate, agree). Composes with run-agent-grid (upstream), build-label-page (the hand-labelling page) and build-benchmark (the analysis)."
+description: "Label the outcomes of an agent experiment grid so the labels survive review: a codebook fixed before the first label (each label with a definition and a borderline example), the automatic classifier used only as a pre-sort, every run without artifact-level evidence read in full and labelled by hand, auto-vs-hand disagreements reported, a blind second rater on a different model with agreement (Cohen's kappa, percent with a CI), labels kept as data and never edited after the analysis without a dated note. Use after the runs of a grid are in and before any outcome number is computed: \"label the runs\", \"the classifier missed some outcomes\", \"second rater\", \"inter-rater agreement on the transcripts\". Ships labels.js (validate, agree). Composes with run-agent-grid (upstream), build-label-page (the hand-labelling page) and build-benchmark (the analysis)."
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:92d36e8dfcf32aa7 compiled from skills/label-agent-runs/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c9d8b39c5810670d compiled from skills/label-agent-runs/SKILL.md.spec.ts -->
 
 # label-agent-runs — turning finished agent runs into outcome labels a reviewer can trust
 
@@ -14,13 +14,13 @@ decided by a script, what must be read by a person, how a second rater is run, a
 are kept. `build-benchmark` turns the labels into statistics; `build-label-page` is the page a person
 labels on.
 
-Each rule names the failure behind it and what holds it — a refusal in `scripts/labels.mjs` or
+Each rule names the failure behind it and what holds it — a refusal in `scripts/labels.js` or
 **prose only**. Formats (codebook, label file, notes, rater instruction):
 [`references/formats.md`](references/formats.md).
 
 ```bash
-node ${CLAUDE_SKILL_DIR}/scripts/labels.mjs validate labels.tsv --codebook codebook.json --ledger attempts.jsonl
-node ${CLAUDE_SKILL_DIR}/scripts/labels.mjs agree auto.tsv hand.tsv
+node ${CLAUDE_SKILL_DIR}/scripts/labels.js validate labels.tsv --codebook codebook.json --ledger attempts.jsonl
+node ${CLAUDE_SKILL_DIR}/scripts/labels.js agree auto.tsv hand.tsv
 ```
 
 Exit codes: 0 valid or reported · 1 a finding · 2 usage.
