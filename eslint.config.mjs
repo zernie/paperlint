@@ -14,7 +14,9 @@
 import { texLanguage } from "#eslint-rules/latex-language";
 import texBuild from "#eslint-rules/tex-build";
 import markdown from "@eslint/markdown";
-import localRules from "#eslint-rules/temp-root-realpath";
+import tempRootRules from "#eslint-rules/temp-root-realpath";
+import jsReasonRules from "#eslint-rules/js-needs-reason";
+
 import portRules from "#eslint-rules/install-path-literals";
 import n from "eslint-plugin-n";
 import tseslint from "typescript-eslint";
@@ -27,8 +29,22 @@ import {
 } from "eslint-plugin-project-structure";
 import { presetCardRules } from "#src/preset-card-rule";
 import { nodeFiles } from "#src/adapters/node/index";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+/** The JavaScript files that predate `local/js-needs-reason`; the list only shrinks. */
+const jsGrandfathered = JSON.parse(
+  readFileSync(
+    new URL("./eslint-rules/js-grandfathered.json", import.meta.url),
+    "utf8",
+  ),
+);
+
+/** This repository's own rules, one plugin: `local/<rule>`. */
+const localRules = {
+  rules: { ...tempRootRules.rules, ...jsReasonRules.rules },
+};
 
 // The complexity set, shared by the TypeScript block and the ratchet below. Every function
 // measured over these limits on 2026-09-24 was either refactored under them (the #59 build code)
@@ -873,6 +889,16 @@ export default [
         ...GIT_IN_A_RULE,
         ...READS_THE_CLOCK,
       ],
+    },
+  },
+  // A NEW JavaScript file names why it is not TypeScript (#78), anywhere in the repository; the
+  // files that existed when the rule arrived are listed and the list only shrinks
+  // (eslint-rules/js-needs-reason.ts, js-grandfathered.json).
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    plugins: { local: localRules },
+    rules: {
+      "local/js-needs-reason": ["error", { grandfathered: jsGrandfathered }],
     },
   },
   // LAST, so no block above can replace its `no-restricted-syntax` options for these files (none
