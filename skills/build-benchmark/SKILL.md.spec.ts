@@ -173,6 +173,9 @@ Before submitting, verify the artifact you built with the reviewer-side reproduc
 - **argument-arc (frame mode)** — 🔴 **hard input.** Owns row \`frame\`, the stated claim. No \`frame\`, no study.
 - **research-ideate** (upstream) — supplies the contribution and the pitfall to invert; this skill turns
   it into evidence.
+- **run-agent-grid** — when the study is a grid of agent runs: this skill designs it, that one runs
+  it (registry gate, sandbox probe, smoke, locked driver, overlap audit, committed runs).
+- **label-agent-runs** — the outcome labels of those runs, before any statistic here is computed.
 - **build-label-page** — when the study needs a person to label items (gold labels, a blind review of
   outputs): it builds the page, publishes it and exports the answers into the study's \`data/\`.
 - **draft-paper** — the study's stats, bound, and artifact-number table feed Methods/Results/Availability.

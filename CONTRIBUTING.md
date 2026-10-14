@@ -132,13 +132,25 @@ site without `npx eslint . --prune-suppressions` fails lint, and #134 burns the 
 New code is TypeScript (#78). The last block of [`eslint.config.mjs`](eslint.config.mjs) makes any
 `.js`, `.mjs` or `.cjs` file an error in the directories already converted (`TYPESCRIPT_ONLY`), so
 `npm run lint` fails on one; a directory that still mixes the two is not listed yet, and the change
-that converts it adds it. Code that only this repository runs (tests, `scripts/`, `test/e2e/`) is
+that converts it adds it. Everywhere else, a NEW `.js`, `.mjs` or `.cjs` file fails `local/js-needs-reason`
+unless its top comment says `JavaScript, not TypeScript: evidence|fixture|config-loader — <why>`;
+the files that predate the rule are bulk suppressions in `eslint-suppressions.json`, which only
+shrinks. Code that only this repository runs (tests, `scripts/`, `test/e2e/`) is
 run by `node` directly; code a consumer runs from `node_modules` needs a build first, because Node
 does not strip types there.
 
-`npm run build` is one `tsc` over two projects into one `dist/`: `tsconfig.json` builds `src/` to
-`dist/*.js`, and `tsconfig.pkg.json` builds `lib/` and `eslint-rules/` to `dist/lib/` and
-`dist/eslint-rules/`. Everything else imports those two through the package's subpath imports,
+`npm run build` is `tsc -b`: TypeScript's build mode over the project references in the root
+`tsconfig.json`, which is a solution file and compiles nothing itself. The three projects share
+`tsconfig.base.json`: `tsconfig.pkg.json` builds `lib/` and `eslint-rules/` to `dist/lib/` and
+`dist/eslint-rules/`; `tsconfig.src.json` builds `src/` to `dist/*.js` and references the first,
+whose declarations it reads; `tsconfig.skills.json` compiles a skill's scripts
+(`skills/*/scripts/*.ts`) to a `.js` BESIDE each, gitignored and shipped through `files` (their
+declarations go to `dist/skills/`): a skill names its script as `${CLAUDE_SKILL_DIR}/scripts/<name>.js`,
+and only a path inside the skill's own directory resolves the same through the consumer's
+`.claude/skills/<name>` link and in this checkout. A second `tsc -b` with nothing changed is a no-op;
+it decides that from `dist/.tsbuildinfo/`, so an output deleted by hand is rebuilt only by
+`npx tsc -b --force` (or by deleting `dist/` with it). `tsconfig.test.json` is not part of the build:
+it type-checks every `.ts` without emitting. Everything else imports `lib/` and `eslint-rules/` through the package's subpath imports,
 `#lib/<name>` and `#eslint-rules/<name>` (`"imports"` in `package.json`): the default target is the
 build, which is what an install runs; the `paperlint-source` condition points at the `.ts` instead,
 and `npm test` (so `npm run coverage` and `npm run check` too) and `tsconfig.test.json` set it so

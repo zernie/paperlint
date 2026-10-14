@@ -14,7 +14,9 @@
 import { texLanguage } from "#eslint-rules/latex-language";
 import texBuild from "#eslint-rules/tex-build";
 import markdown from "@eslint/markdown";
-import localRules from "#eslint-rules/temp-root-realpath";
+import tempRootRules from "#eslint-rules/temp-root-realpath";
+import jsReasonRules from "#eslint-rules/js-needs-reason";
+
 import portRules from "#eslint-rules/install-path-literals";
 import n from "eslint-plugin-n";
 import tseslint from "typescript-eslint";
@@ -29,6 +31,11 @@ import { presetCardRules } from "#src/preset-card-rule";
 import { nodeFiles } from "#src/adapters/node/index";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+/** This repository's own rules, one plugin: `local/<rule>`. */
+const localRules = {
+  rules: { ...tempRootRules.rules, ...jsReasonRules.rules },
+};
 
 // The complexity set, shared by the TypeScript block and the ratchet below. Every function
 // measured over these limits on 2026-09-24 was either refactored under them (the #59 build code)
@@ -541,13 +548,16 @@ export default [
   // them invites the next reader to tidy an unused import — and then the file on disk is no longer
   // the file that produced the number it backs.
   // `dist/` is tsc's OUTPUT (gitignored): its declaration files are generated from `src/`, so
-  // linting them would report every finding twice and blame a file nobody edits.
+  // linting them would report every finding twice and blame a file nobody edits. The same holds for
+  // a skill's compiled scripts (`skills/*/scripts/*.js`, gitignored, from tsconfig.skills.json): the
+  // `.ts` beside each is what is linted.
   {
     ignores: [
       ".tmp-stages-src-*/",
       "fixtures/.tmp-*/",
       "docs/prior-art/repro/",
       "dist/",
+      "skills/*/scripts/*.js",
     ],
   },
   // 🔴 THE PACKAGE'S TYPESCRIPT, and before 2026-09-24 no block matched it — the same silent
@@ -870,6 +880,16 @@ export default [
         ...GIT_IN_A_RULE,
         ...READS_THE_CLOCK,
       ],
+    },
+  },
+  // A NEW JavaScript file names why it is not TypeScript (#78), anywhere in the repository. The
+  // files that existed when the rule arrived are bulk suppressions in eslint-suppressions.json,
+  // which only shrinks (eslint-rules/js-needs-reason.ts).
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    plugins: { local: localRules },
+    rules: {
+      "local/js-needs-reason": "error",
     },
   },
   // LAST, so no block above can replace its `no-restricted-syntax` options for these files (none

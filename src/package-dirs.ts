@@ -16,6 +16,14 @@ import { fileURLToPath } from "node:url";
 export const presetsDir = (): string =>
   fileURLToPath(new URL("../presets", import.meta.url));
 
+/**
+ * This checkout's own Claude Code directory, `.claude/` at the package root: the links to the
+ * skills that Claude Code loads while working on this repository. For the harnesses, which run
+ * only here; an install has no such directory.
+ */
+export const claudeDir = (): string =>
+  fileURLToPath(new URL("../.claude", import.meta.url));
+
 /** The LaTeX inputs a paper `\input`s by name (`paper-guards`, a venue's numbers). */
 export const texInputsDir = (): string =>
   fileURLToPath(new URL("../presets/tex", import.meta.url));

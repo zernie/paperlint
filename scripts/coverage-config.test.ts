@@ -165,7 +165,7 @@ test("every evalOnly exclusion is imported only by an eval or another evalOnly m
       : [];
   });
   const outsiders = importers.filter(
-    (f) => !f.endsWith(".eval.mjs") && !evalOnly.has(join(ROOT, f)),
+    (f) => !/\.eval\.[cm]?[jt]s$/.test(f) && !evalOnly.has(join(ROOT, f)),
   );
   assert.deepEqual(
     { outsiders, anyImporter: importers.length > 0 },
@@ -398,8 +398,8 @@ test("the exclude list is exactly the justified set", () => {
     // tests themselves
     "**/*.harness.*",
     "**/*.test.*",
-    // PAID LLM evaluations, never run by `npm test`
-    "**/*.eval.mjs",
+    // PAID LLM evaluations, never run by `npm test` (`.mjs` or `.ts`)
+    "**/*.eval.*",
     // skill and CLAUDE.md sources vigiles compiles; a glob's `**` skips a dot directory
     "**/*.spec.ts",
     ".github/*.spec.ts",
@@ -423,6 +423,8 @@ test("the exclude list is exactly the justified set", () => {
     "skills/**/repro/**",
     "skills/**/references/**",
     "docs/prior-art/repro/**",
+    // a skill's scripts compiled beside their .ts (tsconfig.skills.json); the .ts is what is measured
+    "skills/*/scripts/*.js",
     // the test runner's own configuration, read by vitest, not code the package runs
     "vitest.config.ts",
   ]);

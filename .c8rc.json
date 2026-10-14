@@ -7,7 +7,7 @@
     "A process that loads `dist/` directly anyway (a child spawned without NODE_OPTIONS) is NOT",
     "counted: `excludeAfterRemap: false` drops `dist/**` before source maps would turn it into a",
     "second, column-shifted copy of the `src/` file whose unrun functions read as uncovered.",
-    "Excluded: tests themselves (*.harness.*, *.test.*), *.eval.mjs (PAID LLM evaluations,",
+    "Excluded: tests themselves (*.harness.*, *.test.*), *.eval.* (PAID LLM evaluations,",
     "never run by npm test and never unit-run), *.spec.ts (skill and CLAUDE.md sources compiled by vigiles; a dot directory spelled out),",
     "type declarations, fixtures and test/ (inputs and e2e scripts, not the package's code).",
     "typeOnly: modules with no runtime code (interfaces and type aliases) \u2014 nothing to execute, so",
@@ -15,6 +15,7 @@
     "only from *.eval.mjs. Both claims are CHECKED by scripts/coverage-config.test.ts.",
     "repro/ and references/: dated research records (a replication driver, a readability probe) kept",
     "as evidence for claims in the skills' prose and the prior-art notes, not code the package runs.",
+    "skills/*/scripts/*.js: a skill's scripts compiled from the .ts beside them (tsconfig.skills.json); the .ts is measured.",
     "vitest.config.ts: the test runner's configuration. The pins in scripts/coverage-config.test.ts",
     "also require every tracked source to be either included or excluded here."
   ],
@@ -33,7 +34,7 @@
   "exclude": [
     "**/*.harness.*",
     "**/*.test.*",
-    "**/*.eval.mjs",
+    "**/*.eval.*",
     "**/*.spec.ts",
     ".github/*.spec.ts",
     "**/*.d.ts",
@@ -53,6 +54,7 @@
     "skills/**/repro/**",
     "skills/**/references/**",
     "docs/prior-art/repro/**",
+    "skills/*/scripts/*.js",
     "vitest.config.ts"
   ],
   "extension": [".js", ".mjs", ".ts"],

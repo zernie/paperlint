@@ -41,6 +41,8 @@ Where each stage writes, and the check that guards each place: [`layout.md`](lay
 | you get                                                                                    | skill              |
 | ------------------------------------------------------------------------------------------ | ------------------ |
 | a study design with honest statistics, and a reproduction artifact that checks its numbers | `build-benchmark`  |
+| the grid of agent runs executed: gated on an approved registry, locked, resumable, audited | `run-agent-grid`   |
+| the outcome of every agent run labelled: codebook first, hand labels, a blind second rater | `label-agent-runs` |
 | a page you label items on from a phone, and the answers exported into the study folder     | `build-label-page` |
 
 ## 4 · Draft

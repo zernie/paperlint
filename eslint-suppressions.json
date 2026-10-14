@@ -1,6 +1,36 @@
 {
+  "action.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "bin/paperlint.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "eslint-rules/cycle-stage.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "eslint-rules/install-path-literals.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "eslint-rules/install-path-literals.ts": {
     "functional/no-loop-statements": {
+      "count": 1
+    }
+  },
+  "eslint-rules/latex-language.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "eslint-rules/latex-language.test.mjs": {
+    "local/js-needs-reason": {
       "count": 1
     }
   },
@@ -18,6 +48,16 @@
       "count": 23
     }
   },
+  "eslint-rules/paper-stages.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "eslint-rules/paper-stages.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "eslint-rules/paper-stages.ts": {
     "functional/immutable-data": {
       "count": 2
@@ -30,6 +70,11 @@
     },
     "functional/prefer-immutable-types": {
       "count": 4
+    }
+  },
+  "eslint-rules/paper-typography.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
     }
   },
   "eslint-rules/paper-typography.ts": {
@@ -46,9 +91,24 @@
       "count": 10
     }
   },
+  "eslint-rules/papers.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "eslint-rules/pdf-last-page-balance.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "eslint-rules/pdf-last-page-balance.ts": {
     "functional/no-let": {
       "count": 2
+    }
+  },
+  "eslint-rules/review-frontmatter.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
     }
   },
   "eslint-rules/review-frontmatter.ts": {
@@ -62,12 +122,22 @@
       "count": 3
     }
   },
+  "eslint-rules/temp-root-realpath.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "eslint-rules/temp-root-realpath.ts": {
     "functional/no-loop-statements": {
       "count": 1
     },
     "functional/prefer-immutable-types": {
       "count": 2
+    }
+  },
+  "eslint-rules/tex-build.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
     }
   },
   "eslint-rules/tex-build.ts": {
@@ -78,6 +148,41 @@
       "count": 2
     }
   },
+  "eslint.config.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "fixtures/install-path-literals/clean.fixture.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "fixtures/install-path-literals/defect.fixture.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "hooks/paper-edit-guard.hook.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "hooks/paper-skills-nudge.hook.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "hooks/paper-status-gates.hook.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "lib/agent-cli-version.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "lib/agent-cli-version.ts": {
     "functional/prefer-immutable-types": {
       "count": 3
@@ -86,6 +191,11 @@
   "lib/check.ts": {
     "functional/immutable-data": {
       "count": 2
+    }
+  },
+  "lib/markdown.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
     }
   },
   "lib/markdown.ts": {
@@ -102,6 +212,11 @@
       "count": 5
     }
   },
+  "lib/paper-config.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "lib/paper-config.ts": {
     "functional/no-let": {
       "count": 2
@@ -111,27 +226,447 @@
     }
   },
   "lib/skill-checks.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    },
     "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/skill-checks.test.mjs": {
+    "local/js-needs-reason": {
       "count": 1
     }
   },
   "lib/skill-corpus.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    },
     "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/skill-corpus.test.mjs": {
+    "local/js-needs-reason": {
       "count": 1
     }
   },
   "lib/skill-eval-kit.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    },
     "no-restricted-imports": {
       "count": 1
     }
   },
+  "lib/skill-trigger-cases.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "lib/skill-trigger-cases.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    },
     "no-restricted-imports": {
       "count": 1
     }
   },
   "lib/trigger-ledger.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    },
     "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "scripts/eslint-report-guard.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "scripts/eslint-report-guard.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "scripts/rules-see-files.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "scripts/rules-see-files.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "scripts/rules-see-files.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/analyze-sibling-paper/analyze-sibling-paper.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/analyze-sibling-paper/analyze-sibling-paper.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/argument-arc/argument-arc.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/argument-arc/argument-arc.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/build-benchmark/build-benchmark.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/build-benchmark/build-benchmark.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/build-label-page/build-label-page.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/camera-ready/camera-ready.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/camera-ready/camera-ready.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/cold-read-diff/cold-read-diff.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/cold-read-diff/cold-read-diff.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/draft-paper/draft-paper.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/draft-paper/draft-paper.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/extend-paper/extend-paper.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/extend-paper/extend-paper.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/find-venue/find-venue.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/find-venue/find-venue.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/grade-paper-writing/grade-paper-writing.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/grade-paper-writing/grade-paper-writing.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/grade-paper-writing/prose-lint.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/harden-paper/harden-paper.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/harden-paper/harden-paper.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/map-prior-work/map-prior-work.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/map-prior-work/map-prior-work.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/osf-artifact-upload/osf-artifact-upload.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-adversarial-review/paper-adversarial-review.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-adversarial-review/paper-adversarial-review.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/description-language.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/framing-vs-vocabulary.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/grade-paper-writing-ablation.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/paper-pipeline.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/paper-pipeline.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/pipeline-firing.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/pipeline-language.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/references/occupancy-2026-08-06-probe/run_retext.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/repro/2026-08-08-parent-replication.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/scripts/consumer.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/scripts/consumer.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/scripts/consumer.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/scripts/extract-ref-facts.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/scripts/extract-ref-facts.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/scripts/extract-ref-facts.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/scripts/generated-code.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-pipeline/scripts/generated-code.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-status/paper-status.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/paper-status/paper-status.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/pc-panel-review/pc-panel-review.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/pc-panel-review/pc-panel-review.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/plan-paper-timeline/plan-paper-timeline.effects.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/plan-paper-timeline/plan-paper-timeline.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/plan-paper-timeline/plan-paper-timeline.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/render-paper/extract-pdf-facts.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/render-paper/render-paper.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/render-paper/render-paper.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/research-ideate/research-ideate.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/research-ideate/research-ideate.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/study-accepted-papers/study-accepted-papers.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/study-accepted-papers/study-accepted-papers.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/submission-portal/submission-portal.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/submit-paper/submit-paper.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/submit-paper/submit-paper.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/sweep-design-space/sweep-design-space.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/sweep-design-space/sweep-design-space.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/tighten-paper/tighten-paper.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/tighten-paper/tighten-paper.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/verify-citations/scripts/bib-authors.check.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/verify-citations/scripts/bib-authors.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/verify-citations/scripts/bib-authors.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/verify-citations/scripts/verify-cites.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/verify-citations/scripts/verify-cites.net.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/verify-citations/scripts/verify-cites.test.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/verify-citations/verify-citations.eval.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
+  "skills/verify-citations/verify-citations.harness.mjs": {
+    "local/js-needs-reason": {
       "count": 1
     }
   },
@@ -211,6 +746,11 @@
       "count": 1
     }
   },
+  "src/build-engine.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "src/build-engine.ts": {
     "functional/immutable-data": {
       "count": 1
@@ -220,6 +760,11 @@
     },
     "functional/prefer-immutable-types": {
       "count": 2
+    }
+  },
+  "src/build.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
     }
   },
   "src/build.ts": {
@@ -236,6 +781,11 @@
       "count": 33
     }
   },
+  "src/cli.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "src/cli.ts": {
     "functional/immutable-data": {
       "count": 22
@@ -250,6 +800,11 @@
       "count": 41
     },
     "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/doctor.harness.mjs": {
+    "local/js-needs-reason": {
       "count": 1
     }
   },
@@ -293,6 +848,11 @@
   },
   "src/domain/record.ts": {
     "functional/prefer-immutable-types": {
+      "count": 1
+    }
+  },
+  "src/engine.harness.mjs": {
+    "local/js-needs-reason": {
       "count": 1
     }
   },
@@ -370,6 +930,11 @@
       "count": 4
     },
     "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/new-paper.harness.mjs": {
+    "local/js-needs-reason": {
       "count": 1
     }
   },
@@ -483,6 +1048,11 @@
       "count": 6
     }
   },
+  "src/toolchain.harness.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
+    }
+  },
   "src/toolchain.ts": {
     "functional/immutable-data": {
       "count": 1
@@ -506,6 +1076,11 @@
     },
     "functional/prefer-immutable-types": {
       "count": 13
+    }
+  },
+  "test/fixtures/layers/eslint-rules/rule.mjs": {
+    "local/js-needs-reason": {
+      "count": 1
     }
   }
 }

@@ -122,6 +122,8 @@ Do not iterate on a page you cannot see.
 - **build-benchmark** — owns the study design and the inter-rater rule: agreement with the person who
   wrote the codebook measures trainability, not reliability, so the labeller for gold labels is
   someone who did not write the scheme.
+- **label-agent-runs** — when the items are the runs of an agent grid: the codebook, which runs need
+  a hand label, the second rater and the label file this page's answers go into.
 - **draft-paper** — the exported labels, the familiarity filter and the complete-item count feed the
   Methods and the threats.
 - **submit-paper** — a published artifact page is not anonymous. Do not link it from an anonymized

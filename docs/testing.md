@@ -61,6 +61,19 @@ When in doubt between unit and integration: if the function takes a port (`Files
 - **Skills are tested through vigiles**, not a bespoke runner: a home-grown runner here once printed
   byte-identical "clean" verdicts for three skills that had never loaded.
 
+## Paid — a skill's trigger eval, `skills/<name>/<name>.eval.ts`
+
+- **Answers:** does the skill's description fire on its own requests, and stay quiet on a
+  sibling's? A real model reads every installed description, so it costs money and is not CI.
+- **Lives:** beside the skill, one file. It default-exports
+  `defineEval({ measureTriggerRate: { name, skillsDir, prompts, irrelevantPrompts, fired, … } })`
+  from vigiles, with the prompts inline; a sibling's own requests may be imported from the
+  sibling's eval file. `vigiles eval <file>` discovers and runs it; nothing runs at import.
+- **The old shape is frozen:** older skills still read their prompts from the shared table in
+  `lib/skill-trigger-cases.mjs` through `lib/skill-eval-kit.mjs`. `lib/skill-trigger-cases.test.ts`
+  fails on a new row there, and on a skill that is in both places; the table goes away in #218.
+- **Example:** `skills/run-agent-grid/run-agent-grid.eval.ts`.
+
 ## End-to-end — `test/e2e/<area>/*.e2e.ts`
 
 - **Answers:** does the package work once it is somewhere else? The tarball installed into another
