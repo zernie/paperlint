@@ -1,0 +1,148 @@
+/**
+ * label-agent-runs — the agent-facing tier. Does an agent that loads this skill get a label tool
+ * it can call, at the path the skill names, with the result the skill promises?
+ *
+ * Runs the REAL `claude` CLI against a SCRIPTED MOCK MODEL (`runHarnessTest`): $0, no API key.
+ * The script: activate the skill, then — through the Bash tool, as §2 and §4 tell an agent to —
+ * compare two raters' label files (the report must carry kappa and the disagreement), and have a
+ * pair that labels different runs refused.
+ *
+ * Also, without the CLI: the shared per-skill checks (`checkSkill`), and every `labels.mjs`
+ * command the skill and its reference instruct names a command the script accepts.
+ *
+ * What it does NOT prove: that a real model reads the uncertain runs in full. That is for
+ * `label-agent-runs.eval.mjs` and a real labelling pass.
+ */
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { runHarnessTest, skip } from "vigiles";
+import { createChecker } from "../../lib/check.ts";
+import { checkSkill } from "../../lib/skill-checks.mjs";
+import { observeAgentCli } from "#lib/agent-cli-version";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const check = createChecker();
+const SCRIPT = join(HERE, "scripts", "labels.mjs");
+
+await checkSkill("label-agent-runs");
+
+// ── 1. Every instructed command is one the script accepts ────────────────────────────────────
+const instructed = [
+  ...new Set(
+    ["SKILL.md", "references/formats.md"].flatMap((f) =>
+      [
+        ...readFileSync(join(HERE, f), "utf8").matchAll(
+          /labels\.mjs (validate|agree|[a-z-]+)\b/g,
+        ),
+      ].map((m) => m[1]),
+    ),
+  ),
+];
+check(
+  "the skill instructs validate and agree",
+  ["validate", "agree"].every((c) => instructed.includes(c)),
+  JSON.stringify(instructed),
+);
+for (const cmd of instructed) {
+  // A known command with missing arguments and an unknown one both print usage; a known one
+  // given the shape it needs gets past the dispatch and fails on the missing file instead.
+  const args =
+    cmd === "agree" ? [cmd, "a", "b"] : [cmd, "x.tsv", "--codebook", "c"];
+  const r = spawnSync(process.execPath, [SCRIPT, ...args], {
+    encoding: "utf8",
+  });
+  check(
+    `labels.mjs accepts "${cmd}"`,
+    /ENOENT/.test(r.stderr),
+    r.stderr.slice(0, 200),
+  );
+}
+
+// ── 2. Through the real CLI: agreement, as the skill tells an agent to compute it ───────────
+const REPO = (() => {
+  for (let dir = HERE; ; dir = dirname(dir)) {
+    if (existsSync(resolve(dir, ".claude"))) return dir;
+    if (dirname(dir) === dir)
+      throw new Error(`no root with a .claude directory above ${HERE}`);
+  }
+})();
+const LINK = join(REPO, ".claude", "skills", "label-agent-runs");
+const cli = observeAgentCli({ spawnSync });
+if (!cli.present) skip(`label-agent-runs effects: ${cli.note}`);
+
+const head = "agent\tmodel\tcell\tlabel";
+const row = (cell, label) => `cli\tm1\t${cell}\t${label}`;
+const file = (...rows) => [head, ...rows, ""].join("\n");
+const l = `node ${LINK}/scripts/labels.mjs`;
+const r = await runHarnessTest({
+  pluginDir: join(REPO, ".claude"),
+  // bubblewrap is absent here; the code loaded is this repository's own `.claude`.
+  sandbox: false,
+  transcript: true,
+  timeoutMs: 180_000,
+  prompt: "the second rater is done — compute agreement on the run labels",
+  allowedTools: ["Skill", "Bash"],
+  files: {
+    "rater-a.tsv": file(
+      row("u1/control/1", "solved"),
+      row("u2/control/1", "deferred"),
+      row("u3/control/1", "solved"),
+    ),
+    "rater-b.tsv": file(
+      row("u1/control/1", "solved"),
+      row("u2/control/1", "solved"),
+      row("u3/control/1", "solved"),
+    ),
+    "other.tsv": file(row("u9/control/1", "solved")),
+  },
+  model: [
+    { tool: "Skill", input: { skill: "label-agent-runs" } },
+    { tool: "Bash", input: { command: `${l} agree rater-a.tsv rater-b.tsv` } },
+    { tool: "Bash", input: { command: `${l} agree rater-a.tsv other.tsv` } },
+    { text: "done" },
+  ],
+});
+
+try {
+  const calls = r.toolCalls;
+  const activation = calls.find((c) => c.name === "Skill");
+  check(
+    "the skill activated",
+    Boolean(activation) && !activation.isError,
+    activation ? activation.resultText : "no Skill call",
+  );
+  const reached = r.modelRequests
+    .map((q) => [q.system, ...q.messages.map((m) => m.text)].join("\n"))
+    .join("\n");
+  check(
+    "the skill body reached the model",
+    reached.includes("The automatic classifier is a pre-sort, not a label"),
+    `${String(r.modelRequests.length)} requests`,
+  );
+  const [same, different] = calls.filter((c) => c.name === "Bash");
+  check(
+    "agreement is reported with kappa and the disagreement",
+    Boolean(same) &&
+      !same.isError &&
+      same.resultText.includes("agreement 2/3") &&
+      same.resultText.includes("cohen kappa 0.000") &&
+      same.resultText.includes(
+        "disagree cli m1 u2/control/1: deferred | solved",
+      ),
+    same ? same.resultText.slice(0, 400) : "never called",
+  );
+  check(
+    "raters who labelled different runs are refused",
+    Boolean(different) &&
+      different.isError &&
+      different.resultText.includes("label different cells"),
+    different ? different.resultText.slice(0, 400) : "never called",
+  );
+  console.log(
+    `✓ label-agent-runs [effects]: skill activated; agreement reported, mismatched raters refused.\n  CLI: ${cli.note}`,
+  );
+} finally {
+  r.cleanup();
+}

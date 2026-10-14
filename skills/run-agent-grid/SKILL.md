@@ -4,7 +4,7 @@ description: "Run a paid or counted agent experiment grid end to end — units �
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:c048620377d3ad6c compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a7394aa6901dd426 compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
 
 # run-agent-grid — running a counted agent grid without spoiling it
 
@@ -136,8 +136,8 @@ numbers are reported.
   A precondition failure is investigated before it is trusted — either way. **Prose only.**
 - **Every run whose outcome is not mechanically certain is read in full and labelled by hand.** An
   automatic outcome classifier misses classes (a deferral phrased without a question mark); its
-  label is a pre-sort, and the disagreements between it and the hand labels are reported. Use
-  `build-label-page` for the labelling. **Prose only.**
+  label is a pre-sort, and the disagreements between it and the hand labels are reported. The
+  procedure, with a label-file validator and an agreement report: `label-agent-runs`.
 
 ### 8. Commit finished runs, often (catalog 15, 8)
 
@@ -163,7 +163,9 @@ any stack the fix touched, then resume. A harness change is an addendum like any
 ## Compose with
 
 - **build-benchmark** (upstream) — the design, the statistics and the artifact this run feeds.
-- **build-label-page** — the hand labels of every run whose outcome is not mechanically certain.
+- **label-agent-runs** (downstream) — the outcome labels: codebook first, hand labels for every
+  uncertain run, a blind second rater, labels frozen after the analysis.
+- **build-label-page** — the page a person labels those runs on.
 - **osf-artifact-upload** — the artifact, after `scan-keys` is clean.
 - An **independent refutation pass** (a second agent framed to refute, not to confirm) on the
   registry and the smoke before the first counted run.

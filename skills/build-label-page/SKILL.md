@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:894d8a2df3f5c319 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:592d7b4f8f27c4ce compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -112,6 +112,8 @@ Do not iterate on a page you cannot see.
 - **build-benchmark** — owns the study design and the inter-rater rule: agreement with the person who
   wrote the codebook measures trainability, not reliability, so the labeller for gold labels is
   someone who did not write the scheme.
+- **label-agent-runs** — when the items are the runs of an agent grid: the codebook, which runs need
+  a hand label, the second rater and the label file this page's answers go into.
 - **draft-paper** — the exported labels, the familiarity filter and the complete-item count feed the
   Methods and the threats.
 - **submit-paper** — a published artifact page is not anonymous. Do not link it from an anonymized

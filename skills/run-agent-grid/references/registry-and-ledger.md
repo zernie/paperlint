@@ -80,15 +80,16 @@ One JSON object per line. A driver writes a line when an attempt **starts** and 
 stays on record with a start and no end.
 
 ```json
-{"attempt":"a-0042","unit":"unit-017","arm":"control","model":"model-a","seed":1,"root":"/scratch/w1","start":"2026-01-01T10:00:00Z"}
+{"attempt":"a-0042","agent":"cli-a","model":"model-a","unit":"unit-017","arm":"control","seed":1,"root":"/scratch/w1","start":"2026-01-01T10:00:00Z"}
 {"attempt":"a-0042","end":"2026-01-01T10:31:00Z","status":"complete","cost":1.62}
 ```
 
-| field    | meaning                                                                                           |
-| -------- | ------------------------------------------------------------------------------------------------- |
-| `status` | `complete` — counted, whatever the outcome; `harness-error` — kept on record, not counted, re-run |
-| `root`   | the working-copy root the attempt used: what `overlap` compares                                   |
-| `cost`   | what the attempt cost, counted toward the cap even for a harness error                            |
+| field    | meaning                                                                                            |
+| -------- | -------------------------------------------------------------------------------------------------- |
+| `status` | `complete` — counted, whatever the outcome; `harness-error` — kept on record, not counted, re-run  |
+| `root`   | the working-copy root the attempt used: what `overlap` compares                                    |
+| `agent`  | the agent CLI that ran; with `model` and `<unit>/<arm>/<seed>` it names the cell a label refers to |
+| `cost`   | what the attempt cost, counted toward the cap even for a harness error                             |
 
 The outcome itself lives in the run folder (`runs/<attempt>/`), whose completion record
 (`done.json` by default) is written **last**.

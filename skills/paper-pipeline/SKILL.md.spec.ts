@@ -187,6 +187,13 @@ No numbers. Nothing here happens once, and nothing here is "next".
 
 - **\`build-benchmark\`** — a design that inverts the pitfall; honest stats; a self-checking artifact
   (\`references/artifact-checklist.md\`).
+- **\`run-agent-grid\`** — when the study is a grid of agent runs (units × arms × seeds, one agent CLI
+  run per cell): the registry and the author's approval gate every counted run, a sandbox and secret
+  probe, a smoke per model, a locked and resumable driver, an overlap audit, finished runs committed.
+  Between the design and the analysis.
+- **\`label-agent-runs\`** — when the runs are in and before any outcome number: a codebook fixed
+  first, the automatic classifier only a pre-sort, every uncertain run read and labelled by hand, a
+  blind second rater with its agreement, labels frozen after the analysis.
 - **\`build-label-page\`** — when the study needs a person to label items (gold labels, a blind review):
   a phone page with a shared answer store, the answers exported into the study's \`data/\`.
 - **\`draft-paper\`** — section skeleton + the accept-and-get-cited properties
