@@ -1,14 +1,15 @@
 /**
  * `local/js-needs-reason`: both halves on planted files, through ESLint's own `Linter`, then the
- * real configuration on a planted new file, then the grandfathered list against the disk.
+ * real configuration on a planted new file, then an existing file through the repository's bulk
+ * suppressions (`eslint-suppressions.json`), with and without them.
  */
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { ESLint, Linter } from "eslint";
 import { test } from "vitest";
 import { z } from "zod";
+import { useTempDir, writeTree } from "../test/support.ts";
 import rules from "./js-needs-reason.ts";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -25,8 +26,8 @@ const MESSAGE =
   "(evidence kept exactly as it ran; a fixture checked as JavaScript; a config a loader " +
   "that cannot read TypeScript reads).";
 
-/** The rule's messages for `code` as the file `rel`, with `old` grandfathered. */
-const lint = (rel: string, code: string, old: readonly string[] = []) =>
+/** The rule's messages for `code` as the file `rel`. */
+const lint = (rel: string, code: string) =>
   new Linter({ cwd: ROOT })
     .verify(
       code,
@@ -35,7 +36,7 @@ const lint = (rel: string, code: string, old: readonly string[] = []) =>
           files: ["**/*.{js,mjs,cjs}"],
           plugins: { local: plugin },
           rules: {
-            "local/js-needs-reason": ["error", { grandfathered: [...old] }],
+            "local/js-needs-reason": "error",
           },
         },
       ],
@@ -87,58 +88,54 @@ test("a reason that is not on the list, or that comes after the code, fails", ()
   );
 });
 
-test("a grandfathered file passes without a reason", () => {
-  assert.deepEqual(
-    lint("scripts/old.mjs", "export const x = 1;\n", ["scripts/old.mjs"]),
-    [],
+/** The repository's own `eslint` CLI on one file: exit code and this rule's findings. */
+function cli(
+  file: string,
+  extra: readonly string[] = [],
+): { status: number | null; findings: number } {
+  const r = spawnSync(
+    process.execPath,
+    [
+      join(ROOT, "node_modules", "eslint", "bin", "eslint.js"),
+      "--format",
+      "json",
+      ...extra,
+      file,
+    ],
+    { cwd: ROOT, encoding: "utf8" },
   );
-});
+  const findings = z
+    .array(
+      z.object({
+        messages: z.array(z.object({ ruleId: z.string().nullable() })),
+      }),
+    )
+    .parse(JSON.parse(r.stdout))
+    .flatMap((f) => f.messages)
+    .filter((m) => m.ruleId === "local/js-needs-reason").length;
+  return { status: r.status, findings };
+}
+const WORK = useTempDir("js-needs-reason-");
 
-test("the repository's configuration runs the rule on a new file and spares an old one", async () => {
-  const eslint = new ESLint({ cwd: ROOT });
-  const rules = async (filePath: string): Promise<(string | null)[]> =>
-    (
-      await eslint.lintText("export const x = 1;\n", {
-        filePath: join(ROOT, filePath),
-      })
-    ).flatMap((r) => r.messages.map((m) => m.ruleId));
+test("an existing JavaScript file is suppressed by eslint-suppressions.json, and only by it", () => {
+  const old = join(ROOT, "scripts", "rules-see-files.mjs");
+  assert.deepEqual(cli(old), { status: 0, findings: 0 });
+  const none = writeTree(WORK, { "none.json": "{}\n" });
   assert.deepEqual(
-    (await rules("scripts/planted-new-file.mjs")).filter(
-      (id) => id === "local/js-needs-reason",
-    ),
-    ["local/js-needs-reason"],
-  );
-  assert.deepEqual(
-    (await rules("scripts/rules-see-files.mjs")).filter(
-      (id) => id === "local/js-needs-reason",
-    ),
-    [],
+    cli(old, ["--suppressions-location", join(none, "none.json")]),
+    { status: 1, findings: 1 },
   );
 }, 120_000);
 
-test("the grandfathered list only shrinks: every entry is a tracked JavaScript file, sorted, once", () => {
-  const listed = z
-    .array(z.string())
-    .parse(
-      JSON.parse(
-        readFileSync(
-          join(ROOT, "eslint-rules", "js-grandfathered.json"),
-          "utf8",
-        ),
-      ),
-    );
-  const tracked = new Set(
-    execFileSync("git", ["ls-files", "*.js", "*.mjs", "*.cjs"], {
-      cwd: ROOT,
-      encoding: "utf8",
+test("the repository's configuration runs the rule on a new file", async () => {
+  const eslint = new ESLint({ cwd: ROOT });
+  const found = (
+    await eslint.lintText("export const x = 1;\n", {
+      filePath: join(ROOT, "scripts", "planted-new-file.mjs"),
     })
-      .split("\n")
-      .filter(Boolean),
-  );
+  ).flatMap((r) => r.messages.map((m) => m.ruleId));
   assert.deepEqual(
-    listed.filter((f) => !tracked.has(f)),
-    [],
-    "remove these from js-grandfathered.json: the file is gone or no longer JavaScript",
+    found.filter((id) => id === "local/js-needs-reason"),
+    ["local/js-needs-reason"],
   );
-  assert.deepEqual(listed, [...new Set(listed)].sort());
-});
+}, 120_000);

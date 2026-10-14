@@ -29,17 +29,8 @@ import {
 } from "eslint-plugin-project-structure";
 import { presetCardRules } from "#src/preset-card-rule";
 import { nodeFiles } from "#src/adapters/node/index";
-import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-
-/** The JavaScript files that predate `local/js-needs-reason`; the list only shrinks. */
-const jsGrandfathered = JSON.parse(
-  readFileSync(
-    new URL("./eslint-rules/js-grandfathered.json", import.meta.url),
-    "utf8",
-  ),
-);
 
 /** This repository's own rules, one plugin: `local/<rule>`. */
 const localRules = {
@@ -891,14 +882,14 @@ export default [
       ],
     },
   },
-  // A NEW JavaScript file names why it is not TypeScript (#78), anywhere in the repository; the
-  // files that existed when the rule arrived are listed and the list only shrinks
-  // (eslint-rules/js-needs-reason.ts, js-grandfathered.json).
+  // A NEW JavaScript file names why it is not TypeScript (#78), anywhere in the repository. The
+  // files that existed when the rule arrived are bulk suppressions in eslint-suppressions.json,
+  // which only shrinks (eslint-rules/js-needs-reason.ts).
   {
     files: ["**/*.{js,mjs,cjs}"],
     plugins: { local: localRules },
     rules: {
-      "local/js-needs-reason": ["error", { grandfathered: jsGrandfathered }],
+      "local/js-needs-reason": "error",
     },
   },
   // LAST, so no block above can replace its `no-restricted-syntax` options for these files (none

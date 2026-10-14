@@ -134,7 +134,8 @@ New code is TypeScript (#78). The last block of [`eslint.config.mjs`](eslint.con
 `npm run lint` fails on one; a directory that still mixes the two is not listed yet, and the change
 that converts it adds it. Everywhere else, a NEW `.js`, `.mjs` or `.cjs` file fails `local/js-needs-reason`
 unless its top comment says `JavaScript, not TypeScript: evidence|fixture|config-loader — <why>`;
-the files that predate the rule are listed in `eslint-rules/js-grandfathered.json`, which only shrinks. Code that only this repository runs (tests, `scripts/`, `test/e2e/`) is
+the files that predate the rule are bulk suppressions in `eslint-suppressions.json`, which only
+shrinks. Code that only this repository runs (tests, `scripts/`, `test/e2e/`) is
 run by `node` directly; code a consumer runs from `node_modules` needs a build first, because Node
 does not strip types there.
 

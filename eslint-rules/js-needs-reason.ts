@@ -13,23 +13,18 @@
  * "Smaller", "faster" and "the neighbours are .mjs" are not on the list. Code a consumer runs from
  * `node_modules` is TypeScript too, compiled (`tsconfig.skills.json`, `tsconfig.pkg.json`).
  *
- * WHY A LIST AND NOT "ADDED SINCE THE BASE BRANCH". A rule may not run git (`GIT_IN_A_RULE` in
- * the config: a shallow CI checkout has no base). The JavaScript files that existed when the rule
- * arrived are listed in `js-grandfathered.json`; that list may only shrink, and
- * `js-needs-reason.test.ts` fails on an entry whose file is gone.
+ * The rule reports EVERY JavaScript file without a reason; it keeps no list of its own. The files
+ * that existed when it arrived are ESLint bulk suppressions in `eslint-suppressions.json`, which
+ * only shrinks: a suppression that no longer matches fails `eslint .` until
+ * `--prune-suppressions` removes it. Not "added since the base branch": a rule may not run git
+ * (`GIT_IN_A_RULE` in the config — a shallow CI checkout has no base).
  */
-import { relative, sep } from "node:path";
 import type { Program } from "estree";
-import { z } from "zod";
 import type { RuleContext } from "./rule-context.ts";
 
 /** The comment that excuses a JavaScript file, and the reasons it may give. */
 const REASON =
   /JavaScript, not TypeScript: (?:evidence|fixture|config-loader)\b/;
-
-const Options = z.tuple([
-  z.object({ grandfathered: z.array(z.string()).readonly() }),
-]);
 
 interface Comment {
   readonly type: string;
@@ -37,9 +32,8 @@ interface Comment {
   readonly range: readonly [number, number];
 }
 
-/** What this rule reads beyond the shared slice: the working directory and the comments. */
+/** What this rule reads beyond the shared slice: the comments. */
 type Context = RuleContext & {
-  readonly cwd: string;
   readonly sourceCode: { getAllComments(): readonly Comment[] };
 };
 
@@ -57,18 +51,9 @@ export default {
         type: "problem" as const,
         docs: {
           description:
-            "a JavaScript file that is not grandfathered names why it is not TypeScript at its top",
+            "a JavaScript file names why it is not TypeScript at its top",
         },
-        schema: [
-          {
-            type: "object",
-            properties: {
-              grandfathered: { type: "array", items: { type: "string" } },
-            },
-            required: ["grandfathered"],
-            additionalProperties: false,
-          },
-        ],
+        schema: [],
         messages: {
           noReason:
             "New code is TypeScript (#78): write this file as .ts, or open it with " +
@@ -78,13 +63,8 @@ export default {
         },
       },
       create(context: Context) {
-        const [{ grandfathered }] = Options.parse(context.options);
-        const path = relative(context.cwd, context.filename)
-          .split(sep)
-          .join("/");
         return {
           Program(node: Readonly<Program>) {
-            if (grandfathered.includes(path)) return;
             const starts = node.body.map((s) => Number(s.range?.[0]));
             const codeStart = Math.min(Infinity, ...starts);
             if (excused(context.sourceCode.getAllComments(), codeStart)) return;
