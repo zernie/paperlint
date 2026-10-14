@@ -3,7 +3,9 @@
  * grid-guard — the checks of the run-agent-grid skill that a driver or a commit hook calls, so
  * that a rule of the skill is a refusal and not a sentence.
  *
- *   lock <root> --owner <id> [--pid <pid>]   take the lock on a working-copy root
+ *   lock <root> --owner <id> [--pid <pid>] [--attached]
+ *                                            take the lock on a working-copy root; the holder
+ *                                            must be detached (its own session) unless --attached
  *   release <root> --owner <id>              give it back
  *   gate --registry <f> --ledger <f> --unit <u> --arm <a> --model <m> --seed <s>
  *                                            may this cell run now?
@@ -90,7 +92,45 @@ function take(path: string, me: Lock): boolean {
   }
 }
 
-function lock(root: string, owner: string, pid: string | undefined): void {
+// ── detached? ───────────────────────────────────────────────────────────────────────────────
+// A driver started as a task the agent session tracks dies with the session (its time cap). Only
+// a process in a session of its own survives that: `setsid` makes it the session leader, so its
+// session id equals its pid. `GRID_GUARD_PROC` stands in for `/proc` in tests.
+const procRoot = (): string => process.env.GRID_GUARD_PROC ?? "/proc";
+
+/** The session id of `pid` from `/proc/<pid>/stat` (field 6), or null when there is no such process. */
+function sessionOf(pid: number): number | null {
+  const stat = join(procRoot(), String(pid), "stat");
+  if (!existsSync(stat)) return null;
+  // The command name (field 2) is in parentheses and may hold spaces or parentheses itself.
+  const text = readFileSync(stat, "utf8");
+  const after = text.slice(text.lastIndexOf(")") + 2);
+  return Number(after.split(" ")[3]);
+}
+
+/** Why `pid` may not hold a grid lock, or null. Warns and passes where there is no `/proc`. */
+function detachProblem(pid: number): string | null {
+  if (!existsSync(join(procRoot(), "self"))) {
+    process.stderr.write(
+      `grid-guard: warning: no ${procRoot()} here, so whether pid ${String(pid)} is detached is not checked\n`,
+    );
+    return null;
+  }
+  const sid = sessionOf(pid);
+  if (sid === null) return `pid ${String(pid)} is not a live process`;
+  return sid === pid
+    ? null
+    : `pid ${String(pid)} is not detached (it runs in session ${String(sid)}), so it dies with the ` +
+        `session that started it. Start the driver as \`setsid nohup <driver> > driver.log 2>&1 &\` ` +
+        `and lock with --pid $$ inside it, or pass --attached for a short run.`;
+}
+
+function lock(
+  root: string,
+  owner: string,
+  pid: string | undefined,
+  attached: boolean,
+): void {
   const path = lockPath(root);
   const me: Lock = {
     owner,
@@ -98,26 +138,33 @@ function lock(root: string, owner: string, pid: string | undefined): void {
     host: hostname(),
     at: new Date().toISOString(),
   };
+  const notDetached = attached ? null : detachProblem(me.pid);
+  if (notDetached !== null) refuse(1, notDetached);
   if (take(path, me)) {
     say(`locked ${path} for ${me.owner} (pid ${String(me.pid)})`);
     return;
   }
   const held = readLock(path);
-  // A holder is stale only when it provably is: same host, and its process is gone. A lock from
-  // another host cannot be judged from here, so it is never taken over.
-  const stale = held.host === me.host && !alive(held.pid);
-  if (stale) rmSync(path, { force: true });
-  if (stale && take(path, me)) {
-    say(
-      `took over a stale lock on ${path} (holder ${held.owner}, pid ${String(held.pid)}, is gone)`,
-    );
-    return;
-  }
+  if (takeOverStale(path, me, held)) return;
   refuse(
     1,
     `${path} is held by ${held.owner} (pid ${String(held.pid)} on ${held.host} since ${held.at}). ` +
       `Wait for it, or give this driver its own working-copy root.`,
   );
+}
+
+/**
+ * Take the lock from a holder that is provably gone: same host, and its process is dead. A lock
+ * from another host cannot be judged from here, so it is never taken over.
+ */
+function takeOverStale(path: string, me: Lock, held: Lock): boolean {
+  const stale = held.host === me.host && !alive(held.pid);
+  if (stale) rmSync(path, { force: true });
+  if (!(stale && take(path, me))) return false;
+  say(
+    `took over a stale lock on ${path} (holder ${held.owner}, pid ${String(held.pid)}, is gone)`,
+  );
+  return true;
 }
 
 function release(root: string, owner: string): void {
@@ -572,6 +619,7 @@ interface Opts {
   readonly seed?: string;
   readonly allow: readonly string[];
   readonly git: boolean;
+  readonly attached: boolean;
   readonly runs?: string;
   readonly done: string;
 }
@@ -588,7 +636,7 @@ const COMMANDS: Readonly<Record<string, Command>> = {
     ["owner"],
     1,
     (p, o) => {
-      lock(String(p[0]), String(o.owner), o.pid);
+      lock(String(p[0]), String(o.owner), o.pid, o.attached);
     },
   ],
   release: [
@@ -654,6 +702,7 @@ function parse(): { positionals: string[]; opts: Opts } {
         seed: { type: "string" },
         allow: { type: "string", multiple: true, default: [] },
         git: { type: "boolean", default: false },
+        attached: { type: "boolean", default: false },
         runs: { type: "string" },
         done: { type: "string", default: "done.json" },
       },

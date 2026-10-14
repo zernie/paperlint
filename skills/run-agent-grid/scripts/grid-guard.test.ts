@@ -7,11 +7,11 @@
  * No model, no network. Needs `git`.
  */
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { hostname } from "node:os";
 import { join } from "node:path";
-import { test } from "vitest";
+import { onTestFinished, test } from "vitest";
 import { z } from "zod";
 import {
   parseJson,
@@ -101,6 +101,7 @@ test("lock and release: a free root is locked; a second driver is refused while 
     "driver-a",
     "--pid",
     String(process.pid),
+    "--attached",
   ]);
   assert.deepEqual(
     first,
@@ -114,7 +115,7 @@ test("lock and release: a free root is locked; a second driver is refused while 
     at: held.at,
   });
   assert.deepEqual(
-    guard(["lock", root, "--owner", "driver-b"]),
+    guard(["lock", root, "--owner", "driver-b", "--attached"]),
     no(
       1,
       `${root}.lock is held by driver-a (pid ${String(process.pid)} on ${hostname()} since ${String(held.at)}). Wait for it, or give this driver its own working-copy root.`,
@@ -139,7 +140,15 @@ test("lock and release: a lock whose process is gone on this host is taken over;
     }),
   });
   assert.deepEqual(
-    guard(["lock", root, "--owner", "driver-b", "--pid", String(process.pid)]),
+    guard([
+      "lock",
+      root,
+      "--owner",
+      "driver-b",
+      "--pid",
+      String(process.pid),
+      "--attached",
+    ]),
     ok(
       `took over a stale lock on ${root}.lock (holder crashed, pid ${String(dead)}, is gone)`,
     ),
@@ -156,7 +165,7 @@ test("lock and release: a lock whose process is gone on this host is taken over;
     }),
   });
   assert.deepEqual(
-    guard(["lock", far, "--owner", "driver-b"]),
+    guard(["lock", far, "--owner", "driver-b", "--attached"]),
     no(
       1,
       `${far}.lock is held by remote (pid ${String(dead)} on elsewhere since x). Wait for it, or give this driver its own working-copy root.`,
@@ -166,7 +175,7 @@ test("lock and release: a lock whose process is gone on this host is taken over;
 
 test("lock and release: without --pid the lock records the caller's process", () => {
   const root = join(WORK, "wc-ppid");
-  const r = guard(["lock", root, "--owner", "a"]);
+  const r = guard(["lock", root, "--owner", "a", "--attached"]);
   assert.equal(r.status, 0, r.stderr);
   // The caller here is this test process, which spawned node directly.
   assert.equal(lockFile(root).pid, process.pid);
@@ -175,7 +184,15 @@ test("lock and release: without --pid the lock records the caller's process", ()
 test("lock and release: release: only by the owner, only when held", () => {
   const root = join(WORK, "wc-release");
   assert.equal(
-    guard(["lock", root, "--owner", "a", "--pid", String(process.pid)]).status,
+    guard([
+      "lock",
+      root,
+      "--owner",
+      "a",
+      "--pid",
+      String(process.pid),
+      "--attached",
+    ]).status,
     0,
   );
   assert.deepEqual(
@@ -195,11 +212,87 @@ test("lock and release: release: only by the owner, only when held", () => {
 
 test("lock and release: a root whose parent does not exist is an error, not a lock", () => {
   const root = join(WORK, "no-such-dir", "wc");
-  const r = guard(["lock", root, "--owner", "a"]);
+  const r = guard(["lock", root, "--owner", "a", "--attached"]);
   assert.deepEqual(
     r,
     no(1, `ENOENT: no such file or directory, open '${root}.lock'`),
   );
+});
+
+/** A sleeping node process, in a session of its own when `detached`; killed after the test. */
+const sleeper = (detached: boolean): number => {
+  const child = spawn(process.execPath, ["-e", "setTimeout(() => {}, 60000)"], {
+    detached,
+    stdio: "ignore",
+  });
+  child.unref();
+  onTestFinished(() => {
+    child.kill();
+  });
+  return Number(child.pid);
+};
+
+test("lock: a detached holder (its own session) takes the lock; an attached one is refused", () => {
+  const free = sleeper(true);
+  const root = join(WORK, "wc-detached");
+  assert.deepEqual(
+    guard(["lock", root, "--owner", "driver-a", "--pid", String(free)]),
+    ok(`locked ${root}.lock for driver-a (pid ${String(free)})`),
+  );
+  const tied = sleeper(false);
+  const other = join(WORK, "wc-attached");
+  const r = guard([
+    "lock",
+    other,
+    "--owner",
+    "driver-b",
+    "--pid",
+    String(tied),
+  ]);
+  assert.equal(r.status, 1);
+  assert.equal(r.stdout, "");
+  assert.match(
+    r.stderr,
+    new RegExp(
+      `^grid-guard: pid ${String(tied)} is not detached \\(it runs in session \\d+\\), so it dies with the session that started it\\. Start the driver as \`setsid nohup <driver> > driver\\.log 2>&1 &\` and lock with --pid \\$\\$ inside it, or pass --attached for a short run\\.\\n$`,
+    ),
+  );
+  assert.equal(existsSync(`${other}.lock`), false);
+  // Said out loud, an attached holder is allowed: a short run that the session outlives.
+  assert.deepEqual(
+    guard([
+      "lock",
+      other,
+      "--owner",
+      "driver-b",
+      "--pid",
+      String(tied),
+      "--attached",
+    ]),
+    ok(`locked ${other}.lock for driver-b (pid ${String(tied)})`),
+  );
+});
+
+test("lock: a pid that is no process is refused; without /proc the check warns and passes", () => {
+  const dead = spawnSync(process.execPath, ["-e", ""]).pid;
+  const root = join(WORK, "wc-nopid");
+  assert.deepEqual(
+    guard(["lock", root, "--owner", "a", "--pid", String(dead)]),
+    no(1, `pid ${String(dead)} is not a live process`),
+  );
+  const r = runNode(
+    SCRIPT,
+    ["lock", root, "--owner", "a", "--pid", String(dead)],
+    {
+      cwd: WORK,
+      env: { GRID_GUARD_PROC: join(WORK, "no-proc-here") },
+    },
+  );
+  assert.deepEqual(r, {
+    status: 0,
+    stdout: `locked ${root}.lock for a (pid ${String(dead)})\n`,
+    stderr: `grid-guard: warning: no ${join(WORK, "no-proc-here")} here, so whether pid ${String(dead)} is detached is not checked\n`,
+  });
 });
 
 const REGISTRY = {

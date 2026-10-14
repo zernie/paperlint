@@ -100,6 +100,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
 
   The lock is a file beside the root. A live holder → refused. A holder whose process is gone on
   the same host → taken over, and said so. A holder on another host → refused (it cannot be judged).
+  The holder must be detached — see the next point.
 - **Before every cell, ask the gate** and obey its exit code; 3 means the cell is already counted —
   skip it. That makes a killed driver resumable: run it again and it continues.
 
@@ -112,7 +113,10 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
   still reads. **Prose only**, held by file permissions where you set them.
 - **Run the driver detached** (\`setsid nohup … &\`, its log to a file), never as a task tracked by
   the agent session: a session's time cap kills a long grid. A separate waiter (a scheduled wake-up,
-  a loop that polls the ledger) brings the session back. **Prose only**; the resume is mechanical.
+  a loop that polls the ledger) brings the session back. **Held by \`lock\`:** it refuses a holder
+  that is not the leader of its own session (Linux \`/proc/<pid>/stat\`; true after \`setsid\`) and
+  names the command to use instead; \`--attached\` allows a short run, said out loud; without
+  \`/proc\` it warns and passes.
 - The driver appends a ledger line when an attempt starts and another when it ends (same \`attempt\`
   id, \`root\`, \`start\`/\`end\`, \`status\`, \`cost\`). Format: \`references/registry-and-ledger.md\`.
 

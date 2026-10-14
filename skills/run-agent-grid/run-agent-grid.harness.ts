@@ -75,7 +75,9 @@ if (!cli.present) skip(`run-agent-grid effects: ${cli.note}`);
 
 const g = `node ${SKILL_LINK}/scripts/grid-guard.js`;
 // The holder's pid is this harness: alive for the whole run, so the second driver must be refused.
-const LOCK = `${g} lock wc --owner driver-a --pid ${String(process.pid)}`;
+// `--attached`: a Bash call of an agent session is not a detached driver, and this run is short —
+// the detachment refusal itself is pinned in `scripts/grid-guard.test.ts`.
+const LOCK = `${g} lock wc --owner driver-a --pid ${String(process.pid)} --attached`;
 const r = await runHarnessTest({
   pluginDir: join(REPO, ".claude"),
   // bubblewrap is absent here; the code loaded is this repository's own `.claude`.
@@ -89,7 +91,10 @@ const r = await runHarnessTest({
   model: [
     { tool: "Skill", input: { skill: "run-agent-grid" } },
     { tool: "Bash", input: { command: LOCK } },
-    { tool: "Bash", input: { command: `${g} lock wc --owner driver-b` } },
+    {
+      tool: "Bash",
+      input: { command: `${g} lock wc --owner driver-b --attached` },
+    },
     { tool: "Bash", input: { command: `${g} release wc --owner driver-a` } },
     { text: "done" },
   ],
