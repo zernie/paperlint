@@ -8,69 +8,28 @@
  * pair that labels different runs refused. The commands call the COMPILED `labels.js` under the
  * skill's link, which is what runs from `node_modules` (`npm run build` makes it).
  *
- * Also, without the CLI: the shared per-skill checks (`checkSkill`), and every `labels.js`
- * command the skill and its reference instruct names a command the script accepts.
+ * Also, without the CLI: the shared per-skill checks (`checkSkill`). Whether the skill names only
+ * subcommands the script has is not tested here: the spec interpolates them from
+ * `scripts/labels-commands.ts`, so a wrong one fails `tsc`.
  *
  * What it does NOT prove: that a real model reads the uncertain runs in full. That is for
  * `label-agent-runs.eval.ts` and a real labelling pass.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { runHarnessTest, skip, type ToolCall } from "vigiles";
 import { createChecker } from "../../lib/check.ts";
 import { checkSkill } from "../../lib/skill-checks.mjs";
 import { observeAgentCli } from "#lib/agent-cli-version";
+import { claudeDir } from "#src/package-dirs";
+import { COMMANDS } from "./scripts/labels-commands.ts";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
 const check = createChecker();
-const SCRIPT = join(HERE, "scripts", "labels.ts");
 
 await checkSkill("label-agent-runs");
 
-// ── 1. Every instructed command is one the script accepts ────────────────────────────────────
-const instructed = [
-  ...new Set(
-    ["SKILL.md", "references/formats.md"].flatMap((f) =>
-      [
-        ...readFileSync(join(HERE, f), "utf8").matchAll(
-          /labels\.js ([a-z-]+)\b/g,
-        ),
-      ].map((m) => String(m[1])),
-    ),
-  ),
-];
-check(
-  "the skill instructs validate and agree",
-  ["validate", "agree"].every((c) => instructed.includes(c)),
-  JSON.stringify(instructed),
-);
-for (const cmd of instructed) {
-  // A known command given the shape it needs gets past the dispatch and fails on the missing
-  // file; an unknown one prints usage.
-  const args =
-    cmd === "agree" ? [cmd, "a", "b"] : [cmd, "x.tsv", "--codebook", "c"];
-  const r = spawnSync(process.execPath, [SCRIPT, ...args], {
-    encoding: "utf8",
-  });
-  check(
-    `labels.js accepts "${cmd}"`,
-    r.stderr.includes("ENOENT"),
-    r.stderr.slice(0, 200),
-  );
-}
-
-// ── 2. Through the real CLI: agreement, as the skill tells an agent to compute it ───────────
-/** The directory above HERE that holds `.claude`, found by walking up rather than by counting. */
-function repoRoot(dir: string): string {
-  if (existsSync(resolve(dir, ".claude"))) return dir;
-  if (dirname(dir) === dir)
-    throw new Error(`no root with a .claude directory above ${HERE}`);
-  return repoRoot(dirname(dir));
-}
-const REPO = repoRoot(HERE);
-const LINK = join(REPO, ".claude", "skills", "label-agent-runs");
+// ── Through the real CLI: agreement, as the skill tells an agent to compute it ───────────
+const LINK = join(claudeDir(), "skills", "label-agent-runs");
 const cli = observeAgentCli({ spawnSync });
 if (!cli.present) skip(`label-agent-runs effects: ${cli.note}`);
 
@@ -80,7 +39,7 @@ const file = (...rows: string[]): string =>
   ["agent\tmodel\tcell\tlabel", ...rows, ""].join("\n");
 const l = `node ${LINK}/scripts/labels.js`;
 const r = await runHarnessTest({
-  pluginDir: join(REPO, ".claude"),
+  pluginDir: claudeDir(),
   // bubblewrap is absent here; the code loaded is this repository's own `.claude`.
   sandbox: false,
   transcript: true,
@@ -102,8 +61,14 @@ const r = await runHarnessTest({
   },
   model: [
     { tool: "Skill", input: { skill: "label-agent-runs" } },
-    { tool: "Bash", input: { command: `${l} agree rater-a.tsv rater-b.tsv` } },
-    { tool: "Bash", input: { command: `${l} agree rater-a.tsv other.tsv` } },
+    {
+      tool: "Bash",
+      input: { command: `${l} ${COMMANDS.agree} rater-a.tsv rater-b.tsv` },
+    },
+    {
+      tool: "Bash",
+      input: { command: `${l} ${COMMANDS.agree} rater-a.tsv other.tsv` },
+    },
     { text: "done" },
   ],
 });

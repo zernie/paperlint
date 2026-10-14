@@ -4,7 +4,7 @@ description: "Label the outcomes of an agent experiment grid so the labels survi
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:c9d8b39c5810670d compiled from skills/label-agent-runs/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a39018883548b320 compiled from skills/label-agent-runs/SKILL.md.spec.ts -->
 
 # label-agent-runs — turning finished agent runs into outcome labels a reviewer can trust
 
@@ -14,7 +14,7 @@ decided by a script, what must be read by a person, how a second rater is run, a
 are kept. `build-benchmark` turns the labels into statistics; `build-label-page` is the page a person
 labels on.
 
-Each rule names the failure behind it and what holds it — a refusal in `scripts/labels.js` or
+Each rule names the failure behind it and what holds it — a refusal in `skills/label-agent-runs/scripts/labels.ts` (run as the compiled `scripts/labels.js`) or
 **prose only**. Formats (codebook, label file, notes, rater instruction):
 [`references/formats.md`](references/formats.md).
 

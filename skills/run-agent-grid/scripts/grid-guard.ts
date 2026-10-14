@@ -40,6 +40,7 @@ import { hostname, tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
+import { COMMANDS, type CommandName } from "./grid-guard-commands.ts";
 
 class Refusal extends Error {
   readonly exitCode: number;
@@ -630,8 +631,11 @@ type Command = readonly [
   arity: number,
   run: (paths: readonly string[], o: Opts) => void,
 ];
-/** Each command: the options it requires, how many paths it takes (-1: one or more), what it does. */
-const COMMANDS: Readonly<Record<string, Command>> = {
+/**
+ * Each command: the options it requires, how many paths it takes (-1: one or more), what it does.
+ * Keyed by the names in `grid-guard-commands.ts`, all of them and nothing else.
+ */
+const DISPATCH: { readonly [K in CommandName]: Command } = {
   lock: [
     ["owner"],
     1,
@@ -683,7 +687,8 @@ const COMMANDS: Readonly<Record<string, Command>> = {
   ],
 };
 
-const USAGE = `usage: grid-guard.js <${Object.keys(COMMANDS).join("|")}> … (see the header of this file)`;
+const BY_NAME = new Map<string, Command>(Object.entries(DISPATCH));
+const USAGE = `usage: grid-guard.js <${Object.values(COMMANDS).join("|")}> … (see the header of this file)`;
 
 /** The command line, parsed; an unknown option is a usage error. */
 function parse(): { positionals: string[]; opts: Opts } {
@@ -716,7 +721,7 @@ function parse(): { positionals: string[]; opts: Opts } {
 function main(): void {
   const { positionals, opts } = parse();
   const [name, ...paths] = positionals;
-  const command = COMMANDS[String(name)];
+  const command = BY_NAME.get(String(name));
   if (!command) return refuse(2, USAGE);
   const [required, arity, run] = command;
   const missing = required.filter((k) => opts[k] === undefined);

@@ -1,11 +1,12 @@
-import { experimental_skill } from "vigiles/spec";
+import { experimental_skill, file, prose } from "vigiles/spec";
+import { COMMANDS } from "./scripts/grid-guard-commands.ts";
 
 export default experimental_skill({
   name: "run-agent-grid",
   description:
     "Run a paid or counted agent experiment grid end to end — units × arms × seeds (× agent stacks), one agent CLI run per cell in a fresh working copy, scored by an outcome oracle — without the failures that silently spoil one: an unapproved or hand-picked sample, a timeout that kills a slower model, two drivers sharing a working copy, secrets in transcripts, a classifier that mislabels outcomes, a session cap that kills the run, results lost from scratch space. Use when a study design exists and you are about to spend money or count runs: the registry and approval gate, the sandbox and secret probe, the smoke per model, the locked detached driver, the overlap audit, hand labels and the commit of finished runs. Ships grid-guard.js (lock, gate, overlap audit, env probe, key scan, pre-commit). Composes with build-benchmark (the design, upstream), build-label-page (hand labels) and osf-artifact-upload (the artifact).",
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "Agent"],
-  body: `
+  body: prose`
 # run-agent-grid — running a counted agent grid without spoiling it
 
 **What a grid is here.** Units under test × conditions (arms) × seeds, repeated per agent stack
@@ -15,13 +16,13 @@ the study and the artifact; this skill is the **operational procedure for runnin
 first paid call to the last committed run.
 
 Every rule below was paid for by a failure. Each is stated with that failure and with what HOLDS it:
-a refusal in \`scripts/grid-guard.js\`, a commit hook, a probe — or, said plainly, **prose only**,
+a refusal in ${file("skills/run-agent-grid/scripts/grid-guard.ts")} (run as the compiled \`scripts/grid-guard.js\`), a commit hook, a probe — or, said plainly, **prose only**,
 which means it holds only as long as someone reads this. The full catalog, one entry per failure:
 [\`references/failure-catalog.md\`](references/failure-catalog.md). The registry, the attempt ledger
 and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](references/registry-and-ledger.md).
 
 **Exit codes of every guard command:** 0 allowed or clean · 1 refused or a finding · 2 usage ·
-3 (\`gate\` only) the cell is already counted, skip it.
+3 (\`${COMMANDS.gate}\` only) the cell is already counted, skip it.
 
 ## The order — each gate is passed before the next phase starts
 
@@ -37,7 +38,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
   at the drawn units**; a stratified draw is proportional to the frame.
 - **Only the committed registry allows a run.** An added model, seed or arm is a dated addendum,
   committed before its first run. Report models as columns, never pooled.
-- **Held by:** \`gate\` reads the registry from \`HEAD\` and refuses when the working copy differs from
+- **Held by:** \`${COMMANDS.gate}\` reads the registry from \`HEAD\` and refuses when the working copy differs from
   it, when the cell is not declared, when an excluded unit has no reason, when a counted run has no
   draw seed. **Prose only:** that the frame is the whole population, and that the draw is
   proportional; the guard sees the registry, not the population behind it.
@@ -47,7 +48,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
 - The **author** approves the drawn units — in their own words, with the time and the channel
   (chat, message, review comment) recorded in \`approval\`. The agent that designed or drew the sample
   never fills this field, not even to "save a step".
-- **Held by:** \`gate\` refuses a counted run unless \`approval.by\` equals the registry's \`author\` and
+- **Held by:** \`${COMMANDS.gate}\` refuses a counted run unless \`approval.by\` equals the registry's \`author\` and
   \`at\` and \`channel\` are filled. **Prose only:** who typed it — the guard cannot tell the author
   from an agent writing the author's name. Make it reviewable: the approval lands in its own commit,
   quoting the author's message.
@@ -66,11 +67,11 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
 - **Held by:** run inside the sandbox, as the agent would run —
 
   \`\`\`bash
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js env-probe --git
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js ${COMMANDS.envProbe} --git
   \`\`\`
 
   It prints secret-looking variable NAMES (never values) and exits 1; \`--allow NAME\` accepts one by
-  name after you have looked at it. \`gate\` refuses a counted unit without \`proof\` (\`toolVisible\`,
+  name after you have looked at it. \`${COMMANDS.gate}\` refuses a counted unit without \`proof\` (\`toolVisible\`,
   \`firesOnPinned\`, \`acceptsReference\`, all \`true\`). **Prose only:** how the proof is taken — the
   three facts are recorded by your proof script; the guard only refuses their absence.
 
@@ -82,7 +83,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
 - From the smoke, write into the registry, per model, \`smoke.timeoutSec\` and \`smoke.costPerRun\`
   (measured, with reserve), and commit it **before the grid**. A model can cost a multiple of its
   planned price; the cap and the stop rule are written down before the first counted run.
-- **Held by:** \`gate\` refuses a counted run on a model without \`smoke.timeoutSec\` and
+- **Held by:** \`${COMMANDS.gate}\` refuses a counted run on a model without \`smoke.timeoutSec\` and
   \`smoke.costPerRun\`, hands the driver \`timeoutSec\` in its output, and refuses when the spend in the
   ledger plus the next run's cost would pass \`budget.cap\`. **Prose only:** that the smoke runs were
   actually read.
@@ -94,8 +95,8 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
   root**.
 
   \`\`\`bash
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js lock <root> --owner <driver-id> --pid $$
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js release <root> --owner <driver-id>
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js ${COMMANDS.lock} <root> --owner <driver-id> --pid $$
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js ${COMMANDS.release} <root> --owner <driver-id>
   \`\`\`
 
   The lock is a file beside the root. A live holder → refused. A holder whose process is gone on
@@ -105,7 +106,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
   skip it. That makes a killed driver resumable: run it again and it continues.
 
   \`\`\`bash
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js gate --registry grid.json --ledger attempts.jsonl --unit <u> --arm <a> --model <m> --seed <s>
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js ${COMMANDS.gate} --registry grid.json --ledger attempts.jsonl --unit <u> --arm <a> --model <m> --seed <s>
   \`\`\`
 
 - **Never delete shared inputs from a step.** Templates, fixtures and pinned states are read-only
@@ -113,7 +114,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
   still reads. **Prose only**, held by file permissions where you set them.
 - **Run the driver detached** (\`setsid nohup … &\`, its log to a file), never as a task tracked by
   the agent session: a session's time cap kills a long grid. A separate waiter (a scheduled wake-up,
-  a loop that polls the ledger) brings the session back. **Held by \`lock\`:** it refuses a holder
+  a loop that polls the ledger) brings the session back. **Held by \`${COMMANDS.lock}\`:** it refuses a holder
   that is not the leader of its own session (Linux \`/proc/<pid>/stat\`; true after \`setsid\`) and
   names the command to use instead; \`--attached\` allows a short run, said out loud; without
   \`/proc\` it warns and passes.
@@ -123,7 +124,7 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
 ### 6. After any incident — and before reporting — the overlap audit (catalog 6)
 
 \`\`\`bash
-node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js overlap attempts.jsonl
+node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js ${COMMANDS.overlap} attempts.jsonl
 \`\`\`
 
 Lists every pair of attempts that shared a root at the same time (an attempt with no end overlaps
@@ -150,12 +151,12 @@ numbers are reported.
 - Every committed artifact is scanned for key-shaped strings, by a pre-commit hook:
 
   \`\`\`bash
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js precommit --runs runs --done done.json
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js ${COMMANDS.precommit} --runs runs --done done.json
   \`\`\`
 
   It reads the **staged** content (the index is what commits), refuses key-shaped strings by file and
   line without printing them, and refuses a staged run folder that has no completion record. Before
-  an artifact leaves the repository: \`node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js scan-keys <dir>\`.
+  an artifact leaves the repository: \`node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js ${COMMANDS.scanKeys} <dir>\`.
 - **Report the spend**: total, per model, against the cap.
 
 ## When something goes wrong mid-grid
@@ -170,7 +171,7 @@ any stack the fix touched, then resume. A harness change is an addendum like any
 - **label-agent-runs** (downstream) — the outcome labels: codebook first, hand labels for every
   uncertain run, a blind second rater, labels frozen after the analysis.
 - **build-label-page** — the page a person labels those runs on.
-- **osf-artifact-upload** — the artifact, after \`scan-keys\` is clean.
+- **osf-artifact-upload** — the artifact, after \`${COMMANDS.scanKeys}\` is clean.
 - An **independent refutation pass** (a second agent framed to refute, not to confirm) on the
   registry and the smoke before the first counted run.
 `,

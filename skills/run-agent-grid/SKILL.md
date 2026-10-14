@@ -4,7 +4,7 @@ description: "Run a paid or counted agent experiment grid end to end — units �
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:2bb9ef540d8fa4ae compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:da6bf4d945a26796 compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
 
 # run-agent-grid — running a counted agent grid without spoiling it
 
@@ -15,7 +15,7 @@ the study and the artifact; this skill is the **operational procedure for runnin
 first paid call to the last committed run.
 
 Every rule below was paid for by a failure. Each is stated with that failure and with what HOLDS it:
-a refusal in `scripts/grid-guard.js`, a commit hook, a probe — or, said plainly, **prose only**,
+a refusal in `skills/run-agent-grid/scripts/grid-guard.ts` (run as the compiled `scripts/grid-guard.js`), a commit hook, a probe — or, said plainly, **prose only**,
 which means it holds only as long as someone reads this. The full catalog, one entry per failure:
 [`references/failure-catalog.md`](references/failure-catalog.md). The registry, the attempt ledger
 and a driver loop that calls the guard: [`references/registry-and-ledger.md`](references/registry-and-ledger.md).

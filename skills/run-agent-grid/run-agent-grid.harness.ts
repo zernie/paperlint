@@ -9,67 +9,28 @@
  * consumer: the skill's link under `.claude/skills/`, and the COMPILED `grid-guard.js` there,
  * which is what runs from `node_modules` (`npm run build` makes it; `npm run check` builds first).
  *
- * Also, without the CLI: the shared per-skill checks (`checkSkill`), and every guard command the
- * skill and its references instruct names a subcommand the guard knows — a renamed subcommand
- * would otherwise leave the skill instructing a command that only prints usage.
+ * Also, without the CLI: the shared per-skill checks (`checkSkill`). Whether the skill names only
+ * subcommands the guard has is not tested here: the spec interpolates them from
+ * `scripts/grid-guard-commands.ts`, so a wrong one fails `tsc`.
  *
  * What it does NOT prove: that a real model follows the order of the gates. That is a
  * probabilistic question for `run-agent-grid.eval.ts` and a real grid.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { runHarnessTest, skip, type ToolCall } from "vigiles";
 import { createChecker } from "../../lib/check.ts";
 import { checkSkill } from "../../lib/skill-checks.mjs";
 import { observeAgentCli } from "#lib/agent-cli-version";
+import { claudeDir } from "#src/package-dirs";
+import { COMMANDS } from "./scripts/grid-guard-commands.ts";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
 const check = createChecker();
-const GUARD = join(HERE, "scripts", "grid-guard.ts");
 
 await checkSkill("run-agent-grid");
 
-// ── 1. Every instructed guard command names a subcommand the guard knows ─────────────────────
-const instructed = [
-  ...new Set(
-    ["SKILL.md", "references/registry-and-ledger.md"].flatMap((f) =>
-      [
-        ...readFileSync(join(HERE, f), "utf8").matchAll(
-          /grid-guard\.js ([a-z-]+)/g,
-        ),
-      ].map((m) => String(m[1])),
-    ),
-  ),
-];
-check(
-  "the skill instructs the guard's commands",
-  instructed.length >= 6,
-  `found ${JSON.stringify(instructed)}`,
-);
-for (const sub of instructed) {
-  const r = spawnSync(process.execPath, [GUARD, sub, "--owner", "x"], {
-    encoding: "utf8",
-  });
-  // An unknown subcommand prints the usage line alone; a known one gets past the dispatch.
-  check(
-    `guard knows "${sub}"`,
-    !/^grid-guard: usage:/.test(r.stderr),
-    r.stderr.slice(0, 200),
-  );
-}
-
-// ── 2. Through the real CLI: the lock, as the skill tells an agent to take it ────────────────
-/** The directory above HERE that holds `.claude`, found by walking up rather than by counting. */
-function repoRoot(dir: string): string {
-  if (existsSync(resolve(dir, ".claude"))) return dir;
-  if (dirname(dir) === dir)
-    throw new Error(`no root with a .claude directory above ${HERE}`);
-  return repoRoot(dirname(dir));
-}
-const REPO = repoRoot(HERE);
-const SKILL_LINK = join(REPO, ".claude", "skills", "run-agent-grid");
+// ── Through the real CLI: the lock, as the skill tells an agent to take it ────────────────
+const SKILL_LINK = join(claudeDir(), "skills", "run-agent-grid");
 const cli = observeAgentCli({ spawnSync });
 if (!cli.present) skip(`run-agent-grid effects: ${cli.note}`);
 
@@ -77,9 +38,9 @@ const g = `node ${SKILL_LINK}/scripts/grid-guard.js`;
 // The holder's pid is this harness: alive for the whole run, so the second driver must be refused.
 // `--attached`: a Bash call of an agent session is not a detached driver, and this run is short —
 // the detachment refusal itself is pinned in `scripts/grid-guard.test.ts`.
-const LOCK = `${g} lock wc --owner driver-a --pid ${String(process.pid)} --attached`;
+const LOCK = `${g} ${COMMANDS.lock} wc --owner driver-a --pid ${String(process.pid)} --attached`;
 const r = await runHarnessTest({
-  pluginDir: join(REPO, ".claude"),
+  pluginDir: claudeDir(),
   // bubblewrap is absent here; the code loaded is this repository's own `.claude`.
   sandbox: false,
   transcript: true,
@@ -93,9 +54,14 @@ const r = await runHarnessTest({
     { tool: "Bash", input: { command: LOCK } },
     {
       tool: "Bash",
-      input: { command: `${g} lock wc --owner driver-b --attached` },
+      input: {
+        command: `${g} ${COMMANDS.lock} wc --owner driver-b --attached`,
+      },
     },
-    { tool: "Bash", input: { command: `${g} release wc --owner driver-a` } },
+    {
+      tool: "Bash",
+      input: { command: `${g} ${COMMANDS.release} wc --owner driver-a` },
+    },
     { text: "done" },
   ],
 });

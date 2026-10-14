@@ -27,6 +27,7 @@ import { readFileSync } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
+import { COMMANDS } from "./labels-commands.ts";
 
 class Refusal extends Error {
   readonly exitCode: number;
@@ -417,12 +418,12 @@ function main(): void {
   })();
   const [cmd, ...paths] = positionals;
   const validateOk =
-    cmd === "validate" &&
+    cmd === COMMANDS.validate &&
     paths.length === 1 &&
     values.codebook !== undefined &&
     (values["analysed-at"] === undefined || values.notes !== undefined);
   if (validateOk) validate(String(paths[0]), values);
-  else if (cmd === "agree" && paths.length === 2)
+  else if (cmd === COMMANDS.agree && paths.length === 2)
     agree(String(paths[0]), String(paths[1]));
   else refuse(2, USAGE);
 }
