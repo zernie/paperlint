@@ -236,7 +236,7 @@ test("validate: the codebook must be committed, unchanged, complete, and first",
     run(),
     no(
       1,
-      `${cb} was committed after ${join(d, "labels.tsv")}: the codebook comes first`,
+      `${cb} was committed after ${join(d, "labels.tsv")} was first committed: the codebook is fixed before labelling; a changed codebook needs a new label file`,
     ),
   );
 
@@ -252,7 +252,7 @@ test("validate: the codebook must be committed, unchanged, complete, and first",
       [
         `${cb} differs from its committed version: the codebook is fixed before labelling`,
         `${cb}: label "solved" needs an id, a definition and a borderline example`,
-        `${cb} was committed after ${join(d, "labels.tsv")}: the codebook comes first`,
+        `${cb} was committed after ${join(d, "labels.tsv")} was first committed: the codebook is fixed before labelling; a changed codebook needs a new label file`,
         `${join(d, "labels.tsv")}:3: "deferred" is not a codebook label`,
       ].join("\n"),
     ),
@@ -305,7 +305,10 @@ test("validate --analysed-at: a relabel after the analysis needs a dated note wi
     ]);
   const missing = no(
     1,
-    "cli m1 u1/control/1: relabelled solved → deferred after the analysis, with no dated note quoting the run",
+    [
+      "cli m1 u1/control/1: relabelled solved → deferred after the analysis, with no dated note quoting the run",
+      "cli m1 u3/control/1: added after the analysis (solved), with no dated note quoting the run",
+    ].join("\n"),
   );
   assert.deepEqual(run(), missing);
   // Dated, but no verbatim quote: still refused.
@@ -315,7 +318,7 @@ test("validate --analysed-at: a relabel after the analysis needs a dated note wi
   assert.deepEqual(run(), missing);
   writeTree(d, {
     "notes.md":
-      "## 2026-01-05\nu1/control/1: re-read, it defers.\n> I'll leave the final call on this to you.\n## 2026-01-06\nother\n",
+      "## 2026-01-05\nu1/control/1: re-read, it defers.\n> I'll leave the final call on this to you.\n## 2026-01-06\nu3/control/1 came in late:\n> Done — the check passes.\n",
   });
   assert.deepEqual(run(), ok(`${join(d, "labels.tsv")}: 3 labels, valid`));
 });
@@ -451,4 +454,85 @@ test("agree: different cells, a malformed file, or nothing to compare are refuse
     labels(["agree", join(d, "empty.tsv"), join(d, "empty.tsv")]),
     no(1, "no labels to compare"),
   );
+});
+
+test("validate --analysed-at: deleting a labelled cell after the analysis needs a note too", () => {
+  const d = repo("relabel-delete");
+  commit(d, { "codebook.json": CODEBOOK }, 1_700_000_000);
+  commit(d, { "labels.tsv": GOOD }, 1_700_001_000);
+  git(d, {}, "tag", "analysis");
+  // Emptied to the header: every cell the analysis read is gone.
+  writeTree(d, { "labels.tsv": tsv(), "notes.md": "" });
+  const run = (): ScriptResult =>
+    labels([
+      "validate",
+      join(d, "labels.tsv"),
+      "--codebook",
+      join(d, "codebook.json"),
+      "--analysed-at",
+      "analysis",
+      "--notes",
+      join(d, "notes.md"),
+    ]);
+  assert.deepEqual(
+    run(),
+    no(
+      1,
+      [
+        "cli m1 u1/control/1: removed after the analysis (was solved), with no dated note quoting the run",
+        "cli m1 u1/treatment/1: removed after the analysis (was deferred), with no dated note quoting the run",
+      ].join("\n"),
+    ),
+  );
+  writeTree(d, {
+    "notes.md":
+      "## 2026-01-07\nu1/control/1 and u1/treatment/1 were a harness error:\n> setup failed before the agent started\n",
+  });
+  assert.deepEqual(run(), ok(`${join(d, "labels.tsv")}: 0 labels, valid`));
+});
+
+test("validate: a codebook changed after the first label commit is refused", () => {
+  const d = repo("codebook-edited");
+  commit(d, { "codebook.json": CODEBOOK }, 1_700_000_000);
+  commit(d, { "labels.tsv": GOOD }, 1_700_001_000);
+  const edited = CODEBOOK.replace(
+    "]}",
+    ',{"id":"failed","definition":"neither","borderline":"a timeout"}]}',
+  );
+  commit(d, { "codebook.json": edited }, 1_700_002_000);
+  const cb = join(d, "codebook.json");
+  assert.deepEqual(
+    labels(["validate", join(d, "labels.tsv"), "--codebook", cb]),
+    no(
+      1,
+      `${cb} was committed after ${join(d, "labels.tsv")} was first committed: the codebook is fixed before labelling; a changed codebook needs a new label file`,
+    ),
+  );
+  // A new label file, begun after the new codebook, is fine.
+  commit(d, { "labels-v2.tsv": GOOD }, 1_700_003_000);
+  assert.deepEqual(
+    labels(["validate", join(d, "labels-v2.tsv"), "--codebook", cb]),
+    ok(`${join(d, "labels-v2.tsv")}: 2 labels, valid`),
+  );
+});
+
+test("agree: a cell labelled twice in either file is refused before any statistic", () => {
+  const twice = tsv(
+    ["cli", "m1", "u1/control/1", "yes"],
+    ["cli", "m1", "u1/control/1", "no"],
+    ["cli", "m1", "u2/control/1", "yes"],
+  );
+  const once = tsv(
+    ["cli", "m1", "u1/control/1", "yes"],
+    ["cli", "m1", "u2/control/1", "yes"],
+  );
+  const d = writeTree(join(WORK, "agree-dup"), {
+    "twice.tsv": twice,
+    "once.tsv": once,
+  });
+  const a = join(d, "twice.tsv");
+  const b = join(d, "once.tsv");
+  const dup = `${a}: cli m1 u1/control/1 is labelled 2 times (lines 2, 3)`;
+  assert.deepEqual(labels(["agree", a, b]), no(1, dup));
+  assert.deepEqual(labels(["agree", b, a]), no(1, dup));
 });

@@ -32,9 +32,11 @@ Exit codes: 0 valid or reported · 1 a finding · 2 usage.
   case nearest the line, and which side it falls on). A codebook written while labelling bends to the
   runs already seen.
 - **Held by:** \`${COMMANDS.validate}\` refuses a codebook that is not committed, differs from its committed
-  version, lacks a definition or a borderline example for a label, or was first committed after the
-  label file; and a label the codebook does not define. A codebook change after labelling started is
-  a dated addendum, and the affected runs are re-labelled.
+  version, lacks a definition or a borderline example for a label, or has ANY commit later than the
+  label file's first commit; and a label the codebook does not define. A codebook changed after
+  labelling began is refused rather than excused by a note: the labels already given were given
+  under the old definitions, so the change starts a NEW label file, committed after it, and every
+  run is labelled again under the new codebook.
 
 ## 2. The automatic classifier is a pre-sort, not a label
 
@@ -84,9 +86,10 @@ Exit codes: 0 valid or reported · 1 a finding · 2 usage.
   run, beside a notes file. Every relabel gets a note under a dated heading (\`## YYYY-MM-DD\`) naming
   the cell and quoting the run verbatim (a \`>\` line) — the quote is the evidence for the label.
 - Once an analysis has read the labels, they are not edited without such a note.
-- **Held by:** \`validate --analysed-at <rev> --notes notes.md\` refuses every cell whose label differs
-  from the revision the analysis read and is not named in a dated section with a quote. Tag the
-  revision when the analysis runs (\`git tag analysis-<date>\`).
+- **Held by:** \`validate --analysed-at <rev> --notes notes.md\` compares the cells at the revision the
+  analysis read with the cells now, and refuses every cell that was relabelled, ADDED or REMOVED
+  since and is not named in a dated section with a quote. Added cells count too: the analysis did
+  not see them. Tag the revision when the analysis runs (\`git tag analysis-<date>\`).
 
 ## What to report
 

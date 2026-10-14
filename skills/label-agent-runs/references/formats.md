@@ -53,8 +53,8 @@ unit-017/control/1: solved → deferred. Re-read the final message:
 > I've prepared both options; I'll leave the final call to you.
 ```
 
-A relabel after the analysis is accepted by `validate --analysed-at` only when its cell appears in a
-section under a `## YYYY-MM-DD` heading that also holds a `>` quote line.
+A cell relabelled, added or removed after the analysis is accepted by `validate --analysed-at` only
+when the cell appears in a section under a `## YYYY-MM-DD` heading that also holds a `>` quote line.
 
 ## Rater instruction — one committed file, used byte for byte
 

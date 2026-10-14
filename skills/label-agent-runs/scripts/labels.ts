@@ -109,17 +109,17 @@ const repoPath = (abs: string): { top: string; rel: string } | null => {
       }
     : null;
 };
-/** Unix time of the commit that first added `abs`, or null when it was never committed. */
-const firstCommit = (abs: string): number | null => {
+/** Unix times of the commits that touched `abs` — only the ones that ADDED it, with `added`. */
+const commitTimes = (abs: string, added: boolean): number[] => {
   const at = repoPath(abs);
-  const times = at
-    ? git(at.top, "log", "--diff-filter=A", "--format=%ct", "--", at.rel)
+  const filter = added ? ["--diff-filter=A"] : [];
+  return at
+    ? git(at.top, "log", ...filter, "--format=%ct", "--", at.rel)
         .stdout.trim()
         .split("\n")
         .filter(Boolean)
         .map(Number)
     : [];
-  return times.length ? Math.min(...times) : null;
 };
 
 const Codebook = z.looseObject({
@@ -171,9 +171,14 @@ function codebookProblems(
   const abs = resolve(file);
   const text = readFileSync(abs, "utf8");
   const { labels } = Codebook.parse(JSON.parse(text));
-  const bookAt = firstCommit(abs);
-  const labelsAt = firstCommit(resolve(labelsFile));
-  const late = bookAt !== null && labelsAt !== null && bookAt > labelsAt;
+  // EVERY commit of the codebook, not only the one that added it: an edit after labelling began
+  // changes what the labels already given mean.
+  const bookLast = Math.max(-Infinity, ...commitTimes(abs, false));
+  const labelsFirst = Math.min(
+    Infinity,
+    ...commitTimes(resolve(labelsFile), true),
+  );
+  const late = bookLast > labelsFirst;
   return {
     known: new Set(labels.map((l) => l.id)),
     problems: [
@@ -182,7 +187,7 @@ function codebookProblems(
       ...incomplete(file, labels),
       ...(late
         ? [
-            `${file} was committed after ${labelsFile}: the codebook comes first`,
+            `${file} was committed after ${labelsFile} was first committed: the codebook is fixed before labelling; a changed codebook needs a new label file`,
           ]
         : []),
     ],
@@ -247,7 +252,48 @@ const datedSections = (notesFile: string): string[] =>
     .split(/^(?=## )/m)
     .filter((s) => /^## \d{4}-\d{2}-\d{2}\b/.test(s));
 
-/** Cells whose label changed since `rev` and are not explained in a dated, quoted note. */
+/** A cell key back as the three fields `show` prints. */
+const fromKey = (key: string): CellId => {
+  const [agent, model, cell] = key.split("\t");
+  return { agent: String(agent), model: String(model), cell: String(cell) };
+};
+
+const WHY = " with no dated note quoting the run";
+
+/** Rows whose label is new or different since the analysis, and not explained. */
+const touchedSince = (
+  rows: readonly Row[],
+  before: ReadonlyMap<string, string>,
+  noted: (cell: string) => boolean,
+): string[] =>
+  rows
+    .filter((r) => before.get(keyOf(r)) !== r.label && !noted(r.cell))
+    .map((r) => {
+      const was = before.get(keyOf(r));
+      return was === undefined
+        ? `${show(r)}: added after the analysis (${r.label}),${WHY}`
+        : `${show(r)}: relabelled ${was} → ${r.label} after the analysis,${WHY}`;
+    });
+
+/** Cells the analysis read that are gone now, and not explained. */
+const removedSince = (
+  rows: readonly Row[],
+  before: ReadonlyMap<string, string>,
+  noted: (cell: string) => boolean,
+): string[] => {
+  const now = new Set(rows.map(keyOf));
+  return [...before]
+    .filter(([key]) => !now.has(key) && !noted(fromKey(key).cell))
+    .map(
+      ([key, was]) =>
+        `${show(fromKey(key))}: removed after the analysis (was ${was}),${WHY}`,
+    );
+};
+
+/**
+ * Every cell whose label differs from what the analysis read at `rev` — changed, ADDED after it,
+ * or REMOVED since — and is not explained in a dated, quoted note naming the cell.
+ */
 function relabelProblems(
   labelsFile: string,
   rev: string,
@@ -260,31 +306,33 @@ function relabelProblems(
       `${labelsFile} does not exist at ${rev}: name the revision the analysis read`,
     ];
   const sections = datedSections(notesFile);
-  return rows
-    .filter((r) => before.has(keyOf(r)) && before.get(keyOf(r)) !== r.label)
-    .filter(
-      (r) => !sections.some((s) => s.includes(r.cell) && /^> \S/m.test(s)),
-    )
+  const noted = (cell: string): boolean =>
+    sections.some((s) => s.includes(cell) && /^> \S/m.test(s));
+  return [
+    ...touchedSince(rows, before, noted),
+    ...removedSince(rows, before, noted),
+  ];
+}
+
+/** Cells a file labels more than once, with the lines. */
+function duplicates(file: string, rows: readonly Row[]): string[] {
+  const seen = new Map<string, number[]>();
+  rows.forEach((r) => seen.set(keyOf(r), [...(seen.get(keyOf(r)) ?? []), r.n]));
+  return [...seen]
+    .filter(([, ns]) => ns.length > 1)
     .map(
-      (r) =>
-        `${show(r)}: relabelled ${String(before.get(keyOf(r)))} → ${r.label} after the analysis, with no dated note quoting the run`,
+      ([k, ns]) =>
+        `${file}: ${show(fromKey(k))} is labelled ${String(ns.length)} times (lines ${ns.join(", ")})`,
     );
 }
 
 /** Rows naming a cell twice, and coverage against the ledger. */
 function rowProblems(file: string, rows: readonly Row[], ledger?: string) {
-  const seen = new Map<string, number[]>();
-  rows.forEach((r) => seen.set(keyOf(r), [...(seen.get(keyOf(r)) ?? []), r.n]));
   const runs = ledger === undefined ? null : ledgerCells(ledger);
   const ran = new Set((runs ?? []).map(keyOf));
   const labelled = new Set(rows.map(keyOf));
   return [
-    ...[...seen]
-      .filter(([, ns]) => ns.length > 1)
-      .map(
-        ([k, ns]) =>
-          `${file}: ${k.split("\t").join(" ")} is labelled ${String(ns.length)} times (lines ${ns.join(", ")})`,
-      ),
+    ...duplicates(file, rows),
     ...(runs
       ? [
           ...rows
@@ -346,6 +394,25 @@ function cohenKappa(
   return pe === 1 ? null : (po - pe) / (1 - pe);
 }
 
+/** Cells of either file that the other does not label. */
+const onlyIn = (
+  fileA: string,
+  a: readonly Row[],
+  b: readonly Row[],
+  fileB: string,
+): string[] => {
+  const inA = new Set(a.map(keyOf));
+  const inB = new Set(b.map(keyOf));
+  return [
+    ...a
+      .filter((r) => !inB.has(keyOf(r)))
+      .map((r) => `${show(r)}: only in ${fileA}`),
+    ...b
+      .filter((r) => !inA.has(keyOf(r)))
+      .map((r) => `${show(r)}: only in ${fileB}`),
+  ];
+};
+
 /** The second file's label for each cell of the first; a refusal when the cells differ. */
 function matched(
   fileA: string,
@@ -353,18 +420,16 @@ function matched(
 ): readonly (readonly [Row, string])[] {
   const a = readLabels(fileA);
   const b = readLabels(fileB);
-  const bad = [...a.problems, ...b.problems];
+  // A cell labelled twice has no single label to compare: refused before any statistic.
+  const bad = [
+    ...a.problems,
+    ...b.problems,
+    ...duplicates(fileA, a.rows),
+    ...duplicates(fileB, b.rows),
+  ];
   if (bad.length) refuse(1, bad.join("\n"));
   const inB = new Map(b.rows.map((r) => [keyOf(r), r.label]));
-  const inA = new Set(a.rows.map(keyOf));
-  const unmatched = [
-    ...a.rows
-      .filter((r) => !inB.has(keyOf(r)))
-      .map((r) => `${show(r)}: only in ${fileA}`),
-    ...b.rows
-      .filter((r) => !inA.has(keyOf(r)))
-      .map((r) => `${show(r)}: only in ${fileB}`),
-  ];
+  const unmatched = onlyIn(fileA, a.rows, b.rows, fileB);
   if (unmatched.length)
     refuse(
       1,
