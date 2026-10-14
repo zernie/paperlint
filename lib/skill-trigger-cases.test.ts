@@ -1,25 +1,33 @@
 /**
- * The shared trigger table is FROZEN while the skills move their cases next to themselves.
+ * The shared trigger table is FROZEN while every skill moves its trigger cases into its own eval
+ * file (#218).
  *
- * A skill's trigger cases belong beside the skill, in `skills/<name>/trigger-cases.json`. The
- * shared table in `skill-trigger-cases.mjs` holds the skills that have not moved yet; this file
- * keeps it from growing (a new skill adds a colocated file, never a row) and makes it shrink in
- * step with the moves (a skill that left the table leaves `FROZEN` too). A skill is never in both
- * places, and a colocated file is read through a schema.
+ * A skill's trigger cases belong to the skill: `skills/<name>/<name>.eval.ts` default-exports
+ * `defineEval({ measureTriggerRate: { prompts, irrelevantPrompts, … } })`, and `vigiles eval`
+ * discovers and runs it. `lib/skill-trigger-cases.mjs` holds the skills that have not moved yet.
+ * This file keeps that table from growing (a new skill writes its own eval file, never a row),
+ * makes `FROZEN` shrink in step with the moves, and refuses a skill that is in both places.
  *
- * Each check is shown both ways: on the real table (passes) and on a planted one (fails).
+ * The table is read by RUNNING the module in a child process, as the evals do — not by importing
+ * it here, which would need types for a JavaScript module, and not by matching its text. An eval
+ * file is classified by PARSING it: importing one that still calls the paid kit would spend money.
+ *
+ * Each check is shown both ways: on the real files (passes) and on a planted input (fails).
  */
 import assert from "node:assert/strict";
-import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { globSync, readFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
+import ts from "typescript";
+import { assertPromptDiversity } from "vigiles";
 import { test } from "vitest";
+import { z } from "zod";
 import { useTempDir, writeTree } from "../test/support.ts";
-import {
-  COLOCATED_CASES,
-  SHARED_CASES,
-  TRIGGER_CASES_FILE,
-  colocatedCases,
-  type TriggerCase,
-} from "./skill-trigger-cases.mjs";
+import grid from "../skills/run-agent-grid/run-agent-grid.eval.ts";
+import labels from "../skills/label-agent-runs/label-agent-runs.eval.ts";
+
+const ROOT = join(import.meta.dirname, "..");
 
 /** The skills still in the shared table. It may only SHRINK: remove a name when its skill moves. */
 const FROZEN: readonly string[] = [
@@ -51,108 +59,153 @@ const FROZEN: readonly string[] = [
   "verify-citations",
 ];
 
+const Row = z.object({ skill: z.string(), prompts: z.array(z.string()) });
+type Row = z.infer<typeof Row>;
+
+/** The shared table's rows, read by running the module. */
+function sharedTable(): Row[] {
+  const url = pathToFileURL(join(ROOT, "lib", "skill-trigger-cases.mjs")).href;
+  const r = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `const m = await import(${JSON.stringify(url)});` +
+        "console.log(JSON.stringify(m.CASES.map(({ skill, prompts }) => ({ skill, prompts }))));",
+    ],
+    { cwd: ROOT, encoding: "utf8" },
+  );
+  assert.equal(r.status, 0, r.stderr);
+  return z.array(Row).parse(JSON.parse(r.stdout));
+}
+const SHARED = sharedTable();
+
 /** What is wrong with the shared table against the frozen set, as messages; [] when nothing. */
 function frozenProblems(
-  table: readonly TriggerCase[],
+  table: readonly string[],
   frozen: readonly string[],
 ): string[] {
-  const names = table.map((c) => c.skill);
-  const added = names.filter((n) => !frozen.includes(n));
-  const gone = frozen.filter((n) => !names.includes(n));
   return [
-    ...added.map(
-      (n) =>
-        `${n} is a new row in lib/skill-trigger-cases.mjs, which is frozen: put its cases in ` +
-        `skills/${n}/${TRIGGER_CASES_FILE} beside the skill instead`,
-    ),
-    ...gone.map(
-      (n) =>
-        `${n} left the shared table: remove it from FROZEN in lib/skill-trigger-cases.test.ts — ` +
-        `the frozen set only shrinks`,
-    ),
+    ...table
+      .filter((n) => !frozen.includes(n))
+      .map(
+        (n) =>
+          `${n} is a new row in lib/skill-trigger-cases.mjs, which is frozen: declare its trigger ` +
+          `cases in skills/${n}/${n}.eval.ts with defineEval({ measureTriggerRate }) instead`,
+      ),
+    ...frozen
+      .filter((n) => !table.includes(n))
+      .map(
+        (n) =>
+          `${n} left the shared table: remove it from FROZEN in lib/skill-trigger-cases.test.ts — ` +
+          `the frozen set only shrinks`,
+      ),
   ];
 }
 
-const row = (skill: string): TriggerCase => ({
-  skill,
-  why: "x",
-  prompts: ["a", "b", "c", "d"],
-  collides: [],
-});
+/** Is this the `measureTriggerRate` key of an object literal? */
+const isTriggerKey = (p: ts.ObjectLiteralElementLike): boolean =>
+  p.name !== undefined &&
+  ts.isIdentifier(p.name) &&
+  p.name.text === "measureTriggerRate";
+
+/** Does this eval file default-export `defineEval({ measureTriggerRate: … })`? Parsed, not run. */
+function declaresTriggerRate(file: string): boolean {
+  const sf = ts.createSourceFile(
+    file,
+    readFileSync(file, "utf8"),
+    ts.ScriptTarget.Latest,
+  );
+  return sf.statements.some(
+    (s) =>
+      ts.isExportAssignment(s) &&
+      ts.isCallExpression(s.expression) &&
+      ts.isIdentifier(s.expression.expression) &&
+      s.expression.expression.text === "defineEval" &&
+      s.expression.arguments.some(
+        (a) =>
+          ts.isObjectLiteralExpression(a) && a.properties.some(isTriggerKey),
+      ),
+  );
+}
+
+/** Skills under `dir` whose own `<name>.eval.ts` declares their trigger cases. */
+const colocated = (dir: string): string[] =>
+  globSync("*/*.eval.ts", { cwd: dir })
+    .filter((f) => basename(f) === `${dirname(f)}.eval.ts`)
+    .filter((f) => declaresTriggerRate(join(dir, f)))
+    .map((f) => dirname(f))
+    .sort();
 
 test("the shared table names exactly the frozen skills", () => {
-  assert.deepEqual(frozenProblems(SHARED_CASES, FROZEN), []);
+  assert.deepEqual(
+    frozenProblems(
+      SHARED.map((r) => r.skill),
+      FROZEN,
+    ),
+    [],
+  );
 });
 
 test("a planted new row, and a frozen name that left the table, both fail", () => {
-  const planted = [...SHARED_CASES, row("new-skill")];
-  assert.deepEqual(frozenProblems(planted, FROZEN), [
-    `new-skill is a new row in lib/skill-trigger-cases.mjs, which is frozen: put its cases in skills/new-skill/${TRIGGER_CASES_FILE} beside the skill instead`,
+  const names = SHARED.map((r) => r.skill);
+  assert.deepEqual(frozenProblems([...names, "new-skill"], FROZEN), [
+    "new-skill is a new row in lib/skill-trigger-cases.mjs, which is frozen: declare its trigger cases in skills/new-skill/new-skill.eval.ts with defineEval({ measureTriggerRate }) instead",
   ]);
-  const shrunk = SHARED_CASES.filter((c) => c.skill !== "camera-ready");
-  assert.deepEqual(frozenProblems(shrunk, FROZEN), [
-    "camera-ready left the shared table: remove it from FROZEN in lib/skill-trigger-cases.test.ts — the frozen set only shrinks",
-  ]);
+  assert.deepEqual(
+    frozenProblems(
+      names.filter((n) => n !== "camera-ready"),
+      FROZEN,
+    ),
+    [
+      "camera-ready left the shared table: remove it from FROZEN in lib/skill-trigger-cases.test.ts — the frozen set only shrinks",
+    ],
+  );
 });
 
-test("no skill with a colocated file is also in the shared table", () => {
-  const shared = new Set(SHARED_CASES.map((c) => c.skill));
+test("no skill that declares its own trigger cases is also in the shared table", () => {
+  const mine = colocated(join(ROOT, "skills"));
+  assert.deepEqual(mine, ["label-agent-runs", "run-agent-grid"]);
   assert.deepEqual(
-    COLOCATED_CASES.map((c) => c.skill).filter((s) => shared.has(s)),
+    mine.filter((s) => SHARED.some((r) => r.skill === s)),
     [],
   );
-  assert.deepEqual(
-    COLOCATED_CASES.map((c) => c.skill),
-    ["label-agent-runs", "run-agent-grid"],
-  );
 });
 
-const CASE = {
-  why: "the territory",
-  prompts: ["one", "two", "three", "four"],
-  collides: ["other"],
-};
 const WORK = useTempDir("trigger-cases-");
 
-test("colocated files are read by directory name; a skill without one is skipped", () => {
-  const dir = writeTree(join(WORK, "ok"), {
-    [`b-skill/${TRIGGER_CASES_FILE}`]: JSON.stringify(CASE),
-    [`a-skill/${TRIGGER_CASES_FILE}`]: JSON.stringify(CASE),
-    "c-skill/SKILL.md": "---\n---\n",
+test("an eval file is classified by its default export, parsed: defineEval yes, the kit no", () => {
+  const dir = writeTree(join(WORK, "skills"), {
+    "own/own.eval.ts":
+      'import { defineEval } from "vigiles";\nexport default defineEval({ measureTriggerRate: { prompts: [] } });\n',
+    "kit/kit.eval.ts":
+      'import { runSkillTriggerEval } from "../../lib/skill-eval-kit.mjs";\nawait runSkillTriggerEval("kit");\n',
+    "other/other.eval.ts":
+      'import { defineEval } from "vigiles";\nexport default defineEval({ measure: { task: "x" } });\n',
+    "named/elsewhere.eval.ts":
+      'import { defineEval } from "vigiles";\nexport default defineEval({ measureTriggerRate: { prompts: [] } });\n',
   });
-  assert.deepEqual(colocatedCases(dir, []), [
-    { skill: "a-skill", ...CASE },
-    { skill: "b-skill", ...CASE },
-  ]);
-});
-
-test("a skill in both places is refused, naming it", () => {
-  const dir = writeTree(join(WORK, "double"), {
-    [`a-skill/${TRIGGER_CASES_FILE}`]: JSON.stringify(CASE),
-  });
-  assert.throws(() => colocatedCases(dir, [row("a-skill")]), {
-    message: `a-skill has its trigger cases in ${join(dir, "a-skill", TRIGGER_CASES_FILE)} AND in lib/skill-trigger-cases.mjs; delete the table row — the colocated file is the one that stays.`,
-  });
-});
-
-test("a malformed colocated file is refused through the schema, naming the file", () => {
-  const dir = writeTree(join(WORK, "bad"), {
-    [`a-skill/${TRIGGER_CASES_FILE}`]: JSON.stringify({
-      why: "x",
-      prompts: ["only one"],
-      collides: [],
-      skill: "a-skill",
-    }),
-  });
-  const file = join(dir, "a-skill", TRIGGER_CASES_FILE);
-  assert.throws(
-    () => colocatedCases(dir, []),
-    (e: unknown) => {
-      assert.ok(e instanceof TypeError);
-      assert.ok(e.message.startsWith(`${file}: `), e.message);
-      assert.match(e.message, /prompts/);
-      assert.match(e.message, /skill/);
-      return true;
-    },
+  assert.deepEqual(colocated(dir), ["own"]);
+  // A planted double source: a skill that declares its own cases and is also a table row.
+  assert.deepEqual(
+    colocated(dir).filter((s) => [...FROZEN, "own"].includes(s)),
+    ["own"],
   );
+});
+
+test("each new eval declares diverse prompts on both sides, none of them a table row's", () => {
+  const tablePrompts = new Set(SHARED.flatMap((r) => r.prompts));
+  for (const def of [grid, labels]) {
+    const spec = def.measureTriggerRate;
+    assert.ok(spec, "the eval declares measureTriggerRate");
+    assertPromptDiversity(spec.prompts, { minPrompts: 4, label: "prompts" });
+    assertPromptDiversity(spec.irrelevantPrompts ?? [], {
+      minPrompts: 4,
+      label: "irrelevantPrompts",
+    });
+    assert.deepEqual(
+      spec.prompts.filter((p) => tablePrompts.has(p)),
+      [],
+    );
+  }
 });
