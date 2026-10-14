@@ -70,26 +70,30 @@ What `gate` requires, field by field:
 | `draw.seed`                                  | counted runs | missing                                                            |
 | `models[].smoke`                             | counted runs | `timeoutSec` or `costPerRun` is not a number                       |
 
-On success `gate` prints one JSON line: `{"allowed":true,"cell":{…},"counted":…,"timeoutSec":…,"spent":…}`.
+On success `gate` prints one JSON line: `{"allowed":true,"cell":{…},"attempt":"…","counted":…,"timeoutSec":…,"spent":…}`,
+and has already appended a `reserved` record for that attempt to the ledger (read, check and append
+under `<ledger>.lock`, so concurrent drivers cannot both take one cell or both fit under the cap).
 The driver takes the run's timeout from `timeoutSec`.
 
 ## The attempt ledger — `attempts.jsonl`, append-only
 
-One JSON object per line. A driver writes a line when an attempt **starts** and another when it
-**ends**, with the same `attempt` id; later lines add to earlier ones. A crashed attempt therefore
-stays on record with a start and no end.
+One JSON object per line. `gate` writes the first line of an attempt (a reservation); the driver
+writes a line when the attempt **starts** and another when it **ends**, all with the same `attempt`
+id; later lines add to earlier ones. A crashed attempt therefore stays on record with a start and
+no end, and its reservation lapses at `expires`.
 
 ```json
+{"attempt":"a-0042","unit":"unit-017","arm":"control","model":"model-a","seed":"1","status":"reserved","cost":1.8,"start":"2026-01-01T09:59:58Z","expires":"2026-01-01T15:59:58Z"}
 {"attempt":"a-0042","agent":"cli-a","model":"model-a","unit":"unit-017","arm":"control","seed":1,"root":"/scratch/w1","start":"2026-01-01T10:00:00Z"}
 {"attempt":"a-0042","end":"2026-01-01T10:31:00Z","status":"complete","cost":1.62}
 ```
 
-| field    | meaning                                                                                            |
-| -------- | -------------------------------------------------------------------------------------------------- |
-| `status` | `complete` — counted, whatever the outcome; `harness-error` — kept on record, not counted, re-run  |
-| `root`   | the working-copy root the attempt used: what `overlap` compares                                    |
-| `agent`  | the agent CLI that ran; with `model` and `<unit>/<arm>/<seed>` it names the cell a label refers to |
-| `cost`   | what the attempt cost, counted toward the cap even for a harness error                             |
+| field    | meaning                                                                                                                                                          |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status` | `reserved` — held by `gate` until the end record or `expires`; `complete` — counted, whatever the outcome; `harness-error` — kept on record, not counted, re-run |
+| `root`   | the working-copy root the attempt used: what `overlap` compares                                                                                                  |
+| `agent`  | the agent CLI that ran; with `model` and `<unit>/<arm>/<seed>` it names the cell a label refers to                                                               |
+| `cost`   | what the attempt cost, counted toward the cap even for a harness error                                                                                           |
 
 The outcome itself lives in the run folder (`runs/<attempt>/`), whose completion record
 (`done.json` by default) is written **last**.
@@ -105,15 +109,16 @@ $G lock "$ROOT" --owner "driver-w1" --pid $$ || exit 1
 trap '$G release "$ROOT" --owner driver-w1' EXIT
 
 while read -r unit arm model seed; do
+  id="a-$(date +%s%N)-$$-$unit-$arm-$model-$seed"
   verdict=$($G gate --registry grid.json --ledger attempts.jsonl \
-            --unit "$unit" --arm "$arm" --model "$model" --seed "$seed")
+            --unit "$unit" --arm "$arm" --model "$model" --seed "$seed" --attempt "$id")
   rc=$?
-  [ $rc -eq 3 ] && continue           # already counted: resume past it
+  [ $rc -eq 3 ] && continue           # counted, or reserved by another driver: skip it
   [ $rc -ne 0 ] && exit $rc           # refused: stop the grid, read why
   timeout_sec=$(node -e 'console.log(JSON.parse(process.argv[1]).timeoutSec ?? 3600)' "$verdict")
-  id="a-$(date +%s)-$unit-$arm-$model-$seed"
   # 1. start record   2. fresh working copy of the unit in $ROOT   3. the agent CLI under
   #    `timeout $timeout_sec`   4. the scorer   5. runs/$id/done.json LAST   6. end record
+  #    (status complete or harness-error, real cost) — it releases the reservation
 done < cells.txt
 ```
 

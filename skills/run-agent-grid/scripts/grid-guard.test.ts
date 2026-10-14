@@ -232,13 +232,25 @@ const sleeper = (detached: boolean): number => {
   return Number(child.pid);
 };
 
+/** What a lock by `pid` prints on stderr: nothing where `/proc` can be read, a warning where not. */
+const procWarning = (pid: number, proc = "/proc"): string =>
+  existsSync(join(proc, String(pid), "stat"))
+    ? ""
+    : `grid-guard: warning: cannot read ${join(proc, String(pid), "stat")} here, so whether pid ${String(pid)} is detached is not checked\n`;
+
 test("lock: a detached holder (its own session) takes the lock; an attached one is refused", () => {
   const free = sleeper(true);
   const root = join(WORK, "wc-detached");
   assert.deepEqual(
     guard(["lock", root, "--owner", "driver-a", "--pid", String(free)]),
-    ok(`locked ${root}.lock for driver-a (pid ${String(free)})`),
+    {
+      ...ok(`locked ${root}.lock for driver-a (pid ${String(free)})`),
+      stderr: procWarning(free),
+    },
   );
+  // The session check needs /proc; where there is none (macOS) it warns and passes, so the
+  // refusal below is a Linux fact. The no-/proc branch is pinned in the next test on every platform.
+  if (!existsSync("/proc/self/stat")) return;
   const tied = sleeper(false);
   const other = join(WORK, "wc-attached");
   const r = guard([
@@ -273,26 +285,33 @@ test("lock: a detached holder (its own session) takes the lock; an attached one 
   );
 });
 
-test("lock: a pid that is no process is refused; without /proc the check warns and passes", () => {
+test("lock: a pid that is no process is refused with or without /proc; without /proc a live one warns and passes", () => {
   const dead = spawnSync(process.execPath, ["-e", ""]).pid;
   const root = join(WORK, "wc-nopid");
+  const noProc = { GRID_GUARD_PROC: join(WORK, "no-proc-here") };
   assert.deepEqual(
     guard(["lock", root, "--owner", "a", "--pid", String(dead)]),
     no(1, `pid ${String(dead)} is not a live process`),
   );
-  const r = runNode(
-    SCRIPT,
-    ["lock", root, "--owner", "a", "--pid", String(dead)],
-    {
+  // Liveness is the kernel's answer, not /proc's: a dead pid is refused where /proc is missing too.
+  assert.deepEqual(
+    runNode(SCRIPT, ["lock", root, "--owner", "a", "--pid", String(dead)], {
       cwd: WORK,
-      env: { GRID_GUARD_PROC: join(WORK, "no-proc-here") },
+      env: noProc,
+    }),
+    no(1, `pid ${String(dead)} is not a live process`),
+  );
+  const live = sleeper(false);
+  assert.deepEqual(
+    runNode(SCRIPT, ["lock", root, "--owner", "a", "--pid", String(live)], {
+      cwd: WORK,
+      env: noProc,
+    }),
+    {
+      ...ok(`locked ${root}.lock for a (pid ${String(live)})`),
+      stderr: procWarning(live, join(WORK, "no-proc-here")),
     },
   );
-  assert.deepEqual(r, {
-    status: 0,
-    stdout: `locked ${root}.lock for a (pid ${String(dead)})\n`,
-    stderr: `grid-guard: warning: no ${join(WORK, "no-proc-here")} here, so whether pid ${String(dead)} is detached is not checked\n`,
-  });
 });
 
 const REGISTRY = {
@@ -348,40 +367,75 @@ const CELL = [
 const dir = repo("gate", { "grid.json": JSON.stringify(REGISTRY, null, 2) });
 const reg = join(dir, "grid.json");
 const ledger = join(dir, "attempts.jsonl");
+/** `gate` on `cell`; an attempt id `x0` unless the cell's arguments name one. */
 const gate = (cell: readonly string[], ledgerPath = ledger): ScriptResult =>
-  guard(["gate", "--registry", reg, "--ledger", ledgerPath, ...cell]);
+  guard([
+    "gate",
+    "--registry",
+    reg,
+    "--ledger",
+    ledgerPath,
+    ...cell,
+    ...(cell.includes("--attempt") ? [] : ["--attempt", "x0"]),
+  ]);
+/** The ledger's records, parsed. */
+const records = (path: string): Record<string, unknown>[] =>
+  readFileSync(path, "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((l) => z.record(z.string(), z.unknown()).parse(JSON.parse(l)));
 
-test("gate: a declared, approved, proven, smoked cell under the cap runs, with its timeout", () => {
+test("gate: a declared, approved, proven, smoked cell under the cap runs, with its timeout, and is reserved", () => {
+  const own = join(dir, "run.jsonl");
   assert.deepEqual(
-    gate(CELL),
+    gate(CELL, own),
     ok(
       JSON.stringify({
         allowed: true,
         cell: { unit: "u1", arm: "control", model: "m1", seed: "1" },
+        attempt: "x0",
         counted: true,
         timeoutSec: 1800,
         spent: 0,
       }),
     ),
   );
+  const [held] = records(own);
+  assert.deepEqual(held, {
+    attempt: "x0",
+    unit: "u1",
+    arm: "control",
+    model: "m1",
+    seed: "1",
+    status: "reserved",
+    cost: 2,
+    start: held?.start,
+    expires: new Date(
+      Date.parse(String(held?.start)) + 21_600_000,
+    ).toISOString(),
+  });
 });
 
 test("gate: a smoke unit needs no approval and no smoke result", () => {
   assert.deepEqual(
-    gate([
-      "--unit",
-      "u-smoke",
-      "--arm",
-      "treatment",
-      "--model",
-      "m2",
-      "--seed",
-      "2",
-    ]),
+    gate(
+      [
+        "--unit",
+        "u-smoke",
+        "--arm",
+        "treatment",
+        "--model",
+        "m2",
+        "--seed",
+        "2",
+      ],
+      join(dir, "smoke.jsonl"),
+    ),
     ok(
       JSON.stringify({
         allowed: true,
         cell: { unit: "u-smoke", arm: "treatment", model: "m2", seed: "2" },
+        attempt: "x0",
         counted: false,
         timeoutSec: null,
         spent: 0,
@@ -512,6 +566,8 @@ test("gate: only the COMMITTED registry allows anything", () => {
     "--ledger",
     ledger,
     ...CELL,
+    "--attempt",
+    "x0",
   ]);
   assert.deepEqual(
     r,
@@ -529,6 +585,8 @@ test("gate: only the COMMITTED registry allows anything", () => {
       "--ledger",
       ledger,
       ...CELL,
+      "--attempt",
+      "x0",
     ]),
     no(
       1,
@@ -545,6 +603,8 @@ test("gate: only the COMMITTED registry allows anything", () => {
       "--ledger",
       ledger,
       ...CELL,
+      "--attempt",
+      "x0",
     ]),
     no(
       1,
@@ -570,6 +630,8 @@ test("gate: an empty registry: no budget, no draw, an excluded unit without a re
       "--ledger",
       ledger,
       ...CELL,
+      "--attempt",
+      "x0",
     ]),
     no(
       1,
@@ -586,6 +648,152 @@ test("gate: an empty registry: no budget, no draw, an excluded unit without a re
       ].join("\n  - "),
     ),
   );
+});
+
+test("gate: a reserved cell is held until its attempt ends or the reservation lapses", () => {
+  const own = join(dir, "held.jsonl");
+  assert.equal(gate([...CELL, "--attempt", "r1"], own).status, 0);
+  const again = gate([...CELL, "--attempt", "r2"], own);
+  const [held] = records(own);
+  assert.deepEqual(
+    again,
+    no(
+      3,
+      `{"unit":"u1","arm":"control","model":"m1","seed":"1"} is reserved by attempt r1 until ${String(held?.expires)}; skip it`,
+    ),
+  );
+  // The driver's end record for r1, a harness error: the cell is free again, at its real cost.
+  writeTree(dir, {
+    "held.jsonl": `${readFileSync(own, "utf8")}${JSON.stringify({ attempt: "r1", status: "harness-error", cost: 1 })}\n`,
+  });
+  const r3 = gate([...CELL, "--attempt", "r3"], own);
+  assert.equal(r3.status, 0, r3.stderr);
+  assert.match(r3.stdout, /"spent":1\}/);
+  // An attempt id is used once.
+  assert.deepEqual(
+    gate(
+      [
+        "--unit",
+        "u-smoke",
+        "--arm",
+        "control",
+        "--model",
+        "m2",
+        "--seed",
+        "1",
+        "--attempt",
+        "r3",
+      ],
+      own,
+    ),
+    no(1, "attempt r3 is already on the ledger; give each attempt its own id"),
+  );
+});
+
+test("gate: a lapsed reservation neither holds the cell nor counts as spent", () => {
+  const own = join(dir, "lapsed.jsonl");
+  assert.equal(
+    gate([...CELL, "--attempt", "l1", "--reserve-sec", "0"], own).status,
+    0,
+  );
+  const r = gate([...CELL, "--attempt", "l2"], own);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /"spent":0\}/);
+});
+
+/** `gate` as a child process that runs while others do; resolves to its exit code. */
+const gateAsync = (
+  cell: readonly string[],
+  ledgerPath: string,
+): Promise<number | null> =>
+  new Promise((done) => {
+    spawn(
+      process.execPath,
+      [SCRIPT, "gate", "--registry", reg, "--ledger", ledgerPath, ...cell],
+      {
+        cwd: WORK,
+        env: { ...process.env, ...GIT_ENV },
+        stdio: "ignore",
+      },
+    ).on("exit", done);
+  });
+
+test("gate: two drivers asking at once for one cell — exactly one gets it", async () => {
+  const own = join(dir, "race-cell.jsonl");
+  const codes = await Promise.all(
+    ["c1", "c2", "c3", "c4"].map((id) =>
+      gateAsync([...CELL, "--attempt", id], own),
+    ),
+  );
+  assert.deepEqual([...codes].sort(), [0, 3, 3, 3]);
+  assert.equal(records(own).length, 1);
+}, 60_000);
+
+test("gate: two drivers asking at once with room for one run under the cap — one is refused", async () => {
+  const own = join(dir, "race-budget.jsonl");
+  writeTree(dir, {
+    "race-budget.jsonl": `${JSON.stringify({ attempt: "old", cost: 7 })}\n`,
+  });
+  const treatment = [
+    "--unit",
+    "u1",
+    "--arm",
+    "treatment",
+    "--model",
+    "m1",
+    "--seed",
+    "1",
+  ];
+  const codes = await Promise.all([
+    gateAsync([...CELL, "--attempt", "b1"], own),
+    gateAsync([...treatment, "--attempt", "b2"], own),
+  ]);
+  // 7 spent + 2 reserved = 9, then 9 + 2 = 11 > 10.
+  assert.deepEqual([...codes].sort(), [0, 1]);
+}, 60_000);
+
+test("gate: a ledger lock held by a live gate is waited for, then refused; a dead holder's is taken over", () => {
+  const own = join(dir, "locked.jsonl");
+  const hold = (pid: number): void => {
+    writeTree(dir, {
+      "locked.jsonl.lock": JSON.stringify({
+        owner: "gate",
+        pid,
+        host: hostname(),
+        at: "t",
+      }),
+    });
+  };
+  hold(process.pid);
+  const r = runNode(
+    SCRIPT,
+    ["gate", "--registry", reg, "--ledger", own, ...CELL, "--attempt", "k1"],
+    { cwd: WORK, env: { ...GIT_ENV, GRID_GUARD_LEDGER_WAIT_MS: "100" } },
+  );
+  assert.deepEqual(
+    r,
+    no(
+      1,
+      `${own}.lock is held by pid ${String(process.pid)} on ${hostname()} since t; another gate is writing the ledger — try again`,
+    ),
+  );
+  // A lock file another gate has created and not yet written: held, and said so when time is up.
+  writeTree(dir, { "locked.jsonl.lock": "" });
+  assert.deepEqual(
+    runNode(
+      SCRIPT,
+      ["gate", "--registry", reg, "--ledger", own, ...CELL, "--attempt", "k1"],
+      { cwd: WORK, env: { ...GIT_ENV, GRID_GUARD_LEDGER_WAIT_MS: "100" } },
+    ),
+    no(
+      1,
+      `${own}.lock exists and names no owner; if no gate is running, delete it`,
+    ),
+  );
+  hold(spawnSync(process.execPath, ["-e", ""]).pid);
+  const taken = gate([...CELL, "--attempt", "k2"], own);
+  assert.equal(taken.status, 0, taken.stderr);
+  assert.equal(existsSync(`${own}.lock`), false);
 });
 
 const ledgerFile = (name: string, recs: readonly object[]): string =>
@@ -863,5 +1071,20 @@ test("precommit: outside a repository it says so", () => {
   assert.match(
     r.stderr,
     /^grid-guard: git rev-parse: fatal: not a git repository/,
+  );
+});
+
+test("precommit: a staged deletion of a run's completion record is refused", () => {
+  const d = repo("pc-delete", {
+    "runs/c1/transcript.txt": "t\n",
+    "runs/c1/done.json": "{}\n",
+  });
+  git(d, "rm", "-q", "--cached", "runs/c1/done.json");
+  assert.deepEqual(
+    guard(["precommit", "--runs", "runs"], d),
+    no(
+      1,
+      "run folders without done.json are staged (commit only finished runs):\nruns/c1",
+    ),
   );
 });

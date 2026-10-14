@@ -102,12 +102,18 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
   The lock is a file beside the root. A live holder → refused. A holder whose process is gone on
   the same host → taken over, and said so. A holder on another host → refused (it cannot be judged).
   The holder must be detached — see the next point.
-- **Before every cell, ask the gate** and obey its exit code; 3 means the cell is already counted —
-  skip it. That makes a killed driver resumable: run it again and it continues.
+- **Before every cell, ask the gate** and obey its exit code; 3 means the cell is already counted,
+  or reserved by another attempt — skip it. That makes a killed driver resumable: run it again and
+  it continues.
 
   \`\`\`bash
-  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js ${COMMANDS.gate} --registry grid.json --ledger attempts.jsonl --unit <u> --arm <a> --model <m> --seed <s>
+  node \${CLAUDE_SKILL_DIR}/scripts/grid-guard.js ${COMMANDS.gate} --registry grid.json --ledger attempts.jsonl --unit <u> --arm <a> --model <m> --seed <s> --attempt <id>
   \`\`\`
+
+  An allowed cell is **reserved** for \`<id>\` in the ledger in the same step, under the ledger's
+  lock: two drivers asking at once cannot both get one cell, nor both fit under the cap, because a
+  reservation holds the cell and counts its estimated cost until the attempt's end record (same
+  id) replaces it, or until it lapses (\`--reserve-sec\`, default six hours).
 
 - **Never delete shared inputs from a step.** Templates, fixtures and pinned states are read-only
   (\`chmod -R a-w\` them); a packing step that deletes what it packed removes what another driver

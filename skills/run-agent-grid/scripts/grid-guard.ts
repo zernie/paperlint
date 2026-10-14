@@ -8,7 +8,9 @@
  *                                            must be detached (its own session) unless --attached
  *   release <root> --owner <id>              give it back
  *   gate --registry <f> --ledger <f> --unit <u> --arm <a> --model <m> --seed <s>
- *                                            may this cell run now?
+ *        --attempt <id> [--reserve-sec <n>]  may this cell run now? If so it is RESERVED for
+ *                                            <id> in the ledger, atomically, until the attempt's
+ *                                            end record or n seconds (default 6 h)
  *   overlap <ledger>                         attempts that shared a root at the same time
  *   env-probe [--allow <NAME>]... [--git]    secret-named variables, and whether git still works
  *   scan-keys <path>...                      key-shaped strings in files on disk
@@ -27,6 +29,7 @@
  */
 import { spawnSync } from "node:child_process";
 import {
+  appendFileSync,
   existsSync,
   mkdtempSync,
   readFileSync,
@@ -99,7 +102,7 @@ function take(path: string, me: Lock): boolean {
 // session id equals its pid. `GRID_GUARD_PROC` stands in for `/proc` in tests.
 const procRoot = (): string => process.env.GRID_GUARD_PROC ?? "/proc";
 
-/** The session id of `pid` from `/proc/<pid>/stat` (field 6), or null when there is no such process. */
+/** The session id of `pid` from `/proc/<pid>/stat` (field 6), or null where that cannot be read. */
 function sessionOf(pid: number): number | null {
   const stat = join(procRoot(), String(pid), "stat");
   if (!existsSync(stat)) return null;
@@ -109,16 +112,20 @@ function sessionOf(pid: number): number | null {
   return Number(after.split(" ")[3]);
 }
 
-/** Why `pid` may not hold a grid lock, or null. Warns and passes where there is no `/proc`. */
+/**
+ * Why `pid` may not hold a grid lock, or null. Liveness is asked of the kernel (`kill(pid, 0)`),
+ * which every platform answers; only the session check needs `/proc`, and where it cannot be read
+ * (macOS, a hidden `/proc`) it warns and passes.
+ */
 function detachProblem(pid: number): string | null {
-  if (!existsSync(join(procRoot(), "self"))) {
+  if (!alive(pid)) return `pid ${String(pid)} is not a live process`;
+  const sid = sessionOf(pid);
+  if (sid === null) {
     process.stderr.write(
-      `grid-guard: warning: no ${procRoot()} here, so whether pid ${String(pid)} is detached is not checked\n`,
+      `grid-guard: warning: cannot read ${join(procRoot(), String(pid), "stat")} here, so whether pid ${String(pid)} is detached is not checked\n`,
     );
     return null;
   }
-  const sid = sessionOf(pid);
-  if (sid === null) return `pid ${String(pid)} is not a live process`;
   return sid === pid
     ? null
     : `pid ${String(pid)} is not detached (it runs in session ${String(sid)}), so it dies with the ` +
@@ -197,8 +204,13 @@ const Attempt = z.looseObject({
   end: z.string().optional(),
   status: z.string().optional(),
   cost: z.number().optional(),
+  expires: z.string().optional(),
 });
 type Attempt = z.infer<typeof Attempt>;
+
+/** A `reserved` record whose time is up: no longer holds its cell, no longer counts as spent. */
+const lapsed = (r: Attempt, now: number): boolean =>
+  r.status === "reserved" && Date.parse(String(r.expires)) <= now;
 
 function readLedger(path: string): Attempt[] {
   if (!existsSync(path)) return [];
@@ -301,10 +313,14 @@ function facts(reg: Registry, cell: Cell, ledgerPath: string) {
   const smoked = timeoutSec !== null && costPerRun !== null;
   const counted = unit?.role === "counted";
   const ledger = readLedger(ledgerPath);
-  const spent = ledger.reduce((sum, r) => sum + (r.cost ?? 0), 0);
+  const now = Date.now();
+  const spent = ledger
+    .filter((r) => !lapsed(r, now))
+    .reduce((sum, r) => sum + (r.cost ?? 0), 0);
   const cap = num(reg.budget?.cap);
   const next = counted && costPerRun !== null ? costPerRun : 0;
   return {
+    now,
     unit,
     model,
     smoked,
@@ -387,29 +403,139 @@ function problems(reg: Registry, cell: Cell, f: Facts): string[] {
   return checks.filter(([bad]) => bad).map(([, message]) => message);
 }
 
+/** Who already holds this cell: a counted attempt (exit 3), a live reservation (exit 3), or nobody. */
+function holder(f: Facts, cell: Cell): string | null {
+  const mine = f.ledger.filter((r) => sameCell(r, cell));
+  if (mine.some((r) => r.status === "complete"))
+    return `${JSON.stringify(cell)} is already counted; skip it`;
+  const held = mine.find((r) => r.status === "reserved" && !lapsed(r, f.now));
+  return held
+    ? `${JSON.stringify(cell)} is reserved by attempt ${held.attempt} until ${String(held.expires)}; skip it`
+    : null;
+}
+
+/**
+ * May this cell run now — and if so, CLAIM it. Read, check and append happen under the ledger's
+ * lock, so two drivers asking at once cannot both get one cell, nor both fit under the cap: the
+ * `reserved` record holds the cell and counts its estimated cost until the driver's end record for
+ * the same attempt replaces it, or until it lapses.
+ */
+/** The cell a gate call names. */
+const cellOf = (o: Values): Cell => ({
+  unit: String(o.unit),
+  arm: String(o.arm),
+  model: String(o.model),
+  seed: String(o.seed),
+});
+
 function gate(o: Values): void {
   const reg = committedRegistry(String(o.registry));
-  const cell: Cell = {
-    unit: String(o.unit),
-    arm: String(o.arm),
-    model: String(o.model),
-    seed: String(o.seed),
+  const cell = cellOf(o);
+  const ledgerPath = String(o.ledger);
+  const attempt = String(o.attempt);
+  withLedgerLock(ledgerPath, () => {
+    const f = facts(reg, cell, ledgerPath);
+    const found = problems(reg, cell, f);
+    if (found.length)
+      refuse(
+        1,
+        `refused ${JSON.stringify(cell)}:\n  - ${found.join("\n  - ")}`,
+      );
+    const taken = holder(f, cell);
+    if (taken !== null) refuse(3, taken);
+    if (f.ledger.some((r) => r.attempt === attempt))
+      refuse(
+        1,
+        `attempt ${attempt} is already on the ledger; give each attempt its own id`,
+      );
+    reserve(ledgerPath, {
+      attempt,
+      cell,
+      f,
+      seconds: Number(o["reserve-sec"]),
+    });
+  });
+}
+
+/** Append the cell's reservation for `attempt`, and report the gate's answer. */
+function reserve(
+  ledgerPath: string,
+  r: { attempt: string; cell: Cell; f: Facts; seconds: number },
+): void {
+  const record = {
+    attempt: r.attempt,
+    ...r.cell,
+    status: "reserved",
+    cost: r.f.next,
+    start: new Date(r.f.now).toISOString(),
+    expires: new Date(r.f.now + r.seconds * 1000).toISOString(),
   };
-  const f = facts(reg, cell, String(o.ledger));
-  const found = problems(reg, cell, f);
-  if (found.length)
-    refuse(1, `refused ${JSON.stringify(cell)}:\n  - ${found.join("\n  - ")}`);
-  if (f.ledger.some((r) => r.status === "complete" && sameCell(r, cell)))
-    refuse(3, `${JSON.stringify(cell)} is already counted; skip it`);
+  appendFileSync(ledgerPath, `${JSON.stringify(record)}\n`);
   say(
     JSON.stringify({
       allowed: true,
-      cell,
-      counted: f.counted,
-      timeoutSec: f.smoked ? f.timeoutSec : null,
-      spent: f.spent,
+      cell: r.cell,
+      attempt: r.attempt,
+      counted: r.f.counted,
+      timeoutSec: r.f.smoked ? r.f.timeoutSec : null,
+      spent: r.f.spent,
     }),
   );
+}
+
+// ── the ledger's lock ───────────────────────────────────────────────────────────────────────
+/** How long a gate waits for another gate's turn. `GRID_GUARD_LEDGER_WAIT_MS` shortens it in tests. */
+const ledgerWaitMs = (): number =>
+  Number(process.env.GRID_GUARD_LEDGER_WAIT_MS ?? 10_000);
+
+/** Sleep without spinning: the process blocks until the time passes. */
+const pause = (ms: number): void => {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+};
+
+/**
+ * The ledger lock's owner, or null while it cannot be read — another gate may have created the
+ * file and not yet written it, so an unreadable lock is a held one.
+ */
+const peekLock = (path: string): Lock | null => {
+  try {
+    return readLock(path);
+  } catch {
+    return null;
+  }
+};
+
+/** Take `<ledger>.lock`, waiting for a live holder and replacing a dead one on this host. */
+function acquireLedger(path: string, deadline: number): void {
+  const me: Lock = {
+    owner: "gate",
+    pid: process.pid,
+    host: hostname(),
+    at: new Date().toISOString(),
+  };
+  if (take(path, me)) return;
+  const held = peekLock(path);
+  if (held !== null && held.host === me.host && !alive(held.pid))
+    rmSync(path, { force: true });
+  else if (Date.now() >= deadline)
+    refuse(
+      1,
+      held === null
+        ? `${path} exists and names no owner; if no gate is running, delete it`
+        : `${path} is held by pid ${String(held.pid)} on ${held.host} since ${held.at}; another gate is writing the ledger — try again`,
+    );
+  else pause(25);
+  acquireLedger(path, deadline);
+}
+
+function withLedgerLock(ledger: string, work: () => void): void {
+  const path = `${resolve(ledger)}.lock`;
+  acquireLedger(path, Date.now() + ledgerWaitMs());
+  try {
+    work();
+  } finally {
+    rmSync(path, { force: true });
+  }
 }
 
 // ── overlap ─────────────────────────────────────────────────────────────────────────────────
@@ -581,23 +707,20 @@ const nulList = (s: string): string[] => s.split("\0").filter(Boolean);
 
 function precommit(runsOpt: string | undefined, done: string): void {
   const top = gitOut("rev-parse", "--show-toplevel").trim();
-  const staged = nulList(
-    gitOut(
-      "-C",
-      top,
-      "diff",
-      "--cached",
-      "--name-only",
-      "-z",
-      "--diff-filter=ACMR",
-    ),
-  );
+  const cached = (...filter: string[]): string[] =>
+    nulList(
+      gitOut("-C", top, "diff", "--cached", "--name-only", "-z", ...filter),
+    );
+  // Content is scanned only where it exists in the index; a run folder is affected by any staged
+  // path in it, a DELETION included — deleting a completion record must not pass as finished.
+  const staged = cached("--diff-filter=ACMR");
+  const touched = cached();
   const keys = staged.flatMap((f) =>
     scanText(f, gitOut("-C", top, "show", `:${f}`)),
   );
   const index = new Set(nulList(gitOut("-C", top, "ls-files", "-z")));
   const half = runsOpt
-    ? halfWritten(staged, index, runsOpt.replace(/\/+$/, ""), done)
+    ? halfWritten(touched, index, runsOpt.replace(/\/+$/, ""), done)
     : [];
   if (half.length)
     refuse(
@@ -618,6 +741,8 @@ interface Opts {
   readonly arm?: string;
   readonly model?: string;
   readonly seed?: string;
+  readonly attempt?: string;
+  readonly "reserve-sec": string;
   readonly allow: readonly string[];
   readonly git: boolean;
   readonly attached: boolean;
@@ -651,7 +776,7 @@ const DISPATCH: { readonly [K in CommandName]: Command } = {
     },
   ],
   gate: [
-    ["registry", "ledger", "unit", "arm", "model", "seed"],
+    ["registry", "ledger", "unit", "arm", "model", "seed", "attempt"],
     0,
     (_, o) => {
       gate(o);
@@ -705,6 +830,8 @@ function parse(): { positionals: string[]; opts: Opts } {
         arm: { type: "string" },
         model: { type: "string" },
         seed: { type: "string" },
+        attempt: { type: "string" },
+        "reserve-sec": { type: "string", default: "21600" },
         allow: { type: "string", multiple: true, default: [] },
         git: { type: "boolean", default: false },
         attached: { type: "boolean", default: false },
