@@ -26,6 +26,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -135,7 +136,10 @@ function committedRegistry(file) {
     spawnSync("git", ["-C", dirname(abs), ...args], { encoding: "utf8" });
   const top = git("rev-parse", "--show-toplevel");
   if (top.status !== 0)
-    refuse(1, `${file} is not inside a git repository; the registry must be committed`);
+    refuse(
+      1,
+      `${file} is not inside a git repository; the registry must be committed`,
+    );
   const rel = relative(top.stdout.trim(), abs).split(sep).join("/");
   const head = git("show", `HEAD:${rel}`);
   if (head.status !== 0)
@@ -163,7 +167,8 @@ function gate(opts) {
   const model = list(reg.models).find((m) => m.id === cell.model);
   const smoke = model?.smoke ?? {};
   const smoked =
-    typeof smoke.timeoutSec === "number" && typeof smoke.costPerRun === "number";
+    typeof smoke.timeoutSec === "number" &&
+    typeof smoke.costPerRun === "number";
   const counted = unit?.role === "counted";
   const approval = unit?.approval ?? {};
   const proof = unit?.proof ?? {};
@@ -190,14 +195,28 @@ function gate(opts) {
     ],
     [typeof cap !== "number", `the registry declares no budget.cap`],
     [
-      counted && !(filled(reg.author) && approval.by === reg.author && filled(approval.at) && filled(approval.channel)),
+      counted &&
+        !(
+          filled(reg.author) &&
+          approval.by === reg.author &&
+          filled(approval.at) &&
+          filled(approval.channel)
+        ),
       `unit "${cell.unit}" has no approval by the author (approval.by = author, with at and channel)`,
     ],
     [
-      counted && !(proof.toolVisible === true && proof.firesOnPinned === true && proof.acceptsReference === true),
+      counted &&
+        !(
+          proof.toolVisible === true &&
+          proof.firesOnPinned === true &&
+          proof.acceptsReference === true
+        ),
       `unit "${cell.unit}" has no sandbox proof (toolVisible, firesOnPinned, acceptsReference)`,
     ],
-    [counted && !filled(reg.draw?.seed?.toString()), `the registry records no draw seed`],
+    [
+      counted && !filled(reg.draw?.seed?.toString()),
+      `the registry records no draw seed`,
+    ],
     [
       counted && model && !smoked,
       `model "${cell.model}" has no smoke result (smoke.timeoutSec, smoke.costPerRun)`,
@@ -211,7 +230,10 @@ function gate(opts) {
     .map(([, why]) => why);
 
   if (problems.length)
-    refuse(1, `refused ${JSON.stringify(cell)}:\n  - ${problems.join("\n  - ")}`);
+    refuse(
+      1,
+      `refused ${JSON.stringify(cell)}:\n  - ${problems.join("\n  - ")}`,
+    );
   if (ledger.some((r) => r.status === "complete" && sameCell(r, cell)))
     refuse(3, `${JSON.stringify(cell)} is already counted; skip it`);
   say(
@@ -234,7 +256,9 @@ function overlap(file) {
     from: Date.parse(r.start),
     to: r.end === undefined ? Infinity : Date.parse(r.end),
   }));
-  const undated = recs.filter((r) => Number.isNaN(r.from) || Number.isNaN(r.to));
+  const undated = recs.filter(
+    (r) => Number.isNaN(r.from) || Number.isNaN(r.to),
+  );
   const pairs = recs.flatMap((a, i) =>
     recs
       .slice(i + 1)
@@ -260,7 +284,8 @@ function overlap(file) {
 }
 
 // ── env-probe ───────────────────────────────────────────────────────────────────────────────
-const SECRET_NAME = /KEY|TOKEN|SECRET|PASSW|CREDENTIAL|COOKIE|SESSION|AUTH/i;
+const SECRET_NAME =
+  /KEY|TOKEN|SECRET|PASSW|CREDENTIAL|COOKIE|SESSION|AUTH(?!OR)/i;
 
 function envProbe(opts) {
   const allowed = new Set(opts.allow);
@@ -280,7 +305,7 @@ function envProbe(opts) {
 
 /** The policy that drops secrets must not drop what the agent's tools need: prove git commits. */
 function gitProbe() {
-  const dir = mkdtempSync(join(tmpdir(), "grid-git-probe-"));
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "grid-git-probe-")));
   try {
     writeFileSync(join(dir, "probe.txt"), "probe\n");
     [
@@ -306,7 +331,10 @@ function gitProbe() {
 const KEY_SHAPES = [
   ["private key block", /-----BEGIN [A-Z ]*PRIVATE KEY-----/],
   ["access key id", /\bAKIA[0-9A-Z]{16}\b/],
-  ["git host token", /\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{40,})/],
+  [
+    "git host token",
+    /\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{40,})/,
+  ],
   ["chat bot token", /\bxox[abprs]-[A-Za-z0-9-]{10,}/],
   ["cloud api key", /\bAIza[0-9A-Za-z_-]{35}\b/],
   ["sk- api key", /\bsk-[A-Za-z0-9_-]{20,}/],
@@ -320,11 +348,13 @@ const KEY_SHAPES = [
 const scanText = (name, text) =>
   text.includes("\0")
     ? []
-    : text.split("\n").flatMap((line, i) =>
-        KEY_SHAPES.filter(([, re]) => re.test(line)).map(
-          ([shape]) => `${name}:${i + 1}: ${shape}`,
-        ),
-      );
+    : text
+        .split("\n")
+        .flatMap((line, i) =>
+          KEY_SHAPES.filter(([, re]) => re.test(line)).map(
+            ([shape]) => `${name}:${i + 1}: ${shape}`,
+          ),
+        );
 
 const SKIP_DIRS = new Set([".git", "node_modules"]);
 const walk = (path) =>
@@ -336,10 +366,7 @@ const walk = (path) =>
 
 function reportKeys(findings, scanned) {
   if (findings.length)
-    refuse(
-      1,
-      `key-shaped strings (values not shown):\n${findings.join("\n")}`,
-    );
+    refuse(1, `key-shaped strings (values not shown):\n${findings.join("\n")}`);
   say(`no key-shaped strings in ${scanned} files`);
 }
 
@@ -360,9 +387,19 @@ function precommit(opts) {
   const top = git("rev-parse", "--show-toplevel").trim();
   const z = (s) => s.split("\0").filter(Boolean);
   const staged = z(
-    git("-C", top, "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMR"),
+    git(
+      "-C",
+      top,
+      "diff",
+      "--cached",
+      "--name-only",
+      "-z",
+      "--diff-filter=ACMR",
+    ),
   );
-  const keys = staged.flatMap((f) => scanText(f, git("-C", top, "show", `:${f}`)));
+  const keys = staged.flatMap((f) =>
+    scanText(f, git("-C", top, "show", `:${f}`)),
+  );
   const runs = opts.runs?.replace(/\/+$/, "");
   const index = new Set(z(git("-C", top, "ls-files", "-z")));
   const halfWritten = runs
@@ -404,7 +441,11 @@ const OPTIONS = {
 const COMMANDS = {
   lock: [["owner"], 1, (p, o) => lock(p[0], o)],
   release: [["owner"], 1, (p, o) => release(p[0], o)],
-  gate: [["registry", "ledger", "unit", "arm", "model", "seed"], 0, (_, o) => gate(o)],
+  gate: [
+    ["registry", "ledger", "unit", "arm", "model", "seed"],
+    0,
+    (_, o) => gate(o),
+  ],
   overlap: [[], 1, (p) => overlap(p[0])],
   "env-probe": [[], 0, (_, o) => envProbe(o)],
   "scan-keys": [[], -1, (p) => scanKeys(p)],
@@ -416,7 +457,11 @@ const USAGE = `usage: grid-guard.mjs <${Object.keys(COMMANDS).join("|")}> … (s
 try {
   const { values, positionals } = (() => {
     try {
-      return parseArgs({ options: OPTIONS, allowPositionals: true, strict: true });
+      return parseArgs({
+        options: OPTIONS,
+        allowPositionals: true,
+        strict: true,
+      });
     } catch (e) {
       return refuse(2, `${e.message}\n${USAGE}`);
     }
