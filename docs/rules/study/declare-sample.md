@@ -12,7 +12,7 @@ its name) · **Reported on:** the first line of the paper's
 ## What it catches
 
 A study's pre-registration that does not say how its sample relates to the population the paper
-talks about. Every `prereg.json` in a study folder (`repro/<slug>-YYYY-MM-DD/`) must carry five
+talks about. Every `prereg.json` in a study folder (`repro/<id>-<slug>/`) must carry five
 fields; every other key in the file is the author's and is not read.
 
 | field          | holds                                                                                                                                                                                                                                                                             |

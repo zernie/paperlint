@@ -204,13 +204,9 @@ interface Row {
 /** One check of a row: its finding, or null. */
 type RowCheck = (row: Row) => StudyFinding | null;
 
-/** Whether row `i` is the first of `r` with the same value of `key`. */
-const isFirst = (
-  r: StudyRegistry,
-  i: number,
-  key: (s: Study) => string,
-): boolean =>
-  r.studies.findIndex((s) => key(s) === key(r.studies[i] ?? s)) === i;
+/** Whether the row is the first of the registry with its value of `key`. */
+const isFirst = ({ r, s, i }: Row, key: (o: Study) => string): boolean =>
+  r.studies.findIndex((o) => key(o) === key(s)) === i;
 
 const badId: RowCheck = ({ r, s }) =>
   idNumber(r.prefix, s.id) === null
@@ -218,16 +214,17 @@ const badId: RowCheck = ({ r, s }) =>
     : null;
 
 /** Reported once, on the first row that holds the id. */
-const duplicateId: RowCheck = ({ r, s, i }) =>
-  r.studies.filter((o) => o.id === s.id).length > 1 &&
-  isFirst(r, i, (o) => o.id)
-    ? { problem: "duplicate-id", id: s.id }
+const duplicateId: RowCheck = (row) =>
+  row.r.studies.filter((o) => o.id === row.s.id).length > 1 &&
+  isFirst(row, (o) => o.id)
+    ? { problem: "duplicate-id", id: row.s.id }
     : null;
 
 /** Reported once, on the first row that names the folder. */
-const twoRows: RowCheck = ({ r, s, i }) => {
+const twoRows: RowCheck = (row) => {
+  const { r, s } = row;
   const ids = r.studies.filter((o) => o.folder === s.folder).map((o) => o.id);
-  return ids.length > 1 && isFirst(r, i, (o) => o.folder)
+  return ids.length > 1 && isFirst(row, (o) => o.folder)
     ? { problem: "two-rows", folder: s.folder, ids }
     : null;
 };
@@ -343,31 +340,29 @@ export function judgeStudies(input: StudyInput): readonly StudyFinding[] {
 
 // ── the index ─────────────────────────────────────────────────────────────────────
 
-const HEADER = [
-  "id",
-  "title",
-  "status",
-  "result",
-  "in paper",
-  "folder",
-] as const;
-
 /** A cell's text: one line, a pipe escaped. */
 const cell = (s: string): string =>
   s.replace(/\r?\n/gu, " ").replace(/\|/gu, "\\|");
 
-/** The cells of a study's row in the index. */
-const rowCells = (s: Study): readonly string[] => [
-  s.id,
-  cell(s.title),
-  s.status,
-  cell(s.result ?? "—"),
-  s.in_paper,
-  `[${s.folder}/](${s.folder}/)`,
+/** The columns of the index: each one's header, and its cell for a study. */
+const COLUMNS: readonly {
+  readonly head: string;
+  readonly of: (s: Study) => string;
+}[] = [
+  { head: "id", of: (s) => s.id },
+  { head: "title", of: (s) => cell(s.title) },
+  { head: "status", of: (s) => s.status },
+  { head: "result", of: (s) => cell(s.result ?? "—") },
+  { head: "in paper", of: (s) => s.in_paper },
+  { head: "folder", of: (s) => `[${s.folder}/](${s.folder}/)` },
 ];
 
 /** The width a cell takes: its code points. */
 const widthOf = (s: string): number => Array.from(s).length;
+
+/** `t` padded to `width`. */
+const padded = (t: string, width: number): string =>
+  t + " ".repeat(width - widthOf(t));
 
 /**
  * The index of `r`: a markdown table, a row per study in registry order, each column padded to its
@@ -375,17 +370,20 @@ const widthOf = (s: string): number => Array.from(s).length;
  * it is.
  */
 export function studyIndex(r: StudyRegistry): string {
-  const rows: readonly (readonly string[])[] = [
-    HEADER,
-    ...r.studies.map(rowCells),
-  ];
-  const widths = HEADER.map((_, c) =>
-    Math.max(3, ...rows.map((row) => widthOf(row[c] ?? ""))),
-  );
-  const line = (cells: readonly string[]): string =>
-    `| ${cells.map((t, c) => t + " ".repeat((widths[c] ?? 0) - widthOf(t))).join(" | ")} |`;
-  const rule = `| ${widths.map((w) => "-".repeat(w)).join(" | ")} |`;
-  return [line(HEADER), rule, ...rows.slice(1).map(line)].join("\n");
+  const sized = COLUMNS.map((c) => ({
+    ...c,
+    width: Math.max(
+      3,
+      widthOf(c.head),
+      ...r.studies.map((s) => widthOf(c.of(s))),
+    ),
+  }));
+  const line = (cells: readonly string[]): string => `| ${cells.join(" | ")} |`;
+  return [
+    line(sized.map((c) => padded(c.head, c.width))),
+    line(sized.map((c) => "-".repeat(c.width))),
+    ...r.studies.map((s) => line(sized.map((c) => padded(c.of(s), c.width)))),
+  ].join("\n");
 }
 
 /** The index between its markers, a blank line on each side. */

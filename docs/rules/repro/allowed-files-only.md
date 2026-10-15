@@ -62,7 +62,7 @@ or where a new run goes. Each kind of material now has one place, and each study
 Failing: a script loose at the top.
 
 ```text
-papers/agent-rule-drift/PIPELINE-STATUS.md
+papers/example/PIPELINE-STATUS.md
   1:1  error  `repro/paper_numbers.py` is loose at the top of the paper's repro/ folder, which holds
               only an index, the study registry, the shared tools and data, and one folder per study.
               Where it goes: repro/tools/ — the scripts used across the paper (numbers, figures, the
@@ -126,8 +126,8 @@ Move or rename the entry where its message says, and update whatever names its p
 folder gets its row in `repro/studies.json` in the same commit:
 
 ```sh
-git mv papers/agent-rule-drift/repro/paper_numbers.py papers/agent-rule-drift/repro/tools/
-git mv papers/agent-rule-drift/repro/baseline papers/agent-rule-drift/repro/P1-S04-baseline
+git mv papers/example/repro/paper_numbers.py papers/example/repro/tools/
+git mv papers/example/repro/baseline papers/example/repro/P1-S04-baseline
 ```
 
 To switch the rule off for one paper — say, one whose `repro/` predates the layout — set it in that

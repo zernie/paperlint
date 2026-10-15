@@ -49,6 +49,7 @@ const paper = (
 function studies(
   a: Partial<StudiesArgs>,
   tree: Readonly<Record<string, string>>,
+  cwd = CWD,
 ) {
   const files = memoryFiles(tree);
   const log: string[] = [];
@@ -66,7 +67,7 @@ function studies(
       files,
       listDir: memoryListDir(files),
       codec: studyRegistryCodec,
-      cwd: CWD,
+      cwd,
       today: "2026-10-15",
       log: (l) => log.push(l),
       err: (l) => err.push(l),
@@ -256,6 +257,32 @@ describe("studies index", () => {
   });
 });
 
+describe("studies index — refuses by the paper's state", () => {
+  it("a paper with no studies.json, and writes nothing", () => {
+    const tree = paper();
+    const out = studies({ sub: "index" }, tree);
+    expect([out.code, out.err[0]?.split(".", 1)[0], out.after]).toEqual([
+      1,
+      "papers/example/repro/studies",
+      tree,
+    ]);
+  });
+});
+
+describe("studies — run from inside the paper folder", () => {
+  it("names the folder `.`", () => {
+    const tree = paper({
+      [`${REPRO}/studies.json`]: registryText(P1()),
+      [`${REPRO}/README.md`]: withIndex("# I\n", P1()),
+    });
+    const out = studies({ sub: "index", paperDir: "." }, tree, DIR);
+    expect([out.code, out.log]).toEqual([
+      0,
+      ["the index in ./repro/README.md is in sync with 0 studies"],
+    ]);
+  });
+});
+
 describe("studies — the command line", () => {
   it.each([
     [
@@ -267,6 +294,11 @@ describe("studies — the command line", () => {
       "an unknown subcommand",
       { sub: "add" },
       'unknown subcommand `studies add`: new or index — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir>',
+    ],
+    [
+      "new with no paper folder",
+      { sub: "new", paperDir: undefined },
+      'studies new needs the paper\'s folder: npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]',
     ],
     [
       "no paper folder",
