@@ -360,6 +360,14 @@ await checkSkill("render-paper");
     `a control key IEEEtran reported reading was flagged as a missing reference:\n${ctlOnly.stdout}`,
   );
 
+  // A key that starts with "-" is still a key, not a grep option.
+  const dashKey = paper(["-ctl", "real"], ["-ctl"]);
+  assert.doesNotMatch(
+    dashKey.stdout,
+    /CITED-BUT-ABSENT/,
+    `a control key starting with "-" was flagged:\n${dashKey.stdout}`,
+  );
+
   // A misspelled \\bstctlcite key: IEEEtran detected a different key, so this one is not exempt.
   const typo = paper(["BSTcontrl", "real"]);
   assert.match(

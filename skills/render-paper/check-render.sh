@@ -196,7 +196,7 @@ if [ -f "$BLG" ]; then
     ctl=$(sed -n 's/^\*\* IEEEtran BST control entry "\(.*\)" detected\.$/\1/p' "$BASE.blg" 2>/dev/null | sort -u)
     while read -r key; do
       [ -z "$key" ] && continue
-      printf '%s\n' "$ctl" | grep -qxF "$key" && continue
+      printf '%s\n' "$ctl" | grep -qxF -- "$key" && continue
       grep -qF "{$key}" "$BASE.bbl" || { echo "      cited but NOT in the bibliography: $key"; missing=$((missing+1)); }
     done < <(grep -oE '\\citation\{[^}]*\}' "$BASE.aux" | sed 's/.*{//;s/}//' | tr ',' '\n' | sort -u)
     [ "$missing" -gt 0 ] && { echo "  CITED-BUT-ABSENT references: $missing"; blgerr=$((blgerr+missing)); }
