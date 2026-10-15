@@ -1,8 +1,8 @@
 # repro/study-registered
 
 **Level:** error · **Reads:** the listing of the paper's `repro/`, `repro/studies.json`,
-`repro/README.md`, and each `result_file` the registry names · **Reported on:** the first line of the
-paper's `PIPELINE-STATUS.md`, once per finding
+`repro/README.md`, and each `result_file` and `plan` the registry names · **Reported on:** the first
+line of the paper's `PIPELINE-STATUS.md`, once per finding
 
 ## What it catches
 
@@ -46,9 +46,118 @@ is named `<id>-<slug>` after its row — `P1-S03-baseline`. The design: [`study-
 | `superseded_by` | optional: the id of the study that replaced it; required when `superseded`       |
 | `in_paper`      | `yes`, `no`, or `registry` (listed in the registry, not in the paper's text)     |
 
-A row may carry more fields — a paper's own measurement metadata (`role`, `frame`, `method`,
-`outcome`, …) — and `paperlint studies new` keeps them when it rewrites the file. The top level holds
-only `prefix` and `studies`.
+| `measurement` | optional: the id of the measurement the study belongs to (below) |
+| `plan` | optional: the study's plan, a file inside its folder — `plan.json` (below) |
+
+A row may carry more fields — a paper's own metadata (`frame`, `method`, `outcome`, …) — and
+`paperlint studies new` keeps them when it rewrites the file. Beside `prefix` and `studies`, the top
+level holds only the optional `author`, `requirements` and `measurements`; any other key is an error.
+
+### Measurements, requirements, the author
+
+One measurement — a census, a benchmark — often spans several studies: a pilot, the main run, a
+replication. A measurement is declared once, at the top level, and each of its studies' rows names
+it in `measurement`. The author's requirements on the measurements are kept in their words, beside
+them:
+
+```json
+{
+  "prefix": "P1",
+  "author": "A. Author",
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "Every sample is a random draw from all rules found, no filter by difficulty.",
+      "date": "2026-10-10",
+      "source": "chat"
+    }
+  ],
+  "measurements": [
+    {
+      "id": "M1",
+      "title": "Rule census",
+      "rq": "RQ1",
+      "role": "headline",
+      "approval": {
+        "by": "A. Author",
+        "date": "2026-10-12",
+        "quote": "This is the one."
+      },
+      "requirements": ["R1"]
+    }
+  ],
+  "studies": [
+    {
+      "id": "P1-S01",
+      "folder": "P1-S01-census-pilot",
+      "measurement": "M1",
+      "plan": "plan.json",
+      "…": "…"
+    },
+    {
+      "id": "P1-S02",
+      "folder": "P1-S02-census",
+      "measurement": "M1",
+      "plan": "plan.json",
+      "…": "…"
+    }
+  ]
+}
+```
+
+| field                         | what it holds                                                                    |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| `author`                      | optional: the paper's author, the one person who approves a headline measurement |
+| `requirements[].id`           | the requirement's id, named by the measurements that must meet it                |
+| `requirements[].text`         | the author's words, verbatim                                                     |
+| `requirements[].date`         | `YYYY-MM-DD`                                                                     |
+| `requirements[].source`       | where they said it: a chat, a message, a review comment                          |
+| `measurements[].id`           | the measurement's id, named by its studies' rows                                 |
+| `measurements[].title`        | a plain name                                                                     |
+| `measurements[].rq`           | optional: the research question it answers                                       |
+| `measurements[].role`         | `headline` (the paper's claim rests on it) or `baseline`                         |
+| `measurements[].approval`     | the author's approval: `by`, `date`, their words in `quote`, optional `source`   |
+| `measurements[].requirements` | optional: the ids of the requirements it must meet                               |
+
+A measurement may carry more fields, as a row does; a requirement and an approval are exactly
+their fields. **A registry without `measurements` is judged as before**: a row's `measurement` is
+then a field of the paper's own, and nothing checks it.
+
+### The study's plan, `plan.json`
+
+Each study's plan is a JSON file in its folder, fixed before the runs: what it measures, the
+population and how the sample is drawn from it, the arms compared, the primary outcome, and the
+author's check of the drawn units. `paperlint studies new` writes the template beside the study's
+`README.md` and names it in the row's `plan`:
+
+```json
+{
+  "question": "",
+  "population": {
+    "source": "",
+    "size": null,
+    "draw": { "method": "", "seed": null }
+  },
+  "arms": [],
+  "primary_outcome": "",
+  "author_check": null
+}
+```
+
+| field                    | what it holds                                                                |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `question`               | what the study measures, one sentence                                        |
+| `population.source`      | where the units come from: the census, crawl or registry, with its date      |
+| `population.size`        | optional: how many units it holds, a whole number above 0, or `null`         |
+| `population.draw.method` | how the sample is drawn: `census`, `random`, `stratified` …                  |
+| `population.draw.seed`   | optional: the draw's seed, or `null`                                         |
+| `arms`                   | the conditions compared, each with a `name`; `[]` for a census               |
+| `primary_outcome`        | the one number the study reports first                                       |
+| `author_check`           | `null` until the author has seen the drawn units; then `by`, `date`, `quote` |
+
+Every other key is the paper's own (hypotheses, models, budget) and is kept. A plan named
+`prereg.json`, its old name, is read the same way, and [`repro/study-plan-name`](study-plan-name.md)
+warns that it moves to `plan.json`.
 
 The rule reports:
 
@@ -69,7 +178,20 @@ The rule reports:
   ```
 
 - a `repro/` with study folders and no `repro/studies.json` (one finding naming the file), and a
-  `studies.json` that is not JSON or not of the shape above (one finding with the reasons).
+  `studies.json` that is not JSON or not of the shape above (one finding with the reasons);
+- when the registry has `measurements`: a row whose `measurement` is not one of them
+  (`unknown-measurement`), a measurement no row names (`empty-measurement`), and a measurement that
+  must meet a requirement the registry does not hold (`unknown-requirement`);
+- a `headline` measurement with no `approval`, or, when the registry names its `author`, one approved
+  by anyone else (`headline-approval`);
+- a row's `plan` that is outside its folder, not a file, or not of the plan's shape — and, once the
+  study has run (`running`, `done`, `stopped`, `superseded`), a plan that leaves `question`,
+  `population.source`, `population.draw.method` or `primary_outcome` empty (`bad-plan`);
+- a study of a `headline` measurement that has run with no `author_check` in its plan — or no plan —
+  or, when the registry names its `author`, a check by anyone else (`author-check`).
+
+A study that is still `designing` owes neither a filled plan nor the author's check: the template
+`studies new` writes is clean until the first run. A `dropped` study owes neither.
 
 ## Why
 
@@ -98,6 +220,20 @@ Rule repro/study-registered: https://github.com/zernie/paperlint/blob/main/docs/
 
 Failing: a row set to `done` by hand, with no result, and the index not regenerated — two findings.
 
+Failing: the census of the example above set to `running` while its plan is still the template —
+the plan is reported for its empty fields, and the study for the author's check it lacks:
+
+```text
+papers/example/PIPELINE-STATUS.md
+  1:1  error  The plan of `P1-S02`, `plan.json` in its folder, leaves `question`, `population.source`,
+              `population.draw.method` and `primary_outcome` empty, and the study is `running`: a
+              plan is written before the runs. What to do: fill them in, or set the study back to
+              `designing`.
+  1:1  error  `P1-S02` is `running` in the headline measurement `M1`, and its plan has no
+              `author_check`. What to do: show the author the drawn units, then record their answer
+              in the plan's `author_check` — `by`, `date`, and their words in `quote`.
+```
+
 Passing: a paper with no study folder; and a `repro/` made only by `paperlint studies new`, its rows
 edited as the studies end and its index regenerated:
 
@@ -107,6 +243,7 @@ repro/
 ├── studies.json
 ├── P1-S01-baseline-pass-rate/
 │   ├── README.md
+│   ├── plan.json
 │   └── results.tsv
 ├── tools/
 └── data/
@@ -130,6 +267,11 @@ No rule options.
 
 - Whether `question` is one sentence and `result` one line, beyond their being text.
 - What a study's `README.md` says, or whether its frontmatter matches the row.
+- Whether a plan's texts say anything true, beyond their being filled in; whether `arms` should be
+  empty; whether the person in `approval` or `author_check` really said it — the rule sees the
+  name, not who typed it.
+- A repeated measurement or requirement id, and a requirement no measurement names.
+- A `prereg.json` or `plan.json` that no row names.
 - Whether the paper cites a study: `in_paper` is declared, not detected.
 - What may stand at the top of `repro/` besides the study folders, and whether a study folder has a
   `README.md`: that is [`repro/allowed-files-only`](allowed-files-only.md).
@@ -142,6 +284,11 @@ Create every new study with the command, which takes the next id, makes the fold
 ```sh
 npx paperlint studies new papers/example "Baseline pass rate" --kind measurement
 ```
+
+`studies new` also writes the study's `plan.json`: fill it in before the first run, and, for a
+study of a headline measurement, show the author the drawn units and record their answer in its
+`author_check`. A measurement is added by hand to `measurements`, with the author's `approval` when
+it is the headline, and each of its studies' rows names it in `measurement`.
 
 When a study ends, edit its row in `repro/studies.json` — `status`, `result`, `result_file`,
 `in_paper`, and `superseded_by` when another study replaced it — then regenerate the index:
