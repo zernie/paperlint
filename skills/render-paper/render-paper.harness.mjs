@@ -295,3 +295,62 @@ await checkSkill("render-paper");
         : ` under ${root}/`),
   );
 }
+
+// ── AN IEEEtran BST CONTROL ENTRY IS NOT A MISSING REFERENCE ─────────────────
+// `\bstctlcite{key}` cites an `@IEEEtranBSTCTL{key, …}` entry, so the key lands in the .aux like any
+// citation, but IEEEtran reads it as configuration and never prints a \bibitem for it. The
+// "cited but NOT in the bibliography" check failed a real IEEE paper on exactly that key (an
+// "et al. after six authors" setting). Both halves: the control key is skipped, and a genuinely
+// missing key in the same build is still reported.
+{
+  const HERE = dirname(fileURLToPath(import.meta.url));
+  const CHECK = join(HERE, "check-render.sh");
+  const paper = (citations) => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "bstctl-")));
+    writeFileSync(
+      join(dir, "paper.tex"),
+      "\\documentclass{IEEEtran}\n\\begin{document}\n\\bstctlcite{BSTcontrol}\nText \\cite{real}.\n\\bibliographystyle{IEEEtran}\n\\bibliography{refs}\n\\end{document}\n",
+    );
+    writeFileSync(
+      join(dir, "refs.bib"),
+      "@IEEEtranBSTCTL{BSTcontrol,\n  CTLuse_forced_etal = {yes},\n}\n\n@misc{real, title = {A real reference}, year = {2026}}\n",
+    );
+    writeFileSync(
+      join(dir, "paper.aux"),
+      citations.map((k) => `\\citation{${k}}`).join("\n") + "\n",
+    );
+    writeFileSync(
+      join(dir, "paper.bbl"),
+      "\\begin{thebibliography}{1}\n\\bibitem{real}\nA real reference, 2026.\n\\end{thebibliography}\n",
+    );
+    writeFileSync(join(dir, "paper.blg"), "This is BibTeX\n");
+    writeFileSync(
+      join(dir, "paper.log"),
+      "This is pdfTeX\nOutput written on paper.pdf (1 page, 1000 bytes).\n",
+    );
+    return spawnSync("bash", [CHECK, dir, "paper"], {
+      encoding: "utf8",
+      env: { ...process.env, NO_COMPILE: "1" },
+    });
+  };
+
+  const ctlOnly = paper(["BSTcontrol", "real"]);
+  assert.doesNotMatch(
+    ctlOnly.stdout,
+    /cited but NOT in the bibliography: BSTcontrol/,
+    `an @IEEEtranBSTCTL key cited by \\bstctlcite was reported as a missing reference:\n${ctlOnly.stdout}`,
+  );
+  assert.doesNotMatch(ctlOnly.stdout, /CITED-BUT-ABSENT/, ctlOnly.stdout);
+
+  const withGap = paper(["BSTcontrol", "real", "gone"]);
+  assert.match(
+    withGap.stdout,
+    /cited but NOT in the bibliography: gone/,
+    `a key with no \\bibitem must still be reported:\n${withGap.stdout}`,
+  );
+  assert.doesNotMatch(
+    withGap.stdout,
+    /bibliography: BSTcontrol/,
+    withGap.stdout,
+  );
+}

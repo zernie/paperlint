@@ -184,10 +184,18 @@ if [ -f "$BLG" ]; then
     grep -E "^(You're|I'm skipping|Repeated entry|I couldn't open)" "$BLG" | sed 's/^/      /' | head -12
   fi
   # A cited key that never made it into the .bbl is the same failure seen from the other side.
+  # An IEEEtran BST control entry (`@IEEEtranBSTCTL`, activated by `\bstctlcite{key}`) is cited
+  # in the .aux like any key, but IEEEtran reads it as configuration and never prints it as a
+  # \bibitem — so it is not a missing reference. Its keys come from the .tex (`\bstctlcite`)
+  # and from any `@IEEEtranBSTCTL{key,` entry in the paper's .bib files or inline filecontents.
   if [ -f "$BASE.aux" ] && [ -f "$BASE.bbl" ]; then
     missing=0
+    ctl=$( { grep -ohE '\\bstctlcite\{[^}]*\}' ./*.tex 2>/dev/null | sed 's/.*{//;s/}//' | tr ',' '\n'
+             grep -ohiE '@IEEEtranBSTCTL[[:space:]]*\{[^,]*' ./*.bib ./*.tex 2>/dev/null | sed 's/.*{//'
+           } | tr -d ' ' | sort -u)
     while read -r key; do
       [ -z "$key" ] && continue
+      printf '%s\n' "$ctl" | grep -qxF "$key" && continue
       grep -qF "{$key}" "$BASE.bbl" || { echo "      cited but NOT in the bibliography: $key"; missing=$((missing+1)); }
     done < <(grep -oE '\\citation\{[^}]*\}' "$BASE.aux" | sed 's/.*{//;s/}//' | tr ',' '\n' | sort -u)
     [ "$missing" -gt 0 ] && { echo "  CITED-BUT-ABSENT references: $missing"; blgerr=$((blgerr+missing)); }
