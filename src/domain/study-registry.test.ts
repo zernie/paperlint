@@ -50,7 +50,10 @@ const read = (r: StudyRegistry): RegistryState => ({
 });
 
 /** A `repro/` whose folders are exactly the rows', with its index in sync, then `over`. */
-const input = (r: StudyRegistry, over: Partial<StudyInput> = {}): StudyInput => ({
+const input = (
+  r: StudyRegistry,
+  over: Partial<StudyInput> = {},
+): StudyInput => ({
   folders: r.studies.map((s) => s.folder),
   registry: read(r),
   readme: withIndex("# Reproduction index\n", r),
@@ -169,7 +172,9 @@ describe("judgeStudies — folders and rows", () => {
       ids: ["P1-S01", "P1-S02"],
     });
   });
+});
 
+describe("judgeStudies — ids and folder names", () => {
   it.each([
     ["another prefix", "P2-S01"],
     ["one digit", "P1-S1"],
@@ -220,7 +225,11 @@ describe("judgeStudies — status", () => {
   it("done without result and result_file", () => {
     const r = reg(study({ status: "done" }));
     expect(judgeStudies(input(r))).toEqual([
-      { problem: "no-result", id: "P1-S01", missing: ["result", "result_file"] },
+      {
+        problem: "no-result",
+        id: "P1-S01",
+        missing: ["result", "result_file"],
+      },
     ]);
   });
 
@@ -340,7 +349,9 @@ describe("the index", () => {
     const md = withIndex("# Reproduction index\n\nSome text.\n", r);
     expect(await format(md, { parser: "markdown" })).toBe(md);
   });
+});
 
+describe("the index of an empty registry, and its markers", () => {
   it("of an empty registry is the header alone", () => {
     expect(studyIndex(reg())).toBe(
       [
@@ -434,96 +445,103 @@ describe("registryText", () => {
   });
 });
 
+/** Each finding, and the head of the text it is reported with. */
+const MESSAGES = [
+  [
+    { problem: "no-registry", folders: ["a-2026-10-01", "b-2026-10-02"] },
+    '`repro/` holds study folders (`a-2026-10-01/`, `b-2026-10-02/`) but no `repro/studies.json`, the registry that gives every study an id, a plain name and a status. What to do: write `repro/studies.json` with the paper\'s prefix — `{ "prefix": "P1", "studies": [] }` — then give each folder its row and rename it to `<id>-<slug>`; a new study is created with `npx paperlint studies new <paper-dir> "<title>"`.',
+  ],
+  [
+    { problem: "unreadable", why: "prefix: required" },
+    "`repro/studies.json` is not a study registry: prefix: required. Its shape is on the rule's page.",
+  ],
+  [
+    { problem: "unregistered", folder: "spike-2026-10-12", next: "P1-S02" },
+    '`repro/spike-2026-10-12/` has no row in `repro/studies.json`, and every study folder has exactly one. What to do: add its row with the next free id, `P1-S02`, and rename the folder to `P1-S02-<slug>`; a new study is created with `npx paperlint studies new <paper-dir> "<title>"`, which does both.',
+  ],
+  [
+    { problem: "no-folder", id: "P1-S01", folder: "P1-S01-x" },
+    "`repro/studies.json`: the row `P1-S01` names the folder `repro/P1-S01-x/`, which does not exist. What to do: rename the study's folder to it, or correct the row's `folder`.",
+  ],
+  [
+    { problem: "two-rows", folder: "P1-S01-x", ids: ["P1-S01", "P1-S02"] },
+    "`repro/studies.json`: the rows `P1-S01`, `P1-S02` all name the folder `repro/P1-S01-x/`, and a study folder has exactly one row. What to do: keep one row for it.",
+  ],
+  [
+    { problem: "bad-id", id: "P1-S1", prefix: "P1" },
+    "`repro/studies.json`: the id `P1-S1` is not `P1-S` followed by two or more digits (`P1-S01`). What to do: give the row the next free id and rename its folder to match.",
+  ],
+  [
+    { problem: "duplicate-id", id: "P1-S01" },
+    "`repro/studies.json`: the id `P1-S01` is on more than one row, and an id names one study. What to do: give each other row the next free id and rename its folder to match.",
+  ],
+  [
+    { problem: "folder-name", id: "P1-S01", folder: "x" },
+    "`repro/studies.json`: the row `P1-S01` names the folder `x`, which is not `P1-S01-<slug>` — the id, then lowercase letters and digits in words joined by hyphens. What to do: rename the folder and the row's `folder` together.",
+  ],
+  [
+    { problem: "long-title", id: "P1-S01", words: 9 },
+    "`repro/studies.json`: the title of `P1-S01` has 9 words; a title is a plain name of at most 8. What to do: shorten it, and put the detail in `question`.",
+  ],
+  [
+    { problem: "no-result", id: "P1-S01", missing: ["result"] },
+    "`repro/studies.json`: `P1-S01` is `done` without `result`. What to do: write the one-line result and the file it is read from (`result`, `result_file`), or set the status it really has.",
+  ],
+  [
+    {
+      problem: "result-file",
+      id: "P1-S01",
+      path: "r.tsv",
+      why: "missing",
+    },
+    "`repro/studies.json`: the `result_file` of `P1-S01`, `r.tsv`, is not a file in its folder. What to do: name a file that exists, relative to the study's folder.",
+  ],
+  [
+    {
+      problem: "result-file",
+      id: "P1-S01",
+      path: "../r.tsv",
+      why: "outside",
+    },
+    "`repro/studies.json`: the `result_file` of `P1-S01`, `../r.tsv`, is outside its folder. What to do: name a file that exists, relative to the study's folder.",
+  ],
+  [
+    { problem: "no-successor", id: "P1-S01", superseded_by: null },
+    "`repro/studies.json`: `P1-S01` is `superseded` without `superseded_by`. What to do: name the id of the study that replaced it.",
+  ],
+  [
+    { problem: "no-successor", id: "P1-S01", superseded_by: "P1-S09" },
+    "`repro/studies.json`: `P1-S01` is `superseded` by `P1-S09`, which is no study in the registry. What to do: name the id of the study that replaced it.",
+  ],
+  [
+    { problem: "stale-index", why: "differs" },
+    "The index in `repro/README.md` (between the `studies:begin` and `studies:end` markers) is not the one `repro/studies.json` generates. What to do: run `npx paperlint studies index <paper-dir>`; the block is generated, never edited by hand.",
+  ],
+  [
+    { problem: "stale-index", why: "no-markers" },
+    "`repro/README.md` has no index of the studies (the `studies:begin` and `studies:end` markers). What to do: run `npx paperlint studies index <paper-dir>`; the block is generated, never edited by hand.",
+  ],
+  [
+    { problem: "stale-index", why: "no-readme" },
+    "`repro/README.md`, the index of the studies, does not exist. What to do: run `npx paperlint studies index <paper-dir>`; the block is generated, never edited by hand.",
+  ],
+] as const;
+
 describe("studyMessage — stands alone", () => {
   const RULE =
     "Rule repro/study-registered: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/study-registered.md";
 
-  it.each([
-    [
-      { problem: "no-registry", folders: ["a-2026-10-01", "b-2026-10-02"] },
-      '`repro/` holds study folders (`a-2026-10-01/`, `b-2026-10-02/`) but no `repro/studies.json`, the registry that gives every study an id, a plain name and a status. What to do: write `repro/studies.json` with the paper\'s prefix — `{ "prefix": "P1", "studies": [] }` — then give each folder its row and rename it to `<id>-<slug>`; a new study is created with `npx paperlint studies new <paper-dir> "<title>"`.',
-    ],
-    [
-      { problem: "unreadable", why: "prefix: required" },
-      "`repro/studies.json` is not a study registry: prefix: required. Its shape is on the rule's page.",
-    ],
-    [
-      { problem: "unregistered", folder: "spike-2026-10-12", next: "P1-S02" },
-      "`repro/spike-2026-10-12/` has no row in `repro/studies.json`, and every study folder has exactly one. What to do: add its row with the next free id, `P1-S02`, and rename the folder to `P1-S02-<slug>`; a new study is created with `npx paperlint studies new <paper-dir> \"<title>\"`, which does both.",
-    ],
-    [
-      { problem: "no-folder", id: "P1-S01", folder: "P1-S01-x" },
-      "`repro/studies.json`: the row `P1-S01` names the folder `repro/P1-S01-x/`, which does not exist. What to do: rename the study's folder to it, or correct the row's `folder`.",
-    ],
-    [
-      { problem: "two-rows", folder: "P1-S01-x", ids: ["P1-S01", "P1-S02"] },
-      "`repro/studies.json`: the rows `P1-S01`, `P1-S02` all name the folder `repro/P1-S01-x/`, and a study folder has exactly one row. What to do: keep one row for it.",
-    ],
-    [
-      { problem: "bad-id", id: "P1-S1", prefix: "P1" },
-      "`repro/studies.json`: the id `P1-S1` is not `P1-S` followed by two or more digits (`P1-S01`). What to do: give the row the next free id and rename its folder to match.",
-    ],
-    [
-      { problem: "duplicate-id", id: "P1-S01" },
-      "`repro/studies.json`: the id `P1-S01` is on more than one row, and an id names one study. What to do: give each other row the next free id and rename its folder to match.",
-    ],
-    [
-      { problem: "folder-name", id: "P1-S01", folder: "x" },
-      "`repro/studies.json`: the row `P1-S01` names the folder `x`, which is not `P1-S01-<slug>` — the id, then lowercase letters and digits in words joined by hyphens. What to do: rename the folder and the row's `folder` together.",
-    ],
-    [
-      { problem: "long-title", id: "P1-S01", words: 9 },
-      "`repro/studies.json`: the title of `P1-S01` has 9 words; a title is a plain name of at most 8. What to do: shorten it, and put the detail in `question`.",
-    ],
-    [
-      { problem: "no-result", id: "P1-S01", missing: ["result"] },
-      "`repro/studies.json`: `P1-S01` is `done` without `result`. What to do: write the one-line result and the file it is read from (`result`, `result_file`), or set the status it really has.",
-    ],
-    [
-      {
-        problem: "result-file",
-        id: "P1-S01",
-        path: "r.tsv",
-        why: "missing",
-      },
-      "`repro/studies.json`: the `result_file` of `P1-S01`, `r.tsv`, is not a file in its folder. What to do: name a file that exists, relative to the study's folder.",
-    ],
-    [
-      {
-        problem: "result-file",
-        id: "P1-S01",
-        path: "../r.tsv",
-        why: "outside",
-      },
-      "`repro/studies.json`: the `result_file` of `P1-S01`, `../r.tsv`, is outside its folder. What to do: name a file that exists, relative to the study's folder.",
-    ],
-    [
-      { problem: "no-successor", id: "P1-S01", superseded_by: null },
-      "`repro/studies.json`: `P1-S01` is `superseded` without `superseded_by`. What to do: name the id of the study that replaced it.",
-    ],
-    [
-      { problem: "no-successor", id: "P1-S01", superseded_by: "P1-S09" },
-      "`repro/studies.json`: `P1-S01` is `superseded` by `P1-S09`, which is no study in the registry. What to do: name the id of the study that replaced it.",
-    ],
-    [
-      { problem: "stale-index", why: "differs" },
-      "The index in `repro/README.md` (between the `studies:begin` and `studies:end` markers) is not the one `repro/studies.json` generates. What to do: run `npx paperlint studies index <paper-dir>`; the block is generated, never edited by hand.",
-    ],
-    [
-      { problem: "stale-index", why: "no-markers" },
-      "`repro/README.md` has no index of the studies (the `studies:begin` and `studies:end` markers). What to do: run `npx paperlint studies index <paper-dir>`; the block is generated, never edited by hand.",
-    ],
-    [
-      { problem: "stale-index", why: "no-readme" },
-      "`repro/README.md`, the index of the studies, does not exist. What to do: run `npx paperlint studies index <paper-dir>`; the block is generated, never edited by hand.",
-    ],
-  ] as const)("%j", (finding, head) => {
+  it.each(MESSAGES)("%j", (finding, head) => {
     expect(studyMessage(finding)).toBe(`${head}\n${RULE}`);
   });
 });
 
 describe("addStudy", () => {
-  const NEW = { title: "Baseline pass rate", kind: "spike", date: "2026-10-15" } as const;
+  const NEW = {
+    title: "Baseline pass rate",
+    kind: "spike",
+    date: "2026-10-15",
+  } as const;
 
   it("appends the next id, its folder, designing, not in the paper, an empty question", () => {
     const r = reg(study({ id: "P1-S04", folder: "P1-S04-x", foo: 1 }));

@@ -7,6 +7,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
 import { run } from "./cli.ts";
 import { lintReport } from "../test/lint-report.ts";
 import { useTempDir, writeTree } from "../test/support.ts";
@@ -39,18 +40,18 @@ async function registryFindings(cwd: string): Promise<readonly string[]> {
 const localDate = (d: Date): string =>
   `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-describe("paperlint studies — through the CLI", () => {
-  const dir = join(root, "project");
-  writeTree(dir, {
-    "package.json": "{}",
-    "papers/example/PIPELINE-STATUS.md": "---\nstages: []\n---\n# status\n",
-    "papers/example/paper.tex":
-      "\\documentclass{article}\n\\begin{document}\nx\n\\end{document}\n",
-    "papers/example/repro/README.md": "# Reproduction index\n",
-    "papers/example/repro/studies.json": '{ "prefix": "P1", "studies": [] }\n',
-  });
-  const repro = join(dir, "papers/example/repro");
+const dir = join(root, "project");
+writeTree(dir, {
+  "package.json": "{}",
+  "papers/example/PIPELINE-STATUS.md": "---\nstages: []\n---\n# status\n",
+  "papers/example/paper.tex":
+    "\\documentclass{article}\n\\begin{document}\nx\n\\end{document}\n",
+  "papers/example/repro/README.md": "# Reproduction index\n",
+  "papers/example/repro/studies.json": '{ "prefix": "P1", "studies": [] }\n',
+});
+const repro = join(dir, "papers/example/repro");
 
+describe("paperlint studies new — through the CLI", () => {
   it("new registers a study dated today, and the lint finds nothing to report", async () => {
     const before = localDate(new Date());
     const out = await cli(dir, [
@@ -66,16 +67,17 @@ describe("paperlint studies — through the CLI", () => {
     expect(out.log[0]).toBe(
       "created papers/example/repro/P1-S01-baseline-pass-rate/README.md",
     );
-    const registry = JSON.parse(
+    const parsed = studyRegistryCodec.parse(
       readFileSync(join(repro, "studies.json"), "utf8"),
-    ) as { studies: { id: string; kind: string; date: string }[] };
-    expect(registry.studies.map((s) => [s.id, s.kind])).toEqual([
-      ["P1-S01", "spike"],
-    ]);
-    expect([before, after]).toContain(registry.studies[0]?.date);
+    );
+    const studies = parsed.ok ? parsed.registry.studies : [];
+    expect(studies.map((s) => [s.id, s.kind])).toEqual([["P1-S01", "spike"]]);
+    expect([before, after]).toContain(studies[0]?.date);
     expect(await registryFindings(dir)).toEqual([]);
   });
+});
 
+describe("paperlint studies index — through the CLI", () => {
   it("a row edited by hand leaves the index stale; studies index makes it clean again", async () => {
     const file = join(repro, "studies.json");
     writeTree(repro, {

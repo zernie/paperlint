@@ -173,11 +173,11 @@ describe("repro/study-registered — reports, once each, on line 1", () => {
   it("a bad id", () => {
     expect(
       messages(registered(P1(study({ id: "P1-S1", folder: "P1-S1-x" })))),
-    ).toEqual([
-      studyMessage({ problem: "bad-id", id: "P1-S1", prefix: "P1" }),
-    ]);
+    ).toEqual([studyMessage({ problem: "bad-id", id: "P1-S1", prefix: "P1" })]);
   });
+});
 
+describe("repro/study-registered — reports a row's status and the index", () => {
   it("done without a result", () => {
     expect(messages(registered(P1(study({ status: "done" }))))).toEqual([
       studyMessage({
@@ -206,15 +206,13 @@ describe("repro/study-registered — reports, once each, on line 1", () => {
   });
 
   it("superseded without a target", () => {
-    expect(messages(registered(P1(study({ status: "superseded" }))))).toEqual(
-      [
-        studyMessage({
-          problem: "no-successor",
-          id: "P1-S01",
-          superseded_by: null,
-        }),
-      ],
-    );
+    expect(messages(registered(P1(study({ status: "superseded" }))))).toEqual([
+      studyMessage({
+        problem: "no-successor",
+        id: "P1-S01",
+        superseded_by: null,
+      }),
+    ]);
   });
 
   it("a stale index", () => {
@@ -223,7 +221,9 @@ describe("repro/study-registered — reports, once each, on line 1", () => {
       studyMessage({ problem: "stale-index", why: "differs" }),
     ]);
   });
+});
 
+describe("repro/study-registered — reports the registry itself, once", () => {
   it("study folders and no studies.json: one finding naming the file", () => {
     expect(
       lint({

@@ -78,13 +78,14 @@ function studies(
   return { code, log, err, after };
 }
 
-describe("studies new", () => {
-  const before = paper({
-    [`${REPRO}/studies.json`]: registryText(P1(study())),
-    [`${REPRO}/README.md`]: "# Reproduction index\n\nIntro.\n",
-    [`${REPRO}/P1-S01-baseline/README.md`]: "# s\n",
-  });
+/** A paper with one registered study and a README without the index yet. */
+const before = paper({
+  [`${REPRO}/studies.json`]: registryText(P1(study())),
+  [`${REPRO}/README.md`]: "# Reproduction index\n\nIntro.\n",
+  [`${REPRO}/P1-S01-baseline/README.md`]: "# s\n",
+});
 
+describe("studies new", () => {
   it("creates the folder's README.md, appends the row, regenerates the index", () => {
     const { code, log, err, after } = studies(
       { title: "Ablation of the guard", kind: "spike" },
@@ -119,85 +120,91 @@ describe("studies new", () => {
   it("is a measurement when no kind is named, and keeps a row's extra fields", () => {
     const { code, after } = studies({ title: "Second run" }, before);
     expect(code).toBe(0);
-    const r = JSON.parse(after[`${REPRO}/studies.json`] ?? "") as {
-      studies: Study[];
-    };
-    expect(r.studies.map((s) => [s.id, s.kind, s["role"]])).toEqual([
+    const r = studyRegistryCodec.parse(after[`${REPRO}/studies.json`] ?? "");
+    expect(
+      (r.ok ? r.registry.studies : []).map((s) => [s.id, s.kind, s["role"]]),
+    ).toEqual([
       ["P1-S01", "measurement", "counted"],
       ["P1-S02", "measurement", undefined],
     ]);
   });
 
   it("writes repro/README.md when there is none", () => {
-    const { [`${REPRO}/README.md`]: _gone, ...tree } = before;
+    const tree = Object.fromEntries(
+      Object.entries(before).filter(([k]) => k !== `${REPRO}/README.md`),
+    );
     const { code, after } = studies({ title: "Second run" }, tree);
     expect(code).toBe(0);
-    expect(after[`${REPRO}/README.md`]).toMatch(/^# Reproduction index\n\n<!-- studies:begin/u);
+    expect(after[`${REPRO}/README.md`]).toMatch(
+      /^# Reproduction index\n\n<!-- studies:begin/u,
+    );
+  });
+});
+
+describe("studies new — refuses, writing nothing", () => {
+  it.each([
+    [
+      "no title",
+      { title: undefined },
+      2,
+      'studies new needs the study\'s title: npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]',
+    ],
+    [
+      "an unknown kind",
+      { title: "x", kind: "benchmark" },
+      2,
+      "--kind benchmark is not a kind of study: one of measurement, spike, tooling, data, artifact, salvage",
+    ],
+    [
+      "a title over eight words",
+      { title: "one two three four five six seven eight nine" },
+      2,
+      "the title has 9 words; a title is a plain name of at most 8 — the detail goes in the row's `question`",
+    ],
+    [
+      "an argument past the title",
+      { title: "x", extra: ["y"] },
+      2,
+      "studies new takes the paper's folder and one title — `y` is one argument too many (quote a title of several words)",
+    ],
+  ] as const)("%s", (_why, a, code, line) => {
+    const out = studies(a, before);
+    expect([out.code, out.err, out.after]).toEqual([code, [line], before]);
+  });
+});
+
+describe("studies new — refuses by the paper's state, writing nothing", () => {
+  it("a folder that already exists", () => {
+    const tree = { ...before, [`${REPRO}/P1-S02-second-run/notes.md`]: "x" };
+    const out = studies({ title: "Second run" }, tree);
+    expect([out.code, out.err, out.after]).toEqual([
+      1,
+      [
+        "papers/example/repro/P1-S02-second-run/ already exists; it is never overwritten. Register it by hand, or remove it and run this again.",
+      ],
+      tree,
+    ]);
   });
 
-  describe("refuses, writing nothing", () => {
-    it.each([
+  it("a paper with no studies.json: names the file, and does not guess the prefix", () => {
+    const tree = paper();
+    const out = studies({ title: "x" }, tree);
+    expect([out.code, out.err, out.after]).toEqual([
+      1,
       [
-        "no title",
-        { title: undefined },
-        2,
-        'studies new needs the study\'s title: npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]',
+        'papers/example/repro/studies.json does not exist. Its prefix is the paper\'s own choice — a capital letter, then capitals or digits, one per paper (P1) — so write the file, then run this again:\n\n{ "prefix": "P1", "studies": [] }',
       ],
-      [
-        "an unknown kind",
-        { title: "x", kind: "benchmark" },
-        2,
-        "--kind benchmark is not a kind of study: one of measurement, spike, tooling, data, artifact, salvage",
-      ],
-      [
-        "a title over eight words",
-        { title: "one two three four five six seven eight nine" },
-        2,
-        "the title has 9 words; a title is a plain name of at most 8 — the detail goes in the row's `question`",
-      ],
-      [
-        "an argument past the title",
-        { title: "x", extra: ["y"] },
-        2,
-        "studies new takes the paper's folder and one title — `y` is one argument too many (quote a title of several words)",
-      ],
-    ] as const)("%s", (_why, a, code, line) => {
-      const out = studies(a, before);
-      expect([out.code, out.err, out.after]).toEqual([code, [line], before]);
-    });
+      tree,
+    ]);
+  });
 
-    it("a folder that already exists", () => {
-      const tree = { ...before, [`${REPRO}/P1-S02-second-run/notes.md`]: "x" };
-      const out = studies({ title: "Second run" }, tree);
-      expect([out.code, out.err, out.after]).toEqual([
-        1,
-        [
-          "papers/example/repro/P1-S02-second-run/ already exists; it is never overwritten. Register it by hand, or remove it and run this again.",
-        ],
-        tree,
-      ]);
-    });
-
-    it("a paper with no studies.json: names the file, and does not guess the prefix", () => {
-      const tree = paper();
-      const out = studies({ title: "x" }, tree);
-      expect([out.code, out.err, out.after]).toEqual([
-        1,
-        [
-          'papers/example/repro/studies.json does not exist. Its prefix is the paper\'s own choice — a capital letter, then capitals or digits, one per paper (P1) — so write the file, then run this again:\n\n{ "prefix": "P1", "studies": [] }',
-        ],
-        tree,
-      ]);
-    });
-
-    it("a studies.json that is not a registry", () => {
-      const tree = paper({ [`${REPRO}/studies.json`]: "{" });
-      const out = studies({ title: "x" }, tree);
-      expect([out.code, out.err]).toEqual([
-        1,
-        ["papers/example/repro/studies.json is not a study registry: not JSON"],
-      ]);
-    });
+  it("a studies.json that is not a registry", () => {
+    const tree = paper({ [`${REPRO}/studies.json`]: "{" });
+    const out = studies({ title: "x" }, tree);
+    expect([out.code, out.err]).toEqual([
+      1,
+      ["papers/example/repro/studies.json is not a study registry: not JSON"],
+    ]);
   });
 });
 
@@ -254,12 +261,12 @@ describe("studies — the command line", () => {
     [
       "no subcommand",
       { sub: undefined },
-      "studies needs a subcommand: new or index — npx paperlint studies new <paper-dir> \"<title>\" [--kind <kind>] · npx paperlint studies index <paper-dir>",
+      'studies needs a subcommand: new or index — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir>',
     ],
     [
       "an unknown subcommand",
       { sub: "add" },
-      "unknown subcommand `studies add`: new or index — npx paperlint studies new <paper-dir> \"<title>\" [--kind <kind>] · npx paperlint studies index <paper-dir>",
+      'unknown subcommand `studies add`: new or index — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir>',
     ],
     [
       "no paper folder",

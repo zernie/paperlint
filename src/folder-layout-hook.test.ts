@@ -149,7 +149,9 @@ describe("paper-folder-layout hook — allows", () => {
     expect(reason(`${DIR}/repro/tools/paper_numbers.py`)).toBeNull();
     expect(reason(`${DIR}/repro/data/numbers.tsv`)).toBeNull();
   });
+});
 
+describe("paper-folder-layout hook — a new study folder", () => {
   it("a registered study folder started with its README.md; the first file otherwise is refused", () => {
     expect(reason(`${DIR}/repro/P1-S01-ablation/README.md`)).toBeNull();
     expect(reason(`${DIR}/repro/P1-S01-ablation/run.py`)).toMatch(

@@ -73,7 +73,11 @@ describe("refusing what is not a registry", () => {
   });
 
   it.each([
-    ["no prefix", { studies: [] }, "prefix: Invalid input: expected string, received undefined"],
+    [
+      "no prefix",
+      { studies: [] },
+      "prefix: Invalid input: expected string, received undefined",
+    ],
     [
       "a prefix of another shape",
       { prefix: "p1", studies: [] },
@@ -92,14 +96,36 @@ describe("refusing what is not a registry", () => {
   ])("%s", (_why, v, why) => {
     expect(parse(text(v))).toEqual({ ok: false, why });
   });
+});
 
+describe("refusing a row that is not a study", () => {
   it.each([
-    ["kind", "benchmark", 'studies.0.kind: Invalid option: expected one of "measurement"|"spike"|"tooling"|"data"|"artifact"|"salvage"'],
-    ["status", "finished", 'studies.0.status: Invalid option: expected one of "designing"|"running"|"done"|"stopped"|"superseded"|"dropped"'],
-    ["in_paper", "maybe", 'studies.0.in_paper: Invalid option: expected one of "yes"|"no"|"registry"'],
+    [
+      "kind",
+      "benchmark",
+      'studies.0.kind: Invalid option: expected one of "measurement"|"spike"|"tooling"|"data"|"artifact"|"salvage"',
+    ],
+    [
+      "status",
+      "finished",
+      'studies.0.status: Invalid option: expected one of "designing"|"running"|"done"|"stopped"|"superseded"|"dropped"',
+    ],
+    [
+      "in_paper",
+      "maybe",
+      'studies.0.in_paper: Invalid option: expected one of "yes"|"no"|"registry"',
+    ],
     ["date", "15.10.2026", "studies.0.date: Invalid ISO date"],
-    ["title", "", "studies.0.title: Too small: expected string to have >=1 characters"],
-    ["result", 41, "studies.0.result: Invalid input: expected string, received number"],
+    [
+      "title",
+      "",
+      "studies.0.title: Too small: expected string to have >=1 characters",
+    ],
+    [
+      "result",
+      41,
+      "studies.0.result: Invalid input: expected string, received number",
+    ],
   ])("a row whose %s is %j", (field, value, why) => {
     expect(parse(withRow({ ...ROW, [field]: value }))).toEqual({
       ok: false,

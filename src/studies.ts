@@ -14,6 +14,7 @@
  */
 import { join, relative, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
+import type { AbsolutePath } from "./domain/paths.ts";
 import { README, REPRO_DIR } from "./domain/repro-layout.ts";
 import {
   DEFAULT_KIND,
@@ -24,6 +25,8 @@ import {
   registryText,
   studyReadme,
   withIndex,
+  type Study,
+  type StudyKind,
   type StudyRegistry,
 } from "./domain/study-registry.ts";
 import type { Files } from "./ports/files.ts";
@@ -54,11 +57,18 @@ export interface StudiesDeps {
   readonly err: (line: string) => void;
 }
 
-const NEW_USAGE = 'npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]';
+const NEW_USAGE =
+  'npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]';
 const INDEX_USAGE = "npx paperlint studies index <paper-dir>";
 const SUBS = `new or index — ${NEW_USAGE} · ${INDEX_USAGE}`;
 
 const STATUS_FILE = "PIPELINE-STATUS.md";
+
+/** The paper folder a run works in: absolute, and as the messages show it. */
+interface Paper {
+  readonly dir: string;
+  readonly shown: string;
+}
 
 /** A run's outcome: the exit code, and the line that explains a refusal. */
 type Refusal = { readonly code: 1 | 2; readonly line: string };
@@ -66,13 +76,9 @@ type Refusal = { readonly code: 1 | 2; readonly line: string };
 const refuse = (code: 1 | 2, line: string): Refusal => ({ code, line });
 
 /** The paper folder's registry, or the refusal naming why there is none to write to. */
-function registryIn(
-  dir: string,
-  shown: string,
-  deps: StudiesDeps,
-): StudyRegistry | Refusal {
-  const r = registryOf(dir, deps);
-  const file = `${shown}/${REPRO_DIR}/${STUDIES_FILE}`;
+function registryIn(p: Paper, deps: StudiesDeps): StudyRegistry | Refusal {
+  const r = registryOf(p.dir, deps);
+  const file = `${p.shown}/${REPRO_DIR}/${STUDIES_FILE}`;
   switch (r.kind) {
     case "absent":
       return refuse(
@@ -111,8 +117,7 @@ function writeIndex(dir: string, r: StudyRegistry, files: Files): boolean {
 
 /** `studies index`: the README's block regenerated from the registry. */
 function runIndex(
-  dir: string,
-  shown: string,
+  p: Paper,
   a: StudiesArgs,
   deps: StudiesDeps,
 ): Refusal | readonly string[] {
@@ -122,23 +127,20 @@ function runIndex(
       2,
       `studies index takes only the paper's folder — \`${surplus}\` is one argument too many`,
     );
-  const r = registryIn(dir, shown, deps);
+  const r = registryIn(p, deps);
   if (isRefusal(r)) return r;
-  const readme = `${shown}/${REPRO_DIR}/${README}`;
+  const readme = `${p.shown}/${REPRO_DIR}/${README}`;
   return [
-    writeIndex(dir, r, deps.files)
+    writeIndex(p.dir, r, deps.files)
       ? `wrote the index of ${studiesCount(r)} in ${readme}`
       : `the index in ${readme} is in sync with ${studiesCount(r)}`,
   ];
 }
 
-/** `studies new`: the folder, its README.md, the row, the index. */
-function runNew(
-  dir: string,
-  shown: string,
+/** `new`'s title and kind from the command line, or the refusal. */
+function newArgs(
   a: StudiesArgs,
-  deps: StudiesDeps,
-): Refusal | readonly string[] {
+): Refusal | { readonly title: string; readonly kind: StudyKind } {
   if (a.title === undefined)
     return refuse(2, `studies new needs the study's title: ${NEW_USAGE}`);
   const [surplus] = a.extra;
@@ -148,62 +150,82 @@ function runNew(
       `studies new takes the paper's folder and one title — \`${surplus}\` is one argument too many (quote a title of several words)`,
     );
   const kind = a.kind ?? DEFAULT_KIND;
-  if (!isStudyKind(kind))
+  return isStudyKind(kind)
+    ? { title: a.title, kind }
+    : refuse(
+        2,
+        `--kind ${kind} is not a kind of study: one of ${STUDY_KINDS.join(", ")}`,
+      );
+}
+
+/** Write a new study's README.md, the registry, and the index; the lines that say so. */
+function writeStudy(
+  p: Paper,
+  added: { readonly registry: StudyRegistry; readonly study: Study },
+  files: Files,
+): readonly string[] {
+  const { study, registry } = added;
+  const at = (...names: readonly string[]): AbsolutePath =>
+    callerPath(join(p.dir, REPRO_DIR, ...names));
+  files.writeAtomic(at(study.folder, README), text(studyReadme(study)));
+  files.writeAtomic(at(STUDIES_FILE), text(registryText(registry)));
+  writeIndex(p.dir, registry, files);
+  const repro = `${p.shown}/${REPRO_DIR}`;
+  return [
+    `created ${repro}/${study.folder}/${README}`,
+    `added ${study.id} to ${repro}/${STUDIES_FILE}: kind ${study.kind}, status ${study.status}, ${study.date}`,
+    `wrote the index of ${studiesCount(registry)} in ${repro}/${README}`,
+    `Next: write the study's one-sentence question in its row (\`question\`) and in its README.md. When it ends, set \`status\`, \`result\`, \`result_file\` and \`in_paper\` in its row, then run \`npx paperlint studies index ${p.shown}\`.`,
+  ];
+}
+
+/** `studies new`: the folder, its README.md, the row, the index. */
+function runNew(
+  p: Paper,
+  a: StudiesArgs,
+  deps: StudiesDeps,
+): Refusal | readonly string[] {
+  const args = newArgs(a);
+  if (isRefusal(args)) return args;
+  const r = registryIn(p, deps);
+  if (isRefusal(r)) return r;
+  const added = addStudy(r, { ...args, date: deps.today });
+  if (!added.ok) return refuse(2, added.why);
+  const folder = added.study.folder;
+  return deps.listDir(callerPath(join(p.dir, REPRO_DIR))).includes(folder)
+    ? refuse(
+        1,
+        `${p.shown}/${REPRO_DIR}/${folder}/ already exists; it is never overwritten. Register it by hand, or remove it and run this again.`,
+      )
+    : writeStudy(p, added, deps.files);
+}
+
+/** The paper folder the command line names, or the refusal. */
+function paperOf(a: StudiesArgs, deps: StudiesDeps): Refusal | Paper {
+  if (a.sub === undefined)
+    return refuse(2, `studies needs a subcommand: ${SUBS}`);
+  if (a.sub !== "new" && a.sub !== "index")
+    return refuse(2, `unknown subcommand \`studies ${a.sub}\`: ${SUBS}`);
+  if (a.paperDir === undefined)
     return refuse(
       2,
-      `--kind ${kind} is not a kind of study: one of ${STUDY_KINDS.join(", ")}`,
+      `studies ${a.sub} needs the paper's folder: ${a.sub === "new" ? NEW_USAGE : INDEX_USAGE}`,
     );
-  const r = registryIn(dir, shown, deps);
-  if (isRefusal(r)) return r;
-  const added = addStudy(r, { title: a.title, kind, date: deps.today });
-  if (!added.ok) return refuse(2, added.why);
-  const { study, registry } = added;
-  const folder = `${shown}/${REPRO_DIR}/${study.folder}`;
-  if (deps.listDir(callerPath(join(dir, REPRO_DIR))).includes(study.folder))
-    return refuse(
-      1,
-      `${folder}/ already exists; it is never overwritten. Register it by hand, or remove it and run this again.`,
-    );
-  deps.files.writeAtomic(
-    callerPath(join(dir, REPRO_DIR, study.folder, README)),
-    text(studyReadme(study)),
-  );
-  deps.files.writeAtomic(
-    callerPath(join(dir, REPRO_DIR, STUDIES_FILE)),
-    text(registryText(registry)),
-  );
-  writeIndex(dir, registry, deps.files);
-  return [
-    `created ${folder}/${README}`,
-    `added ${study.id} to ${shown}/${REPRO_DIR}/${STUDIES_FILE}: kind ${study.kind}, status ${study.status}, ${study.date}`,
-    `wrote the index of ${studiesCount(registry)} in ${shown}/${REPRO_DIR}/${README}`,
-    `Next: write the study's one-sentence question in its row (\`question\`) and in its README.md. When it ends, set \`status\`, \`result\`, \`result_file\` and \`in_paper\` in its row, then run \`npx paperlint studies index ${shown}\`.`,
-  ];
+  const dir = resolve(deps.cwd, a.paperDir);
+  const shown = relative(deps.cwd, dir) || ".";
+  return deps.files.isFile(callerPath(join(dir, STATUS_FILE)))
+    ? { dir, shown }
+    : refuse(2, `${shown} is not a paper folder: it has no ${STATUS_FILE}`);
 }
 
 /** The run: 0 done, 1 refused by the paper's state, 2 refused by the command line. */
 export function runStudies(a: StudiesArgs, deps: StudiesDeps): number {
-  const out = ((): Refusal | readonly string[] => {
-    if (a.sub === undefined)
-      return refuse(2, `studies needs a subcommand: ${SUBS}`);
-    if (a.sub !== "new" && a.sub !== "index")
-      return refuse(2, `unknown subcommand \`studies ${a.sub}\`: ${SUBS}`);
-    if (a.paperDir === undefined)
-      return refuse(
-        2,
-        `studies ${a.sub} needs the paper's folder: ${a.sub === "new" ? NEW_USAGE : INDEX_USAGE}`,
-      );
-    const dir = resolve(deps.cwd, a.paperDir);
-    const shown = relative(deps.cwd, dir) || ".";
-    if (!deps.files.isFile(callerPath(join(dir, STATUS_FILE))))
-      return refuse(
-        2,
-        `${shown} is not a paper folder: it has no ${STATUS_FILE}`,
-      );
-    return a.sub === "new"
-      ? runNew(dir, shown, a, deps)
-      : runIndex(dir, shown, a, deps);
-  })();
+  const p = paperOf(a, deps);
+  const out = isRefusal(p)
+    ? p
+    : a.sub === "new"
+      ? runNew(p, a, deps)
+      : runIndex(p, a, deps);
   if (isRefusal(out)) {
     deps.err(out.line);
     return out.code;

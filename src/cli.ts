@@ -387,6 +387,16 @@ const LAYOUT_RULE_DEPS = { files: nodeFiles, listDir: nodeListDir };
 /** What `repro/study-registered` and `paperlint studies` read with: the layout's, and the registry's parser. */
 const STUDY_RULE_DEPS = { ...LAYOUT_RULE_DEPS, codec: studyRegistryCodec };
 
+/** The `repro` plugin's rules, on every `PIPELINE-STATUS.md`: the layout of `repro/`, and its study registry. */
+const REPRO_RULES = {
+  ...reproLayoutRules(LAYOUT_RULE_DEPS),
+  ...studyRegistryRules(STUDY_RULE_DEPS),
+};
+const REPRO_RULE_LEVELS = {
+  ...REPRO_LAYOUT_RULE_LEVELS,
+  ...STUDY_REGISTRY_RULE_LEVELS,
+};
+
 /** Today in this machine's time zone, `YYYY-MM-DD`: the date `paperlint studies new` registers a study on. */
 const today = (now = new Date()): string =>
   [
@@ -461,12 +471,7 @@ export function buildConfig(
             ...folderLayoutRules(LAYOUT_RULE_DEPS),
           },
         },
-        repro: {
-          rules: {
-            ...reproLayoutRules(LAYOUT_RULE_DEPS),
-            ...studyRegistryRules(STUDY_RULE_DEPS),
-          },
-        },
+        repro: { rules: REPRO_RULES },
         // Registered, on for no paper: `"study/declare-sample": "error"` in paperlint.json turns it on.
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
@@ -477,8 +482,7 @@ export function buildConfig(
         "paper/source": "error",
         ...FOLDER_VENUE_RULE_LEVELS,
         ...FOLDER_LAYOUT_RULE_LEVELS,
-        ...REPRO_LAYOUT_RULE_LEVELS,
-        ...STUDY_REGISTRY_RULE_LEVELS,
+        ...REPRO_RULE_LEVELS,
         ...CYCLE_RULE_LEVELS,
       },
     },

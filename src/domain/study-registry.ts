@@ -116,7 +116,11 @@ export type StudyFinding =
       readonly folder: string;
       readonly next: string;
     }
-  | { readonly problem: "no-folder"; readonly id: string; readonly folder: string }
+  | {
+      readonly problem: "no-folder";
+      readonly id: string;
+      readonly folder: string;
+    }
   | {
       readonly problem: "two-rows";
       readonly folder: string;
@@ -129,7 +133,11 @@ export type StudyFinding =
       readonly id: string;
       readonly folder: string;
     }
-  | { readonly problem: "long-title"; readonly id: string; readonly words: number }
+  | {
+      readonly problem: "long-title";
+      readonly id: string;
+      readonly words: number;
+    }
   | {
       readonly problem: "no-result";
       readonly id: string;
@@ -185,9 +193,16 @@ const isInside = (path: string): boolean => {
   return !isAbsolute(path) && n !== ".." && !n.startsWith("../");
 };
 
-/** The ids of the rows that name `folder`. */
-const idsNaming = (r: StudyRegistry, folder: string): readonly string[] =>
-  r.studies.filter((s) => s.folder === folder).map((s) => s.id);
+/** One row of a registry, with what the judge read beside it. */
+interface Row {
+  readonly r: StudyRegistry;
+  readonly s: Study;
+  readonly i: number;
+  readonly input: StudyInput;
+}
+
+/** One check of a row: its finding, or null. */
+type RowCheck = (row: Row) => StudyFinding | null;
 
 /** Whether row `i` is the first of `r` with the same value of `key`. */
 const isFirst = (
@@ -197,65 +212,99 @@ const isFirst = (
 ): boolean =>
   r.studies.findIndex((s) => key(s) === key(r.studies[i] ?? s)) === i;
 
-/** What is wrong with the `i`th row of `r`, in a fixed order. */
-function judgeRow(
-  r: StudyRegistry,
-  s: Study,
-  i: number,
-  input: StudyInput,
-): readonly StudyFinding[] {
-  const ids = idsNaming(r, s.folder);
+const badId: RowCheck = ({ r, s }) =>
+  idNumber(r.prefix, s.id) === null
+    ? { problem: "bad-id", id: s.id, prefix: r.prefix }
+    : null;
+
+/** Reported once, on the first row that holds the id. */
+const duplicateId: RowCheck = ({ r, s, i }) =>
+  r.studies.filter((o) => o.id === s.id).length > 1 &&
+  isFirst(r, i, (o) => o.id)
+    ? { problem: "duplicate-id", id: s.id }
+    : null;
+
+/** Reported once, on the first row that names the folder. */
+const twoRows: RowCheck = ({ r, s, i }) => {
+  const ids = r.studies.filter((o) => o.folder === s.folder).map((o) => o.id);
+  return ids.length > 1 && isFirst(r, i, (o) => o.folder)
+    ? { problem: "two-rows", folder: s.folder, ids }
+    : null;
+};
+
+/** A bad id is reported once, as an id: no folder can match it. */
+const folderName: RowCheck = ({ r, s }) =>
+  idNumber(r.prefix, s.id) === null ||
+  (s.folder.startsWith(`${s.id}-`) &&
+    STUDY_SLUG.test(s.folder.slice(s.id.length + 1)))
+    ? null
+    : { problem: "folder-name", id: s.id, folder: s.folder };
+
+const noFolder: RowCheck = ({ s, input }) =>
+  input.folders.includes(s.folder)
+    ? null
+    : { problem: "no-folder", id: s.id, folder: s.folder };
+
+const longTitle: RowCheck = ({ s }) => {
   const words = titleWords(s.title);
+  return words > MAX_TITLE_WORDS
+    ? { problem: "long-title", id: s.id, words }
+    : null;
+};
+
+const noResult: RowCheck = ({ s }) => {
   const missing = [
     ...(s.result === undefined ? (["result"] as const) : []),
     ...(s.result_file === undefined ? (["result_file"] as const) : []),
   ];
-  const resultFile =
-    s.result_file === undefined
-      ? null
-      : !isInside(s.result_file)
-        ? ("outside" as const)
-        : input.existingResults.has(`${s.folder}/${s.result_file}`)
-          ? null
-          : ("missing" as const);
-  const successor = s.superseded_by ?? null;
-  const out: readonly (StudyFinding | null)[] = [
-    idNumber(r.prefix, s.id) === null
-      ? { problem: "bad-id", id: s.id, prefix: r.prefix }
-      : null,
-    r.studies.filter((o) => o.id === s.id).length > 1 &&
-    isFirst(r, i, (o) => o.id)
-      ? { problem: "duplicate-id", id: s.id }
-      : null,
-    ids.length > 1 && isFirst(r, i, (o) => o.folder)
-      ? { problem: "two-rows", folder: s.folder, ids }
-      : null,
-    // A bad id is reported once, as an id: the folder cannot match it.
-    idNumber(r.prefix, s.id) === null ||
-    (s.folder.startsWith(`${s.id}-`) &&
-      STUDY_SLUG.test(s.folder.slice(s.id.length + 1)))
-      ? null
-      : { problem: "folder-name", id: s.id, folder: s.folder },
-    input.folders.includes(s.folder)
-      ? null
-      : { problem: "no-folder", id: s.id, folder: s.folder },
-    words > MAX_TITLE_WORDS ? { problem: "long-title", id: s.id, words } : null,
-    s.status === "done" && missing.length > 0
-      ? { problem: "no-result", id: s.id, missing }
-      : null,
-    resultFile === null || s.result_file === undefined
-      ? null
-      : { problem: "result-file", id: s.id, path: s.result_file, why: resultFile },
-    s.status === "superseded" &&
-    (successor === null || !r.studies.some((o) => o.id === successor))
-      ? { problem: "no-successor", id: s.id, superseded_by: successor }
-      : null,
-  ];
-  return out.filter((f): f is StudyFinding => f !== null);
-}
+  return s.status === "done" && missing.length > 0
+    ? { problem: "no-result", id: s.id, missing }
+    : null;
+};
+
+/** A `result_file` on any status must be a file inside the study's folder. */
+const resultFile: RowCheck = ({ s, input }) => {
+  const path = s.result_file;
+  if (path === undefined) return null;
+  if (!isInside(path))
+    return { problem: "result-file", id: s.id, path, why: "outside" };
+  return input.existingResults.has(`${s.folder}/${path}`)
+    ? null
+    : { problem: "result-file", id: s.id, path, why: "missing" };
+};
+
+const noSuccessor: RowCheck = ({ r, s }) => {
+  const by = s.superseded_by ?? null;
+  return s.status === "superseded" &&
+    (by === null || !r.studies.some((o) => o.id === by))
+    ? { problem: "no-successor", id: s.id, superseded_by: by }
+    : null;
+};
+
+/** The checks of a row, in the order their findings are reported. */
+const ROW_CHECKS: readonly RowCheck[] = [
+  badId,
+  duplicateId,
+  twoRows,
+  folderName,
+  noFolder,
+  longTitle,
+  noResult,
+  resultFile,
+  noSuccessor,
+];
+
+/** What is wrong with a row, in a fixed order. */
+const judgeRow = (row: Row): readonly StudyFinding[] =>
+  ROW_CHECKS.map((check) => check(row)).filter(
+    (f): f is StudyFinding => f !== null,
+  );
 
 /** Whether the README's index is the one `r` generates; the finding when not. */
-function judgeIndex(r: StudyRegistry, readme: string | null): StudyFinding | null {
+function judgeIndex(
+  r: StudyRegistry,
+  readme: string | null,
+): StudyFinding | null {
   if (readme === null) return { problem: "stale-index", why: "no-readme" };
   const block = embeddedIndex(readme);
   if (block === null) return { problem: "stale-index", why: "no-markers" };
@@ -282,15 +331,26 @@ export function judgeStudies(input: StudyInput): readonly StudyFinding[] {
   return [
     ...input.folders
       .filter((f) => !r.studies.some((s) => s.folder === f))
-      .map((folder): StudyFinding => ({ problem: "unregistered", folder, next })),
-    ...r.studies.flatMap((s, i) => judgeRow(r, s, i, input)),
+      .map((folder): StudyFinding => ({
+        problem: "unregistered",
+        folder,
+        next,
+      })),
+    ...r.studies.flatMap((s, i) => judgeRow({ r, s, i, input })),
     ...(index === null ? [] : [index]),
   ];
 }
 
 // ── the index ─────────────────────────────────────────────────────────────────────
 
-const HEADER = ["id", "title", "status", "result", "in paper", "folder"] as const;
+const HEADER = [
+  "id",
+  "title",
+  "status",
+  "result",
+  "in paper",
+  "folder",
+] as const;
 
 /** A cell's text: one line, a pipe escaped. */
 const cell = (s: string): string =>
@@ -307,7 +367,7 @@ const rowCells = (s: Study): readonly string[] => [
 ];
 
 /** The width a cell takes: its code points. */
-const widthOf = (s: string): number => [...s].length;
+const widthOf = (s: string): number => Array.from(s).length;
 
 /**
  * The index of `r`: a markdown table, a row per study in registry order, each column padded to its
@@ -362,49 +422,60 @@ const REGISTRY = "`repro/studies.json`";
 const NEW_STUDY = '`npx paperlint studies new <paper-dir> "<title>"`';
 const RUN_INDEX =
   "What to do: run `npx paperlint studies index <paper-dir>`; the block is generated, never edited by hand.";
-const RENAME = "give each other row the next free id and rename its folder to match";
+const RENAME =
+  "give each other row the next free id and rename its folder to match";
 
 const tick = (s: string): string => `\`${s}\``;
 
-/** The first part of a finding's text: what is wrong, and what to do. */
-function headOf(f: StudyFinding): string {
-  switch (f.problem) {
-    case "no-registry":
-      return `\`repro/\` holds study folders (${f.folders.map((d) => tick(`${d}/`)).join(", ")}) but no ${REGISTRY}, the registry that gives every study an id, a plain name and a status. What to do: write ${REGISTRY} with the paper's prefix — \`{ "prefix": "P1", "studies": [] }\` — then give each folder its row and rename it to \`<id>-<slug>\`; a new study is created with ${NEW_STUDY}.`;
-    case "unreadable":
-      return `${REGISTRY} is not a study registry: ${f.why}. Its shape is on the rule's page.`;
-    case "unregistered":
-      return `\`repro/${f.folder}/\` has no row in ${REGISTRY}, and every study folder has exactly one. What to do: add its row with the next free id, ${tick(f.next)}, and rename the folder to \`${f.next}-<slug>\`; a new study is created with ${NEW_STUDY}, which does both.`;
-    case "no-folder":
-      return `${REGISTRY}: the row ${tick(f.id)} names the folder \`repro/${f.folder}/\`, which does not exist. What to do: rename the study's folder to it, or correct the row's \`folder\`.`;
-    case "two-rows":
-      return `${REGISTRY}: the rows ${f.ids.map(tick).join(", ")} all name the folder \`repro/${f.folder}/\`, and a study folder has exactly one row. What to do: keep one row for it.`;
-    case "bad-id":
-      return `${REGISTRY}: the id ${tick(f.id)} is not \`${f.prefix}-S\` followed by two or more digits (\`${f.prefix}-S01\`). What to do: give the row the next free id and rename its folder to match.`;
-    case "duplicate-id":
-      return `${REGISTRY}: the id ${tick(f.id)} is on more than one row, and an id names one study. What to do: ${RENAME}.`;
-    case "folder-name":
-      return `${REGISTRY}: the row ${tick(f.id)} names the folder ${tick(f.folder)}, which is not \`${f.id}-<slug>\` — the id, then lowercase letters and digits in words joined by hyphens. What to do: rename the folder and the row's \`folder\` together.`;
-    case "long-title":
-      return `${REGISTRY}: the title of ${tick(f.id)} has ${String(f.words)} words; a title is a plain name of at most ${String(MAX_TITLE_WORDS)}. What to do: shorten it, and put the detail in \`question\`.`;
-    case "no-result":
-      return `${REGISTRY}: ${tick(f.id)} is \`done\` without ${f.missing.map(tick).join(" and ")}. What to do: write the one-line result and the file it is read from (\`result\`, \`result_file\`), or set the status it really has.`;
-    case "result-file":
-      return `${REGISTRY}: the \`result_file\` of ${tick(f.id)}, ${tick(f.path)}, ${f.why === "missing" ? "is not a file in its folder" : "is outside its folder"}. What to do: name a file that exists, relative to the study's folder.`;
-    case "no-successor":
-      return `${REGISTRY}: ${tick(f.id)} is \`superseded\` ${f.superseded_by === null ? "without `superseded_by`" : `by ${tick(f.superseded_by)}, which is no study in the registry`}. What to do: name the id of the study that replaced it.`;
-    case "stale-index":
-      return f.why === "differs"
-        ? `The index in \`repro/README.md\` (between the \`studies:begin\` and \`studies:end\` markers) is not the one ${REGISTRY} generates. ${RUN_INDEX}`
-        : f.why === "no-markers"
-          ? `\`repro/README.md\` has no index of the studies (the \`studies:begin\` and \`studies:end\` markers). ${RUN_INDEX}`
-          : `\`repro/README.md\`, the index of the studies, does not exist. ${RUN_INDEX}`;
-  }
-}
+/** Each finding by its problem: the map the messages are looked up in. */
+type FindingOf = {
+  readonly [F in StudyFinding as F["problem"]]: F;
+};
+type Problem = keyof FindingOf;
+
+const STALE_HEAD: Readonly<Record<FindingOf["stale-index"]["why"], string>> = {
+  differs: `The index in \`repro/README.md\` (between the \`studies:begin\` and \`studies:end\` markers) is not the one ${REGISTRY} generates.`,
+  "no-markers":
+    "`repro/README.md` has no index of the studies (the `studies:begin` and `studies:end` markers).",
+  "no-readme": "`repro/README.md`, the index of the studies, does not exist.",
+};
+
+/** The first part of each finding's text: what is wrong, and what to do. */
+const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
+  "no-registry": (f) =>
+    `\`repro/\` holds study folders (${f.folders.map((d) => tick(`${d}/`)).join(", ")}) but no ${REGISTRY}, the registry that gives every study an id, a plain name and a status. What to do: write ${REGISTRY} with the paper's prefix — \`{ "prefix": "P1", "studies": [] }\` — then give each folder its row and rename it to \`<id>-<slug>\`; a new study is created with ${NEW_STUDY}.`,
+  unreadable: (f) =>
+    `${REGISTRY} is not a study registry: ${f.why}. Its shape is on the rule's page.`,
+  unregistered: (f) =>
+    `\`repro/${f.folder}/\` has no row in ${REGISTRY}, and every study folder has exactly one. What to do: add its row with the next free id, ${tick(f.next)}, and rename the folder to \`${f.next}-<slug>\`; a new study is created with ${NEW_STUDY}, which does both.`,
+  "no-folder": (f) =>
+    `${REGISTRY}: the row ${tick(f.id)} names the folder \`repro/${f.folder}/\`, which does not exist. What to do: rename the study's folder to it, or correct the row's \`folder\`.`,
+  "two-rows": (f) =>
+    `${REGISTRY}: the rows ${f.ids.map(tick).join(", ")} all name the folder \`repro/${f.folder}/\`, and a study folder has exactly one row. What to do: keep one row for it.`,
+  "bad-id": (f) =>
+    `${REGISTRY}: the id ${tick(f.id)} is not \`${f.prefix}-S\` followed by two or more digits (\`${f.prefix}-S01\`). What to do: give the row the next free id and rename its folder to match.`,
+  "duplicate-id": (f) =>
+    `${REGISTRY}: the id ${tick(f.id)} is on more than one row, and an id names one study. What to do: ${RENAME}.`,
+  "folder-name": (f) =>
+    `${REGISTRY}: the row ${tick(f.id)} names the folder ${tick(f.folder)}, which is not \`${f.id}-<slug>\` — the id, then lowercase letters and digits in words joined by hyphens. What to do: rename the folder and the row's \`folder\` together.`,
+  "long-title": (f) =>
+    `${REGISTRY}: the title of ${tick(f.id)} has ${String(f.words)} words; a title is a plain name of at most ${String(MAX_TITLE_WORDS)}. What to do: shorten it, and put the detail in \`question\`.`,
+  "no-result": (f) =>
+    `${REGISTRY}: ${tick(f.id)} is \`done\` without ${f.missing.map(tick).join(" and ")}. What to do: write the one-line result and the file it is read from (\`result\`, \`result_file\`), or set the status it really has.`,
+  "result-file": (f) =>
+    `${REGISTRY}: the \`result_file\` of ${tick(f.id)}, ${tick(f.path)}, ${f.why === "missing" ? "is not a file in its folder" : "is outside its folder"}. What to do: name a file that exists, relative to the study's folder.`,
+  "no-successor": (f) =>
+    `${REGISTRY}: ${tick(f.id)} is \`superseded\` ${f.superseded_by === null ? "without `superseded_by`" : `by ${tick(f.superseded_by)}, which is no study in the registry`}. What to do: name the id of the study that replaced it.`,
+  "stale-index": (f) => `${STALE_HEAD[f.why]} ${RUN_INDEX}`,
+};
+
+/** The head of finding `f` of problem `p`: the lookup, typed by the problem. */
+const headOf = <P extends Problem>(p: P, f: FindingOf[P]): string =>
+  HEADS[p](f);
 
 /** The one text a finding is reported with: what is wrong, what to do, and the rule's page. */
 export const studyMessage = (f: StudyFinding): string =>
-  `${headOf(f)}\nRule repro/study-registered: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/study-registered.md`;
+  `${headOf(f.problem, f)}\nRule repro/study-registered: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/study-registered.md`;
 
 // ── a new study ───────────────────────────────────────────────────────────────────
 
@@ -420,6 +491,17 @@ export interface NewStudy {
   readonly date: string;
 }
 
+/** Why `title` cannot name a study; null when it can. */
+function titleProblem(title: string): string | null {
+  const words = titleWords(title);
+  if (words === 0) return "the title is empty";
+  if (words > MAX_TITLE_WORDS)
+    return `the title has ${String(words)} words; a title is a plain name of at most ${String(MAX_TITLE_WORDS)} — the detail goes in the row's \`question\``;
+  return studySlug(title) === ""
+    ? "the title has no Latin letter or digit to name the folder by; give it one (an English title, or a word such as the method's name)"
+    : null;
+}
+
 /**
  * `r` with a new study appended: the next id, the folder `<id>-<slug>`, `status: designing`,
  * `in_paper: no` and an empty question; or why the title cannot make one.
@@ -428,26 +510,19 @@ export function addStudy(
   r: StudyRegistry,
   n: NewStudy,
 ):
-  | { readonly ok: true; readonly registry: StudyRegistry; readonly study: Study }
+  | {
+      readonly ok: true;
+      readonly registry: StudyRegistry;
+      readonly study: Study;
+    }
   | { readonly ok: false; readonly why: string } {
   const title = n.title.trim().replace(/\s+/gu, " ");
-  const words = titleWords(title);
-  const slug = studySlug(title);
-  if (words === 0) return { ok: false, why: "the title is empty" };
-  if (words > MAX_TITLE_WORDS)
-    return {
-      ok: false,
-      why: `the title has ${String(words)} words; a title is a plain name of at most ${String(MAX_TITLE_WORDS)} — the detail goes in the row's \`question\``,
-    };
-  if (slug === "")
-    return {
-      ok: false,
-      why: "the title has no Latin letter or digit to name the folder by; give it one (an English title, or a word such as the method's name)",
-    };
+  const why = titleProblem(title);
+  if (why !== null) return { ok: false, why };
   const id = nextStudyId(r);
   const study: Study = {
     id,
-    folder: `${id}-${slug}`,
+    folder: `${id}-${studySlug(title)}`,
     title,
     question: "",
     kind: n.kind,
