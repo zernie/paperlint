@@ -14,6 +14,7 @@ import {
   studyMessage,
   withIndex,
   type Measurement,
+  type DraftPlan,
   type PlanState,
   type PlanTextField,
   type Study,
@@ -50,8 +51,7 @@ const PLAN: StudyPlan = {
   question: "How many rules can a linter check?",
   population: {
     source: "every rule found in the crawl of 2026-10-01",
-    size: 4210,
-    draw: { method: "census", seed: null },
+    draw: { kind: "all", method: "census" },
   },
   arms: [],
   primary_outcome: "the share of rules a linter can check",
@@ -94,7 +94,7 @@ const ALL_EMPTY = [
 ] as const;
 
 const draft = (
-  plan: StudyPlan,
+  plan: DraftPlan,
   empty: PlanTextField[] = [...ALL_EMPTY],
 ): PlanState => ({ kind: "draft", plan, empty });
 
@@ -350,7 +350,10 @@ describe("plans — the parser decides ready or draft", () => {
   it("the empty fields are the parser's: a draft is reported with exactly its list", () => {
     const r = reg({ studies: [study({ plan: PLAN_FILE })], measurements: [] });
     const plans = new Map([
-      [`P1-S01-census/${PLAN_FILE}`, draft(PLAN, ["primary_outcome"])],
+      [
+        `P1-S01-census/${PLAN_FILE}`,
+        draft({ ...PLAN, author_check: null }, ["primary_outcome"]),
+      ],
     ]);
     expect(findings(r, { plans })).toEqual([
       {
@@ -459,7 +462,7 @@ describe("planTemplate and planText", () => {
   it("every field present, its value to fill, and author_check null", () => {
     expect(planTemplate()).toEqual({
       question: "",
-      population: { source: "", size: null, draw: { method: "", seed: null } },
+      population: { source: "", draw: { kind: "all", method: "" } },
       arms: [],
       primary_outcome: "",
       author_check: null,

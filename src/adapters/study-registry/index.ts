@@ -17,6 +17,7 @@ import { z } from "zod";
 import {
   IN_PAPER,
   MEASUREMENT_ROLES,
+  PLAN_FIELDS,
   PLAN_TEXT_FIELDS,
   PREFIX_PATTERN,
   STUDY_KINDS,
@@ -86,40 +87,73 @@ const registry = z.strictObject({
 
 const authorCheck = approval.omit({ source: true });
 
-/** A plan: closed at every level; the paper's own keys go in `extra`. Null is the one "none". */
-const plan = z.strictObject({
-  question: z.string(),
-  population: z.strictObject({
-    source: z.string(),
-    size: z.number().int().positive().nullable(),
-    draw: z.strictObject({
-      method: z.string(),
-      seed: z.union([z.string(), z.number()]).nullable(),
-    }),
+/** A draw: seeded, its seed part of it, or of all the population, with none. */
+const draw = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("seeded"),
+    method: z.string(),
+    seed: z.union([z.string(), z.number()]),
   }),
-  arms: z.array(z.strictObject({ name: words })),
+  z.strictObject({ kind: z.literal("all"), method: z.string() }),
+]);
+
+/** The values that occur more than once in `values`, each once. */
+const repeated = (values: readonly string[]): readonly string[] => [
+  ...new Set(values.filter((v, i) => values.indexOf(v) !== i)),
+];
+
+/** Arms whose names are unique: a repeated name is an error naming it. */
+const uniquelyNamed = (
+  arms: readonly { readonly name: string }[],
+  ctx: Readonly<z.core.$RefinementCtx>,
+): void => {
+  repeated(arms.map((a) => a.name)).forEach((name) => {
+    ctx.addIssue({
+      code: "custom",
+      message: `more than one arm is named «${name}» — an arm's name is unique`,
+    });
+  });
+};
+
+/** The paper's own keys: none of them a field of the plan, which would say a thing twice. */
+const extra = z.record(z.string(), z.unknown()).superRefine((e, ctx) => {
+  Object.keys(e)
+    .filter((k) => PLAN_FIELDS.some((f) => f === k))
+    .forEach((k) => {
+      ctx.addIssue({
+        code: "custom",
+        path: [k],
+        message: "is a field of the plan itself — set it there, not in extra",
+      });
+    });
+});
+
+/** A plan's shape: closed at every level; the paper's own keys go in `extra`. Null is the one "none". */
+const planShape = z.strictObject({
+  question: z.string(),
+  population: z.strictObject({ source: z.string(), draw }),
+  arms: z.array(z.strictObject({ name: words })).superRefine(uniquelyNamed),
   primary_outcome: z.string(),
   author_check: authorCheck.nullable(),
-  extra: z.record(z.string(), z.unknown()).optional(),
+  extra: extra.optional(),
 });
 
 /**
  * A plan under its old name, `prereg.json`, written by hand before the plan had a schema: open at
- * every level, an absent size, seed or check read as null, its own top-level keys kept in `extra`.
- * Keys of its own deeper down are not read; the file is never rewritten.
+ * every level, its own top-level keys kept in `extra`. A seed makes the draw seeded, none (or null) a
+ * draw of all; a size, and keys of its own deeper down, are not read; the file is never rewritten.
  */
-const legacyPlan = z
+const legacyAsPlan = z
   .looseObject({
     question: z.string(),
     population: z.looseObject({
       source: z.string(),
-      size: z.number().int().positive().nullable().optional(),
       draw: z.looseObject({
         method: z.string(),
         seed: z.union([z.string(), z.number()]).nullable().optional(),
       }),
     }),
-    arms: z.array(z.looseObject({ name: words })),
+    arms: z.array(z.looseObject({ name: words })).superRefine(uniquelyNamed),
     primary_outcome: z.string(),
     author_check: authorCheck.nullable().optional(),
   })
@@ -132,15 +166,15 @@ const legacyPlan = z
       author_check,
       ...rest
     } = p;
+    const { method, seed } = population.draw;
     return {
       question,
       population: {
         source: population.source,
-        size: population.size ?? null,
-        draw: {
-          method: population.draw.method,
-          seed: population.draw.seed ?? null,
-        },
+        draw:
+          seed === undefined || seed === null
+            ? { kind: "all", method }
+            : { kind: "seeded", method, seed },
       },
       arms: arms.map((a) => ({ name: a.name })),
       primary_outcome,
@@ -162,17 +196,36 @@ const readyTexts = z.object({
   primary_outcome: filled,
 });
 
-/** A parsed plan, ready when every required text is filled, else a draft naming the empty ones. */
-const readiness = (p: StudyPlan): ParsedPlan => {
+/** A plan that parsed: ready, or a draft. */
+type ReadyOrDraft = Exclude<ParsedPlan, { readonly kind: "unreadable" }>;
+
+/**
+ * A parsed plan, ready when every required text is filled, else a draft naming the empty ones. A
+ * draft that carries the author's check is no plan: the author approved one with empty texts.
+ */
+const readyOrDraft = (
+  p: StudyPlan,
+  ctx: Readonly<z.core.$RefinementCtx>,
+): ReadyOrDraft => {
   const checked = readyTexts.safeParse(p);
   if (checked.success) return { kind: "ready", plan: p };
   const paths = checked.error.issues.map((i) => i.path.join("."));
-  return {
-    kind: "draft",
-    plan: p,
-    empty: PLAN_TEXT_FIELDS.filter((f) => paths.includes(f)),
-  };
+  const empty = PLAN_TEXT_FIELDS.filter((f) => paths.includes(f));
+  if (p.author_check === null)
+    return { kind: "draft", plan: { ...p, author_check: null }, empty };
+  ctx.addIssue({
+    code: "custom",
+    path: ["author_check"],
+    message: `is set, and the plan leaves ${empty.map((f) => `\`${f}\``).join(", ")} empty — the author approves a complete plan: fill them, or set author_check to null`,
+  });
+  return z.NEVER;
 };
+
+/** A `plan.json`: strict, then ready or draft. */
+const plan = planShape.transform(readyOrDraft);
+
+/** A `prereg.json`: loose, mapped onto the plan, then ready or draft. */
+const legacyPlan = legacyAsPlan.transform(readyOrDraft);
 
 // ── the schemas ARE the domain's types ─────────────────────────────────────────
 // Each schema's output and its hand-written domain type are the same type, both ways, once both are
@@ -206,8 +259,10 @@ export type SchemasAreTheDomain = [
   Same<z.output<typeof requirement>, Requirement>,
   Same<z.output<typeof approval>, Approval>,
   Same<z.output<typeof authorCheck>, AuthorCheck>,
-  Same<z.output<typeof plan>, StudyPlan>,
-  Same<z.output<typeof legacyPlan>, StudyPlan>,
+  Same<z.output<typeof planShape>, StudyPlan>,
+  Same<z.output<typeof legacyAsPlan>, StudyPlan>,
+  Same<z.output<typeof plan>, ReadyOrDraft>,
+  Same<z.output<typeof legacyPlan>, ReadyOrDraft>,
 ] extends true[]
   ? true
   : never;
@@ -250,13 +305,13 @@ export function parseStudyRegistry(text: string): ParsedRegistry {
 
 /** A plan's text, parsed once at the boundary by `schema`: ready, a draft, or every reason it is neither. */
 const planParser =
-  (schema: Readonly<z.ZodType<StudyPlan>>) =>
+  (schema: Readonly<z.ZodType<ReadyOrDraft>>) =>
   (text: string): ParsedPlan => {
     const json = jsonOf(text);
     if (json === undefined) return { kind: "unreadable", why: "not JSON" };
     const parsed = schema.safeParse(json);
     return parsed.success
-      ? readiness(parsed.data)
+      ? parsed.data
       : { kind: "unreadable", why: reasons(parsed.error.issues) };
   };
 

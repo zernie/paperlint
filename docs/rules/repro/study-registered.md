@@ -135,8 +135,7 @@ author's check of the drawn units. `paperlint studies new` writes the template b
   "question": "",
   "population": {
     "source": "",
-    "size": null,
-    "draw": { "method": "", "seed": null }
+    "draw": { "kind": "all", "method": "" }
   },
   "arms": [],
   "primary_outcome": "",
@@ -144,23 +143,32 @@ author's check of the drawn units. `paperlint studies new` writes the template b
 }
 ```
 
-| field                    | what it holds                                                                |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| `question`               | what the study measures, one sentence                                        |
-| `population.source`      | where the units come from: the census, crawl or registry, with its date      |
-| `population.size`        | how many units it holds, a whole number above 0; `null` when not known       |
-| `population.draw.method` | how the sample is drawn: `census`, `random`, `stratified` …                  |
-| `population.draw.seed`   | the draw's seed; `null` when it has none                                     |
-| `arms`                   | the conditions compared, each `{ "name": … }`; `[]` for a census             |
-| `extra`                  | optional: the paper's own keys (hypotheses, models, budget), kept unread     |
-| `primary_outcome`        | the one number the study reports first                                       |
-| `author_check`           | `null` until the author has seen the drawn units; then `by`, `date`, `quote` |
+| field                    | what it holds                                                                    |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| `question`               | what the study measures, one sentence                                            |
+| `population.source`      | where the units come from: the census, crawl or registry, with its date          |
+| `population.draw.kind`   | `all` (the whole population, a census: no seed) or `seeded` (a sample)           |
+| `population.draw.method` | how the sample is drawn: `census`, `random`, `stratified` …                      |
+| `population.draw.seed`   | `seeded` only, and required there: the draw's seed, a string or a number         |
+| `arms`                   | the conditions compared, each `{ "name": … }`, each name once; `[]` for a census |
+| `primary_outcome`        | the one number the study reports first                                           |
+| `author_check`           | `null` until the author has seen the drawn units; then `by`, `date`, `quote`     |
+| `extra`                  | optional: the paper's own keys (hypotheses, models, budget), kept unread         |
 
-The plan is closed at every level: a misspelt key is an error, and a key of the paper's own goes in
-`extra`. `size`, `seed` and `author_check` are always there; `null` is the one way to say "not known"
-or "not yet". A plan named `prereg.json`, its old name, is parsed by a loose schema — keys of its own
-accepted at every level, those at the top kept in `extra`, an absent size, seed or check read as
-`null` — and [`repro/study-plan-name`](study-plan-name.md) warns that it moves to `plan.json`.
+The template's draw is of all the population; a sampled study changes it to
+`{ "kind": "seeded", "method": "random", "seed": 7 }`. The population's size is not stored: it is
+counted from the source, and a stored copy could only contradict it.
+
+The plan is closed at every level, and holds no contradiction. Each of these makes the file "not a
+study plan" (`bad-plan`, with the reason): a misspelt key; a key of the paper's own outside `extra`,
+or a key of `extra` that is a field of the plan; a missing key — `null` is the one way to say "not
+yet"; a `seeded` draw without its seed, or an `all` draw with one; two arms of one name; and an
+`author_check` on a plan whose required texts are still empty — the author approves a complete plan.
+
+A plan named `prereg.json`, its old name, is parsed by a loose schema — keys of its own accepted at
+every level, those at the top kept in `extra`; a seed makes the draw `seeded`, none (or `null`)
+makes it `all`; a size is not read; an absent check is `null` — and
+[`repro/study-plan-name`](study-plan-name.md) warns that it moves to `plan.json`.
 
 The rule reports:
 

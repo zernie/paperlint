@@ -4,7 +4,7 @@ description: "Run a paid or counted agent experiment grid end to end — units �
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:d895699894334add compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:451354b8f781c409 compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
 
 # run-agent-grid — running a counted agent grid without spoiling it
 
@@ -27,7 +27,7 @@ and a driver loop that calls the guard: [`references/registry-and-ledger.md`](re
 `npx paperlint studies new <paper-dir> "<title>" --kind measurement` — the next id in
 `repro/studies.json`, the folder `repro/<id>-<slug>/` with the study's `plan.json` — and `grid.json`,
 the runs and the ledger live in it. The plan says what the grid measures, the population and its
-draw (`method`, `seed`), the `arms` and the `primary_outcome`, and is filled before the first counted
+draw (`{ "kind": "seeded", "method", "seed" }`), the `arms` (each name once) and the `primary_outcome`, and is filled before the first counted
 run; the author's approval of the drawn units goes into both `grid.json`'s `approval` (the guard reads
 it) and the plan's `author_check` (the lint reads it). A grid that is one study of a larger
 measurement names it in its row's `measurement`. When the grid ends, its row is updated (`status`,

@@ -163,23 +163,47 @@ export interface StudyPlan {
   readonly population: {
     /** Where the units come from: the census, crawl or registry, with its date. */
     readonly source: string;
-    /** How many units it holds; null when not known. */
-    readonly size: number | null;
-    readonly draw: {
-      /** How the sample is drawn from the population: `census`, `random`, `stratified` … */
-      readonly method: string;
-      /** null when the draw has none. */
-      readonly seed: string | number | null;
-    };
+    readonly draw: Draw;
   };
-  /** The conditions compared; none for a census. */
+  /** The conditions compared, each name once; none for a census. */
   readonly arms: readonly { readonly name: string }[];
   readonly primary_outcome: string;
-  /** null: the author has not checked the drawn units yet. */
+  /** null: the author has not checked the drawn units yet. Only a ready plan carries one. */
   readonly author_check: AuthorCheck | null;
-  /** The paper's own keys: hypotheses, models, budget … Kept, never read. */
+  /** The paper's own keys: hypotheses, models, budget … Kept, never read; none is a plan field. */
   readonly extra?: Readonly<Record<string, unknown>> | undefined;
 }
+
+/**
+ * How the sample is drawn from the population: a seeded draw, whose seed is part of it, or all of
+ * the population (a census), which has none. The size of the population is not stored: it is
+ * counted from the source, and a stored copy would only contradict it.
+ */
+export type Draw =
+  | {
+      readonly kind: "seeded";
+      /** `random`, `stratified` … */
+      readonly method: string;
+      readonly seed: string | number;
+    }
+  | {
+      readonly kind: "all";
+      /** `census` … */
+      readonly method: string;
+    };
+
+/** The top-level fields of a plan: none of them may be a key of `extra`. */
+export const PLAN_FIELDS = [
+  "question",
+  "population",
+  "arms",
+  "primary_outcome",
+  "author_check",
+  "extra",
+] as const;
+
+/** A plan with empty required texts: the author has not approved it. */
+export type DraftPlan = StudyPlan & { readonly author_check: null };
 
 /** The texts a plan must fill before the study runs, in the order they are named. */
 export const PLAN_TEXT_FIELDS = [
@@ -191,14 +215,14 @@ export const PLAN_TEXT_FIELDS = [
 export type PlanTextField = (typeof PLAN_TEXT_FIELDS)[number];
 
 /**
- * A plan's text, parsed: ready (every required text filled), a draft (with the texts still empty),
- * or the reasons it is not a plan. Whether a plan is complete is decided here, once, by the parser.
+ * A plan's text, parsed: ready (every required text filled), a draft (its empty texts named, and
+ * no check of the author's: only a complete plan is approved), or the reasons it is not a plan. Whether a plan is complete is decided here, once, by the parser.
  */
 export type ParsedPlan =
   | { readonly kind: "ready"; readonly plan: StudyPlan }
   | {
       readonly kind: "draft";
-      readonly plan: StudyPlan;
+      readonly plan: DraftPlan;
       readonly empty: readonly PlanTextField[];
     }
   | { readonly kind: "unreadable"; readonly why: string };
@@ -206,10 +230,13 @@ export type ParsedPlan =
 /** What a study's folder holds of the plan its row names: absent, or what its text parsed to. */
 export type PlanState = { readonly kind: "absent" } | ParsedPlan;
 
-/** The plan `paperlint studies new` writes: every field present, its value to fill. */
-export const planTemplate = (): StudyPlan => ({
+/**
+ * The plan `paperlint studies new` writes: every field present, its value to fill. Its draw is of
+ * all the population (a census); a sampled study changes it to `{ "kind": "seeded", "method", "seed" }`.
+ */
+export const planTemplate = (): DraftPlan => ({
   question: "",
-  population: { source: "", size: null, draw: { method: "", seed: null } },
+  population: { source: "", draw: { kind: "all", method: "" } },
   arms: [],
   primary_outcome: "",
   author_check: null,

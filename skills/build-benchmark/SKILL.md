@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:5e9cd2bdd35aaa33 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:ed855c5f3aa34b10 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
 
 # build-benchmark — the study + the artifact reviewers can run
 
@@ -83,7 +83,8 @@ Write the design as the answer to "what would make the critiqued pitfall impossi
 between the population and the sample (fits one excerpt, one classifier lane, a model-picked item)
 changes what the sample can say, not only its size; screens that are reasonable one by one can leave a
 sample nobody meets in practice. So, before the draw is frozen, fill the study's `plan.json`: the
-`question`, the `population` (its `source` and `size`, and the `draw`: its `method` and `seed`),
+`question`, the `population` (its `source`, and the `draw`: `{ "kind": "all", "method" }` for a census,
+or `{ "kind": "seeded", "method", "seed" }` for a sample),
 the `arms` (`[]` for a census) and the `primary_outcome`; what each screen removed per stratum and
 what share the sample can represent go into the same file, under `extra` (the plan is closed: any
 other unknown key is an error). Then show the

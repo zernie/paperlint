@@ -325,8 +325,7 @@ const FILLED = planText({
   question: "How many rules can a linter check?",
   population: {
     source: "the crawl of 2026-10-01",
-    size: 4210,
-    draw: { method: "census", seed: null },
+    draw: { kind: "all", method: "census" },
   },
   arms: [],
   primary_outcome: "the share of rules a linter can check",

@@ -156,8 +156,7 @@ two commands that write it.
      "question": "",
      "population": {
        "source": "",
-       "size": null,
-       "draw": { "method": "", "seed": null }
+       "draw": { "kind": "all", "method": "" }
      },
      "arms": [],
      "primary_outcome": "",
@@ -165,19 +164,31 @@ two commands that write it.
    }
    ```
 
-   `arms` is empty for a census; `author_check` becomes `{ "by", "date", "quote" }` once the author
-   has seen the drawn units. **Parse, don't validate:**
+   The template's draw is of all the population (`"kind": "all"`, a census); a sampled study changes
+   it to `{ "kind": "seeded", "method": "random", "seed": 7 }`. `arms` is empty for a census;
+   `author_check` becomes `{ "by", "date", "quote" }` once the author has seen the drawn units.
+   **Parse, don't validate:**
 
    - **Closed at every level.** A misspelt key is an error; the paper's own keys (hypotheses,
      models, budget) go in the one optional key `extra`, an object of anything.
-   - **One spelling of "none".** `size`, `seed` and `author_check` are required, and `null` is
-     "not known" or "not yet"; an absent key is an error, never a second way to say the same.
+   - **One spelling of "none".** `author_check` is required, and `null` is "not yet"; an absent key
+     is an error, never a second way to say the same.
+   - **No contradictory state.** Each of these is a parse error, not a later finding:
+     - an `author_check` on a draft — the author approved a plan whose texts are empty;
+     - a draw that is not one of two kinds: `seeded`, whose `seed` is required and not null, or
+       `all` (a census), which has no seed;
+     - two arms of one name;
+     - a key of `extra` that is a field of the plan, which would say one thing twice.
+
+     The population's size is not stored: it is counted from the source, and a stored copy could
+     only contradict it. Nothing downstream read it.
+
    - **Complete or not is a type.** The parser returns a plan `ready` (every required text filled)
      or a `draft` with the list of its empty texts, or why it is no plan. The rule never looks at a
      text again: a study that has run on a `draft` is `bad-plan`, with the parser's list.
    - **The schemas are the domain's types.** The domain's types are written by hand (the domain
      imports no zod); the adapter holds a compile-time proof that each schema's output — registry,
-     study, measurement, requirement, approval, author check, plan — and its domain type are the
+     study, measurement, requirement, approval, author check, plan, ready-or-draft — and its domain type are the
      same type both ways, so a field added to one alone stops the build.
 
    The schemas live beside the registry's, in `src/adapters/study-registry/`. The rule reports a
@@ -188,8 +199,9 @@ two commands that write it.
    red.
 
    **Compatibility.** A row may name `prereg.json` as its plan: it is parsed by a loose schema of
-   its own — keys of its own accepted at every level, those at the top kept in `extra`, an absent
-   size, seed or check read as `null` — and judged as the plan; a second rule, `repro/study-plan-name`, warns that it moves to `plan.json` — a warning cannot
+   its own — keys of its own accepted at every level, those at the top kept in `extra`, a seed makes
+   the draw `seeded`, none (or `null`) makes it `all`; a size is not read; an absent check is
+   `null` — and judged as the plan, the same contradictions refused; a second rule, `repro/study-plan-name`, warns that it moves to `plan.json` — a warning cannot
    come from an error rule, since ESLint sets the level per rule. A `prereg.json` no row names is not
    read, so no existing paper turns red.
 
