@@ -21,6 +21,7 @@ import {
   STUDIES_FILE,
   STUDY_KINDS,
   addStudy,
+  indexInSync,
   isStudyKind,
   registryText,
   studyReadme,
@@ -106,13 +107,30 @@ const readmeOf = (dir: string, files: Files): string | null => {
 const studiesCount = (r: StudyRegistry): string =>
   `${String(r.studies.length)} ${r.studies.length === 1 ? "study" : "studies"}`;
 
-/** Write the index of `r` into the README; whether it changed. */
+/**
+ * Write the index of `r` into the README; whether it wrote. A block already in sync is left as it
+ * is, so the padding a formatter gave the table is never undone.
+ */
 function writeIndex(dir: string, r: StudyRegistry, files: Files): boolean {
   const before = readmeOf(dir, files);
-  const after = withIndex(before, r);
-  if (after !== before)
-    files.writeAtomic(callerPath(join(dir, REPRO_DIR, README)), text(after));
-  return after !== before;
+  if (indexInSync(before, r)) return false;
+  files.writeAtomic(
+    callerPath(join(dir, REPRO_DIR, README)),
+    text(withIndex(before, r)),
+  );
+  return true;
+}
+
+/** The refusal when something that is not a file sits where `repro/README.md` goes; null when none. */
+function readmeBlocked(p: Paper, deps: StudiesDeps): Refusal | null {
+  const listed = deps.listDir(callerPath(join(p.dir, REPRO_DIR)));
+  const path = callerPath(join(p.dir, REPRO_DIR, README));
+  return listed.includes(README) && !deps.files.isFile(path)
+    ? refuse(
+        1,
+        `${p.shown}/${REPRO_DIR}/${README} is not a file, so the index cannot be written there. Move it, then run this again.`,
+      )
+    : null;
 }
 
 /** `studies index`: the README's block regenerated from the registry. */
@@ -129,6 +147,8 @@ function runIndex(
     );
   const r = registryIn(p, deps);
   if (isRefusal(r)) return r;
+  const blocked = readmeBlocked(p, deps);
+  if (blocked !== null) return blocked;
   const readme = `${p.shown}/${REPRO_DIR}/${README}`;
   return [
     writeIndex(p.dir, r, deps.files)
@@ -189,6 +209,8 @@ function runNew(
   if (isRefusal(args)) return args;
   const r = registryIn(p, deps);
   if (isRefusal(r)) return r;
+  const blocked = readmeBlocked(p, deps);
+  if (blocked !== null) return blocked;
   const added = addStudy(r, { ...args, date: deps.today });
   if (!added.ok) return refuse(2, added.why);
   const folder = added.study.folder;

@@ -89,7 +89,12 @@ const existingResults = (
       .flatMap((s) =>
         s.result_file === undefined ? [] : [`${s.folder}/${s.result_file}`],
       )
-      .filter((p) => files.isFile(callerPath(join(dir, REPRO_DIR, p)))),
+      // A NUL is no path the disk can hold, and probing one throws: such a row reads as missing.
+      .filter(
+        (p) =>
+          !p.includes("\0") &&
+          files.isFile(callerPath(join(dir, REPRO_DIR, p))),
+      ),
   );
 
 /** Every finding of the paper folder `dir`'s study registry — THE function behind the rule. */

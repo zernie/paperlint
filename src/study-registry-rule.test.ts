@@ -18,6 +18,7 @@ import {
 import {
   registryOf,
   STUDY_REGISTRY_RULE_LEVELS,
+  studyFindings,
   studyRegistryRules,
 } from "./study-registry-rule.ts";
 
@@ -286,5 +287,31 @@ describe("repro/study-registered — a directory where the registry should be", 
     expect(registryOf(DIR, { files, codec: studyRegistryCodec })).toEqual({
       kind: "absent",
     });
+  });
+});
+
+describe("repro/study-registered — a result_file the disk cannot hold", () => {
+  it("reads as missing, and the disk is never asked (the disk adapter throws on a NUL)", () => {
+    const r = P1(study({ status: "running", result_file: "a\u0000b.tsv" }));
+    const files = memoryFiles({
+      ...SCAFFOLD,
+      [`${DIR}/repro/studies.json`]: registryText(r),
+      [`${DIR}/repro/README.md`]: withIndex("# index\n", r),
+      [`${DIR}/repro/P1-S01-baseline/README.md`]: "# s\n",
+    });
+    const probe = {
+      ...files,
+      isFile: (p: Parameters<typeof files.isFile>[0]): boolean => {
+        if (p.includes("\0")) throw new Error("ERR_INVALID_ARG_VALUE");
+        return files.isFile(p);
+      },
+    };
+    expect(
+      studyFindings(DIR, {
+        files: probe,
+        listDir: memoryListDir(files),
+        codec: studyRegistryCodec,
+      }).map((f) => f.problem),
+    ).toEqual(["result-file"]);
   });
 });

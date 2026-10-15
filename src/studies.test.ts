@@ -257,6 +257,42 @@ describe("studies index", () => {
   });
 });
 
+describe("studies index — a table a formatter padded", () => {
+  it("leaves an index in sync as it is, whatever its padding", () => {
+    const r = P1(study({ title: "測定 A" }));
+    const generated = withIndex("# I\n", r);
+    const padded = generated.replace("測定 A", "測定 A  ");
+    expect(padded).not.toBe(generated);
+    const tree = paper({
+      [`${REPRO}/studies.json`]: registryText(r),
+      [`${REPRO}/README.md`]: padded,
+    });
+    const out = studies({ sub: "index" }, tree);
+    expect([out.code, out.log, out.after]).toEqual([
+      0,
+      ["the index in papers/example/repro/README.md is in sync with 1 study"],
+      tree,
+    ]);
+  });
+});
+
+describe("studies — a directory where repro/README.md goes", () => {
+  const tree = paper({
+    [`${REPRO}/studies.json`]: registryText(P1(study())),
+    [`${REPRO}/README.md/notes.txt`]: "x",
+  });
+  const refusal =
+    "papers/example/repro/README.md is not a file, so the index cannot be written there. Move it, then run this again.";
+
+  it.each([
+    ["index", {}],
+    ["new", { title: "Second run" }],
+  ] as const)("studies %s refuses and writes nothing", (sub, extra) => {
+    const out = studies({ sub, ...extra }, tree);
+    expect([out.code, out.err, out.after]).toEqual([1, [refusal], tree]);
+  });
+});
+
 describe("studies index — refuses by the paper's state", () => {
   it("a paper with no studies.json, and writes nothing", () => {
     const tree = paper();

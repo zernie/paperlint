@@ -310,7 +310,7 @@ function judgeIndex(
   if (readme === null) return { problem: "stale-index", why: "no-readme" };
   const block = embeddedIndex(readme);
   if (block === null) return { problem: "stale-index", why: "no-markers" };
-  return cellsOf(block) === cellsOf(studyIndex(r))
+  return indexInSync(readme, r)
     ? null
     : { problem: "stale-index", why: "differs" };
 }
@@ -409,6 +409,12 @@ const cellsOf = (table: string): string =>
         .join("|"),
     )
     .join("\n");
+
+/** Whether `readme` holds the index of `r`, whatever padding a formatter gave its table. */
+export function indexInSync(readme: string | null, r: StudyRegistry): boolean {
+  const block = readme === null ? null : embeddedIndex(readme);
+  return block !== null && cellsOf(block) === cellsOf(studyIndex(r));
+}
 
 /** The index between its markers, a blank line on each side. */
 export const indexBlock = (r: StudyRegistry): string =>
