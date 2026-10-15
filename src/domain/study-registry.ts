@@ -415,14 +415,21 @@ export const indexBlock = (r: StudyRegistry): string =>
   `${INDEX_BEGIN}\n\n${studyIndex(r)}\n\n${INDEX_END}`;
 
 /**
- * The text between the markers of `readme`; null when it has no begin marker followed by an end one.
- * The end marker counts only at the start of a line, where the generator writes it: a cell can carry
- * the marker's text, never a line break.
+ * Where `marker` stands alone on a line of `text`, at or after `from`; -1 when it does not. A marker
+ * counts only there, where the generator writes it: prose can mention it and a cell can carry it, but
+ * neither puts it alone on a line.
  */
+const markerAt = (text: string, marker: string, from = 0): number => {
+  const literal = marker.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const m = new RegExp(`^${literal}$`, "mu").exec(text.slice(from));
+  return m === null ? -1 : from + m.index;
+};
+
+/** The text between the markers of `readme`; null when it has no begin marker followed by an end one. */
 export function embeddedIndex(readme: string): string | null {
-  const begin = readme.indexOf(INDEX_BEGIN);
-  const end = begin === -1 ? -1 : readme.indexOf(`\n${INDEX_END}`, begin);
-  return end === -1 ? null : readme.slice(begin + INDEX_BEGIN.length, end + 1);
+  const begin = markerAt(readme, INDEX_BEGIN);
+  const end = begin === -1 ? -1 : markerAt(readme, INDEX_END, begin);
+  return end === -1 ? null : readme.slice(begin + INDEX_BEGIN.length, end);
 }
 
 /**
@@ -433,7 +440,7 @@ export function withIndex(readme: string | null, r: StudyRegistry): string {
   if (readme === null) return `${INDEX_HEADING}\n\n${indexBlock(r)}\n`;
   const block = embeddedIndex(readme);
   if (block === null) return `${readme.trimEnd()}\n\n${indexBlock(r)}\n`;
-  const begin = readme.indexOf(INDEX_BEGIN);
+  const begin = markerAt(readme, INDEX_BEGIN);
   const after = begin + INDEX_BEGIN.length + block.length + INDEX_END.length;
   return `${readme.slice(0, begin)}${indexBlock(r)}${readme.slice(after)}`;
 }

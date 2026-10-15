@@ -329,6 +329,15 @@ describe("judgeStudies — the index", () => {
     expect(withIndex(readme, m)).toBe(readme);
   });
 
+  it("prose that mentions the begin marker is kept, and the real block is the one judged", () => {
+    const r1 = reg(study());
+    const prose = `# index\n\nThe table between \`${INDEX_BEGIN}\` and its end marker is generated.\n`;
+    const readme = withIndex(prose, r1);
+    expect(judgeStudies(input(r1, { readme }))).toEqual([]);
+    expect(withIndex(readme, r1)).toBe(readme);
+    expect(readme.startsWith(prose.trimEnd())).toBe(true);
+  });
+
   it("a block that differs from the registry by one character", () => {
     const readme = withIndex("# index\n", r).replace("designing", "running");
     expect(judgeStudies(input(r, { readme }))).toEqual([
