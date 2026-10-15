@@ -186,13 +186,12 @@ if [ -f "$BLG" ]; then
   # A cited key that never made it into the .bbl is the same failure seen from the other side.
   # An IEEEtran BST control entry (`@IEEEtranBSTCTL`, activated by `\bstctlcite{key}`) is cited
   # in the .aux like any key, but IEEEtran reads it as configuration and never prints it as a
-  # \bibitem — so it is not a missing reference. Its keys come from the .tex (`\bstctlcite`)
-  # and from any `@IEEEtranBSTCTL{key,` entry in the paper's .bib files or inline filecontents.
+  # \bibitem — so it is not a missing reference. A key is exempt only when an
+  # `@IEEEtranBSTCTL{key,` entry actually exists (in the paper's .bib files or inline filecontents):
+  # a misspelled `\bstctlcite{key}` or a removed control record is still reported.
   if [ -f "$BASE.aux" ] && [ -f "$BASE.bbl" ]; then
     missing=0
-    ctl=$( { grep -ohE '\\bstctlcite\{[^}]*\}' ./*.tex 2>/dev/null | sed 's/.*{//;s/}//' | tr ',' '\n'
-             grep -ohiE '@IEEEtranBSTCTL[[:space:]]*\{[^,]*' ./*.bib ./*.tex 2>/dev/null | sed 's/.*{//'
-           } | tr -d ' ' | sort -u)
+    ctl=$(grep -ohiE '@IEEEtranBSTCTL[[:space:]]*\{[^,]*' ./*.bib ./*.tex 2>/dev/null | sed 's/.*{//' | tr -d ' ' | sort -u)
     while read -r key; do
       [ -z "$key" ] && continue
       printf '%s\n' "$ctl" | grep -qxF "$key" && continue

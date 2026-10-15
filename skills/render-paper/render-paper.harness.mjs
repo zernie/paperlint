@@ -342,6 +342,15 @@ await checkSkill("render-paper");
   );
   assert.doesNotMatch(ctlOnly.stdout, /CITED-BUT-ABSENT/, ctlOnly.stdout);
 
+  // A misspelled \bstctlcite key, or one whose control record was removed, has no
+  // @IEEEtranBSTCTL entry behind it, so it is NOT exempt.
+  const typo = paper(["BSTcontrl", "real"]);
+  assert.match(
+    typo.stdout,
+    /cited but NOT in the bibliography: BSTcontrl/,
+    `a \\bstctlcite key with no @IEEEtranBSTCTL entry must be reported:\n${typo.stdout}`,
+  );
+
   const withGap = paper(["BSTcontrol", "real", "gone"]);
   assert.match(
     withGap.stdout,
