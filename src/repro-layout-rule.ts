@@ -1,6 +1,7 @@
 /**
- * `repro/allowed-files-only` — the top of a paper's `repro/` holds an index, the shared `tools/` and
- * `data/`, and one dated folder per study, each with a `README.md`.
+ * `repro/allowed-files-only` — the top of a paper's `repro/` holds an index, the study registry, the
+ * shared `tools/` and `data/`, and one folder per study, each with a `README.md`. Whether each study
+ * folder has its row in the registry is `repro/study-registered`'s (src/study-registry-rule.ts).
  *
  * What may stand there, and why, is `src/domain/repro-layout.ts` and docs/rules/repro/allowed-files-only.md.
  * This file lists the folder and reports.
@@ -76,7 +77,7 @@ const META: FolderRuleModule["meta"] = {
   type: "suggestion",
   docs: {
     description:
-      "the top of a paper's repro/ holds README.md, .gitignore, tools/, data/ and one <slug>-YYYY-MM-DD folder per study, each with a README.md",
+      "the top of a paper's repro/ holds README.md, studies.json, .gitignore, tools/, data/ and one <id>-<slug> (or <slug>-YYYY-MM-DD) folder per study, each with a README.md",
     url: rulePageUrl("repro/allowed-files-only"),
   },
   schema: [],

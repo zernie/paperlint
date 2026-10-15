@@ -34,11 +34,12 @@ it: [the map](../../layout.md).
 ├── siblings/                      ← the cards of competing papers
 ├── research/                      ← dated research and decision records
 ├── repro/                         ← the reproduction artifact
-│   ├── README.md                  ← the index: one line per study
+│   ├── README.md                  ← the index: one line per study, generated from studies.json
+│   ├── studies.json               ← the study registry: id, title, status and result of each study
 │   ├── .gitignore                 ← keeps the scripts' byproducts out of git
 │   ├── tools/                     ← scripts used across the paper (numbers, figures, anonymity check, harnesses)
 │   ├── data/                      ← shared data (tables, caches)
-│   └── <slug>-YYYY-MM-DD/         ← one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)
+│   └── <id>-<slug>/               ← one folder per study or spike, named by its row in studies.json (P1-S03-baseline)
 │       └── README.md              ← required: what it asks, how to run it, what it found
 ├── figures/                       ← graphics and their sources
 ├── sections/                      ← the body, when it is split

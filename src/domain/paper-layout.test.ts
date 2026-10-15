@@ -257,7 +257,7 @@ describe("strayMessage — stands alone for a reader with no context", () => {
       ),
     ).toEqual([]);
     expect(lines).toContain(
-      "│   └── <slug>-YYYY-MM-DD/         ← one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)",
+      "│   └── <id>-<slug>/               ← one folder per study or spike, named by its row in studies.json (P1-S03-baseline)",
     );
     expect(lines.at(-1)).toMatch(/^└── extra\/ +← anything; never judged$/);
   });

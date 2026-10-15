@@ -160,6 +160,8 @@ Each stage's skills, what it writes and what checks it, drawn as one flow, with 
 | `npx paperlint doctor`                                      | checks the setup and exits non-zero if something is miswired                   |
 | `npx paperlint submission show <paper>`                     | the paper's submission on the venue's portal, and whether it holds your build  |
 | `npx paperlint submission update <paper>`                   | checks a new PDF/abstract against the portal; `--save` sends it for real       |
+| `npx paperlint studies new <paper> "<title>"`               | registers a study: the next id in `repro/studies.json`, its folder, the index  |
+| `npx paperlint studies index <paper>`                       | regenerates the index of the studies in `repro/README.md`                      |
 | `npx paperlint --help`                                      | every command and flag                                                         |
 
 ## 🧠 Skills

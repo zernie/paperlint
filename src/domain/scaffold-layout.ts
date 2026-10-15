@@ -70,13 +70,16 @@ export const SCAFFOLD_DIRS: readonly string[] = ROOT_DIR_NOTES.map(
 ).filter((name) => !NOT_SCAFFOLDED.some((n) => n.name === name));
 
 /**
- * The stub index of `repro/`: it makes the folder non-empty (no `.gitkeep`) and says what the rule
- * asks of it. A line per study is added when the first study is.
+ * The stub index of `repro/`: it makes the folder non-empty (no `.gitkeep`) and says what the rules
+ * ask of it. The table of studies is generated into it by `paperlint studies new` and
+ * `paperlint studies index`, from `repro/studies.json`.
  */
 export const REPRO_INDEX_STUB = `# Reproduction index
 
-One line per study: \`<slug>-YYYY-MM-DD/\` — what it asks and what it found. Scripts used across the
-paper go in \`${TOOLS_DIR}/\`, shared data in \`${DATA_DIR}/\`.
+One line per study, generated from \`studies.json\` — create a study with
+\`npx paperlint studies new <paper-dir> "<title>"\`, and after editing its row run
+\`npx paperlint studies index <paper-dir>\`. Scripts used across the paper go in \`${TOOLS_DIR}/\`,
+shared data in \`${DATA_DIR}/\`.
 `;
 
 /** A file `paperlint new` writes into a new paper folder, with its path from that folder. */

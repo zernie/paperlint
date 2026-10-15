@@ -38,6 +38,9 @@ describe("isStudyName", () => {
     "leap-2024-02-29",
     "leap-2000-02-29",
     "april-2026-04-30",
+    "P1-S01-baseline",
+    "P12-S100-a1-b2",
+    "AB-S07-x",
   ])("%s is a study's name", (name) => {
     expect(isStudyName(name)).toBe(true);
   });
@@ -56,6 +59,11 @@ describe("isStudyName", () => {
     ["29 February 1900", "x-1900-02-29"],
     ["32 October", "x-2026-10-32"],
     ["a two-digit year", "x-26-10-12"],
+    ["an id with one digit", "P1-S1-baseline"],
+    ["an id and no slug", "P1-S01"],
+    ["a lowercase id", "p1-s01-baseline"],
+    ["a capital in the slug", "P1-S01-Baseline"],
+    ["an id with no S", "P1-01-baseline"],
   ])("not with %s: %s", (_why, name) => {
     expect(isStudyName(name)).toBe(false);
   });
@@ -158,7 +166,7 @@ describe("judgeRepro — reports a folder, one finding each", () => {
       {
         path: "repro/Old_Baseline/",
         problem: "stray",
-        cure: "rename it to `old-baseline-YYYY-MM-DD`, one folder per study or spike, named for what it is and the date it began — the date of its first commit is a fine default (`git log --reverse --format=%as -- repro/Old_Baseline | head -1`, run in the paper folder) — and give it a README.md; if it holds scripts or data shared across the paper instead, move them into repro/tools/ or repro/data/",
+        cure: "rename it to `<id>-old-baseline` — the next free id in repro/studies.json, then what it is — give it its row there and a README.md (`npx paperlint studies new` makes all three for a new study); in a paper with repro/study-registered off, `old-baseline-YYYY-MM-DD` is accepted instead, dated by the day it began — its first commit is a fine default (`git log --reverse --format=%as -- repro/Old_Baseline | head -1`, run in the paper folder); if it holds scripts or data shared across the paper instead, move them into repro/tools/ or repro/data/",
       },
     ]);
   });
@@ -168,7 +176,7 @@ describe("judgeRepro — reports a folder, one finding each", () => {
       {
         path: "repro/ablation-2026-10-12/",
         problem: "no-readme",
-        cure: "add repro/ablation-2026-10-12/README.md — what the study asks, how to run it, what it found — and a line for it in repro/README.md",
+        cure: "add repro/ablation-2026-10-12/README.md — what the study asks, how to run it, what it found — and give the study its row in repro/studies.json",
       },
     ]);
   });
@@ -194,15 +202,16 @@ describe("reproMessage — stands alone", () => {
       }),
     ).toBe(
       [
-        `\`repro/run.py\` is loose at the top of the paper's repro/ folder, which holds only an index, the shared tools and data, and one dated folder per study. Where it goes: ${SCRIPT_CURE}.`,
+        `\`repro/run.py\` is loose at the top of the paper's repro/ folder, which holds only an index, the study registry, the shared tools and data, and one folder per study. Where it goes: ${SCRIPT_CURE}.`,
         "What repro/ holds (what interpreters and package managers leave there, like __pycache__/ and node_modules/, is never reported):",
         "repro/",
-        "├── README.md           ← the index: one line per study",
-        "├── .gitignore          ← keeps the scripts' byproducts out of git",
-        "├── tools/              ← scripts used across the paper (numbers, figures, anonymity check, harnesses)",
-        "├── data/               ← shared data (tables, caches)",
-        "└── <slug>-YYYY-MM-DD/  ← one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)",
-        "    └── README.md       ← required: what it asks, how to run it, what it found",
+        "├── README.md      ← the index: one line per study, generated from studies.json",
+        "├── studies.json   ← the study registry: id, title, status and result of each study",
+        "├── .gitignore     ← keeps the scripts' byproducts out of git",
+        "├── tools/         ← scripts used across the paper (numbers, figures, anonymity check, harnesses)",
+        "├── data/          ← shared data (tables, caches)",
+        "└── <id>-<slug>/   ← one folder per study or spike, named by its row in studies.json (P1-S03-baseline)",
+        "    └── README.md  ← required: what it asks, how to run it, what it found",
         "Rule repro/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/allowed-files-only.md",
       ].join("\n"),
     );
