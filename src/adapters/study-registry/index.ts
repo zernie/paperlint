@@ -100,8 +100,13 @@ function jsonOf(text: string): unknown {
 }
 
 /** Every reason zod gave, each with the path it is about. */
-const reasons = (error: z.ZodError): string =>
-  error.issues
+const reasons = (
+  issues: readonly {
+    readonly path: readonly PropertyKey[];
+    readonly message: string;
+  }[],
+): string =>
+  issues
     .map(
       (i) =>
         `${i.path.length === 0 ? "(top)" : i.path.join(".")}: ${i.message}`,
@@ -115,7 +120,7 @@ export function parseStudyRegistry(text: string): ParsedRegistry {
   const parsed = registry.safeParse(json);
   return parsed.success
     ? { ok: true, registry: parsed.data }
-    : { ok: false, why: reasons(parsed.error) };
+    : { ok: false, why: reasons(parsed.error.issues) };
 }
 
 /** A study plan's text, parsed once at the boundary: the plan, or every reason it is not one. */
@@ -125,7 +130,7 @@ export function parseStudyPlan(text: string): ParsedPlan {
   const parsed = plan.safeParse(json);
   return parsed.success
     ? { ok: true, plan: parsed.data }
-    : { ok: false, why: reasons(parsed.error) };
+    : { ok: false, why: reasons(parsed.error.issues) };
 }
 
 export const studyRegistryCodec: StudyRegistryCodec = {

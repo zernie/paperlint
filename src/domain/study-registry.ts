@@ -570,12 +570,23 @@ const authorCheck: RowCheck = (row) => {
   } as const;
   const state = planOf(row);
   if (state === null) return { ...at, why: "no-plan" };
-  if (state.kind !== "read") return null;
-  const check = state.plan.author_check ?? null;
-  if (check === null) return { ...at, why: "missing" };
+  const wrong = state.kind === "read" ? checkProblem(r, state.plan) : null;
+  return wrong === null ? null : { ...at, ...wrong };
+};
+
+/** What a read plan's author check lacks: it is not there, or it is not the registry's author's. */
+const checkProblem = (
+  r: StudyRegistry,
+  plan: StudyPlan,
+):
+  | { readonly why: "missing" }
+  | { readonly why: "not-author"; readonly by: string; readonly author: string }
+  | null => {
+  const check = plan.author_check ?? null;
+  if (check === null) return { why: "missing" };
   return r.author === undefined || check.by === r.author
     ? null
-    : { ...at, why: "not-author", by: check.by, author: r.author };
+    : { why: "not-author", by: check.by, author: r.author };
 };
 
 /** The checks of a row, in the order their findings are reported. */
@@ -595,36 +606,37 @@ const ROW_CHECKS: readonly RowCheck[] = [
   authorCheck,
 ];
 
+/** A headline measurement's approval: missing, or not the registry's author's; null when it stands. */
+const headlineApproval = (
+  r: StudyRegistry,
+  m: Measurement,
+): StudyFinding | null => {
+  if (m.role !== "headline") return null;
+  const author = r.author ?? null;
+  if (m.approval === undefined)
+    return {
+      problem: "headline-approval",
+      measurement: m.id,
+      why: "missing",
+      author,
+    };
+  return author === null || m.approval.by === author
+    ? null
+    : {
+        problem: "headline-approval",
+        measurement: m.id,
+        why: "not-author",
+        by: m.approval.by,
+        author,
+      };
+};
+
 /** What is wrong with one measurement: no study, a requirement not held, a headline not approved. */
 const judgeMeasurement = (
   r: StudyRegistry,
   m: Measurement,
 ): readonly StudyFinding[] => {
-  const author = r.author ?? null;
-  const approval = m.approval ?? null;
-  const headline: readonly StudyFinding[] =
-    m.role !== "headline"
-      ? []
-      : approval === null
-        ? [
-            {
-              problem: "headline-approval",
-              measurement: m.id,
-              why: "missing",
-              author,
-            },
-          ]
-        : author !== null && approval.by !== author
-          ? [
-              {
-                problem: "headline-approval",
-                measurement: m.id,
-                why: "not-author",
-                by: approval.by,
-                author,
-              },
-            ]
-          : [];
+  const approval = headlineApproval(r, m);
   return [
     ...(r.studies.some((s) => s.measurement === m.id)
       ? []
@@ -636,7 +648,7 @@ const judgeMeasurement = (
         measurement: m.id,
         requirement,
       })),
-    ...headline,
+    ...(approval === null ? [] : [approval]),
   ];
 };
 
@@ -811,6 +823,14 @@ const RENAME =
 
 const tick = (s: string): string => `\`${s}\``;
 
+/** `a`, `b` and `c`: names in backticks, the last joined by "and". */
+const listed = (names: readonly string[]): string => {
+  const t = names.map(tick);
+  return t.length < 2
+    ? t.join("")
+    : `${t.slice(0, -1).join(", ")} and ${t.at(-1) ?? ""}`;
+};
+
 /** Each finding by its problem: the map the messages are looked up in. */
 type FindingOf = {
   readonly [F in StudyFinding as F["problem"]]: F;
@@ -872,7 +892,7 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
       case "unreadable":
         return `${plan} is not a study plan: ${f.reasons}. What to do: give it the fields on the rule's page — \`question\`, \`population\`, \`arms\`, \`primary_outcome\`.`;
       case "unfilled":
-        return `${plan} leaves ${f.fields.map(tick).join(" and ")} empty, and the study is ${tick(f.status)}: a plan is written before the runs. What to do: fill them in, or set the study back to \`designing\`.`;
+        return `${plan} leaves ${listed(f.fields)} empty, and the study is ${tick(f.status)}: a plan is written before the runs. What to do: fill them in, or set the study back to \`designing\`.`;
     }
   },
   "author-check": (f) => {
@@ -929,20 +949,20 @@ function titleProblem(title: string): string | null {
     : null;
 }
 
-/**
- * `r` with a new study appended: the next id, the folder `<id>-<slug>`, `status: designing`,
- * `in_paper: no` and an empty question; or why the title cannot make one.
- */
-export function addStudy(
-  r: StudyRegistry,
-  n: NewStudy,
-):
+/** A registry with a study added, and the study; or why it could not be. */
+export type Added =
   | {
       readonly ok: true;
       readonly registry: StudyRegistry;
       readonly study: Study;
     }
-  | { readonly ok: false; readonly why: string } {
+  | { readonly ok: false; readonly why: string };
+
+/**
+ * `r` with a new study appended: the next id, the folder `<id>-<slug>`, `status: designing`,
+ * `in_paper: no`, an empty question and its plan, `plan.json`; or why the title cannot make one.
+ */
+export function addStudy(r: StudyRegistry, n: NewStudy): Added {
   const title = n.title.trim().replace(/\s+/gu, " ");
   const why = titleProblem(title);
   if (why !== null) return { ok: false, why };
@@ -956,6 +976,7 @@ export function addStudy(
     status: "designing",
     date: n.date,
     in_paper: "no",
+    plan: PLAN_FILE,
   };
   return {
     ok: true,
@@ -976,6 +997,10 @@ export const studyReadme = (s: Study): string =>
     "",
     `Its row in \`../${STUDIES_FILE}\` holds its status. When the study ends, set \`status\`, \`result\`,`,
     "`result_file` and `in_paper` there, then run `npx paperlint studies index <paper-dir>`.",
+    "",
+    `Its plan is \`${PLAN_FILE}\`: what it measures, the population and the draw, the arms and the primary`,
+    "outcome, filled in before the first run; the author's check of the drawn units goes in its",
+    "`author_check`.",
     "",
     "## Question",
     "",

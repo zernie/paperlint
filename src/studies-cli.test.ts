@@ -83,7 +83,7 @@ describe("paperlint studies index — through the CLI", () => {
     writeTree(repro, {
       "studies.json": readFileSync(file, "utf8").replace(
         '"designing"',
-        '"running"',
+        '"dropped"',
       ),
     });
     expect(await registryFindings(dir)).toEqual([
@@ -96,7 +96,7 @@ describe("paperlint studies index — through the CLI", () => {
       [],
     ]);
     expect(readFileSync(join(repro, "README.md"), "utf8")).toContain(
-      "| P1-S01 | Baseline pass rate | running |",
+      "| P1-S01 | Baseline pass rate | dropped |",
     );
     expect(await registryFindings(dir)).toEqual([]);
   });

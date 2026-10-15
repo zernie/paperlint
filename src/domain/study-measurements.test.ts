@@ -301,7 +301,9 @@ describe("plans — the file a row names", () => {
       },
     ]);
   });
+});
 
+describe("plans — filled once the study has run, and named plan.json", () => {
   it("a study that has run on a plan with empty fields", () => {
     const r = reg({
       studies: [study({ status: "done", result: "x", plan: PLAN_FILE })],
@@ -515,6 +517,21 @@ const MESSAGES = [
 ] as const;
 
 describe("studyMessage — the new findings stand alone", () => {
+  it("lists more than two empty fields with commas, the last with «and»", () => {
+    expect(
+      studyMessage({
+        problem: "bad-plan",
+        id: "P1-S01",
+        path: "plan.json",
+        why: "unfilled",
+        fields: ["question", "population.source", "primary_outcome"],
+        status: "done",
+      }),
+    ).toMatch(
+      /leaves `question`, `population.source` and `primary_outcome` empty/u,
+    );
+  });
+
   const RULE =
     "Rule repro/study-registered: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/study-registered.md";
 

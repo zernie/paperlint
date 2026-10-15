@@ -397,8 +397,10 @@ describe("repro/study-registered — the plan a row names, read from its folder"
       ["author-check", 1],
     ]);
   });
+});
 
-  it("reads a plan the disk cannot hold as missing, and never asks the disk", () => {
+describe("repro/study-registered — a plan the disk cannot hold", () => {
+  it("reads as missing, and the disk is never asked", () => {
     const r = HEADLINE("a\u0000.json");
     const files = memoryFiles(registered(r));
     const probe = {

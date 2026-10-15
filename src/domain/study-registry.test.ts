@@ -58,6 +58,7 @@ const input = (
   registry: read(r),
   readme: withIndex("# Reproduction index\n", r),
   existingResults: new Set(),
+  plans: new Map(),
   ...over,
 });
 
@@ -96,6 +97,7 @@ describe("judgeStudies — silent", () => {
         registry: { kind: "absent" },
         readme: null,
         existingResults: new Set(),
+        plans: new Map(),
       }),
     ).toEqual([]);
   });
@@ -124,6 +126,7 @@ describe("judgeStudies — the registry itself", () => {
         registry: { kind: "absent" },
         readme: null,
         existingResults: new Set(),
+        plans: new Map(),
       }),
     ).toEqual([
       { problem: "no-registry", folders: ["a-2026-10-01", "b-2026-10-02"] },
@@ -137,6 +140,7 @@ describe("judgeStudies — the registry itself", () => {
         registry: { kind: "unreadable", why: "prefix: required" },
         readme: null,
         existingResults: new Set(),
+        plans: new Map(),
       }),
     ).toEqual([{ problem: "unreadable", why: "prefix: required" }]);
   });
@@ -583,7 +587,7 @@ describe("addStudy", () => {
     date: "2026-10-15",
   } as const;
 
-  it("appends the next id, its folder, designing, not in the paper, an empty question", () => {
+  it("appends the next id, its folder, designing, not in the paper, an empty question, its plan", () => {
     const r = reg(study({ id: "P1-S04", folder: "P1-S04-x", foo: 1 }));
     const out = addStudy(r, { ...NEW, title: "  Baseline\n pass   rate " });
     const added: Study = {
@@ -595,6 +599,7 @@ describe("addStudy", () => {
       status: "designing",
       date: "2026-10-15",
       in_paper: "no",
+      plan: "plan.json",
     };
     expect(out).toEqual({
       ok: true,
@@ -644,6 +649,10 @@ describe("studyReadme", () => {
         "",
         "Its row in `../studies.json` holds its status. When the study ends, set `status`, `result`,",
         "`result_file` and `in_paper` there, then run `npx paperlint studies index <paper-dir>`.",
+        "",
+        "Its plan is `plan.json`: what it measures, the population and the draw, the arms and the primary",
+        "outcome, filled in before the first run; the author's check of the drawn units goes in its",
+        "`author_check`.",
         "",
         "## Question",
         "",

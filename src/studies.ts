@@ -3,8 +3,9 @@
  * `repro/studies.json`, and its index in `repro/README.md` (docs/design/study-registry.md).
  *
  *   new <paper-dir> "<title>" [--kind <kind>]
- *            the next id; `repro/<id>-<slug>/README.md` with the id and title in its frontmatter; the
- *            row, `status: designing`, today's date; the index regenerated
+ *            the next id; `repro/<id>-<slug>/README.md` with the id and title in its frontmatter, and
+ *            `plan.json`, the plan's template; the row, `status: designing`, today's date, its `plan`;
+ *            the index regenerated
  *   index <paper-dir>
  *            the index block of `repro/README.md`, regenerated from the registry
  *
@@ -18,11 +19,14 @@ import type { AbsolutePath } from "./domain/paths.ts";
 import { README, REPRO_DIR } from "./domain/repro-layout.ts";
 import {
   DEFAULT_KIND,
+  PLAN_FILE,
   STUDIES_FILE,
   STUDY_KINDS,
   addStudy,
   indexInSync,
   isStudyKind,
+  planTemplate,
+  planText,
   registryText,
   studyReadme,
   withIndex,
@@ -178,7 +182,7 @@ function newArgs(
       );
 }
 
-/** Write a new study's README.md, the registry, and the index; the lines that say so. */
+/** Write a new study's README.md and plan.json, the registry, and the index; the lines that say so. */
 function writeStudy(
   p: Paper,
   added: { readonly registry: StudyRegistry; readonly study: Study },
@@ -188,11 +192,16 @@ function writeStudy(
   const at = (...names: readonly string[]): AbsolutePath =>
     callerPath(join(p.dir, REPRO_DIR, ...names));
   files.writeAtomic(at(study.folder, README), text(studyReadme(study)));
+  files.writeAtomic(
+    at(study.folder, PLAN_FILE),
+    text(planText(planTemplate())),
+  );
   files.writeAtomic(at(STUDIES_FILE), text(registryText(registry)));
   writeIndex(p.dir, registry, files);
   const repro = `${p.shown}/${REPRO_DIR}`;
   return [
     `created ${repro}/${study.folder}/${README}`,
+    `created ${repro}/${study.folder}/${PLAN_FILE}, the study's plan: its fields are there to fill in before the first run`,
     `added ${study.id} to ${repro}/${STUDIES_FILE}: kind ${study.kind}, status ${study.status}, ${study.date}`,
     `wrote the index of ${studiesCount(registry)} in ${repro}/${README}`,
     `Next: write the study's one-sentence question in its row (\`question\`) and in its README.md. When it ends, set \`status\`, \`result\`, \`result_file\` and \`in_paper\` in its row, then run \`npx paperlint studies index ${p.shown}\`.`,

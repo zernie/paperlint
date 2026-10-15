@@ -145,42 +145,45 @@ describe("refusing a row that is not a study", () => {
   });
 });
 
-describe("the keys above the studies: author, requirements, measurements", () => {
-  const FULL = {
-    prefix: "P1",
-    author: "A. Author",
-    requirements: [
-      {
-        id: "R1",
-        text: "Every sample is a random draw from all rules found.",
-        date: "2026-10-10",
-        source: "chat",
+/** A registry with every key above the studies. */
+const FULL = {
+  prefix: "P1",
+  author: "A. Author",
+  requirements: [
+    {
+      id: "R1",
+      text: "Every sample is a random draw from all rules found.",
+      date: "2026-10-10",
+      source: "chat",
+    },
+  ],
+  measurements: [
+    {
+      id: "M1",
+      title: "Rule census",
+      rq: "RQ1",
+      role: "headline",
+      approval: {
+        by: "A. Author",
+        date: "2026-10-12",
+        quote: "This is the one.",
+        source: "review comment",
       },
-    ],
-    measurements: [
-      {
-        id: "M1",
-        title: "Rule census",
-        rq: "RQ1",
-        role: "headline",
-        approval: {
-          by: "A. Author",
-          date: "2026-10-12",
-          quote: "This is the one.",
-          source: "review comment",
-        },
-        requirements: ["R1"],
-        frame: "all rules found",
-      },
-      { id: "M2", title: "Baseline", role: "baseline" },
-    ],
-    studies: [{ ...ROW, measurement: "M1", plan: "plan.json" }],
-  };
+      requirements: ["R1"],
+      frame: "all rules found",
+    },
+    { id: "M2", title: "Baseline", role: "baseline" },
+  ],
+  studies: [{ ...ROW, measurement: "M1", plan: "plan.json" }],
+};
 
+describe("the keys above the studies: author, requirements, measurements", () => {
   it("a registry with all of them parses to itself, a measurement's extra fields kept", () => {
     expect(parse(text(FULL))).toEqual({ ok: true, registry: FULL });
   });
+});
 
+describe("refusing what is not a measurement, a requirement or a plan path", () => {
   it.each([
     [
       "a role that is neither",
