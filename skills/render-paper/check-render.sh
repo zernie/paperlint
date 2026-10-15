@@ -187,11 +187,28 @@ if [ -f "$BLG" ]; then
   # An IEEEtran BST control entry (`@IEEEtranBSTCTL`, activated by `\bstctlcite{key}`) is cited
   # in the .aux like any key, but IEEEtran reads it as configuration and never prints it as a
   # \bibitem — so it is not a missing reference. A key is exempt only when an
-  # `@IEEEtranBSTCTL{key,` entry actually exists (in the paper's .bib files or inline filecontents):
-  # a misspelled `\bstctlcite{key}` or a removed control record is still reported.
+  # `@IEEEtranBSTCTL` entry with that key exists in a database this build actually reads — the
+  # `\bibdata{…}` list in the .aux, resolved the way BibTeX resolves it (relative to the paper
+  # directory, `.bib` appended, else kpsewhich). A stale .bib lying next to the paper exempts
+  # nothing, so a misspelled `\bstctlcite{key}` or a removed control record is still reported.
+  # The entry is matched as BibTeX parses it: `{` or `(` after the type, key on any line.
   if [ -f "$BASE.aux" ] && [ -f "$BASE.bbl" ]; then
     missing=0
-    ctl=$(grep -ohiE '@IEEEtranBSTCTL[[:space:]]*\{[^,]*' ./*.bib ./*.tex 2>/dev/null | sed 's/.*{//' | tr -d ' ' | sort -u)
+    ctl=$(
+      grep -oE '\\bibdata\{[^}]*\}' "$BASE.aux" | sed 's/.*{//;s/}//' | tr ',' '\n' |
+        while read -r db; do
+          [ -z "$db" ] && continue
+          case "$db" in *.bib) ;; *) db="$db.bib" ;; esac
+          if [ -f "$db" ]; then
+            printf '%s\n' "$db"
+          elif command -v kpsewhich >/dev/null 2>&1; then
+            kpsewhich "$db" 2>/dev/null
+          fi
+        done |
+        while read -r f; do
+          perl -0ne 'print "$1\n" while /\@IEEEtranBSTCTL\s*[({]\s*([^,\s]+)\s*,/gi' "$f"
+        done | sort -u
+    )
     while read -r key; do
       [ -z "$key" ] && continue
       printf '%s\n' "$ctl" | grep -qxF "$key" && continue

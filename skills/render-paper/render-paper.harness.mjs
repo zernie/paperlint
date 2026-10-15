@@ -305,19 +305,26 @@ await checkSkill("render-paper");
 {
   const HERE = dirname(fileURLToPath(import.meta.url));
   const CHECK = join(HERE, "check-render.sh");
-  const paper = (citations) => {
+  const CTL_BIB =
+    "@IEEEtranBSTCTL{BSTcontrol,\n  CTLuse_forced_etal = {yes},\n}\n\n@misc{real, title = {A real reference}, year = {2026}}\n";
+  // `bibdata` is what the .aux names as the build's databases; `bibs` maps file → contents.
+  const paper = (
+    citations,
+    { bibdata = "refs", bibs = { "refs.bib": CTL_BIB } } = {},
+  ) => {
     const dir = realpathSync(mkdtempSync(join(tmpdir(), "bstctl-")));
     writeFileSync(
       join(dir, "paper.tex"),
-      "\\documentclass{IEEEtran}\n\\begin{document}\n\\bstctlcite{BSTcontrol}\nText \\cite{real}.\n\\bibliographystyle{IEEEtran}\n\\bibliography{refs}\n\\end{document}\n",
+      `\\documentclass{IEEEtran}\n\\begin{document}\n\\bstctlcite{BSTcontrol}\nText \\cite{real}.\n\\bibliographystyle{IEEEtran}\n\\bibliography{${bibdata}}\n\\end{document}\n`,
     );
-    writeFileSync(
-      join(dir, "refs.bib"),
-      "@IEEEtranBSTCTL{BSTcontrol,\n  CTLuse_forced_etal = {yes},\n}\n\n@misc{real, title = {A real reference}, year = {2026}}\n",
-    );
+    for (const [file, body] of Object.entries(bibs)) {
+      mkdirSync(dirname(join(dir, file)), { recursive: true });
+      writeFileSync(join(dir, file), body);
+    }
     writeFileSync(
       join(dir, "paper.aux"),
-      citations.map((k) => `\\citation{${k}}`).join("\n") + "\n",
+      citations.map((k) => `\\citation{${k}}`).join("\n") +
+        `\n\\bibstyle{IEEEtran}\n\\bibdata{${bibdata}}\n`,
     );
     writeFileSync(
       join(dir, "paper.bbl"),
@@ -362,4 +369,53 @@ await checkSkill("render-paper");
     /bibliography: BSTcontrol/,
     withGap.stdout,
   );
+
+  // Only a database the build reads can exempt a key: a stale .bib next to the paper that still
+  // holds the control record must not turn a removed record in the active database into a pass.
+  const stale = paper(["BSTcontrol", "real"], {
+    bibs: {
+      "refs.bib": "@misc{real, title = {A real reference}, year = {2026}}\n",
+      "unused.bib": CTL_BIB,
+    },
+  });
+  assert.match(
+    stale.stdout,
+    /cited but NOT in the bibliography: BSTcontrol/,
+    `a control record only in a .bib the build does not read must not exempt the key:\n${stale.stdout}`,
+  );
+
+  // Layouts BibTeX accepts: the database in a subdirectory, the key on the next line, and the
+  // parenthesized entry form.
+  const layouts = [
+    [
+      "subdirectory",
+      { bibdata: "bib/refs", bibs: { "bib/refs.bib": CTL_BIB } },
+    ],
+    [
+      "key on the next line",
+      {
+        bibs: {
+          "refs.bib":
+            "@IEEEtranBSTCTL{\n  BSTcontrol,\n  CTLuse_forced_etal = {yes},\n}\n",
+        },
+      },
+    ],
+    [
+      "parenthesized form",
+      {
+        bibs: {
+          "refs.bib":
+            "@IEEEtranBSTCTL(BSTcontrol,\n  CTLuse_forced_etal = {yes})\n",
+        },
+      },
+    ],
+  ];
+  for (const [layout, opts] of layouts) {
+    const r = paper(["BSTcontrol", "real"], opts);
+    assert.doesNotMatch(
+      r.stdout,
+      /CITED-BUT-ABSENT/,
+      `${layout}: a valid @IEEEtranBSTCTL entry was not recognised:\n${r.stdout}`,
+    );
+  }
 }
