@@ -184,10 +184,19 @@ if [ -f "$BLG" ]; then
     grep -E "^(You're|I'm skipping|Repeated entry|I couldn't open)" "$BLG" | sed 's/^/      /' | head -12
   fi
   # A cited key that never made it into the .bbl is the same failure seen from the other side.
+  # An IEEEtran BST control entry (`@IEEEtranBSTCTL`, activated by `\bstctlcite{key}`) is cited
+  # in the .aux like any key, but IEEEtran reads it as configuration and never prints it as a
+  # \bibitem — so it is not a missing reference. A key is exempt only when IEEEtran itself reports
+  # reading it as a control entry: the .blg line `** IEEEtran BST control entry "key" detected.`,
+  # which every IEEEtran*.bst prints. BibTeX wrote that line after parsing the build's own databases,
+  # so a record in a .bib the build does not read, inside `@comment{…}`, or misspelled exempts
+  # nothing, and every layout BibTeX accepts is recognised without parsing .bib files here.
   if [ -f "$BASE.aux" ] && [ -f "$BASE.bbl" ]; then
     missing=0
+    ctl=$(sed -n 's/^\*\* IEEEtran BST control entry "\(.*\)" detected\.$/\1/p' "$BASE.blg" 2>/dev/null | sort -u)
     while read -r key; do
       [ -z "$key" ] && continue
+      printf '%s\n' "$ctl" | grep -qxF -- "$key" && continue
       grep -qF "{$key}" "$BASE.bbl" || { echo "      cited but NOT in the bibliography: $key"; missing=$((missing+1)); }
     done < <(grep -oE '\\citation\{[^}]*\}' "$BASE.aux" | sed 's/.*{//;s/}//' | tr ',' '\n' | sort -u)
     [ "$missing" -gt 0 ] && { echo "  CITED-BUT-ABSENT references: $missing"; blgerr=$((blgerr+missing)); }

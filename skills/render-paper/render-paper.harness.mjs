@@ -295,3 +295,105 @@ await checkSkill("render-paper");
         : ` under ${root}/`),
   );
 }
+
+// ── AN IEEEtran BST CONTROL ENTRY IS NOT A MISSING REFERENCE ─────────────────
+// `\\bstctlcite{key}` cites an `@IEEEtranBSTCTL{key, …}` entry, so the key lands in the .aux like any
+// citation, but IEEEtran reads it as configuration and never prints a \\bibitem for it. The
+// "cited but NOT in the bibliography" check failed a real IEEE paper on exactly that key (an
+// "et al. after six authors" setting). The exemption comes only from IEEEtran's own .blg line
+// `** IEEEtran BST control entry "key" detected.`: BibTeX wrote it after parsing the build's
+// databases, so a record BibTeX never read (a .bib the build does not use, a record inside
+// `@comment{…}`) or a misspelled key exempts nothing, and a genuinely missing key is still reported.
+{
+  const HERE = dirname(fileURLToPath(import.meta.url));
+  const CHECK = join(HERE, "check-render.sh");
+  // `detected` = the keys IEEEtran reported in the .blg as control entries it read.
+  const paper = (citations, detected = ["BSTcontrol"]) => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "bstctl-")));
+    writeFileSync(
+      join(dir, "paper.tex"),
+      "\\documentclass{IEEEtran}\n\\begin{document}\n\\bstctlcite{BSTcontrol}\nText \\cite{real}.\n\\bibliographystyle{IEEEtran}\n\\bibliography{refs}\n\\end{document}\n",
+    );
+    writeFileSync(
+      join(dir, "paper.aux"),
+      citations.map((k) => `\\citation{${k}}`).join("\n") +
+        "\n\\bibstyle{IEEEtran}\n\\bibdata{refs}\n",
+    );
+    writeFileSync(
+      join(dir, "paper.bbl"),
+      "\\begin{thebibliography}{1}\n\\bibitem{real}\nA real reference, 2026.\n\\end{thebibliography}\n",
+    );
+    writeFileSync(
+      join(dir, "paper.blg"),
+      "This is BibTeX, Version 0.99e\nDatabase file #1: refs.bib\n-- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.\n" +
+        detected
+          .map((k) => `** IEEEtran BST control entry "${k}" detected.\n`)
+          .join("") +
+        "\nDone.\n",
+    );
+    writeFileSync(
+      join(dir, "paper.log"),
+      "This is pdfTeX\nOutput written on paper.pdf (1 page, 1000 bytes).\n",
+    );
+    const r = spawnSync("bash", [CHECK, dir, "paper"], {
+      encoding: "utf8",
+      env: { ...process.env, NO_COMPILE: "1" },
+    });
+    // The script must run to its verdict: a run that stopped early prints no complaint either, and
+    // "no complaint" is what the exemption case asserts. stderr and the bash version name the cause.
+    assert.match(
+      r.stdout,
+      /^(PASS|FAIL)\b/m,
+      `check-render.sh stopped before its verdict (exit ${r.status}, ${BASH_VERSION}):\n` +
+        `--- stdout\n${r.stdout}--- stderr\n${r.stderr}`,
+    );
+    return r;
+  };
+  const BASH_VERSION = spawnSync("bash", ["--version"], {
+    encoding: "utf8",
+  }).stdout.split("\n")[0];
+
+  const ctlOnly = paper(["BSTcontrol", "real"]);
+  assert.doesNotMatch(
+    ctlOnly.stdout,
+    /CITED-BUT-ABSENT/,
+    `a control key IEEEtran reported reading was flagged as a missing reference:\n${ctlOnly.stdout}`,
+  );
+
+  // A key that starts with "-" is still a key, not a grep option.
+  const dashKey = paper(["-ctl", "real"], ["-ctl"]);
+  assert.doesNotMatch(
+    dashKey.stdout,
+    /CITED-BUT-ABSENT/,
+    `a control key starting with "-" was flagged:\n${dashKey.stdout}`,
+  );
+
+  // A misspelled \\bstctlcite key: IEEEtran detected a different key, so this one is not exempt.
+  const typo = paper(["BSTcontrl", "real"]);
+  assert.match(
+    typo.stdout,
+    /cited but NOT in the bibliography: BSTcontrl/,
+    `a \\bstctlcite key IEEEtran did not report must be flagged:\n${typo.stdout}`,
+  );
+
+  // A record BibTeX never read — in a .bib the build does not use, or inside @comment{…} — leaves
+  // no "detected" line, so the key is not exempt.
+  const unread = paper(["BSTcontrol", "real"], []);
+  assert.match(
+    unread.stdout,
+    /cited but NOT in the bibliography: BSTcontrol/,
+    `a control key IEEEtran never reported reading must be flagged:\n${unread.stdout}`,
+  );
+
+  const withGap = paper(["BSTcontrol", "real", "gone"]);
+  assert.match(
+    withGap.stdout,
+    /cited but NOT in the bibliography: gone/,
+    `a key with no \\bibitem must still be reported:\n${withGap.stdout}`,
+  );
+  assert.doesNotMatch(
+    withGap.stdout,
+    /bibliography: BSTcontrol/,
+    withGap.stdout,
+  );
+}
