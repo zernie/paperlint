@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:eed7d0afdfee87a6 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:93d83b56c6c1baea compiled from skills/build-benchmark/SKILL.md.spec.ts -->
 
 # build-benchmark — the study + the artifact reviewers can run
 
@@ -35,6 +35,25 @@ Cross-check the claim against the prevention rule in the `CLAUDE.md` beside the 
 about *preventing* something, write the one sentence saying **what physically stops the bad outcome in
 the experimental arm**. "There is different text in it" means you are measuring persuasion, not
 prevention, and the design is wrong before a single run.
+
+## 0.5 Register the study before its first file
+
+Every study gets its folder, its id and its row from one command, never from a folder made by hand:
+
+```bash
+npx paperlint studies new <paper-dir> "<plain title, at most 8 words>" --kind measurement
+```
+
+It takes the next id in `repro/studies.json`, creates `repro/<id>-<slug>/README.md`, appends the row
+(`status: designing`) and regenerates the index in `repro/README.md`. The kinds: `measurement`,
+`spike`, `tooling`, `data`, `artifact`, `salvage`. Write the study's one-sentence `question` into its
+row at once.
+
+As the study moves, edit its row in `repro/studies.json`: `running` when the first counted run starts;
+when it ends, `done` with `result` (one line) and `result_file` (the file inside the folder the result
+is read from) — or `stopped`, `dropped`, or `superseded` with `superseded_by` — and `in_paper`. Then
+run `npx paperlint studies index <paper-dir>`. The rule `repro/study-registered` fails `paperlint lint`
+on a folder without a row, a `done` row without its result, and an index out of sync.
 
 ## 1. Design that inverts the pitfall you're critiquing
 

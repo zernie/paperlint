@@ -4,7 +4,7 @@ description: "Run a paid or counted agent experiment grid end to end — units �
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:aef4152e680a2ccd compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:522a747e8eb6ead4 compiled from skills/run-agent-grid/SKILL.md.spec.ts -->
 
 # run-agent-grid — running a counted agent grid without spoiling it
 
@@ -22,6 +22,13 @@ and a driver loop that calls the guard: [`references/registry-and-ledger.md`](re
 
 **Exit codes of every guard command:** 0 allowed or clean · 1 refused or a finding · 2 usage ·
 3 (`gate` only) the cell is already counted, skip it.
+
+**The grid's study folder.** A grid is one study of the paper. Its folder is made by
+`npx paperlint studies new <paper-dir> "<title>" --kind measurement` — the next id in
+`repro/studies.json`, the folder `repro/<id>-<slug>/` — and `grid.json`, the runs and the ledger live
+in it. When the grid ends, its row is updated (`status`, `result`, `result_file`, `in_paper`) and
+`npx paperlint studies index <paper-dir>` regenerates the index; `repro/study-registered` fails the
+lint until both are done.
 
 ## The order — each gate is passed before the next phase starts
 
