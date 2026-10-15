@@ -322,6 +322,13 @@ describe("judgeStudies — the index", () => {
     expect(readme).toContain("foo\\\\\\|bar");
   });
 
+  it("a title carrying the end marker's text: in sync, and regenerating changes nothing", () => {
+    const m = reg(study({ title: `x ${INDEX_END} y` }));
+    const readme = withIndex("# index\n", m);
+    expect(judgeStudies(input(m, { readme }))).toEqual([]);
+    expect(withIndex(readme, m)).toBe(readme);
+  });
+
   it("a block that differs from the registry by one character", () => {
     const readme = withIndex("# index\n", r).replace("designing", "running");
     expect(judgeStudies(input(r, { readme }))).toEqual([

@@ -48,8 +48,9 @@ export interface StudyRegistryDeps extends FolderLayoutDeps {
   readonly codec: StudyRegistryCodec;
 }
 
-/** The text of the file at `p`; null when there is none. */
+/** The text of the file at `p`; null when there is none, or a directory sits there. */
 const textAt = (files: Files, p: string): string | null => {
+  if (!files.isFile(callerPath(p))) return null;
   const b = files.readBytes(callerPath(p));
   return b === null ? null : new TextDecoder().decode(b);
 };

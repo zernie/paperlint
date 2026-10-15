@@ -16,6 +16,7 @@ import {
   type StudyRegistry,
 } from "./domain/study-registry.ts";
 import {
+  registryOf,
   STUDY_REGISTRY_RULE_LEVELS,
   studyRegistryRules,
 } from "./study-registry-rule.ts";
@@ -269,6 +270,21 @@ describe("repro/study-registered — level", () => {
   it("is an error from the start", () => {
     expect(STUDY_REGISTRY_RULE_LEVELS).toEqual({
       "repro/study-registered": "error",
+    });
+  });
+});
+
+describe("repro/study-registered — a directory where the registry should be", () => {
+  it("is read as no registry, not thrown on (the disk adapter throws EISDIR on a directory)", () => {
+    const files = {
+      ...memoryFiles({}),
+      isFile: () => false,
+      readBytes: (): Uint8Array => {
+        throw Object.assign(new Error("EISDIR"), { code: "EISDIR" });
+      },
+    };
+    expect(registryOf(DIR, { files, codec: studyRegistryCodec })).toEqual({
+      kind: "absent",
     });
   });
 });

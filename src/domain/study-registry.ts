@@ -414,11 +414,15 @@ const cellsOf = (table: string): string =>
 export const indexBlock = (r: StudyRegistry): string =>
   `${INDEX_BEGIN}\n\n${studyIndex(r)}\n\n${INDEX_END}`;
 
-/** The text between the markers of `readme`; null when it has no begin marker followed by an end one. */
+/**
+ * The text between the markers of `readme`; null when it has no begin marker followed by an end one.
+ * The end marker counts only at the start of a line, where the generator writes it: a cell can carry
+ * the marker's text, never a line break.
+ */
 export function embeddedIndex(readme: string): string | null {
   const begin = readme.indexOf(INDEX_BEGIN);
-  const end = begin === -1 ? -1 : readme.indexOf(INDEX_END, begin);
-  return end === -1 ? null : readme.slice(begin + INDEX_BEGIN.length, end);
+  const end = begin === -1 ? -1 : readme.indexOf(`\n${INDEX_END}`, begin);
+  return end === -1 ? null : readme.slice(begin + INDEX_BEGIN.length, end + 1);
 }
 
 /**
