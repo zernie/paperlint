@@ -9,6 +9,8 @@ import { describe, expect, it } from "vitest";
 import { memoryFiles, memoryListDir } from "./adapters/memory/index.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
 import {
+  planTemplate,
+  planText,
   registryText,
   studyMessage,
   withIndex,
@@ -65,13 +67,14 @@ interface Reported {
 function lint(
   tree: Readonly<Record<string, string>>,
   file = `${DIR}/PIPELINE-STATUS.md`,
+  name: "study-registered" | "study-plan-name" = "study-registered",
 ): Reported[] {
   const files = memoryFiles(tree);
   const rule = studyRegistryRules({
     files,
     listDir: memoryListDir(files),
     codec: studyRegistryCodec,
-  })["study-registered"];
+  })[name];
   const out: Reported[] = [];
   const visitor = rule.create({
     filename: file,
@@ -271,6 +274,7 @@ describe("repro/study-registered — level", () => {
   it("is an error from the start", () => {
     expect(STUDY_REGISTRY_RULE_LEVELS).toEqual({
       "repro/study-registered": "error",
+      "repro/study-plan-name": "warn",
     });
   });
 });
@@ -313,5 +317,139 @@ describe("repro/study-registered — a result_file the disk cannot hold", () => 
         codec: studyRegistryCodec,
       }).map((f) => f.problem),
     ).toEqual(["result-file"]);
+  });
+});
+
+/** A plan as a study would hold it once the author has checked its drawn units. */
+const FILLED = planText({
+  question: "How many rules can a linter check?",
+  population: {
+    source: "the crawl of 2026-10-01",
+    size: 4210,
+    draw: { method: "census" },
+  },
+  arms: [],
+  primary_outcome: "the share of rules a linter can check",
+  author_check: { by: "A. Author", date: "2026-10-14", quote: "Go." },
+});
+
+/** A registry with a headline measurement of one running study whose row names `plan`. */
+const HEADLINE = (plan: string): StudyRegistry => ({
+  prefix: "P1",
+  author: "A. Author",
+  measurements: [
+    {
+      id: "M1",
+      title: "Rule census",
+      role: "headline",
+      approval: { by: "A. Author", date: "2026-10-12", quote: "Yes." },
+    },
+  ],
+  studies: [study({ status: "running", measurement: "M1", plan })],
+});
+
+describe("repro/study-registered — the plan a row names, read from its folder", () => {
+  it("is silent on a plan.json the author checked", () => {
+    expect(
+      lint({
+        ...registered(HEADLINE("plan.json")),
+        [`${DIR}/repro/P1-S01-baseline/plan.json`]: FILLED,
+      }),
+    ).toEqual([]);
+  });
+
+  it("reports a plan that is not there", () => {
+    expect(messages(registered(HEADLINE("plan.json")))).toEqual([
+      studyMessage({
+        problem: "bad-plan",
+        id: "P1-S01",
+        path: "plan.json",
+        why: "missing",
+      }),
+    ]);
+  });
+
+  it("reports a plan that is not JSON, with the reason", () => {
+    expect(
+      messages({
+        ...registered(HEADLINE("plan.json")),
+        [`${DIR}/repro/P1-S01-baseline/plan.json`]: "{",
+      }),
+    ).toEqual([
+      studyMessage({
+        problem: "bad-plan",
+        id: "P1-S01",
+        path: "plan.json",
+        why: "unreadable",
+        reasons: "not JSON",
+      }),
+    ]);
+  });
+
+  it("reports a running study of the headline whose plan is still the template", () => {
+    expect(
+      lint({
+        ...registered(HEADLINE("plan.json")),
+        [`${DIR}/repro/P1-S01-baseline/plan.json`]: planText(planTemplate()),
+      }).map((r) => [r.messageId, r.line]),
+    ).toEqual([
+      ["bad-plan", 1],
+      ["author-check", 1],
+    ]);
+  });
+
+  it("reads a plan the disk cannot hold as missing, and never asks the disk", () => {
+    const r = HEADLINE("a\u0000.json");
+    const files = memoryFiles(registered(r));
+    const probe = {
+      ...files,
+      isFile: (p: Parameters<typeof files.isFile>[0]): boolean => {
+        if (p.includes("\0")) throw new Error("ERR_INVALID_ARG_VALUE");
+        return files.isFile(p);
+      },
+    };
+    expect(
+      studyFindings(DIR, {
+        files: probe,
+        listDir: memoryListDir(files),
+        codec: studyRegistryCodec,
+      }).map((f) => f.problem),
+    ).toEqual(["bad-plan"]);
+  });
+});
+
+describe("repro/study-plan-name — a plan under its old name", () => {
+  const OLD = {
+    ...registered(HEADLINE("prereg.json")),
+    [`${DIR}/repro/P1-S01-baseline/prereg.json`]: FILLED,
+  };
+
+  it("is read as the plan: repro/study-registered is silent", () => {
+    expect(lint(OLD)).toEqual([]);
+  });
+
+  it("is reported by repro/study-plan-name, naming plan.json", () => {
+    expect(lint(OLD, `${DIR}/PIPELINE-STATUS.md`, "study-plan-name")).toEqual([
+      {
+        messageId: "legacy-plan",
+        message: studyMessage({
+          problem: "legacy-plan",
+          id: "P1-S01",
+          path: "prereg.json",
+        }),
+        line: 1,
+      },
+    ]);
+  });
+
+  it("is silent on plan.json, and on any file but PIPELINE-STATUS.md", () => {
+    const tree = {
+      ...registered(HEADLINE("plan.json")),
+      [`${DIR}/repro/P1-S01-baseline/plan.json`]: FILLED,
+    };
+    expect([
+      lint(tree, `${DIR}/PIPELINE-STATUS.md`, "study-plan-name"),
+      lint(OLD, `${DIR}/paper.tex`, "study-plan-name"),
+    ]).toEqual([[], []]);
   });
 });

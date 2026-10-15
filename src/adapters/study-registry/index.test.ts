@@ -4,6 +4,8 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  planTemplate,
+  planText,
   registryText,
   type StudyRegistry,
 } from "../../domain/study-registry.ts";
@@ -140,5 +142,140 @@ describe("refusing a row that is not a study", () => {
       ok: false,
       why: "prefix: Invalid input: expected string, received number; studies.0.question: Invalid input: expected string, received undefined",
     });
+  });
+});
+
+describe("the keys above the studies: author, requirements, measurements", () => {
+  const FULL = {
+    prefix: "P1",
+    author: "A. Author",
+    requirements: [
+      {
+        id: "R1",
+        text: "Every sample is a random draw from all rules found.",
+        date: "2026-10-10",
+        source: "chat",
+      },
+    ],
+    measurements: [
+      {
+        id: "M1",
+        title: "Rule census",
+        rq: "RQ1",
+        role: "headline",
+        approval: {
+          by: "A. Author",
+          date: "2026-10-12",
+          quote: "This is the one.",
+          source: "review comment",
+        },
+        requirements: ["R1"],
+        frame: "all rules found",
+      },
+      { id: "M2", title: "Baseline", role: "baseline" },
+    ],
+    studies: [{ ...ROW, measurement: "M1", plan: "plan.json" }],
+  };
+
+  it("a registry with all of them parses to itself, a measurement's extra fields kept", () => {
+    expect(parse(text(FULL))).toEqual({ ok: true, registry: FULL });
+  });
+
+  it.each([
+    [
+      "a role that is neither",
+      { ...FULL, measurements: [{ id: "M1", title: "x", role: "main" }] },
+      'measurements.0.role: Invalid option: expected one of "headline"|"baseline"',
+    ],
+    [
+      "an approval without the author's words",
+      {
+        ...FULL,
+        measurements: [
+          {
+            id: "M1",
+            title: "x",
+            role: "headline",
+            approval: { by: "A", date: "2026-10-12" },
+          },
+        ],
+      },
+      "measurements.0.approval.quote: Invalid input: expected string, received undefined",
+    ],
+    [
+      "a requirement with a key of its own",
+      { ...FULL, requirements: [{ ...FULL.requirements[0], note: "x" }] },
+      'requirements.0: Unrecognized key: "note"',
+    ],
+    [
+      "a row's plan that is not a path",
+      { ...FULL, studies: [{ ...ROW, plan: true }] },
+      "studies.0.plan: Invalid input: expected string, received boolean",
+    ],
+  ])("refuses %s", (_why, v, why) => {
+    expect(parse(text(v))).toEqual({ ok: false, why });
+  });
+});
+
+describe("parsing a study's plan", () => {
+  const parsePlan = studyRegistryCodec.parsePlan;
+  const PLAN = {
+    question: "How many rules can a linter check?",
+    population: {
+      source: "the crawl of 2026-10-01",
+      size: 4210,
+      draw: { method: "random", seed: 7, script: "tools/draw.py" },
+    },
+    arms: [{ name: "with the linter", model: "m" }],
+    primary_outcome: "the share of rules checked",
+    author_check: { by: "A. Author", date: "2026-10-14", quote: "Go." },
+    hypotheses: ["H1"],
+  };
+
+  it("a plan parses to itself, its extra fields kept", () => {
+    expect(parsePlan(JSON.stringify(PLAN))).toEqual({ ok: true, plan: PLAN });
+  });
+
+  it("the template studies new writes parses", () => {
+    expect(parsePlan(planText(planTemplate()))).toEqual({
+      ok: true,
+      plan: planTemplate(),
+    });
+  });
+
+  it.each([
+    ["text that is not JSON", "{", "not JSON"],
+    [
+      "no question and no draw",
+      JSON.stringify({
+        ...PLAN,
+        question: undefined,
+        population: { source: "x" },
+      }),
+      "question: Invalid input: expected string, received undefined; population.draw: Invalid input: expected object, received undefined",
+    ],
+    [
+      "a size that is not a whole number",
+      JSON.stringify({
+        ...PLAN,
+        population: { ...PLAN.population, size: 0.5 },
+      }),
+      "population.size: Invalid input: expected int, received number",
+    ],
+    [
+      "an author_check with an empty quote",
+      JSON.stringify({
+        ...PLAN,
+        author_check: { ...PLAN.author_check, quote: "" },
+      }),
+      "author_check.quote: Too small: expected string to have >=1 characters",
+    ],
+    [
+      "an arm without a name",
+      JSON.stringify({ ...PLAN, arms: [{ model: "m" }] }),
+      "arms.0.name: Invalid input: expected string, received undefined",
+    ],
+  ])("refuses %s", (_why, t, why) => {
+    expect(parsePlan(t)).toEqual({ ok: false, why });
   });
 });

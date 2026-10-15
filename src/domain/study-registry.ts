@@ -61,6 +61,55 @@ export const INDEX_END = "<!-- studies:end -->";
 /** The README written when `repro/` has none. */
 const INDEX_HEADING = "# Reproduction index";
 
+/** What a measurement is to the paper: the claim it carries, or what that claim is compared with. */
+export const MEASUREMENT_ROLES = ["headline", "baseline"] as const;
+export type MeasurementRole = (typeof MEASUREMENT_ROLES)[number];
+
+/**
+ * The statuses of a study that has run: its plan was due before the first run. A `designing` study
+ * has not run yet, and a `dropped` one never will.
+ */
+export const RAN_STATUSES: readonly StudyStatus[] = [
+  "running",
+  "done",
+  "stopped",
+  "superseded",
+];
+
+/** A requirement of the author's on the paper's measurements, in their words. */
+export interface Requirement {
+  readonly id: string;
+  /** The author's words, verbatim. */
+  readonly text: string;
+  readonly date: string;
+  /** Where they said it: a chat, a message, a review comment. */
+  readonly source: string;
+}
+
+/** Someone's approval, in their words: of a measurement, or of a study's drawn units. */
+export interface Approval {
+  readonly by: string;
+  readonly date: string;
+  readonly quote: string;
+  readonly source?: string | undefined;
+}
+
+/**
+ * One measurement: what the paper measures, made of one or more studies (a pilot, the main run, a
+ * replication) whose rows name it in `measurement`. A measurement may carry more fields.
+ */
+export interface Measurement {
+  readonly id: string;
+  readonly title: string;
+  /** The research question it answers. */
+  readonly rq?: string | undefined;
+  readonly role: MeasurementRole;
+  readonly approval?: Approval | undefined;
+  /** The ids of the requirements it must meet. */
+  readonly requirements?: readonly string[] | undefined;
+  readonly [extra: string]: unknown;
+}
+
 /**
  * One study. The named fields are the registry's; a row may carry more (a paper merges its own
  * measurement metadata into it), and they are kept as they are.
@@ -77,13 +126,85 @@ export interface Study {
   readonly result_file?: string | undefined;
   readonly superseded_by?: string | undefined;
   readonly in_paper: InPaper;
+  /** The id of the measurement the study belongs to. */
+  readonly measurement?: string | undefined;
+  /** The study's plan: a path inside its folder, `plan.json`. */
+  readonly plan?: string | undefined;
   readonly [extra: string]: unknown;
 }
 
 export interface StudyRegistry {
   readonly prefix: string;
+  /** The paper's author: the one person whose approval makes a measurement the headline. */
+  readonly author?: string | undefined;
+  readonly requirements?: readonly Requirement[] | undefined;
+  /** When present, every row's `measurement` names one of them. */
+  readonly measurements?: readonly Measurement[] | undefined;
   readonly studies: readonly Study[];
 }
+
+/** The file `paperlint studies new` writes a study's plan to, beside its README.md. */
+export const PLAN_FILE = "plan.json";
+
+/** The plan's name before it was a plan: still read as one, and reported by `repro/study-plan-name`. */
+export const LEGACY_PLAN_FILE = "prereg.json";
+
+/** The author's check of a study's drawn units, before the runs. */
+export type AuthorCheck = Omit<Approval, "source">;
+
+/**
+ * A study's plan, fixed before its runs: what it measures, on what population and how it is drawn,
+ * its arms, its primary outcome, and the author's check of the drawn units. Every other key is the
+ * paper's and is kept.
+ */
+export interface StudyPlan {
+  readonly question: string;
+  readonly population: {
+    /** Where the units come from: the census, crawl or registry, with its date. */
+    readonly source: string;
+    readonly size?: number | null | undefined;
+    readonly draw: {
+      /** How the sample is drawn from the population: `census`, `random`, `stratified` … */
+      readonly method: string;
+      readonly seed?: string | number | null | undefined;
+      readonly [extra: string]: unknown;
+    };
+    readonly [extra: string]: unknown;
+  };
+  /** The conditions compared; none for a census. */
+  readonly arms: readonly {
+    readonly name: string;
+    readonly [extra: string]: unknown;
+  }[];
+  readonly primary_outcome: string;
+  /** null: not yet. */
+  readonly author_check?: AuthorCheck | null | undefined;
+  readonly [extra: string]: unknown;
+}
+
+/** A plan's text, parsed: the plan, or the reasons it is not one. */
+export type ParsedPlan =
+  | { readonly ok: true; readonly plan: StudyPlan }
+  | { readonly ok: false; readonly why: string };
+
+/** What a study's folder holds of the plan its row names. */
+export type PlanState =
+  | { readonly kind: "absent" }
+  | { readonly kind: "unreadable"; readonly why: string }
+  | { readonly kind: "read"; readonly plan: StudyPlan };
+
+/** The plan `paperlint studies new` writes: every field present, its value to fill. */
+export const planTemplate = (): StudyPlan => ({
+  question: "",
+  population: { source: "", size: null, draw: { method: "", seed: null } },
+  arms: [],
+  primary_outcome: "",
+  author_check: null,
+});
+
+/** A plan's text as `paperlint studies new` writes it: JSON, two-space indented, a final newline. */
+export const planText = (p: StudyPlan): string =>
+  `${JSON.stringify(p, null, 2)}\n`;
 
 /** A registry's text, parsed: the registry, or the one reason it is not one. */
 export type ParsedRegistry =
@@ -105,6 +226,8 @@ export interface StudyInput {
   readonly readme: string | null;
   /** Each `<folder>/<result_file>` of the registry that is a file. */
   readonly existingResults: ReadonlySet<string>;
+  /** The plan each row names, by `<folder>/<plan>`; one not listed is absent. */
+  readonly plans: ReadonlyMap<string, PlanState>;
 }
 
 /** One defect of the registry, of a row, or of the index. */
@@ -157,7 +280,78 @@ export type StudyFinding =
   | {
       readonly problem: "stale-index";
       readonly why: "no-readme" | "no-markers" | "differs";
+    }
+  | {
+      readonly problem: "unknown-measurement";
+      readonly id: string;
+      readonly measurement: string;
+    }
+  | { readonly problem: "empty-measurement"; readonly measurement: string }
+  | {
+      readonly problem: "unknown-requirement";
+      readonly measurement: string;
+      readonly requirement: string;
+    }
+  | {
+      readonly problem: "headline-approval";
+      readonly measurement: string;
+      readonly why: "missing";
+      readonly author: string | null;
+    }
+  | {
+      readonly problem: "headline-approval";
+      readonly measurement: string;
+      readonly why: "not-author";
+      readonly by: string;
+      readonly author: string;
+    }
+  | {
+      readonly problem: "bad-plan";
+      readonly id: string;
+      readonly path: string;
+      readonly why: "missing" | "outside";
+    }
+  | {
+      readonly problem: "bad-plan";
+      readonly id: string;
+      readonly path: string;
+      readonly why: "unreadable";
+      readonly reasons: string;
+    }
+  | {
+      readonly problem: "bad-plan";
+      readonly id: string;
+      readonly path: string;
+      readonly why: "unfilled";
+      readonly fields: readonly string[];
+      readonly status: StudyStatus;
+    }
+  | {
+      readonly problem: "author-check";
+      readonly id: string;
+      readonly measurement: string;
+      readonly status: StudyStatus;
+      readonly why: "no-plan" | "missing";
+    }
+  | {
+      readonly problem: "author-check";
+      readonly id: string;
+      readonly measurement: string;
+      readonly status: StudyStatus;
+      readonly why: "not-author";
+      readonly by: string;
+      readonly author: string;
+    }
+  | {
+      readonly problem: "legacy-plan";
+      readonly id: string;
+      readonly path: string;
     };
+
+/** The findings `repro/study-plan-name` reports, a warning; every other is `repro/study-registered`'s. */
+export const PLAN_NAME_PROBLEMS: readonly StudyFinding["problem"][] = [
+  "legacy-plan",
+];
 
 /** The number of an id of `prefix` (`P1-S07` → 7); null for an id of another shape. */
 function idNumber(prefix: string, id: string): number | null {
@@ -197,6 +391,15 @@ const isInside = (path: string): boolean => {
   const n = posix.normalize(path);
   return n !== ".." && !n.startsWith("../");
 };
+
+/**
+ * The `<folder>/<plan>` of each row whose plan lies inside its folder: the files the judge needs read
+ * (`StudyInput.plans`). A plan outside its folder is reported without being read.
+ */
+export const planKeys = (r: StudyRegistry): readonly string[] =>
+  r.studies.flatMap((s) =>
+    s.plan !== undefined && isInside(s.plan) ? [`${s.folder}/${s.plan}`] : [],
+  );
 
 /** One row of a registry, with what the judge read beside it. */
 interface Row {
@@ -283,6 +486,98 @@ const noSuccessor: RowCheck = ({ r, s }) => {
     : null;
 };
 
+/** A row's `measurement`, when the registry declares its measurements, names one of them. */
+const unknownMeasurement: RowCheck = ({ r, s }) =>
+  r.measurements === undefined ||
+  s.measurement === undefined ||
+  r.measurements.some((m) => m.id === s.measurement)
+    ? null
+    : { problem: "unknown-measurement", id: s.id, measurement: s.measurement };
+
+/** The state of the plan the row names (absent when outside its folder); null when it names none. */
+const planOf = ({ s, input }: Row): PlanState | null => {
+  if (s.plan === undefined) return null;
+  return isInside(s.plan)
+    ? (input.plans.get(`${s.folder}/${s.plan}`) ?? { kind: "absent" })
+    : { kind: "absent" };
+};
+
+/** The plan's required texts left empty. */
+const emptyFields = (p: StudyPlan): readonly string[] =>
+  (
+    [
+      ["question", p.question],
+      ["population.source", p.population.source],
+      ["population.draw.method", p.population.draw.method],
+      ["primary_outcome", p.primary_outcome],
+    ] as const
+  )
+    .filter(([, v]) => v.trim() === "")
+    .map(([k]) => k);
+
+const hasRun = (s: Study): boolean => RAN_STATUSES.includes(s.status);
+
+/** The plan a row names is a file inside its folder, of the schema, and filled once the study has run. */
+const badPlan: RowCheck = (row) => {
+  const { s } = row;
+  const path = s.plan;
+  if (path === undefined) return null;
+  if (!isInside(path))
+    return { problem: "bad-plan", id: s.id, path, why: "outside" };
+  const state = planOf(row);
+  if (state?.kind !== "read" && state?.kind !== "unreadable")
+    return { problem: "bad-plan", id: s.id, path, why: "missing" };
+  if (state.kind === "unreadable")
+    return {
+      problem: "bad-plan",
+      id: s.id,
+      path,
+      why: "unreadable",
+      reasons: state.why,
+    };
+  const fields = emptyFields(state.plan);
+  return hasRun(s) && fields.length > 0
+    ? {
+        problem: "bad-plan",
+        id: s.id,
+        path,
+        why: "unfilled",
+        fields,
+        status: s.status,
+      }
+    : null;
+};
+
+/** A plan under its old name: read, and named for renaming. */
+const legacyPlan: RowCheck = ({ s }) =>
+  s.plan !== undefined && posix.basename(s.plan) === LEGACY_PLAN_FILE
+    ? { problem: "legacy-plan", id: s.id, path: s.plan }
+    : null;
+
+/**
+ * A study of a headline measurement that has run carries the author's check of its drawn units in
+ * its plan, by the registry's author when it names one. A plan that cannot be read is `badPlan`'s.
+ */
+const authorCheck: RowCheck = (row) => {
+  const { r, s } = row;
+  const m = r.measurements?.find((o) => o.id === s.measurement);
+  if (m?.role !== "headline" || !hasRun(s)) return null;
+  const at = {
+    problem: "author-check",
+    id: s.id,
+    measurement: m.id,
+    status: s.status,
+  } as const;
+  const state = planOf(row);
+  if (state === null) return { ...at, why: "no-plan" };
+  if (state.kind !== "read") return null;
+  const check = state.plan.author_check ?? null;
+  if (check === null) return { ...at, why: "missing" };
+  return r.author === undefined || check.by === r.author
+    ? null
+    : { ...at, why: "not-author", by: check.by, author: r.author };
+};
+
 /** The checks of a row, in the order their findings are reported. */
 const ROW_CHECKS: readonly RowCheck[] = [
   badId,
@@ -294,7 +589,56 @@ const ROW_CHECKS: readonly RowCheck[] = [
   noResult,
   resultFile,
   noSuccessor,
+  unknownMeasurement,
+  badPlan,
+  legacyPlan,
+  authorCheck,
 ];
+
+/** What is wrong with one measurement: no study, a requirement not held, a headline not approved. */
+const judgeMeasurement = (
+  r: StudyRegistry,
+  m: Measurement,
+): readonly StudyFinding[] => {
+  const author = r.author ?? null;
+  const approval = m.approval ?? null;
+  const headline: readonly StudyFinding[] =
+    m.role !== "headline"
+      ? []
+      : approval === null
+        ? [
+            {
+              problem: "headline-approval",
+              measurement: m.id,
+              why: "missing",
+              author,
+            },
+          ]
+        : author !== null && approval.by !== author
+          ? [
+              {
+                problem: "headline-approval",
+                measurement: m.id,
+                why: "not-author",
+                by: approval.by,
+                author,
+              },
+            ]
+          : [];
+  return [
+    ...(r.studies.some((s) => s.measurement === m.id)
+      ? []
+      : [{ problem: "empty-measurement", measurement: m.id } as const]),
+    ...(m.requirements ?? [])
+      .filter((id) => !(r.requirements ?? []).some((q) => q.id === id))
+      .map((requirement): StudyFinding => ({
+        problem: "unknown-requirement",
+        measurement: m.id,
+        requirement,
+      })),
+    ...headline,
+  ];
+};
 
 /** What is wrong with a row, in a fixed order. */
 const judgeRow = (row: Row): readonly StudyFinding[] =>
@@ -339,6 +683,7 @@ export function judgeStudies(input: StudyInput): readonly StudyFinding[] {
         next,
       })),
     ...r.studies.flatMap((s, i) => judgeRow({ r, s, i, input })),
+    ...(r.measurements ?? []).flatMap((m) => judgeMeasurement(r, m)),
     ...(index === null ? [] : [index]),
   ];
 }
@@ -506,15 +851,58 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
   "no-successor": (f) =>
     `${REGISTRY}: ${tick(f.id)} is \`superseded\` ${f.superseded_by === null ? "without `superseded_by`" : `by ${tick(f.superseded_by)}, which is no study in the registry`}. What to do: name the id of the study that replaced it.`,
   "stale-index": (f) => `${STALE_HEAD[f.why]} ${RUN_INDEX}`,
+  "unknown-measurement": (f) =>
+    `${REGISTRY}: the row ${tick(f.id)} names the measurement ${tick(f.measurement)}, which is not in \`measurements\`. What to do: add the measurement to \`measurements\`, or correct the row's \`measurement\`.`,
+  "empty-measurement": (f) =>
+    `${REGISTRY}: no row names the measurement ${tick(f.measurement)}, and a measurement is made of studies. What to do: set \`"measurement": "${f.measurement}"\` on the rows of its studies, or remove the measurement.`,
+  "unknown-requirement": (f) =>
+    `${REGISTRY}: the measurement ${tick(f.measurement)} must meet the requirement ${tick(f.requirement)}, which is not in \`requirements\`. What to do: add the requirement — the author's words verbatim in \`text\`, with its \`date\` and \`source\` — or correct the measurement's \`requirements\`.`,
+  "headline-approval": (f) =>
+    f.why === "missing"
+      ? `${REGISTRY}: the measurement ${tick(f.measurement)} is a \`headline\` one and has no \`approval\`. What to do: record ${f.author === null ? "the author's approval" : `the approval of ${f.author}, the registry's \`author\``} — \`by\`, \`date\`, and their words in \`quote\` — or make it a \`baseline\`.`
+      : `${REGISTRY}: the measurement ${tick(f.measurement)} is a \`headline\` one, and its \`approval\` is by ${f.by}, not by the registry's \`author\`, ${f.author}. What to do: only the author approves a headline measurement; record their own approval.`,
+  "bad-plan": (f) => {
+    const of = `the \`plan\` of ${tick(f.id)}, ${tick(f.path)},`;
+    const plan = `The plan of ${tick(f.id)}, ${tick(f.path)} in its folder,`;
+    switch (f.why) {
+      case "missing":
+        return `${REGISTRY}: ${of} is not a file in its folder. What to do: write the plan there (its fields are on the rule's page), or correct the row's \`plan\`.`;
+      case "outside":
+        return `${REGISTRY}: ${of} is outside its folder. What to do: keep the plan in the study's folder, as \`${PLAN_FILE}\`, and name it relative to the folder.`;
+      case "unreadable":
+        return `${plan} is not a study plan: ${f.reasons}. What to do: give it the fields on the rule's page — \`question\`, \`population\`, \`arms\`, \`primary_outcome\`.`;
+      case "unfilled":
+        return `${plan} leaves ${f.fields.map(tick).join(" and ")} empty, and the study is ${tick(f.status)}: a plan is written before the runs. What to do: fill them in, or set the study back to \`designing\`.`;
+    }
+  },
+  "author-check": (f) => {
+    const head = `${tick(f.id)} is ${tick(f.status)} in the headline measurement ${tick(f.measurement)}, and`;
+    switch (f.why) {
+      case "no-plan":
+        return `${head} its row names no plan to hold the author's check of the drawn units. What to do: write its plan (\`${PLAN_FILE}\` in its folder, named in the row's \`plan\`) with \`author_check\` — \`by\`, \`date\`, and the author's words in \`quote\`.`;
+      case "missing":
+        return `${head} its plan has no \`author_check\`. What to do: show the author the drawn units, then record their answer in the plan's \`author_check\` — \`by\`, \`date\`, and their words in \`quote\`.`;
+      case "not-author":
+        return `${head} the \`author_check\` in its plan is by ${f.by}, not by the registry's \`author\`, ${f.author}. What to do: only the author approves the drawn units of a headline measurement; record their own answer.`;
+    }
+  },
+  "legacy-plan": (f) =>
+    `The plan of ${tick(f.id)} is ${tick(f.path)}, its old name; it is read as the plan. What to do: rename it to \`${PLAN_FILE}\` in the study's folder (\`git mv\`) and set the row's \`plan\` to \`${PLAN_FILE}\`.`,
 };
 
 /** The head of finding `f` of problem `p`: the lookup, typed by the problem. */
 const headOf = <P extends Problem>(p: P, f: FindingOf[P]): string =>
   HEADS[p](f);
 
+/** The rule that reports finding `f`. */
+const ruleOf = (f: StudyFinding): string =>
+  PLAN_NAME_PROBLEMS.includes(f.problem)
+    ? "repro/study-plan-name"
+    : "repro/study-registered";
+
 /** The one text a finding is reported with: what is wrong, what to do, and the rule's page. */
 export const studyMessage = (f: StudyFinding): string =>
-  `${headOf(f.problem, f)}\nRule repro/study-registered: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/study-registered.md`;
+  `${headOf(f.problem, f)}\nRule ${ruleOf(f)}: https://github.com/zernie/paperlint/blob/main/docs/rules/${ruleOf(f)}.md`;
 
 // ── a new study ───────────────────────────────────────────────────────────────────
 
