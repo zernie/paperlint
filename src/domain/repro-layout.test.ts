@@ -176,7 +176,7 @@ describe("judgeRepro — reports a folder, one finding each", () => {
       {
         path: "repro/ablation-2026-10-12/",
         problem: "no-readme",
-        cure: "add repro/ablation-2026-10-12/README.md — what the study asks, how to run it, what it found — and a line for it in repro/README.md",
+        cure: "add repro/ablation-2026-10-12/README.md — what the study asks, how to run it, what it found — and give the study its row in repro/studies.json",
       },
     ]);
   });

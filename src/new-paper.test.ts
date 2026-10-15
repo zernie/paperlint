@@ -32,11 +32,17 @@ import { judgeLayout } from "./domain/paper-layout.ts";
 import {
   GITKEEP,
   NOT_SCAFFOLDED,
+  REPRO_INDEX_STUB,
   SCAFFOLD_DIRS,
   SCAFFOLD_FILES,
 } from "./domain/scaffold-layout.ts";
 import { ROOT_DIRS } from "./domain/paper-layout.ts";
 import { judgeRepro, REPRO_DIR } from "./domain/repro-layout.ts";
+import {
+  registryText,
+  withIndex,
+  type StudyRegistry,
+} from "./domain/study-registry.ts";
 import { statSync } from "node:fs";
 
 const dirs: string[] = [];
@@ -765,10 +771,28 @@ async function lintScaffold(added: Record<string, string> = {}) {
   };
 }
 
+/** One registered study, as `paperlint studies new` writes it. */
+const SOME_STUDY: StudyRegistry = {
+  prefix: "P1",
+  studies: [
+    {
+      id: "P1-S01",
+      folder: "P1-S01-some-study",
+      title: "Some study",
+      question: "",
+      kind: "measurement",
+      status: "designing",
+      date: "2026-10-13",
+      in_paper: "no",
+    },
+  ],
+};
+
 describe("paperlint lint — a scaffolded paper has no layout finding", () => {
   const LAYOUT_RULES = [
     "paper/allowed-files-only",
     "repro/allowed-files-only",
+    "repro/study-registered",
     "review/frontmatter",
     "sibling/frontmatter",
     "paper/stages",
@@ -787,8 +811,10 @@ describe("paperlint lint — a scaffolded paper has no layout finding", () => {
       "siblings/.gitkeep": "",
       "talk/.gitkeep": "",
       "sections/.gitkeep": "",
-      "repro/some-study-2026-10-13/README.md": "# s\n",
-      "repro/some-study-2026-10-13/.gitkeep": "",
+      "repro/studies.json": registryText(SOME_STUDY),
+      "repro/README.md": withIndex(REPRO_INDEX_STUB, SOME_STUDY),
+      "repro/P1-S01-some-study/README.md": "# s\n",
+      "repro/P1-S01-some-study/.gitkeep": "",
     });
     expect(ids.filter((id) => LAYOUT_RULES.includes(id ?? ""))).toEqual([]);
   });

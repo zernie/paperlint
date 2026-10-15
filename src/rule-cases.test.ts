@@ -17,6 +17,11 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
+import {
+  registryText,
+  withIndex,
+  type StudyRegistry,
+} from "./domain/study-registry.ts";
 import { recordText } from "../test/recorded-fixture.ts";
 import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
 
@@ -38,6 +43,28 @@ const paper = (
   [`${P}/paper.tex`]: paperTex,
   ...extra,
 });
+
+/** A registered study: `repro/studies.json` with its row, the study's folder, and the index in sync. */
+const REGISTRY: StudyRegistry = {
+  prefix: "P1",
+  studies: [
+    {
+      id: "P1-S01",
+      folder: "P1-S01-ablation",
+      title: "Ablation",
+      question: "Which step does the work?",
+      kind: "measurement",
+      status: "designing",
+      date: "2026-10-15",
+      in_paper: "no",
+    },
+  ],
+};
+const REGISTERED_STUDY: Readonly<Record<string, string>> = {
+  [`${P}/repro/studies.json`]: registryText(REGISTRY),
+  [`${P}/repro/README.md`]: withIndex("# repro\n", REGISTRY),
+  [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
+};
 
 /** `study/declare-sample` is off by default; a paper turns it on in its `paperlint.json`. */
 const DECLARE_SAMPLE_ON: Readonly<Record<string, string>> = {
@@ -729,6 +756,20 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       [`${P}/repro/tools/run.py`]: "print(1)\n",
       [`${P}/repro/ablation-2026-10-12/README.md`]: "# ablation\n",
     }),
+  },
+  // A study folder with no row in repro/studies.json.
+  "repro/study-registered": {
+    reports: {
+      tree: paper(tex("x"), {
+        ...REGISTERED_STUDY,
+        [`${P}/repro/spike-2026-10-12/README.md`]: "# spike\n",
+      }),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 2,
+      line: 1,
+    },
+    // Every folder registered, and the index the registry generates.
+    silent: paper(tex("x"), REGISTERED_STUDY),
   },
   // A study's prereg.json that declares none of population, strata, screens, coverage, author_check.
   // Off by default: the paper turns it on, as both trees do.

@@ -145,8 +145,16 @@ describe("paper-folder-layout hook — allows", () => {
     expect(reason(`${DIR}/reviews/2026-10-12-x.md`)).toBeNull();
     expect(reason(`${DIR}/extra/anything.bin`)).toBeNull();
     expect(reason(`${DIR}/repro/README.md`)).toBeNull();
+    expect(reason(`${DIR}/repro/studies.json`)).toBeNull();
     expect(reason(`${DIR}/repro/tools/paper_numbers.py`)).toBeNull();
     expect(reason(`${DIR}/repro/data/numbers.tsv`)).toBeNull();
+  });
+
+  it("a registered study folder started with its README.md; the first file otherwise is refused", () => {
+    expect(reason(`${DIR}/repro/P1-S01-ablation/README.md`)).toBeNull();
+    expect(reason(`${DIR}/repro/P1-S01-ablation/run.py`)).toMatch(
+      /^`repro\/P1-S01-ablation\/` is a study folder without a README\.md/,
+    );
   });
 
   it("a new study folder started with its README.md, then any file in it", () => {

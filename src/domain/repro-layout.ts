@@ -320,7 +320,7 @@ function judgeEntry(e: ReproEntry): ReproFinding | null {
     return {
       path,
       problem: "no-readme",
-      cure: `add ${path}${README} — what the study asks, how to run it, what it found — and a line for it in repro/${README}`,
+      cure: `add ${path}${README} — what the study asks, how to run it, what it found — and give the study its row in repro/${STUDIES_FILE}`,
     };
   return null;
 }
