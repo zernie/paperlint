@@ -185,6 +185,12 @@ import {
   REPRO_LAYOUT_RULE_LEVELS,
   reproLayoutRules,
 } from "./repro-layout-rule.ts";
+import {
+  STUDY_REGISTRY_RULE_LEVELS,
+  studyRegistryRules,
+} from "./study-registry-rule.ts";
+import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
+import { runStudies } from "./studies.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
 import reviewFrontmatter from "#eslint-rules/review-frontmatter";
@@ -230,6 +236,12 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       send the PDF (default: the paper's own), an abstract, or
                                       "submitted". A DRY RUN unless --save: the portal checks the
                                       change and keeps nothing
+  npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]
+                                      register a study: the next id in repro/studies.json, the folder
+                                      repro/<id>-<slug>/ with its README.md, the row (status designing,
+                                      today's date), and the index in repro/README.md regenerated
+  npx paperlint studies index <paper-dir>
+                                      regenerate the index in repro/README.md from repro/studies.json
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
 
@@ -249,6 +261,11 @@ new:
   --allow-venue-name  create the folder even though its name names a venue (a whole word such as
                       "realm" can be the work's own). Without it such a name is refused: a rejected
                       paper moves to another venue and keeps its folder
+
+studies:
+  --kind <kind>       new: measurement (the default), spike, tooling, data, artifact or salvage.
+                      A study's status, result and in_paper are edited in repro/studies.json;
+                      the rule repro/study-registered checks them (docs/rules/repro/study-registered.md)
 
 submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
@@ -367,6 +384,17 @@ const FRAGMENT_RULES = {
 /** What the two layout rules read with: the disk and its directory listings. */
 const LAYOUT_RULE_DEPS = { files: nodeFiles, listDir: nodeListDir };
 
+/** What `repro/study-registered` and `paperlint studies` read with: the layout's, and the registry's parser. */
+const STUDY_RULE_DEPS = { ...LAYOUT_RULE_DEPS, codec: studyRegistryCodec };
+
+/** Today in this machine's time zone, `YYYY-MM-DD`: the date `paperlint studies new` registers a study on. */
+const today = (now = new Date()): string =>
+  [
+    String(now.getFullYear()),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+
 /** What the talk rules read with: the disk, the shipped presets, and the three media readers. */
 const TALK_RULE_DEPS = {
   files: nodeFiles,
@@ -433,7 +461,12 @@ export function buildConfig(
             ...folderLayoutRules(LAYOUT_RULE_DEPS),
           },
         },
-        repro: { rules: reproLayoutRules(LAYOUT_RULE_DEPS) },
+        repro: {
+          rules: {
+            ...reproLayoutRules(LAYOUT_RULE_DEPS),
+            ...studyRegistryRules(STUDY_RULE_DEPS),
+          },
+        },
         // Registered, on for no paper: `"study/declare-sample": "error"` in paperlint.json turns it on.
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
@@ -445,6 +478,7 @@ export function buildConfig(
         ...FOLDER_VENUE_RULE_LEVELS,
         ...FOLDER_LAYOUT_RULE_LEVELS,
         ...REPRO_LAYOUT_RULE_LEVELS,
+        ...STUDY_REGISTRY_RULE_LEVELS,
         ...CYCLE_RULE_LEVELS,
       },
     },
@@ -1626,6 +1660,17 @@ const SIMPLE: Readonly<
       banal: hostBanalInstaller(),
       tex: toolchainTex(cwd),
     }),
+  studies: (a, { log, err, cwd }) =>
+    runStudies(
+      {
+        sub: a.paths[0],
+        paperDir: a.paths[1],
+        title: a.paths[2],
+        extra: a.paths.slice(3),
+        kind: a.kind,
+      },
+      { ...STUDY_RULE_DEPS, cwd, today: today(), log, err },
+    ),
   submission: (a, { log, err, cwd }) =>
     runSubmission(
       {

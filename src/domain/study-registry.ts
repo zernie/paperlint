@@ -405,3 +405,80 @@ function headOf(f: StudyFinding): string {
 /** The one text a finding is reported with: what is wrong, what to do, and the rule's page. */
 export const studyMessage = (f: StudyFinding): string =>
   `${headOf(f)}\nRule repro/study-registered: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/study-registered.md`;
+
+// ── a new study ───────────────────────────────────────────────────────────────────
+
+/** Whether `s` names a kind of study. */
+export const isStudyKind = (s: string): s is StudyKind =>
+  STUDY_KINDS.some((k) => k === s);
+
+/** What a new study is made from. */
+export interface NewStudy {
+  readonly title: string;
+  readonly kind: StudyKind;
+  /** The day it is registered, `YYYY-MM-DD`. */
+  readonly date: string;
+}
+
+/**
+ * `r` with a new study appended: the next id, the folder `<id>-<slug>`, `status: designing`,
+ * `in_paper: no` and an empty question; or why the title cannot make one.
+ */
+export function addStudy(
+  r: StudyRegistry,
+  n: NewStudy,
+):
+  | { readonly ok: true; readonly registry: StudyRegistry; readonly study: Study }
+  | { readonly ok: false; readonly why: string } {
+  const title = n.title.trim().replace(/\s+/gu, " ");
+  const words = titleWords(title);
+  const slug = studySlug(title);
+  if (words === 0) return { ok: false, why: "the title is empty" };
+  if (words > MAX_TITLE_WORDS)
+    return {
+      ok: false,
+      why: `the title has ${String(words)} words; a title is a plain name of at most ${String(MAX_TITLE_WORDS)} — the detail goes in the row's \`question\``,
+    };
+  if (slug === "")
+    return {
+      ok: false,
+      why: "the title has no Latin letter or digit to name the folder by; give it one (an English title, or a word such as the method's name)",
+    };
+  const id = nextStudyId(r);
+  const study: Study = {
+    id,
+    folder: `${id}-${slug}`,
+    title,
+    question: "",
+    kind: n.kind,
+    status: "designing",
+    date: n.date,
+    in_paper: "no",
+  };
+  return {
+    ok: true,
+    registry: { ...r, studies: [...r.studies, study] },
+    study,
+  };
+}
+
+/** The `README.md` a new study's folder starts with: its id and title in frontmatter, then the sections. */
+export const studyReadme = (s: Study): string =>
+  [
+    "---",
+    `id: ${s.id}`,
+    `title: ${JSON.stringify(s.title)}`,
+    "---",
+    "",
+    `# ${s.id} — ${s.title}`,
+    "",
+    `Its row in \`../${STUDIES_FILE}\` holds its status. When the study ends, set \`status\`, \`result\`,`,
+    "`result_file` and `in_paper` there, then run `npx paperlint studies index <paper-dir>`.",
+    "",
+    "## Question",
+    "",
+    "## How to run",
+    "",
+    "## Result",
+    "",
+  ].join("\n");

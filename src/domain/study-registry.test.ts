@@ -9,13 +9,16 @@ import { describe, expect, it } from "vitest";
 import {
   INDEX_BEGIN,
   INDEX_END,
+  addStudy,
   embeddedIndex,
+  isStudyKind,
   indexBlock,
   judgeStudies,
   nextStudyId,
   registryText,
   studyIndex,
   studyMessage,
+  studyReadme,
   studySlug,
   withIndex,
   type RegistryState,
@@ -516,5 +519,81 @@ describe("studyMessage — stands alone", () => {
     ],
   ] as const)("%j", (finding, head) => {
     expect(studyMessage(finding)).toBe(`${head}\n${RULE}`);
+  });
+});
+
+describe("addStudy", () => {
+  const NEW = { title: "Baseline pass rate", kind: "spike", date: "2026-10-15" } as const;
+
+  it("appends the next id, its folder, designing, not in the paper, an empty question", () => {
+    const r = reg(study({ id: "P1-S04", folder: "P1-S04-x", foo: 1 }));
+    const out = addStudy(r, { ...NEW, title: "  Baseline\n pass   rate " });
+    const added: Study = {
+      id: "P1-S05",
+      folder: "P1-S05-baseline-pass-rate",
+      title: "Baseline pass rate",
+      question: "",
+      kind: "spike",
+      status: "designing",
+      date: "2026-10-15",
+      in_paper: "no",
+    };
+    expect(out).toEqual({
+      ok: true,
+      registry: { prefix: "P1", studies: [...r.studies, added] },
+      study: added,
+    });
+  });
+
+  it.each([
+    ["an empty title", "  ", "the title is empty"],
+    [
+      "nine words",
+      "one two three four five six seven eight nine",
+      "the title has 9 words; a title is a plain name of at most 8 — the detail goes in the row's `question`",
+    ],
+    [
+      "no Latin letter or digit",
+      "Проверка гипотезы",
+      "the title has no Latin letter or digit to name the folder by; give it one (an English title, or a word such as the method's name)",
+    ],
+  ])("refuses %s", (_why, title, why) => {
+    expect(addStudy(reg(), { ...NEW, title })).toEqual({ ok: false, why });
+  });
+});
+
+describe("isStudyKind", () => {
+  it("is true for each kind and false for anything else", () => {
+    expect(
+      ["measurement", "spike", "tooling", "data", "artifact", "salvage"].every(
+        isStudyKind,
+      ),
+    ).toBe(true);
+    expect(isStudyKind("benchmark")).toBe(false);
+  });
+});
+
+describe("studyReadme", () => {
+  it("frontmatter with the id and the quoted title, then the sections", () => {
+    expect(studyReadme(study({ title: 'A "quoted": title' }))).toBe(
+      [
+        "---",
+        "id: P1-S01",
+        'title: "A \\"quoted\\": title"',
+        "---",
+        "",
+        '# P1-S01 — A "quoted": title',
+        "",
+        "Its row in `../studies.json` holds its status. When the study ends, set `status`, `result`,",
+        "`result_file` and `in_paper` there, then run `npx paperlint studies index <paper-dir>`.",
+        "",
+        "## Question",
+        "",
+        "## How to run",
+        "",
+        "## Result",
+        "",
+      ].join("\n"),
+    );
   });
 });
