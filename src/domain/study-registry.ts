@@ -345,9 +345,9 @@ export function judgeStudies(input: StudyInput): readonly StudyFinding[] {
 
 // ── the index ─────────────────────────────────────────────────────────────────────
 
-/** A cell's text: one line, a pipe escaped. */
+/** A cell's text: one line, a backslash and then a pipe escaped, so `a\\|b` stays one cell. */
 const cell = (s: string): string =>
-  s.replace(/\r?\n/gu, " ").replace(/\|/gu, "\\|");
+  s.replace(/\r?\n/gu, " ").replace(/\\/gu, "\\\\").replace(/\|/gu, "\\|");
 
 /** The columns of the index: each one's header, and its cell for a study. */
 const COLUMNS: readonly {

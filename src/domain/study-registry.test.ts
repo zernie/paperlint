@@ -313,6 +313,15 @@ describe("judgeStudies — the index", () => {
     expect(judgeStudies(input(wide, { readme }))).toEqual([]);
   });
 
+  it("a title with a backslash before a pipe stays one cell through prettier", async () => {
+    const bs = reg(study({ title: "foo\\|bar" }));
+    const readme = await format(withIndex("# index\n", bs), {
+      parser: "markdown",
+    });
+    expect(judgeStudies(input(bs, { readme }))).toEqual([]);
+    expect(readme).toContain("foo\\\\\\|bar");
+  });
+
   it("a block that differs from the registry by one character", () => {
     const readme = withIndex("# index\n", r).replace("designing", "running");
     expect(judgeStudies(input(r, { readme }))).toEqual([
