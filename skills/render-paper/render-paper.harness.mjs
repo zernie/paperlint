@@ -335,11 +335,23 @@ await checkSkill("render-paper");
       join(dir, "paper.log"),
       "This is pdfTeX\nOutput written on paper.pdf (1 page, 1000 bytes).\n",
     );
-    return spawnSync("bash", [CHECK, dir, "paper"], {
+    const r = spawnSync("bash", [CHECK, dir, "paper"], {
       encoding: "utf8",
       env: { ...process.env, NO_COMPILE: "1" },
     });
+    // The script must run to its verdict: a run that stopped early prints no complaint either, and
+    // "no complaint" is what the exemption case asserts. stderr and the bash version name the cause.
+    assert.match(
+      r.stdout,
+      /^(PASS|FAIL)\b/m,
+      `check-render.sh stopped before its verdict (exit ${r.status}, ${BASH_VERSION}):\n` +
+        `--- stdout\n${r.stdout}--- stderr\n${r.stderr}`,
+    );
+    return r;
   };
+  const BASH_VERSION = spawnSync("bash", ["--version"], {
+    encoding: "utf8",
+  }).stdout.split("\n")[0];
 
   const ctlOnly = paper(["BSTcontrol", "real"]);
   assert.doesNotMatch(
