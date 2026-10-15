@@ -26,10 +26,15 @@ and a driver loop that calls the guard: [\`references/registry-and-ledger.md\`](
 
 **The grid's study folder.** A grid is one study of the paper. Its folder is made by
 \`npx paperlint studies new <paper-dir> "<title>" --kind measurement\` — the next id in
-\`repro/studies.json\`, the folder \`repro/<id>-<slug>/\` — and \`grid.json\`, the runs and the ledger live
-in it. When the grid ends, its row is updated (\`status\`, \`result\`, \`result_file\`, \`in_paper\`) and
-\`npx paperlint studies index <paper-dir>\` regenerates the index; \`repro/study-registered\` fails the
-lint until both are done.
+\`repro/studies.json\`, the folder \`repro/<id>-<slug>/\` with the study's \`plan.json\` — and \`grid.json\`,
+the runs and the ledger live in it. The plan says what the grid measures, the population and its
+draw (\`method\`, \`seed\`), the \`arms\` and the \`primary_outcome\`, and is filled before the first counted
+run; the author's approval of the drawn units goes into both \`grid.json\`'s \`approval\` (the guard reads
+it) and the plan's \`author_check\` (the lint reads it). A grid that is one study of a larger
+measurement names it in its row's \`measurement\`. When the grid ends, its row is updated (\`status\`,
+\`result\`, \`result_file\`, \`in_paper\`) and \`npx paperlint studies index <paper-dir>\` regenerates the
+index; \`repro/study-registered\` fails the lint until both are done, and on a running grid whose plan
+is empty.
 
 ## The order — each gate is passed before the next phase starts
 

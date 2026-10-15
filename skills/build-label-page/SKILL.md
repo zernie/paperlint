@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:7a537e71585bd321 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:dd742c1fcb34cfd6 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -49,15 +49,17 @@ The full text, each with its reason and its check, is
    fit the time they have on a phone? Who is the labeller: a page with a store opens only for people
    with access to the artifact, so the labeller is the owner or has been shared as a Contributor.
    If the study design is not written yet, `build-benchmark` comes first.
-   If the items come from a drawn sample, the study's `prereg.json` declares the population, the
-   screens and the coverage before the sample is frozen (the experimental rule `study/declare-sample` checks it, off by default), and the
-   author has been shown the drawn **units** (the rules or cases, not the items) with "is this what
-   you meet in practice?". The labelling page is not that check: items made from easy units each look
-   fine on their own.
+   If the items come from a drawn sample, the study's `plan.json` (written by
+   `paperlint studies new`) declares the population and its draw before the sample is frozen, and its
+   `author_check` records that the author has been shown the drawn **units** (the rules or cases, not
+   the items) with "is this what you meet in practice?". The labelling page is not that check: items
+   made from easy units each look fine on their own.
 2. **Copy the generator into the study and write the items.** The study folder is
    `<paper-dir>/repro/<id>-<slug>/`, made by `npx paperlint studies new <paper-dir> "Gold labels"
    --kind data` when the labelling is a study of its own (`P1-S04-gold-labels`): the command writes
-   its `README.md` and its row in `repro/studies.json`, and `repro/study-registered` checks both. When
+   its `README.md`, its `plan.json` and its row in `repro/studies.json`, and `repro/study-registered`
+   checks them; fill the plan (what is labelled, the items' source, `arms: []`, the primary outcome)
+   before the first label. When
    the labels are in, update the row (`status`, `result`, `result_file`) and run
    `npx paperlint studies index <paper-dir>`. Where this sits in stage 3, and what checks each place:
    `docs/layout.md` in the paperlint package.
