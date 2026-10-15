@@ -186,29 +186,14 @@ if [ -f "$BLG" ]; then
   # A cited key that never made it into the .bbl is the same failure seen from the other side.
   # An IEEEtran BST control entry (`@IEEEtranBSTCTL`, activated by `\bstctlcite{key}`) is cited
   # in the .aux like any key, but IEEEtran reads it as configuration and never prints it as a
-  # \bibitem — so it is not a missing reference. A key is exempt only when an
-  # `@IEEEtranBSTCTL` entry with that key exists in a database this build actually reads — the
-  # `\bibdata{…}` list in the .aux, resolved the way BibTeX resolves it (relative to the paper
-  # directory, `.bib` appended, else kpsewhich). A stale .bib lying next to the paper exempts
-  # nothing, so a misspelled `\bstctlcite{key}` or a removed control record is still reported.
-  # The entry is matched as BibTeX parses it: `{` or `(` after the type, key on any line.
+  # \bibitem — so it is not a missing reference. A key is exempt only when IEEEtran itself reports
+  # reading it as a control entry: the .blg line `** IEEEtran BST control entry "key" detected.`,
+  # which every IEEEtran*.bst prints. BibTeX wrote that line after parsing the build's own databases,
+  # so a record in a .bib the build does not read, inside `@comment{…}`, or misspelled exempts
+  # nothing, and every layout BibTeX accepts is recognised without parsing .bib files here.
   if [ -f "$BASE.aux" ] && [ -f "$BASE.bbl" ]; then
     missing=0
-    ctl=$(
-      grep -oE '\\bibdata\{[^}]*\}' "$BASE.aux" | sed 's/.*{//;s/}//' | tr ',' '\n' |
-        while read -r db; do
-          [ -z "$db" ] && continue
-          case "$db" in *.bib) ;; *) db="$db.bib" ;; esac
-          if [ -f "$db" ]; then
-            printf '%s\n' "$db"
-          elif command -v kpsewhich >/dev/null 2>&1; then
-            kpsewhich "$db" 2>/dev/null
-          fi
-        done |
-        while read -r f; do
-          perl -0ne 'print "$1\n" while /\@IEEEtranBSTCTL\s*[({]\s*([^,\s]+)\s*,/gi' "$f"
-        done | sort -u
-    )
+    ctl=$(sed -n 's/^\*\* IEEEtran BST control entry "\(.*\)" detected\.$/\1/p' "$BASE.blg" 2>/dev/null | sort -u)
     while read -r key; do
       [ -z "$key" ] && continue
       printf '%s\n' "$ctl" | grep -qxF "$key" && continue

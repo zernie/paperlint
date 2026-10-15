@@ -297,40 +297,40 @@ await checkSkill("render-paper");
 }
 
 // ── AN IEEEtran BST CONTROL ENTRY IS NOT A MISSING REFERENCE ─────────────────
-// `\bstctlcite{key}` cites an `@IEEEtranBSTCTL{key, …}` entry, so the key lands in the .aux like any
-// citation, but IEEEtran reads it as configuration and never prints a \bibitem for it. The
+// `\\bstctlcite{key}` cites an `@IEEEtranBSTCTL{key, …}` entry, so the key lands in the .aux like any
+// citation, but IEEEtran reads it as configuration and never prints a \\bibitem for it. The
 // "cited but NOT in the bibliography" check failed a real IEEE paper on exactly that key (an
-// "et al. after six authors" setting). Both halves: the control key is skipped, and a genuinely
-// missing key in the same build is still reported.
+// "et al. after six authors" setting). The exemption comes only from IEEEtran's own .blg line
+// `** IEEEtran BST control entry "key" detected.`: BibTeX wrote it after parsing the build's
+// databases, so a record BibTeX never read (a .bib the build does not use, a record inside
+// `@comment{…}`) or a misspelled key exempts nothing, and a genuinely missing key is still reported.
 {
   const HERE = dirname(fileURLToPath(import.meta.url));
   const CHECK = join(HERE, "check-render.sh");
-  const CTL_BIB =
-    "@IEEEtranBSTCTL{BSTcontrol,\n  CTLuse_forced_etal = {yes},\n}\n\n@misc{real, title = {A real reference}, year = {2026}}\n";
-  // `bibdata` is what the .aux names as the build's databases; `bibs` maps file → contents.
-  const paper = (
-    citations,
-    { bibdata = "refs", bibs = { "refs.bib": CTL_BIB } } = {},
-  ) => {
+  // `detected` = the keys IEEEtran reported in the .blg as control entries it read.
+  const paper = (citations, detected = ["BSTcontrol"]) => {
     const dir = realpathSync(mkdtempSync(join(tmpdir(), "bstctl-")));
     writeFileSync(
       join(dir, "paper.tex"),
-      `\\documentclass{IEEEtran}\n\\begin{document}\n\\bstctlcite{BSTcontrol}\nText \\cite{real}.\n\\bibliographystyle{IEEEtran}\n\\bibliography{${bibdata}}\n\\end{document}\n`,
+      "\\documentclass{IEEEtran}\n\\begin{document}\n\\bstctlcite{BSTcontrol}\nText \\cite{real}.\n\\bibliographystyle{IEEEtran}\n\\bibliography{refs}\n\\end{document}\n",
     );
-    for (const [file, body] of Object.entries(bibs)) {
-      mkdirSync(dirname(join(dir, file)), { recursive: true });
-      writeFileSync(join(dir, file), body);
-    }
     writeFileSync(
       join(dir, "paper.aux"),
       citations.map((k) => `\\citation{${k}}`).join("\n") +
-        `\n\\bibstyle{IEEEtran}\n\\bibdata{${bibdata}}\n`,
+        "\n\\bibstyle{IEEEtran}\n\\bibdata{refs}\n",
     );
     writeFileSync(
       join(dir, "paper.bbl"),
       "\\begin{thebibliography}{1}\n\\bibitem{real}\nA real reference, 2026.\n\\end{thebibliography}\n",
     );
-    writeFileSync(join(dir, "paper.blg"), "This is BibTeX\n");
+    writeFileSync(
+      join(dir, "paper.blg"),
+      "This is BibTeX, Version 0.99e\nDatabase file #1: refs.bib\n-- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.\n" +
+        detected
+          .map((k) => `** IEEEtran BST control entry "${k}" detected.\n`)
+          .join("") +
+        "\nDone.\n",
+    );
     writeFileSync(
       join(dir, "paper.log"),
       "This is pdfTeX\nOutput written on paper.pdf (1 page, 1000 bytes).\n",
@@ -344,18 +344,25 @@ await checkSkill("render-paper");
   const ctlOnly = paper(["BSTcontrol", "real"]);
   assert.doesNotMatch(
     ctlOnly.stdout,
-    /cited but NOT in the bibliography: BSTcontrol/,
-    `an @IEEEtranBSTCTL key cited by \\bstctlcite was reported as a missing reference:\n${ctlOnly.stdout}`,
+    /CITED-BUT-ABSENT/,
+    `a control key IEEEtran reported reading was flagged as a missing reference:\n${ctlOnly.stdout}`,
   );
-  assert.doesNotMatch(ctlOnly.stdout, /CITED-BUT-ABSENT/, ctlOnly.stdout);
 
-  // A misspelled \bstctlcite key, or one whose control record was removed, has no
-  // @IEEEtranBSTCTL entry behind it, so it is NOT exempt.
+  // A misspelled \\bstctlcite key: IEEEtran detected a different key, so this one is not exempt.
   const typo = paper(["BSTcontrl", "real"]);
   assert.match(
     typo.stdout,
     /cited but NOT in the bibliography: BSTcontrl/,
-    `a \\bstctlcite key with no @IEEEtranBSTCTL entry must be reported:\n${typo.stdout}`,
+    `a \\bstctlcite key IEEEtran did not report must be flagged:\n${typo.stdout}`,
+  );
+
+  // A record BibTeX never read — in a .bib the build does not use, or inside @comment{…} — leaves
+  // no "detected" line, so the key is not exempt.
+  const unread = paper(["BSTcontrol", "real"], []);
+  assert.match(
+    unread.stdout,
+    /cited but NOT in the bibliography: BSTcontrol/,
+    `a control key IEEEtran never reported reading must be flagged:\n${unread.stdout}`,
   );
 
   const withGap = paper(["BSTcontrol", "real", "gone"]);
@@ -369,53 +376,4 @@ await checkSkill("render-paper");
     /bibliography: BSTcontrol/,
     withGap.stdout,
   );
-
-  // Only a database the build reads can exempt a key: a stale .bib next to the paper that still
-  // holds the control record must not turn a removed record in the active database into a pass.
-  const stale = paper(["BSTcontrol", "real"], {
-    bibs: {
-      "refs.bib": "@misc{real, title = {A real reference}, year = {2026}}\n",
-      "unused.bib": CTL_BIB,
-    },
-  });
-  assert.match(
-    stale.stdout,
-    /cited but NOT in the bibliography: BSTcontrol/,
-    `a control record only in a .bib the build does not read must not exempt the key:\n${stale.stdout}`,
-  );
-
-  // Layouts BibTeX accepts: the database in a subdirectory, the key on the next line, and the
-  // parenthesized entry form.
-  const layouts = [
-    [
-      "subdirectory",
-      { bibdata: "bib/refs", bibs: { "bib/refs.bib": CTL_BIB } },
-    ],
-    [
-      "key on the next line",
-      {
-        bibs: {
-          "refs.bib":
-            "@IEEEtranBSTCTL{\n  BSTcontrol,\n  CTLuse_forced_etal = {yes},\n}\n",
-        },
-      },
-    ],
-    [
-      "parenthesized form",
-      {
-        bibs: {
-          "refs.bib":
-            "@IEEEtranBSTCTL(BSTcontrol,\n  CTLuse_forced_etal = {yes})\n",
-        },
-      },
-    ],
-  ];
-  for (const [layout, opts] of layouts) {
-    const r = paper(["BSTcontrol", "real"], opts);
-    assert.doesNotMatch(
-      r.stdout,
-      /CITED-BUT-ABSENT/,
-      `${layout}: a valid @IEEEtranBSTCTL entry was not recognised:\n${r.stdout}`,
-    );
-  }
 }
