@@ -17,8 +17,11 @@ before `paperlint studies new` wrote it as `plan.json`.
 }
 ```
 
-The file is still read as the study's plan, and [`repro/study-registered`](study-registered.md)
-judges it like any `plan.json`: this rule only asks for the new name.
+The file is still read as the study's plan — by a loose schema, since it was written by hand before
+the plan had one: keys of its own are accepted, and an absent size, seed or check is read as `null` —
+and [`repro/study-registered`](study-registered.md) judges it like any `plan.json`. This rule only
+asks for the new name. A `prereg.json` moved to `plan.json` is parsed strictly: its own keys go in
+`extra`.
 
 ## Why
 

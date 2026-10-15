@@ -326,7 +326,7 @@ const FILLED = planText({
   population: {
     source: "the crawl of 2026-10-01",
     size: 4210,
-    draw: { method: "census" },
+    draw: { method: "census", seed: null },
   },
   arms: [],
   primary_outcome: "the share of rules a linter can check",

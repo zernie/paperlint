@@ -141,7 +141,8 @@ two commands that write it.
    finding its own message id: a row naming an undeclared measurement (`unknown-measurement`), a
    measurement no row names (`empty-measurement`), a measurement naming an undeclared requirement
    (`unknown-requirement`), and a headline without `approval`, or approved by anyone but `author`
-   when the registry names one (`headline-approval`). **These checks run only when the registry has
+   when the registry names one (`headline-approval`). These cross-references are the rule's, not the
+   parser's: one dangling id must not fail the whole parse and hide every other finding. **These checks run only when the registry has
    `measurements`**: a registry written before them, whose rows already carry `measurement` as a field
    of their own, stays valid.
 
@@ -165,17 +166,30 @@ two commands that write it.
    ```
 
    `arms` is empty for a census; `author_check` becomes `{ "by", "date", "quote" }` once the author
-   has seen the drawn units. Other keys are the paper's. The schema lives beside the registry's, in
-   `src/adapters/study-registry/`; the text fields may be empty there, because the template is.
-   The rule reports a `plan` outside the folder, missing, or not of the schema, and — once the study
-   has run (`running`, `done`, `stopped`, `superseded`) — one with `question`, `population.source`,
-   `population.draw.method` or `primary_outcome` empty (`bad-plan`); a study of a headline measurement
+   has seen the drawn units. **Parse, don't validate:**
+
+   - **Closed at every level.** A misspelt key is an error; the paper's own keys (hypotheses,
+     models, budget) go in the one optional key `extra`, an object of anything.
+   - **One spelling of "none".** `size`, `seed` and `author_check` are required, and `null` is
+     "not known" or "not yet"; an absent key is an error, never a second way to say the same.
+   - **Complete or not is a type.** The parser returns a plan `ready` (every required text filled)
+     or a `draft` with the list of its empty texts, or why it is no plan. The rule never looks at a
+     text again: a study that has run on a `draft` is `bad-plan`, with the parser's list.
+   - **The schemas are the domain's types.** The domain's types are written by hand (the domain
+     imports no zod); the adapter holds a compile-time proof that each schema's output — registry,
+     study, measurement, requirement, approval, author check, plan — and its domain type are the
+     same type both ways, so a field added to one alone stops the build.
+
+   The schemas live beside the registry's, in `src/adapters/study-registry/`. The rule reports a
+   `plan` outside the folder, missing, or not of the schema, and — once the study has run (`running`,
+   `done`, `stopped`, `superseded`) — a draft (`bad-plan`); a study of a headline measurement
    that has run with no `author_check` in its plan, no plan, or a check by anyone but `author`
    (`author-check`). A `designing` study's template is clean, so `studies new` never leaves the lint
    red.
 
-   **Compatibility.** A row may name `prereg.json` as its plan: it is read and judged as the plan,
-   and a second rule, `repro/study-plan-name`, warns that it moves to `plan.json` — a warning cannot
+   **Compatibility.** A row may name `prereg.json` as its plan: it is parsed by a loose schema of
+   its own — keys of its own accepted at every level, those at the top kept in `extra`, an absent
+   size, seed or check read as `null` — and judged as the plan; a second rule, `repro/study-plan-name`, warns that it moves to `plan.json` — a warning cannot
    come from an error rule, since ESLint sets the level per rule. A `prereg.json` no row names is not
    read, so no existing paper turns red.
 

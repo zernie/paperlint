@@ -220,50 +220,89 @@ describe("refusing what is not a measurement, a requirement or a plan path", () 
   });
 });
 
-describe("parsing a study's plan", () => {
-  const parsePlan = studyRegistryCodec.parsePlan;
-  const PLAN = {
-    question: "How many rules can a linter check?",
-    population: {
-      source: "the crawl of 2026-10-01",
-      size: 4210,
-      draw: { method: "random", seed: 7, script: "tools/draw.py" },
-    },
-    arms: [{ name: "with the linter", model: "m" }],
-    primary_outcome: "the share of rules checked",
-    author_check: { by: "A. Author", date: "2026-10-14", quote: "Go." },
-    hypotheses: ["H1"],
-  };
+/** A filled plan, with keys of the paper's own in `extra`. */
+const parsePlan = studyRegistryCodec.parsePlan;
+const PLAN = {
+  question: "How many rules can a linter check?",
+  population: {
+    source: "the crawl of 2026-10-01",
+    size: 4210,
+    draw: { method: "random", seed: 7 },
+  },
+  arms: [{ name: "with the linter" }],
+  primary_outcome: "the share of rules checked",
+  author_check: { by: "A. Author", date: "2026-10-14", quote: "Go." },
+  extra: { hypotheses: ["H1"], draw_script: "tools/draw.py" },
+};
 
-  it("a plan parses to itself, its extra fields kept", () => {
-    expect(parsePlan(JSON.stringify(PLAN))).toEqual({ ok: true, plan: PLAN });
-  });
-
-  it("the template studies new writes parses", () => {
-    expect(parsePlan(planText(planTemplate()))).toEqual({
-      ok: true,
-      plan: planTemplate(),
+describe("parsing a study's plan: ready or draft", () => {
+  it("a filled plan is ready, its `extra` kept as it is", () => {
+    expect(parsePlan(JSON.stringify(PLAN))).toEqual({
+      kind: "ready",
+      plan: PLAN,
     });
   });
 
+  it("the template studies new writes is a draft, naming every empty text", () => {
+    expect(parsePlan(planText(planTemplate()))).toEqual({
+      kind: "draft",
+      plan: planTemplate(),
+      empty: [
+        "question",
+        "population.source",
+        "population.draw.method",
+        "primary_outcome",
+      ],
+    });
+  });
+
+  it("a text of white space only is empty", () => {
+    expect(
+      parsePlan(JSON.stringify({ ...PLAN, primary_outcome: "  " })),
+    ).toEqual({
+      kind: "draft",
+      plan: { ...PLAN, primary_outcome: "  " },
+      empty: ["primary_outcome"],
+    });
+  });
+});
+
+describe("parsing a study's plan: strict at every level", () => {
   it.each([
     ["text that is not JSON", "{", "not JSON"],
     [
-      "no question and no draw",
-      JSON.stringify({
-        ...PLAN,
-        question: undefined,
-        population: { source: "x" },
-      }),
-      "question: Invalid input: expected string, received undefined; population.draw: Invalid input: expected object, received undefined",
+      "a misspelt key at the top",
+      JSON.stringify({ ...PLAN, primary_outcom: "x" }),
+      '(top): Unrecognized key: "primary_outcom"',
     ],
     [
-      "a size that is not a whole number",
+      "a misspelt key in the draw",
       JSON.stringify({
         ...PLAN,
-        population: { ...PLAN.population, size: 0.5 },
+        population: {
+          ...PLAN.population,
+          draw: { method: "random", seed: 7, sed: 7 },
+        },
       }),
-      "population.size: Invalid input: expected int, received number",
+      'population.draw: Unrecognized key: "sed"',
+    ],
+    [
+      "a key of the paper's own outside `extra`",
+      JSON.stringify({ ...PLAN, hypotheses: ["H1"] }),
+      '(top): Unrecognized key: "hypotheses"',
+    ],
+    [
+      "no author_check: null is the one way to say none yet",
+      JSON.stringify({ ...PLAN, author_check: undefined }),
+      "author_check: Invalid input: expected object, received undefined",
+    ],
+    [
+      "no size and no seed: null is the one way to say unknown",
+      JSON.stringify({
+        ...PLAN,
+        population: { source: "x", draw: { method: "census" } },
+      }),
+      "population.size: Invalid input: expected number, received undefined; population.draw.seed: Invalid input",
     ],
     [
       "an author_check with an empty quote",
@@ -274,11 +313,76 @@ describe("parsing a study's plan", () => {
       "author_check.quote: Too small: expected string to have >=1 characters",
     ],
     [
-      "an arm without a name",
-      JSON.stringify({ ...PLAN, arms: [{ model: "m" }] }),
-      "arms.0.name: Invalid input: expected string, received undefined",
+      "an arm with a key besides its name",
+      JSON.stringify({ ...PLAN, arms: [{ name: "a", model: "m" }] }),
+      'arms.0: Unrecognized key: "model"',
     ],
   ])("refuses %s", (_why, t, why) => {
-    expect(parsePlan(t)).toEqual({ ok: false, why });
+    expect(parsePlan(t)).toEqual({ kind: "unreadable", why });
+  });
+});
+
+describe("parsing a plan under its old name, prereg.json: loose", () => {
+  const parseLegacyPlan = studyRegistryCodec.parseLegacyPlan;
+  const OLD = {
+    question: "How many rules can a linter check?",
+    population: {
+      source: "the crawl of 2026-10-01",
+      about: "rules in instruction files",
+      draw: { method: "random", script: "tools/draw.py" },
+    },
+    arms: [{ name: "with the linter", model: "m" }],
+    primary_outcome: "",
+    hypotheses: ["H1"],
+    strata: { by: "type" },
+  };
+
+  it("keys of its own are accepted: the top-level ones kept in `extra`, an absent size, seed or check read as null", () => {
+    expect(parseLegacyPlan(JSON.stringify(OLD))).toEqual({
+      kind: "draft",
+      plan: {
+        question: "How many rules can a linter check?",
+        population: {
+          source: "the crawl of 2026-10-01",
+          size: null,
+          draw: { method: "random", seed: null },
+        },
+        arms: [{ name: "with the linter" }],
+        primary_outcome: "",
+        author_check: null,
+        extra: { hypotheses: ["H1"], strata: { by: "type" } },
+      },
+      empty: ["primary_outcome"],
+    });
+  });
+
+  it("still needs the plan's own fields", () => {
+    expect(parseLegacyPlan(JSON.stringify({ hypotheses: ["H1"] }))).toEqual({
+      kind: "unreadable",
+      why: "question: Invalid input: expected string, received undefined; population: Invalid input: expected object, received undefined; arms: Invalid input: expected array, received undefined; primary_outcome: Invalid input: expected string, received undefined",
+    });
+  });
+
+  it("text that is not JSON", () => {
+    expect(parseLegacyPlan("{")).toEqual({
+      kind: "unreadable",
+      why: "not JSON",
+    });
+  });
+});
+
+describe("parsing a study's plan: a value of the wrong kind", () => {
+  it("a size that is not a whole number", () => {
+    expect(
+      parsePlan(
+        JSON.stringify({
+          ...PLAN,
+          population: { ...PLAN.population, size: 0.5 },
+        }),
+      ),
+    ).toEqual({
+      kind: "unreadable",
+      why: "population.size: Invalid input: expected int, received number",
+    });
   });
 });

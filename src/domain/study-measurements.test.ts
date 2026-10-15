@@ -15,6 +15,7 @@ import {
   withIndex,
   type Measurement,
   type PlanState,
+  type PlanTextField,
   type Study,
   type StudyInput,
   type StudyPlan,
@@ -50,7 +51,7 @@ const PLAN: StudyPlan = {
   population: {
     source: "every rule found in the crawl of 2026-10-01",
     size: 4210,
-    draw: { method: "census" },
+    draw: { method: "census", seed: null },
   },
   arms: [],
   primary_outcome: "the share of rules a linter can check",
@@ -82,7 +83,20 @@ const reg = (over: Partial<StudyRegistry> = {}): StudyRegistry => ({
   ...over,
 });
 
-const read = (plan: StudyPlan): PlanState => ({ kind: "read", plan });
+const read = (plan: StudyPlan): PlanState => ({ kind: "ready", plan });
+
+/** Every required text of the template, empty. */
+const ALL_EMPTY = [
+  "question",
+  "population.source",
+  "population.draw.method",
+  "primary_outcome",
+] as const;
+
+const draft = (
+  plan: StudyPlan,
+  empty: PlanTextField[] = [...ALL_EMPTY],
+): PlanState => ({ kind: "draft", plan, empty });
 
 /** A `repro/` that holds every row's folder and plan, its index in sync, then `over`. */
 const input = (
@@ -144,7 +158,7 @@ describe("measurements and plans — silent", () => {
       ],
     });
     const plans = new Map([
-      [`P1-S01-census/${PLAN_FILE}`, read(planTemplate())],
+      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate())],
     ]);
     expect(findings(r, { plans })).toEqual([]);
   });
@@ -311,7 +325,7 @@ describe("plans — filled once the study has run, and named plan.json", () => {
       measurements: [],
     });
     const plans = new Map([
-      [`P1-S01-census/${PLAN_FILE}`, read(planTemplate())],
+      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate())],
     ]);
     expect(findings(r, { plans })).toEqual([
       { problem: "no-result", id: "P1-S01", missing: ["result_file"] },
@@ -330,6 +344,43 @@ describe("plans — filled once the study has run, and named plan.json", () => {
       },
     ]);
   });
+});
+
+describe("plans — the parser decides ready or draft", () => {
+  it("the empty fields are the parser's: a draft is reported with exactly its list", () => {
+    const r = reg({ studies: [study({ plan: PLAN_FILE })], measurements: [] });
+    const plans = new Map([
+      [`P1-S01-census/${PLAN_FILE}`, draft(PLAN, ["primary_outcome"])],
+    ]);
+    expect(findings(r, { plans })).toEqual([
+      {
+        problem: "bad-plan",
+        id: "P1-S01",
+        path: PLAN_FILE,
+        why: "unfilled",
+        fields: ["primary_outcome"],
+        status: "running",
+      },
+    ]);
+  });
+
+  it("a ready plan is never reported as unfilled", () => {
+    const r = reg({
+      studies: [
+        study({
+          status: "done",
+          result: "x",
+          result_file: "r.tsv",
+          plan: PLAN_FILE,
+        }),
+      ],
+      measurements: [],
+    });
+    const plans = new Map([[`P1-S01-census/${PLAN_FILE}`, read(PLAN)]]);
+    expect(
+      findings(r, { plans, existingResults: new Set(["P1-S01-census/r.tsv"]) }),
+    ).toEqual([]);
+  });
 
   it("an old prereg.json as the plan: read as the plan, and reported for its name", () => {
     const r = reg({
@@ -342,10 +393,10 @@ describe("plans — filled once the study has run, and named plan.json", () => {
 });
 
 describe("plans — the author's check of a headline measurement's study", () => {
-  it("a running study of a headline measurement whose plan has no author_check", () => {
-    const { author_check, ...plan } = PLAN;
-    expect(author_check).toBeDefined();
-    const plans = new Map([[`P1-S01-census/${PLAN_FILE}`, read(plan)]]);
+  it("a running study of a headline measurement whose plan's author_check is null", () => {
+    const plans = new Map([
+      [`P1-S01-census/${PLAN_FILE}`, read({ ...PLAN, author_check: null })],
+    ]);
     expect(findings(reg(), { plans })).toEqual([
       {
         problem: "author-check",
@@ -355,15 +406,6 @@ describe("plans — the author's check of a headline measurement's study", () =>
         why: "missing",
       },
     ]);
-  });
-
-  it("an author_check of null, as the template writes it, is none", () => {
-    const plans = new Map([
-      [`P1-S01-census/${PLAN_FILE}`, read({ ...PLAN, author_check: null })],
-    ]);
-    expect(judgeStudies(input(reg(), { plans })).map((f) => f.problem)).toEqual(
-      ["author-check"],
-    );
   });
 
   it("an author_check by someone other than the author", () => {

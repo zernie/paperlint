@@ -17,7 +17,7 @@
  * `PIPELINE-STATUS.md`, first line, like the layout rules: every paper has it, and ESLint lints no
  * file in `repro/`.
  */
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, posix } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
   README,
@@ -26,6 +26,7 @@ import {
   REPRO_DIRS,
 } from "./domain/repro-layout.ts";
 import {
+  LEGACY_PLAN_FILE,
   PLAN_NAME_PROBLEMS,
   STUDIES_FILE,
   judgeStudies,
@@ -101,7 +102,10 @@ const existingResults = (
       ),
   );
 
-/** The plan each row of `r` names, read and parsed, by `<folder>/<plan>`; a plan not there is left out. */
+/**
+ * The plan each row of `r` names, read and parsed, by `<folder>/<plan>`; a plan not there is left out.
+ * A plan still named `prereg.json` is parsed by the loose schema of its old name.
+ */
 const plansOf = (
   dir: string,
   r: RegistryState,
@@ -114,15 +118,11 @@ const plansOf = (
       .flatMap((key): readonly (readonly [string, PlanState])[] => {
         const text = textAt(deps.files, join(dir, REPRO_DIR, key));
         if (text === null) return [];
-        const parsed = deps.codec.parsePlan(text);
-        return [
-          [
-            key,
-            parsed.ok
-              ? { kind: "read", plan: parsed.plan }
-              : { kind: "unreadable", why: parsed.why },
-          ],
-        ];
+        const parse =
+          posix.basename(key) === LEGACY_PLAN_FILE
+            ? deps.codec.parseLegacyPlan
+            : deps.codec.parsePlan;
+        return [[key, parse(text)]];
       }),
   );
 

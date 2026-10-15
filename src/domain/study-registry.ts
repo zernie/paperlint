@@ -154,44 +154,57 @@ export type AuthorCheck = Omit<Approval, "source">;
 
 /**
  * A study's plan, fixed before its runs: what it measures, on what population and how it is drawn,
- * its arms, its primary outcome, and the author's check of the drawn units. Every other key is the
- * paper's and is kept.
+ * its arms, its primary outcome, and the author's check of the drawn units. Closed: a key the paper
+ * needs of its own goes in `extra`, so a misspelt key is an error, not a key nobody reads. "Not
+ * known" and "not yet" have one spelling each: null.
  */
 export interface StudyPlan {
   readonly question: string;
   readonly population: {
     /** Where the units come from: the census, crawl or registry, with its date. */
     readonly source: string;
-    readonly size?: number | null | undefined;
+    /** How many units it holds; null when not known. */
+    readonly size: number | null;
     readonly draw: {
       /** How the sample is drawn from the population: `census`, `random`, `stratified` … */
       readonly method: string;
-      readonly seed?: string | number | null | undefined;
-      readonly [extra: string]: unknown;
+      /** null when the draw has none. */
+      readonly seed: string | number | null;
     };
-    readonly [extra: string]: unknown;
   };
   /** The conditions compared; none for a census. */
-  readonly arms: readonly {
-    readonly name: string;
-    readonly [extra: string]: unknown;
-  }[];
+  readonly arms: readonly { readonly name: string }[];
   readonly primary_outcome: string;
-  /** null: not yet. */
-  readonly author_check?: AuthorCheck | null | undefined;
-  readonly [extra: string]: unknown;
+  /** null: the author has not checked the drawn units yet. */
+  readonly author_check: AuthorCheck | null;
+  /** The paper's own keys: hypotheses, models, budget … Kept, never read. */
+  readonly extra?: Readonly<Record<string, unknown>> | undefined;
 }
 
-/** A plan's text, parsed: the plan, or the reasons it is not one. */
-export type ParsedPlan =
-  | { readonly ok: true; readonly plan: StudyPlan }
-  | { readonly ok: false; readonly why: string };
+/** The texts a plan must fill before the study runs, in the order they are named. */
+export const PLAN_TEXT_FIELDS = [
+  "question",
+  "population.source",
+  "population.draw.method",
+  "primary_outcome",
+] as const;
+export type PlanTextField = (typeof PLAN_TEXT_FIELDS)[number];
 
-/** What a study's folder holds of the plan its row names. */
-export type PlanState =
-  | { readonly kind: "absent" }
-  | { readonly kind: "unreadable"; readonly why: string }
-  | { readonly kind: "read"; readonly plan: StudyPlan };
+/**
+ * A plan's text, parsed: ready (every required text filled), a draft (with the texts still empty),
+ * or the reasons it is not a plan. Whether a plan is complete is decided here, once, by the parser.
+ */
+export type ParsedPlan =
+  | { readonly kind: "ready"; readonly plan: StudyPlan }
+  | {
+      readonly kind: "draft";
+      readonly plan: StudyPlan;
+      readonly empty: readonly PlanTextField[];
+    }
+  | { readonly kind: "unreadable"; readonly why: string };
+
+/** What a study's folder holds of the plan its row names: absent, or what its text parsed to. */
+export type PlanState = { readonly kind: "absent" } | ParsedPlan;
 
 /** The plan `paperlint studies new` writes: every field present, its value to fill. */
 export const planTemplate = (): StudyPlan => ({
@@ -323,7 +336,7 @@ export type StudyFinding =
       readonly id: string;
       readonly path: string;
       readonly why: "unfilled";
-      readonly fields: readonly string[];
+      readonly fields: readonly PlanTextField[];
       readonly status: StudyStatus;
     }
   | {
@@ -502,50 +515,40 @@ const planOf = ({ s, input }: Row): PlanState | null => {
     : { kind: "absent" };
 };
 
-/** The plan's required texts left empty. */
-const emptyFields = (p: StudyPlan): readonly string[] =>
-  (
-    [
-      ["question", p.question],
-      ["population.source", p.population.source],
-      ["population.draw.method", p.population.draw.method],
-      ["primary_outcome", p.primary_outcome],
-    ] as const
-  )
-    .filter(([, v]) => v.trim() === "")
-    .map(([k]) => k);
-
 const hasRun = (s: Study): boolean => RAN_STATUSES.includes(s.status);
 
-/** The plan a row names is a file inside its folder, of the schema, and filled once the study has run. */
-const badPlan: RowCheck = (row) => {
-  const { s } = row;
+/** The finding for the plan `path` of `s`, in the state its folder holds it; null when it stands. */
+const planFinding = (
+  s: Study,
+  path: string,
+  state: PlanState,
+): StudyFinding | null => {
+  const at = { problem: "bad-plan", id: s.id, path } as const;
+  switch (state.kind) {
+    case "absent":
+      return { ...at, why: "missing" };
+    case "unreadable":
+      return { ...at, why: "unreadable", reasons: state.why };
+    case "draft":
+      return hasRun(s)
+        ? { ...at, why: "unfilled", fields: state.empty, status: s.status }
+        : null;
+    case "ready":
+      return null;
+  }
+};
+
+/** The plan a row names is a file inside its folder, of the schema, and ready once the study has run. */
+const badPlan: RowCheck = ({ s, input }) => {
   const path = s.plan;
   if (path === undefined) return null;
   if (!isInside(path))
     return { problem: "bad-plan", id: s.id, path, why: "outside" };
-  const state = planOf(row);
-  if (state?.kind !== "read" && state?.kind !== "unreadable")
-    return { problem: "bad-plan", id: s.id, path, why: "missing" };
-  if (state.kind === "unreadable")
-    return {
-      problem: "bad-plan",
-      id: s.id,
-      path,
-      why: "unreadable",
-      reasons: state.why,
-    };
-  const fields = emptyFields(state.plan);
-  return hasRun(s) && fields.length > 0
-    ? {
-        problem: "bad-plan",
-        id: s.id,
-        path,
-        why: "unfilled",
-        fields,
-        status: s.status,
-      }
-    : null;
+  return planFinding(
+    s,
+    path,
+    input.plans.get(`${s.folder}/${path}`) ?? { kind: "absent" },
+  );
 };
 
 /** A plan under its old name: read, and named for renaming. */
@@ -570,7 +573,10 @@ const authorCheck: RowCheck = (row) => {
   } as const;
   const state = planOf(row);
   if (state === null) return { ...at, why: "no-plan" };
-  const wrong = state.kind === "read" ? checkProblem(r, state.plan) : null;
+  const wrong =
+    state.kind === "ready" || state.kind === "draft"
+      ? checkProblem(r, state.plan)
+      : null;
   return wrong === null ? null : { ...at, ...wrong };
 };
 
@@ -582,7 +588,7 @@ const checkProblem = (
   | { readonly why: "missing" }
   | { readonly why: "not-author"; readonly by: string; readonly author: string }
   | null => {
-  const check = plan.author_check ?? null;
+  const check = plan.author_check;
   if (check === null) return { why: "missing" };
   return r.author === undefined || check.by === r.author
     ? null

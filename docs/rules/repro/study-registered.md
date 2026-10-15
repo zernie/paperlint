@@ -148,16 +148,19 @@ author's check of the drawn units. `paperlint studies new` writes the template b
 | ------------------------ | ---------------------------------------------------------------------------- |
 | `question`               | what the study measures, one sentence                                        |
 | `population.source`      | where the units come from: the census, crawl or registry, with its date      |
-| `population.size`        | optional: how many units it holds, a whole number above 0, or `null`         |
+| `population.size`        | how many units it holds, a whole number above 0; `null` when not known       |
 | `population.draw.method` | how the sample is drawn: `census`, `random`, `stratified` …                  |
-| `population.draw.seed`   | optional: the draw's seed, or `null`                                         |
-| `arms`                   | the conditions compared, each with a `name`; `[]` for a census               |
+| `population.draw.seed`   | the draw's seed; `null` when it has none                                     |
+| `arms`                   | the conditions compared, each `{ "name": … }`; `[]` for a census             |
+| `extra`                  | optional: the paper's own keys (hypotheses, models, budget), kept unread     |
 | `primary_outcome`        | the one number the study reports first                                       |
 | `author_check`           | `null` until the author has seen the drawn units; then `by`, `date`, `quote` |
 
-Every other key is the paper's own (hypotheses, models, budget) and is kept. A plan named
-`prereg.json`, its old name, is read the same way, and [`repro/study-plan-name`](study-plan-name.md)
-warns that it moves to `plan.json`.
+The plan is closed at every level: a misspelt key is an error, and a key of the paper's own goes in
+`extra`. `size`, `seed` and `author_check` are always there; `null` is the one way to say "not known"
+or "not yet". A plan named `prereg.json`, its old name, is parsed by a loose schema — keys of its own
+accepted at every level, those at the top kept in `extra`, an absent size, seed or check read as
+`null` — and [`repro/study-plan-name`](study-plan-name.md) warns that it moves to `plan.json`.
 
 The rule reports:
 

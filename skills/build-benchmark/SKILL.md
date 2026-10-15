@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:830c78f568fafaef compiled from skills/build-benchmark/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:5e9cd2bdd35aaa33 compiled from skills/build-benchmark/SKILL.md.spec.ts -->
 
 # build-benchmark — the study + the artifact reviewers can run
 
@@ -85,7 +85,8 @@ changes what the sample can say, not only its size; screens that are reasonable 
 sample nobody meets in practice. So, before the draw is frozen, fill the study's `plan.json`: the
 `question`, the `population` (its `source` and `size`, and the `draw`: its `method` and `seed`),
 the `arms` (`[]` for a census) and the `primary_outcome`; what each screen removed per stratum and
-what share the sample can represent go into the same file, as keys of the paper's own. Then show the
+what share the sample can represent go into the same file, under `extra` (the plan is closed: any
+other unknown key is an error). Then show the
 author the drawn **units** (the rules or cases, not the items made from them), ask *is this what you
 meet in practice?*, and record the answer in the plan's `author_check` (`by`, `date`, their words in
 `quote`). Once the study is `running`, `repro/study-registered` fails the lint on an empty plan field,
