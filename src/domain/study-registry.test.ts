@@ -247,16 +247,6 @@ describe("judgeStudies — status", () => {
     ]);
   });
 
-  it.each(["../tools/numbers.tsv", "/etc/passwd", "a/../../b"])(
-    "a result_file outside the folder: %s",
-    (path) => {
-      const r = reg(study({ status: "running", result_file: path }));
-      expect(judgeStudies(input(r))).toEqual([
-        { problem: "result-file", id: "P1-S01", path, why: "outside" },
-      ]);
-    },
-  );
-
   it("a result_file that exists is fine on any status", () => {
     const r = reg(study({ status: "running", result_file: "r.tsv" }));
     expect(
@@ -283,6 +273,22 @@ describe("judgeStudies — status", () => {
   });
 });
 
+describe("judgeStudies — a result_file outside its folder", () => {
+  it.each([
+    "../tools/numbers.tsv",
+    "/etc/passwd",
+    "a/../../b",
+    "..\\tools\\numbers.tsv",
+    "C:\\tools\\numbers.tsv",
+    "C:/tools/numbers.tsv",
+  ])("a result_file outside the folder: %s", (path) => {
+    const r = reg(study({ status: "running", result_file: path }));
+    expect(judgeStudies(input(r))).toEqual([
+      { problem: "result-file", id: "P1-S01", path, why: "outside" },
+    ]);
+  });
+});
+
 describe("judgeStudies — the index", () => {
   const r = reg(study());
 
@@ -296,6 +302,15 @@ describe("judgeStudies — the index", () => {
     expect(judgeStudies(input(r, { readme: "# index\n" }))).toEqual([
       { problem: "stale-index", why: "no-markers" },
     ]);
+  });
+
+  it("a table prettier padded by display width, with wide characters, is in sync", async () => {
+    const wide = reg(study({ title: "測定 A" }));
+    const readme = await format(withIndex("# index\n", wide), {
+      parser: "markdown",
+    });
+    expect(readme).not.toBe(withIndex("# index\n", wide));
+    expect(judgeStudies(input(wide, { readme }))).toEqual([]);
   });
 
   it("a block that differs from the registry by one character", () => {

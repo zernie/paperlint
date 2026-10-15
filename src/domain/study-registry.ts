@@ -14,7 +14,7 @@
  *
  * Pure: the caller lists `repro/`, reads the registry and the README, and says which result files exist.
  */
-import { isAbsolute, posix } from "node:path";
+import { isAbsolute, posix, win32 } from "node:path";
 import { STUDIES_FILE, STUDY_SLUG } from "./repro-layout.ts";
 
 /** The registry, at the top of the paper's `repro/`; the layout allows it there. */
@@ -187,10 +187,15 @@ export const studySlug = (title: string): string =>
 export const titleWords = (title: string): number =>
   title.split(/\s+/u).filter((w) => w !== "").length;
 
-/** Whether `path` stays inside the folder it is relative to. */
+/**
+ * Whether `path` stays inside the folder it is relative to. A backslash or a Windows absolute path
+ * is refused outright: `posix.normalize` does not resolve `..\\`, while the host's `join` may.
+ */
 const isInside = (path: string): boolean => {
+  if (path.includes("\\") || isAbsolute(path) || win32.isAbsolute(path))
+    return false;
   const n = posix.normalize(path);
-  return !isAbsolute(path) && n !== ".." && !n.startsWith("../");
+  return n !== ".." && !n.startsWith("../");
 };
 
 /** One row of a registry, with what the judge read beside it. */
@@ -305,7 +310,7 @@ function judgeIndex(
   if (readme === null) return { problem: "stale-index", why: "no-readme" };
   const block = embeddedIndex(readme);
   if (block === null) return { problem: "stale-index", why: "no-markers" };
-  return block === `\n\n${studyIndex(r)}\n\n`
+  return cellsOf(block) === cellsOf(studyIndex(r))
     ? null
     : { problem: "stale-index", why: "differs" };
 }
@@ -385,6 +390,25 @@ export function studyIndex(r: StudyRegistry): string {
     ...r.studies.map((s) => line(sized.map((c) => padded(c.of(s), c.width)))),
   ].join("\n");
 }
+
+/**
+ * What a markdown table says, whatever its padding: its rows, each cell trimmed, a separator cell as
+ * `---`. The index is judged on this, because the padding belongs to the formatter: prettier sizes a
+ * column by display width, so a wide character pads differently from a code-point count.
+ */
+const cellsOf = (table: string): string =>
+  table
+    .trim()
+    .split("\n")
+    .map((line) =>
+      line
+        .trim()
+        .replace(/^\||\|$/gu, "")
+        .split(/(?<!\\)\|/u)
+        .map((c) => c.trim().replace(/^:?-{3,}:?$/u, "---"))
+        .join("|"),
+    )
+    .join("\n");
 
 /** The index between its markers, a blank line on each side. */
 export const indexBlock = (r: StudyRegistry): string =>
