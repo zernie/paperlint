@@ -7,15 +7,21 @@
  * where a new run goes. The layout gives each kind of material one place:
  *
  *   repro/
- *   ├── README.md              the index: one line per study
- *   ├── <slug>-YYYY-MM-DD/     one folder per study or spike, with a README.md inside
+ *   ├── README.md              the index: one line per study, generated from studies.json
+ *   ├── studies.json           the study registry: one row per study (src/domain/study-registry.ts)
+ *   ├── <id>-<slug>/           one folder per study or spike, named by its row, with a README.md inside
  *   ├── tools/                 scripts used across the paper (numbers, figures, anonymity check, harnesses)
  *   └── data/                  shared data (tables, caches)
  *
  * plus `.gitignore`. A loose note belongs in its study's folder or in the paper's `research/`.
  *
- * ── THE DATE IN A STUDY'S NAME ────────────────────────────────────────────────────
- * `<slug>-YYYY-MM-DD` is the day the study began. `<slug>-YYYY-MM` is accepted too: a study that ran
+ * ── A STUDY'S NAME ───────────────────────────────────────────────────────────────
+ * `<id>-<slug>` (`P1-S03-baseline`): the id of the study's row in `repro/studies.json` — the paper's
+ * prefix, `-S`, two or more digits — then the slug. Whether the id has a row, and the row this folder,
+ * is `repro/study-registered`'s question; this layout only accepts the shape.
+ *
+ * The older form, `<slug>-YYYY-MM-DD`, stays accepted, so a paper that turned the registry off is not
+ * broken: the date is the day the study began. `<slug>-YYYY-MM` is accepted too: a study that ran
  * over weeks (labelling, a reading of a corpus) has a month as its honest date, and both forms sort
  * by time. The date must be a real one (no month 13, no 30 February). The slug is lowercase letters
  * and digits in words joined by single hyphens.
@@ -32,6 +38,9 @@ import { leaf, renderTree, type TreeNode } from "./layout-tree.ts";
 /** The folder this layout governs, at the paper folder's root. */
 export const REPRO_DIR = "repro";
 
+/** The study registry, at the top of `repro/` (src/domain/study-registry.ts). */
+export const STUDIES_FILE = "studies.json";
+
 /** The index at the top of `repro/`, and the file every study folder holds. */
 export const README = "README.md";
 
@@ -40,7 +49,14 @@ export const REPRO_FILE_NOTES: readonly {
   readonly name: string;
   readonly note: string;
 }[] = [
-  { name: README, note: "the index: one line per study" },
+  {
+    name: README,
+    note: "the index: one line per study, generated from studies.json",
+  },
+  {
+    name: STUDIES_FILE,
+    note: "the study registry: id, title, status and result of each study",
+  },
   { name: ".gitignore", note: "keeps the scripts' byproducts out of git" },
 ];
 export const REPRO_FILES: readonly string[] = REPRO_FILE_NOTES.map(
@@ -64,8 +80,8 @@ export const REPRO_DIRS: readonly string[] = REPRO_DIR_NOTES.map((d) => d.name);
 
 /** The study folder as the layout draws it: the name pattern, and the README.md it must hold. */
 const STUDY_NODE: TreeNode = {
-  name: "<slug>-YYYY-MM-DD/",
-  note: "one folder per study or spike (<slug>-YYYY-MM for one that ran over weeks)",
+  name: "<id>-<slug>/",
+  note: "one folder per study or spike, named by its row in studies.json (P1-S03-baseline)",
   children: [
     leaf(README, "required: what it asks, how to run it, what it found"),
   ],
@@ -100,8 +116,19 @@ export const REPRO_BYPRODUCTS: readonly string[] = [
   "Thumbs.db",
 ];
 
-/** A study's name: a slug, then the year, the month, and optionally the day it began. */
+/** A slug: lowercase letters and digits, in words joined by single hyphens. */
+export const STUDY_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+
+/** A dated study's name: a slug, then the year, the month, and optionally the day it began. */
 const STUDY_NAME = /^([a-z0-9]+(?:-[a-z0-9]+)*)-(\d{4})-(\d{2})(?:-(\d{2}))?$/u;
+
+/** A registered study's name: the id (a prefix, `-S`, two or more digits), then the slug. */
+const REGISTERED_STUDY_NAME =
+  /^[A-Z][A-Z0-9]*-S\d{2,}-[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+
+/** Whether `name` is a registered study folder's: `<id>-<slug>`, as `P1-S03-baseline`. */
+export const isRegisteredStudyName = (name: string): boolean =>
+  REGISTERED_STUDY_NAME.test(name);
 
 const isLeapYear = (y: number): boolean =>
   (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
@@ -110,8 +137,8 @@ const isLeapYear = (y: number): boolean =>
 const daysIn = (y: number, m: number): number =>
   m === 2 ? (isLeapYear(y) ? 29 : 28) : [4, 6, 9, 11].includes(m) ? 30 : 31;
 
-/** Whether `name` is a study folder's: `<slug>-YYYY-MM-DD` or `<slug>-YYYY-MM`, a real date. */
-export function isStudyName(name: string): boolean {
+/** Whether `name` is a dated study folder's: `<slug>-YYYY-MM-DD` or `<slug>-YYYY-MM`, a real date. */
+function isDatedStudyName(name: string): boolean {
   const m = STUDY_NAME.exec(name);
   if (m === null) return false;
   const year = Number(m[2]);
@@ -119,6 +146,10 @@ export function isStudyName(name: string): boolean {
   const day = m[4] === undefined ? 1 : Number(m[4]);
   return month >= 1 && month <= 12 && day >= 1 && day <= daysIn(year, month);
 }
+
+/** Whether `name` is a study folder's: `<id>-<slug>`, or the dated `<slug>-YYYY-MM-DD` / `<slug>-YYYY-MM`. */
+export const isStudyName = (name: string): boolean =>
+  isRegisteredStudyName(name) || isDatedStudyName(name);
 
 /**
  * The study name to suggest for a folder named `name`: its name as a slug, with the date to fill in.
@@ -129,9 +160,18 @@ export function suggestedStudyName(name: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/gu, "-")
     .replace(/^-+|-+$/gu, "");
-  if (isStudyName(slug)) return slug;
-  const base = slug.replace(/(?:^|-)\d{4}(?:-\d{1,2}){0,2}$/u, "");
-  return `${base === "" ? "<slug>" : base}-YYYY-MM-DD`;
+  if (isDatedStudyName(slug)) return slug;
+  return `${suggestedSlug(name)}-YYYY-MM-DD`;
+}
+
+/** The slug to suggest for a folder named `name`: its name as a slug, any trailing date dropped. */
+export function suggestedSlug(name: string): string {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, "-")
+    .replace(/^-+|-+$/gu, "")
+    .replace(/(?:^|-)\d{4}(?:-\d{1,2}){0,2}$/u, "");
+  return base === "" ? "<slug>" : base;
 }
 
 /** The extensions of a script: what a study or the paper's build runs. */
@@ -203,11 +243,11 @@ export const DATA_CURE =
 
 /** Where a note goes. */
 export const NOTE_CURE =
-  "the dated folder of the study it is about (repro/<slug>-YYYY-MM-DD/), or the paper's research/ when it is research or a decision rather than the record of a run";
+  "the folder of the study it is about (repro/<id>-<slug>/), or the paper's research/ when it is research or a decision rather than the record of a run";
 
 /** Where a file of any other kind goes. */
 export const FILE_CURE_BY_KIND =
-  "decide by what it is — a script → repro/tools/; data → repro/data/; a note → the dated folder of its study, or the paper's research/; what one study produced → that study's folder";
+  "decide by what it is — a script → repro/tools/; data → repro/data/; a note → the folder of its study, or the paper's research/; what one study produced → that study's folder";
 
 /** The files paperlint itself once kept at the top of `repro/`, each with where it is read now. */
 export const MOVED_FILES: readonly {
@@ -242,7 +282,7 @@ function fileCure(name: string): string {
 
 /** Where a folder with no study name goes: renamed as a study, or emptied into the shared folders. */
 const folderCure = (name: string): string =>
-  `rename it to \`${suggestedStudyName(name)}\`, one folder per study or spike, named for what it is and the date it began — the date of its first commit is a fine default (\`git log --reverse --format=%as -- repro/${name} | head -1\`, run in the paper folder) — and give it a README.md; if it holds scripts or data shared across the paper instead, move them into repro/tools/ or repro/data/`;
+  `rename it to \`<id>-${suggestedSlug(name)}\` — the next free id in repro/${STUDIES_FILE}, then what it is — give it its row there and a README.md (\`npx paperlint studies new\` makes all three for a new study); in a paper with repro/study-registered off, \`${suggestedStudyName(name)}\` is accepted instead, dated by the day it began — its first commit is a fine default (\`git log --reverse --format=%as -- repro/${name} | head -1\`, run in the paper folder); if it holds scripts or data shared across the paper instead, move them into repro/tools/ or repro/data/`;
 
 /** An entry at the top of `repro/`: a file or a folder, and for a folder whether it holds a README.md. */
 export interface ReproEntry {
@@ -300,7 +340,7 @@ export function judgeRepro(
 export function reproMessage(f: ReproFinding): string {
   const head =
     f.problem === "stray"
-      ? `\`${f.path}\` is loose at the top of the paper's repro/ folder, which holds only an index, the shared tools and data, and one dated folder per study. Where it goes: ${f.cure}.`
+      ? `\`${f.path}\` is loose at the top of the paper's repro/ folder, which holds only an index, the study registry, the shared tools and data, and one folder per study. Where it goes: ${f.cure}.`
       : `\`${f.path}\` is a study folder without a ${README}, and every study in repro/ has one. What to do: ${f.cure}.`;
   return [
     head,

@@ -32,20 +32,20 @@ two commands that write it.
    }
    ```
 
-   | field           | values                                                                     |
-   | --------------- | -------------------------------------------------------------------------- |
-   | `prefix`        | the paper's prefix: a capital letter, then capitals or digits (`P1`)       |
-   | `id`            | `<prefix>-S<two or more digits>`, unique                                   |
-   | `folder`        | `<id>-<slug>`: the study's folder at the top of `repro/`                   |
-   | `title`         | a plain name, at most 8 words                                              |
-   | `question`      | one sentence: what the study asks                                          |
-   | `kind`          | `measurement`, `spike`, `tooling`, `data`, `artifact`, `salvage`           |
-   | `status`        | `designing`, `running`, `done`, `stopped`, `superseded`, `dropped`         |
-   | `date`          | `YYYY-MM-DD`, the day it was registered                                    |
-   | `result`        | optional; one line. Required when `done`                                   |
-   | `result_file`   | optional; a path inside the folder. Required, and must exist, when `done`  |
-   | `superseded_by` | optional; an id in the registry. Required when `superseded`                |
-   | `in_paper`      | `yes`, `no`, `registry` (listed only in the registry, not in the text)     |
+   | field           | values                                                                    |
+   | --------------- | ------------------------------------------------------------------------- |
+   | `prefix`        | the paper's prefix: a capital letter, then capitals or digits (`P1`)      |
+   | `id`            | `<prefix>-S<two or more digits>`, unique                                  |
+   | `folder`        | `<id>-<slug>`: the study's folder at the top of `repro/`                  |
+   | `title`         | a plain name, at most 8 words                                             |
+   | `question`      | one sentence: what the study asks                                         |
+   | `kind`          | `measurement`, `spike`, `tooling`, `data`, `artifact`, `salvage`          |
+   | `status`        | `designing`, `running`, `done`, `stopped`, `superseded`, `dropped`        |
+   | `date`          | `YYYY-MM-DD`, the day it was registered                                   |
+   | `result`        | optional; one line. Required when `done`                                  |
+   | `result_file`   | optional; a path inside the folder. Required, and must exist, when `done` |
+   | `superseded_by` | optional; an id in the registry. Required when `superseded`               |
+   | `in_paper`      | `yes`, `no`, `registry` (listed only in the registry, not in the text)    |
 
    **A row may carry more fields**, and they are kept: a paper merges its own measurement metadata
    into the rows (`role`, `frame`, `method`, `outcome`, …). The top level is closed: a misspelt
@@ -95,14 +95,14 @@ two commands that write it.
 
 ## Where each part lives
 
-| part                                    | file                                  | layer   |
-| --------------------------------------- | ------------------------------------- | ------- |
-| the types, the judge, the index, ids    | `src/domain/study-registry.ts`        | domain  |
-| the schema (zod), parsing the text      | `src/adapters/study-registry/`        | adapter |
-| what the app asks of a parser           | `src/ports/study-registry-codec.ts`   | port    |
-| the rule: list the folder, read, report | `src/study-registry-rule.ts`          | app     |
-| the two commands                        | `src/studies.ts`                      | app     |
-| wiring, the clock for today's date      | `src/cli.ts`                          | root    |
+| part                                    | file                                | layer   |
+| --------------------------------------- | ----------------------------------- | ------- |
+| the types, the judge, the index, ids    | `src/domain/study-registry.ts`      | domain  |
+| the schema (zod), parsing the text      | `src/adapters/study-registry/`      | adapter |
+| what the app asks of a parser           | `src/ports/study-registry-codec.ts` | port    |
+| the rule: list the folder, read, report | `src/study-registry-rule.ts`        | app     |
+| the two commands                        | `src/studies.ts`                    | app     |
+| wiring, the clock for today's date      | `src/cli.ts`                        | root    |
 
 The judge is pure: it takes the folder names, the parsed registry (or why it is absent or unreadable),
 the README's text, and which result files exist, and returns findings. The rule and the commands are
