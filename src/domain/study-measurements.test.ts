@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   PLAN_FILE,
   judgeStudies,
+  planKeys,
   planTemplate,
   planText,
   studyMessage,
@@ -395,6 +396,23 @@ describe("plans — the author's check of a headline measurement's study", () =>
   });
 });
 
+describe("planKeys", () => {
+  it("names each plan inside its folder, and leaves out a row with none or one outside", () => {
+    const r = reg({
+      studies: [
+        study({ plan: PLAN_FILE }),
+        study({ id: "P1-S02", folder: "P1-S02-b" }),
+        study({ id: "P1-S03", folder: "P1-S03-c", plan: "../x.json" }),
+        study({ id: "P1-S04", folder: "P1-S04-d", plan: "design/plan.json" }),
+      ],
+    });
+    expect(planKeys(r)).toEqual([
+      "P1-S01-census/plan.json",
+      "P1-S04-d/design/plan.json",
+    ]);
+  });
+});
+
 describe("planTemplate and planText", () => {
   it("every field present, its value to fill, and author_check null", () => {
     expect(planTemplate()).toEqual({
@@ -530,6 +548,19 @@ describe("studyMessage — the new findings stand alone", () => {
     ).toMatch(
       /leaves `question`, `population.source` and `primary_outcome` empty/u,
     );
+  });
+
+  it("names a single empty field alone", () => {
+    expect(
+      studyMessage({
+        problem: "bad-plan",
+        id: "P1-S01",
+        path: "plan.json",
+        why: "unfilled",
+        fields: ["question"],
+        status: "done",
+      }),
+    ).toMatch(/leaves `question` empty, and/u);
   });
 
   const RULE =

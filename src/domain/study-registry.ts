@@ -826,9 +826,9 @@ const tick = (s: string): string => `\`${s}\``;
 /** `a`, `b` and `c`: names in backticks, the last joined by "and". */
 const listed = (names: readonly string[]): string => {
   const t = names.map(tick);
-  return t.length < 2
-    ? t.join("")
-    : `${t.slice(0, -1).join(", ")} and ${t.at(-1) ?? ""}`;
+  return [t.slice(0, -1).join(", "), ...t.slice(-1)]
+    .filter((part) => part !== "")
+    .join(" and ");
 };
 
 /** Each finding by its problem: the map the messages are looked up in. */
