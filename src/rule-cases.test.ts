@@ -18,6 +18,8 @@ import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import {
+  planTemplate,
+  planText,
   registryText,
   withIndex,
   type StudyRegistry,
@@ -64,6 +66,20 @@ const REGISTERED_STUDY: Readonly<Record<string, string>> = {
   [`${P}/repro/studies.json`]: registryText(REGISTRY),
   [`${P}/repro/README.md`]: withIndex("# repro\n", REGISTRY),
   [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
+};
+
+/** The registered study with its plan named `name`, the plan's text beside its README. */
+const STUDY_WITH_PLAN = (name: string): Readonly<Record<string, string>> => {
+  const r: StudyRegistry = {
+    ...REGISTRY,
+    studies: REGISTRY.studies.map((s) => ({ ...s, plan: name })),
+  };
+  return {
+    [`${P}/repro/studies.json`]: registryText(r),
+    [`${P}/repro/README.md`]: withIndex("# repro\n", r),
+    [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
+    [`${P}/repro/P1-S01-ablation/${name}`]: planText(planTemplate()),
+  };
 };
 
 /** `study/declare-sample` is off by default; a paper turns it on in its `paperlint.json`. */
@@ -770,6 +786,17 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     // Every folder registered, and the index the registry generates.
     silent: paper(tex("x"), REGISTERED_STUDY),
+  },
+  // A study's plan still named prereg.json: read as its plan, and a warning to rename it.
+  "repro/study-plan-name": {
+    reports: {
+      tree: paper(tex("x"), STUDY_WITH_PLAN("prereg.json")),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 1,
+      line: 1,
+    },
+    // The same plan as plan.json.
+    silent: paper(tex("x"), STUDY_WITH_PLAN("plan.json")),
   },
   // A study's prereg.json that declares none of population, strata, screens, coverage, author_check.
   // Off by default: the paper turns it on, as both trees do.

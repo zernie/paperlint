@@ -50,10 +50,19 @@ Every study gets its folder, its id and its row from one command, never from a f
 npx paperlint studies new <paper-dir> "<plain title, at most 8 words>" --kind measurement
 \`\`\`
 
-It takes the next id in \`repro/studies.json\`, creates \`repro/<id>-<slug>/README.md\`, appends the row
-(\`status: designing\`) and regenerates the index in \`repro/README.md\`. The kinds: \`measurement\`,
-\`spike\`, \`tooling\`, \`data\`, \`artifact\`, \`salvage\`. Write the study's one-sentence \`question\` into its
-row at once.
+It takes the next id in \`repro/studies.json\`, creates \`repro/<id>-<slug>/README.md\` and the study's
+plan, \`plan.json\`, appends the row (\`status: designing\`, \`plan: "plan.json"\`) and regenerates the index
+in \`repro/README.md\`. The kinds: \`measurement\`, \`spike\`, \`tooling\`, \`data\`, \`artifact\`, \`salvage\`.
+Write the study's one-sentence \`question\` into its row at once. Never write a plan by hand under
+another name: the template's fields are the ones \`repro/study-registered\` reads.
+
+**A measurement that spans studies** (a pilot, the main run, a replication) is declared once, in
+\`measurements\` at the top of \`repro/studies.json\` — \`id\`, \`title\`, \`rq\`, \`role\` (\`headline\` or
+\`baseline\`) — and each of its studies' rows names it in \`measurement\`. The author's requirements on
+the measurements go, verbatim, into \`requirements\` (\`id\`, \`text\`, \`date\`, \`source\`), and each
+measurement lists the ones it must meet; never in a separate note. A \`headline\` measurement carries
+the author's \`approval\` (\`by\` the registry's \`author\`, \`date\`, their words in \`quote\`), written
+from the author's own message, never by the agent that designed the study.
 
 As the study moves, edit its row in \`repro/studies.json\`: \`running\` when the first counted run starts;
 when it ends, \`done\` with \`result\` (one line) and \`result_file\` (the file inside the folder the result
@@ -79,13 +88,16 @@ Write the design as the answer to "what would make the critiqued pitfall impossi
 **Declare the population, the screens and the coverage before freezing the sample.** Each screen
 between the population and the sample (fits one excerpt, one classifier lane, a model-picked item)
 changes what the sample can say, not only its size; screens that are reasonable one by one can leave a
-sample nobody meets in practice. So, before the draw is frozen, the study's \`prereg.json\` says what
-the claim is about, what each screen removed per stratum and what share the sample can represent; then
-show the author the drawn **units** (the rules or cases, not the items made from them) and ask: *is
-this what you meet in practice?* The fields are the experimental rule
-\`study/declare-sample\` (\`docs/rules/study/declare-sample.md\`), off by default: do this step either way,
-and turn the check on with \`"rules": { "study/declare-sample": "error" }\` in the paper's \`paperlint.json\`
-for \`paperlint lint\` to fail until they are there.
+sample nobody meets in practice. So, before the draw is frozen, fill the study's \`plan.json\`: the
+\`question\`, the \`population\` (its \`source\`, and the \`draw\`: \`{ "kind": "all", "method" }\` for a census,
+or \`{ "kind": "seeded", "method", "seed" }\` for a sample),
+the \`arms\` (\`[]\` for a census) and the \`primary_outcome\`; what each screen removed per stratum and
+what share the sample can represent go into the same file, under \`extra\` (the plan is closed: any
+other unknown key is an error). Then show the
+author the drawn **units** (the rules or cases, not the items made from them), ask *is this what you
+meet in practice?*, and record the answer in the plan's \`author_check\` (\`by\`, \`date\`, their words in
+\`quote\`). Once the study is \`running\`, \`repro/study-registered\` fails the lint on an empty plan field,
+and, for a study of a \`headline\` measurement, on a plan without the author's check.
 
 ## 2. Honest statistics — the part reviewers attack first
 

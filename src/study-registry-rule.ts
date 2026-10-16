@@ -1,10 +1,11 @@
 /**
  * `repro/study-registered` — every study folder at the top of a paper's `repro/` has exactly one row in
- * `repro/studies.json`, every row names a folder that exists, and the index in `repro/README.md` is the
- * one the registry generates.
+ * `repro/studies.json`, every row names a folder that exists, a row's measurement and plan hold
+ * together, and the index in `repro/README.md` is the one the registry generates. Beside it,
+ * `repro/study-plan-name`, a warning: a plan still named `prereg.json`.
  *
  * What is judged, and why, is `src/domain/study-registry.ts` and docs/rules/repro/study-registered.md.
- * This file lists `repro/`, reads the registry, the README and the result files, and reports.
+ * This file lists `repro/`, reads the registry, the README, the result files and the plans, and reports.
  *
  * ── WHY A RULE OF ITS OWN, NOT MORE OF `repro/allowed-files-only` ─────────────────────
  * `repro/allowed-files-only` judges what may stand at the top of `repro/`, by name, and accepts the
@@ -16,7 +17,7 @@
  * `PIPELINE-STATUS.md`, first line, like the layout rules: every paper has it, and ESLint lints no
  * file in `repro/`.
  */
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, posix } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
   README,
@@ -25,9 +26,13 @@ import {
   REPRO_DIRS,
 } from "./domain/repro-layout.ts";
 import {
+  LEGACY_PLAN_FILE,
+  PLAN_NAME_PROBLEMS,
   STUDIES_FILE,
   judgeStudies,
+  planKeys,
   studyMessage,
+  type PlanState,
   type RegistryState,
   type StudyFinding,
 } from "./domain/study-registry.ts";
@@ -97,7 +102,31 @@ const existingResults = (
       ),
   );
 
-/** Every finding of the paper folder `dir`'s study registry — THE function behind the rule. */
+/**
+ * The plan each row of `r` names, read and parsed, by `<folder>/<plan>`; a plan not there is left out.
+ * A plan still named `prereg.json` is parsed by the loose schema of its old name.
+ */
+const plansOf = (
+  dir: string,
+  r: RegistryState,
+  deps: Pick<StudyRegistryDeps, "files" | "codec">,
+): ReadonlyMap<string, PlanState> =>
+  new Map(
+    (r.kind === "read" ? planKeys(r.registry) : [])
+      // A NUL is no path the disk can hold, and probing one throws: such a plan reads as missing.
+      .filter((key) => !key.includes("\0"))
+      .flatMap((key): readonly (readonly [string, PlanState])[] => {
+        const text = textAt(deps.files, join(dir, REPRO_DIR, key));
+        if (text === null) return [];
+        const parse =
+          posix.basename(key) === LEGACY_PLAN_FILE
+            ? deps.codec.parseLegacyPlan
+            : deps.codec.parsePlan;
+        return [[key, parse(text)]];
+      }),
+  );
+
+/** Every finding of the paper folder `dir`'s study registry — THE function behind both rules. */
 export function studyFindings(
   dir: string,
   deps: StudyRegistryDeps,
@@ -108,10 +137,11 @@ export function studyFindings(
     registry,
     readme: textAt(deps.files, join(dir, REPRO_DIR, README)),
     existingResults: existingResults(dir, registry, deps.files),
+    plans: plansOf(dir, registry, deps),
   });
 }
 
-/** The problems a finding can be, each its own message id; the text is `studyMessage`. */
+/** The problems `repro/study-registered` reports, each its own message id; the text is `studyMessage`. */
 const PROBLEMS: readonly StudyFinding["problem"][] = [
   "no-registry",
   "unreadable",
@@ -126,47 +156,84 @@ const PROBLEMS: readonly StudyFinding["problem"][] = [
   "result-file",
   "no-successor",
   "stale-index",
+  "unknown-measurement",
+  "empty-measurement",
+  "unknown-requirement",
+  "headline-approval",
+  "bad-plan",
+  "author-check",
 ];
 
-const META: FolderRuleModule["meta"] = {
+/** A rule's meta: its page, and a message id per problem, the whole text being `studyMessage`. */
+const metaOf = (
+  name: string,
+  description: string,
+  problems: readonly StudyFinding["problem"][],
+): FolderRuleModule["meta"] => ({
   type: "suggestion",
-  docs: {
-    description:
-      "every study folder at the top of a paper's repro/ has exactly one row in repro/studies.json, every row names a folder that exists, and repro/README.md's index is the one the registry generates",
-    url: rulePageUrl("repro/study-registered"),
-  },
+  docs: { description, url: rulePageUrl(name) },
   schema: [],
-  // The whole text is `studyMessage` (src/domain/study-registry.ts).
-  messages: Object.fromEntries(PROBLEMS.map((p) => [p, "{{text}}"])),
-};
+  messages: Object.fromEntries(problems.map((p) => [p, "{{text}}"])),
+});
 
-/** The rule, reading the folder through `deps`. */
+/** A rule that reports the findings of `problems`, reading the folder through `deps`. */
+const ruleOf = (
+  meta: FolderRuleModule["meta"],
+  problems: readonly StudyFinding["problem"][],
+  deps: StudyRegistryDeps,
+): FolderRuleModule => ({
+  meta,
+  create(context: FolderRuleContext) {
+    if (basename(context.filename) !== STATUS_FILE) return {};
+    return {
+      root() {
+        const at = context.sourceCode.getLocFromIndex(0);
+        studyFindings(dirname(context.filename), deps)
+          .filter((f) => problems.includes(f.problem))
+          .forEach((f) => {
+            context.report({
+              loc: { start: at, end: at },
+              messageId: f.problem,
+              data: { text: studyMessage(f) },
+            });
+          });
+      },
+    };
+  },
+});
+
+/**
+ * The two rules, reading the folder through `deps`: `study-registered`, the registry's errors, and
+ * `study-plan-name`, a warning for a plan still named `prereg.json` — read as the plan, so a paper
+ * that wrote one before `plan.json` existed is not broken, and told the name to move to.
+ */
 export function studyRegistryRules(
   deps: StudyRegistryDeps,
-): Readonly<Record<"study-registered", FolderRuleModule>> {
+): Readonly<Record<"study-registered" | "study-plan-name", FolderRuleModule>> {
   return {
-    "study-registered": {
-      meta: META,
-      create(context: FolderRuleContext) {
-        if (basename(context.filename) !== STATUS_FILE) return {};
-        return {
-          root() {
-            const at = context.sourceCode.getLocFromIndex(0);
-            studyFindings(dirname(context.filename), deps).forEach((f) => {
-              context.report({
-                loc: { start: at, end: at },
-                messageId: f.problem,
-                data: { text: studyMessage(f) },
-              });
-            });
-          },
-        };
-      },
-    },
+    "study-registered": ruleOf(
+      metaOf(
+        "repro/study-registered",
+        "every study folder at the top of a paper's repro/ has exactly one row in repro/studies.json, every row names a folder that exists, its measurement and its plan hold together, and repro/README.md's index is the one the registry generates",
+        PROBLEMS,
+      ),
+      PROBLEMS,
+      deps,
+    ),
+    "study-plan-name": ruleOf(
+      metaOf(
+        "repro/study-plan-name",
+        "a study's plan is named plan.json, not prereg.json",
+        PLAN_NAME_PROBLEMS,
+      ),
+      PLAN_NAME_PROBLEMS,
+      deps,
+    ),
   };
 }
 
-/** The level it is on at in paperlint's own config, for every paper's `PIPELINE-STATUS.md`. */
-export const STUDY_REGISTRY_RULE_LEVELS: Readonly<
-  Record<"repro/study-registered", "error">
-> = { "repro/study-registered": "error" };
+/** The levels they are on at in paperlint's own config, for every paper's `PIPELINE-STATUS.md`. */
+export const STUDY_REGISTRY_RULE_LEVELS: Readonly<{
+  "repro/study-registered": "error";
+  "repro/study-plan-name": "warn";
+}> = { "repro/study-registered": "error", "repro/study-plan-name": "warn" };

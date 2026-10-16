@@ -4,6 +4,8 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  planTemplate,
+  planText,
   registryText,
   type StudyRegistry,
 } from "../../domain/study-registry.ts";
@@ -139,6 +141,344 @@ describe("refusing a row that is not a study", () => {
     expect(parse(text({ prefix: 1, studies: [row] }))).toEqual({
       ok: false,
       why: "prefix: Invalid input: expected string, received number; studies.0.question: Invalid input: expected string, received undefined",
+    });
+  });
+});
+
+/** A registry with every key above the studies. */
+const FULL = {
+  prefix: "P1",
+  author: "A. Author",
+  requirements: [
+    {
+      id: "R1",
+      text: "Every sample is a random draw from all rules found.",
+      date: "2026-10-10",
+      source: "chat",
+    },
+  ],
+  measurements: [
+    {
+      id: "M1",
+      title: "Rule census",
+      rq: "RQ1",
+      role: "headline",
+      approval: {
+        by: "A. Author",
+        date: "2026-10-12",
+        quote: "This is the one.",
+        source: "review comment",
+      },
+      requirements: ["R1"],
+      frame: "all rules found",
+    },
+    { id: "M2", title: "Baseline", role: "baseline" },
+  ],
+  studies: [{ ...ROW, measurement: "M1", plan: "plan.json" }],
+};
+
+describe("the keys above the studies: author, requirements, measurements", () => {
+  it("a registry with all of them parses to itself, a measurement's extra fields kept", () => {
+    expect(parse(text(FULL))).toEqual({ ok: true, registry: FULL });
+  });
+});
+
+describe("refusing what is not a measurement, a requirement or a plan path", () => {
+  it.each([
+    [
+      "a role that is neither",
+      { ...FULL, measurements: [{ id: "M1", title: "x", role: "main" }] },
+      'measurements.0.role: Invalid option: expected one of "headline"|"baseline"',
+    ],
+    [
+      "an approval without the author's words",
+      {
+        ...FULL,
+        measurements: [
+          {
+            id: "M1",
+            title: "x",
+            role: "headline",
+            approval: { by: "A", date: "2026-10-12" },
+          },
+        ],
+      },
+      "measurements.0.approval.quote: Invalid input: expected string, received undefined",
+    ],
+    [
+      "a requirement with a key of its own",
+      { ...FULL, requirements: [{ ...FULL.requirements[0], note: "x" }] },
+      'requirements.0: Unrecognized key: "note"',
+    ],
+    [
+      "a row's plan that is not a path",
+      { ...FULL, studies: [{ ...ROW, plan: true }] },
+      "studies.0.plan: Invalid input: expected string, received boolean",
+    ],
+  ])("refuses %s", (_why, v, why) => {
+    expect(parse(text(v))).toEqual({ ok: false, why });
+  });
+});
+
+/** A filled plan of a seeded draw, with keys of the paper's own in `extra`. */
+const parsePlan = studyRegistryCodec.parsePlan;
+const PLAN = {
+  question: "How many rules can a linter check?",
+  population: {
+    source: "the crawl of 2026-10-01",
+    draw: { kind: "seeded", method: "random", seed: 7 },
+  },
+  arms: [{ name: "with the linter" }, { name: "without" }],
+  primary_outcome: "the share of rules checked",
+  author_check: { by: "A. Author", date: "2026-10-14", quote: "Go." },
+  extra: { hypotheses: ["H1"], draw_script: "tools/draw.py" },
+};
+
+/** `PLAN` with `over` merged in, as the text of a file. */
+const planWith = (over: Readonly<Record<string, unknown>>): string =>
+  JSON.stringify({ ...PLAN, ...over });
+
+describe("parsing a study's plan: ready or draft", () => {
+  it("a filled plan is ready, its `extra` kept as it is", () => {
+    expect(parsePlan(JSON.stringify(PLAN))).toEqual({
+      kind: "ready",
+      plan: PLAN,
+    });
+  });
+
+  it("a census draws all: no seed", () => {
+    const census = {
+      ...PLAN,
+      population: {
+        source: "every rule found",
+        draw: { kind: "all", method: "census" },
+      },
+      arms: [],
+    };
+    expect(parsePlan(JSON.stringify(census))).toEqual({
+      kind: "ready",
+      plan: census,
+    });
+  });
+
+  it("the template studies new writes is a draft of a census, naming every empty text", () => {
+    expect(planTemplate().population.draw).toEqual({ kind: "all", method: "" });
+    expect(parsePlan(planText(planTemplate()))).toEqual({
+      kind: "draft",
+      plan: planTemplate(),
+      empty: [
+        "question",
+        "population.source",
+        "population.draw.method",
+        "primary_outcome",
+      ],
+    });
+  });
+
+  it("a text of white space only is empty", () => {
+    const plan = { ...PLAN, primary_outcome: "  ", author_check: null };
+    expect(parsePlan(JSON.stringify(plan))).toEqual({
+      kind: "draft",
+      plan,
+      empty: ["primary_outcome"],
+    });
+  });
+});
+
+describe("parsing a study's plan: no contradictory state", () => {
+  it.each([
+    [
+      "an author_check on a draft: the author approved a plan with empty texts",
+      planWith({ question: "", primary_outcome: " " }),
+      "author_check: is set, and the plan leaves `question`, `primary_outcome` empty — the author approves a complete plan: fill them, or set author_check to null",
+    ],
+    [
+      "a seeded draw without its seed",
+      planWith({
+        population: {
+          source: "x",
+          draw: { kind: "seeded", method: "random" },
+        },
+      }),
+      "population.draw.seed: Invalid input",
+    ],
+    [
+      "a seeded draw whose seed is null",
+      planWith({
+        population: {
+          source: "x",
+          draw: { kind: "seeded", method: "random", seed: null },
+        },
+      }),
+      "population.draw.seed: Invalid input",
+    ],
+    [
+      "a draw of all that carries a seed",
+      planWith({
+        population: {
+          source: "x",
+          draw: { kind: "all", method: "census", seed: 7 },
+        },
+      }),
+      'population.draw: Unrecognized key: "seed"',
+    ],
+    [
+      "a draw of no known kind",
+      planWith({
+        population: { source: "x", draw: { method: "census" } },
+      }),
+      "population.draw.kind: Invalid discriminator value. Expected 'seeded' | 'all'",
+    ],
+  ])("refuses %s", (_why, t, why) => {
+    expect(parsePlan(t)).toEqual({ kind: "unreadable", why });
+  });
+});
+
+describe("parsing a study's plan: no name or fact said twice", () => {
+  it.each([
+    [
+      "two arms of one name",
+      planWith({ arms: [{ name: "a" }, { name: "b" }, { name: "a" }] }),
+      "arms: more than one arm is named «a» — an arm's name is unique",
+    ],
+    [
+      "a key in `extra` that is a field of the plan",
+      planWith({ extra: { hypotheses: ["H1"], question: "x" } }),
+      "extra.question: is a field of the plan itself — set it there, not in extra",
+    ],
+    [
+      "a population size: it is derived, never stored",
+      planWith({ population: { ...PLAN.population, size: 4210 } }),
+      'population: Unrecognized key: "size"',
+    ],
+  ])("refuses %s", (_why, t, why) => {
+    expect(parsePlan(t)).toEqual({ kind: "unreadable", why });
+  });
+});
+
+describe("parsing a study's plan: strict at every level", () => {
+  it.each([
+    ["text that is not JSON", "{", "not JSON"],
+    [
+      "a misspelt key at the top",
+      planWith({ primary_outcom: "x" }),
+      '(top): Unrecognized key: "primary_outcom"',
+    ],
+    [
+      "a misspelt key in the draw",
+      planWith({
+        population: {
+          ...PLAN.population,
+          draw: { kind: "seeded", method: "random", seed: 7, sed: 7 },
+        },
+      }),
+      'population.draw: Unrecognized key: "sed"',
+    ],
+    [
+      "a key of the paper's own outside `extra`",
+      planWith({ hypotheses: ["H1"] }),
+      '(top): Unrecognized key: "hypotheses"',
+    ],
+    [
+      "no author_check: null is the one way to say none yet",
+      planWith({ author_check: undefined }),
+      "author_check: Invalid input: expected object, received undefined",
+    ],
+    [
+      "an author_check with an empty quote",
+      planWith({ author_check: { ...PLAN.author_check, quote: "" } }),
+      "author_check.quote: Too small: expected string to have >=1 characters",
+    ],
+    [
+      "an arm with a key besides its name",
+      planWith({ arms: [{ name: "a", model: "m" }] }),
+      'arms.0: Unrecognized key: "model"',
+    ],
+  ])("refuses %s", (_why, t, why) => {
+    expect(parsePlan(t)).toEqual({ kind: "unreadable", why });
+  });
+});
+
+/** A plan under its old name, written by hand: keys of its own, a size, no seed, no check. */
+const parseLegacyPlan = studyRegistryCodec.parseLegacyPlan;
+const OLD = {
+  question: "How many rules can a linter check?",
+  population: {
+    source: "the crawl of 2026-10-01",
+    about: "rules in instruction files",
+    size: 4210,
+    draw: { method: "random", script: "tools/draw.py" },
+  },
+  arms: [{ name: "with the linter", model: "m" }],
+  primary_outcome: "",
+  hypotheses: ["H1"],
+  strata: { by: "type" },
+};
+
+describe("parsing a plan under its old name, prereg.json: loose", () => {
+  it("keys of its own accepted, the top-level ones kept in `extra`; size dropped; no seed and no check: a draw of all, null", () => {
+    expect(parseLegacyPlan(JSON.stringify(OLD))).toEqual({
+      kind: "draft",
+      plan: {
+        question: "How many rules can a linter check?",
+        population: {
+          source: "the crawl of 2026-10-01",
+          draw: { kind: "all", method: "random" },
+        },
+        arms: [{ name: "with the linter" }],
+        primary_outcome: "",
+        author_check: null,
+        extra: { hypotheses: ["H1"], strata: { by: "type" } },
+      },
+      empty: ["primary_outcome"],
+    });
+  });
+});
+
+describe("parsing a plan under its old name, prereg.json: its draw", () => {
+  it("a seed, and a check: a seeded draw, the check kept", () => {
+    const old = {
+      ...OLD,
+      population: {
+        source: "s",
+        draw: { method: "random", seed: "a1" },
+      },
+      primary_outcome: "share",
+      author_check: { by: "A. Author", date: "2026-10-14", quote: "Go." },
+    };
+    expect(parseLegacyPlan(JSON.stringify(old))).toMatchObject({
+      kind: "ready",
+      plan: {
+        population: {
+          source: "s",
+          draw: { kind: "seeded", method: "random", seed: "a1" },
+        },
+        author_check: { by: "A. Author", date: "2026-10-14", quote: "Go." },
+      },
+    });
+  });
+
+  it("a seed of null is a draw of all", () => {
+    const old = {
+      ...OLD,
+      population: { source: "s", draw: { method: "census", seed: null } },
+    };
+    expect(parseLegacyPlan(JSON.stringify(old))).toMatchObject({
+      plan: { population: { draw: { kind: "all", method: "census" } } },
+    });
+  });
+
+  it("still needs the plan's own fields", () => {
+    expect(parseLegacyPlan(JSON.stringify({ hypotheses: ["H1"] }))).toEqual({
+      kind: "unreadable",
+      why: "question: Invalid input: expected string, received undefined; population: Invalid input: expected object, received undefined; arms: Invalid input: expected array, received undefined; primary_outcome: Invalid input: expected string, received undefined",
+    });
+  });
+
+  it("text that is not JSON", () => {
+    expect(parseLegacyPlan("{")).toEqual({
+      kind: "unreadable",
+      why: "not JSON",
     });
   });
 });

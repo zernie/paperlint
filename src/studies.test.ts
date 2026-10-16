@@ -9,6 +9,8 @@ import { memoryFiles, memoryListDir } from "./adapters/memory/index.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
 import {
   indexBlock,
+  planTemplate,
+  planText,
   registryText,
   studyReadme,
   withIndex,
@@ -101,17 +103,21 @@ describe("studies new", () => {
       status: "designing",
       date: "2026-10-15",
       in_paper: "no",
+      plan: "plan.json",
     };
     const r = P1(study(), added);
     expect({ code, err }).toEqual({ code: 0, err: [] });
     expect(after).toEqual({
       ...before,
       [`${REPRO}/P1-S02-ablation-of-the-guard/README.md`]: studyReadme(added),
+      [`${REPRO}/P1-S02-ablation-of-the-guard/plan.json`]:
+        planText(planTemplate()),
       [`${REPRO}/studies.json`]: registryText(r),
       [`${REPRO}/README.md`]: `# Reproduction index\n\nIntro.\n\n${indexBlock(r)}\n`,
     });
     expect(log).toEqual([
       "created papers/example/repro/P1-S02-ablation-of-the-guard/README.md",
+      "created papers/example/repro/P1-S02-ablation-of-the-guard/plan.json, the study's plan: its fields are there to fill in before the first run",
       "added P1-S02 to papers/example/repro/studies.json: kind spike, status designing, 2026-10-15",
       "wrote the index of 2 studies in papers/example/repro/README.md",
       "Next: write the study's one-sentence question in its row (`question`) and in its README.md. When it ends, set `status`, `result`, `result_file` and `in_paper` in its row, then run `npx paperlint studies index papers/example`.",

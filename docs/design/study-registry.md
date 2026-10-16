@@ -47,9 +47,13 @@ two commands that write it.
    | `superseded_by` | optional; an id in the registry. Required when `superseded`               |
    | `in_paper`      | `yes`, `no`, `registry` (listed only in the registry, not in the text)    |
 
-   **A row may carry more fields**, and they are kept: a paper merges its own measurement metadata
-   into the rows (`role`, `frame`, `method`, `outcome`, …). The top level is closed: a misspelt
-   `prefix` is an error, not an ignored key.
+   | `measurement` | optional; the id of the measurement the study belongs to (6) |
+   | `plan` | optional; the study's plan, a path inside its folder: `plan.json` (7) |
+
+   **A row may carry more fields**, and they are kept: a paper merges its own metadata into the rows
+   (`frame`, `method`, `outcome`, …). The top level is closed — `prefix`, `studies`, and the optional
+   `author`, `requirements` and `measurements` (6) — so a misspelt key is an error, not an ignored
+   key.
 
 2. **The rule `repro/study-registered`, an error,** reported on the first line of
    `PIPELINE-STATUS.md` like `repro/allowed-files-only`, once per finding:
@@ -74,8 +78,9 @@ two commands that write it.
 3. **Two commands**, in `src/studies.ts`, wired in `src/cli.ts`:
 
    - `paperlint studies new <paper-dir> "<title>" [--kind measurement]` takes the next id, creates
-     `repro/<id>-<slug>/README.md` (frontmatter `id:` and `title:`), appends the row with
-     `status: designing`, `in_paper: no` and today's date, and regenerates the index block. It refuses a
+     `repro/<id>-<slug>/README.md` (frontmatter `id:` and `title:`) and the plan's template,
+     `plan.json` (7), appends the row with `status: designing`, `in_paper: no`, today's date and
+     `plan: "plan.json"`, and regenerates the index block. It refuses a
      title over 8 words, a title with no letter or digit to make a slug from, an unknown kind, a folder
      that already exists, and a paper with no `studies.json` (the prefix is the author's choice, so the
      refusal names the file to write and does not guess one).
@@ -93,19 +98,127 @@ two commands that write it.
    `paperlint studies new`, and update its row (status, result, result file, in paper) when it ends,
    then run `paperlint studies index`.
 
+6. **Measurements above studies, and the author's requirements.** One measurement (a census, a
+   benchmark) spans several study folders: a pilot, the main run, a replication. Before this, a paper
+   put the measurement's fields on the row of its first study under prefixed names
+   (`measurement_title`, `measurement_status`) and the other rows carried `measurement: <id>`, which
+   nothing checked; the author's verbatim requirements went to a separate file nothing read. Now:
+
+   ```json
+   {
+     "prefix": "P1",
+     "author": "A. Author",
+     "requirements": [
+       {
+         "id": "R1",
+         "text": "Every sample is a random draw from all rules found.",
+         "date": "2026-10-10",
+         "source": "chat"
+       }
+     ],
+     "measurements": [
+       {
+         "id": "M1",
+         "title": "Rule census",
+         "rq": "RQ1",
+         "role": "headline",
+         "approval": {
+           "by": "A. Author",
+           "date": "2026-10-12",
+           "quote": "This is the one."
+         },
+         "requirements": ["R1"]
+       }
+     ],
+     "studies": [
+       { "id": "P1-S01", "measurement": "M1", "plan": "plan.json", "…": "…" }
+     ]
+   }
+   ```
+
+   `role` is `headline` (the paper's claim rests on it) or `baseline`. A measurement keeps extra
+   fields like a row; a requirement and an approval are exactly their fields. The rule reports, each
+   finding its own message id: a row naming an undeclared measurement (`unknown-measurement`), a
+   measurement no row names (`empty-measurement`), a measurement naming an undeclared requirement
+   (`unknown-requirement`), and a headline without `approval`, or approved by anyone but `author`
+   when the registry names one (`headline-approval`). These cross-references are the rule's, not the
+   parser's: one dangling id must not fail the whole parse and hide every other finding. **These checks run only when the registry has
+   `measurements`**: a registry written before them, whose rows already carry `measurement` as a field
+   of their own, stays valid.
+
+7. **The study's plan, `plan.json`.** Each study folder held a hand-written `prereg.json`, its
+   fields differing study to study, read only by the experimental `study/declare-sample`. The name
+   misled — it is not an outside pre-registration — so the plan is `plan.json`, written as a
+   template by `paperlint studies new` beside the README, and named in the row's `plan`:
+
+   ```json
+   {
+     "question": "",
+     "population": {
+       "source": "",
+       "draw": { "kind": "all", "method": "" }
+     },
+     "arms": [],
+     "primary_outcome": "",
+     "author_check": null
+   }
+   ```
+
+   The template's draw is of all the population (`"kind": "all"`, a census); a sampled study changes
+   it to `{ "kind": "seeded", "method": "random", "seed": 7 }`. `arms` is empty for a census;
+   `author_check` becomes `{ "by", "date", "quote" }` once the author has seen the drawn units.
+   **Parse, don't validate:**
+
+   - **Closed at every level.** A misspelt key is an error; the paper's own keys (hypotheses,
+     models, budget) go in the one optional key `extra`, an object of anything.
+   - **One spelling of "none".** `author_check` is required, and `null` is "not yet"; an absent key
+     is an error, never a second way to say the same.
+   - **No contradictory state.** Each of these is a parse error, not a later finding:
+     - an `author_check` on a draft — the author approved a plan whose texts are empty;
+     - a draw that is not one of two kinds: `seeded`, whose `seed` is required and not null, or
+       `all` (a census), which has no seed;
+     - two arms of one name;
+     - a key of `extra` that is a field of the plan, which would say one thing twice.
+
+     The population's size is not stored: it is counted from the source, and a stored copy could
+     only contradict it. Nothing downstream read it.
+
+   - **Complete or not is a type.** The parser returns a plan `ready` (every required text filled)
+     or a `draft` with the list of its empty texts, or why it is no plan. The rule never looks at a
+     text again: a study that has run on a `draft` is `bad-plan`, with the parser's list.
+   - **The schemas are the domain's types.** The domain's types are written by hand (the domain
+     imports no zod); the adapter holds a compile-time proof that each schema's output — registry,
+     study, measurement, requirement, approval, author check, plan, ready-or-draft — and its domain type are the
+     same type both ways, so a field added to one alone stops the build.
+
+   The schemas live beside the registry's, in `src/adapters/study-registry/`. The rule reports a
+   `plan` outside the folder, missing, or not of the schema, and — once the study has run (`running`,
+   `done`, `stopped`, `superseded`) — a draft (`bad-plan`); a study of a headline measurement
+   that has run with no `author_check` in its plan, no plan, or a check by anyone but `author`
+   (`author-check`). A `designing` study's template is clean, so `studies new` never leaves the lint
+   red.
+
+   **Compatibility.** A row may name `prereg.json` as its plan: it is parsed by a loose schema of
+   its own — keys of its own accepted at every level, those at the top kept in `extra`, a seed makes
+   the draw `seeded`, none (or `null`) makes it `all`; a size is not read; an absent check is
+   `null` — and judged as the plan, the same contradictions refused; a second rule, `repro/study-plan-name`, warns that it moves to `plan.json` — a warning cannot
+   come from an error rule, since ESLint sets the level per rule. A `prereg.json` no row names is not
+   read, so no existing paper turns red.
+
 ## Where each part lives
 
-| part                                    | file                                | layer   |
-| --------------------------------------- | ----------------------------------- | ------- |
-| the types, the judge, the index, ids    | `src/domain/study-registry.ts`      | domain  |
-| the schema (zod), parsing the text      | `src/adapters/study-registry/`      | adapter |
-| what the app asks of a parser           | `src/ports/study-registry-codec.ts` | port    |
-| the rule: list the folder, read, report | `src/study-registry-rule.ts`        | app     |
-| the two commands                        | `src/studies.ts`                    | app     |
-| wiring, the clock for today's date      | `src/cli.ts`                        | root    |
+| part                                   | file                                | layer   |
+| -------------------------------------- | ----------------------------------- | ------- |
+| the types, the judge, the index, ids   | `src/domain/study-registry.ts`      | domain  |
+| the plan's type and template           | `src/domain/study-registry.ts`      | domain  |
+| the schemas (zod) of registry and plan | `src/adapters/study-registry/`      | adapter |
+| what the app asks of a parser          | `src/ports/study-registry-codec.ts` | port    |
+| both rules: list, read, report         | `src/study-registry-rule.ts`        | app     |
+| the two commands                       | `src/studies.ts`                    | app     |
+| wiring, the clock for today's date     | `src/cli.ts`                        | root    |
 
 The judge is pure: it takes the folder names, the parsed registry (or why it is absent or unreadable),
-the README's text, and which result files exist, and returns findings. The rule and the commands are
+the README's text, which result files exist, and each named plan parsed, and returns findings. The rule and the commands are
 the only places that touch the disk, through the `Files` and `ListDir` ports.
 
 ## Generated index, and prettier
@@ -127,4 +240,7 @@ a cell is escaped and a line break becomes a space.
 
 - Whether the `question` is one sentence, or the `result` one line, beyond their being strings.
 - What a study's `README.md` says, or whether its frontmatter matches the row.
-- Files inside a study folder other than `result_file`.
+- Files inside a study folder other than `result_file` and the `plan` its row names.
+- `study/declare-sample` still reads only `prereg.json`, and asks for different fields
+  (`strata`, `screens`, `coverage`, and an `author_check` of `who`, `when`, `units_seen`,
+  `units_drawn`, `verdict`); merging the two shapes is its own decision.

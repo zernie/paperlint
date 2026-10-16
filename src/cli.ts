@@ -238,8 +238,9 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       change and keeps nothing
   npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]
                                       register a study: the next id in repro/studies.json, the folder
-                                      repro/<id>-<slug>/ with its README.md, the row (status designing,
-                                      today's date), and the index in repro/README.md regenerated
+                                      repro/<id>-<slug>/ with its README.md and plan.json (a template),
+                                      the row (status designing, today's date, its plan), and the
+                                      index in repro/README.md regenerated
   npx paperlint studies index <paper-dir>
                                       regenerate the index in repro/README.md from repro/studies.json
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
@@ -264,8 +265,9 @@ new:
 
 studies:
   --kind <kind>       new: measurement (the default), spike, tooling, data, artifact or salvage.
-                      A study's status, result and in_paper are edited in repro/studies.json;
-                      the rule repro/study-registered checks them (docs/rules/repro/study-registered.md)
+                      A study's status, result and in_paper are edited in repro/studies.json, its
+                      plan in its plan.json; the rule repro/study-registered checks them
+                      (docs/rules/repro/study-registered.md)
 
 submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the

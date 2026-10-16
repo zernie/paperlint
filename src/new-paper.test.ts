@@ -793,6 +793,7 @@ describe("paperlint lint — a scaffolded paper has no layout finding", () => {
     "paper/allowed-files-only",
     "repro/allowed-files-only",
     "repro/study-registered",
+    "repro/study-plan-name",
     "review/frontmatter",
     "sibling/frontmatter",
     "paper/stages",
