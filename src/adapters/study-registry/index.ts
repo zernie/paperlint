@@ -12,6 +12,10 @@
  * Its texts may be empty — the template's are — and the parser says which: a plan comes out ready or
  * a draft naming its empty texts, so nothing downstream looks at a text again. A plan still named
  * `prereg.json` has a loose schema of its own.
+ *
+ * A plan's `blind` (docs/design/sealed-studies.md) and a blind study's manifest, `sealed.json`, are
+ * parsed here too, strictly, each contradiction an error: a decision file the outputs would seal, a
+ * glob that leaves the folder, an unsealing without the commit it waited for.
  */
 import { z } from "zod";
 import {
@@ -32,6 +36,19 @@ import {
   type StudyPlan,
   type StudyRegistry,
 } from "../../domain/study-registry.ts";
+import {
+  RECIPIENT_PATTERN,
+  RESERVED_NAMES,
+  SEALED_SUFFIX,
+  type Blind,
+  type GateCommit,
+  type ParsedManifest,
+  type SealManifest,
+  type SealedFile,
+  type UnsealGate,
+  type Unsealed,
+} from "../../domain/sealed-study.ts";
+import { posix } from "node:path";
 import type { StudyRegistryCodec } from "../../ports/study-registry-codec.ts";
 
 const study = z.looseObject({
@@ -128,6 +145,63 @@ const extra = z.record(z.string(), z.unknown()).superRefine((e, ctx) => {
     });
 });
 
+/** Every value of `values` once: a repeat is an error naming it. */
+const once =
+  (what: string) =>
+  (values: readonly string[], ctx: Readonly<z.core.$RefinementCtx>): void => {
+    repeated(values).forEach((v) => {
+      ctx.addIssue({
+        code: "custom",
+        message: `${what} «${v}» is listed more than once`,
+      });
+    });
+  };
+
+/**
+ * A path or glob relative to the study's folder that stays inside it: no backslash, not absolute,
+ * no `..` segment, and not one of the study's own files or a ciphertext.
+ */
+const inFolder = z
+  .string()
+  .min(1)
+  .refine(
+    (p) =>
+      !p.includes("\\") &&
+      !p.startsWith("/") &&
+      !p.split("/").includes("..") &&
+      !RESERVED_NAMES.includes(p) &&
+      !p.endsWith(SEALED_SUFFIX),
+    `is not a path inside the study's folder, or names one of its own files (${RESERVED_NAMES.join(", ")}, *${SEALED_SUFFIX})`,
+  );
+
+const recipient = z
+  .string()
+  .regex(
+    RECIPIENT_PATTERN,
+    "is not a native age recipient (age1 and 58 more characters, from age-keygen)",
+  );
+
+const unsealGate = z.strictObject({ file: inFolder, note: words });
+
+/** A plan's `blind`: a decision file no output would seal. */
+const blind = z
+  .strictObject({
+    recipients: z.array(recipient).min(1).superRefine(once("the recipient")),
+    outputs: z.array(inFolder).min(1).superRefine(once("the output")),
+    unseal_after: unsealGate,
+  })
+  .superRefine((b, ctx) => {
+    b.outputs
+      .filter((g) => posix.matchesGlob(b.unseal_after.file, g))
+      .forEach((g) => {
+        ctx.addIssue({
+          code: "custom",
+          path: ["unseal_after", "file"],
+          message: `is matched by the output «${g}»: the decision would be sealed with the results`,
+        });
+      });
+  });
+
 /** A plan's shape: closed at every level; the paper's own keys go in `extra`. Null is the one "none". */
 const planShape = z.strictObject({
   question: z.string(),
@@ -136,6 +210,7 @@ const planShape = z.strictObject({
   primary_outcome: z.string(),
   author_check: authorCheck.nullable(),
   extra: extra.optional(),
+  blind: blind.optional(),
 });
 
 /**
@@ -227,6 +302,40 @@ const plan = planShape.transform(readyOrDraft);
 /** A `prereg.json`: loose, mapped onto the plan, then ready or draft. */
 const legacyPlan = legacyAsPlan.transform(readyOrDraft);
 
+// ── a blind study's manifest, sealed.json ───────────────────────────────────────
+
+const sha256 = z.string().regex(/^[0-9a-f]{64}$/u, "is not a sha256");
+
+const sealedFile = z.strictObject({
+  path: inFolder,
+  sha256,
+  size: z.number().int().nonnegative(),
+  age_sha256: sha256,
+  sealed_at: z.iso.datetime(),
+});
+
+const gateCommit = z.strictObject({
+  file: inFolder,
+  commit: z.string().regex(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u, "is not a commit"),
+  date: z.iso.datetime({ offset: true }),
+});
+
+const unsealed = z.strictObject({ at: z.iso.datetime(), gate: gateCommit });
+
+/** `sealed.json`: written by the commands only; null is "still sealed", and an unsealing carries its gate. */
+const manifest = z.strictObject({
+  recipients: z.array(recipient).min(1).superRefine(once("the recipient")),
+  files: z
+    .array(sealedFile)
+    .superRefine((fs, ctx) => {
+      once("the path")(
+        fs.map((f) => f.path),
+        ctx,
+      );
+    }),
+  unsealed: unsealed.nullable(),
+});
+
 // ── the schemas ARE the domain's types ─────────────────────────────────────────
 // Each schema's output and its hand-written domain type are the same type, both ways, once both are
 // made readonly all the way down: a field added to one and not the other stops the build.
@@ -263,6 +372,12 @@ export type SchemasAreTheDomain = [
   Same<z.output<typeof legacyAsPlan>, StudyPlan>,
   Same<z.output<typeof plan>, ReadyOrDraft>,
   Same<z.output<typeof legacyPlan>, ReadyOrDraft>,
+  Same<z.output<typeof blind>, Blind>,
+  Same<z.output<typeof unsealGate>, UnsealGate>,
+  Same<z.output<typeof manifest>, SealManifest>,
+  Same<z.output<typeof sealedFile>, SealedFile>,
+  Same<z.output<typeof gateCommit>, GateCommit>,
+  Same<z.output<typeof unsealed>, Unsealed>,
 ] extends true[]
   ? true
   : never;
@@ -321,8 +436,19 @@ export const parseStudyPlan = planParser(plan);
 /** A plan still named `prereg.json`: loose, read only when a row names it. */
 export const parseLegacyPlan = planParser(legacyPlan);
 
+/** A `sealed.json`'s text, parsed once at the boundary: the manifest, or every reason it is not one. */
+export function parseSealManifest(text: string): ParsedManifest {
+  const json = jsonOf(text);
+  if (json === undefined) return { ok: false, why: "not JSON" };
+  const parsed = manifest.safeParse(json);
+  return parsed.success
+    ? { ok: true, manifest: parsed.data }
+    : { ok: false, why: reasons(parsed.error.issues) };
+}
+
 export const studyRegistryCodec: StudyRegistryCodec = {
   parse: parseStudyRegistry,
   parsePlan: parseStudyPlan,
   parseLegacyPlan,
+  parseManifest: parseSealManifest,
 };

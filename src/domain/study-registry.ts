@@ -16,6 +16,7 @@
  */
 import { isAbsolute, posix, win32 } from "node:path";
 import { STUDIES_FILE, STUDY_SLUG } from "./repro-layout.ts";
+import type { Blind } from "./sealed-study.ts";
 
 /** The registry, at the top of the paper's `repro/`; the layout allows it there. */
 export { STUDIES_FILE };
@@ -172,6 +173,8 @@ export interface StudyPlan {
   readonly author_check: AuthorCheck | null;
   /** The paper's own keys: hypotheses, models, budget … Kept, never read; none is a plan field. */
   readonly extra?: Readonly<Record<string, unknown>> | undefined;
+  /** A blind study: its results sealed to `recipients` until the decision is committed (docs/design/sealed-studies.md). */
+  readonly blind?: Blind | undefined;
 }
 
 /**
@@ -200,6 +203,7 @@ export const PLAN_FIELDS = [
   "primary_outcome",
   "author_check",
   "extra",
+  "blind",
 ] as const;
 
 /** A plan with empty required texts: the author has not approved it. */
