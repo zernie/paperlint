@@ -61,8 +61,13 @@ const tree = (body: string): Record<string, string> => ({
 });
 
 /** Each rule's reports over the paper: message id and line. */
-const lint = (body: string, order: OrderFacts = AFTER, raw = true) => {
-  const files = memoryFiles(tree(body));
+const lint = (
+  body: string,
+  order: OrderFacts = AFTER,
+  raw = true,
+  over: Readonly<Record<string, string>> = {},
+) => {
+  const files = memoryFiles({ ...tree(body), ...over });
   const rules = studyClaimRules({
     prose: { files, latex: latexReader, codec: sourcesCodec },
     studies: {
@@ -134,4 +139,13 @@ it("a link to an unregistered study, and an exploratory number left unlabelled",
     ["unknownStudy@3"],
     ["unlabelled@3"],
   ]);
+});
+
+it("with no registry to read, every link names no study", () => {
+  // Guards: an unreadable registry never makes a link silently pass.
+  expect(
+    lint("We pre-registered it. % study: P1-S01", AFTER, true, {
+      [`${DIR}/repro/studies.json`]: "{",
+    }),
+  ).toEqual([["unknownStudy@3"], []]);
 });
