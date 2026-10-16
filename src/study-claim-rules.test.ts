@@ -72,9 +72,7 @@ const lint = (body: string, order: OrderFacts = AFTER, raw = true) => {
       git: fakeGit({}, order),
     },
   });
-  const src = new TextDecoder().decode(
-    files.readBytes(`${DIR}/paper.tex`) ?? new Uint8Array(),
-  );
+  const src = String(tree(body)[`${DIR}/paper.tex`]);
   return (["study-mode-claim", "study-mode-stated"] as const).map((name) => {
     const out: string[] = [];
     rules[name]
