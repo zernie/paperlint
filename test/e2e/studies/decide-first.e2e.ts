@@ -157,6 +157,21 @@ describe.skipIf(SKIP)(
       ]);
       // Guards: the order in history is the declared one — silent.
       expect(orderFindings(dir)).toEqual([]);
+      const registry = join(dir, "papers/example/repro/studies.json");
+      writeFileSync(
+        registry,
+        readFileSync(registry, "utf8").replace(
+          '"in_paper": "no"',
+          '"in_paper": "yes"',
+        ),
+      );
+      const md = paperlint(dir, ["studies", "methods", "papers/example"]);
+      const head = git(dir, ["rev-parse", "HEAD"]).trim();
+      // Guards: the methods text names the decision's and the first output's commits, from the same history.
+      expect([md.status, md.out.trim().split("\n")[2]]).toEqual([
+        0,
+        `| P1-S01 | Outcome | decided before its run | \`${sha.slice(0, 12)}\` (2026-10-16) | \`${head.slice(0, 12)}\` (2026-10-16) | \`npx paperlint lint papers/example\` |`,
+      ]);
     });
   },
 );

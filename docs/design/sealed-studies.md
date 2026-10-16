@@ -144,6 +144,77 @@ silent while the study is `designing`, reported once it runs, and an unreadable 
 author's check is already on it (the message names `mode`). Adding one line — usually the
 decide-first mode — is the migration.
 
+### 8. The paper side: what the text says of each study's mode
+
+A study's mode is only half the guarantee; the other half is that the paper does not say more than
+the mode allows. Before this, the writing and review skills never mentioned the registry, a
+pre-registration or the word exploratory, and nothing tied a number in `paper.tex` to the study that
+produced it.
+
+- **`paperlint studies methods <paper-dir> [--format md|tex]`**, read-only: for every study the
+  paper reports (`in_paper: "yes"`), its mode, its decision's first commit and date, the first commit
+  of any of its outputs, and the command that re-checks it (`npx paperlint lint` for the order,
+  `npx paperlint studies verify <paper> <id>` for a sealed study). `md` is a table for the artifact's
+  README; `tex` is one sentence per study the author adapts for Methods, TeX's special characters
+  escaped. Derived each time from the plans, the manifests and git; there is no copy to keep in sync.
+- **The link from text to study is a comment**, `% study: P1-S03` on a line of the paragraph
+  (several ids separated by commas), read off the parse tree (`LatexReader.studyMarks`). paperlint
+  had no number-to-study link before; this is the smallest one: invisible in the PDF, no macro to
+  define, no second registry — it names an id the registry already holds. A paragraph's extent is
+  its TeX paragraph (blank line to blank line), so the comment may sit on its own line inside it.
+- **`paper/study-mode-claim`, an error**: a linked paragraph calls its study pre-registered,
+  preregistered, decided before, blind or blinded, and the study is exploratory, declares no mode,
+  or is decided first but its history does not show the decision first; and a link to an id the
+  registry does not hold. The overclaim is the dangerous direction, so it is the error.
+- **`paper/study-mode-stated`, a warning**: a linked paragraph states a number from an exploratory
+  study and never says "exploratory". Two rules, because ESLint sets the level per rule.
+- **The skills read the registry through `studies methods`, never by hand**: `draft-paper` (Methods
+  states each study's mode and decision commit; results paragraphs carry their `% study:` link),
+  `harden-paper` and `pc-panel-review` (every confirmatory claim rests on a study decided first or
+  run blind; the opposite is a soundness finding), `tighten-paper` (the mode sentence is never cut
+  for length), `osf-artifact-upload` and `camera-ready` (the artifact ships the plans, decision files,
+  manifests and the verify commands, with the whole history).
+- **Not judged**: a paragraph with no link, claims in other words ("registered in advance"), and
+  whether a linked number really comes from that study.
+
+### 9. Why: confirmatory vs exploratory, and venues that review the plan first
+
+Read for this note (2026-10-16):
+
+- Nosek, Ebersole, DeHaven, Mellor, "The preregistration revolution", _PNAS_ 115(11):2600–2606,
+  2018 (metadata and abstract from Crossref, doi:10.1073/pnas.1708274114). The abstract, verbatim:
+
+  > Progress in science relies in part on generating hypotheses with existing observations and
+  > testing hypotheses with new observations. This distinction between postdiction and prediction
+  > is appreciated conceptually but is not respected in practice. Mistaking generation of
+  > postdictions with testing of predictions reduces the credibility of research findings. […] An
+  > effective solution is to define the research questions and analysis plan before observing the
+  > research outcomes—a process called preregistration. Preregistration distinguishes analyses and
+  > outcomes that result from predictions from those that result from postdictions.
+
+  This is the distinction the modes encode: decided first or blind is prediction; exploratory is
+  postdiction, legitimate when it is labelled.
+
+- The MSR (Mining Software Repositories) Registered Reports track, 2020 edition
+  (https://2020.msrconf.org/track/msr-2020-Registered-Reports; the 2021, 2025 and 2026 editions have a
+  track page at the same address, the 2019 site has none there). Quoted from the 2020 page:
+
+  > Methods and proposed analyses are pre-registered and reviewed prior to research being conducted.
+
+  > (MSR 2020) Phase 1: Introduction, Methods (including proposed analyses), and Pilot Data (where
+  > applicable).
+
+  > (EMSE) Phase 2: full study, after data collection and analysis.
+
+  > Additional exploratory analyses in Phase 2 may be conducted, if they are justified.
+
+  > Any deviation from the protocol must be justified and logged in detail to ensure replicability.
+
+  A venue of this field already reviews the plan before the data, and accepts exploratory analyses
+  beside it only when they are justified. The modes, the order rule and `studies methods` give a
+  paper the same evidence in its own repository: what was fixed before the run, with its commit,
+  and what was exploratory, with its reason.
+
 ## Where each part lives
 
 | part                                                         | file                                                                                  | layer   |

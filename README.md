@@ -166,6 +166,7 @@ Each stage's skills, what it writes and what checks it, drawn as one flow, with 
 | `npx paperlint studies seal <paper> <id>`                   | a blind study: its results encrypted with age, their sha256 in `sealed.json`   |
 | `npx paperlint studies verify <paper> <id>`                 | checks the sealed files against `sealed.json`, no key needed                   |
 | `npx paperlint studies unseal <paper> <id> --identity <f>`  | decrypts a blind study once its decision and `sealed.json` are committed       |
+| `npx paperlint studies methods <paper> [--format tex]`      | each reported study's mode, decision commit and check, for Methods or README   |
 | `npx paperlint --help`                                      | every command and flag                                                         |
 
 ## 🧠 Skills
