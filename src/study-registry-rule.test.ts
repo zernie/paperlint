@@ -15,7 +15,9 @@ import {
   studyMessage,
   withIndex,
   type Study,
+  type StudyPlan,
   type StudyRegistry,
+  type IndexInput,
 } from "./domain/study-registry.ts";
 import {
   registryOf,
@@ -23,6 +25,9 @@ import {
   studyFindings,
   studyRegistryRules,
 } from "./study-registry-rule.ts";
+
+/** No plan and no history: the index with every mode column `—`. */
+const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
 
 const DIR = "/work/papers/example";
 const SCAFFOLD = {
@@ -45,7 +50,7 @@ const study = (over: Partial<Study> = {}): Study => ({
 /** A registered `repro/`: the registry, its index, and a README.md in each row's folder. */
 const registered = (
   r: StudyRegistry,
-  readme: string | null = withIndex("# Reproduction index\n", r),
+  readme: string | null = withIndex("# Reproduction index\n", r, NO_FACTS),
 ): Record<string, string> => ({
   ...SCAFFOLD,
   [`${DIR}/repro/studies.json`]: registryText(r),
@@ -222,9 +227,9 @@ describe("repro/study-registered — reports a row's status and the index", () =
 
   it("a stale index", () => {
     const r = P1(study());
-    expect(messages(registered(r, withIndex("# x\n", P1())))).toEqual([
-      studyMessage({ problem: "stale-index", why: "differs" }),
-    ]);
+    expect(messages(registered(r, withIndex("# x\n", P1(), NO_FACTS)))).toEqual(
+      [studyMessage({ problem: "stale-index", why: "differs" })],
+    );
   });
 });
 
@@ -300,7 +305,7 @@ describe("repro/study-registered — a result_file the disk cannot hold", () => 
     const files = memoryFiles({
       ...SCAFFOLD,
       [`${DIR}/repro/studies.json`]: registryText(r),
-      [`${DIR}/repro/README.md`]: withIndex("# index\n", r),
+      [`${DIR}/repro/README.md`]: withIndex("# index\n", r, NO_FACTS),
       [`${DIR}/repro/P1-S01-baseline/README.md`]: "# s\n",
     });
     const probe = {
@@ -320,8 +325,58 @@ describe("repro/study-registered — a result_file the disk cannot hold", () => 
   });
 });
 
+describe("repro/study-registered — a row whose folder leads outside repro/", () => {
+  it("is reported by name, and nothing is read through it: its plan and result read as missing", () => {
+    const r = P1(
+      study({
+        folder: "../outside",
+        status: "done",
+        result: "41 of 60",
+        result_file: "r.txt",
+        plan: "plan.json",
+      }),
+    );
+    const files = memoryFiles({
+      ...SCAFFOLD,
+      [`${DIR}/repro/studies.json`]: registryText(r),
+      [`${DIR}/repro/README.md`]: withIndex("# index\n", r, NO_FACTS),
+      [`${DIR}/outside/plan.json`]: "not JSON",
+      [`${DIR}/outside/r.txt`]: "41 of 60\n",
+    });
+    const read: string[] = [];
+    const spy = {
+      ...files,
+      readBytes: (p: Parameters<typeof files.readBytes>[0]) => {
+        read.push(p);
+        return files.readBytes(p);
+      },
+      isFile: (p: Parameters<typeof files.isFile>[0]): boolean => {
+        read.push(p);
+        return files.isFile(p);
+      },
+    };
+    const found = studyFindings(DIR, {
+      files: spy,
+      listDir: memoryListDir(files),
+      codec: studyRegistryCodec,
+    });
+    // Guards: a row naming `../outside` never has a file outside `repro/` read for it.
+    expect([
+      found.map((f) =>
+        f.problem === "bad-plan" || f.problem === "result-file"
+          ? `${f.problem}:${f.why}`
+          : f.problem,
+      ),
+      read.filter((p) => p.includes("/outside/")),
+    ]).toEqual([
+      ["folder-name", "no-folder", "result-file:missing", "bad-plan:missing"],
+      [],
+    ]);
+  });
+});
+
 /** A plan as a study would hold it once the author has checked its drawn units. */
-const FILLED = planText({
+const FILLED_PLAN: StudyPlan = {
   question: "How many rules can a linter check?",
   population: {
     source: "the crawl of 2026-10-01",
@@ -338,7 +393,20 @@ const FILLED = planText({
       note: "the sample approved",
     },
   },
-});
+};
+const FILLED = planText(FILLED_PLAN);
+
+/** The index of `r` as `studies index` writes it, FILLED_PLAN as its study's plan and `history` read. */
+const FILLED_INDEX = (
+  r: StudyRegistry,
+  history: IndexInput["history"] = new Map(),
+): string =>
+  withIndex("# Reproduction index\n", r, {
+    plans: new Map([
+      ["P1-S01-baseline/plan.json", { kind: "ready", plan: FILLED_PLAN }],
+    ]),
+    history,
+  });
 
 /** A registry with a headline measurement of one running study whose row names `plan`. */
 const HEADLINE = (plan: string): StudyRegistry => ({
@@ -356,10 +424,11 @@ const HEADLINE = (plan: string): StudyRegistry => ({
 });
 
 describe("repro/study-registered — the plan a row names, read from its folder", () => {
-  it("is silent on a plan.json the author checked", () => {
+  it("is silent on a plan.json the author checked, its mode in the index", () => {
+    const r = HEADLINE("plan.json");
     expect(
       lint({
-        ...registered(HEADLINE("plan.json")),
+        ...registered(r, FILLED_INDEX(r)),
         [`${DIR}/repro/P1-S01-baseline/plan.json`]: FILLED,
       }),
     ).toEqual([]);
@@ -495,4 +564,29 @@ it("repro/study-registered — a measurement's plan that has run without a mode 
       "The plan of `P1-S01`, `plan.json` in its folder, is not a study plan: author_check: is set, and the plan leaves `mode` empty — the author approves a complete plan: fill them, or set author_check to null. What to do: give it the fields on the rule's page — `question`, `population`, `arms`, `primary_outcome`, and for a measurement its `mode`.",
     ],
   ]);
+});
+
+describe("repro/study-registered — the index's mode columns", () => {
+  it("reports an index whose mode column is not the plan's, and never compares the two read from git", () => {
+    const r = HEADLINE("plan.json");
+    const at = { commit: "a".repeat(40), date: "2026-10-14T09:00:00+05:00" };
+    const lintWith = (readme: string): string[] =>
+      lint({
+        ...registered(r, readme),
+        [`${DIR}/repro/P1-S01-baseline/plan.json`]: FILLED,
+      }).map((x) => x.messageId);
+    // Guards: the mode is in the tree, so a stale one is reported; the commits are what git said when
+    // `studies index` ran — a squash merge renames them — so whatever they say is in sync.
+    expect([
+      lintWith(withIndex("# Reproduction index\n", r, NO_FACTS)),
+      lintWith(
+        FILLED_INDEX(
+          r,
+          new Map([
+            ["P1-S01", { kind: "read", decision: at, firstOutput: at }],
+          ]),
+        ),
+      ),
+    ]).toEqual([["stale-index"], []]);
+  });
 });

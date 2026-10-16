@@ -4,7 +4,8 @@
  *
  *   - `studies new` writes the decide-first plan;
  *   - `studies gate` refuses while the decision is uncommitted, and opens once it is, with its commit;
- *   - outputs committed after the decision: `repro/outputs-before-decision` is silent;
+ *   - outputs committed after the decision: `repro/outputs-before-decision` is silent, and
+ *     `studies index` writes both commits into the index, which the lint still finds in sync;
  *   - an output committed with the decision, or in a shallow clone: the rule says so.
  *
  *   npm run test:e2e:studies
@@ -53,14 +54,29 @@ const LintReport = z.array(
   }),
 );
 
-/** The first line of each `repro/outputs-before-decision` message of `paperlint lint` in `cwd`. */
-const orderFindings = (cwd: string): readonly string[] =>
+/** The first line of each `rule` message of `paperlint lint` in `cwd`. */
+const findings = (cwd: string, rule: string): readonly string[] =>
   LintReport.parse(JSON.parse(paperlint(cwd, ["lint", "--json"]).out)).flatMap(
     (f) =>
       f.messages
-        .filter((m) => m.ruleId === "repro/outputs-before-decision")
+        .filter((m) => m.ruleId === rule)
         .map((m) => m.message.split("\n")[0] ?? ""),
   );
+
+/** The first line of each `repro/outputs-before-decision` message of `paperlint lint` in `cwd`. */
+const orderFindings = (cwd: string): readonly string[] =>
+  findings(cwd, "repro/outputs-before-decision");
+
+/** The mode, decision and first-output cells of P1-S01 in the index `studies index` wrote. */
+const modeCells = (dir: string): readonly string[] =>
+  (
+    readFileSync(join(dir, "papers/example/repro/README.md"), "utf8")
+      .split("\n")
+      .find((l) => l.startsWith("| P1-S01")) ?? ""
+  )
+    .split("|")
+    .map((c) => c.trim())
+    .slice(6, 9);
 
 const T = (h: number): string =>
   `2026-10-16T${String(h).padStart(2, "0")}:00:00+05:00`;
@@ -157,20 +173,22 @@ describe.skipIf(SKIP)(
       ]);
       // Guards: the order in history is the declared one — silent.
       expect(orderFindings(dir)).toEqual([]);
-      const registry = join(dir, "papers/example/repro/studies.json");
-      writeFileSync(
-        registry,
-        readFileSync(registry, "utf8").replace(
-          '"in_paper": "no"',
-          '"in_paper": "yes"',
-        ),
-      );
-      const md = paperlint(dir, ["studies", "methods", "papers/example"]);
+      const indexed = paperlint(dir, ["studies", "index", "papers/example"]);
       const head = git(dir, ["rev-parse", "HEAD"]).trim();
-      // Guards: the methods text names the decision's and the first output's commits, from the same history.
-      expect([md.status, md.out.trim().split("\n")[2]]).toEqual([
+      // Guards: the index names the decision's and the first output's commits, from the same history,
+      // and the lint, which never compares those two columns, still finds the index in sync.
+      expect([
+        indexed.status,
+        modeCells(dir),
+        findings(dir, "repro/study-registered"),
+      ]).toEqual([
         0,
-        `| P1-S01 | Outcome | decided before its run | \`${sha.slice(0, 12)}\` (2026-10-16) | \`${head.slice(0, 12)}\` (2026-10-16) | \`npx paperlint lint papers/example\` |`,
+        [
+          "decide_before_run",
+          `${sha.slice(0, 12)} 2026-10-16`,
+          `${head.slice(0, 12)} 2026-10-16`,
+        ],
+        [],
       ]);
     });
   },

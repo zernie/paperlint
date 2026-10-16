@@ -70,10 +70,6 @@ export interface Args {
   pdf: string | null;
   /** `--abstract <file>` for `submission update`: a plain-text abstract to send. */
   abstract: string | null;
-  /** `--identity <file>` for `studies unseal`: the age identity file that opens the sealed results. */
-  identity: string | null;
-  /** `--format <md|tex>` for `studies methods`: the Markdown table or the LaTeX sentences. */
-  format: string | null;
   /** `--submit` for `submission update`: mark the submission submitted. */
   submit: boolean;
   /** `--save` for `submission update`: really change the submission; without it, a dry run. */

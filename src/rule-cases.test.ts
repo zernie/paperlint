@@ -17,17 +17,21 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
-import { manifestText } from "./domain/sealed-study.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
 import {
   planTemplate,
   planText,
   registryText,
   withIndex,
+  type StudyPlan,
   type StudyRegistry,
+  type IndexInput,
 } from "./domain/study-registry.ts";
 import { recordText } from "../test/recorded-fixture.ts";
 import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
+
+/** No plan and no history: the index with every mode column `—`. */
+const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const fixture = (p: string): string =>
@@ -66,7 +70,7 @@ const REGISTRY: StudyRegistry = {
 };
 const REGISTERED_STUDY: Readonly<Record<string, string>> = {
   [`${P}/repro/studies.json`]: registryText(REGISTRY),
-  [`${P}/repro/README.md`]: withIndex("# repro\n", REGISTRY),
+  [`${P}/repro/README.md`]: withIndex("# repro\n", REGISTRY, NO_FACTS),
   [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
 };
 
@@ -78,38 +82,13 @@ const STUDY_WITH_PLAN = (name: string): Readonly<Record<string, string>> => {
   };
   return {
     [`${P}/repro/studies.json`]: registryText(r),
-    [`${P}/repro/README.md`]: withIndex("# repro\n", r),
+    [`${P}/repro/README.md`]: withIndex("# repro\n", r, NO_FACTS),
     [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
     [`${P}/repro/P1-S01-ablation/${name}`]: planText(
       planTemplate("spike", "P1-S01-ablation"),
     ),
   };
 };
-
-/** The registered study made blind: its plan seals RESULTS.md to one recipient. `files` beside its plan. */
-const BLIND_STUDY = (
-  files: Readonly<Record<string, string>>,
-): Readonly<Record<string, string>> => ({
-  ...STUDY_WITH_PLAN("plan.json"),
-  [`${P}/repro/P1-S01-ablation/plan.json`]: planText({
-    ...planTemplate("measurement", "P1-S01-ablation"),
-    mode: {
-      kind: "blind",
-      recipients: [`age1${"q".repeat(58)}`],
-      outputs: ["RESULTS.md"],
-      unseal_after: {
-        file: "repro/P1-S01-ablation/exclusions.md",
-        note: "exclusions frozen",
-      },
-    },
-  }),
-  ...Object.fromEntries(
-    Object.entries(files).map(([k, v]) => [
-      `${P}/repro/P1-S01-ablation/${k}`,
-      v,
-    ]),
-  ),
-});
 
 /** The registered study as a measurement in `mode`, its plan ready, `files` beside it. */
 const STUDY_IN_MODE = (
@@ -120,18 +99,24 @@ const STUDY_IN_MODE = (
     ...REGISTRY,
     studies: REGISTRY.studies.map((s) => ({ ...s, plan: "plan.json" })),
   };
+  const plan: StudyPlan = {
+    question: "Which step does the work?",
+    population: { source: "tasks", draw: { kind: "all", method: "census" } },
+    arms: [],
+    primary_outcome: "pass rate",
+    author_check: null,
+    mode,
+  };
+  // The index carries the plan's mode, as the lint reads it; no history is asked.
+  const facts: IndexInput = {
+    plans: new Map([["P1-S01-ablation/plan.json", { kind: "ready", plan }]]),
+    history: new Map(),
+  };
   return {
     [`${P}/repro/studies.json`]: registryText(r),
-    [`${P}/repro/README.md`]: withIndex("# repro\n", r),
+    [`${P}/repro/README.md`]: withIndex("# repro\n", r, facts),
     [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
-    [`${P}/repro/P1-S01-ablation/plan.json`]: planText({
-      question: "Which step does the work?",
-      population: { source: "tasks", draw: { kind: "all", method: "census" } },
-      arms: [],
-      primary_outcome: "pass rate",
-      author_check: null,
-      mode,
-    }),
+    [`${P}/repro/P1-S01-ablation/plan.json`]: planText(plan),
     ...Object.fromEntries(
       Object.entries(files).map(([k, v]) => [
         `${P}/repro/P1-S01-ablation/${k}`,
@@ -846,35 +831,6 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     // Every folder registered, and the index the registry generates.
     silent: paper(tex("x"), REGISTERED_STUDY),
   },
-  // A blind study, still sealed, with its result in plaintext beside its ciphertext.
-  "repro/blind-plaintext": {
-    reports: {
-      tree: paper(tex("x"), BLIND_STUDY({ "RESULTS.md": "41 of 60\n" })),
-      file: `${P}/PIPELINE-STATUS.md`,
-      severity: 2,
-      line: 1,
-    },
-    // The same study with only its ciphertext and its manifest.
-    silent: paper(
-      tex("x"),
-      BLIND_STUDY({
-        "RESULTS.md.age": "age-encryption.org/v1\n",
-        "sealed.json": manifestText({
-          recipients: [`age1${"q".repeat(58)}`],
-          files: [
-            {
-              path: "RESULTS.md",
-              sha256: "a".repeat(64),
-              size: 9,
-              age_sha256: "c".repeat(64),
-              sealed_at: "2026-10-16T10:00:00.000Z",
-            },
-          ],
-          unsealed: null,
-        }),
-      }),
-    ),
-  },
   // A study decided before its run, linted where git has no history of it: said, never a pass. The
   // order itself is judged on real repositories in src/outputs-before-decision-rule.test.ts.
   "repro/outputs-before-decision": {
@@ -904,40 +860,6 @@ const CASES: Readonly<Record<string, RuleCases>> = {
         { kind: "exploratory", reason: "a first look" },
         { "RESULTS.md": "41 of 60\n" },
       ),
-    ),
-  },
-  // A paragraph linked to an exploratory study calls it pre-registered.
-  "paper/study-mode-claim": {
-    reports: {
-      tree: paper(
-        tex("We pre-registered it. % study: P1-S01"),
-        STUDY_IN_MODE({ kind: "exploratory", reason: "a first look" }),
-      ),
-      file: `${P}/paper.tex`,
-      severity: 2,
-      line: 3,
-    },
-    // The same paragraph saying what the study is.
-    silent: paper(
-      tex("An exploratory look. % study: P1-S01"),
-      STUDY_IN_MODE({ kind: "exploratory", reason: "a first look" }),
-    ),
-  },
-  // A number from an exploratory study, in a paragraph that never says so.
-  "paper/study-mode-stated": {
-    reports: {
-      tree: paper(
-        tex("In all, 12 runs stall. % study: P1-S01"),
-        STUDY_IN_MODE({ kind: "exploratory", reason: "a first look" }),
-      ),
-      file: `${P}/paper.tex`,
-      severity: 1,
-      line: 3,
-    },
-    // The same number, labelled.
-    silent: paper(
-      tex("In an exploratory look, 12 runs stall. % study: P1-S01"),
-      STUDY_IN_MODE({ kind: "exploratory", reason: "a first look" }),
     ),
   },
   // A study's plan still named prereg.json: read as its plan, and a warning to rename it.

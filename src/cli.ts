@@ -80,10 +80,6 @@ import {
   texVenueRules,
 } from "./tex-venue-rules.ts";
 import { claimProvenanceRule } from "./claim-provenance.ts";
-import {
-  STUDY_CLAIM_RULE_LEVELS,
-  studyClaimRules,
-} from "./study-claim-rules.ts";
 import { registerRule } from "./register.ts";
 import {
   REGISTER_BAND_RULE_LEVELS,
@@ -194,17 +190,12 @@ import {
   studyRegistryRules,
 } from "./study-registry-rule.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
-import { ageSealer, spawnBytes } from "./adapters/age/index.ts";
-import { nodeRemove, spawnProcess } from "./adapters/node/index.ts";
+import { spawnProcess } from "./adapters/node/index.ts";
 import { gitHistory } from "./adapters/git/index.ts";
 import {
   ORDER_RULE_LEVELS,
   outputsBeforeDecisionRules,
 } from "./outputs-before-decision-rule.ts";
-import {
-  BLIND_RULE_LEVELS,
-  blindPlaintextRules,
-} from "./blind-plaintext-rule.ts";
 import { runStudies } from "./studies.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
@@ -263,25 +254,6 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       (the default mode), exit 0 only once its decision file is
                                       committed as it stands, printing the commit and date; else exit
                                       1 saying why. A runner calls it first: gate … && ./run.sh
-  npx paperlint studies seal <paper-dir> <id>
-                                      a blind study (mode "blind"): every file its outputs match
-                                      encrypted with age to <file>.age for every recipient, its sha256
-                                      recorded in sealed.json, the plaintext removed. A re-run seals
-                                      only what is new and refuses a changed result
-  npx paperlint studies verify <paper-dir> <id>
-                                      no key needed: every .age file against the sha256 sealed.json
-                                      recorded, and once unsealed every plaintext too
-  npx paperlint studies unseal <paper-dir> <id> --identity <file>
-                                      a blind study's results decrypted with an age identity file,
-                                      only once its unseal_after decision and sealed.json are both
-                                      committed as they stand; every sha256 checked before anything is
-                                      written, then the gate's commit recorded in sealed.json
-  npx paperlint studies methods <paper-dir> [--format md|tex]
-                                      per study the paper reports (in_paper "yes"): its mode, its
-                                      decision's commit and date, its first output's, and the command
-                                      that re-checks it — a Markdown table for the artifact's README
-                                      (md), or one LaTeX sentence per study for Methods (tex). Derived
-                                      from the plans and git, never kept by hand
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
 
@@ -307,13 +279,9 @@ studies:
                       A study's status, result and in_paper are edited in repro/studies.json, its
                       plan in its plan.json; the rule repro/study-registered checks them
                       (docs/rules/repro/study-registered.md). A measurement's plan declares its
-                      mode: decide_before_run (written by new), blind, or exploratory;
-                      repro/outputs-before-decision checks the order in git, and a blind study's
-                      plaintext results are refused by repro/blind-plaintext until it is unsealed
-                      (docs/design/sealed-studies.md)
-  --format md|tex     methods: a Markdown table (the default) or LaTeX sentences.
-  --identity <file>   unseal: the age identity file. Where it is kept is yours to choose; a study
-                      decided before its run needs no key at all.
+                      mode: decide_before_run (written by new) or exploratory;
+                      repro/outputs-before-decision checks the order in git
+                      (docs/design/study-modes.md)
 
 submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
@@ -440,9 +408,6 @@ const envOf =
       ),
     );
 
-/** The environment age runs in: PATH. */
-const pathOnly = envOf(["PATH"]);
-
 /** The environment git runs in: PATH, and HOME for its configuration. */
 const gitEnv = envOf(["PATH", "HOME"]);
 
@@ -459,24 +424,13 @@ const STUDY_RULE_DEPS = { ...LAYOUT_RULE_DEPS, codec: studyRegistryCodec };
 const REPRO_RULES = {
   ...reproLayoutRules(LAYOUT_RULE_DEPS),
   ...studyRegistryRules(STUDY_RULE_DEPS),
-  ...blindPlaintextRules(STUDY_RULE_DEPS),
   ...outputsBeforeDecisionRules({ ...STUDY_RULE_DEPS, git: GIT }),
 };
 const REPRO_RULE_LEVELS = {
   ...REPRO_LAYOUT_RULE_LEVELS,
   ...STUDY_REGISTRY_RULE_LEVELS,
-  ...BLIND_RULE_LEVELS,
   ...ORDER_RULE_LEVELS,
 };
-
-/** What the text says of its studies' modes, where a paragraph links one (`% study: <id>`). */
-const STUDY_CLAIM_RULES = studyClaimRules({
-  prose: TEX_RULE_DEPS,
-  studies: { ...STUDY_RULE_DEPS, git: GIT },
-});
-
-/** The `paper` plugin's own rules on `paper.tex`, beside the reference and sources rules. */
-const PAPER_TEX_RULES = { ...typography.rules, ...STUDY_CLAIM_RULES };
 
 /** Today in this machine's time zone, `YYYY-MM-DD`: the date `paperlint studies new` registers a study on. */
 const today = (now = new Date()): string =>
@@ -499,9 +453,10 @@ export function buildConfig(
   opts: PaperlintConfig = {},
   texLanguage: unknown,
 ): ConfigBlock[] {
+  const paperRules = { ...typography.rules };
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
-    ...PAPER_TEX_RULES,
+    ...paperRules,
     ...referenceRules(RECORDED_DEPS),
     ...sourcesRules(RECORD_DEPS),
   };
@@ -622,7 +577,6 @@ export function buildConfig(
         "tex/future-promise": "warn",
         // A number with no owner: a prose rule, on beside the others above.
         "tex/claim-provenance": "warn",
-        ...STUDY_CLAIM_RULE_LEVELS,
         // Sentence-initial conjunctions over the whole body: register, not vocabulary.
         "tex/register": "warn",
         // Contrast frames, claims in bold, relation markers: each against the band the venue
@@ -1041,8 +995,6 @@ export function parseArgs(argv: readonly string[]): Args {
     kind: null,
     pdf: null,
     abstract: null,
-    identity: null,
-    format: null,
     submit: false,
     save: false,
     hooksMode: null,
@@ -1137,15 +1089,13 @@ const SWITCHES: ReadonlyMap<
 /** The flags whose value is one string field of `Args`. */
 const STRING_FLAGS: ReadonlyMap<
   string,
-  "paper" | "venue" | "kind" | "pdf" | "abstract" | "identity" | "format"
+  "paper" | "venue" | "kind" | "pdf" | "abstract"
 > = new Map([
   ["--paper", "paper"],
   ["--venue", "venue"],
   ["--kind", "kind"],
   ["--pdf", "pdf"],
   ["--abstract", "abstract"],
-  ["--identity", "identity"],
-  ["--format", "format"],
 ]);
 
 /** The flags that take a value, in either spelling: `--flag value` or `--flag=value`. */
@@ -1757,16 +1707,10 @@ const SIMPLE: Readonly<
         title: a.paths[2],
         extra: a.paths.slice(3),
         kind: a.kind,
-        identity: a.identity,
-        format: a.format,
       },
       {
         ...STUDY_RULE_DEPS,
-        // age gets PATH and nothing else of this process's environment.
-        sealer: ageSealer(spawnBytes, pathOnly(process.env)),
         git: GIT,
-        remove: nodeRemove,
-        now: new Date().toISOString(),
         cwd,
         today: today(),
         log,

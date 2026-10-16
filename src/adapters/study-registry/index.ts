@@ -13,11 +13,12 @@
  * a draft naming its empty texts, so nothing downstream looks at a text again. A plan still named
  * `prereg.json` has a loose schema of its own.
  *
- * A plan's `blind` (docs/design/sealed-studies.md) and a blind study's manifest, `sealed.json`, are
- * parsed here too, strictly, each contradiction an error: a decision file the outputs would seal, a
- * glob that leaves the folder, an unsealing without the commit it waited for.
+ * A plan's `mode` (docs/design/study-modes.md) is parsed here too, strictly, a union on its `kind`:
+ * one mode at most, a glob that leaves the study's folder or a decision outside the paper refused,
+ * and a measurement's plan ready only with a mode.
  */
 import { z } from "zod";
+import { README } from "../../domain/repro-layout.ts";
 import {
   IN_PAPER,
   MEASUREMENT_ROLES,
@@ -38,16 +39,6 @@ import {
   type StudyPlan,
   type StudyRegistry,
 } from "../../domain/study-registry.ts";
-import {
-  RECIPIENT_PATTERN,
-  RESERVED_NAMES,
-  SEALED_SUFFIX,
-  type GateCommit,
-  type ParsedManifest,
-  type SealManifest,
-  type SealedFile,
-  type Unsealed,
-} from "../../domain/sealed-study.ts";
 import {
   needsMode,
   type Decision,
@@ -161,44 +152,23 @@ const once =
     });
   };
 
-/**
- * A path or glob relative to the study's folder that stays inside it: no backslash, not absolute,
- * no `..` segment, and not one of the study's own files or a ciphertext.
- */
+/** Whether `p` is a relative path that stays where it starts: no backslash, not absolute, no `..`. */
+const staysInside = (p: string): boolean =>
+  !p.includes("\\") && !p.startsWith("/") && !p.split("/").includes("..");
+
+/** An output glob, relative to the study's folder: inside it, and never the study's README. */
 const inFolder = z
   .string()
   .min(1)
   .refine(
-    (p) =>
-      !p.includes("\\") &&
-      !p.startsWith("/") &&
-      !p.split("/").includes("..") &&
-      !RESERVED_NAMES.includes(p) &&
-      !p.endsWith(SEALED_SUFFIX),
-    `is not a path inside the study's folder, or names one of its own files (${RESERVED_NAMES.join(", ")}, *${SEALED_SUFFIX})`,
+    (p) => staysInside(p) && p !== README,
+    `is not a path inside the study's folder, or names its ${README}`,
   );
 
-const recipient = z
-  .string()
-  .regex(
-    RECIPIENT_PATTERN,
-    "is not a native age recipient (age1 and 58 more characters, from age-keygen)",
-  );
-
-/**
- * A decision file, relative to the PAPER's folder: inside it, never a ciphertext. Empty in a draft
- * (the parser names it among the empty texts).
- */
+/** A decision file, relative to the PAPER's folder: inside it. Empty in a draft (the parser names it). */
 const inPaper = z
   .string()
-  .refine(
-    (p) =>
-      !p.includes("\\") &&
-      !p.startsWith("/") &&
-      !p.split("/").includes("..") &&
-      !p.endsWith(SEALED_SUFFIX),
-    `is not a path inside the paper's folder, or is a ciphertext (*${SEALED_SUFFIX})`,
-  );
+  .refine(staysInside, "is not a path inside the paper's folder");
 
 const decisionShape = z.strictObject({ file: inPaper, note: z.string() });
 
@@ -211,12 +181,6 @@ const mode = z.discriminatedUnion("kind", [
     kind: z.literal("decide_before_run"),
     outputs,
     decision: decisionShape,
-  }),
-  z.strictObject({
-    kind: z.literal("blind"),
-    outputs,
-    recipients: z.array(recipient).min(1).superRefine(once("the recipient")),
-    unseal_after: decisionShape,
   }),
   z.strictObject({ kind: z.literal("exploratory"), reason: z.string() }),
 ]);
@@ -295,7 +259,7 @@ const says = (t: string): boolean => /\S/u.test(t);
 
 /**
  * The mode's texts that are still empty, by their field: the mode itself when a study of `kind` must
- * declare one and the plan does not, each gated mode's outputs and decision, an exploratory reason.
+ * declare one and the plan does not, a decide-first mode's outputs and decision, an exploratory reason.
  */
 const modeEmpties = (
   p: StudyPlan,
@@ -304,15 +268,11 @@ const modeEmpties = (
   const m = p.mode;
   if (m === undefined) return needsMode(kind) ? ["mode"] : [];
   if (m.kind === "exploratory") return says(m.reason) ? [] : ["mode.reason"];
-  const [d, at] =
-    m.kind === "blind"
-      ? [m.unseal_after, "mode.unseal_after"]
-      : [m.decision, "mode.decision"];
   return PLAN_TEXT_FIELDS.filter(
     (f) =>
       (f === "mode.outputs" && m.outputs.length === 0) ||
-      (f === `${at}.file` && !says(d.file)) ||
-      (f === `${at}.note` && !says(d.note)),
+      (f === "mode.decision.file" && !says(m.decision.file)) ||
+      (f === "mode.decision.note" && !says(m.decision.note)),
   );
 };
 
@@ -355,40 +315,6 @@ const planFor = (kind: StudyKind) => planShape.transform(readyOrDraft(kind));
  */
 const legacyPlan = legacyAsPlan.transform(readyOrDraft("spike"));
 
-// ── a blind study's manifest, sealed.json ───────────────────────────────────────
-
-const sha256 = z.string().regex(/^[0-9a-f]{64}$/u, "is not a sha256");
-
-const sealedFile = z.strictObject({
-  path: inFolder,
-  sha256,
-  size: z.number().int().nonnegative(),
-  age_sha256: sha256,
-  sealed_at: z.iso.datetime(),
-});
-
-const gateCommit = z.strictObject({
-  file: inFolder,
-  commit: z
-    .string()
-    .regex(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u, "is not a commit"),
-  date: z.iso.datetime({ offset: true }),
-});
-
-const unsealed = z.strictObject({ at: z.iso.datetime(), gate: gateCommit });
-
-/** `sealed.json`: written by the commands only; null is "still sealed", and an unsealing carries its gate. */
-const manifest = z.strictObject({
-  recipients: z.array(recipient).min(1).superRefine(once("the recipient")),
-  files: z.array(sealedFile).superRefine((fs, ctx) => {
-    once("the path")(
-      fs.map((f) => f.path),
-      ctx,
-    );
-  }),
-  unsealed: unsealed.nullable(),
-});
-
 // ── the schemas ARE the domain's types ─────────────────────────────────────────
 // Each schema's output and its hand-written domain type are the same type, both ways, once both are
 // made readonly all the way down: a field added to one and not the other stops the build.
@@ -427,10 +353,6 @@ export type SchemasAreTheDomain = [
   Same<z.output<typeof legacyPlan>, ReadyOrDraft>,
   Same<z.output<typeof mode>, StudyMode>,
   Same<z.output<typeof decisionShape>, Decision>,
-  Same<z.output<typeof manifest>, SealManifest>,
-  Same<z.output<typeof sealedFile>, SealedFile>,
-  Same<z.output<typeof gateCommit>, GateCommit>,
-  Same<z.output<typeof unsealed>, Unsealed>,
 ] extends true[]
   ? true
   : never;
@@ -490,19 +412,8 @@ export const parseStudyPlan = (text: string, kind: StudyKind): ParsedPlan =>
 /** A plan still named `prereg.json`: loose, read only when a row names it. */
 export const parseLegacyPlan = planParser(legacyPlan);
 
-/** A `sealed.json`'s text, parsed once at the boundary: the manifest, or every reason it is not one. */
-export function parseSealManifest(text: string): ParsedManifest {
-  const json = jsonOf(text);
-  if (json === undefined) return { ok: false, why: "not JSON" };
-  const parsed = manifest.safeParse(json);
-  return parsed.success
-    ? { ok: true, manifest: parsed.data }
-    : { ok: false, why: reasons(parsed.error.issues) };
-}
-
 export const studyRegistryCodec: StudyRegistryCodec = {
   parse: parseStudyRegistry,
   parsePlan: parseStudyPlan,
   parseLegacyPlan,
-  parseManifest: parseSealManifest,
 };

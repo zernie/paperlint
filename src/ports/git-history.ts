@@ -1,6 +1,6 @@
 /**
  * What git says of a study's files — shaped by what the decide-first gate needs: whether a decision
- * file is committed as it stands, and in which commit (`studies gate`, `studies unseal`); and whether
+ * file is committed as it stands, and in which commit (`studies gate`); and whether
  * each output entered history after the decision (`repro/outputs-before-decision`). The one
  * implementation is `src/adapters/git/`; `src/cli.ts` wires it.
  */

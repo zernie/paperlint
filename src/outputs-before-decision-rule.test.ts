@@ -86,3 +86,24 @@ it("loud on each output committed with or before the decision, and on outputs wi
   // Guards: an output while the decision has never been committed.
   expect(lint(none)).toEqual(["undecided-output"]);
 });
+
+it("never reads through a row whose folder leads outside repro/: no study, so no question to git", () => {
+  const repo = join(root, "escaping");
+  initRepo(repo);
+  // The row names `../outside`; a plan and an output sit there, outside `repro/`.
+  commit(
+    repo,
+    {
+      ...PAPER,
+      "p/repro/studies.json": registryText({
+        prefix: "P1",
+        studies: [{ ...ROW, folder: "../outside" }],
+      }),
+      "p/outside/plan.json": planText(planOf(DECIDED)),
+      "p/outside/RESULTS.md": "41 of 60\n",
+    },
+    T(9),
+  );
+  // Guards: an output outside the paper's `repro/` is no study's; `repro/study-registered` names the row.
+  expect(lint(repo)).toEqual([]);
+});

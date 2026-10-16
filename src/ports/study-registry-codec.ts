@@ -3,7 +3,6 @@
  * of `StudyRegistry` (`src/domain/study-registry.ts`). The one implementation is
  * `src/adapters/study-registry/` (zod); `src/cli.ts` wires it.
  */
-import type { ParsedManifest } from "../domain/sealed-study.ts";
 import type {
   ParsedPlan,
   ParsedRegistry,
@@ -20,6 +19,4 @@ export interface StudyRegistryCodec {
   readonly parsePlan: (text: string, kind: StudyKind) => ParsedPlan;
   /** A plan still named `prereg.json`, loose: the same three outcomes. */
   readonly parseLegacyPlan: (text: string) => ParsedPlan;
-  /** A blind study's `sealed.json`, strict: the manifest, or why it is not one. */
-  readonly parseManifest: (text: string) => ParsedManifest;
 }

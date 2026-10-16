@@ -1,7 +1,8 @@
 /**
  * `paperlint studies new|index <paper-dir>` — the two commands that write a paper's study registry,
  * `repro/studies.json`, and its index in `repro/README.md` (docs/design/study-registry.md) — and
- * `studies seal|verify <paper-dir> <id>`, a blind study's sealed results (src/sealed-studies.ts).
+ * `studies gate <paper-dir> <id>` (src/study-gate.ts), over the studies' modes
+ * (docs/design/study-modes.md).
  *
  *   new <paper-dir> "<title>" [--kind <kind>]
  *            the next id; `repro/<id>-<slug>/README.md` with the id and title in its frontmatter, and
@@ -24,7 +25,8 @@ import {
   STUDIES_FILE,
   STUDY_KINDS,
   addStudy,
-  indexInSync,
+  indexCurrent,
+  isFolderName,
   isStudyKind,
   planTemplate,
   planText,
@@ -39,10 +41,8 @@ import type { Files } from "./ports/files.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type { ListDir } from "./ports/talk-media.ts";
 import { registryOf } from "./study-registry-rule.ts";
-import { runSeal, runVerify, type SealRun } from "./sealed-studies.ts";
 import { runGate } from "./study-gate.ts";
-import { runUnseal, type UnsealDeps } from "./unseal-study.ts";
-import { isMethodsFormat, runMethods } from "./study-methods.ts";
+import { indexInputOf } from "./study-index-input.ts";
 import type { GitHistory, GitOrder } from "./ports/git-history.ts";
 
 /** What one `studies` run was asked, after the command line. */
@@ -55,13 +55,9 @@ export interface StudiesArgs {
   readonly extra: readonly string[];
   /** `--kind <kind>`; null: the default. */
   readonly kind: string | null;
-  /** `--identity <file>`, for `unseal` only. */
-  readonly identity: string | null;
-  /** `--format <md|tex>`, for `methods` only; null: Markdown. */
-  readonly format: string | null;
 }
 
-export interface StudiesDeps extends UnsealDeps {
+export interface StudiesDeps {
   readonly git: GitHistory & GitOrder;
   readonly files: Files;
   readonly listDir: ListDir;
@@ -76,14 +72,8 @@ export interface StudiesDeps extends UnsealDeps {
 const NEW_USAGE =
   'npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]';
 const INDEX_USAGE = "npx paperlint studies index <paper-dir>";
-const SEAL_USAGE = "npx paperlint studies seal <paper-dir> <id>";
-const VERIFY_USAGE = "npx paperlint studies verify <paper-dir> <id>";
 const GATE_USAGE = "npx paperlint studies gate <paper-dir> <id>";
-const UNSEAL_USAGE =
-  "npx paperlint studies unseal <paper-dir> <id> --identity <file>";
-const METHODS_USAGE =
-  "npx paperlint studies methods <paper-dir> [--format md|tex]";
-const SUBS = `new, index, gate, seal, verify, unseal or methods — ${[NEW_USAGE, INDEX_USAGE, GATE_USAGE, SEAL_USAGE, VERIFY_USAGE, UNSEAL_USAGE, METHODS_USAGE].join(" · ")}`;
+const SUBS = `new, index or gate — ${[NEW_USAGE, INDEX_USAGE, GATE_USAGE].join(" · ")}`;
 
 const STATUS_FILE = "PIPELINE-STATUS.md";
 
@@ -111,8 +101,19 @@ function registryIn(p: Paper, deps: StudiesDeps): StudyRegistry | Refusal {
     case "unreadable":
       return refuse(1, `${file} is not a study registry: ${r.why}`);
     case "read":
-      return r.registry;
+      return escaping(p, r.registry) ?? r.registry;
   }
+}
+
+/** The refusal when a row names a folder that is not one inside `repro/`; null when none does. */
+function escaping(p: Paper, r: StudyRegistry): Refusal | null {
+  const s = r.studies.find((row) => !isFolderName(row.folder));
+  return s === undefined
+    ? null
+    : refuse(
+        1,
+        `${s.id} in ${p.shown}/${REPRO_DIR}/${STUDIES_FILE} names the folder \`${s.folder}\`, which is not one folder inside ${REPRO_DIR}/: nothing is read or written through it. Give the row its own folder's name, then run this again.`,
+      );
 }
 
 const isRefusal = (v: unknown): v is Refusal =>
@@ -133,12 +134,13 @@ const studiesCount = (r: StudyRegistry): string =>
  * Write the index of `r` into the README; whether it wrote. A block already in sync is left as it
  * is, so the padding a formatter gave the table is never undone.
  */
-function writeIndex(dir: string, r: StudyRegistry, files: Files): boolean {
-  const before = readmeOf(dir, files);
-  if (indexInSync(before, r)) return false;
-  files.writeAtomic(
+function writeIndex(dir: string, r: StudyRegistry, deps: StudiesDeps): boolean {
+  const before = readmeOf(dir, deps.files);
+  const at = indexInputOf(dir, { kind: "read", registry: r }, deps);
+  if (indexCurrent(before, r, at)) return false;
+  deps.files.writeAtomic(
     callerPath(join(dir, REPRO_DIR, README)),
-    text(withIndex(before, r)),
+    text(withIndex(before, r, at)),
   );
   return true;
 }
@@ -173,7 +175,7 @@ function runIndex(
   if (blocked !== null) return blocked;
   const readme = `${p.shown}/${REPRO_DIR}/${README}`;
   return [
-    writeIndex(p.dir, r, deps.files)
+    writeIndex(p.dir, r, deps)
       ? `wrote the index of ${studiesCount(r)} in ${readme}`
       : `the index in ${readme} is in sync with ${studiesCount(r)}`,
   ];
@@ -204,9 +206,10 @@ function newArgs(
 function writeStudy(
   p: Paper,
   added: { readonly registry: StudyRegistry; readonly study: Study },
-  files: Files,
+  deps: StudiesDeps,
 ): readonly string[] {
   const { study, registry } = added;
+  const { files } = deps;
   const at = (...names: readonly string[]): AbsolutePath =>
     callerPath(join(p.dir, REPRO_DIR, ...names));
   files.writeAtomic(at(study.folder, README), text(studyReadme(study)));
@@ -215,7 +218,7 @@ function writeStudy(
     text(planText(planTemplate(study.kind, study.folder))),
   );
   files.writeAtomic(at(STUDIES_FILE), text(registryText(registry)));
-  writeIndex(p.dir, registry, files);
+  writeIndex(p.dir, registry, deps);
   const repro = `${p.shown}/${REPRO_DIR}`;
   return [
     `created ${repro}/${study.folder}/${README}`,
@@ -246,7 +249,7 @@ function runNew(
         1,
         `${p.shown}/${REPRO_DIR}/${folder}/ already exists; it is never overwritten. Register it by hand, or remove it and run this again.`,
       )
-    : writeStudy(p, added, deps.files);
+    : writeStudy(p, added, deps);
 }
 
 /** The paper folder the command line names, or the refusal. */
@@ -265,67 +268,21 @@ function paperOf(a: StudiesArgs, deps: StudiesDeps): Refusal | Chosen {
     : refuse(2, `${shown} is not a paper folder: it has no ${STATUS_FILE}`);
 }
 
-/** What a command on one study does once its id is read: the lines, or the refusal. */
-type OnStudy = (
-  p: Paper,
-  id: string,
-  identity: string | null,
-  deps: StudiesDeps,
-) => Refusal | SealRun;
-
-/** A command on one study that takes no identity. */
-const keyless =
-  (
-    sub: string,
-    run: (p: Paper, id: string, deps: StudiesDeps) => SealRun,
-  ): OnStudy =>
-  (p, id, identity, deps) =>
-    identity === null
-      ? run(p, id, deps)
-      : refuse(
-          2,
-          `studies ${sub} takes no --identity: only unseal opens sealed files`,
-        );
-
-/** `unseal`: the identity file is required. */
-const unsealStudy: OnStudy = (p, id, identity, deps) =>
-  identity === null
-    ? refuse(2, `studies unseal needs the age identity file: ${UNSEAL_USAGE}`)
-    : runUnseal({ paper: p.dir, shown: p.shown, id, identity }, deps);
-
-/** A subcommand on one study: its id, one argument, then `on`. */
-const onStudy =
-  (sub: string, usage: string, on: OnStudy): Run =>
-  (p, a, deps) => {
-    if (a.title === undefined)
-      return refuse(2, `studies ${sub} needs the study's id: ${usage}`);
-    const [surplus] = a.extra;
-    if (surplus !== undefined)
-      return refuse(
-        2,
-        `studies ${sub} takes the paper's folder and one id — \`${surplus}\` is one argument too many`,
-      );
-    const out = on(p, a.title, a.identity, deps);
-    if (isRefusal(out)) return out;
-    return out.ok ? out.lines : out.refusal;
-  };
-
-/** `methods`: the paper's folder alone, and a form. */
-const methodsRun = (
+/** `gate`: the study's id, one argument, then the gate. */
+const gateRun = (
   p: Paper,
   a: StudiesArgs,
   deps: StudiesDeps,
 ): Refusal | readonly string[] => {
-  const [surplus] = [...(a.title === undefined ? [] : [a.title]), ...a.extra];
+  if (a.title === undefined)
+    return refuse(2, `studies gate needs the study's id: ${GATE_USAGE}`);
+  const [surplus] = a.extra;
   if (surplus !== undefined)
     return refuse(
       2,
-      `studies methods takes only the paper's folder — \`${surplus}\` is one argument too many`,
+      `studies gate takes the paper's folder and one id — \`${surplus}\` is one argument too many`,
     );
-  const format = a.format ?? "md";
-  if (!isMethodsFormat(format))
-    return refuse(2, `--format ${format} is not a form: md or tex`);
-  const out = runMethods(p.dir, p.shown, format, deps);
+  const out = runGate(p.dir, p.shown, a.title, deps);
   return out.ok ? out.lines : out.refusal;
 };
 
@@ -348,44 +305,7 @@ const COMMANDS: ReadonlyMap<
 > = new Map([
   ["new", { usage: NEW_USAGE, run: runNew }],
   ["index", { usage: INDEX_USAGE, run: runIndex }],
-  [
-    "gate",
-    {
-      usage: GATE_USAGE,
-      run: onStudy(
-        "gate",
-        GATE_USAGE,
-        keyless("gate", (p, id, d) => runGate(p.dir, p.shown, id, d)),
-      ),
-    },
-  ],
-  [
-    "seal",
-    {
-      usage: SEAL_USAGE,
-      run: onStudy(
-        "seal",
-        SEAL_USAGE,
-        keyless("seal", (p, id, d) => runSeal(p.dir, p.shown, id, d)),
-      ),
-    },
-  ],
-  [
-    "verify",
-    {
-      usage: VERIFY_USAGE,
-      run: onStudy(
-        "verify",
-        VERIFY_USAGE,
-        keyless("verify", (p, id, d) => runVerify(p.dir, p.shown, id, d)),
-      ),
-    },
-  ],
-  [
-    "unseal",
-    { usage: UNSEAL_USAGE, run: onStudy("unseal", UNSEAL_USAGE, unsealStudy) },
-  ],
-  ["methods", { usage: METHODS_USAGE, run: methodsRun }],
+  ["gate", { usage: GATE_USAGE, run: gateRun }],
 ]);
 
 /** The run: 0 done, 1 refused by the paper's state, 2 refused by the command line. */

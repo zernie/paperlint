@@ -3,7 +3,6 @@
  * parser. The one implementation is `src/adapters/latex/` (unified-latex); `src/cli.ts` wires it.
  */
 import type { Include } from "../domain/paper-source.ts";
-import type { StudyMark } from "../domain/study-claims.ts";
 import type {
   ClassLine,
   DocumentClass,
@@ -75,9 +74,4 @@ export interface LatexReader {
     src: string,
     jobname: string,
   ) => readonly Filecontents[];
-  /**
-   * Every `% study: <id>` comment of the live document, in source order — the link from a paragraph
-   * to the study its numbers come from (src/domain/study-claims.ts).
-   */
-  readonly studyMarks: (src: string) => readonly StudyMark[];
 }

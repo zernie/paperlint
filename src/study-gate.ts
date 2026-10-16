@@ -5,24 +5,25 @@
  *
  *   npx paperlint studies gate papers/my-paper P1-S03 && ./run.sh
  *
- * A blind study's run needs no decision (its outputs are sealed); an exploratory one has no gate. Both
- * exit 0 and say so. A study that declares no mode, or names no decision file, is refused.
+ * An exploratory study has no gate: it exits 0 and says so. A study that declares no mode, names no
+ * decision file, or whose row names a folder that is not one inside `repro/`, is refused.
  */
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import { modeStudies, type BlindDeps } from "./blind-plaintext-rule.ts";
+import { modeStudies, type StudyDeps } from "./study-modes.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
-import {
-  decisionAsOutput,
-  type Blind,
-  type DecideFirst,
-  type Exploratory,
-} from "./domain/study-mode.ts";
-import type { Study } from "./domain/study-registry.ts";
+import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
+import { isFolderName, type Study } from "./domain/study-registry.ts";
 import type { Committed, GitHistory } from "./ports/git-history.ts";
-import { refusal, refused, type SealRun } from "./sealed-studies.ts";
+import { registryOf } from "./study-registry-rule.ts";
+import {
+  refusal,
+  refused,
+  type StudyRefusal,
+  type StudyRun,
+} from "./study-run.ts";
 
-export interface GateDeps extends BlindDeps {
+export interface GateDeps extends StudyDeps {
   readonly git: GitHistory;
 }
 
@@ -31,23 +32,22 @@ export const gateLine = (
   id: string,
   file: string,
   c: Committed,
-  what = "the run",
 ): { readonly open: boolean; readonly line: string } => {
   switch (c.kind) {
     case "committed":
       return {
         open: true,
-        line: `${id}: the decision ${file} is committed in ${c.commit} (${c.date}); ${what} may start.`,
+        line: `${id}: the decision ${file} is committed in ${c.commit} (${c.date}); the run may start.`,
       };
     case "changed":
       return {
         open: false,
-        line: `${id}: the decision ${file} has changed since its last commit, ${c.commit}; ${what} waits for the decision as committed. Commit it, then run this again.`,
+        line: `${id}: the decision ${file} has changed since its last commit, ${c.commit}; the run waits for the decision as committed. Commit it, then run this again.`,
       };
     case "not-committed":
       return {
         open: false,
-        line: `${id}: the decision ${file} is not committed; ${what} waits for it. Write the decision there, commit it, then run this again.`,
+        line: `${id}: the decision ${file} is not committed; the run waits for it. Write the decision there, commit it, then run this again.`,
       };
     case "unknown":
       return {
@@ -63,7 +63,7 @@ const gateDecided = (
   { id, folder }: Study,
   mode: DecideFirst,
   deps: GateDeps,
-): SealRun => {
+): StudyRun => {
   const file = mode.decision.file;
   if (!/\S/u.test(file))
     return refused(
@@ -86,13 +86,33 @@ const gateDecided = (
   return g.open ? { ok: true, lines: [g.line] } : refused(refusal(g.line));
 };
 
+/** The refusal when the row of `id` names a folder that is not one inside `repro/`; null when none does. */
+const escapingRow = (
+  paper: string,
+  shown: string,
+  id: string,
+  deps: GateDeps,
+): StudyRefusal | null => {
+  const r = registryOf(paper, deps);
+  const row = (r.kind === "read" ? r.registry.studies : []).find(
+    (x) => x.id === id && !isFolderName(x.folder),
+  );
+  return row === undefined
+    ? null
+    : refusal(
+        `${id}: its row names the folder \`${row.folder}\`, which is not one folder inside ${shown}/${REPRO_DIR}/; nothing is read through it. Give the row its own folder's name.`,
+      );
+};
+
 /** `studies gate`: 0 when the run may start, 1 with the reason when not. */
 export function runGate(
   paper: string,
   shown: string,
   id: string,
   deps: GateDeps,
-): SealRun {
+): StudyRun {
+  const escaping = escapingRow(paper, shown, id, deps);
+  if (escaping !== null) return refused(escaping);
   const s = modeStudies(paper, deps).find((m) => m.row.id === id);
   if (s === undefined)
     return refused(
@@ -102,15 +122,10 @@ export function runGate(
     );
   return s.mode.kind === "decide_before_run"
     ? gateDecided(paper, s.row, s.mode, deps)
-    : { ok: true, lines: [ungated(shown, id, s.mode)] };
+    : {
+        ok: true,
+        lines: [
+          `${id} is exploratory (${s.mode.reason}): it has no gate, and its results are reported as exploratory.`,
+        ],
+      };
 }
-
-/** What the gate says of a study whose run waits on nothing. */
-const ungated = (
-  shown: string,
-  id: string,
-  mode: Blind | Exploratory,
-): string =>
-  mode.kind === "blind"
-    ? `${id} is blind: its run needs no decision. Seal its outputs as soon as they exist (\`npx paperlint studies seal ${shown} ${id}\`).`
-    : `${id} is exploratory (${mode.reason}): it has no gate, and its results are reported as exploratory.`;

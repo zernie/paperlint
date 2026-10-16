@@ -43,7 +43,7 @@ A measurement's inputs — which runs count, which units are excluded, whether t
 starts only after (`paperlint studies gate` exits 0 only then), and git's history is the proof of
 order. This rule re-reads that proof on every lint, so a reviewer who clones the repository can run
 the same check and get the same answer. The design is
-[`docs/design/sealed-studies.md`](../../design/sealed-studies.md).
+[`docs/design/study-modes.md`](../../design/study-modes.md).
 
 **It asks git for an order, never pins a sha**, which is why it can live as a lint rule (rules in
 `eslint-rules/` may not run git: a pinned sha is deleted by a squash or a gc). A squash merge keeps
@@ -67,7 +67,7 @@ Rule repro/outputs-before-decision: https://github.com/zernie/paperlint/blob/mai
 ```
 
 Passing: `decision.md` committed in one commit; `RESULTS.md` and `out/` committed in a later commit
-that descends from it. A study whose mode is `blind` or `exploratory` is not this rule's.
+that descends from it. An `exploratory` study is not this rule's.
 
 ## Options / preset fields
 
@@ -80,6 +80,8 @@ No rule options. The study declares its mode in its plan.
   decision file is visible in its history (`git log -- <file>`) but not reported.
 - That nobody ran the study before the decision and kept the outputs out of git. History records
   what was committed; a run on a machine that never committed it leaves no trace.
+- A study whose row names a folder that is not one inside `repro/` (`../x`): nothing is read through
+  it, so it is no study here; [`repro/study-registered`](study-registered.md) reports the row.
 - Commit dates. They are shown in the message, but the order is ancestry, which a rebase can
   rewrite only by making a new history that a reviewer comparing against the published one sees.
 

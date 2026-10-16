@@ -7,6 +7,7 @@ import { expect, it } from "vitest";
 import type { StudyMode } from "./domain/study-mode.ts";
 import {
   DATE,
+  DECIDED,
   DIR,
   ROW,
   SHA,
@@ -14,12 +15,6 @@ import {
   studies,
   tree,
 } from "../test/study-tree.ts";
-
-const DECIDED: StudyMode = {
-  kind: "decide_before_run",
-  outputs: ["RESULTS.md"],
-  decision: { file: "repro/P1-S01-outcome/decision.md", note: "exclusions" },
-};
 const DECISION = `${DIR}/repro/P1-S01-outcome/decision.md`;
 const decided = (mode: StudyMode = DECIDED) => tree({}, planOf(mode));
 
@@ -92,30 +87,34 @@ it("refuses a plan that names no decision file, or one its own outputs match", (
   ]);
 });
 
-it("a blind or an exploratory study's run waits on nothing: exit 0, saying so", () => {
+it("an exploratory study's run waits on nothing: exit 0, saying so", () => {
   // Guards: the runner may call gate on every study; the answer names the mode.
-  expect([
-    studies("gate", tree()).log,
-    studies("gate", decided({ kind: "exploratory", reason: "a first look" }))
-      .log,
-  ]).toEqual([
-    [
-      "P1-S01 is blind: its run needs no decision. Seal its outputs as soon as they exist (`npx paperlint studies seal papers/example P1-S01`).",
-    ],
-    [
+  expect(
+    studies("gate", decided({ kind: "exploratory", reason: "a first look" })),
+  ).toMatchObject({
+    code: 0,
+    log: [
       "P1-S01 is exploratory (a first look): it has no gate, and its results are reported as exploratory.",
     ],
-  ]);
+  });
 });
 
-it("refuses a study that declares no mode, and an --identity it does not take", () => {
-  // Guards: a measurement with no mode is not gated by default — it is refused until it says how.
+it("refuses a study that declares no mode, and one whose row names a folder outside repro/", () => {
+  // Guards: a measurement with no mode is not gated by default — it is refused until it says how;
+  // and a row naming `../x` is never read through, so no file outside the paper decides the gate.
   expect(
     [
       studies("gate", tree({}, planOf(undefined))),
-      studies("gate", tree({}, planOf(undefined), { ...ROW, id: "P1-S01" }), {
-        identity: "k.txt",
-      }),
+      studies(
+        "gate",
+        tree(
+          {
+            [`${DIR}/x/plan.json`]: JSON.stringify(planOf(DECIDED)),
+          },
+          planOf(DECIDED),
+          { ...ROW, folder: "../x" },
+        ),
+      ),
     ].map((r) => [r.code, r.err]),
   ).toEqual([
     [
@@ -124,6 +123,49 @@ it("refuses a study that declares no mode, and an --identity it does not take", 
         "P1-S01 declares no mode in papers/example: no row of papers/example/repro/studies.json with this id names a plan.json that parses with `mode`. Lint the paper (`npx paperlint lint`) to see why.",
       ],
     ],
-    [2, ["studies gate takes no --identity: only unseal opens sealed files"]],
+    [
+      1,
+      [
+        "P1-S01: its row names the folder `../x`, which is not one folder inside papers/example/repro/; nothing is read through it. Give the row its own folder's name.",
+      ],
+    ],
   ]);
+});
+
+it("refuses a command line without the study's id, or with an argument too many", () => {
+  // Guards: exit 2 is the command line's, never the paper's state.
+  expect(
+    [
+      studies("gate", decided(), { title: undefined }),
+      studies("gate", decided(), { extra: ["P1-S02"] }),
+    ].map((r) => [r.code, r.err]),
+  ).toEqual([
+    [
+      2,
+      [
+        "studies gate needs the study's id: npx paperlint studies gate <paper-dir> <id>",
+      ],
+    ],
+    [
+      2,
+      [
+        "studies gate takes the paper's folder and one id — `P1-S02` is one argument too many",
+      ],
+    ],
+  ]);
+});
+
+it("a plan it cannot read through declares no mode: no registry, a plan outside its folder, a NUL, not JSON", () => {
+  const noMode = (t: Readonly<Record<string, string>>) =>
+    studies("gate", t).err[0]?.split(":")[0];
+  const withoutRegistry = Object.fromEntries(
+    Object.entries(decided()).filter(([k]) => !k.endsWith("studies.json")),
+  );
+  // Guards: each is refused as declaring no mode — none is read past, none opens the gate.
+  expect([
+    noMode(withoutRegistry),
+    noMode(tree({}, planOf(DECIDED), { ...ROW, plan: "../plan.json" })),
+    noMode(tree({}, planOf(DECIDED), { ...ROW, plan: "a\0b.json" })),
+    noMode({ ...decided(), [`${DIR}/repro/P1-S01-outcome/plan.json`]: "{" }),
+  ]).toEqual(Array(4).fill("P1-S01 declares no mode in papers/example"));
 });

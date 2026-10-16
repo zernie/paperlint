@@ -206,10 +206,10 @@ two commands that write it.
    read, so no existing paper turns red.
 
 8. **A study's mode.** A measurement's plan declares how its outcomes are kept from the decisions
-   on its inputs: `decide_before_run` (the default `studies new` writes), `blind` (sealed with age
-   until the decision), or `exploratory`. `paperlint studies gate|seal|verify|unseal` and the rules
-   `repro/outputs-before-decision` and `repro/blind-plaintext` hold it. Its own note:
-   [`sealed-studies.md`](sealed-studies.md).
+   on its inputs: `decide_before_run` (the default `studies new` writes) or `exploratory` with its
+   reason. `paperlint studies gate` and the rule `repro/outputs-before-decision` hold it, and the
+   index carries it in three columns: the mode, the decision's first commit and date, and the first
+   output's commit. Its own note: [`study-modes.md`](study-modes.md).
 
 ## Where each part lives
 

@@ -47,8 +47,7 @@ export default defineConfig({
           hookTimeout: 10 * 60_000,
         },
       },
-      // A study's mode through the real binary: decided first in a real git repository, and blind
-      // with the real age. Needs git, age and age-keygen.
+      // A study decided before its run, through the real binary in a real git repository. Needs git.
       {
         extends: true,
         test: {

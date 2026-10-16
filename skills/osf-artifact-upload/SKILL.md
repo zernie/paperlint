@@ -4,7 +4,7 @@ description: Upload or replace a paper's reproduction artifact file on an OSF pr
 allowed-tools: [Read, Write, Grep, Glob, Bash]
 ---
 
-<!-- vigiles:sha256:b3b110e508867a84 compiled from skills/osf-artifact-upload/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:953fdd419dbc789c compiled from skills/osf-artifact-upload/SKILL.md.spec.ts -->
 
 # osf-artifact-upload — push/replace a file on an OSF project via API
 
@@ -46,11 +46,10 @@ Verification that actually holds: **OSF-stored md5 == `md5sum $ZIP`**. The uploa
 md5; matching it to the local file is proof even when the download-back call flakes.
 
 ## What the artifact ships about each study
-Before zipping, the artifact carries, for every study the paper reports: its `plan.json` (its mode),
-its decision file, and — for a blind study — its `sealed.json` and `*.age` files; and its README
-carries the table `npx paperlint studies methods <paper-dir> --format md` prints, with the command that
-re-checks each study (`npx paperlint lint` on a full clone for the order, `npx paperlint studies
-verify <paper> <id>` for a sealed study). A zip without them asks a reviewer to take the modes on trust.
+Before zipping, the artifact carries, for every study the paper reports: its `plan.json` (its mode)
+and its decision file; and `repro/README.md` with the index regenerated (`npx paperlint studies index <paper-dir>`)
+— each study's mode, decision commit and first output — with the command that re-checks the order
+(`npx paperlint lint` on a full clone). A zip without them asks a reviewer to take the modes on trust.
 
 ## After
 - Confirm the paper's Availability `\url{}` still points at the same node (it does — same guid).

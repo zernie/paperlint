@@ -21,7 +21,11 @@ import {
   type StudyInput,
   type StudyPlan,
   type StudyRegistry,
+  type IndexInput,
 } from "./study-registry.ts";
+
+/** No plan and no history: the index with every mode column `—`. */
+const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
 
 const study = (over: Partial<Study> = {}): Study => ({
   id: "P1-S01",
@@ -105,7 +109,7 @@ const input = (
 ): StudyInput => ({
   folders: r.studies.map((s) => s.folder),
   registry: { kind: "read", registry: r },
-  readme: withIndex("# Reproduction index\n", r),
+  readme: withIndex("# Reproduction index\n", r, NO_FACTS),
   existingResults: new Set(),
   plans: new Map(
     r.studies.flatMap((s) =>

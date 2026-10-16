@@ -174,7 +174,7 @@ export const GATES: readonly Gate[] = [
     vitest: true,
   },
   {
-    name: "studies e2e — decide first in a real git repository, and a blind study with the real age",
+    name: "studies e2e — a study decided before its run, in a real git repository",
     job: "gates",
     script: "test:e2e:studies",
     vitest: true,

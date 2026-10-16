@@ -25,7 +25,11 @@ import {
   type Study,
   type StudyInput,
   type StudyRegistry,
+  type IndexInput,
 } from "./study-registry.ts";
+
+/** No plan and no history: the index with every mode column `—`. */
+const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
 
 const study = (over: Partial<Study> = {}): Study => ({
   id: "P1-S01",
@@ -56,7 +60,7 @@ const input = (
 ): StudyInput => ({
   folders: r.studies.map((s) => s.folder),
   registry: read(r),
-  readme: withIndex("# Reproduction index\n", r),
+  readme: withIndex("# Reproduction index\n", r, NO_FACTS),
   existingResults: new Set(),
   plans: new Map(),
   ...over,
@@ -310,16 +314,16 @@ describe("judgeStudies — the index", () => {
 
   it("a table prettier padded by display width, with wide characters, is in sync", async () => {
     const wide = reg(study({ title: "測定 A" }));
-    const readme = await format(withIndex("# index\n", wide), {
+    const readme = await format(withIndex("# index\n", wide, NO_FACTS), {
       parser: "markdown",
     });
-    expect(readme).not.toBe(withIndex("# index\n", wide));
+    expect(readme).not.toBe(withIndex("# index\n", wide, NO_FACTS));
     expect(judgeStudies(input(wide, { readme }))).toEqual([]);
   });
 
   it("a title with a backslash before a pipe stays one cell through prettier", async () => {
     const bs = reg(study({ title: "foo\\|bar" }));
-    const readme = await format(withIndex("# index\n", bs), {
+    const readme = await format(withIndex("# index\n", bs, NO_FACTS), {
       parser: "markdown",
     });
     expect(judgeStudies(input(bs, { readme }))).toEqual([]);
@@ -328,22 +332,25 @@ describe("judgeStudies — the index", () => {
 
   it("a title carrying the end marker's text: in sync, and regenerating changes nothing", () => {
     const m = reg(study({ title: `x ${INDEX_END} y` }));
-    const readme = withIndex("# index\n", m);
+    const readme = withIndex("# index\n", m, NO_FACTS);
     expect(judgeStudies(input(m, { readme }))).toEqual([]);
-    expect(withIndex(readme, m)).toBe(readme);
+    expect(withIndex(readme, m, NO_FACTS)).toBe(readme);
   });
 
   it("prose that mentions the begin marker is kept, and the real block is the one judged", () => {
     const r1 = reg(study());
     const prose = `# index\n\nThe table between \`${INDEX_BEGIN}\` and its end marker is generated.\n`;
-    const readme = withIndex(prose, r1);
+    const readme = withIndex(prose, r1, NO_FACTS);
     expect(judgeStudies(input(r1, { readme }))).toEqual([]);
-    expect(withIndex(readme, r1)).toBe(readme);
+    expect(withIndex(readme, r1, NO_FACTS)).toBe(readme);
     expect(readme.startsWith(prose.trimEnd())).toBe(true);
   });
 
   it("a block that differs from the registry by one character", () => {
-    const readme = withIndex("# index\n", r).replace("designing", "running");
+    const readme = withIndex("# index\n", r, NO_FACTS).replace(
+      "designing",
+      "running",
+    );
     expect(judgeStudies(input(r, { readme }))).toEqual([
       { problem: "stale-index", why: "differs" },
     ]);
@@ -363,12 +370,12 @@ describe("the index", () => {
         in_paper: "yes",
       }),
     );
-    expect(studyIndex(r)).toBe(
+    expect(studyIndex(r, NO_FACTS)).toBe(
       [
-        "| id     | title               | status    | result   | in paper | folder                               |",
-        "| ------ | ------------------- | --------- | -------- | -------- | ------------------------------------ |",
-        "| P1-S01 | Baseline pass rate  | designing | —        | no       | [P1-S01-baseline/](P1-S01-baseline/) |",
-        "| P1-S02 | Pipes \\| and breaks | done      | 41 of 60 | yes      | [P1-S02-a-b/](P1-S02-a-b/)           |",
+        "| id     | title               | status    | result   | in paper | mode | decision | first output | folder                               |",
+        "| ------ | ------------------- | --------- | -------- | -------- | ---- | -------- | ------------ | ------------------------------------ |",
+        "| P1-S01 | Baseline pass rate  | designing | —        | no       | —    | —        | —            | [P1-S01-baseline/](P1-S01-baseline/) |",
+        "| P1-S02 | Pipes \\| and breaks | done      | 41 of 60 | yes      | —    | —        | —            | [P1-S02-a-b/](P1-S02-a-b/)           |",
       ].join("\n"),
     );
   });
@@ -390,30 +397,30 @@ describe("the index", () => {
         }),
       ].slice(0, n),
     );
-    const md = withIndex("# Reproduction index\n\nSome text.\n", r);
+    const md = withIndex("# Reproduction index\n\nSome text.\n", r, NO_FACTS);
     expect(await format(md, { parser: "markdown" })).toBe(md);
   });
 });
 
 describe("the index of an empty registry, and its markers", () => {
   it("of an empty registry is the header alone", () => {
-    expect(studyIndex(reg())).toBe(
+    expect(studyIndex(reg(), NO_FACTS)).toBe(
       [
-        "| id  | title | status | result | in paper | folder |",
-        "| --- | ----- | ------ | ------ | -------- | ------ |",
+        "| id  | title | status | result | in paper | mode | decision | first output | folder |",
+        "| --- | ----- | ------ | ------ | -------- | ---- | -------- | ------------ | ------ |",
       ].join("\n"),
     );
   });
 
   it("sits between the two markers, a blank line on each side", () => {
-    expect(indexBlock(reg())).toBe(
-      `${INDEX_BEGIN}\n\n${studyIndex(reg())}\n\n${INDEX_END}`,
+    expect(indexBlock(reg(), NO_FACTS)).toBe(
+      `${INDEX_BEGIN}\n\n${studyIndex(reg(), NO_FACTS)}\n\n${INDEX_END}`,
     );
   });
 
   it("is read back from a README as the text between the markers, or null", () => {
-    expect(embeddedIndex(`# x\n\n${indexBlock(reg())}\n`)).toBe(
-      `\n\n${studyIndex(reg())}\n\n`,
+    expect(embeddedIndex(`# x\n\n${indexBlock(reg(), NO_FACTS)}\n`)).toBe(
+      `\n\n${studyIndex(reg(), NO_FACTS)}\n\n`,
     );
     expect(embeddedIndex("# x\n")).toBeNull();
     expect(embeddedIndex(`${INDEX_END}\n${INDEX_BEGIN}\n`)).toBeNull();
@@ -424,27 +431,27 @@ describe("withIndex", () => {
   const r = reg(study());
 
   it("replaces the block in place and keeps the rest", () => {
-    const before = `# Index\n\nintro\n\n${indexBlock(reg())}\n\ntail\n`;
-    expect(withIndex(before, r)).toBe(
-      `# Index\n\nintro\n\n${indexBlock(r)}\n\ntail\n`,
+    const before = `# Index\n\nintro\n\n${indexBlock(reg(), NO_FACTS)}\n\ntail\n`;
+    expect(withIndex(before, r, NO_FACTS)).toBe(
+      `# Index\n\nintro\n\n${indexBlock(r, NO_FACTS)}\n\ntail\n`,
     );
   });
 
   it("appends the block to a README without markers", () => {
-    expect(withIndex("# Index\n\nintro", r)).toBe(
-      `# Index\n\nintro\n\n${indexBlock(r)}\n`,
+    expect(withIndex("# Index\n\nintro", r, NO_FACTS)).toBe(
+      `# Index\n\nintro\n\n${indexBlock(r, NO_FACTS)}\n`,
     );
   });
 
   it("writes a README when there is none", () => {
-    expect(withIndex(null, r)).toBe(
-      `# Reproduction index\n\n${indexBlock(r)}\n`,
+    expect(withIndex(null, r, NO_FACTS)).toBe(
+      `# Reproduction index\n\n${indexBlock(r, NO_FACTS)}\n`,
     );
   });
 
   it("is a fixed point: a second run changes nothing", () => {
-    const once = withIndex("# Index\n", r);
-    expect(withIndex(once, r)).toBe(once);
+    const once = withIndex("# Index\n", r, NO_FACTS);
+    expect(withIndex(once, r, NO_FACTS)).toBe(once);
   });
 });
 

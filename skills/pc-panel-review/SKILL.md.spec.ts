@@ -78,17 +78,17 @@ prose-only read can.
      predicts. Give it the three sections as text and the venue's name, nothing else.
    - **Methods/stats skeptic** — sample size, construct validity, multiple comparisons, overclaims,
      whether the CIs support the claims, and **whether every confirmatory claim rests on a study
-     decided before its run or run blind**. Give this reviewer the output of
-     \`npx paperlint studies methods <paper-dir>\` (each study's mode, its decision's commit, its first
-     output's) beside the paper: a claim of a tested prediction on an exploratory study, or on one
-     whose decision is not committed before its outputs, is a soundness finding, and the reviewer
-     names it as one.
+     decided before its run**. Run \`npx paperlint studies index <paper-dir>\` and give this reviewer the index in
+     \`repro/README.md\` (each study's \`mode\`, \`decision\` and \`first output\`) beside the paper: a
+     claim of a tested prediction on an exploratory study, on one whose decision reads \`not
+     committed\`, or on one whose first output is not after its decision is a soundness finding, and
+     so is a "pre-registered" or "decided before" the table does not support; the reviewer names it.
    - **Domain practitioner** — relevance to the CFP, novelty vs the nearest prior work, does the
      finding change behavior, generalizability, fairness/tone toward anyone named.
    - **Artifact / reproducibility reviewer (MANDATORY if an artifact is attached)** — *actually
      \`cd\` into the artifact and run it*; verify every headline number reproduces; re-run the order
-     and seal checks the paper claims (\`npx paperlint lint\` on a full clone, \`npx paperlint studies
-     verify <paper> <id>\` for a blind study); read the code for
+     check the paper's decided-before claims rest on (\`npx paperlint lint\` on a full clone); read the
+     code for
      circularity (echoing stored fields vs recomputing); grep all files (incl. data + compiled
      caches) for anonymization leaks; scope the badge (Available / Functional / Reproduced).
    - **Security/ethics reviewer** (security venues) — threat model soundness, responsible disclosure,

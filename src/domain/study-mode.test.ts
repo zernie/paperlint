@@ -5,10 +5,8 @@
 import { expect, it } from "vitest";
 import {
   decisionAsOutput,
-  gateOf,
   inStudy,
   needsMode,
-  type Blind,
   type DecideFirst,
 } from "./study-mode.ts";
 
@@ -16,12 +14,6 @@ const DECIDED: DecideFirst = {
   kind: "decide_before_run",
   outputs: ["**/*.md"],
   decision: { file: "repro/S1-x/decision.md", note: "n" },
-};
-const BLIND: Blind = {
-  kind: "blind",
-  outputs: ["out/**"],
-  recipients: [],
-  unseal_after: { file: "research/exclusions.md", note: "n" },
 };
 
 it("only a measurement must declare its mode", () => {
@@ -50,15 +42,14 @@ it("a paper-relative path inside the study's folder, normalised; outside it, non
   ]).toEqual(["a/b.md", "c.md", null, null]);
 });
 
-it("the decision a gated mode waits on, and the output glob that would swallow it", () => {
+it("the output glob that would swallow the decision; none when it lies elsewhere or no glob matches", () => {
   // Guards: a decision in the folder that an output matches is named by the glob; one elsewhere is not.
-  expect([gateOf(DECIDED).file, gateOf(BLIND).file]).toEqual([
-    "repro/S1-x/decision.md",
-    "research/exclusions.md",
-  ]);
   expect([
     decisionAsOutput("S1-x", DECIDED),
     decisionAsOutput("S1-x", { ...DECIDED, outputs: ["out/**"] }),
-    decisionAsOutput("S1-x", BLIND),
+    decisionAsOutput("S1-x", {
+      ...DECIDED,
+      decision: { file: "research/d.md", note: "n" },
+    }),
   ]).toEqual(["**/*.md", null, null]);
 });

@@ -10,13 +10,22 @@
  * ── JSON, NEVER MARKDOWN ─────────────────────────────────────────────────────────
  * The registry is data: its text is parsed once, where it enters, against the schema in
  * `src/adapters/study-registry/` (`StudyRegistryCodec`). The index in `repro/README.md` is OUTPUT: it is
- * generated from the registry and compared as a string, between two fixed markers. Nothing parses it.
+ * generated from the registry, the plans' modes and git's history (src/domain/index-columns.ts), and
+ * compared cell by cell between two fixed markers, the two columns read from git left out. Nothing
+ * else parses it.
  *
  * Pure: the caller lists `repro/`, reads the registry and the README, and says which result files exist.
  */
 import { isAbsolute, posix, win32 } from "node:path";
 import { STUDIES_FILE, STUDY_SLUG } from "./repro-layout.ts";
 import { needsMode, type StudyMode } from "./study-mode.ts";
+import {
+  decisionCell,
+  firstOutputCell,
+  modeCell,
+  type IndexFacts,
+  type IndexHistory,
+} from "./index-columns.ts";
 
 /** The registry, at the top of the paper's `repro/`; the layout allows it there. */
 export { STUDIES_FILE };
@@ -174,7 +183,7 @@ export interface StudyPlan {
   /** The paper's own keys: hypotheses, models, budget … Kept, never read; none is a plan field. */
   readonly extra?: Readonly<Record<string, unknown>> | undefined;
   /**
-   * How the outcomes are kept from the decisions on the inputs: decided before the run, blind, or
+   * How the outcomes are kept from the decisions on the inputs: decided before the run, or
    * exploratory (src/domain/study-mode.ts). A measurement study's plan is not ready without it.
    */
   readonly mode?: StudyMode | undefined;
@@ -222,8 +231,6 @@ export const PLAN_TEXT_FIELDS = [
   "mode.outputs",
   "mode.decision.file",
   "mode.decision.note",
-  "mode.unseal_after.file",
-  "mode.unseal_after.note",
   "mode.reason",
 ] as const;
 export type PlanTextField = (typeof PLAN_TEXT_FIELDS)[number];
@@ -465,6 +472,14 @@ const isInside = (path: string): boolean => {
 };
 
 /**
+ * Whether `folder` names one folder directly inside `repro/`: not empty, not `.` or `..`, and no
+ * separator or NUL. Every command and rule that reads a study's folder reads only such a one: a row
+ * naming `../x` would have them read and write outside the paper.
+ */
+export const isFolderName = (folder: string): boolean =>
+  folder !== "." && folder !== ".." && /^[^/\\\0]+$/u.test(folder);
+
+/**
  * The `<folder>/<plan>` of each row whose plan lies inside its folder: the files the judge needs read
  * (`StudyInput.plans`). A plan outside its folder is reported without being read.
  */
@@ -476,7 +491,7 @@ export const planRefs = (
   r: StudyRegistry,
 ): readonly { readonly key: string; readonly kind: StudyKind }[] =>
   r.studies.flatMap((s) =>
-    s.plan !== undefined && isInside(s.plan)
+    s.plan !== undefined && isInside(s.plan) && isFolderName(s.folder)
       ? [{ key: `${s.folder}/${s.plan}`, kind: s.kind }]
       : [],
   );
@@ -735,11 +750,12 @@ const judgeRow = (row: Row): readonly StudyFinding[] =>
 function judgeIndex(
   r: StudyRegistry,
   readme: string | null,
+  plans: ReadonlyMap<string, PlanState>,
 ): StudyFinding | null {
   if (readme === null) return { problem: "stale-index", why: "no-readme" };
   const block = embeddedIndex(readme);
   if (block === null) return { problem: "stale-index", why: "no-markers" };
-  return indexInSync(readme, r)
+  return indexInSync(readme, r, { plans, history: new Map() })
     ? null
     : { problem: "stale-index", why: "differs" };
 }
@@ -758,7 +774,7 @@ export function judgeStudies(input: StudyInput): readonly StudyFinding[] {
     return [{ problem: "unreadable", why: state.why }];
   const r = state.registry;
   const next = nextStudyId(r);
-  const index = judgeIndex(r, input.readme);
+  const index = judgeIndex(r, input.readme, input.plans);
   return [
     ...input.folders
       .filter((f) => !r.studies.some((s) => s.folder === f))
@@ -779,18 +795,64 @@ export function judgeStudies(input: StudyInput): readonly StudyFinding[] {
 const cell = (s: string): string =>
   s.replace(/\r?\n/gu, " ").replace(/\\/gu, "\\\\").replace(/\|/gu, "\\|");
 
-/** The columns of the index: each one's header, and its cell for a study. */
+/**
+ * What the index is generated from beyond the registry: the plans by `<folder>/<plan>` (as
+ * `StudyInput.plans`), and the history of each decide-first study by id. A study with no history
+ * listed shows `not read` — the lint, which never compares those columns, asks none.
+ */
+export interface IndexInput {
+  readonly plans: ReadonlyMap<string, PlanState>;
+  readonly history: ReadonlyMap<string, IndexHistory>;
+}
+
+/** The mode the plan of `s` declares; null when it names none, or the plan is absent or unreadable. */
+const declaredMode = (
+  s: Study,
+  plans: ReadonlyMap<string, PlanState>,
+): StudyMode | null => {
+  const state =
+    s.plan !== undefined && isInside(s.plan)
+      ? plans.get(`${s.folder}/${s.plan}`)
+      : undefined;
+  return state === undefined ||
+    state.kind === "absent" ||
+    state.kind === "unreadable"
+    ? null
+    : (state.plan.mode ?? null);
+};
+
+/** What the index shows of `s` beyond its row. */
+const factsOf = (s: Study, at: IndexInput): IndexFacts => ({
+  mode: declaredMode(s, at.plans),
+  history: at.history.get(s.id) ?? null,
+});
+
+/**
+ * The columns of the index: each one's header, its cell for a study, and whether git's history is
+ * where the cell comes from — those two are never compared (src/domain/index-columns.ts).
+ */
 const COLUMNS: readonly {
   readonly head: string;
-  readonly of: (s: Study) => string;
+  readonly of: (s: Study, f: IndexFacts) => string;
+  readonly fromGit: boolean;
 }[] = [
-  { head: "id", of: (s) => s.id },
-  { head: "title", of: (s) => cell(s.title) },
-  { head: "status", of: (s) => s.status },
-  { head: "result", of: (s) => cell(s.result ?? "—") },
-  { head: "in paper", of: (s) => s.in_paper },
-  { head: "folder", of: (s) => `[${s.folder}/](${s.folder}/)` },
+  { head: "id", of: (s) => s.id, fromGit: false },
+  { head: "title", of: (s) => cell(s.title), fromGit: false },
+  { head: "status", of: (s) => s.status, fromGit: false },
+  { head: "result", of: (s) => cell(s.result ?? "—"), fromGit: false },
+  { head: "in paper", of: (s) => s.in_paper, fromGit: false },
+  { head: "mode", of: (_, f) => cell(modeCell(f)), fromGit: false },
+  { head: "decision", of: (_, f) => decisionCell(f), fromGit: true },
+  { head: "first output", of: (_, f) => firstOutputCell(f), fromGit: true },
+  {
+    head: "folder",
+    of: (s) => `[${s.folder}/](${s.folder}/)`,
+    fromGit: false,
+  },
 ];
+
+/** The positions of the columns read from git: left out when an index is compared. */
+const FROM_GIT = COLUMNS.flatMap((c, i) => (c.fromGit ? [i] : []));
 
 /** The width a cell takes: its code points. */
 const widthOf = (s: string): number => Array.from(s).length;
@@ -804,20 +866,23 @@ const padded = (t: string, width: number): string =>
  * widest cell (at least 3), the way prettier writes a table — so formatting the README leaves it as
  * it is.
  */
-export function studyIndex(r: StudyRegistry): string {
+export function studyIndex(r: StudyRegistry, at: IndexInput): string {
+  const studies = r.studies.map((s) => ({ s, f: factsOf(s, at) }));
   const sized = COLUMNS.map((c) => ({
     ...c,
     width: Math.max(
       3,
       widthOf(c.head),
-      ...r.studies.map((s) => widthOf(c.of(s))),
+      ...studies.map(({ s, f }) => widthOf(c.of(s, f))),
     ),
   }));
   const line = (cells: readonly string[]): string => `| ${cells.join(" | ")} |`;
   return [
     line(sized.map((c) => padded(c.head, c.width))),
     line(sized.map((c) => "-".repeat(c.width))),
-    ...r.studies.map((s) => line(sized.map((c) => padded(c.of(s), c.width)))),
+    ...studies.map(({ s, f }) =>
+      line(sized.map((c) => padded(c.of(s, f), c.width))),
+    ),
   ].join("\n");
 }
 
@@ -826,7 +891,7 @@ export function studyIndex(r: StudyRegistry): string {
  * `---`. The index is judged on this, because the padding belongs to the formatter: prettier sizes a
  * column by display width, so a wide character pads differently from a code-point count.
  */
-const cellsOf = (table: string): string =>
+const cellsOf = (table: string, skip: readonly number[]): string =>
   table
     .trim()
     .split("\n")
@@ -836,19 +901,44 @@ const cellsOf = (table: string): string =>
         .replace(/^\||\|$/gu, "")
         .split(/(?<!\\)\|/u)
         .map((c) => c.trim().replace(/^:?-{3,}:?$/u, "---"))
+        .filter((_, i) => !skip.includes(i))
         .join("|"),
     )
     .join("\n");
 
-/** Whether `readme` holds the index of `r`, whatever padding a formatter gave its table. */
-export function indexInSync(readme: string | null, r: StudyRegistry): boolean {
+/** Whether `readme` holds the index of `r` in every column but those at `skip`, whatever its padding. */
+const sameCells = (
+  readme: string | null,
+  index: string,
+  skip: readonly number[],
+): boolean => {
   const block = readme === null ? null : embeddedIndex(readme);
-  return block !== null && cellsOf(block) === cellsOf(studyIndex(r));
-}
+  return block !== null && cellsOf(block, skip) === cellsOf(index, skip);
+};
+
+/**
+ * Whether `readme` holds the index of `r`, whatever padding a formatter gave its table and whatever
+ * its two columns read from git say: what `repro/study-registered` checks.
+ */
+export const indexInSync = (
+  readme: string | null,
+  r: StudyRegistry,
+  at: IndexInput,
+): boolean => sameCells(readme, studyIndex(r, at), FROM_GIT);
+
+/**
+ * Whether `readme` holds the index of `r` in every column, whatever its padding: when it does,
+ * `studies index` leaves the README as it is, so the padding a formatter gave the table stays.
+ */
+export const indexCurrent = (
+  readme: string | null,
+  r: StudyRegistry,
+  at: IndexInput,
+): boolean => sameCells(readme, studyIndex(r, at), []);
 
 /** The index between its markers, a blank line on each side. */
-export const indexBlock = (r: StudyRegistry): string =>
-  `${INDEX_BEGIN}\n\n${studyIndex(r)}\n\n${INDEX_END}`;
+export const indexBlock = (r: StudyRegistry, at: IndexInput): string =>
+  `${INDEX_BEGIN}\n\n${studyIndex(r, at)}\n\n${INDEX_END}`;
 
 /**
  * Where `marker` stands alone on a line of `text`, at or after `from`; -1 when it does not. A marker
@@ -872,13 +962,18 @@ export function embeddedIndex(readme: string): string | null {
  * `readme` with its index regenerated from `r`: the block replaced in place, appended when the README
  * has none, a README of its own when there is none.
  */
-export function withIndex(readme: string | null, r: StudyRegistry): string {
-  if (readme === null) return `${INDEX_HEADING}\n\n${indexBlock(r)}\n`;
+export function withIndex(
+  readme: string | null,
+  r: StudyRegistry,
+  at: IndexInput,
+): string {
+  const fresh = indexBlock(r, at);
+  if (readme === null) return `${INDEX_HEADING}\n\n${fresh}\n`;
   const block = embeddedIndex(readme);
-  if (block === null) return `${readme.trimEnd()}\n\n${indexBlock(r)}\n`;
+  if (block === null) return `${readme.trimEnd()}\n\n${fresh}\n`;
   const begin = markerAt(readme, INDEX_BEGIN);
   const after = begin + INDEX_BEGIN.length + block.length + INDEX_END.length;
-  return `${readme.slice(0, begin)}${indexBlock(r)}${readme.slice(after)}`;
+  return `${readme.slice(0, begin)}${fresh}${readme.slice(after)}`;
 }
 
 /** The registry's text as `paperlint studies new` writes it: JSON, two-space indented, a final newline. */

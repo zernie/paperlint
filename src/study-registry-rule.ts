@@ -29,6 +29,7 @@ import {
   LEGACY_PLAN_FILE,
   PLAN_NAME_PROBLEMS,
   STUDIES_FILE,
+  isFolderName,
   judgeStudies,
   planRefs,
   studyMessage,
@@ -54,7 +55,7 @@ export interface StudyRegistryDeps extends FolderLayoutDeps {
 }
 
 /** The text of the file at `p`; null when there is none, or a directory sits there. */
-const textAt = (files: Files, p: string): string | null => {
+export const textAt = (files: Files, p: string): string | null => {
   const b = files.isFile(callerPath(p)) ? files.readBytes(callerPath(p)) : null;
   return b === null ? null : new TextDecoder().decode(b);
 };
@@ -91,6 +92,8 @@ const existingResults = (
 ): ReadonlySet<string> =>
   new Set(
     (r.kind === "read" ? r.registry.studies : [])
+      // A row whose folder is not one inside `repro/` is never read through: `folder-name` reports it.
+      .filter((s) => isFolderName(s.folder))
       .flatMap((s) =>
         s.result_file === undefined ? [] : [`${s.folder}/${s.result_file}`],
       )
@@ -106,7 +109,7 @@ const existingResults = (
  * The plan each row of `r` names, read and parsed, by `<folder>/<plan>`; a plan not there is left out.
  * A plan still named `prereg.json` is parsed by the loose schema of its old name.
  */
-const plansOf = (
+export const plansOf = (
   dir: string,
   r: RegistryState,
   deps: Pick<StudyRegistryDeps, "files" | "codec">,

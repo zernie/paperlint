@@ -15,11 +15,7 @@
  */
 import { basename, dirname, join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import {
-  filesUnder,
-  modeStudies,
-  type BlindDeps,
-} from "./blind-plaintext-rule.ts";
+import { filesUnder, modeStudies, type StudyDeps } from "./study-modes.ts";
 import {
   judgeOrder,
   orderMessage,
@@ -37,7 +33,7 @@ import { rulePageUrl } from "./venue-rules.ts";
 const STATUS_FILE = "PIPELINE-STATUS.md";
 
 /** What the rule reads with: the registry's, and git's order. */
-export interface OrderDeps extends BlindDeps {
+export interface OrderDeps extends StudyDeps {
   readonly git: GitOrder;
 }
 

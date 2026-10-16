@@ -42,8 +42,12 @@ import {
   registryText,
   withIndex,
   type StudyRegistry,
+  type IndexInput,
 } from "./domain/study-registry.ts";
 import { statSync } from "node:fs";
+
+/** No plan and no history: the index with every mode column `—`. */
+const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -813,7 +817,7 @@ describe("paperlint lint — a scaffolded paper has no layout finding", () => {
       "talk/.gitkeep": "",
       "sections/.gitkeep": "",
       "repro/studies.json": registryText(SOME_STUDY),
-      "repro/README.md": withIndex(REPRO_INDEX_STUB, SOME_STUDY),
+      "repro/README.md": withIndex(REPRO_INDEX_STUB, SOME_STUDY, NO_FACTS),
       "repro/P1-S01-some-study/README.md": "# s\n",
       "repro/P1-S01-some-study/.gitkeep": "",
     });

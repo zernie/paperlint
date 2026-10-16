@@ -4,7 +4,7 @@ description: Use when asking "is this paper actually ready to submit?" / "what's
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:10d76415ada36a95 compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:85001dd768358bb5 compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the multi-axis pre-submit gate
 
@@ -62,18 +62,17 @@ middle sags" — wasting the polish on possibly-cut sections.
      a defence — reviewers are not required to read appendices, and ARR says so in as many words.
      Rule and the sorting test: `paper-pipeline/references/body-vs-appendix.md`.
    - 🔴 **A confirmatory claim on a study that was not confirmatory.** Every claim the paper presents
-     as tested — a prediction, a hypothesis confirmed, a headline effect — must rest on a study
-     decided before its run or run blind; read each study's mode from
-     `npx paperlint studies methods <paper-dir>` (the registry, the plans and git, not the prose). A
-     confirmatory claim on an exploratory study, or on one whose history does not show its decision
-     first, is a **soundness** finding, not a wording one: re-label the result exploratory, or rest the
-     claim on a study that was decided first. Every paragraph reporting a study's numbers carries its
-     `% study: <id>` link, so the lint holds it.
+     as tested — a prediction, a hypothesis confirmed, a headline effect — must rest on a study whose
+     `mode` is `decide_before_run` and whose `decision` commit precedes its `first output`, read
+     from the index in `repro/README.md` after `npx paperlint studies index <paper-dir>` (the plans and git, not
+     the prose). A confirmatory claim on an exploratory study, on one whose decision reads `not
+     committed`, or on one whose first output is not after its decision, is a **soundness** finding,
+     not a wording one: re-label the result exploratory, or rest the claim on a study decided first.
+     Flag every "pre-registered", "preregistered", "registered in advance" or "decided before" the
+     table does not support, and check the Methods sentence names each study's mode as the table does.
    Mechanical leg: `tex/claim-provenance` (axis 7) reports every sentence that states a number and
-   does not say whose it is; `paper/study-mode-claim` (error) every linked paragraph that calls a
-   study pre-registered, decided before or blind when it was not, and `paper/study-mode-stated` every
-   exploratory number left unlabelled; `repro/outputs-before-decision` every output that entered
-   history before its decision.
+   does not say whose it is; `repro/outputs-before-decision` every output that entered history
+   before its decision.
 
 3. **Novelty vs the nearest neighbor** — the scoop check. Search for the paper that *already did your
    thing* (`verify-citations` covers metadata; here, actively hunt the closest empirical/method twin).
