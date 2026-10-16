@@ -23,6 +23,8 @@ export type IndexHistory =
       readonly kind: "read";
       /** The decision file's first commit; null: never committed. */
       readonly decision: CommitAt | null;
+      /** The decision was committed, then deleted: it is not in HEAD. */
+      readonly decisionDeleted: boolean;
       /** The first commit of the oldest output; null: no output was ever committed. */
       readonly firstOutput: CommitAt | null;
     };
@@ -50,25 +52,33 @@ export const modeCell = (f: IndexFacts): string => {
     : f.mode.kind;
 };
 
-/** A history cell of a decide-first study: the commit `pick` chooses, `absent` when there is none. */
+/** A history cell of a decide-first study: the text `pick` makes of it, `absent` when it makes none. */
 const historyCell =
   (
-    pick: (h: IndexHistory & { readonly kind: "read" }) => CommitAt | null,
+    pick: (h: IndexHistory & { readonly kind: "read" }) => string | null,
     absent: string,
   ) =>
   (f: IndexFacts): string => {
     if (f.mode?.kind !== "decide_before_run") return NOT_APPLICABLE;
     if (f.history === null) return "not read";
     if (f.history.kind === "unread") return `unknown (${f.history.why})`;
-    const c = pick(f.history);
-    return c === null ? absent : commitCell(c);
+    return pick(f.history) ?? absent;
   };
 
-/** The decision cell: its first commit and date, or `not committed`. */
-export const decisionCell = historyCell((h) => h.decision, "not committed");
+/** The decision cell: its first commit and date (`, deleted since` when it is not in HEAD), or `not committed`. */
+export const decisionCell = historyCell(
+  (h) =>
+    h.decision === null
+      ? null
+      : `${commitCell(h.decision)}${h.decisionDeleted ? ", deleted since" : ""}`,
+  "not committed",
+);
 
 /** The first-output cell: the commit and date of the first output, or `none`. */
-export const firstOutputCell = historyCell((h) => h.firstOutput, "none");
+export const firstOutputCell = historyCell(
+  (h) => (h.firstOutput === null ? null : commitCell(h.firstOutput)),
+  "none",
+);
 
 /** The history the index shows of a decide-first study, from the facts git gave. */
 export const indexHistory = (s: DecideFirstStudy): IndexHistory => {
@@ -84,6 +94,7 @@ export const indexHistory = (s: DecideFirstStudy): IndexHistory => {
       return {
         kind: "read",
         decision: s.facts.decision,
+        decisionDeleted: s.facts.decisionDeleted,
         firstOutput:
           first === undefined
             ? null

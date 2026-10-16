@@ -27,6 +27,7 @@ const STUDY: DecideFirstStudy = {
   facts: {
     kind: "read",
     decision: D,
+    decisionDeleted: false,
     files: [
       { path: "decision.md", ...D, order: "same" },
       { path: "plan.json", ...D, order: "same" },
@@ -45,6 +46,7 @@ it("an output in the decision's commit, or not after it, deleted or not, is one 
   const facts = {
     kind: "read",
     decision: D,
+    decisionDeleted: false,
     files: [
       { path: "RESULTS.md", ...D, order: "same" },
       { path: "out/gone.csv", ...A, order: "not-after" },
@@ -78,7 +80,12 @@ it("an output in the tree while the decision was never committed", () => {
   expect(
     judgeOrder({
       ...STUDY,
-      facts: { kind: "read", decision: null, files: [] },
+      facts: {
+        kind: "read",
+        decision: null,
+        decisionDeleted: false,
+        files: [],
+      },
     }),
   ).toEqual([
     {
@@ -101,6 +108,7 @@ it("an output committed and since deleted, while the decision was never committe
       facts: {
         kind: "read",
         decision: null,
+        decisionDeleted: false,
         files: [
           { path: "plan.json", ...D, order: "not-after" },
           { path: "out/gone.csv", ...A, order: "not-after" },
@@ -137,6 +145,27 @@ it("a history it cannot read, and a decision the outputs match, are said", () =>
   ]);
 });
 
+it("a decision committed and since deleted is reported, and no order is judged against it", () => {
+  // Guards: outputs that came after a decision that no longer stands are not passed on it.
+  expect(
+    judgeOrder({
+      ...STUDY,
+      facts: {
+        kind: "read",
+        decision: D,
+        decisionDeleted: true,
+        files: [{ path: "RESULTS.md", ...A, order: "after" }],
+      },
+    }),
+  ).toEqual([
+    {
+      problem: "decision-deleted",
+      id: "P1-S01",
+      file: "repro/P1-S01-x/decision.md",
+    },
+  ]);
+});
+
 it("a decision that names a directory is reported, and no history is judged", () => {
   // Guards: the outputs of such a study are never passed on a directory's commits.
   expect(judgeOrder({ ...STUDY, facts: { kind: "directory" } })).toEqual([
@@ -158,6 +187,7 @@ it("each finding's message: what is wrong, what to do, the rule's page", () => {
       file: "repro/P1-S01-x/decision.md",
       glob: "**/*.md",
     },
+    { problem: "decision-deleted", id: "P1-S01", file: "repro/d.md" },
     { problem: "decision-not-file", id: "P1-S01", file: "repro/d" },
     { problem: "no-history", id: "P1-S01", why: "git is not installed" },
     { problem: "shallow", id: "P1-S01" },
@@ -190,6 +220,8 @@ it("each finding's message: what is wrong, what to do, the rule's page", () => {
   // Guards: the whole text a person reads, for every problem.
   expect(all.map(orderMessage)).toEqual([
     "The decision of `P1-S01`, `repro/P1-S01-x/decision.md`, is matched by its output `**/*.md`: the decision would be one of the files its own run produces. What to do: keep the decision out of the outputs — a file the globs do not match, or one elsewhere in the paper — and set `mode.decision.file`." +
+      page,
+    "The decision of `P1-S01`, `repro/d.md`, was committed and then deleted: it is not in HEAD, so the study has no decision its outputs could follow. What to do: restore the decision file as it was decided and commit it — never write a new one after the outputs; if the decision no longer holds, declare the study `exploratory` with the reason." +
       page,
     "The decision of `P1-S01`, `repro/d`, is a directory, not a file: git answers for a directory with the commits of anything under it, so no order can be read from it. What to do: name the decision file itself in `mode.decision.file`." +
       page,

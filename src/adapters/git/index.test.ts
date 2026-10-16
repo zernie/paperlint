@@ -17,10 +17,20 @@ const A = "a".repeat(40);
 const B = "b".repeat(40);
 const DATE = "2026-10-16T15:23:00+05:00";
 
-/** The ports over git answering by its subcommand (`args[2]`, after `-c core.quotepath=false`). */
+/** HEAD's tree holds the decision, unless a test says otherwise. */
+const IN_HEAD = exitedWith("repro/S/decision.md\n");
+
+/**
+ * The ports over git answering by its subcommand (`args[2]`, after `-c core.quotepath=false`); the
+ * decision in HEAD's tree unless `ls-tree` is answered.
+ */
 const over = (answers: Readonly<Record<string, ProcessExit>>) => {
+  const all: Readonly<Record<string, ProcessExit>> = {
+    "ls-tree": IN_HEAD,
+    ...answers,
+  };
   const run = scriptedProcess(
-    (c: Command) => answers[String(c.args[2])] ?? exitedWith(""),
+    (c: Command) => all[String(c.args[2])] ?? exitedWith(""),
   );
   return { git: gitHistory(run, { PATH: "/usr/bin" }), calls: run.calls };
 };
@@ -47,9 +57,38 @@ it("committed: the last commit and its date when the file is as committed — as
       PAPER,
     ],
     [
+      [
+        "-c",
+        "core.quotepath=false",
+        "ls-tree",
+        "--name-only",
+        "HEAD",
+        "--",
+        FILE,
+      ],
+      PAPER,
+    ],
+    [
       ["-c", "core.quotepath=false", "status", "--porcelain=v1", "--", FILE],
       PAPER,
     ],
+  ]);
+});
+
+it("committed: a decision whose last commit deleted it is not in HEAD — deleted, never committed", () => {
+  // Guards: `log -1` names the deleting commit and the status is clean; only HEAD's tree tells.
+  expect([
+    over({
+      log: exitedWith(`${D}\t${DATE}\n`),
+      "ls-tree": exitedWith(""),
+    }).git.committed(PAPER, FILE),
+    over({
+      log: exitedWith(`${D}\t${DATE}\n`),
+      "ls-tree": { kind: "spawn-failed", message: "EIO" },
+    }).git.committed(PAPER, FILE),
+  ]).toEqual([
+    { kind: "deleted", commit: D },
+    { kind: "unknown", why: "EIO" },
   ]);
 });
 
@@ -113,6 +152,7 @@ it("order: each file's first commit against the decision's — after, the same, 
     scriptedProcess((c) => {
       const sub = String(c.args[2]);
       if (sub === "rev-parse") return exitedWith("false\n");
+      if (sub === "ls-tree") return IN_HEAD;
       if (sub === "log" && c.args.includes("--reverse")) return exitedWith(log);
       if (sub === "log") return exitedWith(`${A}\t${DATE}\n${D}\t${DATE}\n`);
       return exitedWith("", String(c.args[5]) === A ? 0 : 1);
@@ -122,6 +162,7 @@ it("order: each file's first commit against the decision's — after, the same, 
   expect(result).toEqual({
     kind: "read",
     decision: { commit: D, date: DATE },
+    decisionDeleted: false,
     files: [
       { path: "x.csv", commit: D, date: DATE, order: "same" },
       { path: "a.csv", commit: A, date: DATE, order: "after" },
@@ -137,6 +178,7 @@ it("order: no decision commit makes every file not-after; a failed ancestry ques
       scriptedProcess((c) => {
         const sub = String(c.args[2]);
         if (sub === "rev-parse") return exitedWith("false\n");
+        if (sub === "ls-tree") return IN_HEAD;
         if (sub === "log" && c.args.includes("--reverse"))
           return exitedWith(log);
         if (sub === "log") return exitedWith(decisionLog);
@@ -148,6 +190,7 @@ it("order: no decision commit makes every file not-after; a failed ancestry ques
   expect(answer(exitedWith(""), "")).toEqual({
     kind: "read",
     decision: null,
+    decisionDeleted: false,
     files: [{ path: "a.csv", commit: A, date: DATE, order: "not-after" }],
   });
   expect(
@@ -183,6 +226,34 @@ it("order: git failing on the decision's log or the folder's log is a reason", (
   expect([answer(fail, exitedWith("")), answer(exitedWith(""), fail)]).toEqual([
     { kind: "unknown", why: "fatal: x" },
     { kind: "unknown", why: "fatal: x" },
+  ]);
+});
+
+it("order: a decision not in HEAD is said deleted; git failing on HEAD's tree is a reason", () => {
+  const answer = (lsTree: ProcessExit) =>
+    gitHistory(
+      scriptedProcess((c) => {
+        const sub = String(c.args[2]);
+        if (sub === "rev-parse") return exitedWith("false\n");
+        if (sub === "ls-tree") return lsTree;
+        if (c.args.includes("--reverse"))
+          return exitedWith(`\x01${D}\t${DATE}\ndecision.md\n`);
+        return exitedWith(`${D}\t${DATE}\n`);
+      }),
+      {},
+    ).order(STUDY, FILE);
+  // Guards: the decision's first commit is still read, and its absence from HEAD is carried with it.
+  expect([
+    answer(exitedWith("")),
+    answer({ kind: "spawn-failed", message: "EIO" }),
+  ]).toEqual([
+    {
+      kind: "read",
+      decision: { commit: D, date: DATE },
+      decisionDeleted: true,
+      files: [{ path: "decision.md", commit: D, date: DATE, order: "same" }],
+    },
+    { kind: "unknown", why: "EIO" },
   ]);
 });
 

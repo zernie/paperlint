@@ -583,7 +583,15 @@ describe("repro/study-registered — the index's mode columns", () => {
         FILLED_INDEX(
           r,
           new Map([
-            ["P1-S01", { kind: "read", decision: at, firstOutput: at }],
+            [
+              "P1-S01",
+              {
+                kind: "read",
+                decision: at,
+                decisionDeleted: false,
+                firstOutput: at,
+              },
+            ],
           ]),
         ),
       ),

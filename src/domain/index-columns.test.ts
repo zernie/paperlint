@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { DecideFirstStudy } from "./decide-first.ts";
-import { indexHistory } from "./index-columns.ts";
+import { decisionCell, indexHistory } from "./index-columns.ts";
 import type { DecideFirst } from "./study-mode.ts";
 import {
   indexCurrent,
@@ -81,8 +81,19 @@ const NINE_AT: IndexInput = {
     ["P1-S09-s/plan.json", plan(undefined)],
   ]),
   history: new Map([
-    ["P1-S01", { kind: "read", decision: D, firstOutput: A }],
-    ["P1-S02", { kind: "read", decision: null, firstOutput: null }],
+    [
+      "P1-S01",
+      { kind: "read", decision: D, decisionDeleted: false, firstOutput: A },
+    ],
+    [
+      "P1-S02",
+      {
+        kind: "read",
+        decision: null,
+        decisionDeleted: false,
+        firstOutput: null,
+      },
+    ],
     ["P1-S04", { kind: "unread", why: "shallow clone" }],
   ]),
 };
@@ -112,7 +123,15 @@ describe("the mode columns of the index", () => {
     const committed: IndexInput = {
       plans,
       history: new Map([
-        ["P1-S01", { kind: "read", decision: D, firstOutput: null }],
+        [
+          "P1-S01",
+          {
+            kind: "read",
+            decision: D,
+            decisionDeleted: false,
+            firstOutput: null,
+          },
+        ],
       ]),
     };
     const explored: IndexInput = {
@@ -130,6 +149,21 @@ describe("the mode columns of the index", () => {
       indexCurrent(null, r, was),
     ]).toEqual([true, false, false, true, false]);
   });
+});
+
+it("a decision committed and since deleted shows its commit, and that it is gone", () => {
+  // Guards: the Methods sentence must not cite a decision that no longer stands.
+  expect(
+    decisionCell({
+      mode: DECIDED,
+      history: {
+        kind: "read",
+        decision: D,
+        decisionDeleted: true,
+        firstOutput: null,
+      },
+    }),
+  ).toBe("dddddddddddd 2026-10-14, deleted since");
 });
 
 describe("indexHistory", () => {
@@ -151,19 +185,32 @@ describe("indexHistory", () => {
         study({
           kind: "read",
           decision: D,
+          decisionDeleted: false,
           files: [
             { path: "decision.md", ...D, order: "same" },
             { path: "RESULTS.md", ...A, order: "after" },
           ],
         }),
       ),
-      indexHistory(study({ kind: "read", decision: null, files: [] })),
+      indexHistory(
+        study({
+          kind: "read",
+          decision: null,
+          decisionDeleted: false,
+          files: [],
+        }),
+      ),
     ]).toEqual([
       { kind: "unread", why: "git could not answer" },
       { kind: "unread", why: "shallow clone" },
       { kind: "unread", why: "the decision is a directory" },
-      { kind: "read", decision: D, firstOutput: A },
-      { kind: "read", decision: null, firstOutput: null },
+      { kind: "read", decision: D, decisionDeleted: false, firstOutput: A },
+      {
+        kind: "read",
+        decision: null,
+        decisionDeleted: false,
+        firstOutput: null,
+      },
     ]);
   });
 });

@@ -99,6 +99,10 @@ export function gitHistory(
       if ("why" in log) return { kind: "unknown", why: log.why };
       const { commit, date } = commitAt(log.out.trim());
       if (commit === "") return { kind: "not-committed" };
+      // `git log -1` names a deleting commit too, and a deleted file leaves a clean status.
+      const head = inHead(git, paper, file);
+      if ("why" in head) return { kind: "unknown", why: head.why };
+      if (!head.present) return { kind: "deleted", commit };
       const status = git(paper, ["status", "--porcelain=v1", "--", file]);
       if ("why" in status) return { kind: "unknown", why: status.why };
       return status.out.trim() === ""
@@ -111,6 +115,33 @@ export function gitHistory(
 
 type Git = ReturnType<typeof gitIn>;
 
+/** Whether `file` is in HEAD's tree (`git ls-tree`, which takes an absolute path in the worktree). */
+const inHead = (
+  git: Git,
+  cwd: AbsolutePath,
+  file: AbsolutePath,
+): { readonly present: boolean } | { readonly why: string } => {
+  const t = git(cwd, ["ls-tree", "--name-only", "HEAD", "--", file]);
+  return "why" in t ? t : { present: t.out.trim() !== "" };
+};
+
+/** The decision's first commit (null: never committed), and whether HEAD's tree still holds it. */
+const decisionIn = (
+  git: Git,
+  studyDir: AbsolutePath,
+  decision: AbsolutePath,
+):
+  | { readonly at: CommitAt | null; readonly deleted: boolean }
+  | { readonly why: string } => {
+  const d = git(studyDir, ["log", "--format=%H%x09%cI", "--", decision]);
+  if ("why" in d) return d;
+  const lines = d.out.trim().split("\n");
+  const first = commitAt(nth(lines, lines.length - 1));
+  if (first.commit === "") return { at: null, deleted: false };
+  const head = inHead(git, studyDir, decision);
+  return "why" in head ? head : { at: first, deleted: !head.present };
+};
+
 /** The order facts of the study in `studyDir`, decided by `decision`. */
 function orderIn(
   git: Git,
@@ -120,10 +151,8 @@ function orderIn(
   const shallow = git(studyDir, ["rev-parse", "--is-shallow-repository"]);
   if ("why" in shallow) return { kind: "unknown", why: shallow.why };
   if (shallow.out.trim() === "true") return { kind: "shallow" };
-  const d = git(studyDir, ["log", "--format=%H%x09%cI", "--", decision]);
+  const d = decisionIn(git, studyDir, decision);
   if ("why" in d) return { kind: "unknown", why: d.why };
-  const lines = d.out.trim().split("\n");
-  const first = commitAt(nth(lines, lines.length - 1));
   const files = git(studyDir, [
     "log",
     "--reverse",
@@ -134,11 +163,15 @@ function orderIn(
     ".",
   ]);
   if ("why" in files) return { kind: "unknown", why: files.why };
-  const at = first.commit === "" ? null : first;
-  const ordered = ordersOf(git, studyDir, at, firstCommitsOf(files.out));
+  const ordered = ordersOf(git, studyDir, d.at, firstCommitsOf(files.out));
   return "why" in ordered
     ? { kind: "unknown", why: ordered.why }
-    : { kind: "read", decision: at, files: ordered.files };
+    : {
+        kind: "read",
+        decision: d.at,
+        decisionDeleted: d.deleted,
+        files: ordered.files,
+      };
 }
 
 /** git's answer for one commit: its order, or why git could not say. */

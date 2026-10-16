@@ -27,35 +27,36 @@ export interface GateDeps extends StudyDeps {
   readonly git: GitHistory;
 }
 
+/** The line of a committed state that holds the run back. */
+const shutLine = (
+  id: string,
+  file: string,
+  c: Exclude<Committed, { readonly kind: "committed" }>,
+): string => {
+  switch (c.kind) {
+    case "changed":
+      return `${id}: the decision ${file} has changed since its last commit, ${c.commit}; the run waits for the decision as committed. Commit it, then run this again.`;
+    case "deleted":
+      return `${id}: the decision ${file} is not in HEAD: it was deleted in ${c.commit}; the run waits for a decision that stands. Restore it, commit it, then run this again.`;
+    case "not-committed":
+      return `${id}: the decision ${file} is not committed; the run waits for it. Write the decision there, commit it, then run this again.`;
+    case "unknown":
+      return `${id}: git could not say whether the decision ${file} is committed: ${c.why}.`;
+  }
+};
+
 /** What a decision's committed state means for the run. */
 export const gateLine = (
   id: string,
   file: string,
   c: Committed,
-): { readonly open: boolean; readonly line: string } => {
-  switch (c.kind) {
-    case "committed":
-      return {
+): { readonly open: boolean; readonly line: string } =>
+  c.kind === "committed"
+    ? {
         open: true,
         line: `${id}: the decision ${file} is committed in ${c.commit} (${c.date}); the run may start.`,
-      };
-    case "changed":
-      return {
-        open: false,
-        line: `${id}: the decision ${file} has changed since its last commit, ${c.commit}; the run waits for the decision as committed. Commit it, then run this again.`,
-      };
-    case "not-committed":
-      return {
-        open: false,
-        line: `${id}: the decision ${file} is not committed; the run waits for it. Write the decision there, commit it, then run this again.`,
-      };
-    case "unknown":
-      return {
-        open: false,
-        line: `${id}: git could not say whether the decision ${file} is committed: ${c.why}.`,
-      };
-  }
-};
+      }
+    : { open: false, line: shutLine(id, file, c) };
 
 /**
  * Why the decision cannot gate the run though it is named: its own outputs match it, or it is a

@@ -193,3 +193,19 @@ it("refuses a decision that names a directory, whatever git says of it", () => {
     ],
   ]);
 });
+
+it("closed when the decision was committed and then deleted: it is not in HEAD", () => {
+  const r = studies(
+    "gate",
+    decided(),
+    {},
+    { git: { [DECISION]: { kind: "deleted", commit: SHA } } },
+  );
+  // Guards: a decision deleted in a later commit leaves a clean tree, and still gates nothing.
+  expect([r.code, r.err]).toEqual([
+    1,
+    [
+      `P1-S01: the decision repro/P1-S01-outcome/decision.md is not in HEAD: it was deleted in ${SHA}; the run waits for a decision that stands. Restore it, commit it, then run this again.`,
+    ],
+  ]);
+});

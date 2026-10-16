@@ -30,6 +30,8 @@ A study decided before its run — its plan's `mode` is `decide_before_run`, the
   decision file has never been committed.
 - **`decision-is-output`** — the decision file lies in the study's folder and an output glob matches
   it: the decision would be a file its own run produces.
+- **`decision-deleted`** — the decision file was committed and later deleted: it is not in HEAD, so
+  the study has no decision its outputs could follow, and the order is not judged against it.
 - **`decision-not-file`** — the decision path names a directory: git answers for a directory with the
   commits of anything under it, so no order is read from it. (A path that names the paper's folder
   itself, `.`, or ends in `/` is refused when the plan is parsed.)

@@ -65,6 +65,7 @@ it("outputs after the decision, in its commit, before it, and deleted since: eac
   ).toEqual({
     kind: "read",
     decision: { commit: decided, date: T2 },
+    decisionDeleted: false,
     files: [
       { path: "early.csv", commit: early, date: T1, order: "not-after" },
       { path: "decision.md", commit: decided, date: T2, order: "same" },
@@ -94,4 +95,27 @@ it("outside any repository, git's own refusal is the reason", () => {
   const r = ports.order(absolutePath("/"), absolutePath("/decision.md"));
   // Guards: no repository is "unknown", never an empty history.
   expect(r.kind).toBe("unknown");
+});
+
+it("a decision committed and deleted in a later commit is not in HEAD: never `committed`", () => {
+  const repo = join(root, "deleted");
+  initRepo(repo);
+  const sha = commit(repo, { "p/repro/S/decision.md": "d\n" }, T1);
+  const gone = commit(repo, { "p/repro/S/decision.md": null }, T2);
+  const paper = absolutePath(join(repo, "p"));
+  const file = absolutePath(join(repo, "p/repro/S/decision.md"));
+  // Guards: `git log -1` names the deletion and the tree is clean, yet there is no decision to gate on;
+  // the order still reads the decision's first commit, and says it is gone.
+  expect([
+    ports.committed(paper, file),
+    ports.order(absolutePath(join(repo, "p/repro/S")), file),
+  ]).toEqual([
+    { kind: "deleted", commit: gone },
+    {
+      kind: "read",
+      decision: { commit: sha, date: T1 },
+      decisionDeleted: true,
+      files: [{ path: "decision.md", commit: sha, date: T1, order: "same" }],
+    },
+  ]);
 });

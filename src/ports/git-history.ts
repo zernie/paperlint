@@ -19,6 +19,8 @@ export type Committed =
   | { readonly kind: "not-committed" }
   /** Committed, and changed since (edited, staged, deleted): the commit is not what is on disk. */
   | { readonly kind: "changed"; readonly commit: string }
+  /** Committed, then deleted in a later commit: it is not in HEAD, so there is nothing to gate on. */
+  | { readonly kind: "deleted"; readonly commit: string }
   /** Committed as it stands: the last commit that touched it, and that commit's date. */
   | {
       readonly kind: "committed";

@@ -87,7 +87,12 @@ function studies(
           );
         },
         // A history with no decision and no output committed yet.
-        order: () => ({ kind: "read", decision: null, files: [] }),
+        order: () => ({
+          kind: "read",
+          decision: null,
+          decisionDeleted: false,
+          files: [],
+        }),
       },
       log: (l) => log.push(l),
       err: (l) => err.push(l),

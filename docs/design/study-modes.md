@@ -59,8 +59,9 @@ A study's `plan.json` holds one `mode`, a union on its `kind` (`src/domain/study
 
 Exit 0 only if the decision file exists and is committed as it stands (git's last commit for it, and
 nothing changed since), printing the commit and its date; exit 1 saying why otherwise (not
-committed, changed since its commit, git unable to answer, no decision file named, a decision that is
-a directory, a decision its own outputs match). A runner calls it first:
+committed, changed since its commit, committed and since deleted — not in HEAD, though `git log -1`
+names the deleting commit and the tree is clean — git unable to answer, no decision file named, a
+decision that is a directory, a decision its own outputs match). A runner calls it first:
 
 ```sh
 npx paperlint studies gate papers/my-paper P1-S03 && ./run.sh
@@ -74,7 +75,9 @@ refused.
 An error, reported on `PIPELINE-STATUS.md`. For each decide-first study: every output whose first
 commit is not a strict descendant of the decision file's first commit (earlier, on another line of
 history, or in the same commit) is a finding; deleted outputs count. An output in the tree or in history while the
-decision was never committed is a finding. A shallow clone, and a history git cannot read, are
+decision was never committed is a finding, and so is a decision committed and since deleted
+(`decision-deleted`): it is not in HEAD, so no order is judged against it. A shallow clone, and a
+history git cannot read, are
 findings that say so — never a pass. The study's folder is walked without following a symbolic link
 (`ListEntries`, `src/ports/list-entries.ts`): a link is one entry, as git stores it, so a link to the
 folder itself cannot loop the walk and one outside brings no foreign file into the study.
@@ -90,11 +93,11 @@ workflow — and a shallow checkout is named by the rule (`fetch-depth: 0`).
 `repro/README.md`'s study index (`paperlint studies index`, docs/design/study-registry.md) has three
 columns for this (`src/domain/index-columns.ts`):
 
-| column         | cell                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------ |
-| `mode`         | `decide_before_run`, `exploratory: <reason>`, or `—` for a study whose plan has none |
-| `decision`     | the decision file's first commit (12 characters) and its date, or `not committed`    |
-| `first output` | the first commit of the oldest output and its date, or `none`                        |
+| column         | cell                                                                                                                         |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `mode`         | `decide_before_run`, `exploratory: <reason>`, or `—` for a study whose plan has none                                         |
+| `decision`     | the decision file's first commit (12 characters) and its date (`, deleted since` when it is not in HEAD), or `not committed` |
+| `first output` | the first commit of the oldest output and its date, or `none`                                                                |
 
 A sample row:
 

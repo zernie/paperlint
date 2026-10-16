@@ -158,3 +158,14 @@ it("lists a symlink in the study's folder as a file, never following it: a loop 
   // `RESULTS.md` into the study; both are entries git itself stores as links.
   expect(lint(repo)).toEqual([]);
 });
+
+it("loud on a decision deleted after its outputs: a decision that no longer stands decides nothing", () => {
+  const repo = join(root, "decision-deleted");
+  initRepo(repo);
+  commit(repo, PAPER, T(9));
+  commit(repo, { [`${S}/decision.md`]: "exclude run 7\n" }, T(10));
+  commit(repo, { [`${S}/RESULTS.md`]: "41 of 60\n" }, T(11));
+  commit(repo, { [`${S}/decision.md`]: null }, T(12));
+  // Guards: the order was right once; with the decision gone from HEAD the study is reported.
+  expect(lint(repo)).toEqual(["decision-deleted"]);
+});

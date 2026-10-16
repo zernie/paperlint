@@ -67,6 +67,7 @@ export const decideFirstStudies = (
 
 const PROBLEMS: readonly OrderFinding["problem"][] = [
   "decision-is-output",
+  "decision-deleted",
   "decision-not-file",
   "no-history",
   "shallow",

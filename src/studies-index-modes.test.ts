@@ -34,6 +34,7 @@ it("writes the decision's first commit and the first output's, read from git", (
       order: {
         kind: "read",
         decision: D,
+        decisionDeleted: false,
         files: [
           { path: "decision.md", ...D, order: "same" },
           { path: "RESULTS.md", ...A, order: "after" },
@@ -61,7 +62,12 @@ it("writes the decision's first commit and the first output's, read from git", (
 
 it("rewrites the index when only git's columns moved, and leaves it when nothing did", () => {
   const before = studies("index", tree(), { title: undefined }).after;
-  const order = { kind: "read", decision: D, files: [] } as const;
+  const order = {
+    kind: "read",
+    decision: D,
+    decisionDeleted: false,
+    files: [],
+  } as const;
   const moved = studies("index", before, { title: undefined }, { order });
   const again = studies("index", moved.after, { title: undefined }, { order });
   // Guards: the lint ignores those two columns, so the command is what keeps them current.

@@ -8,6 +8,7 @@
  *     earlier, on a line of history the decision is not on, or in the very same commit (which says
  *     nothing about which came first);
  *   - a decision file the outputs match (it would be "produced" by the run it gates);
+ *   - a decision file committed and since deleted: it is not in HEAD, so there is no decision;
  *   - a history that cannot be read: no git, or a shallow clone, whose every file starts at the clone.
  *
  * Outputs that were committed and later deleted count: an output that existed before the decision is
@@ -57,6 +58,8 @@ export type OrderFacts =
       readonly kind: "read";
       /** null: the decision file was never committed. */
       readonly decision: CommitAt | null;
+      /** The decision was committed, then deleted: it is not in HEAD. */
+      readonly decisionDeleted: boolean;
       readonly files: readonly FirstCommit[];
     };
 
@@ -79,6 +82,11 @@ export type OrderFinding =
       readonly id: string;
       readonly file: string;
       readonly glob: string;
+    }
+  | {
+      readonly problem: "decision-deleted";
+      readonly id: string;
+      readonly file: string;
     }
   | {
       readonly problem: "decision-not-file";
@@ -165,18 +173,24 @@ export const judgeOrder = (s: DecideFirstStudy): readonly OrderFinding[] => {
             glob,
           },
         ];
+  return [...clash, ...historyFindings(s)];
+};
+
+/** The findings of a decide-first study's history, whatever git could say of it. */
+const historyFindings = (s: DecideFirstStudy): readonly OrderFinding[] => {
+  const file = s.mode.decision.file;
   switch (s.facts.kind) {
     case "directory":
-      return [
-        ...clash,
-        { problem: "decision-not-file", id: s.id, file: s.mode.decision.file },
-      ];
+      return [{ problem: "decision-not-file", id: s.id, file }];
     case "unknown":
-      return [...clash, { problem: "no-history", id: s.id, why: s.facts.why }];
+      return [{ problem: "no-history", id: s.id, why: s.facts.why }];
     case "shallow":
-      return [...clash, { problem: "shallow", id: s.id }];
+      return [{ problem: "shallow", id: s.id }];
     case "read":
-      return [...clash, ...ordered(s, s.facts.decision, s.facts.files)];
+      // A decision deleted since is no decision: the order is not judged against it.
+      return s.facts.decisionDeleted
+        ? [{ problem: "decision-deleted", id: s.id, file }]
+        : ordered(s, s.facts.decision, s.facts.files);
   }
 };
 
@@ -194,6 +208,8 @@ const HEADS: {
 } = {
   "decision-is-output": (f) =>
     `The decision of \`${f.id}\`, \`${f.file}\`, is matched by its output \`${f.glob}\`: the decision would be one of the files its own run produces. What to do: keep the decision out of the outputs — a file the globs do not match, or one elsewhere in the paper — and set \`mode.decision.file\`.`,
+  "decision-deleted": (f) =>
+    `The decision of \`${f.id}\`, \`${f.file}\`, was committed and then deleted: it is not in HEAD, so the study has no decision its outputs could follow. What to do: restore the decision file as it was decided and commit it — never write a new one after the outputs; if the decision no longer holds, declare the study \`exploratory\` with the reason.`,
   "decision-not-file": (f) =>
     `The decision of \`${f.id}\`, \`${f.file}\`, is a directory, not a file: git answers for a directory with the commits of anything under it, so no order can be read from it. What to do: name the decision file itself in \`mode.decision.file\`.`,
   "no-history": (f) =>
