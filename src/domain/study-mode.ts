@@ -53,7 +53,11 @@ export interface Exploratory {
 export type StudyMode = DecideFirst | Blind | Exploratory;
 
 /** The modes, by their `kind`. */
-export const MODE_KINDS = ["decide_before_run", "blind", "exploratory"] as const;
+export const MODE_KINDS = [
+  "decide_before_run",
+  "blind",
+  "exploratory",
+] as const;
 
 /**
  * The kinds of study whose plan must declare a mode: the ones that measure. A spike, a tool, a data
@@ -87,10 +91,7 @@ export const isOutput = (outputs: readonly string[], path: string): boolean =>
  * The output glob that matches the mode's own decision file, when the file lies in the study's
  * folder: the decision would be an output — sealed with the results, or "produced" by the run it gates.
  */
-export const decisionAsOutput = (
-  folder: string,
-  m: Gated,
-): string | null => {
+export const decisionAsOutput = (folder: string, m: Gated): string | null => {
   const rel = inStudy(folder, gateOf(m).file);
   return rel === null
     ? null

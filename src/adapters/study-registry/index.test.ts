@@ -262,7 +262,10 @@ describe("parsing a study's plan: ready or draft", () => {
   });
 
   it("the template studies new writes is a draft of a census, naming every empty text", () => {
-    expect(planTemplate("spike", "x").population.draw).toEqual({ kind: "all", method: "" });
+    expect(planTemplate("spike", "x").population.draw).toEqual({
+      kind: "all",
+      method: "",
+    });
     expect(parsePlan(planText(planTemplate("spike", "x")), "spike")).toEqual({
       kind: "draft",
       plan: planTemplate("spike", "x"),
