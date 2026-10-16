@@ -88,6 +88,11 @@ The review artifact was an OSF anonymized view-only link. The camera-ready needs
   or \`\\doi{}\`.
 - Keep the artifact **self-checking** (it still recomputes every headline number and exits non-zero on
   drift) — de-anonymizing it doesn't excuse it from reproducing the paper.
+- **Ship each study's evidence of its mode**: its \`plan.json\`, its decision file, and for a blind study
+  its \`sealed.json\` and \`*.age\` files; the README carries \`npx paperlint studies methods <paper-dir>
+  --format md\` and the verify commands. The public repo keeps the **whole git history** — the order of
+  decision and outputs is read from it (\`repro/outputs-before-decision\`), and a squashed or shallow
+  copy loses it.
 
 ## 3. Responsible disclosure (security papers — BEFORE public release)
 For the AISec "Safety Theater" paper the studied hooks are named-but-anonymized, and disclosure to the

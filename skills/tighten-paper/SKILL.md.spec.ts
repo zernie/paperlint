@@ -155,6 +155,11 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
   measurement paper's fat HIDES as explanation of real numbers, which is exactly why "it's all numbers" lets it
   survive a lazy pass (GateBench 2026-07-25: a pass cut only 5% hiding behind this; the author correctly pushed
   back that whole sections were over-explained, not just number-dense).
+- **The study-mode sentence is never cut for length.** The sentence that says a study was decided before
+  its run (with its decision's commit), run blind, or is exploratory — and the word "exploratory" beside
+  an exploratory number — is the claim's warrant, not its explanation: cut around it, never it. Its
+  \`% study: <id>\` comment stays on the paragraph, and \`paper/study-mode-claim\` /
+  \`paper/study-mode-stated\` re-check the paragraph after the cut.
 - **"Fold to the artifact" is the PRIMARY length lever for a measurement/benchmark paper — not a last resort.**
   FIRST verify the artifact exists and recomputes the numbers (it usually does for these papers). Then per-case
   breakdowns, secondary analyses, exhaustive robustness sub-results, ablation walkthroughs, and every "we also

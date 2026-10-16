@@ -78,8 +78,19 @@ middle sags" — wasting the polish on possibly-cut sections.
      there with no pointer reaching it, the body is overclaiming and "it's in the appendix" is not
      a defence — reviewers are not required to read appendices, and ARR says so in as many words.
      Rule and the sorting test: \`paper-pipeline/references/body-vs-appendix.md\`.
+   - 🔴 **A confirmatory claim on a study that was not confirmatory.** Every claim the paper presents
+     as tested — a prediction, a hypothesis confirmed, a headline effect — must rest on a study
+     decided before its run or run blind; read each study's mode from
+     \`npx paperlint studies methods <paper-dir>\` (the registry, the plans and git, not the prose). A
+     confirmatory claim on an exploratory study, or on one whose history does not show its decision
+     first, is a **soundness** finding, not a wording one: re-label the result exploratory, or rest the
+     claim on a study that was decided first. Every paragraph reporting a study's numbers carries its
+     \`% study: <id>\` link, so the lint holds it.
    Mechanical leg: \`tex/claim-provenance\` (axis 7) reports every sentence that states a number and
-   does not say whose it is.
+   does not say whose it is; \`paper/study-mode-claim\` (error) every linked paragraph that calls a
+   study pre-registered, decided before or blind when it was not, and \`paper/study-mode-stated\` every
+   exploratory number left unlabelled; \`repro/outputs-before-decision\` every output that entered
+   history before its decision.
 
 3. **Novelty vs the nearest neighbor** — the scoop check. Search for the paper that *already did your
    thing* (\`verify-citations\` covers metadata; here, actively hunt the closest empirical/method twin).

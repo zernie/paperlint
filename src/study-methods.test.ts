@@ -84,7 +84,7 @@ const paperOf = (parts: readonly ReturnType<typeof study>[]) => ({
       { ...ROW, id: "P1-S09", folder: "P1-S09-x", in_paper: "no" },
     ],
   }),
-  ...Object.assign({}, ...parts.map((p) => p.tree)),
+  ...Object.fromEntries(parts.flatMap((p) => Object.entries(p.tree))),
 });
 
 const ALL = paperOf([
