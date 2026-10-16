@@ -3,7 +3,6 @@
  * way age can fail — as a value, never a throw. The real age runs in test/e2e/age/.
  */
 import { describe, expect, it } from "vitest";
-import { absolutePath } from "../../domain/paths.ts";
 import {
   ageSealer,
   x25519Stanzas,
@@ -83,39 +82,6 @@ describe("seal", () => {
         message: "age wrote something that is not an age file",
       },
     });
-  });
-});
-
-describe("unseal", () => {
-  const at = absolutePath("/s/RESULTS.md.age");
-
-  it("an identity file is passed by path", () => {
-    const { sealer, calls } = scripted(exited(bytes("plain")));
-    // Guards: the file's path goes to -i; stdin carries nothing.
-    expect(
-      sealer.unseal({ kind: "file", path: absolutePath("/k.txt") }, at),
-    ).toEqual({
-      ok: true,
-      value: bytes("plain"),
-    });
-    expect(calls.map((c) => [c.args, c.stdin])).toEqual([
-      [["-d", "-i", "/k.txt", at], new Uint8Array()],
-    ]);
-  });
-
-  it("a secret identity goes on stdin, never into an argument or the environment", () => {
-    const { sealer, calls } = scripted(exited(bytes("plain")));
-    sealer.unseal({ kind: "secret", name: "K", text: "AGE-SECRET-KEY-1X" }, at);
-    // Guards: the key is not on the command line (ps) nor in the child's environment.
-    expect(calls).toEqual([
-      {
-        file: "age",
-        args: ["-d", "-i", "-", at],
-        stdin: bytes("AGE-SECRET-KEY-1X"),
-        env: ENV,
-        timeoutMs: 600_000,
-      },
-    ]);
   });
 });
 

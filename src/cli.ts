@@ -190,6 +190,12 @@ import {
   studyRegistryRules,
 } from "./study-registry-rule.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
+import { ageSealer, spawnBytes } from "./adapters/age/index.ts";
+import { nodeRemove } from "./adapters/node/index.ts";
+import {
+  BLIND_RULE_LEVELS,
+  blindPlaintextRules,
+} from "./blind-plaintext-rule.ts";
 import { runStudies } from "./studies.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
@@ -243,6 +249,14 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       index in repro/README.md regenerated
   npx paperlint studies index <paper-dir>
                                       regenerate the index in repro/README.md from repro/studies.json
+  npx paperlint studies seal <paper-dir> <id>
+                                      a blind study (its plan.json has "blind"): every file its outputs
+                                      match encrypted with age to <file>.age for every recipient, its
+                                      sha256 recorded in sealed.json, the plaintext removed. A re-run
+                                      seals only what is new and refuses a changed result
+  npx paperlint studies verify <paper-dir> <id>
+                                      no key needed: every .age file against the sha256 sealed.json
+                                      recorded, and once unsealed every plaintext too
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
 
@@ -267,7 +281,9 @@ studies:
   --kind <kind>       new: measurement (the default), spike, tooling, data, artifact or salvage.
                       A study's status, result and in_paper are edited in repro/studies.json, its
                       plan in its plan.json; the rule repro/study-registered checks them
-                      (docs/rules/repro/study-registered.md)
+                      (docs/rules/repro/study-registered.md). A blind study's plaintext results
+                      are refused by repro/blind-plaintext until it is unsealed
+                      (docs/design/sealed-studies.md)
 
 submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
@@ -393,10 +409,12 @@ const STUDY_RULE_DEPS = { ...LAYOUT_RULE_DEPS, codec: studyRegistryCodec };
 const REPRO_RULES = {
   ...reproLayoutRules(LAYOUT_RULE_DEPS),
   ...studyRegistryRules(STUDY_RULE_DEPS),
+  ...blindPlaintextRules(STUDY_RULE_DEPS),
 };
 const REPRO_RULE_LEVELS = {
   ...REPRO_LAYOUT_RULE_LEVELS,
   ...STUDY_REGISTRY_RULE_LEVELS,
+  ...BLIND_RULE_LEVELS,
 };
 
 /** Today in this machine's time zone, `YYYY-MM-DD`: the date `paperlint studies new` registers a study on. */
@@ -1675,7 +1693,17 @@ const SIMPLE: Readonly<
         extra: a.paths.slice(3),
         kind: a.kind,
       },
-      { ...STUDY_RULE_DEPS, cwd, today: today(), log, err },
+      {
+        ...STUDY_RULE_DEPS,
+        // age gets PATH and nothing else of this process's environment.
+        sealer: ageSealer(spawnBytes, { PATH: process.env.PATH ?? "" }),
+        remove: nodeRemove,
+        now: new Date().toISOString(),
+        cwd,
+        today: today(),
+        log,
+        err,
+      },
     ),
   submission: (a, { log, err, cwd }) =>
     runSubmission(

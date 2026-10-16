@@ -1,6 +1,7 @@
 /**
  * `paperlint studies new|index <paper-dir>` — the two commands that write a paper's study registry,
- * `repro/studies.json`, and its index in `repro/README.md` (docs/design/study-registry.md).
+ * `repro/studies.json`, and its index in `repro/README.md` (docs/design/study-registry.md) — and
+ * `studies seal|verify <paper-dir> <id>`, a blind study's sealed results (src/sealed-studies.ts).
  *
  *   new <paper-dir> "<title>" [--kind <kind>]
  *            the next id; `repro/<id>-<slug>/README.md` with the id and title in its frontmatter, and
@@ -38,6 +39,7 @@ import type { Files } from "./ports/files.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type { ListDir } from "./ports/talk-media.ts";
 import { registryOf } from "./study-registry-rule.ts";
+import { runSeal, runVerify, type SealDeps } from "./sealed-studies.ts";
 
 /** What one `studies` run was asked, after the command line. */
 export interface StudiesArgs {
@@ -51,7 +53,7 @@ export interface StudiesArgs {
   readonly kind: string | null;
 }
 
-export interface StudiesDeps {
+export interface StudiesDeps extends SealDeps {
   readonly files: Files;
   readonly listDir: ListDir;
   readonly codec: StudyRegistryCodec;
@@ -65,7 +67,9 @@ export interface StudiesDeps {
 const NEW_USAGE =
   'npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]';
 const INDEX_USAGE = "npx paperlint studies index <paper-dir>";
-const SUBS = `new or index — ${NEW_USAGE} · ${INDEX_USAGE}`;
+const SEAL_USAGE = "npx paperlint studies seal <paper-dir> <id>";
+const VERIFY_USAGE = "npx paperlint studies verify <paper-dir> <id>";
+const SUBS = `new, index, seal or verify — ${[NEW_USAGE, INDEX_USAGE, SEAL_USAGE, VERIFY_USAGE].join(" · ")}`;
 
 const STATUS_FILE = "PIPELINE-STATUS.md";
 
@@ -232,31 +236,68 @@ function runNew(
 }
 
 /** The paper folder the command line names, or the refusal. */
-function paperOf(a: StudiesArgs, deps: StudiesDeps): Refusal | Paper {
+function paperOf(a: StudiesArgs, deps: StudiesDeps): Refusal | Chosen {
   if (a.sub === undefined)
     return refuse(2, `studies needs a subcommand: ${SUBS}`);
-  if (a.sub !== "new" && a.sub !== "index")
+  const sub = COMMANDS.get(a.sub);
+  if (sub === undefined)
     return refuse(2, `unknown subcommand \`studies ${a.sub}\`: ${SUBS}`);
   if (a.paperDir === undefined)
-    return refuse(
-      2,
-      `studies ${a.sub} needs the paper's folder: ${a.sub === "new" ? NEW_USAGE : INDEX_USAGE}`,
-    );
+    return refuse(2, `studies ${a.sub} needs the paper's folder: ${sub.usage}`);
   const dir = resolve(deps.cwd, a.paperDir);
   const shown = relative(deps.cwd, dir) || ".";
   return deps.files.isFile(callerPath(join(dir, STATUS_FILE)))
-    ? { dir, shown }
+    ? { dir, shown, run: sub.run }
     : refuse(2, `${shown} is not a paper folder: it has no ${STATUS_FILE}`);
 }
+
+/** `seal` or `verify`: the study's id, one argument, then the run. */
+function runSealed(
+  p: Paper,
+  a: StudiesArgs,
+  deps: StudiesDeps,
+): Refusal | readonly string[] {
+  const run = a.sub === "seal" ? runSeal : runVerify;
+  const usage = a.sub === "seal" ? SEAL_USAGE : VERIFY_USAGE;
+  if (a.title === undefined)
+    return refuse(2, `studies ${String(a.sub)} needs the study's id: ${usage}`);
+  const [surplus] = a.extra;
+  if (surplus !== undefined)
+    return refuse(
+      2,
+      `studies ${String(a.sub)} takes the paper's folder and one id — \`${surplus}\` is one argument too many`,
+    );
+  const out = run(p.dir, p.shown, a.title, deps);
+  return out.ok ? out.lines : out.refusal;
+}
+
+/** A run of a subcommand over a paper folder. */
+type Run = (
+  p: Paper,
+  a: StudiesArgs,
+  d: StudiesDeps,
+) => Refusal | readonly string[];
+
+/** The paper folder, and the run the subcommand chose. */
+interface Chosen extends Paper {
+  readonly run: Run;
+}
+
+/** Each subcommand: its usage line and its run. */
+const COMMANDS: ReadonlyMap<
+  string,
+  { readonly usage: string; readonly run: Run }
+> = new Map([
+  ["new", { usage: NEW_USAGE, run: runNew }],
+  ["index", { usage: INDEX_USAGE, run: runIndex }],
+  ["seal", { usage: SEAL_USAGE, run: runSealed }],
+  ["verify", { usage: VERIFY_USAGE, run: runSealed }],
+]);
 
 /** The run: 0 done, 1 refused by the paper's state, 2 refused by the command line. */
 export function runStudies(a: StudiesArgs, deps: StudiesDeps): number {
   const p = paperOf(a, deps);
-  const out = isRefusal(p)
-    ? p
-    : a.sub === "new"
-      ? runNew(p, a, deps)
-      : runIndex(p, a, deps);
+  const out = isRefusal(p) ? p : p.run(p, a, deps);
   if (isRefusal(out)) {
     deps.err(out.line);
     return out.code;

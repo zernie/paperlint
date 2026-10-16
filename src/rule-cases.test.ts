@@ -17,6 +17,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
+import { manifestText } from "./domain/sealed-study.ts";
 import {
   planTemplate,
   planText,
@@ -81,6 +82,27 @@ const STUDY_WITH_PLAN = (name: string): Readonly<Record<string, string>> => {
     [`${P}/repro/P1-S01-ablation/${name}`]: planText(planTemplate()),
   };
 };
+
+/** The registered study made blind: its plan seals RESULTS.md to one recipient. `files` beside its plan. */
+const BLIND_STUDY = (
+  files: Readonly<Record<string, string>>,
+): Readonly<Record<string, string>> => ({
+  ...STUDY_WITH_PLAN("plan.json"),
+  [`${P}/repro/P1-S01-ablation/plan.json`]: planText({
+    ...planTemplate(),
+    blind: {
+      recipients: [`age1${"q".repeat(58)}`],
+      outputs: ["RESULTS.md"],
+      unseal_after: { file: "exclusions.md", note: "exclusions frozen" },
+    },
+  }),
+  ...Object.fromEntries(
+    Object.entries(files).map(([k, v]) => [
+      `${P}/repro/P1-S01-ablation/${k}`,
+      v,
+    ]),
+  ),
+});
 
 /** `study/declare-sample` is off by default; a paper turns it on in its `paperlint.json`. */
 const DECLARE_SAMPLE_ON: Readonly<Record<string, string>> = {
@@ -786,6 +808,35 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     // Every folder registered, and the index the registry generates.
     silent: paper(tex("x"), REGISTERED_STUDY),
+  },
+  // A blind study, still sealed, with its result in plaintext beside its ciphertext.
+  "repro/blind-plaintext": {
+    reports: {
+      tree: paper(tex("x"), BLIND_STUDY({ "RESULTS.md": "41 of 60\n" })),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 2,
+      line: 1,
+    },
+    // The same study with only its ciphertext and its manifest.
+    silent: paper(
+      tex("x"),
+      BLIND_STUDY({
+        "RESULTS.md.age": "age-encryption.org/v1\n",
+        "sealed.json": manifestText({
+          recipients: [`age1${"q".repeat(58)}`],
+          files: [
+            {
+              path: "RESULTS.md",
+              sha256: "a".repeat(64),
+              size: 9,
+              age_sha256: "c".repeat(64),
+              sealed_at: "2026-10-16T10:00:00.000Z",
+            },
+          ],
+          unsealed: null,
+        }),
+      }),
+    ),
   },
   // A study's plan still named prereg.json: read as its plan, and a warning to rename it.
   "repro/study-plan-name": {

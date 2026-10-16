@@ -205,6 +205,10 @@ two commands that write it.
    come from an error rule, since ESLint sets the level per rule. A `prereg.json` no row names is not
    read, so no existing paper turns red.
 
+8. **A blind study.** A plan may declare `blind` — its results sealed with age to public
+   recipients until a recorded decision — and `paperlint studies seal|verify` and the rule
+   `repro/blind-plaintext` hold it. Its own note: [`sealed-studies.md`](sealed-studies.md).
+
 ## Where each part lives
 
 | part                                   | file                                | layer   |

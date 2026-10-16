@@ -1,10 +1,8 @@
 /**
  * `Sealer` over the age CLI (https://age-encryption.org): `age -r <recipient>…` encrypts stdin to
- * stdout, `age -d -i <identity> <file>` decrypts. Nothing here implements cryptography; it builds the
- * command, and reads age's header to check that the ciphertext is sealed to every recipient asked.
- *
- * A secret identity is passed on age's stdin (`-i -`), so the private key never touches the disk and
- * never appears in an argument list (`ps`) or in the child's environment.
+ * stdout. Nothing here implements cryptography; it builds the command, and reads age's header to
+ * check that the ciphertext is sealed to every recipient asked. Decryption is not here: who holds the
+ * private key, and where, is an open decision (docs/design/sealed-studies.md).
  */
 import { err, ok, type Result } from "../../domain/result.ts";
 import type { Sealer, SealerFailure } from "../../ports/sealer.ts";
@@ -19,7 +17,7 @@ export const AGE = "age";
 /** The first line of every binary age file (age-encryption.org/v1, "Header"). */
 const VERSION_LINE = "age-encryption.org/v1";
 
-/** A seal or an unseal may take this long. */
+/** A seal may take this long. */
 const TIMEOUT_MS = 10 * 60_000;
 
 /** What age's run came to, as a result: its stdout, or why not. */
@@ -84,12 +82,5 @@ export function ageSealer(
       );
       return out.ok ? sealedToAll(recipients, out.value) : out;
     },
-    unseal: (identity, ciphertext) =>
-      identity.kind === "file"
-        ? age(["-d", "-i", identity.path, ciphertext], new Uint8Array())
-        : age(
-            ["-d", "-i", "-", ciphertext],
-            new TextEncoder().encode(identity.text),
-          ),
   };
 }

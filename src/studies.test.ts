@@ -71,6 +71,15 @@ function studies(
       codec: studyRegistryCodec,
       cwd,
       today: "2026-10-15",
+      now: "2026-10-15T00:00:00.000Z",
+      sealer: {
+        seal: () => {
+          throw new Error("new and index never seal");
+        },
+      },
+      remove: () => {
+        throw new Error("new and index never remove a file");
+      },
       log: (l) => log.push(l),
       err: (l) => err.push(l),
     },
@@ -330,12 +339,12 @@ describe("studies — the command line", () => {
     [
       "no subcommand",
       { sub: undefined },
-      'studies needs a subcommand: new or index — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir>',
+      'studies needs a subcommand: new, index, seal or verify — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id>',
     ],
     [
       "an unknown subcommand",
       { sub: "add" },
-      'unknown subcommand `studies add`: new or index — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir>',
+      'unknown subcommand `studies add`: new, index, seal or verify — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id>',
     ],
     [
       "new with no paper folder",
