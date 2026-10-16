@@ -10,7 +10,7 @@
  */
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import { modeStudies, type StudyDeps } from "./study-modes.ts";
+import { isDirectory, modeStudies, type StudyDeps } from "./study-modes.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
 import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
 import { isFolderName, type Study } from "./domain/study-registry.ts";
@@ -57,6 +57,29 @@ export const gateLine = (
   }
 };
 
+/**
+ * Why the decision cannot gate the run though it is named: its own outputs match it, or it is a
+ * directory (git answers for a directory with the last commit of anything under it); null when usable.
+ */
+const unusable = (
+  paper: string,
+  { id, folder }: Pick<Study, "id" | "folder">,
+  mode: DecideFirst,
+  deps: GateDeps,
+): StudyRefusal | null => {
+  const file = mode.decision.file;
+  const glob = decisionAsOutput(folder, mode);
+  if (glob !== null)
+    return refusal(
+      `${id}: its decision ${file} is matched by its output \`${glob}\`; a decision cannot be what its own run produces.`,
+    );
+  return isDirectory(join(paper, file), deps)
+    ? refusal(
+        `${id}: its decision ${file} is a directory, not a file; the run cannot be gated on it. Name the decision file in \`mode.decision.file\`.`,
+      )
+    : null;
+};
+
 /** The gate of a decide-first study. */
 const gateDecided = (
   paper: string,
@@ -71,13 +94,8 @@ const gateDecided = (
         `${id}: its plan names no decision file (\`mode.decision.file\`); the run cannot be gated on nothing.`,
       ),
     );
-  const glob = decisionAsOutput(folder, mode);
-  if (glob !== null)
-    return refused(
-      refusal(
-        `${id}: its decision ${file} is matched by its output \`${glob}\`; a decision cannot be what its own run produces.`,
-      ),
-    );
+  const blocked = unusable(paper, { id, folder }, mode, deps);
+  if (blocked !== null) return refused(blocked);
   const g = gateLine(
     id,
     file,

@@ -3,7 +3,7 @@
  * decisions on the inputs are committed before any output exists, and git's history is the proof of
  * order. `repro/outputs-before-decision` judges it here, from facts git gave (src/adapters/git/):
  *
- *   - each output in the tree while the decision file was never committed;
+ *   - each output in the tree or ever committed while the decision file was never committed;
  *   - each output whose FIRST commit is not a strict descendant of the decision file's FIRST commit —
  *     earlier, on a line of history the decision is not on, or in the very same commit (which says
  *     nothing about which came first);
@@ -45,9 +45,11 @@ export interface FirstCommit extends CommitAt {
 
 /**
  * What git's history says of a decide-first study: when its decision file entered history, and when
- * every file ever committed under the study's folder did.
+ * every file ever committed under the study's folder did — or, when the decision names a directory,
+ * that history was not asked (git answers for a directory with the commits of anything under it).
  */
 export type OrderFacts =
+  | { readonly kind: "directory" }
   | { readonly kind: "unknown"; readonly why: string }
   /** A shallow clone: every file's first commit is the clone's first, so no order can be read. */
   | { readonly kind: "shallow" }
@@ -77,6 +79,11 @@ export type OrderFinding =
       readonly id: string;
       readonly file: string;
       readonly glob: string;
+    }
+  | {
+      readonly problem: "decision-not-file";
+      readonly id: string;
+      readonly file: string;
     }
   | {
       readonly problem: "no-history";
@@ -123,12 +130,15 @@ const ordered = (
   const isOut = outputOf(s);
   const at = { id: s.id, folder: s.folder };
   if (decision === null)
-    return s.tree.filter(isOut).map((path) => ({
-      problem: "undecided-output",
-      ...at,
-      path,
-      decision: s.mode.decision.file,
-    }));
+    // The tree's outputs, then those only history holds: deleting an output does not erase it.
+    return [...new Set([...s.tree, ...files.map((f) => f.path)])]
+      .filter(isOut)
+      .map((path) => ({
+        problem: "undecided-output",
+        ...at,
+        path,
+        decision: s.mode.decision.file,
+      }));
   return files
     .filter((f) => isOut(f.path) && f.order !== "after")
     .map((f) => ({
@@ -156,6 +166,11 @@ export const judgeOrder = (s: DecideFirstStudy): readonly OrderFinding[] => {
           },
         ];
   switch (s.facts.kind) {
+    case "directory":
+      return [
+        ...clash,
+        { problem: "decision-not-file", id: s.id, file: s.mode.decision.file },
+      ];
     case "unknown":
       return [...clash, { problem: "no-history", id: s.id, why: s.facts.why }];
     case "shallow":
@@ -179,12 +194,14 @@ const HEADS: {
 } = {
   "decision-is-output": (f) =>
     `The decision of \`${f.id}\`, \`${f.file}\`, is matched by its output \`${f.glob}\`: the decision would be one of the files its own run produces. What to do: keep the decision out of the outputs — a file the globs do not match, or one elsewhere in the paper — and set \`mode.decision.file\`.`,
+  "decision-not-file": (f) =>
+    `The decision of \`${f.id}\`, \`${f.file}\`, is a directory, not a file: git answers for a directory with the commits of anything under it, so no order can be read from it. What to do: name the decision file itself in \`mode.decision.file\`.`,
   "no-history": (f) =>
     `\`${f.id}\` is decided before its run, and git's history is the proof of that order, but git could not answer: ${f.why}. What to do: lint the paper inside its git repository, with git installed.`,
   shallow: (f) =>
     `\`${f.id}\` is decided before its run, and this clone is shallow: every file's first commit is the clone's first, so the order of decision and outputs cannot be read. What to do: fetch the whole history (\`git fetch --unshallow\`; in GitHub Actions, \`actions/checkout\` with \`fetch-depth: 0\`).`,
   "undecided-output": (f) =>
-    `\`repro/${f.folder}/${f.path}\` is an output of \`${f.id}\`, which is decided before its run, and its decision \`${f.decision}\` was never committed. What to do: remove the output, write and commit the decision, check it with \`npx paperlint studies gate <paper-dir> ${f.id}\`, then run the study again.`,
+    `\`repro/${f.folder}/${f.path}\` is an output of \`${f.id}\` — in the tree, or in its history — and the study is decided before its run, but its decision \`${f.decision}\` was never committed. What to do: write and commit the decision, check it with \`npx paperlint studies gate <paper-dir> ${f.id}\`, then run the study again; if the output was made before any decision, declare the study \`exploratory\` with the reason. Deleting the output does not undo it: history keeps it.`,
   "output-before-decision": (f) =>
     `\`repro/${f.folder}/${f.path}\`, an output of \`${f.id}\`, entered history in ${short(f.output)}, ${f.same ? "the very commit" : "not after the commit"} that first recorded its decision, ${short(f.decision)}. The study is declared decided before its run, and its history does not show that order. What to do: if the decision really came first, nothing in this history can prove it — declare the study \`exploratory\` with the reason, or run it again after the decision; never rewrite the history to make it pass.`,
 };

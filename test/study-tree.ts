@@ -5,7 +5,11 @@
  * The stand-in git answers `committed` from a table of states, by absolute path, and `order` with one
  * set of facts for every study.
  */
-import { memoryFiles, memoryListDir } from "../src/adapters/memory/index.ts";
+import {
+  memoryFiles,
+  memoryListDir,
+  memoryListEntries,
+} from "../src/adapters/memory/index.ts";
 import { studyRegistryCodec } from "../src/adapters/study-registry/index.ts";
 import type { DecideFirst, StudyMode } from "../src/domain/study-mode.ts";
 import {
@@ -107,6 +111,7 @@ export function studies(
     {
       files,
       listDir: memoryListDir(files),
+      entries: memoryListEntries(files),
       codec: studyRegistryCodec,
       cwd: "/work",
       today: "2026-10-16",

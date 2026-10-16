@@ -137,6 +137,21 @@ it("refuses an output outside the folder or naming the study's README, and a dec
   );
 });
 
+it("refuses a decision path that names the paper's folder or a directory, and keeps an empty one a draft", () => {
+  const notFile =
+    "mode.decision.file: is not a path to a file inside the paper's folder: one or more names joined by /, none empty, . or ..";
+  // Guards: a decision of `.` would make the gate ask git about the whole paper, and the order rule
+  // read the paper's first commit as the decision; such a path cannot be written down.
+  expect(
+    [".", "./", "repro/", "a//d.md", "a/./d.md", "./d.md"].map((file) =>
+      why(withMode({ ...DECIDED, decision: { file, note: "n" } })),
+    ),
+  ).toEqual(Array(6).fill(notFile));
+  expect(
+    empty(withMode({ ...DECIDED, decision: { file: "", note: "n" } })),
+  ).toEqual(["mode.decision.file"]);
+});
+
 it("mode is a field of the plan, so extra cannot carry it", () => {
   // Guards: one place says how a study is gated.
   expect(

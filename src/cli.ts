@@ -190,7 +190,7 @@ import {
   studyRegistryRules,
 } from "./study-registry-rule.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
-import { spawnProcess } from "./adapters/node/index.ts";
+import { nodeListEntries, spawnProcess } from "./adapters/node/index.ts";
 import { gitHistory } from "./adapters/git/index.ts";
 import {
   ORDER_RULE_LEVELS,
@@ -424,7 +424,11 @@ const STUDY_RULE_DEPS = { ...LAYOUT_RULE_DEPS, codec: studyRegistryCodec };
 const REPRO_RULES = {
   ...reproLayoutRules(LAYOUT_RULE_DEPS),
   ...studyRegistryRules(STUDY_RULE_DEPS),
-  ...outputsBeforeDecisionRules({ ...STUDY_RULE_DEPS, git: GIT }),
+  ...outputsBeforeDecisionRules({
+    ...STUDY_RULE_DEPS,
+    entries: nodeListEntries,
+    git: GIT,
+  }),
 };
 const REPRO_RULE_LEVELS = {
   ...REPRO_LAYOUT_RULE_LEVELS,
@@ -1710,6 +1714,7 @@ const SIMPLE: Readonly<
       },
       {
         ...STUDY_RULE_DEPS,
+        entries: nodeListEntries,
         git: GIT,
         cwd,
         today: today(),

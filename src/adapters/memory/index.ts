@@ -6,6 +6,7 @@ import { absolutePath } from "../../domain/paths.ts";
 import type { Download } from "../../ports/download.ts";
 import type { Files } from "../../ports/files.ts";
 import type { ListDir } from "../../ports/talk-media.ts";
+import type { ListEntries } from "../../ports/list-entries.ts";
 import type { Command, ProcessExit, RunProcess } from "../../ports/process.ts";
 import type { NotAPromise, Scratch, Workspace } from "../../ports/workspace.ts";
 import { err, ok } from "../../domain/result.ts";
@@ -71,6 +72,18 @@ export const memoryListDir =
         ),
     ),
   ];
+
+/**
+ * `ListEntries` over `memoryFiles`: each name directly under a directory, a file when it is one, else a
+ * directory. Memory holds no links: the walk's refusal to follow one is the node adapter's to show.
+ */
+export const memoryListEntries =
+  (files: MemoryFiles): ListEntries =>
+  (dir) =>
+    memoryListDir(files)(dir).map((name) => ({
+      name,
+      kind: files.isFile(absolutePath(`${dir}/${name}`)) ? "file" : "dir",
+    }));
 
 export interface MemoryWorkspace extends Workspace {
   /** Every file written into a scratch directory, in order. */

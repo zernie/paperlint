@@ -146,6 +146,7 @@ describe("indexHistory", () => {
     expect([
       indexHistory(study({ kind: "unknown", why: "not a repository" })),
       indexHistory(study({ kind: "shallow" })),
+      indexHistory(study({ kind: "directory" })),
       indexHistory(
         study({
           kind: "read",
@@ -160,6 +161,7 @@ describe("indexHistory", () => {
     ]).toEqual([
       { kind: "unread", why: "git could not answer" },
       { kind: "unread", why: "shallow clone" },
+      { kind: "unread", why: "the decision is a directory" },
       { kind: "read", decision: D, firstOutput: A },
       { kind: "read", decision: null, firstOutput: null },
     ]);

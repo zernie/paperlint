@@ -1,7 +1,13 @@
 /** The in-memory test doubles keep the contracts of the ports they stand in for. */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { fixedDownload, memoryWorkspace } from "./index.ts";
+import { absolutePath } from "../../domain/paths.ts";
+import {
+  fixedDownload,
+  memoryFiles,
+  memoryListEntries,
+  memoryWorkspace,
+} from "./index.ts";
 
 test("memoryWorkspace: a `within` that throws is recorded as `threw`, and the error goes on", () => {
   const ws = memoryWorkspace();
@@ -22,4 +28,12 @@ test("fixedDownload: bytes are handed back as they are, and every URL is recorde
   const d = fixedDownload(bytes);
   assert.deepEqual(d.fetch("https://a", 1), { ok: true, value: bytes });
   assert.deepEqual(d.urls, ["https://a"]);
+});
+
+test("memoryListEntries: each name directly under a directory, a file or a directory", () => {
+  const files = memoryFiles({ "/s/a.md": "", "/s/out/b.csv": "" });
+  assert.deepEqual(memoryListEntries(files)(absolutePath("/s")), [
+    { name: "a.md", kind: "file" },
+    { name: "out", kind: "dir" },
+  ]);
 });

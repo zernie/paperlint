@@ -4,10 +4,16 @@
  * outputs entered history after its decision, loud on each output that did not, on an output while
  * the decision is uncommitted; and only on `PIPELINE-STATUS.md`.
  */
+import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vitest";
 import { gitHistory } from "./adapters/git/index.ts";
-import { nodeFiles, nodeListDir, spawnProcess } from "./adapters/node/index.ts";
+import {
+  nodeFiles,
+  nodeListDir,
+  nodeListEntries,
+  spawnProcess,
+} from "./adapters/node/index.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
 import { planText, registryText } from "./domain/study-registry.ts";
@@ -37,6 +43,7 @@ const lint = (repo: string, file = "p/PIPELINE-STATUS.md"): string[] => {
   const rule = outputsBeforeDecisionRules({
     files: nodeFiles,
     listDir: nodeListDir,
+    entries: nodeListEntries,
     codec: studyRegistryCodec,
     git: gitHistory(spawnProcess(), { PATH: String(process.env.PATH) }),
   })["outputs-before-decision"];
@@ -105,5 +112,49 @@ it("never reads through a row whose folder leads outside repro/: no study, so no
     T(9),
   );
   // Guards: an output outside the paper's `repro/` is no study's; `repro/study-registered` names the row.
+  expect(lint(repo)).toEqual([]);
+});
+
+it("loud on an output committed and then deleted while the decision was never committed", () => {
+  const repo = join(root, "deleted");
+  initRepo(repo);
+  commit(repo, { ...PAPER, [`${S}/RESULTS.md`]: "41 of 60\n" }, T(9));
+  commit(repo, { [`${S}/RESULTS.md`]: null }, T(10));
+  // Guards: the tree is clean now, and history still shows a result that came before any decision.
+  expect(lint(repo)).toEqual(["undecided-output"]);
+});
+
+it("loud on a decision that names a directory: git's answer for it is no decision's commit", () => {
+  const repo = join(root, "directory");
+  initRepo(repo);
+  const dir = "repro/P1-S01-outcome/decisions";
+  commit(
+    repo,
+    {
+      ...PAPER,
+      [`${S}/plan.json`]: planText(
+        planOf({ ...DECIDED, decision: { file: dir, note: "n" } }),
+      ),
+      [`p/${dir}/a.md`]: "exclude run 7\n",
+    },
+    T(9),
+  );
+  commit(repo, { [`${S}/RESULTS.md`]: "41 of 60\n" }, T(10));
+  // Guards: the order is never read from a directory's history — the plan is reported instead.
+  expect(lint(repo)).toEqual(["decision-not-file"]);
+});
+
+it("lists a symlink in the study's folder as a file, never following it: a loop or a link outside", () => {
+  const repo = join(root, "links");
+  initRepo(repo);
+  mkdirSync(join(repo, "outside"), { recursive: true });
+  writeFileSync(join(repo, "outside", "RESULTS.md"), "not this study's\n");
+  commit(repo, PAPER, T(9));
+  commit(repo, { [`${S}/decision.md`]: "exclude run 7\n" }, T(10));
+  symlinkSync(".", join(repo, S, "loop"));
+  symlinkSync(join(repo, "outside"), join(repo, S, "ext"));
+  commit(repo, { [`${S}/RESULTS.md`]: "41 of 60\n" }, T(11));
+  // Guards: a link to its own folder would recurse forever, and one outside would bring a foreign
+  // `RESULTS.md` into the study; both are entries git itself stores as links.
   expect(lint(repo)).toEqual([]);
 });

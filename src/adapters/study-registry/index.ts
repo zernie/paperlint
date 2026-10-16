@@ -165,10 +165,25 @@ const inFolder = z
     `is not a path inside the study's folder, or names its ${README}`,
   );
 
-/** A decision file, relative to the PAPER's folder: inside it. Empty in a draft (the parser names it). */
+/**
+ * Whether `p` names a file by one or more names joined by `/`, none empty, `.` or `..`: never the
+ * paper's folder itself (`.`) nor a path ending in `/`. Whether a name is a directory on disk is the
+ * gate's and the order rule's to see.
+ */
+const namesAFile = (p: string): boolean =>
+  p.split("/").every((n) => n !== "" && n !== "." && n !== "..");
+
+/**
+ * A decision file, relative to the PAPER's folder: inside it, and a file's path. Empty in a draft (the
+ * parser names it).
+ */
 const inPaper = z
   .string()
-  .refine(staysInside, "is not a path inside the paper's folder");
+  .refine(staysInside, "is not a path inside the paper's folder")
+  .refine(
+    (p) => p === "" || !staysInside(p) || namesAFile(p),
+    "is not a path to a file inside the paper's folder: one or more names joined by /, none empty, . or ..",
+  );
 
 const decisionShape = z.strictObject({ file: inPaper, note: z.string() });
 

@@ -45,7 +45,11 @@ A study's `plan.json` holds one `mode`, a union on its `kind` (`src/domain/study
   placeholder that got committed would open the gate on nothing.
 - **Paths.** `outputs` are globs relative to the study's folder, inside it, never the study's
   `README.md`. A decision `file` is relative to the **paper's** folder, so it may live beside the
-  study or anywhere in the paper (`research/decisions.md`); it may not leave the paper. Whether a
+  study or anywhere in the paper (`research/decisions.md`); it may not leave the paper, and it is a
+  file's path — names joined by `/`, none empty, `.` or `..` — so `.` (the paper itself) or a path
+  ending in `/` cannot be written. A name that is a directory on disk is the gate's to refuse and the
+  rule's to report (`decision-not-file`): git answers for a directory with the commits of anything
+  under it. Whether a
   decision inside the study's folder is matched by an output glob needs the folder, which the plan
   does not hold: the rule reports it (`decision-is-output`) and the gate refuses it.
 - **Empty texts of a mode** — no outputs yet, an empty decision file or note, an empty reason — are a
@@ -55,8 +59,8 @@ A study's `plan.json` holds one `mode`, a union on its `kind` (`src/domain/study
 
 Exit 0 only if the decision file exists and is committed as it stands (git's last commit for it, and
 nothing changed since), printing the commit and its date; exit 1 saying why otherwise (not
-committed, changed since its commit, git unable to answer, no decision file named, a decision its
-own outputs match). A runner calls it first:
+committed, changed since its commit, git unable to answer, no decision file named, a decision that is
+a directory, a decision its own outputs match). A runner calls it first:
 
 ```sh
 npx paperlint studies gate papers/my-paper P1-S03 && ./run.sh
@@ -69,9 +73,11 @@ refused.
 
 An error, reported on `PIPELINE-STATUS.md`. For each decide-first study: every output whose first
 commit is not a strict descendant of the decision file's first commit (earlier, on another line of
-history, or in the same commit) is a finding; deleted outputs count. An output in the tree while the
+history, or in the same commit) is a finding; deleted outputs count. An output in the tree or in history while the
 decision was never committed is a finding. A shallow clone, and a history git cannot read, are
-findings that say so — never a pass.
+findings that say so — never a pass. The study's folder is walked without following a symbolic link
+(`ListEntries`, `src/ports/list-entries.ts`): a link is one entry, as git stores it, so a link to the
+folder itself cannot loop the walk and one outside brings no foreign file into the study.
 
 **Why a lint rule may ask git here.** Rules in `eslint-rules/` may not run git
 (`eslint.config.mjs`, `GIT_IN_A_RULE`): a pinned sha is deleted by a squash or a gc, and a shallow CI
@@ -208,6 +214,7 @@ Read for this note (2026-10-16):
 | the schema of `mode`; readiness by kind                       | `src/adapters/study-registry/`        | adapter |
 | git: committed state, first commits, ancestry, shallow        | `src/adapters/git/`                   | adapter |
 | what the app asks of git                                      | `src/ports/git-history.ts`            | port    |
+| a directory's entries, links not followed                     | `src/ports/list-entries.ts`           | port    |
 | the studies with a mode, and the files under a study's folder | `src/study-modes.ts`                  | app     |
 | the order rule                                                | `src/outputs-before-decision-rule.ts` | app     |
 | the plans and histories `studies index` and `new` write from  | `src/study-index-input.ts`            | app     |

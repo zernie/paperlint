@@ -15,7 +15,12 @@
  */
 import { basename, dirname, join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import { filesUnder, modeStudies, type StudyDeps } from "./study-modes.ts";
+import {
+  filesUnder,
+  isDirectory,
+  modeStudies,
+  type StudyDeps,
+} from "./study-modes.ts";
 import {
   judgeOrder,
   orderMessage,
@@ -45,6 +50,7 @@ export const decideFirstStudies = (
   modeStudies(paper, deps).flatMap(({ row, plan, mode }) => {
     if (mode.kind !== "decide_before_run") return [];
     const folder = join(paper, REPRO_DIR, row.folder);
+    const decision = join(paper, mode.decision.file);
     return [
       {
         id: row.id,
@@ -52,16 +58,16 @@ export const decideFirstStudies = (
         plan,
         mode,
         tree: filesUnder(folder, deps),
-        facts: deps.git.order(
-          callerPath(folder),
-          callerPath(join(paper, mode.decision.file)),
-        ),
+        facts: isDirectory(decision, deps)
+          ? { kind: "directory" }
+          : deps.git.order(callerPath(folder), callerPath(decision)),
       },
     ];
   });
 
 const PROBLEMS: readonly OrderFinding["problem"][] = [
   "decision-is-output",
+  "decision-not-file",
   "no-history",
   "shallow",
   "undecided-output",

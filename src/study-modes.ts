@@ -11,28 +11,41 @@ import type { StudyMode } from "./domain/study-mode.ts";
 import { isFolderName, type Study } from "./domain/study-registry.ts";
 import type { Files } from "./ports/files.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
+import type { ListEntries } from "./ports/list-entries.ts";
 import type { ListDir } from "./ports/talk-media.ts";
 import { registryOf, textAt } from "./study-registry-rule.ts";
 
-/** What reading a paper's studies needs: the disk, its listings, and the parsers. */
+/** What reading a paper's studies needs: the disk, its listings with and without kinds, and the parsers. */
 export interface StudyDeps {
   readonly files: Files;
   readonly listDir: ListDir;
+  readonly entries: ListEntries;
   readonly codec: StudyRegistryCodec;
 }
 
-/** Every file under `dir`, relative to it, `/`-separated; none when it is not a directory. */
+/**
+ * Whether `p` is a directory with something in it: what a decision path must not be, since git answers
+ * for a directory with the commits of anything under it. An empty directory git never tracked.
+ */
+export const isDirectory = (
+  p: string,
+  deps: Pick<StudyDeps, "files" | "listDir">,
+): boolean =>
+  !deps.files.isFile(callerPath(p)) && deps.listDir(callerPath(p)).length > 0;
+
+/**
+ * Every file under `dir`, relative to it, `/`-separated; none when it is not a directory. A symbolic
+ * link is listed as a file — git stores it as one — and never followed: a link to the folder itself
+ * would recurse forever, and one to a tree outside would bring its files into the study.
+ */
 export const filesUnder = (
   dir: string,
-  deps: Pick<StudyDeps, "files" | "listDir">,
+  deps: Pick<StudyDeps, "entries">,
   prefix = "",
 ): readonly string[] =>
-  deps.listDir(callerPath(dir)).flatMap((name) => {
+  deps.entries(callerPath(dir)).flatMap(({ name, kind }) => {
     const rel = prefix === "" ? name : `${prefix}/${name}`;
-    const at = join(dir, name);
-    return deps.files.isFile(callerPath(at))
-      ? [rel]
-      : filesUnder(at, deps, rel);
+    return kind === "dir" ? filesUnder(join(dir, name), deps, rel) : [rel];
   });
 
 /** A study whose plan parsed with a mode: its row, the plan's path in its folder, and the mode. */

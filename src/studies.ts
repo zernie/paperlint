@@ -39,6 +39,7 @@ import {
 } from "./domain/study-registry.ts";
 import type { Files } from "./ports/files.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
+import type { ListEntries } from "./ports/list-entries.ts";
 import type { ListDir } from "./ports/talk-media.ts";
 import { registryOf } from "./study-registry-rule.ts";
 import { runGate } from "./study-gate.ts";
@@ -61,6 +62,7 @@ export interface StudiesDeps {
   readonly git: GitHistory & GitOrder;
   readonly files: Files;
   readonly listDir: ListDir;
+  readonly entries: ListEntries;
   readonly codec: StudyRegistryCodec;
   readonly cwd: string;
   /** Today, `YYYY-MM-DD`: the root reads the clock. */

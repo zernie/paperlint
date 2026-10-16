@@ -169,3 +169,27 @@ it("a plan it cannot read through declares no mode: no registry, a plan outside 
     noMode({ ...decided(), [`${DIR}/repro/P1-S01-outcome/plan.json`]: "{" }),
   ]).toEqual(Array(4).fill("P1-S01 declares no mode in papers/example"));
 });
+
+it("refuses a decision that names a directory, whatever git says of it", () => {
+  const dir = "repro/P1-S01-outcome/decisions";
+  const r = studies(
+    "gate",
+    tree(
+      { [`${DIR}/${dir}/a.md`]: "exclude run 7\n" },
+      planOf({ ...DECIDED, decision: { file: dir, note: "n" } }),
+    ),
+    {},
+    {
+      git: {
+        [`${DIR}/${dir}`]: { kind: "committed", commit: SHA, date: DATE },
+      },
+    },
+  );
+  // Guards: git answers for a directory with the last commit under it — never a decision as committed.
+  expect([r.code, r.err]).toEqual([
+    1,
+    [
+      `P1-S01: its decision ${dir} is a directory, not a file; the run cannot be gated on it. Name the decision file in \`mode.decision.file\`.`,
+    ],
+  ]);
+});

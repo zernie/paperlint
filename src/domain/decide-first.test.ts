@@ -91,6 +91,26 @@ it("an output in the tree while the decision was never committed", () => {
   ]);
 });
 
+it("an output committed and since deleted, while the decision was never committed, still counts", () => {
+  // Guards: history is the evidence — an output that existed before any decision is not erased by
+  // deleting it; each path is said once, whether it is in the tree, in history, or both.
+  expect(
+    judgeOrder({
+      ...STUDY,
+      tree: ["plan.json", "README.md", "RESULTS.md"],
+      facts: {
+        kind: "read",
+        decision: null,
+        files: [
+          { path: "plan.json", ...D, order: "not-after" },
+          { path: "out/gone.csv", ...A, order: "not-after" },
+          { path: "RESULTS.md", ...A, order: "not-after" },
+        ],
+      },
+    }).map((f) => (f.problem === "undecided-output" ? f.path : f.problem)),
+  ).toEqual(["RESULTS.md", "out/gone.csv"]);
+});
+
 it("a history it cannot read, and a decision the outputs match, are said", () => {
   const clash = {
     ...STUDY,
@@ -117,6 +137,17 @@ it("a history it cannot read, and a decision the outputs match, are said", () =>
   ]);
 });
 
+it("a decision that names a directory is reported, and no history is judged", () => {
+  // Guards: the outputs of such a study are never passed on a directory's commits.
+  expect(judgeOrder({ ...STUDY, facts: { kind: "directory" } })).toEqual([
+    {
+      problem: "decision-not-file",
+      id: "P1-S01",
+      file: "repro/P1-S01-x/decision.md",
+    },
+  ]);
+});
+
 it("each finding's message: what is wrong, what to do, the rule's page", () => {
   const page =
     "\nRule repro/outputs-before-decision: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/outputs-before-decision.md";
@@ -127,6 +158,7 @@ it("each finding's message: what is wrong, what to do, the rule's page", () => {
       file: "repro/P1-S01-x/decision.md",
       glob: "**/*.md",
     },
+    { problem: "decision-not-file", id: "P1-S01", file: "repro/d" },
     { problem: "no-history", id: "P1-S01", why: "git is not installed" },
     { problem: "shallow", id: "P1-S01" },
     {
@@ -159,11 +191,13 @@ it("each finding's message: what is wrong, what to do, the rule's page", () => {
   expect(all.map(orderMessage)).toEqual([
     "The decision of `P1-S01`, `repro/P1-S01-x/decision.md`, is matched by its output `**/*.md`: the decision would be one of the files its own run produces. What to do: keep the decision out of the outputs — a file the globs do not match, or one elsewhere in the paper — and set `mode.decision.file`." +
       page,
+    "The decision of `P1-S01`, `repro/d`, is a directory, not a file: git answers for a directory with the commits of anything under it, so no order can be read from it. What to do: name the decision file itself in `mode.decision.file`." +
+      page,
     "`P1-S01` is decided before its run, and git's history is the proof of that order, but git could not answer: git is not installed. What to do: lint the paper inside its git repository, with git installed." +
       page,
     "`P1-S01` is decided before its run, and this clone is shallow: every file's first commit is the clone's first, so the order of decision and outputs cannot be read. What to do: fetch the whole history (`git fetch --unshallow`; in GitHub Actions, `actions/checkout` with `fetch-depth: 0`)." +
       page,
-    "`repro/P1-S01-x/RESULTS.md` is an output of `P1-S01`, which is decided before its run, and its decision `repro/P1-S01-x/decision.md` was never committed. What to do: remove the output, write and commit the decision, check it with `npx paperlint studies gate <paper-dir> P1-S01`, then run the study again." +
+    "`repro/P1-S01-x/RESULTS.md` is an output of `P1-S01` — in the tree, or in its history — and the study is decided before its run, but its decision `repro/P1-S01-x/decision.md` was never committed. What to do: write and commit the decision, check it with `npx paperlint studies gate <paper-dir> P1-S01`, then run the study again; if the output was made before any decision, declare the study `exploratory` with the reason. Deleting the output does not undo it: history keeps it." +
       page,
     `\`repro/P1-S01-x/RESULTS.md\`, an output of \`P1-S01\`, entered history in ${"d".repeat(12)} (${D.date}), the very commit that first recorded its decision, ${"d".repeat(12)} (${D.date}). The study is declared decided before its run, and its history does not show that order. What to do: if the decision really came first, nothing in this history can prove it — declare the study \`exploratory\` with the reason, or run it again after the decision; never rewrite the history to make it pass.` +
       page,

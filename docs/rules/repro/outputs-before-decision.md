@@ -26,14 +26,20 @@ A study decided before its run — its plan's `mode` is `decide_before_run`, the
   folder) whose FIRST commit is not a strict descendant of the decision file's FIRST commit: earlier,
   on a line of history the decision is not on, or in the very same commit, which says nothing about
   which came first. An output committed and later deleted still counts.
-- **`undecided-output`** — an output in the tree while the decision file has never been committed.
+- **`undecided-output`** — an output in the tree, or one ever committed and since deleted, while the
+  decision file has never been committed.
 - **`decision-is-output`** — the decision file lies in the study's folder and an output glob matches
   it: the decision would be a file its own run produces.
+- **`decision-not-file`** — the decision path names a directory: git answers for a directory with the
+  commits of anything under it, so no order is read from it. (A path that names the paper's folder
+  itself, `.`, or ends in `/` is refused when the plan is parsed.)
 - **`shallow`** — the clone is shallow, so every file's first commit is the clone's: no order can be
   read, and the rule says so instead of judging.
 - **`no-history`** — git could not answer (not installed, not a repository).
 
-The study's own files — `plan.json`, `README.md` and the decision file — are never outputs.
+The study's own files — `plan.json`, `README.md` and the decision file — are never outputs. A symbolic
+link in the study's folder is one entry, as git stores it, and is never followed: a link to the folder
+itself cannot loop the walk, and one to a tree outside brings none of its files into the study.
 
 ## Why
 

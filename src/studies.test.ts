@@ -5,7 +5,11 @@
  * state).
  */
 import { describe, expect, it } from "vitest";
-import { memoryFiles, memoryListDir } from "./adapters/memory/index.ts";
+import {
+  memoryFiles,
+  memoryListDir,
+  memoryListEntries,
+} from "./adapters/memory/index.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
 import {
   indexBlock,
@@ -72,6 +76,7 @@ function studies(
     {
       files,
       listDir: memoryListDir(files),
+      entries: memoryListEntries(files),
       codec: studyRegistryCodec,
       cwd,
       today: "2026-10-15",
