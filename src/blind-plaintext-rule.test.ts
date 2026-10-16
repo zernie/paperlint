@@ -28,11 +28,12 @@ const ROW: Study = {
   plan: "plan.json",
 };
 const BLIND_PLAN = planText({
-  ...planTemplate(),
-  blind: {
+  ...planTemplate("measurement", "P1-S01-outcome"),
+  mode: {
+    kind: "blind",
     recipients: [`age1${"q".repeat(58)}`],
     outputs: ["RESULTS.md"],
-    unseal_after: { file: "exclusions.md", note: "n" },
+    unseal_after: { file: "repro/P1-S01-outcome/exclusions.md", note: "n" },
   },
 });
 

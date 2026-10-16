@@ -389,7 +389,7 @@ describe("repro/study-registered — the plan a row names, read from its folder"
     expect(
       lint({
         ...registered(HEADLINE("plan.json")),
-        [`${DIR}/repro/P1-S01-baseline/plan.json`]: planText(planTemplate()),
+        [`${DIR}/repro/P1-S01-baseline/plan.json`]: planText(planTemplate("spike", "x")),
       }).map((r) => [r.messageId, r.line]),
     ).toEqual([
       ["bad-plan", 1],

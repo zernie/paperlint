@@ -16,7 +16,7 @@
  */
 import { isAbsolute, posix, win32 } from "node:path";
 import { STUDIES_FILE, STUDY_SLUG } from "./repro-layout.ts";
-import type { Blind } from "./sealed-study.ts";
+import { needsMode, type StudyMode } from "./study-mode.ts";
 
 /** The registry, at the top of the paper's `repro/`; the layout allows it there. */
 export { STUDIES_FILE };
@@ -173,8 +173,11 @@ export interface StudyPlan {
   readonly author_check: AuthorCheck | null;
   /** The paper's own keys: hypotheses, models, budget … Kept, never read; none is a plan field. */
   readonly extra?: Readonly<Record<string, unknown>> | undefined;
-  /** A blind study: its results sealed to `recipients` until the decision is committed (docs/design/sealed-studies.md). */
-  readonly blind?: Blind | undefined;
+  /**
+   * How the outcomes are kept from the decisions on the inputs: decided before the run, blind, or
+   * exploratory (src/domain/study-mode.ts). A measurement study's plan is not ready without it.
+   */
+  readonly mode?: StudyMode | undefined;
 }
 
 /**
@@ -203,7 +206,7 @@ export const PLAN_FIELDS = [
   "primary_outcome",
   "author_check",
   "extra",
-  "blind",
+  "mode",
 ] as const;
 
 /** A plan with empty required texts: the author has not approved it. */
@@ -215,6 +218,13 @@ export const PLAN_TEXT_FIELDS = [
   "population.source",
   "population.draw.method",
   "primary_outcome",
+  "mode",
+  "mode.outputs",
+  "mode.decision.file",
+  "mode.decision.note",
+  "mode.unseal_after.file",
+  "mode.unseal_after.note",
+  "mode.reason",
 ] as const;
 export type PlanTextField = (typeof PLAN_TEXT_FIELDS)[number];
 
@@ -234,16 +244,34 @@ export type ParsedPlan =
 /** What a study's folder holds of the plan its row names: absent, or what its text parsed to. */
 export type PlanState = { readonly kind: "absent" } | ParsedPlan;
 
+/** The decision file `paperlint studies new` names for a study in `folder`, relative to the paper. */
+export const decisionPath = (folder: string): string =>
+  `repro/${folder}/${DECISION_FILE}`;
+
+/** The decision file's name, beside the plan. */
+export const DECISION_FILE = "decision.md";
+
 /**
- * The plan `paperlint studies new` writes: every field present, its value to fill. Its draw is of
- * all the population (a census); a sampled study changes it to `{ "kind": "seeded", "method", "seed" }`.
+ * The plan `paperlint studies new` writes for a study of `kind` in `folder`: every field present, its
+ * value to fill. Its draw is of all the population (a census); a sampled study changes it to
+ * `{ "kind": "seeded", "method", "seed" }`. A study that must declare its mode gets the default one,
+ * decided before the run, its decision file named and its outputs and note to fill.
  */
-export const planTemplate = (): DraftPlan => ({
+export const planTemplate = (kind: StudyKind, folder: string): DraftPlan => ({
   question: "",
   population: { source: "", draw: { kind: "all", method: "" } },
   arms: [],
   primary_outcome: "",
   author_check: null,
+  ...(needsMode(kind)
+    ? {
+        mode: {
+          kind: "decide_before_run",
+          outputs: [],
+          decision: { file: decisionPath(folder), note: "" },
+        },
+      }
+    : {}),
 });
 
 /** A plan's text as `paperlint studies new` writes it: JSON, two-space indented, a final newline. */
@@ -441,8 +469,16 @@ const isInside = (path: string): boolean => {
  * (`StudyInput.plans`). A plan outside its folder is reported without being read.
  */
 export const planKeys = (r: StudyRegistry): readonly string[] =>
+  planRefs(r).map((p) => p.key);
+
+/** Each plan `planKeys` names, with the kind of the study whose row names it: what its parser needs. */
+export const planRefs = (
+  r: StudyRegistry,
+): readonly { readonly key: string; readonly kind: StudyKind }[] =>
   r.studies.flatMap((s) =>
-    s.plan !== undefined && isInside(s.plan) ? [`${s.folder}/${s.plan}`] : [],
+    s.plan !== undefined && isInside(s.plan)
+      ? [{ key: `${s.folder}/${s.plan}`, kind: s.kind }]
+      : [],
   );
 
 /** One row of a registry, with what the judge read beside it. */

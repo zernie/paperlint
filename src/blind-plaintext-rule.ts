@@ -1,6 +1,6 @@
 /**
  * `repro/blind-plaintext` — a blind study that is still sealed has no plaintext result in the tree:
- * no file its plan's `blind.outputs` match, until its `sealed.json` says unsealed. What is judged, and
+ * no file its plan's `mode.outputs` match, until its `sealed.json` says unsealed. What is judged, and
  * why, is `src/domain/sealed-study.ts` and docs/rules/repro/blind-plaintext.md; this file finds the
  * blind studies, lists their folders, reads their manifests, and reports.
  *
@@ -17,12 +17,12 @@ import {
   MANIFEST_FILE,
   blindMessage,
   judgeBlind,
-  type Blind,
   type BlindFinding,
   type BlindStudy,
   type ManifestState,
 } from "./domain/sealed-study.ts";
 import type { Study } from "./domain/study-registry.ts";
+import type { StudyMode } from "./domain/study-mode.ts";
 import type {
   FolderRuleContext,
   FolderRuleModule,
@@ -75,60 +75,69 @@ export const manifestOf = (
     : { kind: "unreadable", why: parsed.why };
 };
 
-/** A row's plan, when it parsed: the plan's path in the folder and its `blind` (undefined: not blind). */
-export type PlanBlind =
-  | { readonly kind: "no-plan" }
-  | { readonly kind: "unreadable"; readonly why: string }
-  | {
-      readonly kind: "plan";
-      readonly plan: string;
-      readonly blind: Blind | undefined;
-    };
+/** A study whose plan parsed with a mode: its row, the plan's path in its folder, and the mode. */
+export interface ModeStudy {
+  readonly row: Study;
+  readonly plan: string;
+  readonly mode: StudyMode;
+}
 
-/** The blind of the study `s` in the paper folder `paper`. A plan outside its folder reads as none. */
-export const planBlindOf = (
+/** The study `s`'s plan, when it is a `plan.json` inside its folder that parsed with a mode; else null. */
+const modeStudyOf = (
   paper: string,
   s: Study,
   deps: Pick<BlindDeps, "files" | "codec">,
-): PlanBlind => {
+): ModeStudy | null => {
   const plan = s.plan;
   const text =
     plan === undefined || plan.split("/").includes("..") || plan.includes("\0")
       ? null
       : textAt(deps.files, join(paper, REPRO_DIR, s.folder, plan));
-  if (plan === undefined || text === null) return { kind: "no-plan" };
-  const parsed = deps.codec.parsePlan(text);
-  return parsed.kind === "unreadable"
-    ? { kind: "unreadable", why: parsed.why }
-    : { kind: "plan", plan, blind: parsed.plan.blind };
+  if (plan === undefined || text === null) return null;
+  const parsed = deps.codec.parsePlan(text, s.kind);
+  const mode = parsed.kind === "unreadable" ? undefined : parsed.plan.mode;
+  return mode === undefined ? null : { row: s, plan, mode };
+};
+
+/**
+ * Every study of the paper folder `paper` whose plan declares a mode, in registry order. A plan that
+ * does not parse is `repro/study-registered`'s to report; here it declares nothing.
+ */
+export const modeStudies = (
+  paper: string,
+  deps: Pick<BlindDeps, "files" | "codec">,
+): readonly ModeStudy[] => {
+  const r = registryOf(paper, deps);
+  return (r.kind === "read" ? r.registry.studies : []).flatMap((s) => {
+    const m = modeStudyOf(paper, s, deps);
+    return m === null ? [] : [m];
+  });
 };
 
 /** Every blind study of the paper folder `paper`, with what the judge reads of it. */
 export const blindStudies = (
   paper: string,
   deps: BlindDeps,
-): readonly BlindStudy[] => {
-  const r = registryOf(paper, deps);
-  return (r.kind === "read" ? r.registry.studies : []).flatMap((s) => {
-    const p = planBlindOf(paper, s, deps);
-    if (p.kind !== "plan" || p.blind === undefined) return [];
-    const folder = join(paper, REPRO_DIR, s.folder);
+): readonly BlindStudy[] =>
+  modeStudies(paper, deps).flatMap(({ row, plan, mode }) => {
+    if (mode.kind !== "blind") return [];
+    const folder = join(paper, REPRO_DIR, row.folder);
     return [
       {
-        id: s.id,
-        folder: s.folder,
-        plan: p.plan,
-        blind: p.blind,
+        id: row.id,
+        folder: row.folder,
+        plan,
+        blind: mode,
         manifest: manifestOf(folder, deps),
         files: filesUnder(folder, deps),
       },
     ];
   });
-};
 
 const PROBLEMS: readonly BlindFinding["problem"][] = [
   "plaintext",
   "unreadable-manifest",
+  "decision-is-output",
 ];
 
 const NAME = "repro/blind-plaintext";
@@ -161,7 +170,7 @@ export const blindPlaintextRules = (
       type: "suggestion",
       docs: {
         description:
-          "a blind study that is still sealed has no plaintext file in the tree that its plan's blind.outputs match",
+          "a blind study that is still sealed has no plaintext file in the tree that its plan's mode.outputs match",
         url: rulePageUrl(NAME),
       },
       schema: [],

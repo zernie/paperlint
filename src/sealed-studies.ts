@@ -2,7 +2,7 @@
  * `paperlint studies seal|verify <paper-dir> <id>` — a blind study's results, sealed and checked
  * (docs/design/sealed-studies.md).
  *
- *   seal     every file the plan's `blind.outputs` match, encrypted with age to `<file>.age` for every
+ *   seal     every file the plan's `mode.outputs` match, encrypted with age to `<file>.age` for every
  *            recipient; `sealed.json` records each plaintext's sha256, size and the time; the plaintext
  *            is removed. A re-run seals only what is new and refuses a changed result.
  *   verify   no key needed: every ciphertext against the sha256 the manifest recorded, and once the
@@ -57,28 +57,28 @@ export type SealRun =
   | { readonly ok: true; readonly lines: readonly string[] }
   | { readonly ok: false; readonly refusal: SealRefusal };
 
-const refusal = (line: string): SealRefusal => ({ code: 1, line });
-const refused = (r: SealRefusal): SealRun => ({ ok: false, refusal: r });
-const isRefusal = (v: unknown): v is SealRefusal =>
+export const refusal = (line: string): SealRefusal => ({ code: 1, line });
+export const refused = (r: SealRefusal): SealRun => ({ ok: false, refusal: r });
+export const isRefusal = (v: unknown): v is SealRefusal =>
   typeof v === "object" && v !== null && "code" in v && "line" in v;
 
 /** What `age` missing means to the person who ran the command. */
 export const INSTALL_AGE =
-  "age is not installed, and sealing runs it (this package implements no cryptography). Install it — `apt install age`, `brew install age`, or a release from https://github.com/FiloSottile/age/releases — then run this again.";
+  "age is not installed, and this command runs it (this package implements no cryptography). Install it — `apt install age`, `brew install age`, or a release from https://github.com/FiloSottile/age/releases — then run this again.";
 
 /** `k` things, singular or plural. */
-const count = (k: number, what: string): string =>
+export const count = (k: number, what: string): string =>
   `${String(k)} ${what}${k === 1 ? "" : "s"}`;
 
 /** The study a command works on: its folder on disk and as shown. */
-interface At {
+export interface At {
   readonly s: BlindStudy;
   readonly folder: string;
   readonly where: string;
 }
 
 /** The blind study `id` of the paper folder, or the refusal naming why there is none. */
-const blindStudy = (
+export const blindStudy = (
   paper: string,
   shown: string,
   id: string,
@@ -87,7 +87,7 @@ const blindStudy = (
   const s = blindStudies(paper, deps).find((b) => b.id === id);
   return s === undefined
     ? refusal(
-        `${id} is not a blind study of ${shown}: no row of ${shown}/${REPRO_DIR}/studies.json with this id names a plan.json that parses and has \`blind\`. Lint the paper (\`npx paperlint lint\`) to see why.`,
+        `${id} is not a blind study of ${shown}: no row of ${shown}/${REPRO_DIR}/studies.json with this id names a plan.json that parses with the mode \`blind\`. Lint the paper (\`npx paperlint lint\`) to see why.`,
       )
     : {
         s,
@@ -97,7 +97,7 @@ const blindStudy = (
 };
 
 /** The hash and size of the file at `p`; null when there is none. */
-const hashed = (deps: BlindDeps, p: string): Hashed | null => {
+export const hashed = (deps: BlindDeps, p: string): Hashed | null => {
   const b = deps.files.isFile(callerPath(p))
     ? deps.files.readBytes(callerPath(p))
     : null;
@@ -116,7 +116,7 @@ const stillSealed = (
   return sameRecipients(m.recipients, s.blind.recipients)
     ? m
     : refusal(
-        `${s.id} is sealed to ${m.recipients.join(", ")}, and its plan now names ${s.blind.recipients.join(", ")}. A study's files are sealed to one set of recipients: restore the plan's \`blind.recipients\`.`,
+        `${s.id} is sealed to ${m.recipients.join(", ")}, and its plan now names ${s.blind.recipients.join(", ")}. A study's files are sealed to one set of recipients: restore the plan's \`mode.recipients\`.`,
       );
 };
 
@@ -144,7 +144,7 @@ interface Plain {
 /** Every plaintext of the study's outputs. */
 const plainsOf = (a: At, deps: BlindDeps): readonly Plain[] =>
   filesUnder(a.folder, deps)
-    .filter((f) => isSealable(a.s.blind, a.s.plan, f))
+    .filter((f) => isSealable(a.s.blind, a.s.folder, a.s.plan, f))
     .flatMap((path) =>
       // Listed a moment ago, so present; a file removed since is not sealed.
       [deps.files.readBytes(callerPath(join(a.folder, path)))]
@@ -264,7 +264,7 @@ const stepsOf = (
   );
   if (manifest === null && steps.length === 0)
     return refusal(
-      `${a.where} has no file that blind.outputs (${a.s.blind.outputs.join(", ")}) match, and nothing is sealed yet. Run the study first, or correct the outputs.`,
+      `${a.where} has no file that mode.outputs (${a.s.blind.outputs.join(", ")}) match, and nothing is sealed yet. Run the study first, or correct the outputs.`,
     );
   return conflictsOf(a, steps) ?? steps;
 };

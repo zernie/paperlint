@@ -14,20 +14,24 @@ import {
   sameRecipients,
   sealSteps,
   withSealed,
-  type Blind,
   type FileMismatch,
   type Hashed,
   type SealManifest,
   type SealedFile,
 } from "./sealed-study.ts";
+import type { Blind } from "./study-mode.ts";
 
 const R1 = `age1${"q".repeat(58)}`;
 const R2 = `age1${"p".repeat(58)}`;
 
 const BLIND: Blind = {
+  kind: "blind",
   recipients: [R1],
   outputs: ["data/outcome/**", "RESULTS.md"],
-  unseal_after: { file: "exclusions.md", note: "exclusions frozen" },
+  unseal_after: {
+    file: "repro/P1-S01-x/exclusions.md",
+    note: "exclusions frozen",
+  },
 };
 
 const sealed = (path: string, over: Partial<SealedFile> = {}): SealedFile => ({
@@ -49,7 +53,7 @@ it("isSealable — which files a blind study seals — a file an output glob mat
   // Guards: `**` reaches nested outcome files, and a literal names one file at the top.
   expect(
     ["data/outcome/a.csv", "data/outcome/x/b.csv", "RESULTS.md"].map((p) =>
-      isSealable(BLIND, "plan.json", p),
+      isSealable(BLIND, "P1-S01-x", "plan.json", p),
     ),
   ).toEqual([true, true, true]);
 });
@@ -64,9 +68,11 @@ it("isSealable — which files a blind study seals — never the study's own fil
       "plan.json",
       "exclusions.md",
       "data/outcome/a.csv.age",
-    ].map((p) => isSealable(all, "plan.json", p)),
+    ].map((p) => isSealable(all, "P1-S01-x", "plan.json", p)),
   ).toEqual([false, false, false, false, false]);
-  expect(isSealable(BLIND, "plan.json", "notes/RESULTS.md")).toBe(false);
+  expect(isSealable(BLIND, "P1-S01-x", "plan.json", "notes/RESULTS.md")).toBe(
+    false,
+  );
 });
 
 const p = (path: string, sha = "a".repeat(64)) => ({
@@ -311,7 +317,7 @@ it("judgeBlind — what repro/blind-plaintext reports — each finding's message
       path: "RESULTS.md",
     }),
   ).toBe(
-    "`repro/P1-S01-x/RESULTS.md` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `blind.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.\nRule repro/blind-plaintext: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/blind-plaintext.md",
+    "`repro/P1-S01-x/RESULTS.md` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `mode.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.\nRule repro/blind-plaintext: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/blind-plaintext.md",
   );
   expect(
     blindMessage({
@@ -322,5 +328,45 @@ it("judgeBlind — what repro/blind-plaintext reports — each finding's message
     }),
   ).toBe(
     "`repro/P1-S01-x/sealed.json`, the sealed results of `P1-S01`, is not a manifest: not JSON. It is written only by `paperlint studies seal` and `unseal`. What to do: restore it from git (`git checkout -- repro/P1-S01-x/sealed.json`).\nRule repro/blind-plaintext: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/blind-plaintext.md",
+  );
+});
+
+it("judgeBlind — a decision the outputs match is reported, sealed or unsealed, and its message says why", () => {
+  const clash: Blind = { ...BLIND, outputs: ["**/*.md"] };
+  const finding = {
+    problem: "decision-is-output",
+    id: "P1-S01",
+    folder: "P1-S01-x",
+    file: "repro/P1-S01-x/exclusions.md",
+    glob: "**/*.md",
+  } as const;
+  // Guards: a decision that would be sealed with the results is loud even after unsealing.
+  expect(
+    judgeBlind({
+      ...study,
+      blind: clash,
+      files: ["plan.json"],
+      manifest: { kind: "absent" },
+    }),
+  ).toEqual([finding]);
+  expect(
+    judgeBlind({
+      ...study,
+      blind: clash,
+      files: ["plan.json"],
+      manifest: {
+        kind: "read",
+        manifest: {
+          ...MANIFEST,
+          unsealed: {
+            at: "t",
+            gate: { file: "f", commit: "f".repeat(40), date: "d" },
+          },
+        },
+      },
+    }),
+  ).toEqual([finding]);
+  expect(blindMessage(finding)).toBe(
+    "The decision `P1-S01` is unsealed after, `repro/P1-S01-x/exclusions.md`, is matched by its output `**/*.md`: it would be sealed with the results, and the study could never be unsealed. What to do: move the decision out of the outputs (a file the globs do not match, or one elsewhere in the paper) and set `mode.unseal_after.file`.\nRule repro/blind-plaintext: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/blind-plaintext.md",
   );
 });

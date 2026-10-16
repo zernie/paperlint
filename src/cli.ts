@@ -191,7 +191,12 @@ import {
 } from "./study-registry-rule.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
 import { ageSealer, spawnBytes } from "./adapters/age/index.ts";
-import { nodeRemove } from "./adapters/node/index.ts";
+import { nodeRemove, spawnProcess } from "./adapters/node/index.ts";
+import { gitHistory } from "./adapters/git/index.ts";
+import {
+  ORDER_RULE_LEVELS,
+  outputsBeforeDecisionRules,
+} from "./outputs-before-decision-rule.ts";
 import {
   BLIND_RULE_LEVELS,
   blindPlaintextRules,
@@ -249,14 +254,24 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       index in repro/README.md regenerated
   npx paperlint studies index <paper-dir>
                                       regenerate the index in repro/README.md from repro/studies.json
+  npx paperlint studies gate <paper-dir> <id>
+                                      may the study's run start? For a study decided before its run
+                                      (the default mode), exit 0 only once its decision file is
+                                      committed as it stands, printing the commit and date; else exit
+                                      1 saying why. A runner calls it first: gate … && ./run.sh
   npx paperlint studies seal <paper-dir> <id>
-                                      a blind study (its plan.json has "blind"): every file its outputs
-                                      match encrypted with age to <file>.age for every recipient, its
-                                      sha256 recorded in sealed.json, the plaintext removed. A re-run
-                                      seals only what is new and refuses a changed result
+                                      a blind study (mode "blind"): every file its outputs match
+                                      encrypted with age to <file>.age for every recipient, its sha256
+                                      recorded in sealed.json, the plaintext removed. A re-run seals
+                                      only what is new and refuses a changed result
   npx paperlint studies verify <paper-dir> <id>
                                       no key needed: every .age file against the sha256 sealed.json
                                       recorded, and once unsealed every plaintext too
+  npx paperlint studies unseal <paper-dir> <id> --identity <file>
+                                      a blind study's results decrypted with an age identity file,
+                                      only once its unseal_after decision and sealed.json are both
+                                      committed as they stand; every sha256 checked before anything is
+                                      written, then the gate's commit recorded in sealed.json
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
 
@@ -279,6 +294,10 @@ new:
 
 studies:
   --kind <kind>       new: measurement (the default), spike, tooling, data, artifact or salvage.
+                      A measurement's plan declares its mode: decide_before_run (written by new),
+                      blind, or exploratory; repro/outputs-before-decision checks the order in git.
+  --identity <file>   unseal: the age identity file. Where it is kept is yours to choose; a study
+                      decided before its run needs no key at all.
                       A study's status, result and in_paper are edited in repro/studies.json, its
                       plan in its plan.json; the rule repro/study-registered checks them
                       (docs/rules/repro/study-registered.md). A blind study's plaintext results
@@ -399,6 +418,26 @@ const FRAGMENT_RULES = {
   "heading-case": REGISTER_AND_CASE_RULES["heading-case"],
 };
 
+/** `names` of this process's environment, and nothing else of it. */
+const envOf =
+  (names: readonly string[]) =>
+  (env: Readonly<NodeJS.ProcessEnv>): Readonly<Record<string, string>> =>
+    Object.fromEntries(
+      Object.entries(env).filter(
+        (e): e is [string, string] =>
+          names.includes(e[0]) && e[1] !== undefined,
+      ),
+    );
+
+/** The environment age runs in: PATH. */
+const pathOnly = envOf(["PATH"]);
+
+/** The environment git runs in: PATH, and HOME for its configuration. */
+const gitEnv = envOf(["PATH", "HOME"]);
+
+/** git's history, as the decide-first rule and the gate read it. */
+const GIT = gitHistory(spawnProcess(), gitEnv(process.env));
+
 /** What the two layout rules read with: the disk and its directory listings. */
 const LAYOUT_RULE_DEPS = { files: nodeFiles, listDir: nodeListDir };
 
@@ -410,22 +449,14 @@ const REPRO_RULES = {
   ...reproLayoutRules(LAYOUT_RULE_DEPS),
   ...studyRegistryRules(STUDY_RULE_DEPS),
   ...blindPlaintextRules(STUDY_RULE_DEPS),
+  ...outputsBeforeDecisionRules({ ...STUDY_RULE_DEPS, git: GIT }),
 };
 const REPRO_RULE_LEVELS = {
   ...REPRO_LAYOUT_RULE_LEVELS,
   ...STUDY_REGISTRY_RULE_LEVELS,
   ...BLIND_RULE_LEVELS,
+  ...ORDER_RULE_LEVELS,
 };
-
-/** The environment age runs in: this process's PATH, and nothing else of it. */
-const pathOnly = (
-  env: Readonly<NodeJS.ProcessEnv>,
-): Readonly<Record<string, string>> =>
-  Object.fromEntries(
-    Object.entries(env).filter(
-      (e): e is [string, string] => e[0] === "PATH" && e[1] !== undefined,
-    ),
-  );
 
 /** Today in this machine's time zone, `YYYY-MM-DD`: the date `paperlint studies new` registers a study on. */
 const today = (now = new Date()): string =>
@@ -990,6 +1021,7 @@ export function parseArgs(argv: readonly string[]): Args {
     kind: null,
     pdf: null,
     abstract: null,
+    identity: null,
     submit: false,
     save: false,
     hooksMode: null,
@@ -1084,13 +1116,14 @@ const SWITCHES: ReadonlyMap<
 /** The flags whose value is one string field of `Args`. */
 const STRING_FLAGS: ReadonlyMap<
   string,
-  "paper" | "venue" | "kind" | "pdf" | "abstract"
+  "paper" | "venue" | "kind" | "pdf" | "abstract" | "identity"
 > = new Map([
   ["--paper", "paper"],
   ["--venue", "venue"],
   ["--kind", "kind"],
   ["--pdf", "pdf"],
   ["--abstract", "abstract"],
+  ["--identity", "identity"],
 ]);
 
 /** The flags that take a value, in either spelling: `--flag value` or `--flag=value`. */
@@ -1702,11 +1735,13 @@ const SIMPLE: Readonly<
         title: a.paths[2],
         extra: a.paths.slice(3),
         kind: a.kind,
+        identity: a.identity,
       },
       {
         ...STUDY_RULE_DEPS,
         // age gets PATH and nothing else of this process's environment.
         sealer: ageSealer(spawnBytes, pathOnly(process.env)),
+        git: GIT,
         remove: nodeRemove,
         now: new Date().toISOString(),
         cwd,

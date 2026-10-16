@@ -63,6 +63,7 @@ function studies(
       title: undefined,
       extra: [],
       kind: null,
+      identity: null,
       ...a,
     },
     {
@@ -75,6 +76,14 @@ function studies(
       sealer: {
         seal: () => {
           throw new Error("new and index never seal");
+        },
+        unseal: () => {
+          throw new Error("new and index never unseal");
+        },
+      },
+      git: {
+        committed: () => {
+          throw new Error("new and index never ask git");
         },
       },
       remove: () => {
@@ -119,8 +128,9 @@ describe("studies new", () => {
     expect(after).toEqual({
       ...before,
       [`${REPRO}/P1-S02-ablation-of-the-guard/README.md`]: studyReadme(added),
-      [`${REPRO}/P1-S02-ablation-of-the-guard/plan.json`]:
-        planText(planTemplate()),
+      [`${REPRO}/P1-S02-ablation-of-the-guard/plan.json`]: planText(
+        planTemplate("spike", "x"),
+      ),
       [`${REPRO}/studies.json`]: registryText(r),
       [`${REPRO}/README.md`]: `# Reproduction index\n\nIntro.\n\n${indexBlock(r)}\n`,
     });

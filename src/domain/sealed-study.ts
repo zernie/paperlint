@@ -18,6 +18,7 @@
  */
 import { posix } from "node:path";
 import { README } from "./repro-layout.ts";
+import { decisionAsOutput, inStudy, isOutput, type Blind } from "./study-mode.ts";
 
 /** The manifest, in the study's folder beside its plan. */
 export const MANIFEST_FILE = "sealed.json";
@@ -30,21 +31,6 @@ export const SEALED_SUFFIX = ".age";
  * recipients are longer and are refused: the age CLI this package drives is the one that must read them.
  */
 export const RECIPIENT_PATTERN = /^age1[02-9ac-hj-np-z]{58}$/u;
-
-/** The decision that unseals the study: a file of the study's, and what it is. */
-export interface UnsealGate {
-  /** A path inside the study's folder; once committed, unsealing may begin. */
-  readonly file: string;
-  readonly note: string;
-}
-
-/** A plan's `blind`: who can unseal, which files are sealed, and the decision that unseals them. */
-export interface Blind {
-  readonly recipients: readonly string[];
-  /** Globs relative to the study's folder. */
-  readonly outputs: readonly string[];
-  readonly unseal_after: UnsealGate;
-}
 
 /** One sealed file, as `paperlint studies seal` recorded it. */
 export interface SealedFile {
@@ -98,14 +84,21 @@ export const manifestText = (m: SealManifest): string =>
 export const RESERVED_NAMES: readonly string[] = [MANIFEST_FILE, README];
 
 /**
- * Whether the file at `path` (relative to the study's folder) is one the study seals: matched by an
- * output glob, and none of the study's own files — the manifest, the README, the plan, the gate, a
- * ciphertext.
+ * Whether the file at `path` (relative to the study folder `folder`) is one the study seals: matched by
+ * an output glob, and none of the study's own files — the manifest, the README, the plan, the decision
+ * when it lies in the folder, a ciphertext.
  */
-export const isSealable = (blind: Blind, plan: string, path: string): boolean =>
+export const isSealable = (
+  blind: Blind,
+  folder: string,
+  plan: string,
+  path: string,
+): boolean =>
   !path.endsWith(SEALED_SUFFIX) &&
-  ![...RESERVED_NAMES, plan, blind.unseal_after.file].includes(path) &&
-  blind.outputs.some((g) => posix.matchesGlob(path, g));
+  ![...RESERVED_NAMES, plan, inStudy(folder, blind.unseal_after.file)].includes(
+    path,
+  ) &&
+  isOutput(blind.outputs, path);
 
 /** A plaintext on disk, hashed. */
 export interface Plaintext {
@@ -265,6 +258,13 @@ export type BlindFinding =
       readonly id: string;
       readonly folder: string;
       readonly why: string;
+    }
+  | {
+      readonly problem: "decision-is-output";
+      readonly id: string;
+      readonly folder: string;
+      readonly file: string;
+      readonly glob: string;
     };
 
 /** What the judge reads of one blind study. */
@@ -285,9 +285,22 @@ export interface BlindStudy {
  */
 export const judgeBlind = (s: BlindStudy): readonly BlindFinding[] => {
   const at = { id: s.id, folder: s.folder };
+  const glob = decisionAsOutput(s.folder, s.blind);
+  const clash: readonly BlindFinding[] =
+    glob === null
+      ? []
+      : [
+          {
+            problem: "decision-is-output",
+            ...at,
+            file: s.blind.unseal_after.file,
+            glob,
+          },
+        ];
   if (s.manifest.kind === "read" && s.manifest.manifest.unsealed !== null)
-    return [];
+    return clash;
   return [
+    ...clash,
     ...(s.manifest.kind === "unreadable"
       ? [
           {
@@ -298,7 +311,7 @@ export const judgeBlind = (s: BlindStudy): readonly BlindFinding[] => {
         ]
       : []),
     ...s.files
-      .filter((f) => isSealable(s.blind, s.plan, f))
+      .filter((f) => isSealable(s.blind, s.folder, s.plan, f))
       .map((path): BlindFinding => ({ problem: "plaintext", ...at, path })),
   ];
 };
@@ -306,10 +319,27 @@ export const judgeBlind = (s: BlindStudy): readonly BlindFinding[] => {
 const RULE = "repro/blind-plaintext";
 
 /** The one text a finding is reported with: what is wrong, what to do, and the rule's page. */
+/** Each finding by its problem. */
+type FindingOf = {
+  readonly [F in BlindFinding as F["problem"]]: F;
+};
+
+const BLIND_HEADS: {
+  readonly [P in keyof FindingOf]: (f: FindingOf[P]) => string;
+} = {
+  plaintext: (f) =>
+    `\`repro/${f.folder}/${f.path}\` is a plaintext result of the blind study \`${f.id}\`, which is still sealed: its plan's \`mode.outputs\` match it, and its \`${MANIFEST_FILE}\` does not say unsealed. What to do: run \`npx paperlint studies seal <paper-dir> ${f.id}\` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.`,
+  "unreadable-manifest": (f) =>
+    `\`repro/${f.folder}/${MANIFEST_FILE}\`, the sealed results of \`${f.id}\`, is not a manifest: ${f.why}. It is written only by \`paperlint studies seal\` and \`unseal\`. What to do: restore it from git (\`git checkout -- repro/${f.folder}/${MANIFEST_FILE}\`).`,
+  "decision-is-output": (f) =>
+    `The decision \`${f.id}\` is unsealed after, \`${f.file}\`, is matched by its output \`${f.glob}\`: it would be sealed with the results, and the study could never be unsealed. What to do: move the decision out of the outputs (a file the globs do not match, or one elsewhere in the paper) and set \`mode.unseal_after.file\`.`,
+};
+
+const headOf = <P extends keyof FindingOf>(p: P, f: FindingOf[P]): string =>
+  BLIND_HEADS[p](f);
+
+/** The one text a finding is reported with: what is wrong, what to do, and the rule's page. */
 export const blindMessage = (f: BlindFinding): string => {
-  const head =
-    f.problem === "plaintext"
-      ? `\`repro/${f.folder}/${f.path}\` is a plaintext result of the blind study \`${f.id}\`, which is still sealed: its plan's \`blind.outputs\` match it, and its \`${MANIFEST_FILE}\` does not say unsealed. What to do: run \`npx paperlint studies seal <paper-dir> ${f.id}\` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.`
-      : `\`repro/${f.folder}/${MANIFEST_FILE}\`, the sealed results of \`${f.id}\`, is not a manifest: ${f.why}. It is written only by \`paperlint studies seal\` and \`unseal\`. What to do: restore it from git (\`git checkout -- repro/${f.folder}/${MANIFEST_FILE}\`).`;
+  const head = headOf(f.problem, f);
   return `${head}\nRule ${RULE}: https://github.com/zernie/paperlint/blob/main/docs/rules/${RULE}.md`;
 };

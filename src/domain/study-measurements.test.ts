@@ -158,7 +158,7 @@ describe("measurements and plans — silent", () => {
       ],
     });
     const plans = new Map([
-      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate())],
+      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate("spike", "x"))],
     ]);
     expect(findings(r, { plans })).toEqual([]);
   });
@@ -325,7 +325,7 @@ describe("plans — filled once the study has run, and named plan.json", () => {
       measurements: [],
     });
     const plans = new Map([
-      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate())],
+      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate("spike", "x"))],
     ]);
     expect(findings(r, { plans })).toEqual([
       { problem: "no-result", id: "P1-S01", missing: ["result_file"] },
@@ -460,7 +460,7 @@ describe("planKeys", () => {
 
 describe("planTemplate and planText", () => {
   it("every field present, its value to fill, and author_check null", () => {
-    expect(planTemplate()).toEqual({
+    expect(planTemplate("spike", "x")).toEqual({
       question: "",
       population: { source: "", draw: { kind: "all", method: "" } },
       arms: [],

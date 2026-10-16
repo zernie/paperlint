@@ -39,7 +39,9 @@ import type { Files } from "./ports/files.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type { ListDir } from "./ports/talk-media.ts";
 import { registryOf } from "./study-registry-rule.ts";
-import { runSeal, runVerify, type SealDeps } from "./sealed-studies.ts";
+import { runSeal, runVerify, type SealRun } from "./sealed-studies.ts";
+import { runGate } from "./study-gate.ts";
+import { runUnseal, type UnsealDeps } from "./unseal-study.ts";
 
 /** What one `studies` run was asked, after the command line. */
 export interface StudiesArgs {
@@ -51,9 +53,11 @@ export interface StudiesArgs {
   readonly extra: readonly string[];
   /** `--kind <kind>`; null: the default. */
   readonly kind: string | null;
+  /** `--identity <file>`, for `unseal` only. */
+  readonly identity: string | null;
 }
 
-export interface StudiesDeps extends SealDeps {
+export interface StudiesDeps extends UnsealDeps {
   readonly files: Files;
   readonly listDir: ListDir;
   readonly codec: StudyRegistryCodec;
@@ -69,7 +73,10 @@ const NEW_USAGE =
 const INDEX_USAGE = "npx paperlint studies index <paper-dir>";
 const SEAL_USAGE = "npx paperlint studies seal <paper-dir> <id>";
 const VERIFY_USAGE = "npx paperlint studies verify <paper-dir> <id>";
-const SUBS = `new, index, seal or verify — ${[NEW_USAGE, INDEX_USAGE, SEAL_USAGE, VERIFY_USAGE].join(" · ")}`;
+const GATE_USAGE = "npx paperlint studies gate <paper-dir> <id>";
+const UNSEAL_USAGE =
+  "npx paperlint studies unseal <paper-dir> <id> --identity <file>";
+const SUBS = `new, index, gate, seal, verify or unseal — ${[NEW_USAGE, INDEX_USAGE, GATE_USAGE, SEAL_USAGE, VERIFY_USAGE, UNSEAL_USAGE].join(" · ")}`;
 
 const STATUS_FILE = "PIPELINE-STATUS.md";
 
@@ -198,7 +205,7 @@ function writeStudy(
   files.writeAtomic(at(study.folder, README), text(studyReadme(study)));
   files.writeAtomic(
     at(study.folder, PLAN_FILE),
-    text(planText(planTemplate())),
+    text(planText(planTemplate(study.kind, study.folder))),
   );
   files.writeAtomic(at(STUDIES_FILE), text(registryText(registry)));
   writeIndex(p.dir, registry, files);
@@ -251,25 +258,50 @@ function paperOf(a: StudiesArgs, deps: StudiesDeps): Refusal | Chosen {
     : refuse(2, `${shown} is not a paper folder: it has no ${STATUS_FILE}`);
 }
 
-/** `seal` or `verify`: the study's id, one argument, then the run. */
-function runSealed(
+/** What a command on one study does once its id is read: the lines, or the refusal. */
+type OnStudy = (
   p: Paper,
-  a: StudiesArgs,
+  id: string,
+  identity: string | null,
   deps: StudiesDeps,
-): Refusal | readonly string[] {
-  const run = a.sub === "seal" ? runSeal : runVerify;
-  const usage = a.sub === "seal" ? SEAL_USAGE : VERIFY_USAGE;
-  if (a.title === undefined)
-    return refuse(2, `studies ${String(a.sub)} needs the study's id: ${usage}`);
-  const [surplus] = a.extra;
-  if (surplus !== undefined)
-    return refuse(
-      2,
-      `studies ${String(a.sub)} takes the paper's folder and one id — \`${surplus}\` is one argument too many`,
-    );
-  const out = run(p.dir, p.shown, a.title, deps);
-  return out.ok ? out.lines : out.refusal;
-}
+) => Refusal | SealRun;
+
+/** A command on one study that takes no identity. */
+const keyless =
+  (
+    sub: string,
+    run: (p: Paper, id: string, deps: StudiesDeps) => SealRun,
+  ): OnStudy =>
+  (p, id, identity, deps) =>
+    identity === null
+      ? run(p, id, deps)
+      : refuse(
+          2,
+          `studies ${sub} takes no --identity: only unseal opens sealed files`,
+        );
+
+/** `unseal`: the identity file is required. */
+const unsealStudy: OnStudy = (p, id, identity, deps) =>
+  identity === null
+    ? refuse(2, `studies unseal needs the age identity file: ${UNSEAL_USAGE}`)
+    : runUnseal({ paper: p.dir, shown: p.shown, id, identity }, deps);
+
+/** A subcommand on one study: its id, one argument, then `on`. */
+const onStudy =
+  (sub: string, usage: string, on: OnStudy): Run =>
+  (p, a, deps) => {
+    if (a.title === undefined)
+      return refuse(2, `studies ${sub} needs the study's id: ${usage}`);
+    const [surplus] = a.extra;
+    if (surplus !== undefined)
+      return refuse(
+        2,
+        `studies ${sub} takes the paper's folder and one id — \`${surplus}\` is one argument too many`,
+      );
+    const out = on(p, a.title, a.identity, deps);
+    if (isRefusal(out)) return out;
+    return out.ok ? out.lines : out.refusal;
+  };
 
 /** A run of a subcommand over a paper folder. */
 type Run = (
@@ -290,8 +322,43 @@ const COMMANDS: ReadonlyMap<
 > = new Map([
   ["new", { usage: NEW_USAGE, run: runNew }],
   ["index", { usage: INDEX_USAGE, run: runIndex }],
-  ["seal", { usage: SEAL_USAGE, run: runSealed }],
-  ["verify", { usage: VERIFY_USAGE, run: runSealed }],
+  [
+    "gate",
+    {
+      usage: GATE_USAGE,
+      run: onStudy(
+        "gate",
+        GATE_USAGE,
+        keyless("gate", (p, id, d) => runGate(p.dir, p.shown, id, d)),
+      ),
+    },
+  ],
+  [
+    "seal",
+    {
+      usage: SEAL_USAGE,
+      run: onStudy(
+        "seal",
+        SEAL_USAGE,
+        keyless("seal", (p, id, d) => runSeal(p.dir, p.shown, id, d)),
+      ),
+    },
+  ],
+  [
+    "verify",
+    {
+      usage: VERIFY_USAGE,
+      run: onStudy(
+        "verify",
+        VERIFY_USAGE,
+        keyless("verify", (p, id, d) => runVerify(p.dir, p.shown, id, d)),
+      ),
+    },
+  ],
+  [
+    "unseal",
+    { usage: UNSEAL_USAGE, run: onStudy("unseal", UNSEAL_USAGE, unsealStudy) },
+  ],
 ]);
 
 /** The run: 0 done, 1 refused by the paper's state, 2 refused by the command line. */

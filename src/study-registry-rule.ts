@@ -30,7 +30,7 @@ import {
   PLAN_NAME_PROBLEMS,
   STUDIES_FILE,
   judgeStudies,
-  planKeys,
+  planRefs,
   studyMessage,
   type PlanState,
   type RegistryState,
@@ -112,17 +112,20 @@ const plansOf = (
   deps: Pick<StudyRegistryDeps, "files" | "codec">,
 ): ReadonlyMap<string, PlanState> =>
   new Map(
-    (r.kind === "read" ? planKeys(r.registry) : [])
+    (r.kind === "read" ? planRefs(r.registry) : [])
       // A NUL is no path the disk can hold, and probing one throws: such a plan reads as missing.
-      .filter((key) => !key.includes("\0"))
-      .flatMap((key): readonly (readonly [string, PlanState])[] => {
+      .filter(({ key }) => !key.includes("\0"))
+      .flatMap(({ key, kind }): readonly (readonly [string, PlanState])[] => {
         const text = textAt(deps.files, join(dir, REPRO_DIR, key));
         if (text === null) return [];
-        const parse =
-          posix.basename(key) === LEGACY_PLAN_FILE
-            ? deps.codec.parseLegacyPlan
-            : deps.codec.parsePlan;
-        return [[key, parse(text)]];
+        return [
+          [
+            key,
+            posix.basename(key) === LEGACY_PLAN_FILE
+              ? deps.codec.parseLegacyPlan(text)
+              : deps.codec.parsePlan(text, kind),
+          ],
+        ];
       }),
   );
 

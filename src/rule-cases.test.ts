@@ -79,7 +79,9 @@ const STUDY_WITH_PLAN = (name: string): Readonly<Record<string, string>> => {
     [`${P}/repro/studies.json`]: registryText(r),
     [`${P}/repro/README.md`]: withIndex("# repro\n", r),
     [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
-    [`${P}/repro/P1-S01-ablation/${name}`]: planText(planTemplate()),
+    [`${P}/repro/P1-S01-ablation/${name}`]: planText(
+      planTemplate("spike", "P1-S01-ablation"),
+    ),
   };
 };
 
@@ -89,11 +91,15 @@ const BLIND_STUDY = (
 ): Readonly<Record<string, string>> => ({
   ...STUDY_WITH_PLAN("plan.json"),
   [`${P}/repro/P1-S01-ablation/plan.json`]: planText({
-    ...planTemplate(),
-    blind: {
+    ...planTemplate("measurement", "P1-S01-ablation"),
+    mode: {
+      kind: "blind",
       recipients: [`age1${"q".repeat(58)}`],
       outputs: ["RESULTS.md"],
-      unseal_after: { file: "exclusions.md", note: "exclusions frozen" },
+      unseal_after: {
+        file: "repro/P1-S01-ablation/exclusions.md",
+        note: "exclusions frozen",
+      },
     },
   }),
   ...Object.fromEntries(

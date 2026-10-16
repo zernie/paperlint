@@ -1,15 +1,40 @@
 /**
- * The schemas of a blind study: a plan's `blind` and the manifest `sealed.json`. Both halves: what
- * the commands write parses back to itself, and every contradiction is refused with its reason —
- * never read as a blind study, or as an unsealed one.
+ * The schemas of a study's mode (`mode` in its plan) and of a blind study's manifest, `sealed.json`.
+ * Both halves: what the commands write parses back to itself; a measurement's plan is ready only with
+ * exactly one mode; every contradiction is refused with its reason.
  */
 import { expect, it } from "vitest";
 import { manifestText, type SealManifest } from "../../domain/sealed-study.ts";
-import { planText, type StudyPlan } from "../../domain/study-registry.ts";
+import type { StudyMode } from "../../domain/study-mode.ts";
+import {
+  planTemplate,
+  planText,
+  type StudyKind,
+  type StudyPlan,
+} from "../../domain/study-registry.ts";
 import { studyRegistryCodec } from "./index.ts";
 
 const R1 = `age1${"q".repeat(58)}`;
 const R2 = `age1${"p".repeat(58)}`;
+
+const DECIDED: StudyMode = {
+  kind: "decide_before_run",
+  outputs: ["data/outcome/**", "RESULTS.md"],
+  decision: {
+    file: "repro/P1-S01-x/decision.md",
+    note: "exclusions and the sample approved",
+  },
+};
+const BLIND: StudyMode = {
+  kind: "blind",
+  outputs: ["data/outcome/**", "RESULTS.md"],
+  recipients: [R1, R2],
+  unseal_after: { file: "research/exclusions.md", note: "exclusions frozen" },
+};
+const EXPLORATORY: StudyMode = {
+  kind: "exploratory",
+  reason: "a first look at the logs, to find the question",
+};
 
 const PLAN: StudyPlan = {
   question: "Does the hint help?",
@@ -20,96 +45,141 @@ const PLAN: StudyPlan = {
   arms: [{ name: "hint" }, { name: "none" }],
   primary_outcome: "pass rate",
   author_check: null,
-  blind: {
-    recipients: [R1, R2],
-    outputs: ["data/outcome/**", "RESULTS.md"],
-    unseal_after: { file: "exclusions.md", note: "exclusions frozen" },
-  },
+  mode: DECIDED,
 };
 
-const withBlind = (blind: unknown): string =>
-  JSON.stringify({ ...PLAN, blind });
+const parse = (text: string, kind: StudyKind = "measurement") =>
+  studyRegistryCodec.parsePlan(text, kind);
+const withMode = (mode: unknown): string => JSON.stringify({ ...PLAN, mode });
 const why = (text: string): string => {
-  const r = studyRegistryCodec.parsePlan(text);
-  return r.kind === "unreadable" ? r.why : "parsed";
+  const r = parse(text);
+  return r.kind === "unreadable" ? r.why : r.kind;
+};
+const empty = (text: string, kind: StudyKind = "measurement") => {
+  const r = parse(text, kind);
+  return r.kind === "draft" ? r.empty : r.kind;
 };
 
-it("a plan's blind — parses to itself, and a plan without it is not blind", () => {
-  // Guards: the field round-trips; absent is the one spelling of "not blind".
-  expect(studyRegistryCodec.parsePlan(planText(PLAN))).toEqual({
-    kind: "ready",
-    plan: PLAN,
-  });
-  const open: StudyPlan = { ...PLAN, blind: undefined };
-  // An absent key and an undefined one are the same plan: planText writes neither.
-  expect(studyRegistryCodec.parsePlan(planText(open))).toEqual({
-    kind: "ready",
-    plan: open,
-  });
+it("each mode parses to itself, ready", () => {
+  // Guards: the three modes round-trip through the text planText writes.
+  expect(
+    [DECIDED, BLIND, EXPLORATORY].map((mode) =>
+      parse(planText({ ...PLAN, mode })),
+    ),
+  ).toEqual(
+    [DECIDED, BLIND, EXPLORATORY].map((mode) => ({
+      kind: "ready",
+      plan: { ...PLAN, mode },
+    })),
+  );
 });
 
-it("a plan's blind — refuses a decision file the outputs would seal", () => {
-  // Guards: the gate cannot be sealed with the results — unsealing would wait forever.
+it("a measurement's plan without a mode is a draft naming `mode`; a spike's is ready", () => {
+  const none: StudyPlan = { ...PLAN, mode: undefined };
+  // Guards: "none" is not a ready state for a measurement — and a spike may omit it.
+  expect(empty(planText(none))).toEqual(["mode"]);
+  expect(empty(planText(none), "spike")).toBe("ready");
+});
+
+it("the template of a measurement is a draft decided before its run, its decision file named", () => {
+  const t = planTemplate("measurement", "P1-S02-x");
+  // Guards: `studies new` scaffolds the default mode; what is left to fill is named.
+  expect(t.mode).toEqual({
+    kind: "decide_before_run",
+    outputs: [],
+    decision: { file: "repro/P1-S02-x/decision.md", note: "" },
+  });
+  expect(empty(planText(t))).toEqual([
+    "question",
+    "population.source",
+    "population.draw.method",
+    "primary_outcome",
+    "mode.outputs",
+    "mode.decision.note",
+  ]);
+  expect(planTemplate("spike", "P1-S03-y").mode).toBeUndefined();
+});
+
+it("each mode's empty texts are named: a blind gate, an exploratory reason", () => {
+  // Guards: a mode left half-written is a draft, so a study that has run on it is reported.
   expect(
-    why(
-      withBlind({
-        ...PLAN.blind,
-        outputs: ["**/*.md"],
-        unseal_after: { file: "exclusions.md", note: "n" },
+    empty(
+      withMode({
+        ...BLIND,
+        outputs: [],
+        unseal_after: { file: " ", note: "" },
       }),
     ),
-  ).toBe(
-    "blind.unseal_after.file: is matched by the output «**/*.md»: the decision would be sealed with the results",
-  );
-});
-
-it("a plan's blind — refuses a malformed or repeated recipient, and none at all", () => {
-  // Guards: a key nobody holds, or a list that seals to no one, is no blind study.
+  ).toEqual([
+    "mode.outputs",
+    "mode.unseal_after.file",
+    "mode.unseal_after.note",
+  ]);
+  expect(empty(withMode({ ...EXPLORATORY, reason: "" }))).toEqual([
+    "mode.reason",
+  ]);
   expect(
-    why(withBlind({ ...PLAN.blind, recipients: ["ssh-ed25519 AAAA"] })),
-  ).toBe(
-    "blind.recipients.0: is not a native age recipient (age1 and 58 more characters, from age-keygen)",
+    empty(withMode({ ...DECIDED, decision: { file: "", note: "n" } })),
+  ).toEqual(["mode.decision.file"]);
+});
+
+it("two modes at once, or a mode that is none of the three, cannot be written", () => {
+  // Guards: exactly one — a second mode's key is an unknown key, an unknown kind is refused.
+  expect(why(withMode({ ...DECIDED, recipients: [R1] }))).toBe(
+    'mode: Unrecognized key: "recipients"',
   );
-  expect(why(withBlind({ ...PLAN.blind, recipients: [R1, R1] }))).toBe(
-    `blind.recipients: the recipient «${R1}» is listed more than once`,
+  expect(why(withMode({ kind: "preregistered" }))).toBe(
+    "mode.kind: Invalid discriminator value. Expected 'decide_before_run' | 'blind' | 'exploratory'",
   );
-  expect(why(withBlind({ ...PLAN.blind, recipients: [] }))).toBe(
-    "blind.recipients: Too small: expected array to have >=1 items",
+  expect(why(JSON.stringify({ ...PLAN, blind: BLIND }))).toBe(
+    '(top): Unrecognized key: "blind"',
   );
 });
 
-it("a plan's blind — refuses an output outside the folder, or naming the study's own files", () => {
+it("refuses a malformed or repeated recipient, and none at all", () => {
+  // Guards: a key nobody holds, or a list that seals to no one, is no blind study.
+  expect(why(withMode({ ...BLIND, recipients: ["ssh-ed25519 AAAA"] }))).toBe(
+    "mode.recipients.0: is not a native age recipient (age1 and 58 more characters, from age-keygen)",
+  );
+  expect(why(withMode({ ...BLIND, recipients: [R1, R1] }))).toBe(
+    `mode.recipients: the recipient «${R1}» is listed more than once`,
+  );
+  expect(why(withMode({ ...BLIND, recipients: [] }))).toBe(
+    "mode.recipients: Too small: expected array to have >=1 items",
+  );
+});
+
+it("refuses an output outside the folder or naming the study's own files, and a decision outside the paper", () => {
   const outside =
     "is not a path inside the study's folder, or names one of its own files (sealed.json, README.md, *.age)";
-  // Guards: a glob cannot reach past the study's folder, nor seal its manifest, README or a ciphertext.
+  // Guards: a glob cannot reach past the study's folder; a decision cannot leave the paper or be a ciphertext.
   expect(
     ["../x", "/abs", "a\\b", "sealed.json", "README.md", "x.age"].map((o) =>
-      why(withBlind({ ...PLAN.blind, outputs: [o] })),
+      why(withMode({ ...DECIDED, outputs: [o] })),
     ),
-  ).toEqual(Array.from({ length: 6 }, () => `blind.outputs.0: ${outside}`));
-  expect(why(withBlind({ ...PLAN.blind, outputs: ["a", "a"] }))).toBe(
-    "blind.outputs: the output «a» is listed more than once",
+  ).toEqual(Array.from({ length: 6 }, () => `mode.outputs.0: ${outside}`));
+  expect(why(withMode({ ...DECIDED, outputs: ["a", "a"] }))).toBe(
+    "mode.outputs: the output «a» is listed more than once",
+  );
+  expect(
+    ["../d.md", "/d.md", "a\\d.md", "d.md.age"].map((file) =>
+      why(withMode({ ...DECIDED, decision: { file, note: "n" } })),
+    ),
+  ).toEqual(
+    Array.from(
+      { length: 4 },
+      () =>
+        "mode.decision.file: is not a path inside the paper's folder, or is a ciphertext (*.age)",
+    ),
   );
 });
 
-it("a plan's blind — is closed: an unknown key, and a note left out, are errors", () => {
-  // Guards: a misspelt key (`unseal_afer`) is not silently a study with no gate.
-  expect(why(withBlind({ ...PLAN.blind, unseal_afer: {} }))).toBe(
-    'blind: Unrecognized key: "unseal_afer"',
-  );
+it("mode is a field of the plan, so extra cannot carry it", () => {
+  // Guards: one place says how a study is gated.
   expect(
-    why(withBlind({ ...PLAN.blind, unseal_after: { file: "x.md" } })),
+    why(JSON.stringify({ ...PLAN, mode: undefined, extra: { mode: {} } })),
   ).toBe(
-    "blind.unseal_after.note: Invalid input: expected string, received undefined",
-  );
-});
-
-it("a plan's blind — is a field of the plan, so extra cannot carry it", () => {
-  // Guards: one place says whether a study is blind.
-  expect(
-    why(JSON.stringify({ ...PLAN, blind: undefined, extra: { blind: {} } })),
-  ).toBe(
-    "extra.blind: is a field of the plan itself — set it there, not in extra",
+    "extra.mode: is a field of the plan itself — set it there, not in extra",
   );
 });
 

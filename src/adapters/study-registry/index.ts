@@ -33,6 +33,8 @@ import {
   type ParsedRegistry,
   type Requirement,
   type Study,
+  type PlanTextField,
+  type StudyKind,
   type StudyPlan,
   type StudyRegistry,
 } from "../../domain/study-registry.ts";
@@ -40,15 +42,17 @@ import {
   RECIPIENT_PATTERN,
   RESERVED_NAMES,
   SEALED_SUFFIX,
-  type Blind,
   type GateCommit,
   type ParsedManifest,
   type SealManifest,
   type SealedFile,
-  type UnsealGate,
   type Unsealed,
 } from "../../domain/sealed-study.ts";
-import { posix } from "node:path";
+import {
+  needsMode,
+  type Decision,
+  type StudyMode,
+} from "../../domain/study-mode.ts";
 import type { StudyRegistryCodec } from "../../ports/study-registry-codec.ts";
 
 const study = z.looseObject({
@@ -181,26 +185,41 @@ const recipient = z
     "is not a native age recipient (age1 and 58 more characters, from age-keygen)",
   );
 
-const unsealGate = z.strictObject({ file: inFolder, note: words });
+/**
+ * A decision file, relative to the PAPER's folder: inside it, never a ciphertext. Empty in a draft
+ * (the parser names it among the empty texts).
+ */
+const inPaper = z
+  .string()
+  .refine(
+    (p) =>
+      !p.includes("\\") &&
+      !p.startsWith("/") &&
+      !p.split("/").includes("..") &&
+      !p.endsWith(SEALED_SUFFIX),
+    `is not a path inside the paper's folder, or is a ciphertext (*${SEALED_SUFFIX})`,
+  );
 
-/** A plan's `blind`: a decision file no output would seal. */
-const blind = z
-  .strictObject({
+const decisionShape = z.strictObject({ file: inPaper, note: z.string() });
+
+/** The output globs: each once; none yet in a draft. */
+const outputs = z.array(inFolder).superRefine(once("the output"));
+
+/** How the outcomes are kept from the decisions: exactly one mode, by its `kind`. */
+const mode = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("decide_before_run"),
+    outputs,
+    decision: decisionShape,
+  }),
+  z.strictObject({
+    kind: z.literal("blind"),
+    outputs,
     recipients: z.array(recipient).min(1).superRefine(once("the recipient")),
-    outputs: z.array(inFolder).min(1).superRefine(once("the output")),
-    unseal_after: unsealGate,
-  })
-  .superRefine((b, ctx) => {
-    b.outputs
-      .filter((g) => posix.matchesGlob(b.unseal_after.file, g))
-      .forEach((g) => {
-        ctx.addIssue({
-          code: "custom",
-          path: ["unseal_after", "file"],
-          message: `is matched by the output «${g}»: the decision would be sealed with the results`,
-        });
-      });
-  });
+    unseal_after: decisionShape,
+  }),
+  z.strictObject({ kind: z.literal("exploratory"), reason: z.string() }),
+]);
 
 /** A plan's shape: closed at every level; the paper's own keys go in `extra`. Null is the one "none". */
 const planShape = z.strictObject({
@@ -210,7 +229,7 @@ const planShape = z.strictObject({
   primary_outcome: z.string(),
   author_check: authorCheck.nullable(),
   extra: extra.optional(),
-  blind: blind.optional(),
+  mode: mode.optional(),
 });
 
 /**
@@ -271,6 +290,32 @@ const readyTexts = z.object({
   primary_outcome: filled,
 });
 
+/** Whether `t` says something. */
+const says = (t: string): boolean => /\S/u.test(t);
+
+/**
+ * The mode's texts that are still empty, by their field: the mode itself when a study of `kind` must
+ * declare one and the plan does not, each gated mode's outputs and decision, an exploratory reason.
+ */
+const modeEmpties = (
+  p: StudyPlan,
+  kind: StudyKind,
+): readonly PlanTextField[] => {
+  const m = p.mode;
+  if (m === undefined) return needsMode(kind) ? ["mode"] : [];
+  if (m.kind === "exploratory") return says(m.reason) ? [] : ["mode.reason"];
+  const [d, at] =
+    m.kind === "blind"
+      ? [m.unseal_after, "mode.unseal_after"]
+      : [m.decision, "mode.decision"];
+  return PLAN_TEXT_FIELDS.filter(
+    (f) =>
+      (f === "mode.outputs" && m.outputs.length === 0) ||
+      (f === `${at}.file` && !says(d.file)) ||
+      (f === `${at}.note` && !says(d.note)),
+  );
+};
+
 /** A plan that parsed: ready, or a draft. */
 type ReadyOrDraft = Exclude<ParsedPlan, { readonly kind: "unreadable" }>;
 
@@ -278,29 +323,37 @@ type ReadyOrDraft = Exclude<ParsedPlan, { readonly kind: "unreadable" }>;
  * A parsed plan, ready when every required text is filled, else a draft naming the empty ones. A
  * draft that carries the author's check is no plan: the author approved one with empty texts.
  */
-const readyOrDraft = (
-  p: StudyPlan,
-  ctx: Readonly<z.core.$RefinementCtx>,
-): ReadyOrDraft => {
-  const checked = readyTexts.safeParse(p);
-  if (checked.success) return { kind: "ready", plan: p };
-  const paths = checked.error.issues.map((i) => i.path.join("."));
-  const empty = PLAN_TEXT_FIELDS.filter((f) => paths.includes(f));
-  if (p.author_check === null)
-    return { kind: "draft", plan: { ...p, author_check: null }, empty };
-  ctx.addIssue({
-    code: "custom",
-    path: ["author_check"],
-    message: `is set, and the plan leaves ${empty.map((f) => `\`${f}\``).join(", ")} empty — the author approves a complete plan: fill them, or set author_check to null`,
-  });
-  return z.NEVER;
-};
+const readyOrDraft =
+  (kind: StudyKind) =>
+  (p: StudyPlan, ctx: Readonly<z.core.$RefinementCtx>): ReadyOrDraft => {
+    const checked = readyTexts.safeParse(p);
+    const paths = checked.success
+      ? []
+      : checked.error.issues.map((i) => i.path.join("."));
+    const empty = [
+      ...PLAN_TEXT_FIELDS.filter((f) => paths.includes(f)),
+      ...modeEmpties(p, kind),
+    ];
+    if (empty.length === 0) return { kind: "ready", plan: p };
+    if (p.author_check === null)
+      return { kind: "draft", plan: { ...p, author_check: null }, empty };
+    ctx.addIssue({
+      code: "custom",
+      path: ["author_check"],
+      message: `is set, and the plan leaves ${empty.map((f) => `\`${f}\``).join(", ")} empty — the author approves a complete plan: fill them, or set author_check to null`,
+    });
+    return z.NEVER;
+  };
 
-/** A `plan.json`: strict, then ready or draft. */
-const plan = planShape.transform(readyOrDraft);
+/** A `plan.json` of a study of `kind`: strict, then ready or draft — a measurement's ready only with its mode. */
+const planFor = (kind: StudyKind) => planShape.transform(readyOrDraft(kind));
 
-/** A `prereg.json`: loose, mapped onto the plan, then ready or draft. */
-const legacyPlan = legacyAsPlan.transform(readyOrDraft);
+/**
+ * A `prereg.json`: loose, mapped onto the plan, then ready or draft. Written before modes existed, it
+ * is never asked for one; `repro/study-plan-name` already asks to move it to `plan.json`, where the
+ * strict parser does.
+ */
+const legacyPlan = legacyAsPlan.transform(readyOrDraft("spike"));
 
 // ── a blind study's manifest, sealed.json ───────────────────────────────────────
 
@@ -370,10 +423,10 @@ export type SchemasAreTheDomain = [
   Same<z.output<typeof authorCheck>, AuthorCheck>,
   Same<z.output<typeof planShape>, StudyPlan>,
   Same<z.output<typeof legacyAsPlan>, StudyPlan>,
-  Same<z.output<typeof plan>, ReadyOrDraft>,
+  Same<z.output<ReturnType<typeof planFor>>, ReadyOrDraft>,
   Same<z.output<typeof legacyPlan>, ReadyOrDraft>,
-  Same<z.output<typeof blind>, Blind>,
-  Same<z.output<typeof unsealGate>, UnsealGate>,
+  Same<z.output<typeof mode>, StudyMode>,
+  Same<z.output<typeof decisionShape>, Decision>,
   Same<z.output<typeof manifest>, SealManifest>,
   Same<z.output<typeof sealedFile>, SealedFile>,
   Same<z.output<typeof gateCommit>, GateCommit>,
@@ -430,8 +483,9 @@ const planParser =
       : { kind: "unreadable", why: reasons(parsed.error.issues) };
   };
 
-/** A `plan.json`: strict. */
-export const parseStudyPlan = planParser(plan);
+/** A `plan.json` of a study of `kind`: strict. */
+export const parseStudyPlan = (text: string, kind: StudyKind): ParsedPlan =>
+  planParser(planFor(kind))(text);
 
 /** A plan still named `prereg.json`: loose, read only when a row names it. */
 export const parseLegacyPlan = planParser(legacyPlan);

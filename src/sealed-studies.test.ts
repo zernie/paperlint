@@ -5,123 +5,27 @@
  * it was asked writes nothing and says why. The real age is in test/e2e/age/.
  */
 import { expect, it } from "vitest";
-import { memoryFiles, memoryListDir } from "./adapters/memory/index.ts";
-import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
-import { err, ok } from "./domain/result.ts";
-import {
-  manifestText,
-  type Blind,
-  type SealManifest,
-} from "./domain/sealed-study.ts";
+import { manifestText, type SealManifest } from "./domain/sealed-study.ts";
 import { sha256Hex } from "./domain/sha256.ts";
-import {
-  planText,
-  registryText,
-  type Study,
-  type StudyPlan,
-} from "./domain/study-registry.ts";
-import type { Sealer } from "./ports/sealer.ts";
+import { planText } from "./domain/study-registry.ts";
 import { INSTALL_AGE } from "./sealed-studies.ts";
-import { runStudies, type StudiesArgs } from "./studies.ts";
+import {
+  BLIND,
+  DIR,
+  NOW,
+  PLAN,
+  R1,
+  ROW,
+  S,
+  W,
+  enc,
+  planOf,
+  sealedText,
+  studies,
+  tree,
+} from "../test/study-tree.ts";
 
-const DIR = "/work/papers/example";
-const S = `${DIR}/repro/P1-S01-outcome`;
-const W = "papers/example/repro/P1-S01-outcome";
-const R1 = `age1${"q".repeat(58)}`;
-const NOW = "2026-10-16T10:00:00.000Z";
-
-const BLIND: Blind = {
-  recipients: [R1],
-  outputs: ["data/outcome/**", "RESULTS.md"],
-  unseal_after: { file: "exclusions.md", note: "exclusions frozen" },
-};
-const PLAN: StudyPlan = {
-  question: "Does the hint help?",
-  population: { source: "tasks", draw: { kind: "all", method: "census" } },
-  arms: [],
-  primary_outcome: "pass rate",
-  author_check: null,
-  blind: BLIND,
-};
-const ROW: Study = {
-  id: "P1-S01",
-  folder: "P1-S01-outcome",
-  title: "Outcome",
-  question: "q?",
-  kind: "measurement",
-  status: "running",
-  date: "2026-10-01",
-  in_paper: "no",
-  plan: "plan.json",
-};
-
-/** A paper with the blind study, its plan, and `extra` in its folder. */
-const tree = (
-  extra: Readonly<Record<string, string>> = {},
-  plan: StudyPlan = PLAN,
-  row: Study = ROW,
-): Record<string, string> => ({
-  [`${DIR}/PIPELINE-STATUS.md`]: "# status\n",
-  [`${DIR}/repro/studies.json`]: registryText({ prefix: "P1", studies: [row] }),
-  [`${S}/README.md`]: "# outcome\n",
-  [`${S}/plan.json`]: planText(plan),
-  ...extra,
-});
-
-const enc = (s: string): Uint8Array => new TextEncoder().encode(s);
 const sha = (s: string): string => sha256Hex(enc(s));
-/** The stand-in's ciphertext of `s`. */
-const sealedText = (s: string): string => `AGE[${s}]`;
-
-/** A sealer that wraps the plaintext, or fails as told. */
-const fakeSealer = (fail?: "missing" | "failed"): Sealer => ({
-  seal: (_r, p) =>
-    fail === undefined
-      ? ok(enc(sealedText(new TextDecoder().decode(p))))
-      : err(
-          fail === "missing"
-            ? { kind: "missing" }
-            : { kind: "failed", message: "bad recipient" },
-        ),
-});
-
-/** `studies <sub> papers/example <id>` over `t`: the exit code, what it printed, and the files after. */
-function studies(
-  sub: string,
-  t: Readonly<Record<string, string>>,
-  over: Partial<StudiesArgs> = {},
-  sealer: Sealer = fakeSealer(),
-) {
-  const files = memoryFiles(t);
-  const log: string[] = [];
-  const errs: string[] = [];
-  const code = runStudies(
-    {
-      sub,
-      paperDir: "papers/example",
-      title: "P1-S01",
-      extra: [],
-      kind: null,
-      ...over,
-    },
-    {
-      files,
-      listDir: memoryListDir(files),
-      codec: studyRegistryCodec,
-      cwd: "/work",
-      today: "2026-10-16",
-      now: NOW,
-      sealer,
-      remove: (p) => void files.map.delete(p),
-      log: (l) => log.push(l),
-      err: (l) => errs.push(l),
-    },
-  );
-  const after = Object.fromEntries(
-    [...files.map].map(([k, v]) => [k, new TextDecoder().decode(v)]),
-  );
-  return { code, log, err: errs, after };
-}
 
 const file = (path: string, text: string) => ({
   path,
@@ -235,17 +139,17 @@ it("studies seal — refuses a study with nothing to seal yet, without age, or w
     code: 1,
     log: [],
     err: [
-      `${W} has no file that blind.outputs (data/outcome/**, RESULTS.md) match, and nothing is sealed yet. Run the study first, or correct the outputs.`,
+      `${W} has no file that mode.outputs (data/outcome/**, RESULTS.md) match, and nothing is sealed yet. Run the study first, or correct the outputs.`,
     ],
     after: tree(),
   });
-  expect(studies("seal", t, {}, fakeSealer("missing"))).toEqual({
+  expect(studies("seal", t, {}, { sealer: "missing" })).toEqual({
     code: 1,
     log: [],
     err: [INSTALL_AGE],
     after: t,
   });
-  expect(studies("seal", t, {}, fakeSealer("failed")).err).toEqual([
+  expect(studies("seal", t, {}, { sealer: "failed" }).err).toEqual([
     `age could not seal ${W}: bad recipient. Nothing was written.`,
   ]);
 });
@@ -272,7 +176,7 @@ it("studies seal — refuses an unreadable manifest, an unsealed study, and reci
         ...SEALED,
         [`${S}/plan.json`]: planText({
           ...PLAN,
-          blind: { ...BLIND, recipients: [other] },
+          mode: { ...BLIND, recipients: [other] },
         }),
       },
     ].map((t) => studies("seal", t).err),
@@ -284,7 +188,7 @@ it("studies seal — refuses an unreadable manifest, an unsealed study, and reci
       `P1-S01 was unsealed at ${NOW} (commit ${"f".repeat(40)}); a study is sealed once, and its results are now plain.`,
     ],
     [
-      `P1-S01 is sealed to ${R1}, and its plan now names ${other}. A study's files are sealed to one set of recipients: restore the plan's \`blind.recipients\`.`,
+      `P1-S01 is sealed to ${R1}, and its plan now names ${other}. A study's files are sealed to one set of recipients: restore the plan's \`mode.recipients\`.`,
     ],
   ]);
 });
@@ -377,9 +281,9 @@ it("studies verify — refuses a study with no manifest, or one that is not one"
 });
 
 it("which study, and the command line — refuses an id that is not a blind study: unknown, no plan, a plan that is not one, a plan without blind", () => {
-  const open: StudyPlan = { ...PLAN, blind: undefined };
+  const open = planOf(undefined);
   const notBlind = (id: string) =>
-    `${id} is not a blind study of papers/example: no row of papers/example/repro/studies.json with this id names a plan.json that parses and has \`blind\`. Lint the paper (\`npx paperlint lint\`) to see why.`;
+    `${id} is not a blind study of papers/example: no row of papers/example/repro/studies.json with this id names a plan.json that parses with the mode \`blind\`. Lint the paper (\`npx paperlint lint\`) to see why.`;
   // Guards: seal never guesses — every way a study is not blind is a refusal naming the id.
   expect([
     studies("seal", tree(), { title: "P1-S09" }).err,
@@ -421,14 +325,14 @@ it("which study, and the command line — refuses a missing id and an argument t
   ]);
 });
 
-it("which study, and the command line — an unknown subcommand names all four, and a name of Object's own is no subcommand", () => {
+it("which study, and the command line — an unknown subcommand names all six, and a name of Object's own is no subcommand", () => {
   const usage =
-    'new, index, seal or verify — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id>';
+    'new, index, gate, seal, verify or unseal — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id> · npx paperlint studies unseal <paper-dir> <id> --identity <file>';
   // Guards: `studies constructor` is refused like any unknown word, not looked up on a prototype.
   expect(
-    ["unseal", "constructor"].map((sub) => studies(sub, SEALED).err),
+    ["open", "constructor"].map((sub) => studies(sub, SEALED).err),
   ).toEqual([
-    [`unknown subcommand \`studies unseal\`: ${usage}`],
+    [`unknown subcommand \`studies open\`: ${usage}`],
     [`unknown subcommand \`studies constructor\`: ${usage}`],
   ]);
 });
