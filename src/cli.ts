@@ -417,6 +417,16 @@ const REPRO_RULE_LEVELS = {
   ...BLIND_RULE_LEVELS,
 };
 
+/** The environment age runs in: this process's PATH, and nothing else of it. */
+const pathOnly = (
+  env: Readonly<NodeJS.ProcessEnv>,
+): Readonly<Record<string, string>> =>
+  Object.fromEntries(
+    Object.entries(env).filter(
+      (e): e is [string, string] => e[0] === "PATH" && e[1] !== undefined,
+    ),
+  );
+
 /** Today in this machine's time zone, `YYYY-MM-DD`: the date `paperlint studies new` registers a study on. */
 const today = (now = new Date()): string =>
   [
@@ -1696,7 +1706,7 @@ const SIMPLE: Readonly<
       {
         ...STUDY_RULE_DEPS,
         // age gets PATH and nothing else of this process's environment.
-        sealer: ageSealer(spawnBytes, { PATH: process.env.PATH ?? "" }),
+        sealer: ageSealer(spawnBytes, pathOnly(process.env)),
         remove: nodeRemove,
         now: new Date().toISOString(),
         cwd,
