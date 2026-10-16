@@ -36,7 +36,7 @@ import {
 } from "./domain/sealed-study.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { RemoveFile } from "./ports/remove-file.ts";
-import type { Sealer } from "./ports/sealer.ts";
+import type { Sealer, SealerFailure } from "./ports/sealer.ts";
 
 /** What sealing reads and writes with, beyond the registry's own. */
 export interface SealDeps extends BlindDeps {
@@ -145,10 +145,12 @@ interface Plain {
 const plainsOf = (a: At, deps: BlindDeps): readonly Plain[] =>
   filesUnder(a.folder, deps)
     .filter((f) => isSealable(a.s.blind, a.s.plan, f))
-    .flatMap((path) => {
-      const b = deps.files.readBytes(callerPath(join(a.folder, path)));
-      return b === null ? [] : [{ path, bytes: b }];
-    });
+    .flatMap((path) =>
+      // Listed a moment ago, so present; a file removed since is not sealed.
+      [deps.files.readBytes(callerPath(join(a.folder, path)))]
+        .filter((b): b is Uint8Array => b !== null)
+        .map((bytes) => ({ path, bytes })),
+    );
 
 /** The refusal of the steps that conflict with what was sealed; null when none does. */
 const conflictsOf = (a: At, steps: readonly SealStep[]): SealRefusal | null => {
@@ -182,25 +184,26 @@ const recordOf = (p: Plain, cipher: Uint8Array, now: string): Sealed => ({
   cipher,
 });
 
+const isFailure = (d: Sealed | SealerFailure): d is SealerFailure =>
+  "kind" in d;
+const isSealed = (d: Sealed | SealerFailure): d is Sealed => "file" in d;
+
 /** Each file encrypted; or the refusal of the first age could not seal. Writes nothing. */
 const encrypted = (
   a: At,
   plains: readonly Plain[],
   deps: SealDeps,
 ): readonly Sealed[] | SealRefusal => {
-  const done = plains.map((p) => ({
-    p,
-    sealed: deps.sealer.seal(a.s.blind.recipients, p.bytes),
-  }));
-  const failed = done.find((d) => !d.sealed.ok)?.sealed;
-  if (failed !== undefined && !failed.ok)
-    return refusal(
-      failed.error.kind === "missing"
-        ? INSTALL_AGE
-        : `age could not seal ${a.where}: ${failed.error.message}. Nothing was written.`,
-    );
-  return done.flatMap(({ p, sealed }) =>
-    sealed.ok ? [recordOf(p, sealed.value, deps.now)] : [],
+  const done = plains.map((p): Sealed | SealerFailure => {
+    const r = deps.sealer.seal(a.s.blind.recipients, p.bytes);
+    return r.ok ? recordOf(p, r.value, deps.now) : r.error;
+  });
+  const failed = done.find(isFailure);
+  if (failed === undefined) return done.filter(isSealed);
+  return refusal(
+    failed.kind === "missing"
+      ? INSTALL_AGE
+      : `age could not seal ${a.where}: ${failed.message}. Nothing was written.`,
   );
 };
 

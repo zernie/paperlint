@@ -19,6 +19,7 @@ import {
   existsSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -26,6 +27,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
+import { z } from "zod";
 import {
   planTemplate,
   planText,
@@ -59,7 +61,7 @@ const sh = (
 const sha = (b: Uint8Array | string): string =>
   createHash("sha256").update(b).digest("hex");
 
-const dir = mkdtempSync(join(tmpdir(), "paperlint-sealed-e2e-"));
+const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-sealed-e2e-")));
 afterAll(() => {
   rmSync(dir, { recursive: true, force: true });
 });
@@ -72,15 +74,29 @@ const at = (rel: string): string => join(S, rel);
 const paperlint = (args: readonly string[], env = process.env) =>
   sh(process.execPath, [BIN, ...args], { cwd: dir, env });
 
+const LintReport = z.array(
+  z.object({
+    messages: z.array(
+      z.object({ ruleId: z.string().nullable(), message: z.string() }),
+    ),
+  }),
+);
+
+const Manifest = z.object({
+  files: z.array(
+    z.object({
+      path: z.string(),
+      sha256: z.string(),
+      size: z.number(),
+      age_sha256: z.string(),
+    }),
+  ),
+});
+
 /** The repro/blind-plaintext messages of `paperlint lint --json`. */
 const blindFindings = (): readonly string[] => {
   const r = paperlint(["lint", "--json"]);
-  const report = JSON.parse(r.out) as readonly {
-    readonly messages: readonly {
-      readonly ruleId: string | null;
-      readonly message: string;
-    }[];
-  }[];
+  const report = LintReport.parse(JSON.parse(r.out));
   return report.flatMap((f) =>
     f.messages
       .filter((m) => m.ruleId === "repro/blind-plaintext")
@@ -88,17 +104,18 @@ const blindFindings = (): readonly string[] => {
   );
 };
 
-describe.skipIf(
-  missing(
-    "age and age-keygen",
-    has("age") && has("age-keygen"),
-    "install age: apt install age, brew install age, or https://github.com/FiloSottile/age/releases",
-  ),
-)("a blind study sealed with the real age", () => {
-  const key = join(dir, "key.txt");
-  const RESULTS = "41 of 60 pass\n";
-  const CSV = new Uint8Array(Array.from({ length: 300 }, (_, i) => i % 256));
+/** Skipped without age; under CI a failure naming it (test/e2e/need.ts). */
+const SKIP = missing(
+  "age and age-keygen",
+  has("age") && has("age-keygen"),
+  "install age: apt install age, brew install age, or https://github.com/FiloSottile/age/releases",
+);
 
+const key = join(dir, "key.txt");
+const RESULTS = "41 of 60 pass\n";
+const CSV = new Uint8Array(Array.from({ length: 300 }, (_, i) => i % 256));
+
+describe.skipIf(SKIP)("a blind study sealed with the real age — set up", () => {
   it("sets up: a key pair, a project, a blind study, a runner's results", () => {
     expect(sh("age-keygen", ["-o", key]).status).toBe(0);
     const recipient = sh("age-keygen", ["-y", key]).out.trim();
@@ -145,126 +162,136 @@ describe.skipIf(
     // Guards: the recipient is the one age-keygen derived from the key, so the seal targets it.
     expect(recipient).toMatch(/^age1[02-9ac-hj-np-z]{58}$/u);
   });
-
-  it("the lint reports each planted plaintext", () => {
-    // Guards: loud on each defect — one finding per plaintext result.
-    expect(blindFindings()).toEqual([
-      "`repro/P1-S01-outcome/RESULTS.md` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `blind.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.",
-      "`repro/P1-S01-outcome/data/outcome/a.bin` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `blind.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.",
-    ]);
-  });
-
-  it("seal encrypts both, records their hashes, removes the plaintexts; the lint is then silent", () => {
-    const r = paperlint(["studies", "seal", "papers/example", "P1-S01"]);
-    const manifest = JSON.parse(readFileSync(at("sealed.json"), "utf8")) as {
-      files: {
-        path: string;
-        sha256: string;
-        size: number;
-        age_sha256: string;
-      }[];
-    };
-    // Guards: exit 0, the plaintexts gone, the record holding the plaintexts' and ciphertexts' hashes.
-    expect({ status: r.status, err: r.err }).toEqual({ status: 0, err: "" });
-    expect([
-      existsSync(at("RESULTS.md")),
-      existsSync(at("data/outcome/a.bin")),
-    ]).toEqual([false, false]);
-    expect(
-      manifest.files.map((f) => [f.path, f.sha256, f.size, f.age_sha256]),
-    ).toEqual([
-      [
-        "RESULTS.md",
-        sha(RESULTS),
-        RESULTS.length,
-        sha(readFileSync(at("RESULTS.md.age"))),
-      ],
-      [
-        "data/outcome/a.bin",
-        sha(CSV),
-        CSV.length,
-        sha(readFileSync(at("data/outcome/a.bin.age"))),
-      ],
-    ]);
-    expect(blindFindings()).toEqual([]);
-  });
-
-  it("what was sealed decrypts with the private key to the very bytes the manifest hashed", () => {
-    // Guards: the seal is real age to the plan's recipient — the key holder gets the plaintext back.
-    const a = sh("age", ["-d", "-i", key, at("RESULTS.md.age")]);
-    const b = sh("age", ["-d", "-i", key, at("data/outcome/a.bin.age")]);
-    expect([a.status, a.out, b.status, sha(b.stdout)]).toEqual([
-      0,
-      RESULTS,
-      0,
-      sha(CSV),
-    ]);
-  });
-
-  it("a second seal changes nothing; verify passes without a key", () => {
-    const before = readFileSync(at("sealed.json"), "utf8");
-    const again = paperlint(["studies", "seal", "papers/example", "P1-S01"]);
-    const v = paperlint(["studies", "verify", "papers/example", "P1-S01"]);
-    // Guards: idempotent, byte for byte; verify needs no identity.
-    expect([
-      again.status,
-      readFileSync(at("sealed.json"), "utf8") === before,
-    ]).toEqual([0, true]);
-    expect([v.status, v.out.trim()]).toEqual([
-      0,
-      "P1-S01: 2 files sealed, every ciphertext the one recorded. Still sealed: the plaintexts are checked once it is unsealed.",
-    ]);
-  });
-
-  it("a changed result is refused and nothing written", () => {
-    writeFileSync(at("RESULTS.md"), "59 of 60 pass\n");
-    const before = readFileSync(at("sealed.json"), "utf8");
-    const r = paperlint(["studies", "seal", "papers/example", "P1-S01"]);
-    // Guards: no swap through a re-seal — the plaintext stays to be looked at, the manifest unchanged.
-    expect([
-      r.status,
-      r.err.split("\n")[0],
-      readFileSync(at("sealed.json"), "utf8") === before,
-    ]).toEqual([
-      1,
-      "P1-S01: 1 result file not the one sealed, and a sealed result is never replaced by a seal. Nothing was written.",
-      true,
-    ]);
-    rmSync(at("RESULTS.md"));
-  });
-
-  it("verify names a ciphertext swapped for another valid one", () => {
-    const original = readFileSync(at("RESULTS.md.age"));
-    const recipient = sh("age-keygen", ["-y", key]).out.trim();
-    const forged = sh("age", ["-r", recipient], {
-      input: new TextEncoder().encode("60 of 60 pass\n"),
-    });
-    writeFileSync(at("RESULTS.md.age"), forged.stdout);
-    const v = paperlint(["studies", "verify", "papers/example", "P1-S01"]);
-    // Guards: anyone can encrypt to a public key; the recorded hash catches the swap with no key.
-    expect([v.status, v.err.trim().split("\n").slice(1)]).toEqual([
-      1,
-      [
-        `  RESULTS.md.age: sha256 ${sha(forged.stdout)}, the manifest recorded ${sha(original)} — the ciphertext is not the one sealed`,
-      ],
-    ]);
-    writeFileSync(at("RESULTS.md.age"), original);
-  });
-
-  it("without age on PATH, seal stops with the install hint and writes nothing", () => {
-    writeFileSync(at("data/outcome/b.bin"), "x");
-    const r = paperlint(["studies", "seal", "papers/example", "P1-S01"], {
-      PATH: dirname(process.execPath),
-    });
-    // Guards: a missing age is named with how to install it, and the plaintext is not removed.
-    expect([
-      r.status,
-      r.err.trim(),
-      existsSync(at("data/outcome/b.bin")),
-    ]).toEqual([
-      1,
-      "age is not installed, and sealing runs it (this package implements no cryptography). Install it — `apt install age`, `brew install age`, or a release from https://github.com/FiloSottile/age/releases — then run this again.",
-      true,
-    ]);
-  });
 });
+
+describe.skipIf(SKIP)(
+  "a blind study sealed with the real age — sealing",
+  () => {
+    it("the lint reports each planted plaintext", () => {
+      // Guards: loud on each defect — one finding per plaintext result.
+      expect(blindFindings()).toEqual([
+        "`repro/P1-S01-outcome/RESULTS.md` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `blind.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.",
+        "`repro/P1-S01-outcome/data/outcome/a.bin` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `blind.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.",
+      ]);
+    });
+
+    it("seal encrypts both, records their hashes, removes the plaintexts; the lint is then silent", () => {
+      const r = paperlint(["studies", "seal", "papers/example", "P1-S01"]);
+      const manifest = Manifest.parse(
+        JSON.parse(readFileSync(at("sealed.json"), "utf8")),
+      );
+      // Guards: exit 0, the plaintexts gone, the record holding the plaintexts' and ciphertexts' hashes.
+      expect({ status: r.status, err: r.err }).toEqual({ status: 0, err: "" });
+      expect([
+        existsSync(at("RESULTS.md")),
+        existsSync(at("data/outcome/a.bin")),
+      ]).toEqual([false, false]);
+      expect(
+        manifest.files.map((f) => [f.path, f.sha256, f.size, f.age_sha256]),
+      ).toEqual([
+        [
+          "RESULTS.md",
+          sha(RESULTS),
+          RESULTS.length,
+          sha(readFileSync(at("RESULTS.md.age"))),
+        ],
+        [
+          "data/outcome/a.bin",
+          sha(CSV),
+          CSV.length,
+          sha(readFileSync(at("data/outcome/a.bin.age"))),
+        ],
+      ]);
+      expect(blindFindings()).toEqual([]);
+    });
+
+    it("what was sealed decrypts with the private key to the very bytes the manifest hashed", () => {
+      // Guards: the seal is real age to the plan's recipient — the key holder gets the plaintext back.
+      const a = sh("age", ["-d", "-i", key, at("RESULTS.md.age")]);
+      const b = sh("age", ["-d", "-i", key, at("data/outcome/a.bin.age")]);
+      expect([a.status, a.out, b.status, sha(b.stdout)]).toEqual([
+        0,
+        RESULTS,
+        0,
+        sha(CSV),
+      ]);
+    });
+  },
+);
+
+describe.skipIf(SKIP)(
+  "a blind study sealed with the real age — re-runs",
+  () => {
+    it("a second seal changes nothing; verify passes without a key", () => {
+      const before = readFileSync(at("sealed.json"), "utf8");
+      const again = paperlint(["studies", "seal", "papers/example", "P1-S01"]);
+      const v = paperlint(["studies", "verify", "papers/example", "P1-S01"]);
+      // Guards: idempotent, byte for byte; verify needs no identity.
+      expect([
+        again.status,
+        readFileSync(at("sealed.json"), "utf8") === before,
+      ]).toEqual([0, true]);
+      expect([v.status, v.out.trim()]).toEqual([
+        0,
+        "P1-S01: 2 files sealed, every ciphertext the one recorded. Still sealed: the plaintexts are checked once it is unsealed.",
+      ]);
+    });
+
+    it("a changed result is refused and nothing written", () => {
+      writeFileSync(at("RESULTS.md"), "59 of 60 pass\n");
+      const before = readFileSync(at("sealed.json"), "utf8");
+      const r = paperlint(["studies", "seal", "papers/example", "P1-S01"]);
+      // Guards: no swap through a re-seal — the plaintext stays to be looked at, the manifest unchanged.
+      expect([
+        r.status,
+        r.err.split("\n")[0],
+        readFileSync(at("sealed.json"), "utf8") === before,
+      ]).toEqual([
+        1,
+        "P1-S01: 1 result file not the one sealed, and a sealed result is never replaced by a seal. Nothing was written.",
+        true,
+      ]);
+      rmSync(at("RESULTS.md"));
+    });
+  },
+);
+
+describe.skipIf(SKIP)(
+  "a blind study sealed with the real age — tampering",
+  () => {
+    it("verify names a ciphertext swapped for another valid one", () => {
+      const original = readFileSync(at("RESULTS.md.age"));
+      const recipient = sh("age-keygen", ["-y", key]).out.trim();
+      const forged = sh("age", ["-r", recipient], {
+        input: new TextEncoder().encode("60 of 60 pass\n"),
+      });
+      writeFileSync(at("RESULTS.md.age"), forged.stdout);
+      const v = paperlint(["studies", "verify", "papers/example", "P1-S01"]);
+      // Guards: anyone can encrypt to a public key; the recorded hash catches the swap with no key.
+      expect([v.status, v.err.trim().split("\n").slice(1)]).toEqual([
+        1,
+        [
+          `  RESULTS.md.age: sha256 ${sha(forged.stdout)}, the manifest recorded ${sha(original)} — the ciphertext is not the one sealed`,
+        ],
+      ]);
+      writeFileSync(at("RESULTS.md.age"), original);
+    });
+
+    it("without age on PATH, seal stops with the install hint and writes nothing", () => {
+      writeFileSync(at("data/outcome/b.bin"), "x");
+      const r = paperlint(["studies", "seal", "papers/example", "P1-S01"], {
+        PATH: dirname(process.execPath),
+      });
+      // Guards: a missing age is named with how to install it, and the plaintext is not removed.
+      expect([
+        r.status,
+        r.err.trim(),
+        existsSync(at("data/outcome/b.bin")),
+      ]).toEqual([
+        1,
+        "age is not installed, and sealing runs it (this package implements no cryptography). Install it — `apt install age`, `brew install age`, or a release from https://github.com/FiloSottile/age/releases — then run this again.",
+        true,
+      ]);
+    });
+  },
+);

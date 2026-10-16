@@ -159,7 +159,8 @@ export const withSealed = (
   [
     ...files.filter((f) => !added.some((a) => a.path === f.path)),
     ...added,
-  ].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+    // Paths are unique in the list, so no two compare equal.
+  ].sort((a, b) => (a.path < b.path ? -1 : 1));
 
 /** Whether two lists of recipients name the same set. */
 export const sameRecipients = (
@@ -215,38 +216,39 @@ export const mismatches = (
   m: SealManifest,
   at: (path: string) => Hashed | null,
 ): readonly FileMismatch[] =>
-  m.files.flatMap((f): readonly FileMismatch[] => {
-    const c = at(`${f.path}${SEALED_SUFFIX}`);
-    const cipher: readonly FileMismatch[] =
-      c === null
-        ? [{ path: f.path, why: "no-ciphertext" }]
-        : c.sha256 === f.age_sha256
-          ? []
-          : [
-              {
-                path: f.path,
-                why: "ciphertext",
-                recorded: f.age_sha256,
-                found: c.sha256,
-              },
-            ];
-    if (m.unsealed === null) return cipher;
-    const p = at(f.path);
-    const plain: readonly FileMismatch[] =
-      p === null
-        ? [{ path: f.path, why: "no-plaintext" }]
-        : p.sha256 === f.sha256 && p.size === f.size
-          ? []
-          : [
-              {
-                path: f.path,
-                why: "plaintext",
-                recorded: f.sha256,
-                found: p.sha256,
-              },
-            ];
-    return [...cipher, ...plain];
-  });
+  m.files.flatMap((f) => [
+    ...cipherMismatch(f, at(`${f.path}${SEALED_SUFFIX}`)),
+    ...(m.unsealed === null ? [] : plainMismatch(f, at(f.path))),
+  ]);
+
+/** The ciphertext of `f` as found on disk (`c`), against its record. */
+const cipherMismatch = (
+  f: SealedFile,
+  c: Hashed | null,
+): readonly FileMismatch[] => {
+  if (c === null) return [{ path: f.path, why: "no-ciphertext" }];
+  return c.sha256 === f.age_sha256
+    ? []
+    : [
+        {
+          path: f.path,
+          why: "ciphertext",
+          recorded: f.age_sha256,
+          found: c.sha256,
+        },
+      ];
+};
+
+/** The plaintext of `f` as found on disk (`p`), against its record. */
+const plainMismatch = (
+  f: SealedFile,
+  p: Hashed | null,
+): readonly FileMismatch[] => {
+  if (p === null) return [{ path: f.path, why: "no-plaintext" }];
+  return p.sha256 === f.sha256 && p.size === f.size
+    ? []
+    : [{ path: f.path, why: "plaintext", recorded: f.sha256, found: p.sha256 }];
+};
 
 // ── the lint ──────────────────────────────────────────────────────────────────────
 
