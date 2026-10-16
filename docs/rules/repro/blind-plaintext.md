@@ -7,21 +7,28 @@ the files under a blind study's folder · **Reported on:** the first line of the
 ## What it catches
 
 A blind study that is still sealed, with a plaintext result in the tree. A study is blind when its
-plan has `blind`; it is still sealed until its `sealed.json` says `unsealed`. Every file under its
-folder that the plan's `blind.outputs` match is then a finding:
+plan's `mode` is `blind` — for a study whose outputs must exist before the decision; the default is
+to decide first ([`repro/outputs-before-decision`](outputs-before-decision.md)). It is still sealed
+until its `sealed.json` says `unsealed`. Every file under its folder that the mode's `outputs` match
+is then a finding:
 
 ```json
 {
-  "blind": {
-    "recipients": ["age1…"],
+  "mode": {
+    "kind": "blind",
     "outputs": ["data/outcome/**", "RESULTS.md"],
-    "unseal_after": { "file": "exclusions.md", "note": "exclusions frozen" }
+    "recipients": ["age1…"],
+    "unseal_after": {
+      "file": "repro/P1-S01-outcome/exclusions.md",
+      "note": "exclusions frozen"
+    }
   }
 }
 ```
 
 with `repro/P1-S01-outcome/RESULTS.md` on disk. A `sealed.json` that cannot be read is a finding too,
-and is never read as unsealed.
+and is never read as unsealed; so is a decision file (`unseal_after.file`, relative to the paper)
+that the outputs match — it would be sealed with the results.
 
 ## Why
 
@@ -42,25 +49,25 @@ Failing:
 ```text
 papers/example/PIPELINE-STATUS.md
   1:1  error  `repro/P1-S01-outcome/RESULTS.md` is a plaintext result of the blind study `P1-S01`,
-              which is still sealed: its plan's `blind.outputs` match it, and its `sealed.json` does
+              which is still sealed: its plan's `mode.outputs` match it, and its `sealed.json` does
               not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it
               encrypts the file to the plan's recipients and removes the plaintext. Never read it first.
 Rule repro/blind-plaintext: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/blind-plaintext.md  repro/blind-plaintext
 ```
 
 Passing: the same study after `paperlint studies seal` — `RESULTS.md.age` and `sealed.json` beside
-the plan, no `RESULTS.md`; or a study whose plan has no `blind`.
+the plan, no `RESULTS.md`; or a study whose mode is not `blind`.
 
 ## Options / preset fields
 
-No rule options. The study declares what is sealed in its plan's `blind`.
+No rule options. The study declares what is sealed in its plan's `mode`.
 
 ## What it does not check
 
 - Files outside the study's folder: outputs are relative to it, and the plan refuses a glob that
   leaves it.
-- The study's own files — `plan.json`, `README.md`, `sealed.json`, the `unseal_after.file`, any
-  `*.age` — even when a glob such as `**` would match them.
+- The study's own files — `plan.json`, `README.md`, `sealed.json`, the decision file when it lies in
+  the folder, any `*.age` — even when a glob such as `**` would match them.
 - Whether the ciphertexts are the ones sealed: that is `paperlint studies verify`, which needs no key.
 - Whether anyone read a plaintext before it was sealed.
 

@@ -8,14 +8,14 @@ or CI:
 | -------------------------- | ------------- | -------------------------------------------- | --------------------------- |
 | `npm run test:e2e:install` | `e2e-install` | npm and pnpm, and the network for `npm pack` | `test/e2e/install/*.e2e.ts` |
 | `npm run test:e2e:tex`     | `e2e-tex`     | TeX Live from `paperlint toolchain`, banal   | `test/e2e/tex/*.e2e.ts`     |
-| `npm run test:e2e:age`     | `e2e-age`     | `age` and `age-keygen`                       | `test/e2e/age/*.e2e.ts`     |
+| `npm run test:e2e:studies` | `e2e-studies` | git, `age` and `age-keygen`                  | `test/e2e/studies/*.e2e.ts` |
 | `npm run test:e2e`         | all three     |                                              |                             |
 
 All three areas are part of `npm run check`, so nobody has to remember to call them. CI runs each in
-the job that has its environment: `test:e2e:install` and `test:e2e:age` in `gates` (which installs
-age with apt), `test:e2e:tex` in `build-e2e`. The age run seals a blind study through the real binary
-with a throwaway key pair and decrypts with age itself: only a real age shows that what
-`paperlint studies seal` wrote opens with the key.
+the job that has its environment: `test:e2e:install` and `test:e2e:studies` in `gates` (which installs
+age with apt), `test:e2e:tex` in `build-e2e`. The studies run drives a study's mode through the real binary:
+decided first in a real git repository (the gate, then the order the lint reads), and a blind study
+sealed with a throwaway key pair, opened with age itself, and unsealed once its decision is committed.
 
 This page says what they prove, what they deliberately do not, and when a change owes a new one.
 

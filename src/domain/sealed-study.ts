@@ -16,9 +16,13 @@
  *
  * Pure: the caller lists the study's folder, reads the files, hashes them and asks git.
  */
-import { posix } from "node:path";
 import { README } from "./repro-layout.ts";
-import { decisionAsOutput, inStudy, isOutput, type Blind } from "./study-mode.ts";
+import {
+  decisionAsOutput,
+  inStudy,
+  isOutput,
+  type Blind,
+} from "./study-mode.ts";
 
 /** The manifest, in the study's folder beside its plan. */
 export const MANIFEST_FILE = "sealed.json";
@@ -283,20 +287,25 @@ export interface BlindStudy {
  * The defects of a blind study: a manifest that cannot be read, and — until the manifest says
  * unsealed — each plaintext file its outputs match. An unreadable manifest is not an unsealed one.
  */
+/** The finding when the study's decision is one of its outputs; none when it is not. */
+const clashOf = (s: BlindStudy): readonly BlindFinding[] => {
+  const glob = decisionAsOutput(s.folder, s.blind);
+  return glob === null
+    ? []
+    : [
+        {
+          problem: "decision-is-output",
+          id: s.id,
+          folder: s.folder,
+          file: s.blind.unseal_after.file,
+          glob,
+        },
+      ];
+};
+
 export const judgeBlind = (s: BlindStudy): readonly BlindFinding[] => {
   const at = { id: s.id, folder: s.folder };
-  const glob = decisionAsOutput(s.folder, s.blind);
-  const clash: readonly BlindFinding[] =
-    glob === null
-      ? []
-      : [
-          {
-            problem: "decision-is-output",
-            ...at,
-            file: s.blind.unseal_after.file,
-            glob,
-          },
-        ];
+  const clash = clashOf(s);
   if (s.manifest.kind === "read" && s.manifest.manifest.unsealed !== null)
     return clash;
   return [

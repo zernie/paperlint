@@ -162,8 +162,10 @@ Each stage's skills, what it writes and what checks it, drawn as one flow, with 
 | `npx paperlint submission update <paper>`                   | checks a new PDF/abstract against the portal; `--save` sends it for real       |
 | `npx paperlint studies new <paper> "<title>"`               | registers a study: the next id in `repro/studies.json`, its folder, the index  |
 | `npx paperlint studies index <paper>`                       | regenerates the index of the studies in `repro/README.md`                      |
+| `npx paperlint studies gate <paper> <id>`                   | exits 0 only once the study's decision is committed: run it before the study   |
 | `npx paperlint studies seal <paper> <id>`                   | a blind study: its results encrypted with age, their sha256 in `sealed.json`   |
 | `npx paperlint studies verify <paper> <id>`                 | checks the sealed files against `sealed.json`, no key needed                   |
+| `npx paperlint studies unseal <paper> <id> --identity <f>`  | decrypts a blind study once its decision and `sealed.json` are committed       |
 | `npx paperlint --help`                                      | every command and flag                                                         |
 
 ## 🧠 Skills

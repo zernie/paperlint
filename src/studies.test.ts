@@ -349,12 +349,12 @@ describe("studies — the command line", () => {
     [
       "no subcommand",
       { sub: undefined },
-      'studies needs a subcommand: new, index, seal or verify — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id>',
+      'studies needs a subcommand: new, index, gate, seal, verify or unseal — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id> · npx paperlint studies unseal <paper-dir> <id> --identity <file>',
     ],
     [
       "an unknown subcommand",
       { sub: "add" },
-      'unknown subcommand `studies add`: new, index, seal or verify — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id>',
+      'unknown subcommand `studies add`: new, index, gate, seal, verify or unseal — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id> · npx paperlint studies unseal <paper-dir> <id> --identity <file>',
     ],
     [
       "new with no paper folder",

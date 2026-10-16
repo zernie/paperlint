@@ -532,7 +532,7 @@ const MESSAGES = [
       why: "unreadable",
       reasons: "question: required",
     },
-    "The plan of `P1-S01`, `plan.json` in its folder, is not a study plan: question: required. What to do: give it the fields on the rule's page — `question`, `population`, `arms`, `primary_outcome`.",
+    "The plan of `P1-S01`, `plan.json` in its folder, is not a study plan: question: required. What to do: give it the fields on the rule's page — `question`, `population`, `arms`, `primary_outcome`, and for a measurement its `mode`.",
   ],
   [
     {

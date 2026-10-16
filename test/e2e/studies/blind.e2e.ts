@@ -9,7 +9,8 @@
  *   - verify, with no key, passes on the sealed tree and names a swapped ciphertext;
  *   - without age on PATH, seal stops with the install hint.
  *
- * Unsealing is not built yet (the key-custody decision), so no step here decrypts through paperlint.
+ *   - unseal is refused until the decision is committed in a real git repository, then writes the
+ *     very bytes sealed and records the gate's commit; verify and the lint are then clean.
  *
  *   npm run test:e2e:age
  */
@@ -36,6 +37,7 @@ import {
   type StudyRegistry,
 } from "../../../dist/domain/study-registry.js";
 import { missing } from "../need.ts";
+import { commit, initRepo } from "../../git-repo.ts";
 
 const ROOT = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 const BIN = join(ROOT, "bin", "paperlint.mjs");
@@ -82,6 +84,12 @@ const LintReport = z.array(
   }),
 );
 
+const UnsealedManifest = z.object({
+  unsealed: z.object({
+    gate: z.object({ file: z.string(), commit: z.string(), date: z.string() }),
+  }),
+});
+
 const Manifest = z.object({
   files: z.array(
     z.object({
@@ -111,7 +119,11 @@ const SKIP = missing(
   "install age: apt install age, brew install age, or https://github.com/FiloSottile/age/releases",
 );
 
-const key = join(dir, "key.txt");
+/** The private key, outside the project: it is never committed. */
+const key = join(
+  realpathSync(mkdtempSync(join(tmpdir(), "paperlint-sealed-key-"))),
+  "key.txt",
+);
 const RESULTS = "41 of 60 pass\n";
 const CSV = new Uint8Array(Array.from({ length: 300 }, (_, i) => i % 256));
 
@@ -144,11 +156,15 @@ describe.skipIf(SKIP)("a blind study sealed with the real age — set up", () =>
       "papers/example/repro/README.md": withIndex("# repro\n", registry),
       "papers/example/repro/P1-S01-outcome/README.md": "# outcome\n",
       "papers/example/repro/P1-S01-outcome/plan.json": planText({
-        ...planTemplate(),
-        blind: {
+        ...planTemplate("measurement", "P1-S01-outcome"),
+        mode: {
+          kind: "blind",
           recipients: [recipient],
           outputs: ["data/outcome/**", "RESULTS.md"],
-          unseal_after: { file: "exclusions.md", note: "exclusions frozen" },
+          unseal_after: {
+            file: "repro/P1-S01-outcome/exclusions.md",
+            note: "exclusions frozen",
+          },
         },
       }),
       "papers/example/repro/P1-S01-outcome/RESULTS.md": RESULTS,
@@ -170,8 +186,8 @@ describe.skipIf(SKIP)(
     it("the lint reports each planted plaintext", () => {
       // Guards: loud on each defect — one finding per plaintext result.
       expect(blindFindings()).toEqual([
-        "`repro/P1-S01-outcome/RESULTS.md` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `blind.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.",
-        "`repro/P1-S01-outcome/data/outcome/a.bin` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `blind.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.",
+        "`repro/P1-S01-outcome/RESULTS.md` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `mode.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.",
+        "`repro/P1-S01-outcome/data/outcome/a.bin` is a plaintext result of the blind study `P1-S01`, which is still sealed: its plan's `mode.outputs` match it, and its `sealed.json` does not say unsealed. What to do: run `npx paperlint studies seal <paper-dir> P1-S01` — it encrypts the file to the plan's recipients and removes the plaintext. Never read it first.",
       ]);
     });
 
@@ -289,8 +305,68 @@ describe.skipIf(SKIP)(
         existsSync(at("data/outcome/b.bin")),
       ]).toEqual([
         1,
-        "age is not installed, and sealing runs it (this package implements no cryptography). Install it — `apt install age`, `brew install age`, or a release from https://github.com/FiloSottile/age/releases — then run this again.",
+        "age is not installed, and this command runs it (this package implements no cryptography). Install it — `apt install age`, `brew install age`, or a release from https://github.com/FiloSottile/age/releases — then run this again.",
         true,
+      ]);
+      rmSync(at("data/outcome/b.bin"));
+    });
+  },
+);
+
+describe.skipIf(SKIP)(
+  "a blind study sealed with the real age — unsealing, gated on git",
+  () => {
+    const T1 = "2026-10-16T10:00:00+05:00";
+    const T2 = "2026-10-16T11:00:00+05:00";
+    const unseal = () =>
+      paperlint([
+        "studies",
+        "unseal",
+        "papers/example",
+        "P1-S01",
+        "--identity",
+        key,
+      ]);
+
+    it("refuses while the decision is uncommitted, and writes nothing", () => {
+      initRepo(dir);
+      commit(dir, {}, T1, "the sealed results");
+      const r = unseal();
+      // Guards: the key is not used before the decision is in history.
+      expect([r.status, r.err.trim(), existsSync(at("RESULTS.md"))]).toEqual([
+        1,
+        "P1-S01: the decision repro/P1-S01-outcome/exclusions.md is not committed; unsealing waits for it. Write the decision there, commit it, then run this again.",
+        false,
+      ]);
+    });
+
+    it("unseals once the decision is committed: the bytes sealed, the gate recorded, verify and lint clean", () => {
+      const sha1 = commit(
+        dir,
+        { "papers/example/repro/P1-S01-outcome/exclusions.md": "none\n" },
+        T2,
+        "the decision",
+      );
+      const r = unseal();
+      const v = paperlint(["studies", "verify", "papers/example", "P1-S01"]);
+      const manifest = UnsealedManifest.parse(
+        JSON.parse(readFileSync(at("sealed.json"), "utf8")),
+      );
+      // Guards: the plaintexts are the very bytes sealed, the gate's commit is recorded, and anyone can check it.
+      expect([
+        r.status,
+        readFileSync(at("RESULTS.md"), "utf8"),
+        sha(readFileSync(at("data/outcome/a.bin"))),
+        manifest.unsealed.gate,
+        v.status,
+        blindFindings(),
+      ]).toEqual([
+        0,
+        RESULTS,
+        sha(CSV),
+        { file: "repro/P1-S01-outcome/exclusions.md", commit: sha1, date: T2 },
+        0,
+        [],
       ]);
     });
   },

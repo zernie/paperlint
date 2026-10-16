@@ -963,7 +963,7 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
       case "outside":
         return `${REGISTRY}: ${of} is outside its folder. What to do: keep the plan in the study's folder, as \`${PLAN_FILE}\`, and name it relative to the folder.`;
       case "unreadable":
-        return `${plan} is not a study plan: ${f.reasons}. What to do: give it the fields on the rule's page — \`question\`, \`population\`, \`arms\`, \`primary_outcome\`.`;
+        return `${plan} is not a study plan: ${f.reasons}. What to do: give it the fields on the rule's page — \`question\`, \`population\`, \`arms\`, \`primary_outcome\`, and for a measurement its \`mode\`.`;
       case "unfilled":
         return `${plan} leaves ${listed(f.fields)} empty, and the study is ${tick(f.status)}: a plan is written before the runs. What to do: fill them in, or set the study back to \`designing\`.`;
     }

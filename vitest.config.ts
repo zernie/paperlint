@@ -47,13 +47,14 @@ export default defineConfig({
           hookTimeout: 10 * 60_000,
         },
       },
-      // A blind study sealed with the real age, through the real binary. Needs age and age-keygen.
+      // A study's mode through the real binary: decided first in a real git repository, and blind
+      // with the real age. Needs git, age and age-keygen.
       {
         extends: true,
         test: {
-          name: "e2e-age",
+          name: "e2e-studies",
           fileParallelism: false,
-          include: ["test/e2e/age/**/*.e2e.ts"],
+          include: ["test/e2e/studies/**/*.e2e.ts"],
           testTimeout: 2 * 60_000,
           hookTimeout: 2 * 60_000,
         },

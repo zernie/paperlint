@@ -154,7 +154,7 @@ const notAsSealed = (
     ? null
     : refusal(
         [
-          `${a.s.id}: ${count(lines.length, "file")} not as sealed; nothing was written:`,
+          `${a.s.id}: ${count(lines.length, "check")} failed — not as sealed; nothing was written:`,
           ...lines,
         ].join("\n"),
       );

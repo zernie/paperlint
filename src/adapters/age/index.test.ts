@@ -3,6 +3,7 @@
  * way age can fail — as a value, never a throw. The real age runs in test/e2e/age/.
  */
 import { describe, expect, it } from "vitest";
+import { absolutePath } from "../../domain/paths.ts";
 import {
   ageSealer,
   x25519Stanzas,
@@ -116,4 +117,21 @@ describe("x25519Stanzas", () => {
       x25519Stanzas(bytes("age-encryption.org/v1\n-> X25519 a")),
     ]).toEqual([3, null, null]);
   });
+});
+
+it("unseal: age -d with the identity file, the ciphertext by path, nothing on stdin", () => {
+  const { sealer, calls } = scripted(exited(bytes("plain")));
+  // Guards: the identity file is age's own format, passed by path; the plaintext comes back on stdout.
+  expect(
+    sealer.unseal(absolutePath("/k.txt"), absolutePath("/s/RESULTS.md.age")),
+  ).toEqual({ ok: true, value: bytes("plain") });
+  expect(calls).toEqual([
+    {
+      file: "age",
+      args: ["-d", "-i", "/k.txt", "/s/RESULTS.md.age"],
+      stdin: new Uint8Array(),
+      env: ENV,
+      timeoutMs: 600_000,
+    },
+  ]);
 });

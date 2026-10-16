@@ -205,9 +205,11 @@ two commands that write it.
    come from an error rule, since ESLint sets the level per rule. A `prereg.json` no row names is not
    read, so no existing paper turns red.
 
-8. **A blind study.** A plan may declare `blind` — its results sealed with age to public
-   recipients until a recorded decision — and `paperlint studies seal|verify` and the rule
-   `repro/blind-plaintext` hold it. Its own note: [`sealed-studies.md`](sealed-studies.md).
+8. **A study's mode.** A measurement's plan declares how its outcomes are kept from the decisions
+   on its inputs: `decide_before_run` (the default `studies new` writes), `blind` (sealed with age
+   until the decision), or `exploratory`. `paperlint studies gate|seal|verify|unseal` and the rules
+   `repro/outputs-before-decision` and `repro/blind-plaintext` hold it. Its own note:
+   [`sealed-studies.md`](sealed-studies.md).
 
 ## Where each part lives
 

@@ -330,6 +330,14 @@ const FILLED = planText({
   arms: [],
   primary_outcome: "the share of rules a linter can check",
   author_check: { by: "A. Author", date: "2026-10-14", quote: "Go." },
+  mode: {
+    kind: "decide_before_run",
+    outputs: ["results.tsv"],
+    decision: {
+      file: "repro/P1-S01-baseline/decision.md",
+      note: "the sample approved",
+    },
+  },
 });
 
 /** A registry with a headline measurement of one running study whose row names `plan`. */
@@ -389,7 +397,9 @@ describe("repro/study-registered — the plan a row names, read from its folder"
     expect(
       lint({
         ...registered(HEADLINE("plan.json")),
-        [`${DIR}/repro/P1-S01-baseline/plan.json`]: planText(planTemplate("spike", "x")),
+        [`${DIR}/repro/P1-S01-baseline/plan.json`]: planText(
+          planTemplate("spike", "x"),
+        ),
       }).map((r) => [r.messageId, r.line]),
     ).toEqual([
       ["bad-plan", 1],
@@ -453,4 +463,36 @@ describe("repro/study-plan-name — a plan under its old name", () => {
       lint(OLD, `${DIR}/paper.tex`, "study-plan-name"),
     ]).toEqual([[], []]);
   });
+});
+
+/** A plan whose texts are filled and which declares no mode; checked by the author when `check`. */
+const noMode = (check: boolean): string =>
+  planText({
+    question: "q",
+    population: { source: "s", draw: { kind: "all", method: "census" } },
+    arms: [],
+    primary_outcome: "o",
+    author_check: check
+      ? { by: "A. Author", date: "2026-10-14", quote: "Go." }
+      : null,
+  });
+
+/** The first line of each finding over the headline study with `plan` as its plan.json. */
+const firstLines = (plan: string): readonly string[] =>
+  lint({
+    ...registered(HEADLINE("plan.json")),
+    [`${DIR}/repro/P1-S01-baseline/plan.json`]: plan,
+  }).map((r) => r.message.split("\n")[0] ?? "");
+
+it("repro/study-registered — a measurement's plan that has run without a mode is reported; approved without one, it is no plan", () => {
+  // Guards: decide-first is the default — a measurement that ran with no mode is reported, never silent.
+  expect([firstLines(noMode(false)), firstLines(noMode(true))]).toEqual([
+    [
+      "The plan of `P1-S01`, `plan.json` in its folder, leaves `mode` empty, and the study is `running`: a plan is written before the runs. What to do: fill them in, or set the study back to `designing`.",
+      "`P1-S01` is `running` in the headline measurement `M1`, and its plan has no `author_check`. What to do: show the author the drawn units, then record their answer in the plan's `author_check` — `by`, `date`, and their words in `quote`.",
+    ],
+    [
+      "The plan of `P1-S01`, `plan.json` in its folder, is not a study plan: author_check: is set, and the plan leaves `mode` empty — the author approves a complete plan: fill them, or set author_check to null. What to do: give it the fields on the rule's page — `question`, `population`, `arms`, `primary_outcome`, and for a measurement its `mode`.",
+    ],
+  ]);
 });

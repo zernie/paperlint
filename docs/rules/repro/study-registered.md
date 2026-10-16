@@ -139,7 +139,12 @@ author's check of the drawn units. `paperlint studies new` writes the template b
   },
   "arms": [],
   "primary_outcome": "",
-  "author_check": null
+  "author_check": null,
+  "mode": {
+    "kind": "decide_before_run",
+    "outputs": [],
+    "decision": { "file": "repro/P1-S02-census/decision.md", "note": "" }
+  }
 }
 ```
 
@@ -154,6 +159,16 @@ author's check of the drawn units. `paperlint studies new` writes the template b
 | `primary_outcome`        | the one number the study reports first                                           |
 | `author_check`           | `null` until the author has seen the drawn units; then `by`, `date`, `quote`     |
 | `extra`                  | optional: the paper's own keys (hypotheses, models, budget), kept unread         |
+| `mode`                   | a measurement's: exactly one of `decide_before_run`, `blind`, `exploratory`      |
+
+`mode` is required of a `measurement` (other kinds may omit it): how its outcomes are kept from the
+decisions on its inputs — decided before the run (the default the template writes; its `outputs`,
+and its `decision` file relative to the paper, committed before the run), `blind` (sealed with age
+until the decision), or `exploratory` with its `reason`. Without it a measurement's plan is a draft
+whose empty text is `mode`. The modes, and the two rules that hold them —
+[`repro/outputs-before-decision`](outputs-before-decision.md) and
+[`repro/blind-plaintext`](blind-plaintext.md) — are in
+[`docs/design/sealed-studies.md`](../../design/sealed-studies.md).
 
 The template's draw is of all the population; a sampled study changes it to
 `{ "kind": "seeded", "method": "random", "seed": 7 }`. The population's size is not stored: it is
@@ -197,7 +212,8 @@ The rule reports:
   by anyone else (`headline-approval`);
 - a row's `plan` that is outside its folder, not a file, or not of the plan's shape — and, once the
   study has run (`running`, `done`, `stopped`, `superseded`), a plan that leaves `question`,
-  `population.source`, `population.draw.method` or `primary_outcome` empty (`bad-plan`);
+  `population.source`, `population.draw.method` or `primary_outcome` empty, or — for a measurement —
+  declares no `mode` or leaves one of its texts empty (`bad-plan`);
 - a study of a `headline` measurement that has run with no `author_check` in its plan — or no plan —
   or, when the registry names its `author`, a check by anyone else (`author-check`).
 
@@ -237,9 +253,9 @@ the plan is reported for its empty fields, and the study for the author's check 
 ```text
 papers/example/PIPELINE-STATUS.md
   1:1  error  The plan of `P1-S02`, `plan.json` in its folder, leaves `question`, `population.source`,
-              `population.draw.method` and `primary_outcome` empty, and the study is `running`: a
-              plan is written before the runs. What to do: fill them in, or set the study back to
-              `designing`.
+              `population.draw.method`, `primary_outcome`, `mode.outputs` and `mode.decision.note`
+              empty, and the study is `running`: a plan is written before the runs. What to do: fill
+              them in, or set the study back to `designing`.
   1:1  error  `P1-S02` is `running` in the headline measurement `M1`, and its plan has no
               `author_check`. What to do: show the author the drawn units, then record their answer
               in the plan's `author_check` — `by`, `date`, and their words in `quote`.
