@@ -315,6 +315,8 @@ No rule options.
 - A `prereg.json` or `plan.json` that no row names.
 - Whether the paper cites a study: `in_paper` is declared, not detected.
 - The index's `decision` and `first output` cells: they name commits a squash merge renames.
+- Inside a study folder that is a symbolic link: nothing is read through it, so its plan and its
+  result file read as missing.
 - What may stand at the top of `repro/` besides the study folders, and whether a study folder has a
   `README.md`: that is [`repro/allowed-files-only`](allowed-files-only.md).
 

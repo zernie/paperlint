@@ -94,6 +94,8 @@ export function studies(
   o: {
     readonly git?: Readonly<Record<string, Committed>>;
     readonly order?: OrderFacts;
+    /** Paths (absolute) the stand-in disk reports as symbolic links: memory holds none of its own. */
+    readonly links?: readonly string[];
   } = {},
 ) {
   const files = memoryFiles(t);
@@ -111,7 +113,12 @@ export function studies(
     {
       files,
       listDir: memoryListDir(files),
-      entries: memoryListEntries(files),
+      entries: (dir) =>
+        memoryListEntries(files)(dir).map((e) =>
+          (o.links ?? []).includes(`${dir}/${e.name}`)
+            ? { ...e, kind: "symlink" as const }
+            : e,
+        ),
       codec: studyRegistryCodec,
       cwd: "/work",
       today: "2026-10-16",

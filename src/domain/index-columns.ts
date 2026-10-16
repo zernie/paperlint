@@ -83,8 +83,8 @@ export const firstOutputCell = historyCell(
 /** The history the index shows of a decide-first study, from the facts git gave. */
 export const indexHistory = (s: DecideFirstStudy): IndexHistory => {
   switch (s.facts.kind) {
-    case "directory":
-      return { kind: "unread", why: "the decision is a directory" };
+    case "not-a-file":
+      return { kind: "unread", why: `the decision is a ${s.facts.what}` };
     case "unknown":
       return { kind: "unread", why: "git could not answer" };
     case "shallow":

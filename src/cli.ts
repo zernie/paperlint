@@ -418,17 +418,17 @@ const GIT = gitHistory(spawnProcess(), gitEnv(process.env));
 const LAYOUT_RULE_DEPS = { files: nodeFiles, listDir: nodeListDir };
 
 /** What `repro/study-registered` and `paperlint studies` read with: the layout's, and the registry's parser. */
-const STUDY_RULE_DEPS = { ...LAYOUT_RULE_DEPS, codec: studyRegistryCodec };
+const STUDY_RULE_DEPS = {
+  ...LAYOUT_RULE_DEPS,
+  entries: nodeListEntries,
+  codec: studyRegistryCodec,
+};
 
 /** The `repro` plugin's rules, on every `PIPELINE-STATUS.md`: the layout of `repro/`, and its study registry. */
 const REPRO_RULES = {
   ...reproLayoutRules(LAYOUT_RULE_DEPS),
   ...studyRegistryRules(STUDY_RULE_DEPS),
-  ...outputsBeforeDecisionRules({
-    ...STUDY_RULE_DEPS,
-    entries: nodeListEntries,
-    git: GIT,
-  }),
+  ...outputsBeforeDecisionRules({ ...STUDY_RULE_DEPS, git: GIT }),
 };
 const REPRO_RULE_LEVELS = {
   ...REPRO_LAYOUT_RULE_LEVELS,
@@ -1714,7 +1714,6 @@ const SIMPLE: Readonly<
       },
       {
         ...STUDY_RULE_DEPS,
-        entries: nodeListEntries,
         git: GIT,
         cwd,
         today: today(),

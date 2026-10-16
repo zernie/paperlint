@@ -180,7 +180,7 @@ describe("indexHistory", () => {
     expect([
       indexHistory(study({ kind: "unknown", why: "not a repository" })),
       indexHistory(study({ kind: "shallow" })),
-      indexHistory(study({ kind: "directory" })),
+      indexHistory(study({ kind: "not-a-file", what: "directory" })),
       indexHistory(
         study({
           kind: "read",

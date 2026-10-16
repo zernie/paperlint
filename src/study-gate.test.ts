@@ -79,7 +79,7 @@ it("refuses a plan that names no decision file, or one its own outputs match", (
     studies("gate", decided({ ...DECIDED, outputs: ["*.md"] })).err,
   ]).toEqual([
     [
-      "P1-S01: its plan names no decision file (`mode.decision.file`); the run cannot be gated on nothing.",
+      "P1-S01: its plan.json is a draft — `mode.decision.file` is empty; the run waits for a ready plan. Fill it in, then run this again.",
     ],
     [
       "P1-S01: its decision repro/P1-S01-outcome/decision.md is matched by its output `*.md`; a decision cannot be what its own run produces.",
@@ -208,4 +208,109 @@ it("closed when the decision was committed and then deleted: it is not in HEAD",
       `P1-S01: the decision repro/P1-S01-outcome/decision.md is not in HEAD: it was deleted in ${SHA}; the run waits for a decision that stands. Restore it, commit it, then run this again.`,
     ],
   ]);
+});
+
+it("refuses a plan that is still a draft: a mode is no decision until its plan is ready", () => {
+  const r = studies(
+    "gate",
+    decided({ ...DECIDED, outputs: [] }),
+    {},
+    { git: { [DECISION]: { kind: "committed", commit: SHA, date: DATE } } },
+  );
+  const blankReason = studies(
+    "gate",
+    decided({ kind: "exploratory", reason: " " }),
+  );
+  const twoEmpty = studies(
+    "gate",
+    decided({
+      ...DECIDED,
+      outputs: [],
+      decision: { ...DECIDED.decision, note: "" },
+    }),
+  );
+  // Guards: a draft names no outputs to keep from the decision, and an exploratory plan with no
+  // reason is no declaration; the gate opens on a ready plan only, whatever its mode.
+  expect([
+    [r.code, r.err],
+    [blankReason.code, blankReason.err],
+    [twoEmpty.code, twoEmpty.err],
+  ]).toEqual([
+    [
+      1,
+      [
+        "P1-S01: its plan.json is a draft — `mode.outputs` is empty; the run waits for a ready plan. Fill it in, then run this again.",
+      ],
+    ],
+    [
+      1,
+      [
+        "P1-S01: its plan.json is a draft — `mode.reason` is empty; the run waits for a ready plan. Fill it in, then run this again.",
+      ],
+    ],
+    [
+      1,
+      [
+        "P1-S01: its plan.json is a draft — `mode.outputs`, `mode.decision.note` are empty; the run waits for a ready plan. Fill it in, then run this again.",
+      ],
+    ],
+  ]);
+});
+
+it("refuses a decision or a study folder that is a symbolic link", () => {
+  const committed = {
+    [DECISION]: { kind: "committed", commit: SHA, date: DATE },
+  } as const;
+  const decisionLink = studies(
+    "gate",
+    { ...decided(), [DECISION]: "exclude run 7\n" },
+    {},
+    { git: committed, links: [DECISION] },
+  );
+  const folderLink = studies(
+    "gate",
+    decided(),
+    {},
+    { git: committed, links: [`${DIR}/repro/P1-S01-outcome`] },
+  );
+  // Guards: git records a link, not the file it points to; a linked folder leads out of `repro/`.
+  expect([
+    [decisionLink.code, decisionLink.err],
+    [folderLink.code, folderLink.err],
+  ]).toEqual([
+    [
+      1,
+      [
+        "P1-S01: its decision repro/P1-S01-outcome/decision.md is a symbolic link, not a file; the run cannot be gated on it. Name the decision file in `mode.decision.file`.",
+      ],
+    ],
+    [
+      1,
+      [
+        "P1-S01: its row names the folder `P1-S01-outcome`, which is not one folder inside papers/example/repro/; nothing is read through it. Give the row its own folder's name.",
+      ],
+    ],
+  ]);
+});
+
+it("never reads a plan through a backslash: `..\\x\\plan.json` is outside the folder on Windows", () => {
+  const plan = "..\\x\\plan.json";
+  const r = studies(
+    "gate",
+    tree(
+      {
+        [`${DIR}/repro/P1-S01-outcome/${plan}`]: JSON.stringify(
+          planOf(DECIDED),
+        ),
+      },
+      planOf(DECIDED),
+      { ...ROW, plan },
+    ),
+    {},
+    { git: { [DECISION]: { kind: "committed", commit: SHA, date: DATE } } },
+  );
+  // Guards: the containment test is the registry rule's own `isInside`, the same on every platform.
+  expect(r.err[0]?.split(":")[0]).toBe(
+    "P1-S01 declares no mode in papers/example",
+  );
 });

@@ -17,8 +17,8 @@ import { basename, dirname, join } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
   filesUnder,
-  isDirectory,
   modeStudies,
+  onDisk,
   type StudyDeps,
 } from "./study-modes.ts";
 import {
@@ -47,10 +47,12 @@ export const decideFirstStudies = (
   paper: string,
   deps: OrderDeps,
 ): readonly DecideFirstStudy[] =>
-  modeStudies(paper, deps).flatMap(({ row, plan, mode }) => {
-    if (mode.kind !== "decide_before_run") return [];
+  modeStudies(paper, deps).flatMap(({ row, plan, mode, empty }) => {
+    // Only a ready plan decides: a draft may name no outputs, or an empty decision file.
+    if (mode.kind !== "decide_before_run" || empty.length > 0) return [];
     const folder = join(paper, REPRO_DIR, row.folder);
     const decision = join(paper, mode.decision.file);
+    const on = onDisk(decision, deps);
     return [
       {
         id: row.id,
@@ -58,9 +60,10 @@ export const decideFirstStudies = (
         plan,
         mode,
         tree: filesUnder(folder, deps),
-        facts: isDirectory(decision, deps)
-          ? { kind: "directory" }
-          : deps.git.order(callerPath(folder), callerPath(decision)),
+        facts:
+          on === "directory" || on === "symbolic link"
+            ? { kind: "not-a-file", what: on }
+            : deps.git.order(callerPath(folder), callerPath(decision)),
       },
     ];
   });

@@ -22,6 +22,9 @@ import {
   type DecideFirst,
 } from "./study-mode.ts";
 
+/** What a decision path names on disk when it is no file git can vouch for. */
+export type NotAFile = "directory" | "symbolic link";
+
 /** A commit, and its committer date (ISO 8601 with its offset). */
 export interface CommitAt {
   readonly commit: string;
@@ -50,7 +53,7 @@ export interface FirstCommit extends CommitAt {
  * that history was not asked (git answers for a directory with the commits of anything under it).
  */
 export type OrderFacts =
-  | { readonly kind: "directory" }
+  | { readonly kind: "not-a-file"; readonly what: NotAFile }
   | { readonly kind: "unknown"; readonly why: string }
   /** A shallow clone: every file's first commit is the clone's first, so no order can be read. */
   | { readonly kind: "shallow" }
@@ -92,6 +95,7 @@ export type OrderFinding =
       readonly problem: "decision-not-file";
       readonly id: string;
       readonly file: string;
+      readonly what: NotAFile;
     }
   | {
       readonly problem: "no-history";
@@ -180,8 +184,10 @@ export const judgeOrder = (s: DecideFirstStudy): readonly OrderFinding[] => {
 const historyFindings = (s: DecideFirstStudy): readonly OrderFinding[] => {
   const file = s.mode.decision.file;
   switch (s.facts.kind) {
-    case "directory":
-      return [{ problem: "decision-not-file", id: s.id, file }];
+    case "not-a-file":
+      return [
+        { problem: "decision-not-file", id: s.id, file, what: s.facts.what },
+      ];
     case "unknown":
       return [{ problem: "no-history", id: s.id, why: s.facts.why }];
     case "shallow":
@@ -201,6 +207,13 @@ type FindingOf = {
   readonly [F in OrderFinding as F["problem"]]: F;
 };
 
+/** Why git's history says nothing of a decision that is not a file. */
+const NOT_A_FILE: Readonly<Record<NotAFile, string>> = {
+  directory:
+    "git answers for a directory with the commits of anything under it",
+  "symbolic link": "git records the link, not the file it points to",
+};
+
 const short = (c: CommitAt): string => `${c.commit.slice(0, 12)} (${c.date})`;
 
 const HEADS: {
@@ -211,7 +224,7 @@ const HEADS: {
   "decision-deleted": (f) =>
     `The decision of \`${f.id}\`, \`${f.file}\`, was committed and then deleted: it is not in HEAD, so the study has no decision its outputs could follow. What to do: restore the decision file as it was decided and commit it — never write a new one after the outputs; if the decision no longer holds, declare the study \`exploratory\` with the reason.`,
   "decision-not-file": (f) =>
-    `The decision of \`${f.id}\`, \`${f.file}\`, is a directory, not a file: git answers for a directory with the commits of anything under it, so no order can be read from it. What to do: name the decision file itself in \`mode.decision.file\`.`,
+    `The decision of \`${f.id}\`, \`${f.file}\`, is a ${f.what}, not a file: ${NOT_A_FILE[f.what]}, so no order can be read from it. What to do: name the decision file itself in \`mode.decision.file\`.`,
   "no-history": (f) =>
     `\`${f.id}\` is decided before its run, and git's history is the proof of that order, but git could not answer: ${f.why}. What to do: lint the paper inside its git repository, with git installed.`,
   shallow: (f) =>

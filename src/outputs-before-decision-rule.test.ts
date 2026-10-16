@@ -169,3 +169,38 @@ it("loud on a decision deleted after its outputs: a decision that no longer stan
   // Guards: the order was right once; with the decision gone from HEAD the study is reported.
   expect(lint(repo)).toEqual(["decision-deleted"]);
 });
+
+it("loud on a decision that is a symbolic link: git records the link, not the decision", () => {
+  const repo = join(root, "decision-link");
+  initRepo(repo);
+  mkdirSync(join(repo, "p"), { recursive: true });
+  writeFileSync(join(repo, "p/elsewhere.md"), "exclude run 7\n");
+  mkdirSync(join(repo, S), { recursive: true });
+  symlinkSync("../../elsewhere.md", join(repo, S, "decision.md"));
+  commit(repo, PAPER, T(9));
+  commit(repo, { [`${S}/RESULTS.md`]: "41 of 60\n" }, T(10));
+  // Guards: a link committed first proves nothing of what it pointed to when the run started.
+  expect(lint(repo)).toEqual(["decision-not-file"]);
+});
+
+it("never reads through a study folder that is a symbolic link", () => {
+  const repo = join(root, "folder-link");
+  initRepo(repo);
+  const elsewhere = "p/elsewhere";
+  commit(
+    repo,
+    {
+      ...Object.fromEntries(
+        Object.entries(PAPER).filter(([k]) => !k.startsWith(S)),
+      ),
+      [`${elsewhere}/README.md`]: "# outcome\n",
+      [`${elsewhere}/plan.json`]: planText(planOf(DECIDED)),
+      [`${elsewhere}/RESULTS.md`]: "41 of 60\n",
+    },
+    T(9),
+  );
+  symlinkSync("../elsewhere", join(repo, S));
+  commit(repo, {}, T(10));
+  // Guards: the outputs behind the link are not this paper's study; nothing is read through it.
+  expect(lint(repo)).toEqual([]);
+});

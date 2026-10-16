@@ -110,3 +110,20 @@ it("refuses a registry whose row names a folder outside repro/, for index and fo
     [1, [line], Object.keys(escaping).length],
   ]);
 });
+
+it("refuses a registry whose study folder is a symbolic link, for index", () => {
+  const r = studies(
+    "index",
+    tree(),
+    { title: undefined },
+    { links: [`${DIR}/repro/P1-S01-outcome`] },
+  );
+  // Guards: a linked folder leads the reads out of `repro/`, like a row naming `../x`.
+  expect([r.code, r.err, README in r.after]).toEqual([
+    1,
+    [
+      "P1-S01 in papers/example/repro/studies.json names the folder `P1-S01-outcome`, which is not one folder inside repro/: nothing is read or written through it. Give the row its own folder's name, then run this again.",
+    ],
+    false,
+  ]);
+});

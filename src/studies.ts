@@ -26,7 +26,6 @@ import {
   STUDY_KINDS,
   addStudy,
   indexCurrent,
-  isFolderName,
   isStudyKind,
   planTemplate,
   planText,
@@ -41,7 +40,7 @@ import type { Files } from "./ports/files.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type { ListEntries } from "./ports/list-entries.ts";
 import type { ListDir } from "./ports/talk-media.ts";
-import { registryOf } from "./study-registry-rule.ts";
+import { readableFolders, registryOf } from "./study-registry-rule.ts";
 import { runGate } from "./study-gate.ts";
 import { indexInputOf } from "./study-index-input.ts";
 import type { GitHistory, GitOrder } from "./ports/git-history.ts";
@@ -103,13 +102,18 @@ function registryIn(p: Paper, deps: StudiesDeps): StudyRegistry | Refusal {
     case "unreadable":
       return refuse(1, `${file} is not a study registry: ${r.why}`);
     case "read":
-      return escaping(p, r.registry) ?? r.registry;
+      return escaping(p, r.registry, deps) ?? r.registry;
   }
 }
 
 /** The refusal when a row names a folder that is not one inside `repro/`; null when none does. */
-function escaping(p: Paper, r: StudyRegistry): Refusal | null {
-  const s = r.studies.find((row) => !isFolderName(row.folder));
+function escaping(
+  p: Paper,
+  r: StudyRegistry,
+  deps: StudiesDeps,
+): Refusal | null {
+  const readable = readableFolders(p.dir, deps);
+  const s = r.studies.find((row) => !readable(row.folder));
   return s === undefined
     ? null
     : refuse(

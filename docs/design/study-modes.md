@@ -67,8 +67,8 @@ decision that is a directory, a decision its own outputs match). A runner calls 
 npx paperlint studies gate papers/my-paper P1-S03 && ./run.sh
 ```
 
-For an exploratory study it exits 0 and says it has no gate. A study that declares no mode is
-refused.
+For an exploratory study it exits 0 and says it has no gate. A study that declares no mode, or whose
+plan is still a draft, is refused.
 
 ### 3. `repro/outputs-before-decision` — the proof of order a reviewer can re-run
 
@@ -122,15 +122,27 @@ A sample row:
   sentence; `osf-artifact-upload` and `camera-ready` ship each plan, its decision file and the index,
   with the whole history. Each regenerates the index first, so the commits are this checkout's.
 
-### 5. A study folder stays inside `repro/`
+### 5. Reads stay inside the paper
+
+**What these checks guard against.** paperlint's checks guard against accidents and honest
+mistakes — a run started before the decision was committed, a decision edited or deleted afterwards,
+a path typed wrong — not against an author who controls the repository's history and sets out to
+forge it. The path rules below exist to keep every read inside the paper, so a mistyped row cannot
+make a command or a rule read, judge or write files that belong to nothing in it.
 
 Every command and rule that reads a study's folder — `studies gate`, `studies index` and `new`,
 `repro/outputs-before-decision`, and `repro/study-registered`'s reads of plans and result files —
-reads only a row whose `folder` is one folder directly inside `repro/`: not empty, not `.` or `..`,
-no separator or NUL (`isFolderName`, `src/domain/study-registry.ts`). A row naming `../x` is never
-read through: `studies index` and `new` refuse the registry, the gate refuses the study, the order
-rule treats it as no study, and `repro/study-registered` reports the row (`folder-name`). Plans and
-decision files are held inside their folder and the paper by the schema (`staysInside`).
+reads a row only through one predicate, `readableFolders` (`src/study-registry-rule.ts`): its
+`folder` is one folder directly inside `repro/` (`isFolderName`: not empty, not `.` or `..`, no
+separator or NUL) and not a symbolic link (`ListEntries`, read without following links). Such a row
+is never read through: `studies index` and `new` refuse the registry, the gate refuses the study,
+the order rule treats it as no study, and `repro/study-registered` reads its plan and results as
+missing. A plan's path is held inside its folder by the registry rule's own `isInside`, the same on
+every platform (a backslash is refused outright); the decision file is held inside the paper by the
+schema (`staysInside`) and must be a regular file on disk — a directory or a symbolic link is refused
+by the gate and reported by the rule (`decision-not-file`). Only a **ready** plan's mode decides
+anything: the gate refuses a draft, naming its empty fields, and the order rule judges no draft — a
+draft may name no outputs, or an empty decision file.
 
 ### 6. Legacy plans
 

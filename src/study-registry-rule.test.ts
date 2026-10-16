@@ -6,7 +6,11 @@
  * on the first line of `PIPELINE-STATUS.md`, with the domain's text.
  */
 import { describe, expect, it } from "vitest";
-import { memoryFiles, memoryListDir } from "./adapters/memory/index.ts";
+import {
+  memoryFiles,
+  memoryListDir,
+  memoryListEntries,
+} from "./adapters/memory/index.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
 import {
   planTemplate,
@@ -78,6 +82,7 @@ function lint(
   const rule = studyRegistryRules({
     files,
     listDir: memoryListDir(files),
+    entries: memoryListEntries(files),
     codec: studyRegistryCodec,
   })[name];
   const out: Reported[] = [];
@@ -319,9 +324,45 @@ describe("repro/study-registered — a result_file the disk cannot hold", () => 
       studyFindings(DIR, {
         files: probe,
         listDir: memoryListDir(files),
+        entries: memoryListEntries(files),
         codec: studyRegistryCodec,
       }).map((f) => f.problem),
     ).toEqual(["result-file"]);
+  });
+});
+
+describe("repro/study-registered — a study folder that is a symbolic link", () => {
+  it("never reads a plan or a result through it", () => {
+    const r = P1(
+      study({
+        status: "done",
+        result: "41 of 60",
+        result_file: "r.txt",
+        plan: "plan.json",
+      }),
+    );
+    const files = memoryFiles({
+      ...registered(r),
+      [`${DIR}/repro/P1-S01-baseline/plan.json`]: "not JSON",
+      [`${DIR}/repro/P1-S01-baseline/r.txt`]: "41 of 60\n",
+    });
+    const found = studyFindings(DIR, {
+      files,
+      listDir: memoryListDir(files),
+      entries: (dir) =>
+        memoryListEntries(files)(dir).map((e) =>
+          e.name === "P1-S01-baseline" ? { ...e, kind: "symlink" as const } : e,
+        ),
+      codec: studyRegistryCodec,
+    });
+    // Guards: the files behind the link are not read — the plan and the result read as missing.
+    expect(
+      found.map((f) =>
+        f.problem === "bad-plan" || f.problem === "result-file"
+          ? `${f.problem}:${f.why}`
+          : f.problem,
+      ),
+    ).toEqual(["result-file:missing", "bad-plan:missing"]);
   });
 });
 
@@ -358,6 +399,7 @@ describe("repro/study-registered — a row whose folder leads outside repro/", (
     const found = studyFindings(DIR, {
       files: spy,
       listDir: memoryListDir(files),
+      entries: memoryListEntries(files),
       codec: studyRegistryCodec,
     });
     // Guards: a row naming `../outside` never has a file outside `repro/` read for it.
@@ -492,6 +534,7 @@ describe("repro/study-registered — a plan the disk cannot hold", () => {
       studyFindings(DIR, {
         files: probe,
         listDir: memoryListDir(files),
+        entries: memoryListEntries(files),
         codec: studyRegistryCodec,
       }).map((f) => f.problem),
     ).toEqual(["bad-plan"]);

@@ -32,8 +32,9 @@ A study decided before its run — its plan's `mode` is `decide_before_run`, the
   it: the decision would be a file its own run produces.
 - **`decision-deleted`** — the decision file was committed and later deleted: it is not in HEAD, so
   the study has no decision its outputs could follow, and the order is not judged against it.
-- **`decision-not-file`** — the decision path names a directory: git answers for a directory with the
-  commits of anything under it, so no order is read from it. (A path that names the paper's folder
+- **`decision-not-file`** — the decision path names a directory or a symbolic link: git answers for
+  a directory with the commits of anything under it, and records a link rather than the file it
+  points to, so no order is read from either. (A path that names the paper's folder
   itself, `.`, or ends in `/` is refused when the plan is parsed.)
 - **`shallow`** — the clone is shallow, so every file's first commit is the clone's: no order can be
   read, and the rule says so instead of judging.
@@ -88,8 +89,11 @@ No rule options. The study declares its mode in its plan.
   decision file is visible in its history (`git log -- <file>`) but not reported.
 - That nobody ran the study before the decision and kept the outputs out of git. History records
   what was committed; a run on a machine that never committed it leaves no trace.
-- A study whose row names a folder that is not one inside `repro/` (`../x`): nothing is read through
-  it, so it is no study here; [`repro/study-registered`](study-registered.md) reports the row.
+- A study whose row names a folder that is not one inside `repro/` (`../x`), or a folder that is a
+  symbolic link: nothing is read through it, so it is no study here;
+  [`repro/study-registered`](study-registered.md) reports the row or reads its plan as missing.
+- A study whose plan is still a draft: only a ready plan's mode decides anything, and
+  [`repro/study-registered`](study-registered.md) reports an unfilled plan once the study runs.
 - Commit dates. They are shown in the message, but the order is ancestry, which a rebase can
   rewrite only by making a new history that a reviewer comparing against the published one sees.
 

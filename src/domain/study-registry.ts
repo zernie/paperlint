@@ -464,7 +464,7 @@ export const titleWords = (title: string): number =>
  * Whether `path` stays inside the folder it is relative to. A backslash or a Windows absolute path
  * is refused outright: `posix.normalize` does not resolve `..\\`, while the host's `join` may.
  */
-const isInside = (path: string): boolean => {
+export const isInside = (path: string): boolean => {
   if (path.includes("\\") || isAbsolute(path) || win32.isAbsolute(path))
     return false;
   const n = posix.normalize(path);
@@ -489,10 +489,14 @@ export const planKeys = (r: StudyRegistry): readonly string[] =>
 /** Each plan `planKeys` names, with the kind of the study whose row names it: what its parser needs. */
 export const planRefs = (
   r: StudyRegistry,
-): readonly { readonly key: string; readonly kind: StudyKind }[] =>
+): readonly {
+  readonly key: string;
+  readonly folder: string;
+  readonly kind: StudyKind;
+}[] =>
   r.studies.flatMap((s) =>
     s.plan !== undefined && isInside(s.plan) && isFolderName(s.folder)
-      ? [{ key: `${s.folder}/${s.plan}`, kind: s.kind }]
+      ? [{ key: `${s.folder}/${s.plan}`, folder: s.folder, kind: s.kind }]
       : [],
   );
 

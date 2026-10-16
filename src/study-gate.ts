@@ -10,12 +10,17 @@
  */
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import { isDirectory, modeStudies, type StudyDeps } from "./study-modes.ts";
+import {
+  modeStudies,
+  onDisk,
+  type ModeStudy,
+  type StudyDeps,
+} from "./study-modes.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
 import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
-import { isFolderName, type Study } from "./domain/study-registry.ts";
+import type { Study } from "./domain/study-registry.ts";
 import type { Committed, GitHistory } from "./ports/git-history.ts";
-import { registryOf } from "./study-registry-rule.ts";
+import { readableFolders, registryOf } from "./study-registry-rule.ts";
 import {
   refusal,
   refused,
@@ -74,9 +79,10 @@ const unusable = (
     return refusal(
       `${id}: its decision ${file} is matched by its output \`${glob}\`; a decision cannot be what its own run produces.`,
     );
-  return isDirectory(join(paper, file), deps)
+  const on = onDisk(join(paper, file), deps);
+  return on === "directory" || on === "symbolic link"
     ? refusal(
-        `${id}: its decision ${file} is a directory, not a file; the run cannot be gated on it. Name the decision file in \`mode.decision.file\`.`,
+        `${id}: its decision ${file} is a ${on}, not a file; the run cannot be gated on it. Name the decision file in \`mode.decision.file\`.`,
       )
     : null;
 };
@@ -89,12 +95,6 @@ const gateDecided = (
   deps: GateDeps,
 ): StudyRun => {
   const file = mode.decision.file;
-  if (!/\S/u.test(file))
-    return refused(
-      refusal(
-        `${id}: its plan names no decision file (\`mode.decision.file\`); the run cannot be gated on nothing.`,
-      ),
-    );
   const blocked = unusable(paper, { id, folder }, mode, deps);
   if (blocked !== null) return refused(blocked);
   const g = gateLine(
@@ -113,14 +113,24 @@ const escapingRow = (
   deps: GateDeps,
 ): StudyRefusal | null => {
   const r = registryOf(paper, deps);
+  const readable = readableFolders(paper, deps);
   const row = (r.kind === "read" ? r.registry.studies : []).find(
-    (x) => x.id === id && !isFolderName(x.folder),
+    (x) => x.id === id && !readable(x.folder),
   );
   return row === undefined
     ? null
     : refusal(
         `${id}: its row names the folder \`${row.folder}\`, which is not one folder inside ${shown}/${REPRO_DIR}/; nothing is read through it. Give the row its own folder's name.`,
       );
+};
+
+/** The refusal of a study whose plan is still a draft: a mode decides nothing until its plan is ready. */
+const draftRefusal = (id: string, s: ModeStudy): StudyRefusal => {
+  const names = s.empty.map((f) => `\`${f}\``).join(", ");
+  const verb = s.empty.length === 1 ? "is" : "are";
+  return refusal(
+    `${id}: its ${s.plan} is a draft — ${names} ${verb} empty; the run waits for a ready plan. Fill it in, then run this again.`,
+  );
 };
 
 /** `studies gate`: 0 when the run may start, 1 with the reason when not. */
@@ -139,6 +149,7 @@ export function runGate(
         `${id} declares no mode in ${shown}: no row of ${shown}/${REPRO_DIR}/studies.json with this id names a plan.json that parses with \`mode\`. Lint the paper (\`npx paperlint lint\`) to see why.`,
       ),
     );
+  if (s.empty.length > 0) return refused(draftRefusal(id, s));
   return s.mode.kind === "decide_before_run"
     ? gateDecided(paper, s.row, s.mode, deps)
     : {
