@@ -304,16 +304,16 @@ new:
 
 studies:
   --kind <kind>       new: measurement (the default), spike, tooling, data, artifact or salvage.
-                      A measurement's plan declares its mode: decide_before_run (written by new),
-                      blind, or exploratory; repro/outputs-before-decision checks the order in git.
+                      A study's status, result and in_paper are edited in repro/studies.json, its
+                      plan in its plan.json; the rule repro/study-registered checks them
+                      (docs/rules/repro/study-registered.md). A measurement's plan declares its
+                      mode: decide_before_run (written by new), blind, or exploratory;
+                      repro/outputs-before-decision checks the order in git, and a blind study's
+                      plaintext results are refused by repro/blind-plaintext until it is unsealed
+                      (docs/design/sealed-studies.md)
   --format md|tex     methods: a Markdown table (the default) or LaTeX sentences.
   --identity <file>   unseal: the age identity file. Where it is kept is yours to choose; a study
                       decided before its run needs no key at all.
-                      A study's status, result and in_paper are edited in repro/studies.json, its
-                      plan in its plan.json; the rule repro/study-registered checks them
-                      (docs/rules/repro/study-registered.md). A blind study's plaintext results
-                      are refused by repro/blind-plaintext until it is unsealed
-                      (docs/design/sealed-studies.md)
 
 submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
