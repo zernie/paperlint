@@ -16,7 +16,12 @@ import {
   type Study,
   type StudyPlan,
 } from "../src/domain/study-registry.ts";
-import type { Committed, GitHistory } from "../src/ports/git-history.ts";
+import type {
+  Committed,
+  GitHistory,
+  GitOrder,
+  OrderFacts,
+} from "../src/ports/git-history.ts";
 import type { Sealer } from "../src/ports/sealer.ts";
 import { runStudies, type StudiesArgs } from "../src/studies.ts";
 
@@ -108,19 +113,17 @@ const fakeSealer = (
   };
 };
 
-/** git answering from `table` (absolute path → state); a path not in it was never committed. */
+/**
+ * git answering from `table` (absolute path → state; a path not in it was never committed), and with
+ * `order` for every study's history.
+ */
 export const fakeGit = (
   table: Readonly<Record<string, Committed>>,
-): GitHistory & { readonly asked: string[] } => {
-  const asked: string[] = [];
-  return {
-    asked,
-    committed: (_paper, file) => {
-      asked.push(file);
-      return table[file] ?? { kind: "not-committed" };
-    },
-  };
-};
+  order: OrderFacts = { kind: "unknown", why: "no history in this test" },
+): GitHistory & GitOrder => ({
+  committed: (_paper, file) => table[file] ?? { kind: "not-committed" },
+  order: () => order,
+});
 
 /** `studies <sub> papers/example <id>` over `t`: the exit code, what it printed, and the files after. */
 export function studies(
@@ -130,6 +133,7 @@ export function studies(
   o: {
     readonly sealer?: SealerScript;
     readonly git?: Readonly<Record<string, Committed>>;
+    readonly order?: OrderFacts;
   } = {},
 ) {
   const files = memoryFiles(t);
@@ -143,6 +147,7 @@ export function studies(
       extra: [],
       kind: null,
       identity: null,
+      format: null,
       ...over,
     },
     {
@@ -153,7 +158,7 @@ export function studies(
       today: "2026-10-16",
       now: NOW,
       sealer: fakeSealer(o.sealer ?? "works", (p) => files.readBytes(p)),
-      git: fakeGit(o.git ?? {}),
+      git: fakeGit(o.git ?? {}, o.order),
       remove: (p) => void files.map.delete(p),
       log: (l) => log.push(l),
       err: (l) => errs.push(l),

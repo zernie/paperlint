@@ -42,6 +42,8 @@ import { registryOf } from "./study-registry-rule.ts";
 import { runSeal, runVerify, type SealRun } from "./sealed-studies.ts";
 import { runGate } from "./study-gate.ts";
 import { runUnseal, type UnsealDeps } from "./unseal-study.ts";
+import { isMethodsFormat, runMethods } from "./study-methods.ts";
+import type { GitHistory, GitOrder } from "./ports/git-history.ts";
 
 /** What one `studies` run was asked, after the command line. */
 export interface StudiesArgs {
@@ -55,9 +57,12 @@ export interface StudiesArgs {
   readonly kind: string | null;
   /** `--identity <file>`, for `unseal` only. */
   readonly identity: string | null;
+  /** `--format <md|tex>`, for `methods` only; null: Markdown. */
+  readonly format: string | null;
 }
 
 export interface StudiesDeps extends UnsealDeps {
+  readonly git: GitHistory & GitOrder;
   readonly files: Files;
   readonly listDir: ListDir;
   readonly codec: StudyRegistryCodec;
@@ -76,7 +81,9 @@ const VERIFY_USAGE = "npx paperlint studies verify <paper-dir> <id>";
 const GATE_USAGE = "npx paperlint studies gate <paper-dir> <id>";
 const UNSEAL_USAGE =
   "npx paperlint studies unseal <paper-dir> <id> --identity <file>";
-const SUBS = `new, index, gate, seal, verify or unseal — ${[NEW_USAGE, INDEX_USAGE, GATE_USAGE, SEAL_USAGE, VERIFY_USAGE, UNSEAL_USAGE].join(" · ")}`;
+const METHODS_USAGE =
+  "npx paperlint studies methods <paper-dir> [--format md|tex]";
+const SUBS = `new, index, gate, seal, verify, unseal or methods — ${[NEW_USAGE, INDEX_USAGE, GATE_USAGE, SEAL_USAGE, VERIFY_USAGE, UNSEAL_USAGE, METHODS_USAGE].join(" · ")}`;
 
 const STATUS_FILE = "PIPELINE-STATUS.md";
 
@@ -303,6 +310,25 @@ const onStudy =
     return out.ok ? out.lines : out.refusal;
   };
 
+/** `methods`: the paper's folder alone, and a form. */
+const methodsRun = (
+  p: Paper,
+  a: StudiesArgs,
+  deps: StudiesDeps,
+): Refusal | readonly string[] => {
+  const [surplus] = [...(a.title === undefined ? [] : [a.title]), ...a.extra];
+  if (surplus !== undefined)
+    return refuse(
+      2,
+      `studies methods takes only the paper's folder — \`${surplus}\` is one argument too many`,
+    );
+  const format = a.format ?? "md";
+  if (!isMethodsFormat(format))
+    return refuse(2, `--format ${format} is not a form: md or tex`);
+  const out = runMethods(p.dir, p.shown, format, deps);
+  return out.ok ? out.lines : out.refusal;
+};
+
 /** A run of a subcommand over a paper folder. */
 type Run = (
   p: Paper,
@@ -359,6 +385,7 @@ const COMMANDS: ReadonlyMap<
     "unseal",
     { usage: UNSEAL_USAGE, run: onStudy("unseal", UNSEAL_USAGE, unsealStudy) },
   ],
+  ["methods", { usage: METHODS_USAGE, run: methodsRun }],
 ]);
 
 /** The run: 0 done, 1 refused by the paper's state, 2 refused by the command line. */

@@ -276,6 +276,12 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       only once its unseal_after decision and sealed.json are both
                                       committed as they stand; every sha256 checked before anything is
                                       written, then the gate's commit recorded in sealed.json
+  npx paperlint studies methods <paper-dir> [--format md|tex]
+                                      per study the paper reports (in_paper "yes"): its mode, its
+                                      decision's commit and date, its first output's, and the command
+                                      that re-checks it — a Markdown table for the artifact's README
+                                      (md), or one LaTeX sentence per study for Methods (tex). Derived
+                                      from the plans and git, never kept by hand
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
 
@@ -300,6 +306,7 @@ studies:
   --kind <kind>       new: measurement (the default), spike, tooling, data, artifact or salvage.
                       A measurement's plan declares its mode: decide_before_run (written by new),
                       blind, or exploratory; repro/outputs-before-decision checks the order in git.
+  --format md|tex     methods: a Markdown table (the default) or LaTeX sentences.
   --identity <file>   unseal: the age identity file. Where it is kept is yours to choose; a study
                       decided before its run needs no key at all.
                       A study's status, result and in_paper are edited in repro/studies.json, its
@@ -1035,6 +1042,7 @@ export function parseArgs(argv: readonly string[]): Args {
     pdf: null,
     abstract: null,
     identity: null,
+    format: null,
     submit: false,
     save: false,
     hooksMode: null,
@@ -1129,7 +1137,7 @@ const SWITCHES: ReadonlyMap<
 /** The flags whose value is one string field of `Args`. */
 const STRING_FLAGS: ReadonlyMap<
   string,
-  "paper" | "venue" | "kind" | "pdf" | "abstract" | "identity"
+  "paper" | "venue" | "kind" | "pdf" | "abstract" | "identity" | "format"
 > = new Map([
   ["--paper", "paper"],
   ["--venue", "venue"],
@@ -1137,6 +1145,7 @@ const STRING_FLAGS: ReadonlyMap<
   ["--pdf", "pdf"],
   ["--abstract", "abstract"],
   ["--identity", "identity"],
+  ["--format", "format"],
 ]);
 
 /** The flags that take a value, in either spelling: `--flag value` or `--flag=value`. */
@@ -1749,6 +1758,7 @@ const SIMPLE: Readonly<
         extra: a.paths.slice(3),
         kind: a.kind,
         identity: a.identity,
+        format: a.format,
       },
       {
         ...STUDY_RULE_DEPS,

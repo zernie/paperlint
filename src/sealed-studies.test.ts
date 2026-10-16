@@ -325,9 +325,9 @@ it("which study, and the command line — refuses a missing id and an argument t
   ]);
 });
 
-it("which study, and the command line — an unknown subcommand names all six, and a name of Object's own is no subcommand", () => {
+it("which study, and the command line — an unknown subcommand names all seven, and a name of Object's own is no subcommand", () => {
   const usage =
-    'new, index, gate, seal, verify or unseal — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id> · npx paperlint studies unseal <paper-dir> <id> --identity <file>';
+    'new, index, gate, seal, verify, unseal or methods — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id> · npx paperlint studies unseal <paper-dir> <id> --identity <file> · npx paperlint studies methods <paper-dir> [--format md|tex]';
   // Guards: `studies constructor` is refused like any unknown word, not looked up on a prototype.
   expect(
     ["open", "constructor"].map((sub) => studies(sub, SEALED).err),

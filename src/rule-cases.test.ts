@@ -906,6 +906,40 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       ),
     ),
   },
+  // A paragraph linked to an exploratory study calls it pre-registered.
+  "paper/study-mode-claim": {
+    reports: {
+      tree: paper(
+        tex("We pre-registered it. % study: P1-S01"),
+        STUDY_IN_MODE({ kind: "exploratory", reason: "a first look" }),
+      ),
+      file: `${P}/paper.tex`,
+      severity: 2,
+      line: 3,
+    },
+    // The same paragraph saying what the study is.
+    silent: paper(
+      tex("An exploratory look. % study: P1-S01"),
+      STUDY_IN_MODE({ kind: "exploratory", reason: "a first look" }),
+    ),
+  },
+  // A number from an exploratory study, in a paragraph that never says so.
+  "paper/study-mode-stated": {
+    reports: {
+      tree: paper(
+        tex("In all, 12 runs stall. % study: P1-S01"),
+        STUDY_IN_MODE({ kind: "exploratory", reason: "a first look" }),
+      ),
+      file: `${P}/paper.tex`,
+      severity: 1,
+      line: 3,
+    },
+    // The same number, labelled.
+    silent: paper(
+      tex("In an exploratory look, 12 runs stall. % study: P1-S01"),
+      STUDY_IN_MODE({ kind: "exploratory", reason: "a first look" }),
+    ),
+  },
   // A study's plan still named prereg.json: read as its plan, and a warning to rename it.
   "repro/study-plan-name": {
     reports: {

@@ -108,6 +108,12 @@ const outputOf =
     ![README, s.plan, inStudy(s.folder, s.mode.decision.file)].includes(path) &&
     isOutput(s.mode.outputs, path);
 
+/** The files of a read history that are outputs of the study, oldest first commit first. */
+export const outputCommits = (
+  s: DecideFirstStudy,
+  files: readonly FirstCommit[],
+): readonly FirstCommit[] => files.filter((f) => outputOf(s)(f.path));
+
 /** The findings of a history that was read. */
 const ordered = (
   s: DecideFirstStudy,

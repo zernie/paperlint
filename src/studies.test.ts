@@ -64,6 +64,7 @@ function studies(
       extra: [],
       kind: null,
       identity: null,
+      format: null,
       ...a,
     },
     {
@@ -83,6 +84,9 @@ function studies(
       },
       git: {
         committed: () => {
+          throw new Error("new and index never ask git");
+        },
+        order: () => {
           throw new Error("new and index never ask git");
         },
       },
@@ -349,12 +353,12 @@ describe("studies — the command line", () => {
     [
       "no subcommand",
       { sub: undefined },
-      'studies needs a subcommand: new, index, gate, seal, verify or unseal — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id> · npx paperlint studies unseal <paper-dir> <id> --identity <file>',
+      'studies needs a subcommand: new, index, gate, seal, verify, unseal or methods — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id> · npx paperlint studies unseal <paper-dir> <id> --identity <file> · npx paperlint studies methods <paper-dir> [--format md|tex]',
     ],
     [
       "an unknown subcommand",
       { sub: "add" },
-      'unknown subcommand `studies add`: new, index, gate, seal, verify or unseal — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id> · npx paperlint studies unseal <paper-dir> <id> --identity <file>',
+      'unknown subcommand `studies add`: new, index, gate, seal, verify, unseal or methods — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id> · npx paperlint studies seal <paper-dir> <id> · npx paperlint studies verify <paper-dir> <id> · npx paperlint studies unseal <paper-dir> <id> --identity <file> · npx paperlint studies methods <paper-dir> [--format md|tex]',
     ],
     [
       "new with no paper folder",
