@@ -219,6 +219,20 @@ it("refuses when age is missing or cannot open a file, and without an identity f
   ]);
 });
 
+it("refuses a study that is not blind, naming the id", () => {
+  // Guards: unseal never guesses which study was meant.
+  expect(
+    studies(
+      "unseal",
+      SEALED,
+      { identity: KEY, title: "P1-S09" },
+      { git: COMMITTED },
+    ).err,
+  ).toEqual([
+    "P1-S09 is not a blind study of papers/example: no row of papers/example/repro/studies.json with this id names a plan.json that parses with the mode `blind`. Lint the paper (`npx paperlint lint`) to see why.",
+  ]);
+});
+
 it("refuses a study with no manifest, or one that is not one", () => {
   // Guards: nothing sealed is never "unsealed".
   expect([
