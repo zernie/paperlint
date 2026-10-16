@@ -80,6 +80,10 @@ import {
   texVenueRules,
 } from "./tex-venue-rules.ts";
 import { claimProvenanceRule } from "./claim-provenance.ts";
+import {
+  STUDY_CLAIM_RULE_LEVELS,
+  studyClaimRules,
+} from "./study-claim-rules.ts";
 import { registerRule } from "./register.ts";
 import {
   REGISTER_BAND_RULE_LEVELS,
@@ -458,6 +462,15 @@ const REPRO_RULE_LEVELS = {
   ...ORDER_RULE_LEVELS,
 };
 
+/** What the text says of its studies' modes, where a paragraph links one (`% study: <id>`). */
+const STUDY_CLAIM_RULES = studyClaimRules({
+  prose: TEX_RULE_DEPS,
+  studies: { ...STUDY_RULE_DEPS, git: GIT },
+});
+
+/** The `paper` plugin's own rules on `paper.tex`, beside the reference and sources rules. */
+const PAPER_TEX_RULES = { ...typography.rules, ...STUDY_CLAIM_RULES };
+
 /** Today in this machine's time zone, `YYYY-MM-DD`: the date `paperlint studies new` registers a study on. */
 const today = (now = new Date()): string =>
   [
@@ -479,10 +492,9 @@ export function buildConfig(
   opts: PaperlintConfig = {},
   texLanguage: unknown,
 ): ConfigBlock[] {
-  const paperRules = { ...typography.rules };
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
-    ...paperRules,
+    ...PAPER_TEX_RULES,
     ...referenceRules(RECORDED_DEPS),
     ...sourcesRules(RECORD_DEPS),
   };
@@ -603,6 +615,7 @@ export function buildConfig(
         "tex/future-promise": "warn",
         // A number with no owner: a prose rule, on beside the others above.
         "tex/claim-provenance": "warn",
+        ...STUDY_CLAIM_RULE_LEVELS,
         // Sentence-initial conjunctions over the whole body: register, not vocabulary.
         "tex/register": "warn",
         // Contrast frames, claims in bold, relation markers: each against the band the venue
