@@ -316,7 +316,9 @@ const sealedFile = z.strictObject({
 
 const gateCommit = z.strictObject({
   file: inFolder,
-  commit: z.string().regex(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u, "is not a commit"),
+  commit: z
+    .string()
+    .regex(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u, "is not a commit"),
   date: z.iso.datetime({ offset: true }),
 });
 
@@ -325,14 +327,12 @@ const unsealed = z.strictObject({ at: z.iso.datetime(), gate: gateCommit });
 /** `sealed.json`: written by the commands only; null is "still sealed", and an unsealing carries its gate. */
 const manifest = z.strictObject({
   recipients: z.array(recipient).min(1).superRefine(once("the recipient")),
-  files: z
-    .array(sealedFile)
-    .superRefine((fs, ctx) => {
-      once("the path")(
-        fs.map((f) => f.path),
-        ctx,
-      );
-    }),
+  files: z.array(sealedFile).superRefine((fs, ctx) => {
+    once("the path")(
+      fs.map((f) => f.path),
+      ctx,
+    );
+  }),
   unsealed: unsealed.nullable(),
 });
 

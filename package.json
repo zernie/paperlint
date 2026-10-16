@@ -11,6 +11,7 @@
     "test:e2e": "vitest run --project 'e2e-*'",
     "test:e2e:install": "vitest run --project e2e-install",
     "test:e2e:tex": "vitest run --project e2e-tex",
+    "test:e2e:age": "vitest run --project e2e-age",
     "coverage": "NODE_OPTIONS=\"--import=./test/coverage-src.ts $NODE_OPTIONS\" c8 --check-coverage npm test --",
     "lint": "eslint .",
     "check": "node scripts/check.ts",

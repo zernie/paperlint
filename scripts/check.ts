@@ -174,6 +174,12 @@ export const GATES: readonly Gate[] = [
     vitest: true,
   },
   {
+    name: "age e2e — a blind study sealed with the real age, through the real binary",
+    job: "gates",
+    script: "test:e2e:age",
+    vitest: true,
+  },
+  {
     name: "TeX e2e — real TeX Live: paperlint toolchain, a real pdflatex build of every fixture, the real banal",
     job: "build-e2e",
     script: "test:e2e:tex",

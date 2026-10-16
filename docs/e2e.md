@@ -8,10 +8,14 @@ or CI:
 | -------------------------- | ------------- | -------------------------------------------- | --------------------------- |
 | `npm run test:e2e:install` | `e2e-install` | npm and pnpm, and the network for `npm pack` | `test/e2e/install/*.e2e.ts` |
 | `npm run test:e2e:tex`     | `e2e-tex`     | TeX Live from `paperlint toolchain`, banal   | `test/e2e/tex/*.e2e.ts`     |
-| `npm run test:e2e`         | both          |                                              |                             |
+| `npm run test:e2e:age`     | `e2e-age`     | `age` and `age-keygen`                       | `test/e2e/age/*.e2e.ts`     |
+| `npm run test:e2e`         | all three     |                                              |                             |
 
-Both areas are part of `npm run check`, so nobody has to remember to call them. CI runs each in the
-job that has its environment: `test:e2e:install` in `gates`, `test:e2e:tex` in `build-e2e`.
+All three areas are part of `npm run check`, so nobody has to remember to call them. CI runs each in
+the job that has its environment: `test:e2e:install` and `test:e2e:age` in `gates` (which installs
+age with apt), `test:e2e:tex` in `build-e2e`. The age run seals a blind study through the real binary
+with a throwaway key pair and decrypts with age itself: only a real age shows that what
+`paperlint studies seal` wrote opens with the key.
 
 This page says what they prove, what they deliberately do not, and when a change owes a new one.
 

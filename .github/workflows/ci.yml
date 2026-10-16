@@ -188,6 +188,18 @@ jobs:
         run: npm run test:e2e:install
         timeout-minutes: 10
 
+      # A blind study sealed with the real age (test/e2e/age/): `paperlint studies seal` drives the age
+      # CLI and implements no cryptography, so only a real age shows the seal decrypts with the key.
+      # Installed rather than hoped for, like pnpm above: `CI` is set, so a missing age FAILS the run
+      # (test/e2e/need.ts). Its own bond: apt is the only network step here after npm ci.
+      - name: install age
+        run: sudo apt-get install -y --no-install-recommends age
+        timeout-minutes: 3
+
+      - name: npm run test:e2e:age
+        run: npm run test:e2e:age
+        timeout-minutes: 5
+
   # ── BUILDING THE PAPER WITH REAL pdflatex, ON LINUX AND macOS ──────────────────────────────────
   #
   # 🔴 ONE JOB, TWO OPERATING SYSTEMS. TeX Live comes from `paperlint toolchain` — the same command a user
