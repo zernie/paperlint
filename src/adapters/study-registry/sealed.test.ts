@@ -13,7 +13,10 @@ const R2 = `age1${"p".repeat(58)}`;
 
 const PLAN: StudyPlan = {
   question: "Does the hint help?",
-  population: { source: "tasks, 2026-10-01", draw: { kind: "all", method: "census" } },
+  population: {
+    source: "tasks, 2026-10-01",
+    draw: { kind: "all", method: "census" },
+  },
   arms: [{ name: "hint" }, { name: "none" }],
   primary_outcome: "pass rate",
   author_check: null,
@@ -24,7 +27,8 @@ const PLAN: StudyPlan = {
   },
 };
 
-const withBlind = (blind: unknown): string => JSON.stringify({ ...PLAN, blind });
+const withBlind = (blind: unknown): string =>
+  JSON.stringify({ ...PLAN, blind });
 const why = (text: string): string => {
   const r = studyRegistryCodec.parsePlan(text);
   return r.kind === "unreadable" ? r.why : "parsed";
@@ -61,7 +65,9 @@ describe("a plan's blind", () => {
 
   it("refuses a malformed or repeated recipient, and none at all", () => {
     // Guards: a key nobody holds, or a list that seals to no one, is no blind study.
-    expect(why(withBlind({ ...PLAN.blind, recipients: ["ssh-ed25519 AAAA"] }))).toBe(
+    expect(
+      why(withBlind({ ...PLAN.blind, recipients: ["ssh-ed25519 AAAA"] })),
+    ).toBe(
       "blind.recipients.0: is not a native age recipient (age1 and 58 more characters, from age-keygen)",
     );
     expect(why(withBlind({ ...PLAN.blind, recipients: [R1, R1] }))).toBe(
@@ -93,12 +99,16 @@ describe("a plan's blind", () => {
     );
     expect(
       why(withBlind({ ...PLAN.blind, unseal_after: { file: "x.md" } })),
-    ).toBe("blind.unseal_after.note: Invalid input: expected string, received undefined");
+    ).toBe(
+      "blind.unseal_after.note: Invalid input: expected string, received undefined",
+    );
   });
 
   it("is a field of the plan, so extra cannot carry it", () => {
     // Guards: one place says whether a study is blind.
-    expect(why(JSON.stringify({ ...PLAN, blind: undefined, extra: { blind: {} } }))).toBe(
+    expect(
+      why(JSON.stringify({ ...PLAN, blind: undefined, extra: { blind: {} } })),
+    ).toBe(
       "extra.blind: is a field of the plan itself — set it there, not in extra",
     );
   });
@@ -157,29 +167,39 @@ describe("a blind study's manifest, sealed.json", () => {
 
   it("refuses an unsealing without its gate, a flag in its place, and a repeated path", () => {
     // Guards: "unsealed" cannot be written down without the commit it waited for.
-    expect(manifestWhy({ ...MANIFEST, unsealed: { at: "2026-10-17T09:00:00.000Z" } })).toBe(
-      "unsealed.gate: Invalid input: expected object, received undefined",
-    );
+    expect(
+      manifestWhy({
+        ...MANIFEST,
+        unsealed: { at: "2026-10-17T09:00:00.000Z" },
+      }),
+    ).toBe("unsealed.gate: Invalid input: expected object, received undefined");
     expect(manifestWhy({ ...MANIFEST, unsealed: true })).toBe(
       "unsealed: Invalid input: expected object, received boolean",
     );
     expect(
-      manifestWhy({ ...MANIFEST, files: [MANIFEST.files[0], MANIFEST.files[0]] }),
+      manifestWhy({
+        ...MANIFEST,
+        files: [MANIFEST.files[0], MANIFEST.files[0]],
+      }),
     ).toBe("files: the path «RESULTS.md» is listed more than once");
   });
 
   it("refuses a hash that is not one, and a commit that is not one", () => {
     const [f] = MANIFEST.files;
     // Guards: the record anyone verifies against is made of real digests.
-    expect(
-      manifestWhy({ ...MANIFEST, files: [{ ...f, sha256: "xyz" }] }),
-    ).toBe("files.0.sha256: is not a sha256");
+    expect(manifestWhy({ ...MANIFEST, files: [{ ...f, sha256: "xyz" }] })).toBe(
+      "files.0.sha256: is not a sha256",
+    );
     expect(
       manifestWhy({
         ...MANIFEST,
         unsealed: {
           at: "2026-10-17T09:00:00.000Z",
-          gate: { file: "e.md", commit: "HEAD", date: "2026-10-17T14:00:00+05:00" },
+          gate: {
+            file: "e.md",
+            commit: "HEAD",
+            date: "2026-10-17T14:00:00+05:00",
+          },
         },
       }),
     ).toBe("unsealed.gate.commit: is not a commit");

@@ -35,3 +35,4 @@ export { nodeFiles } from "./files.io.ts";
 export { spawnProcess, type SpawnSync } from "./process.io.ts";
 export { hostDirs } from "./host.io.ts";
 export { nodeListDir } from "./list-dir.io.ts";
+export { nodeRemove } from "./remove.io.ts";

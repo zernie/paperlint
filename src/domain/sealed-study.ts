@@ -166,7 +166,9 @@ export const sameRecipients = (
   a: readonly string[],
   b: readonly string[],
 ): boolean =>
-  a.length === b.length && a.every((r) => b.includes(r)) && new Set(a).size === a.length;
+  a.length === b.length &&
+  a.every((r) => b.includes(r)) &&
+  new Set(a).size === a.length;
 
 /** What a check of one sealed file against the disk came to; null: it holds. */
 export type FileMismatch =

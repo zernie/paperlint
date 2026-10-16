@@ -71,7 +71,11 @@ describe("isSealable — which files a blind study seals", () => {
 });
 
 describe("sealSteps — what a seal does with each plaintext", () => {
-  const p = (path: string, sha = "a".repeat(64)) => ({ path, sha256: sha, size: 3 });
+  const p = (path: string, sha = "a".repeat(64)) => ({
+    path,
+    sha256: sha,
+    size: 3,
+  });
 
   it("a new file is sealed; the same bytes already sealed are only dropped; other bytes conflict", () => {
     // Guards: idempotence — a re-run removes a reappeared plaintext; a different one is refused.
@@ -143,7 +147,9 @@ describe("mismatches — the files against the manifest", () => {
 
   it("while sealed only the ciphertext is checked; it holds or is named", () => {
     // Guards: verify needs no key — and a swapped or missing ciphertext is seen without one.
-    expect(mismatches(MANIFEST, disk({ "RESULTS.md.age": cipher }))).toEqual([]);
+    expect(mismatches(MANIFEST, disk({ "RESULTS.md.age": cipher }))).toEqual(
+      [],
+    );
     expect(
       mismatches(
         MANIFEST,
@@ -294,7 +300,11 @@ describe("judgeBlind — what repro/blind-plaintext reports", () => {
             ...MANIFEST,
             unsealed: {
               at: "t",
-              gate: { file: "exclusions.md", commit: "f".repeat(40), date: "d" },
+              gate: {
+                file: "exclusions.md",
+                commit: "f".repeat(40),
+                date: "d",
+              },
             },
           },
         },
