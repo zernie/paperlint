@@ -17,15 +17,21 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
+import type { StudyMode } from "./domain/study-mode.ts";
 import {
   planTemplate,
   planText,
   registryText,
   withIndex,
+  type StudyPlan,
   type StudyRegistry,
+  type IndexInput,
 } from "./domain/study-registry.ts";
 import { recordText } from "../test/recorded-fixture.ts";
 import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
+
+/** No plan and no history: the index with every mode column `—`. */
+const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const fixture = (p: string): string =>
@@ -64,7 +70,7 @@ const REGISTRY: StudyRegistry = {
 };
 const REGISTERED_STUDY: Readonly<Record<string, string>> = {
   [`${P}/repro/studies.json`]: registryText(REGISTRY),
-  [`${P}/repro/README.md`]: withIndex("# repro\n", REGISTRY),
+  [`${P}/repro/README.md`]: withIndex("# repro\n", REGISTRY, NO_FACTS),
   [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
 };
 
@@ -76,9 +82,47 @@ const STUDY_WITH_PLAN = (name: string): Readonly<Record<string, string>> => {
   };
   return {
     [`${P}/repro/studies.json`]: registryText(r),
-    [`${P}/repro/README.md`]: withIndex("# repro\n", r),
+    [`${P}/repro/README.md`]: withIndex("# repro\n", r, NO_FACTS),
     [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
-    [`${P}/repro/P1-S01-ablation/${name}`]: planText(planTemplate()),
+    [`${P}/repro/P1-S01-ablation/${name}`]: planText(
+      planTemplate("spike", "P1-S01-ablation"),
+    ),
+  };
+};
+
+/** The registered study as a measurement in `mode`, its plan ready, `files` beside it. */
+const STUDY_IN_MODE = (
+  mode: StudyMode,
+  files: Readonly<Record<string, string>> = {},
+): Readonly<Record<string, string>> => {
+  const r: StudyRegistry = {
+    ...REGISTRY,
+    studies: REGISTRY.studies.map((s) => ({ ...s, plan: "plan.json" })),
+  };
+  const plan: StudyPlan = {
+    question: "Which step does the work?",
+    population: { source: "tasks", draw: { kind: "all", method: "census" } },
+    arms: [],
+    primary_outcome: "pass rate",
+    author_check: null,
+    mode,
+  };
+  // The index carries the plan's mode, as the lint reads it; no history is asked.
+  const facts: IndexInput = {
+    plans: new Map([["P1-S01-ablation/plan.json", { kind: "ready", plan }]]),
+    history: new Map(),
+  };
+  return {
+    [`${P}/repro/studies.json`]: registryText(r),
+    [`${P}/repro/README.md`]: withIndex("# repro\n", r, facts),
+    [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
+    [`${P}/repro/P1-S01-ablation/plan.json`]: planText(plan),
+    ...Object.fromEntries(
+      Object.entries(files).map(([k, v]) => [
+        `${P}/repro/P1-S01-ablation/${k}`,
+        v,
+      ]),
+    ),
   };
 };
 
@@ -786,6 +830,37 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     // Every folder registered, and the index the registry generates.
     silent: paper(tex("x"), REGISTERED_STUDY),
+  },
+  // A study decided before its run, linted where git has no history of it: said, never a pass. The
+  // order itself is judged on real repositories in src/outputs-before-decision-rule.test.ts.
+  "repro/outputs-before-decision": {
+    reports: {
+      tree: paper(
+        tex("x"),
+        STUDY_IN_MODE(
+          {
+            kind: "decide_before_run",
+            outputs: ["RESULTS.md"],
+            decision: {
+              file: "repro/P1-S01-ablation/decision.md",
+              note: "exclusions",
+            },
+          },
+          { "RESULTS.md": "41 of 60\n" },
+        ),
+      ),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 2,
+      line: 1,
+    },
+    // The same study declared exploratory: no gate, nothing to order.
+    silent: paper(
+      tex("x"),
+      STUDY_IN_MODE(
+        { kind: "exploratory", reason: "a first look" },
+        { "RESULTS.md": "41 of 60\n" },
+      ),
+    ),
   },
   // A study's plan still named prereg.json: read as its plan, and a warning to rename it.
   "repro/study-plan-name": {

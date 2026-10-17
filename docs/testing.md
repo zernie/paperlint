@@ -100,6 +100,7 @@ npm run coverage                  # the same under c8, failing below the thresho
 npm run test:e2e                  # every end-to-end run
 npm run test:e2e:install          # the package packed and installed under npm and pnpm
 npm run test:e2e:tex              # real TeX Live: toolchain, builds of every fixture, banal
+npm run test:e2e:studies          # real git: the gate, the order rule, the index's commits
 npm run check                     # every gate CI runs, and the list of what it does not reproduce
 ```
 

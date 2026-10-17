@@ -190,6 +190,12 @@ import {
   studyRegistryRules,
 } from "./study-registry-rule.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
+import { nodeListEntries, spawnProcess } from "./adapters/node/index.ts";
+import { gitHistory } from "./adapters/git/index.ts";
+import {
+  ORDER_RULE_LEVELS,
+  outputsBeforeDecisionRules,
+} from "./outputs-before-decision-rule.ts";
 import { runStudies } from "./studies.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
@@ -243,6 +249,11 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       index in repro/README.md regenerated
   npx paperlint studies index <paper-dir>
                                       regenerate the index in repro/README.md from repro/studies.json
+  npx paperlint studies gate <paper-dir> <id>
+                                      may the study's run start? For a study decided before its run
+                                      (the default mode), exit 0 only once its decision file is
+                                      committed as it stands, printing the commit and date; else exit
+                                      1 saying why. A runner calls it first: gate … && ./run.sh
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
 
@@ -267,7 +278,10 @@ studies:
   --kind <kind>       new: measurement (the default), spike, tooling, data, artifact or salvage.
                       A study's status, result and in_paper are edited in repro/studies.json, its
                       plan in its plan.json; the rule repro/study-registered checks them
-                      (docs/rules/repro/study-registered.md)
+                      (docs/rules/repro/study-registered.md). A measurement's plan declares its
+                      mode: decide_before_run (written by new) or exploratory;
+                      repro/outputs-before-decision checks the order in git
+                      (docs/design/study-modes.md)
 
 submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
@@ -383,20 +397,43 @@ const FRAGMENT_RULES = {
   "heading-case": REGISTER_AND_CASE_RULES["heading-case"],
 };
 
+/** `names` of this process's environment, and nothing else of it. */
+const envOf =
+  (names: readonly string[]) =>
+  (env: Readonly<NodeJS.ProcessEnv>): Readonly<Record<string, string>> =>
+    Object.fromEntries(
+      Object.entries(env).filter(
+        (e): e is [string, string] =>
+          names.includes(e[0]) && e[1] !== undefined,
+      ),
+    );
+
+/** The environment git runs in: PATH, and HOME for its configuration. */
+const gitEnv = envOf(["PATH", "HOME"]);
+
+/** git's history, as the decide-first rule and the gate read it. */
+const GIT = gitHistory(spawnProcess(), gitEnv(process.env));
+
 /** What the two layout rules read with: the disk and its directory listings. */
 const LAYOUT_RULE_DEPS = { files: nodeFiles, listDir: nodeListDir };
 
 /** What `repro/study-registered` and `paperlint studies` read with: the layout's, and the registry's parser. */
-const STUDY_RULE_DEPS = { ...LAYOUT_RULE_DEPS, codec: studyRegistryCodec };
+const STUDY_RULE_DEPS = {
+  ...LAYOUT_RULE_DEPS,
+  entries: nodeListEntries,
+  codec: studyRegistryCodec,
+};
 
 /** The `repro` plugin's rules, on every `PIPELINE-STATUS.md`: the layout of `repro/`, and its study registry. */
 const REPRO_RULES = {
   ...reproLayoutRules(LAYOUT_RULE_DEPS),
   ...studyRegistryRules(STUDY_RULE_DEPS),
+  ...outputsBeforeDecisionRules({ ...STUDY_RULE_DEPS, git: GIT }),
 };
 const REPRO_RULE_LEVELS = {
   ...REPRO_LAYOUT_RULE_LEVELS,
   ...STUDY_REGISTRY_RULE_LEVELS,
+  ...ORDER_RULE_LEVELS,
 };
 
 /** Today in this machine's time zone, `YYYY-MM-DD`: the date `paperlint studies new` registers a study on. */
@@ -1675,7 +1712,14 @@ const SIMPLE: Readonly<
         extra: a.paths.slice(3),
         kind: a.kind,
       },
-      { ...STUDY_RULE_DEPS, cwd, today: today(), log, err },
+      {
+        ...STUDY_RULE_DEPS,
+        git: GIT,
+        cwd,
+        today: today(),
+        log,
+        err,
+      },
     ),
   submission: (a, { log, err, cwd }) =>
     runSubmission(

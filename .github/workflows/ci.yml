@@ -28,9 +28,12 @@
 # what took the job from `timeout-minutes: 20` to 10. Re-measure when the counts move again; do not
 # cite the table above without re-running it.
 #
-# Expect ~3 minutes warm. `timeout-minutes: 10` is ~3×, and `npm ci` carries its OWN bond
-# because a job-level bond cannot tell "the registry hung" from "the suite is slow" and so hands
-# a hang the whole job.
+# MEASURED 2026-10-16 on GitHub's runner, not locally: `gates` on main took 9m38s (run 38854596880),
+# 6m43s of it `npm test, under coverage`; a branch adding a 16-second step was cancelled by the
+# 10-minute bond (run 38909690302). The ~3-minute estimate this bond was set against no longer holds,
+# so `timeout-minutes: 15` is ~1.5× the measured job — a bond against a hang, not a budget the suite
+# lives inside. `npm ci` carries its OWN bond because a job-level bond cannot tell "the registry hung"
+# from "the suite is slow" and so hands a hang the whole job.
 name: ci
 
 on:
@@ -66,7 +69,7 @@ jobs:
     # there is no pull_request object, and a bare `.draft` would be missing and kill every check there.
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -187,6 +190,14 @@ jobs:
       - name: npm run test:e2e:install
         run: npm run test:e2e:install
         timeout-minutes: 10
+
+      # A study decided before its run, through the real binary in a real git repository
+      # (test/e2e/studies/): `studies gate`, `repro/outputs-before-decision`, and the commits
+      # `studies index` writes. git is on the runner image; `CI` is set, so a missing git FAILS the
+      # run (test/e2e/need.ts). 16 s on the runner (run 38909690302), 10 s locally.
+      - name: npm run test:e2e:studies
+        run: npm run test:e2e:studies
+        timeout-minutes: 5
 
   # ── BUILDING THE PAPER WITH REAL pdflatex, ON LINUX AND macOS ──────────────────────────────────
   #

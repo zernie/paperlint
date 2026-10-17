@@ -21,7 +21,11 @@ import {
   type StudyInput,
   type StudyPlan,
   type StudyRegistry,
+  type IndexInput,
 } from "./study-registry.ts";
+
+/** No plan and no history: the index with every mode column `—`. */
+const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
 
 const study = (over: Partial<Study> = {}): Study => ({
   id: "P1-S01",
@@ -105,7 +109,7 @@ const input = (
 ): StudyInput => ({
   folders: r.studies.map((s) => s.folder),
   registry: { kind: "read", registry: r },
-  readme: withIndex("# Reproduction index\n", r),
+  readme: withIndex("# Reproduction index\n", r, NO_FACTS),
   existingResults: new Set(),
   plans: new Map(
     r.studies.flatMap((s) =>
@@ -158,7 +162,7 @@ describe("measurements and plans — silent", () => {
       ],
     });
     const plans = new Map([
-      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate())],
+      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate("spike", "x"))],
     ]);
     expect(findings(r, { plans })).toEqual([]);
   });
@@ -325,7 +329,7 @@ describe("plans — filled once the study has run, and named plan.json", () => {
       measurements: [],
     });
     const plans = new Map([
-      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate())],
+      [`P1-S01-census/${PLAN_FILE}`, draft(planTemplate("spike", "x"))],
     ]);
     expect(findings(r, { plans })).toEqual([
       { problem: "no-result", id: "P1-S01", missing: ["result_file"] },
@@ -460,7 +464,7 @@ describe("planKeys", () => {
 
 describe("planTemplate and planText", () => {
   it("every field present, its value to fill, and author_check null", () => {
-    expect(planTemplate()).toEqual({
+    expect(planTemplate("spike", "x")).toEqual({
       question: "",
       population: { source: "", draw: { kind: "all", method: "" } },
       arms: [],
@@ -532,7 +536,7 @@ const MESSAGES = [
       why: "unreadable",
       reasons: "question: required",
     },
-    "The plan of `P1-S01`, `plan.json` in its folder, is not a study plan: question: required. What to do: give it the fields on the rule's page — `question`, `population`, `arms`, `primary_outcome`.",
+    "The plan of `P1-S01`, `plan.json` in its folder, is not a study plan: question: required. What to do: give it the fields on the rule's page — `question`, `population`, `arms`, `primary_outcome`, and for a measurement its `mode`.",
   ],
   [
     {

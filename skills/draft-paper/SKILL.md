@@ -4,7 +4,7 @@ description: Use when the numbers exist and it's time to WRITE the paper — "dr
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:c8d25c21dc01a742 compiled from skills/draft-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a68aebea0917e4a6 compiled from skills/draft-paper/SKILL.md.spec.ts -->
 
 # draft-paper — prose that survives review and gets cited
 
@@ -33,9 +33,17 @@ number in the body stays in the body**.
    study, and — for security — the explicit threat model (attacker goals/capabilities/knowledge). A
    fuzzy threat model is the fastest reject at a security venue.
 4. **Method** — the reusable core. How the measurement/benchmark is *constructed* so someone else can
-   run it on a different target. This is the part that gets cited; give it the most care.
+   run it on a different target. This is the part that gets cited; give it the most care. **It states
+   each study's mode from the index, never from memory:** run `npx paperlint studies index <paper-dir>`, then read
+   each reported study's `mode`, `decision` and `first output` columns in `repro/README.md` and
+   write one sentence per study — decided before its run, with the decision's commit and date (and
+   its first output's, which came after); an exploratory study named exploratory, with its reason.
+   A study whose `decision` reads `not committed` was not decided before its run: say so.
 5. **Results** — the numbers from `build-benchmark`, each tied to a claim. Report ranges/CIs, not
-   rounded maxes. One figure or table carries the paper — make it legible standalone.
+   rounded maxes. One figure or table carries the paper — make it legible standalone. A number from
+   an exploratory study says "exploratory" where it is reported; "pre-registered" or "decided before"
+   only for a study the index shows as `decide_before_run` with its decision committed before its
+   first output.
 6. **Threats to validity** — construct / internal / external, honestly (see below). This section is a
    trust signal, not a confession.
 7. **Related work** — position against the *nearest* neighbor explicitly ("X measures A; we measure B

@@ -29,8 +29,9 @@ import {
   LEGACY_PLAN_FILE,
   PLAN_NAME_PROBLEMS,
   STUDIES_FILE,
+  isFolderName,
   judgeStudies,
-  planKeys,
+  planRefs,
   studyMessage,
   type PlanState,
   type RegistryState,
@@ -42,6 +43,7 @@ import type {
   FolderRuleModule,
 } from "./folder-venue-rule.ts";
 import type { Files } from "./ports/files.ts";
+import type { ListEntries } from "./ports/list-entries.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import { reproEntriesOf } from "./repro-layout-rule.ts";
 import { rulePageUrl } from "./venue-rules.ts";
@@ -51,10 +53,36 @@ const STATUS_FILE = "PIPELINE-STATUS.md";
 /** What the rule reads with: the disk, its listings, and the registry's parser. */
 export interface StudyRegistryDeps extends FolderLayoutDeps {
   readonly codec: StudyRegistryCodec;
+  /** `repro/`'s entries, links not followed: a study folder that is a link is never read through. */
+  readonly entries: ListEntries;
 }
 
+/** The names at the top of `<dir>/repro/` that are symbolic links. */
+const linksIn = (
+  dir: string,
+  deps: Pick<StudyRegistryDeps, "entries">,
+): ReadonlySet<string> =>
+  new Set(
+    deps
+      .entries(callerPath(join(dir, REPRO_DIR)))
+      .filter((e) => e.kind === "symlink")
+      .map((e) => e.name),
+  );
+
+/**
+ * The test every reader of a study's folder passes a row through: its folder is one folder name
+ * inside `repro/` (`isFolderName`) and not a symbolic link, which would lead the reads anywhere.
+ */
+export const readableFolders = (
+  dir: string,
+  deps: Pick<StudyRegistryDeps, "entries">,
+): ((folder: string) => boolean) => {
+  const links = linksIn(dir, deps);
+  return (folder) => isFolderName(folder) && !links.has(folder);
+};
+
 /** The text of the file at `p`; null when there is none, or a directory sits there. */
-const textAt = (files: Files, p: string): string | null => {
+export const textAt = (files: Files, p: string): string | null => {
   const b = files.isFile(callerPath(p)) ? files.readBytes(callerPath(p)) : null;
   return b === null ? null : new TextDecoder().decode(b);
 };
@@ -88,9 +116,12 @@ const existingResults = (
   dir: string,
   r: RegistryState,
   files: Files,
+  readable: (folder: string) => boolean,
 ): ReadonlySet<string> =>
   new Set(
     (r.kind === "read" ? r.registry.studies : [])
+      // A row whose folder is not one inside `repro/`, or is a link, is never read through.
+      .filter((s) => readable(s.folder))
       .flatMap((s) =>
         s.result_file === undefined ? [] : [`${s.folder}/${s.result_file}`],
       )
@@ -106,23 +137,28 @@ const existingResults = (
  * The plan each row of `r` names, read and parsed, by `<folder>/<plan>`; a plan not there is left out.
  * A plan still named `prereg.json` is parsed by the loose schema of its old name.
  */
-const plansOf = (
+export const plansOf = (
   dir: string,
   r: RegistryState,
   deps: Pick<StudyRegistryDeps, "files" | "codec">,
+  readable: (folder: string) => boolean,
 ): ReadonlyMap<string, PlanState> =>
   new Map(
-    (r.kind === "read" ? planKeys(r.registry) : [])
-      // A NUL is no path the disk can hold, and probing one throws: such a plan reads as missing.
-      .filter((key) => !key.includes("\0"))
-      .flatMap((key): readonly (readonly [string, PlanState])[] => {
+    (r.kind === "read" ? planRefs(r.registry) : [])
+      // A NUL is no path the disk can hold, and probing one throws: such a plan reads as missing. A
+      // folder that is a link is never read through.
+      .filter(({ key, folder }) => !key.includes("\0") && readable(folder))
+      .flatMap(({ key, kind }): readonly (readonly [string, PlanState])[] => {
         const text = textAt(deps.files, join(dir, REPRO_DIR, key));
         if (text === null) return [];
-        const parse =
-          posix.basename(key) === LEGACY_PLAN_FILE
-            ? deps.codec.parseLegacyPlan
-            : deps.codec.parsePlan;
-        return [[key, parse(text)]];
+        return [
+          [
+            key,
+            posix.basename(key) === LEGACY_PLAN_FILE
+              ? deps.codec.parseLegacyPlan(text)
+              : deps.codec.parsePlan(text, kind),
+          ],
+        ];
       }),
   );
 
@@ -131,13 +167,14 @@ export function studyFindings(
   dir: string,
   deps: StudyRegistryDeps,
 ): readonly StudyFinding[] {
+  const readable = readableFolders(dir, deps);
   const registry = registryOf(dir, deps);
   return judgeStudies({
     folders: studyFolders(dir, deps),
     registry,
     readme: textAt(deps.files, join(dir, REPRO_DIR, README)),
-    existingResults: existingResults(dir, registry, deps.files),
-    plans: plansOf(dir, registry, deps),
+    existingResults: existingResults(dir, registry, deps.files, readable),
+    plans: plansOf(dir, registry, deps, readable),
   });
 }
 

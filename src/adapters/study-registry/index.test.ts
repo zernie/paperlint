@@ -240,7 +240,7 @@ const planWith = (over: Readonly<Record<string, unknown>>): string =>
 
 describe("parsing a study's plan: ready or draft", () => {
   it("a filled plan is ready, its `extra` kept as it is", () => {
-    expect(parsePlan(JSON.stringify(PLAN))).toEqual({
+    expect(parsePlan(JSON.stringify(PLAN), "spike")).toEqual({
       kind: "ready",
       plan: PLAN,
     });
@@ -255,17 +255,20 @@ describe("parsing a study's plan: ready or draft", () => {
       },
       arms: [],
     };
-    expect(parsePlan(JSON.stringify(census))).toEqual({
+    expect(parsePlan(JSON.stringify(census), "spike")).toEqual({
       kind: "ready",
       plan: census,
     });
   });
 
   it("the template studies new writes is a draft of a census, naming every empty text", () => {
-    expect(planTemplate().population.draw).toEqual({ kind: "all", method: "" });
-    expect(parsePlan(planText(planTemplate()))).toEqual({
+    expect(planTemplate("spike", "x").population.draw).toEqual({
+      kind: "all",
+      method: "",
+    });
+    expect(parsePlan(planText(planTemplate("spike", "x")), "spike")).toEqual({
       kind: "draft",
-      plan: planTemplate(),
+      plan: planTemplate("spike", "x"),
       empty: [
         "question",
         "population.source",
@@ -277,7 +280,7 @@ describe("parsing a study's plan: ready or draft", () => {
 
   it("a text of white space only is empty", () => {
     const plan = { ...PLAN, primary_outcome: "  ", author_check: null };
-    expect(parsePlan(JSON.stringify(plan))).toEqual({
+    expect(parsePlan(JSON.stringify(plan), "spike")).toEqual({
       kind: "draft",
       plan,
       empty: ["primary_outcome"],
@@ -330,7 +333,7 @@ describe("parsing a study's plan: no contradictory state", () => {
       "population.draw.kind: Invalid discriminator value. Expected 'seeded' | 'all'",
     ],
   ])("refuses %s", (_why, t, why) => {
-    expect(parsePlan(t)).toEqual({ kind: "unreadable", why });
+    expect(parsePlan(t, "spike")).toEqual({ kind: "unreadable", why });
   });
 });
 
@@ -352,7 +355,7 @@ describe("parsing a study's plan: no name or fact said twice", () => {
       'population: Unrecognized key: "size"',
     ],
   ])("refuses %s", (_why, t, why) => {
-    expect(parsePlan(t)).toEqual({ kind: "unreadable", why });
+    expect(parsePlan(t, "spike")).toEqual({ kind: "unreadable", why });
   });
 });
 
@@ -395,7 +398,7 @@ describe("parsing a study's plan: strict at every level", () => {
       'arms.0: Unrecognized key: "model"',
     ],
   ])("refuses %s", (_why, t, why) => {
-    expect(parsePlan(t)).toEqual({ kind: "unreadable", why });
+    expect(parsePlan(t, "spike")).toEqual({ kind: "unreadable", why });
   });
 });
 

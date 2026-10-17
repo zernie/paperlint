@@ -174,6 +174,12 @@ export const GATES: readonly Gate[] = [
     vitest: true,
   },
   {
+    name: "studies e2e — a study decided before its run, in a real git repository",
+    job: "gates",
+    script: "test:e2e:studies",
+    vitest: true,
+  },
+  {
     name: "TeX e2e — real TeX Live: paperlint toolchain, a real pdflatex build of every fixture, the real banal",
     job: "build-e2e",
     script: "test:e2e:tex",

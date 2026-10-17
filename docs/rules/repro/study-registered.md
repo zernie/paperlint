@@ -139,7 +139,12 @@ author's check of the drawn units. `paperlint studies new` writes the template b
   },
   "arms": [],
   "primary_outcome": "",
-  "author_check": null
+  "author_check": null,
+  "mode": {
+    "kind": "decide_before_run",
+    "outputs": [],
+    "decision": { "file": "repro/P1-S02-census/decision.md", "note": "" }
+  }
 }
 ```
 
@@ -154,6 +159,14 @@ author's check of the drawn units. `paperlint studies new` writes the template b
 | `primary_outcome`        | the one number the study reports first                                           |
 | `author_check`           | `null` until the author has seen the drawn units; then `by`, `date`, `quote`     |
 | `extra`                  | optional: the paper's own keys (hypotheses, models, budget), kept unread         |
+| `mode`                   | a measurement's: exactly one of `decide_before_run` or `exploratory`             |
+
+`mode` is required of a `measurement` (other kinds may omit it): how its outcomes are kept from the
+decisions on its inputs — decided before the run (the default the template writes; its `outputs`,
+and its `decision` file relative to the paper, committed before the run) or `exploratory` with its
+`reason`. Without it a measurement's plan is a draft whose empty text is `mode`. The modes, and the
+rule that holds the order in git, [`repro/outputs-before-decision`](outputs-before-decision.md), are
+in [`docs/design/study-modes.md`](../../design/study-modes.md).
 
 The template's draw is of all the population; a sampled study changes it to
 `{ "kind": "seeded", "method": "random", "seed": 7 }`. The population's size is not stored: it is
@@ -176,12 +189,13 @@ The rule reports:
   managers leave there, like `__pycache__/` and `node_modules/`, are not studies);
 - a row whose folder does not exist, and a folder named by more than one row;
 - an id that is not `<prefix>-S<digits>`, an id on more than one row, and a folder that is not
-  `<id>-<slug>`;
+  `<id>-<slug>` — a row naming `../x` among them, through which no file is read;
 - a title over 8 words;
 - `done` without `result` or `result_file`, and a `result_file` that is not a file inside the folder;
 - `superseded` without `superseded_by`, or naming an id that is not in the registry;
-- an index out of sync: the block of `repro/README.md` between the markers below must equal the
-  text the registry generates, character for character;
+- an index out of sync: the block of `repro/README.md` between the markers below must hold the
+  cells the registry and the plans generate, whatever padding a formatter gave the table — every
+  column but the two `studies index` reads from git (below);
 
   ```text
   <!-- studies:begin — generated from studies.json by `paperlint studies index`; do not edit -->
@@ -197,7 +211,8 @@ The rule reports:
   by anyone else (`headline-approval`);
 - a row's `plan` that is outside its folder, not a file, or not of the plan's shape — and, once the
   study has run (`running`, `done`, `stopped`, `superseded`), a plan that leaves `question`,
-  `population.source`, `population.draw.method` or `primary_outcome` empty (`bad-plan`);
+  `population.source`, `population.draw.method` or `primary_outcome` empty, or — for a measurement —
+  declares no `mode` or leaves one of its texts empty (`bad-plan`);
 - a study of a `headline` measurement that has run with no `author_check` in its plan — or no plan —
   or, when the registry names its `author`, a check by anyone else (`author-check`).
 
@@ -212,9 +227,24 @@ study began, not what it is. The registry gives each study a number that does no
 person can read, and says in one place where every study stands. A rule holds it, not a guideline: a
 row the rule does not check is a row that drifts.
 
-The index in `repro/README.md` is generated, so it is never edited by hand and never parsed: the rule
-compares strings. It is a table padded the way prettier writes one, so formatting the README leaves
-it in sync.
+The index in `repro/README.md` is generated, so it is never edited by hand: the rule compares its
+cells. It is a table padded the way prettier writes one, so formatting the README leaves it in sync.
+
+Three of its columns say how each study kept its outcomes from its decisions
+([`docs/design/study-modes.md`](../../design/study-modes.md)):
+
+| column         | cell                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------ |
+| `mode`         | `decide_before_run`, `exploratory: <reason>`, or `—` for a study whose plan has none |
+| `decision`     | the decision file's first commit (12 characters) and its date, or `not committed`    |
+| `first output` | the first commit of the oldest output and its date, or `none`                        |
+
+The `mode` comes from the plan, which is in the tree, so the rule compares it. The two commits are
+what git's history said when `paperlint studies index` last ran: a squash merge or a rebase gives the
+same files new commits, and a shallow CI clone has none to read, so the rule never compares those two
+columns. Regenerate the index before reading them; the order itself is judged by
+[`repro/outputs-before-decision`](outputs-before-decision.md), not by the table. In a shallow clone
+`studies index` writes `unknown (shallow clone)`.
 
 ## Examples
 
@@ -237,9 +267,9 @@ the plan is reported for its empty fields, and the study for the author's check 
 ```text
 papers/example/PIPELINE-STATUS.md
   1:1  error  The plan of `P1-S02`, `plan.json` in its folder, leaves `question`, `population.source`,
-              `population.draw.method` and `primary_outcome` empty, and the study is `running`: a
-              plan is written before the runs. What to do: fill them in, or set the study back to
-              `designing`.
+              `population.draw.method`, `primary_outcome`, `mode.outputs` and `mode.decision.note`
+              empty, and the study is `running`: a plan is written before the runs. What to do: fill
+              them in, or set the study back to `designing`.
   1:1  error  `P1-S02` is `running` in the headline measurement `M1`, and its plan has no
               `author_check`. What to do: show the author the drawn units, then record their answer
               in the plan's `author_check` — `by`, `date`, and their words in `quote`.
@@ -263,9 +293,9 @@ repro/
 ```markdown
 <!-- studies:begin — generated from studies.json by `paperlint studies index`; do not edit -->
 
-| id     | title              | status | result             | in paper | folder                                                   |
-| ------ | ------------------ | ------ | ------------------ | -------- | -------------------------------------------------------- |
-| P1-S01 | Baseline pass rate | done   | 41 of 60 runs pass | yes      | [P1-S01-baseline-pass-rate/](P1-S01-baseline-pass-rate/) |
+| id     | title              | status | result             | in paper | mode              | decision                | first output            | folder                                                   |
+| ------ | ------------------ | ------ | ------------------ | -------- | ----------------- | ----------------------- | ----------------------- | -------------------------------------------------------- |
+| P1-S01 | Baseline pass rate | done   | 41 of 60 runs pass | yes      | decide_before_run | 3f2a9c1d7e40 2026-10-14 | 8b51e0aa42c9 2026-10-15 | [P1-S01-baseline-pass-rate/](P1-S01-baseline-pass-rate/) |
 
 <!-- studies:end -->
 ```
@@ -284,6 +314,9 @@ No rule options.
 - A repeated measurement or requirement id, and a requirement no measurement names.
 - A `prereg.json` or `plan.json` that no row names.
 - Whether the paper cites a study: `in_paper` is declared, not detected.
+- The index's `decision` and `first output` cells: they name commits a squash merge renames.
+- Inside a study folder that is a symbolic link: nothing is read through it, so its plan and its
+  result file read as missing.
 - What may stand at the top of `repro/` besides the study folders, and whether a study folder has a
   `README.md`: that is [`repro/allowed-files-only`](allowed-files-only.md).
 

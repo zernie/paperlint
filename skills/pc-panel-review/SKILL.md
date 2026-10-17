@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:7e5fb04d1cfa0548 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d92a744ec1cc1b05 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -61,11 +61,18 @@ prose-only read can.
      and calls the paper a blog post — the one reviewer a panel of careful full readers never
      predicts. Give it the three sections as text and the venue's name, nothing else.
    - **Methods/stats skeptic** — sample size, construct validity, multiple comparisons, overclaims,
-     whether the CIs support the claims.
+     whether the CIs support the claims, and **whether every confirmatory claim rests on a study
+     decided before its run**. Run `npx paperlint studies index <paper-dir>` and give this reviewer the index in
+     `repro/README.md` (each study's `mode`, `decision` and `first output`) beside the paper: a
+     claim of a tested prediction on an exploratory study, on one whose decision reads `not
+     committed`, or on one whose first output is not after its decision is a soundness finding, and
+     so is a "pre-registered" or "decided before" the table does not support; the reviewer names it.
    - **Domain practitioner** — relevance to the CFP, novelty vs the nearest prior work, does the
      finding change behavior, generalizability, fairness/tone toward anyone named.
    - **Artifact / reproducibility reviewer (MANDATORY if an artifact is attached)** — *actually
-     `cd` into the artifact and run it*; verify every headline number reproduces; read the code for
+     `cd` into the artifact and run it*; verify every headline number reproduces; re-run the order
+     check the paper's decided-before claims rest on (`npx paperlint lint` on a full clone); read the
+     code for
      circularity (echoing stored fields vs recomputing); grep all files (incl. data + compiled
      caches) for anonymization leaks; scope the badge (Available / Functional / Reproduced).
    - **Security/ethics reviewer** (security venues) — threat model soundness, responsible disclosure,

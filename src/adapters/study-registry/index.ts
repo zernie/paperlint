@@ -12,8 +12,13 @@
  * Its texts may be empty — the template's are — and the parser says which: a plan comes out ready or
  * a draft naming its empty texts, so nothing downstream looks at a text again. A plan still named
  * `prereg.json` has a loose schema of its own.
+ *
+ * A plan's `mode` (docs/design/study-modes.md) is parsed here too, strictly, a union on its `kind`:
+ * one mode at most, a glob that leaves the study's folder or a decision outside the paper refused,
+ * and a measurement's plan ready only with a mode.
  */
 import { z } from "zod";
+import { README } from "../../domain/repro-layout.ts";
 import {
   IN_PAPER,
   MEASUREMENT_ROLES,
@@ -29,9 +34,16 @@ import {
   type ParsedRegistry,
   type Requirement,
   type Study,
+  type PlanTextField,
+  type StudyKind,
   type StudyPlan,
   type StudyRegistry,
 } from "../../domain/study-registry.ts";
+import {
+  needsMode,
+  type Decision,
+  type StudyMode,
+} from "../../domain/study-mode.ts";
 import type { StudyRegistryCodec } from "../../ports/study-registry-codec.ts";
 
 const study = z.looseObject({
@@ -128,6 +140,66 @@ const extra = z.record(z.string(), z.unknown()).superRefine((e, ctx) => {
     });
 });
 
+/** Every value of `values` once: a repeat is an error naming it. */
+const once =
+  (what: string) =>
+  (values: readonly string[], ctx: Readonly<z.core.$RefinementCtx>): void => {
+    repeated(values).forEach((v) => {
+      ctx.addIssue({
+        code: "custom",
+        message: `${what} «${v}» is listed more than once`,
+      });
+    });
+  };
+
+/** Whether `p` is a relative path that stays where it starts: no backslash, not absolute, no `..`. */
+const staysInside = (p: string): boolean =>
+  !p.includes("\\") && !p.startsWith("/") && !p.split("/").includes("..");
+
+/** An output glob, relative to the study's folder: inside it, and never the study's README. */
+const inFolder = z
+  .string()
+  .min(1)
+  .refine(
+    (p) => staysInside(p) && p !== README,
+    `is not a path inside the study's folder, or names its ${README}`,
+  );
+
+/**
+ * Whether `p` names a file by one or more names joined by `/`, none empty, `.` or `..`: never the
+ * paper's folder itself (`.`) nor a path ending in `/`. Whether a name is a directory on disk is the
+ * gate's and the order rule's to see.
+ */
+const namesAFile = (p: string): boolean =>
+  p.split("/").every((n) => n !== "" && n !== "." && n !== "..");
+
+/**
+ * A decision file, relative to the PAPER's folder: inside it, and a file's path. Empty in a draft (the
+ * parser names it).
+ */
+const inPaper = z
+  .string()
+  .refine(staysInside, "is not a path inside the paper's folder")
+  .refine(
+    (p) => p === "" || !staysInside(p) || namesAFile(p),
+    "is not a path to a file inside the paper's folder: one or more names joined by /, none empty, . or ..",
+  );
+
+const decisionShape = z.strictObject({ file: inPaper, note: z.string() });
+
+/** The output globs: each once; none yet in a draft. */
+const outputs = z.array(inFolder).superRefine(once("the output"));
+
+/** How the outcomes are kept from the decisions: exactly one mode, by its `kind`. */
+const mode = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("decide_before_run"),
+    outputs,
+    decision: decisionShape,
+  }),
+  z.strictObject({ kind: z.literal("exploratory"), reason: z.string() }),
+]);
+
 /** A plan's shape: closed at every level; the paper's own keys go in `extra`. Null is the one "none". */
 const planShape = z.strictObject({
   question: z.string(),
@@ -136,6 +208,7 @@ const planShape = z.strictObject({
   primary_outcome: z.string(),
   author_check: authorCheck.nullable(),
   extra: extra.optional(),
+  mode: mode.optional(),
 });
 
 /**
@@ -196,6 +269,28 @@ const readyTexts = z.object({
   primary_outcome: filled,
 });
 
+/** Whether `t` says something. */
+const says = (t: string): boolean => /\S/u.test(t);
+
+/**
+ * The mode's texts that are still empty, by their field: the mode itself when a study of `kind` must
+ * declare one and the plan does not, a decide-first mode's outputs and decision, an exploratory reason.
+ */
+const modeEmpties = (
+  p: StudyPlan,
+  kind: StudyKind,
+): readonly PlanTextField[] => {
+  const m = p.mode;
+  if (m === undefined) return needsMode(kind) ? ["mode"] : [];
+  if (m.kind === "exploratory") return says(m.reason) ? [] : ["mode.reason"];
+  return PLAN_TEXT_FIELDS.filter(
+    (f) =>
+      (f === "mode.outputs" && m.outputs.length === 0) ||
+      (f === "mode.decision.file" && !says(m.decision.file)) ||
+      (f === "mode.decision.note" && !says(m.decision.note)),
+  );
+};
+
 /** A plan that parsed: ready, or a draft. */
 type ReadyOrDraft = Exclude<ParsedPlan, { readonly kind: "unreadable" }>;
 
@@ -203,29 +298,37 @@ type ReadyOrDraft = Exclude<ParsedPlan, { readonly kind: "unreadable" }>;
  * A parsed plan, ready when every required text is filled, else a draft naming the empty ones. A
  * draft that carries the author's check is no plan: the author approved one with empty texts.
  */
-const readyOrDraft = (
-  p: StudyPlan,
-  ctx: Readonly<z.core.$RefinementCtx>,
-): ReadyOrDraft => {
-  const checked = readyTexts.safeParse(p);
-  if (checked.success) return { kind: "ready", plan: p };
-  const paths = checked.error.issues.map((i) => i.path.join("."));
-  const empty = PLAN_TEXT_FIELDS.filter((f) => paths.includes(f));
-  if (p.author_check === null)
-    return { kind: "draft", plan: { ...p, author_check: null }, empty };
-  ctx.addIssue({
-    code: "custom",
-    path: ["author_check"],
-    message: `is set, and the plan leaves ${empty.map((f) => `\`${f}\``).join(", ")} empty — the author approves a complete plan: fill them, or set author_check to null`,
-  });
-  return z.NEVER;
-};
+const readyOrDraft =
+  (kind: StudyKind) =>
+  (p: StudyPlan, ctx: Readonly<z.core.$RefinementCtx>): ReadyOrDraft => {
+    const checked = readyTexts.safeParse(p);
+    const paths = checked.success
+      ? []
+      : checked.error.issues.map((i) => i.path.join("."));
+    const empty = [
+      ...PLAN_TEXT_FIELDS.filter((f) => paths.includes(f)),
+      ...modeEmpties(p, kind),
+    ];
+    if (empty.length === 0) return { kind: "ready", plan: p };
+    if (p.author_check === null)
+      return { kind: "draft", plan: { ...p, author_check: null }, empty };
+    ctx.addIssue({
+      code: "custom",
+      path: ["author_check"],
+      message: `is set, and the plan leaves ${empty.map((f) => `\`${f}\``).join(", ")} empty — the author approves a complete plan: fill them, or set author_check to null`,
+    });
+    return z.NEVER;
+  };
 
-/** A `plan.json`: strict, then ready or draft. */
-const plan = planShape.transform(readyOrDraft);
+/** A `plan.json` of a study of `kind`: strict, then ready or draft — a measurement's ready only with its mode. */
+const planFor = (kind: StudyKind) => planShape.transform(readyOrDraft(kind));
 
-/** A `prereg.json`: loose, mapped onto the plan, then ready or draft. */
-const legacyPlan = legacyAsPlan.transform(readyOrDraft);
+/**
+ * A `prereg.json`: loose, mapped onto the plan, then ready or draft. Written before modes existed, it
+ * is never asked for one; `repro/study-plan-name` already asks to move it to `plan.json`, where the
+ * strict parser does.
+ */
+const legacyPlan = legacyAsPlan.transform(readyOrDraft("spike"));
 
 // ── the schemas ARE the domain's types ─────────────────────────────────────────
 // Each schema's output and its hand-written domain type are the same type, both ways, once both are
@@ -261,8 +364,10 @@ export type SchemasAreTheDomain = [
   Same<z.output<typeof authorCheck>, AuthorCheck>,
   Same<z.output<typeof planShape>, StudyPlan>,
   Same<z.output<typeof legacyAsPlan>, StudyPlan>,
-  Same<z.output<typeof plan>, ReadyOrDraft>,
+  Same<z.output<ReturnType<typeof planFor>>, ReadyOrDraft>,
   Same<z.output<typeof legacyPlan>, ReadyOrDraft>,
+  Same<z.output<typeof mode>, StudyMode>,
+  Same<z.output<typeof decisionShape>, Decision>,
 ] extends true[]
   ? true
   : never;
@@ -315,8 +420,9 @@ const planParser =
       : { kind: "unreadable", why: reasons(parsed.error.issues) };
   };
 
-/** A `plan.json`: strict. */
-export const parseStudyPlan = planParser(plan);
+/** A `plan.json` of a study of `kind`: strict. */
+export const parseStudyPlan = (text: string, kind: StudyKind): ParsedPlan =>
+  planParser(planFor(kind))(text);
 
 /** A plan still named `prereg.json`: loose, read only when a row names it. */
 export const parseLegacyPlan = planParser(legacyPlan);

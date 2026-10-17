@@ -8,10 +8,14 @@ or CI:
 | -------------------------- | ------------- | -------------------------------------------- | --------------------------- |
 | `npm run test:e2e:install` | `e2e-install` | npm and pnpm, and the network for `npm pack` | `test/e2e/install/*.e2e.ts` |
 | `npm run test:e2e:tex`     | `e2e-tex`     | TeX Live from `paperlint toolchain`, banal   | `test/e2e/tex/*.e2e.ts`     |
-| `npm run test:e2e`         | both          |                                              |                             |
+| `npm run test:e2e:studies` | `e2e-studies` | git                                          | `test/e2e/studies/*.e2e.ts` |
+| `npm run test:e2e`         | all three     |                                              |                             |
 
-Both areas are part of `npm run check`, so nobody has to remember to call them. CI runs each in the
-job that has its environment: `test:e2e:install` in `gates`, `test:e2e:tex` in `build-e2e`.
+All three areas are part of `npm run check`, so nobody has to remember to call them. CI runs each in
+the job that has its environment: `test:e2e:install` and `test:e2e:studies` in `gates`, `test:e2e:tex`
+in `build-e2e`. The studies run drives a study decided before its run through the real binary in a
+real git repository: the gate, the order the lint reads, a shallow clone named, and the two commits
+`studies index` writes into the index.
 
 This page says what they prove, what they deliberately do not, and when a change owes a new one.
 

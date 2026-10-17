@@ -1,6 +1,8 @@
 /**
  * `paperlint studies new|index <paper-dir>` — the two commands that write a paper's study registry,
- * `repro/studies.json`, and its index in `repro/README.md` (docs/design/study-registry.md).
+ * `repro/studies.json`, and its index in `repro/README.md` (docs/design/study-registry.md) — and
+ * `studies gate <paper-dir> <id>` (src/study-gate.ts), over the studies' modes
+ * (docs/design/study-modes.md).
  *
  *   new <paper-dir> "<title>" [--kind <kind>]
  *            the next id; `repro/<id>-<slug>/README.md` with the id and title in its frontmatter, and
@@ -23,7 +25,7 @@ import {
   STUDIES_FILE,
   STUDY_KINDS,
   addStudy,
-  indexInSync,
+  indexCurrent,
   isStudyKind,
   planTemplate,
   planText,
@@ -36,8 +38,12 @@ import {
 } from "./domain/study-registry.ts";
 import type { Files } from "./ports/files.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
+import type { ListEntries } from "./ports/list-entries.ts";
 import type { ListDir } from "./ports/talk-media.ts";
-import { registryOf } from "./study-registry-rule.ts";
+import { readableFolders, registryOf } from "./study-registry-rule.ts";
+import { runGate } from "./study-gate.ts";
+import { indexInputOf } from "./study-index-input.ts";
+import type { GitHistory, GitOrder } from "./ports/git-history.ts";
 
 /** What one `studies` run was asked, after the command line. */
 export interface StudiesArgs {
@@ -52,8 +58,10 @@ export interface StudiesArgs {
 }
 
 export interface StudiesDeps {
+  readonly git: GitHistory & GitOrder;
   readonly files: Files;
   readonly listDir: ListDir;
+  readonly entries: ListEntries;
   readonly codec: StudyRegistryCodec;
   readonly cwd: string;
   /** Today, `YYYY-MM-DD`: the root reads the clock. */
@@ -65,7 +73,8 @@ export interface StudiesDeps {
 const NEW_USAGE =
   'npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]';
 const INDEX_USAGE = "npx paperlint studies index <paper-dir>";
-const SUBS = `new or index — ${NEW_USAGE} · ${INDEX_USAGE}`;
+const GATE_USAGE = "npx paperlint studies gate <paper-dir> <id>";
+const SUBS = `new, index or gate — ${[NEW_USAGE, INDEX_USAGE, GATE_USAGE].join(" · ")}`;
 
 const STATUS_FILE = "PIPELINE-STATUS.md";
 
@@ -93,8 +102,24 @@ function registryIn(p: Paper, deps: StudiesDeps): StudyRegistry | Refusal {
     case "unreadable":
       return refuse(1, `${file} is not a study registry: ${r.why}`);
     case "read":
-      return r.registry;
+      return escaping(p, r.registry, deps) ?? r.registry;
   }
+}
+
+/** The refusal when a row names a folder that is not one inside `repro/`; null when none does. */
+function escaping(
+  p: Paper,
+  r: StudyRegistry,
+  deps: StudiesDeps,
+): Refusal | null {
+  const readable = readableFolders(p.dir, deps);
+  const s = r.studies.find((row) => !readable(row.folder));
+  return s === undefined
+    ? null
+    : refuse(
+        1,
+        `${s.id} in ${p.shown}/${REPRO_DIR}/${STUDIES_FILE} names the folder \`${s.folder}\`, which is not one folder inside ${REPRO_DIR}/: nothing is read or written through it. Give the row its own folder's name, then run this again.`,
+      );
 }
 
 const isRefusal = (v: unknown): v is Refusal =>
@@ -115,12 +140,13 @@ const studiesCount = (r: StudyRegistry): string =>
  * Write the index of `r` into the README; whether it wrote. A block already in sync is left as it
  * is, so the padding a formatter gave the table is never undone.
  */
-function writeIndex(dir: string, r: StudyRegistry, files: Files): boolean {
-  const before = readmeOf(dir, files);
-  if (indexInSync(before, r)) return false;
-  files.writeAtomic(
+function writeIndex(dir: string, r: StudyRegistry, deps: StudiesDeps): boolean {
+  const before = readmeOf(dir, deps.files);
+  const at = indexInputOf(dir, { kind: "read", registry: r }, deps);
+  if (indexCurrent(before, r, at)) return false;
+  deps.files.writeAtomic(
     callerPath(join(dir, REPRO_DIR, README)),
-    text(withIndex(before, r)),
+    text(withIndex(before, r, at)),
   );
   return true;
 }
@@ -155,7 +181,7 @@ function runIndex(
   if (blocked !== null) return blocked;
   const readme = `${p.shown}/${REPRO_DIR}/${README}`;
   return [
-    writeIndex(p.dir, r, deps.files)
+    writeIndex(p.dir, r, deps)
       ? `wrote the index of ${studiesCount(r)} in ${readme}`
       : `the index in ${readme} is in sync with ${studiesCount(r)}`,
   ];
@@ -186,18 +212,19 @@ function newArgs(
 function writeStudy(
   p: Paper,
   added: { readonly registry: StudyRegistry; readonly study: Study },
-  files: Files,
+  deps: StudiesDeps,
 ): readonly string[] {
   const { study, registry } = added;
+  const { files } = deps;
   const at = (...names: readonly string[]): AbsolutePath =>
     callerPath(join(p.dir, REPRO_DIR, ...names));
   files.writeAtomic(at(study.folder, README), text(studyReadme(study)));
   files.writeAtomic(
     at(study.folder, PLAN_FILE),
-    text(planText(planTemplate())),
+    text(planText(planTemplate(study.kind, study.folder))),
   );
   files.writeAtomic(at(STUDIES_FILE), text(registryText(registry)));
-  writeIndex(p.dir, registry, files);
+  writeIndex(p.dir, registry, deps);
   const repro = `${p.shown}/${REPRO_DIR}`;
   return [
     `created ${repro}/${study.folder}/${README}`,
@@ -228,35 +255,69 @@ function runNew(
         1,
         `${p.shown}/${REPRO_DIR}/${folder}/ already exists; it is never overwritten. Register it by hand, or remove it and run this again.`,
       )
-    : writeStudy(p, added, deps.files);
+    : writeStudy(p, added, deps);
 }
 
 /** The paper folder the command line names, or the refusal. */
-function paperOf(a: StudiesArgs, deps: StudiesDeps): Refusal | Paper {
+function paperOf(a: StudiesArgs, deps: StudiesDeps): Refusal | Chosen {
   if (a.sub === undefined)
     return refuse(2, `studies needs a subcommand: ${SUBS}`);
-  if (a.sub !== "new" && a.sub !== "index")
+  const sub = COMMANDS.get(a.sub);
+  if (sub === undefined)
     return refuse(2, `unknown subcommand \`studies ${a.sub}\`: ${SUBS}`);
   if (a.paperDir === undefined)
-    return refuse(
-      2,
-      `studies ${a.sub} needs the paper's folder: ${a.sub === "new" ? NEW_USAGE : INDEX_USAGE}`,
-    );
+    return refuse(2, `studies ${a.sub} needs the paper's folder: ${sub.usage}`);
   const dir = resolve(deps.cwd, a.paperDir);
   const shown = relative(deps.cwd, dir) || ".";
   return deps.files.isFile(callerPath(join(dir, STATUS_FILE)))
-    ? { dir, shown }
+    ? { dir, shown, run: sub.run }
     : refuse(2, `${shown} is not a paper folder: it has no ${STATUS_FILE}`);
 }
+
+/** `gate`: the study's id, one argument, then the gate. */
+const gateRun = (
+  p: Paper,
+  a: StudiesArgs,
+  deps: StudiesDeps,
+): Refusal | readonly string[] => {
+  if (a.title === undefined)
+    return refuse(2, `studies gate needs the study's id: ${GATE_USAGE}`);
+  const [surplus] = a.extra;
+  if (surplus !== undefined)
+    return refuse(
+      2,
+      `studies gate takes the paper's folder and one id — \`${surplus}\` is one argument too many`,
+    );
+  const out = runGate(p.dir, p.shown, a.title, deps);
+  return out.ok ? out.lines : out.refusal;
+};
+
+/** A run of a subcommand over a paper folder. */
+type Run = (
+  p: Paper,
+  a: StudiesArgs,
+  d: StudiesDeps,
+) => Refusal | readonly string[];
+
+/** The paper folder, and the run the subcommand chose. */
+interface Chosen extends Paper {
+  readonly run: Run;
+}
+
+/** Each subcommand: its usage line and its run. */
+const COMMANDS: ReadonlyMap<
+  string,
+  { readonly usage: string; readonly run: Run }
+> = new Map([
+  ["new", { usage: NEW_USAGE, run: runNew }],
+  ["index", { usage: INDEX_USAGE, run: runIndex }],
+  ["gate", { usage: GATE_USAGE, run: gateRun }],
+]);
 
 /** The run: 0 done, 1 refused by the paper's state, 2 refused by the command line. */
 export function runStudies(a: StudiesArgs, deps: StudiesDeps): number {
   const p = paperOf(a, deps);
-  const out = isRefusal(p)
-    ? p
-    : a.sub === "new"
-      ? runNew(p, a, deps)
-      : runIndex(p, a, deps);
+  const out = isRefusal(p) ? p : p.run(p, a, deps);
   if (isRefusal(out)) {
     deps.err(out.line);
     return out.code;

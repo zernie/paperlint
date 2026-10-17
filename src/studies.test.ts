@@ -5,7 +5,11 @@
  * state).
  */
 import { describe, expect, it } from "vitest";
-import { memoryFiles, memoryListDir } from "./adapters/memory/index.ts";
+import {
+  memoryFiles,
+  memoryListDir,
+  memoryListEntries,
+} from "./adapters/memory/index.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
 import {
   indexBlock,
@@ -16,8 +20,12 @@ import {
   withIndex,
   type Study,
   type StudyRegistry,
+  type IndexInput,
 } from "./domain/study-registry.ts";
 import { runStudies, type StudiesArgs } from "./studies.ts";
+
+/** No plan and no history: the index with every mode column `—`. */
+const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
 
 const CWD = "/work";
 const DIR = "/work/papers/example";
@@ -68,9 +76,24 @@ function studies(
     {
       files,
       listDir: memoryListDir(files),
+      entries: memoryListEntries(files),
       codec: studyRegistryCodec,
       cwd,
       today: "2026-10-15",
+      git: {
+        committed: () => {
+          throw new Error(
+            "new and index never ask whether a file is committed",
+          );
+        },
+        // A history with no decision and no output committed yet.
+        order: () => ({
+          kind: "read",
+          decision: null,
+          decisionDeleted: false,
+          files: [],
+        }),
+      },
       log: (l) => log.push(l),
       err: (l) => err.push(l),
     },
@@ -110,10 +133,11 @@ describe("studies new", () => {
     expect(after).toEqual({
       ...before,
       [`${REPRO}/P1-S02-ablation-of-the-guard/README.md`]: studyReadme(added),
-      [`${REPRO}/P1-S02-ablation-of-the-guard/plan.json`]:
-        planText(planTemplate()),
+      [`${REPRO}/P1-S02-ablation-of-the-guard/plan.json`]: planText(
+        planTemplate("spike", "x"),
+      ),
       [`${REPRO}/studies.json`]: registryText(r),
-      [`${REPRO}/README.md`]: `# Reproduction index\n\nIntro.\n\n${indexBlock(r)}\n`,
+      [`${REPRO}/README.md`]: `# Reproduction index\n\nIntro.\n\n${indexBlock(r, NO_FACTS)}\n`,
     });
     expect(log).toEqual([
       "created papers/example/repro/P1-S02-ablation-of-the-guard/README.md",
@@ -221,7 +245,7 @@ describe("studies index", () => {
   it("regenerates the block in place", () => {
     const tree = paper({
       [`${REPRO}/studies.json`]: registryText(r),
-      [`${REPRO}/README.md`]: `# I\n\n${indexBlock(P1())}\n\nTail.\n`,
+      [`${REPRO}/README.md`]: `# I\n\n${indexBlock(P1(), NO_FACTS)}\n\nTail.\n`,
     });
     const { code, log, err, after } = studies(
       { sub: "index", paperDir: "papers/example" },
@@ -234,14 +258,14 @@ describe("studies index", () => {
     });
     expect(after).toEqual({
       ...tree,
-      [`${REPRO}/README.md`]: `# I\n\n${indexBlock(r)}\n\nTail.\n`,
+      [`${REPRO}/README.md`]: `# I\n\n${indexBlock(r, NO_FACTS)}\n\nTail.\n`,
     });
   });
 
   it("says so and writes nothing when the index is in sync", () => {
     const tree = paper({
       [`${REPRO}/studies.json`]: registryText(r),
-      [`${REPRO}/README.md`]: withIndex("# I\n", r),
+      [`${REPRO}/README.md`]: withIndex("# I\n", r, NO_FACTS),
     });
     const out = studies({ sub: "index" }, tree);
     expect([out.code, out.log, out.after]).toEqual([
@@ -266,7 +290,7 @@ describe("studies index", () => {
 describe("studies index — a table a formatter padded", () => {
   it("leaves an index in sync as it is, whatever its padding", () => {
     const r = P1(study({ title: "測定 A" }));
-    const generated = withIndex("# I\n", r);
+    const generated = withIndex("# I\n", r, NO_FACTS);
     const padded = generated.replace("測定 A", "測定 A  ");
     expect(padded).not.toBe(generated);
     const tree = paper({
@@ -315,7 +339,7 @@ describe("studies — run from inside the paper folder", () => {
   it("names the folder `.`", () => {
     const tree = paper({
       [`${REPRO}/studies.json`]: registryText(P1()),
-      [`${REPRO}/README.md`]: withIndex("# I\n", P1()),
+      [`${REPRO}/README.md`]: withIndex("# I\n", P1(), NO_FACTS),
     });
     const out = studies({ sub: "index", paperDir: "." }, tree, DIR);
     expect([out.code, out.log]).toEqual([
@@ -330,12 +354,12 @@ describe("studies — the command line", () => {
     [
       "no subcommand",
       { sub: undefined },
-      'studies needs a subcommand: new or index — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir>',
+      'studies needs a subcommand: new, index or gate — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id>',
     ],
     [
       "an unknown subcommand",
       { sub: "add" },
-      'unknown subcommand `studies add`: new or index — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir>',
+      'unknown subcommand `studies add`: new, index or gate — npx paperlint studies new <paper-dir> "<title>" [--kind <kind>] · npx paperlint studies index <paper-dir> · npx paperlint studies gate <paper-dir> <id>',
     ],
     [
       "new with no paper folder",

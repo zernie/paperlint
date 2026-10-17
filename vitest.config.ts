@@ -47,6 +47,17 @@ export default defineConfig({
           hookTimeout: 10 * 60_000,
         },
       },
+      // A study decided before its run, through the real binary in a real git repository. Needs git.
+      {
+        extends: true,
+        test: {
+          name: "e2e-studies",
+          fileParallelism: false,
+          include: ["test/e2e/studies/**/*.e2e.ts"],
+          testTimeout: 2 * 60_000,
+          hookTimeout: 2 * 60_000,
+        },
+      },
       // A real TeX Live: paperlint's own toolchain, builds, banal. Needs `paperlint toolchain`.
       {
         extends: true,
