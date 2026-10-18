@@ -51,10 +51,10 @@ it("a link to a file inside the package that the pack list leaves out is reporte
   ]);
 });
 
-it("links that stay inside the package, URLs, anchors, mail links and root paths are quiet; images and reference links are read", () => {
+it("links that stay inside the package, URLs, protocol-relative URLs, anchors and mail links are quiet; images and reference links are read", () => {
   const quiet = [
     "[a](../a.md) [b](tex/b.md#heading) [c](./../a.md?plain=1) [d](../../skills/x)",
-    "[u](https://example.org/x) [m](mailto:a@b.c) [h](#here) [root](/docs/a.md)",
+    "[u](https://example.org/x) [m](mailto:a@b.c) [h](#here) [p](//example.org/x)",
   ].join("\n");
   expect(check("docs/rules/c.md", quiet)).toEqual([]);
   // Guards: an image and a reference-style link are links too.
@@ -66,6 +66,14 @@ it("links that stay inside the package, URLs, anchors, mail links and root paths
   ).toEqual([
     "docs/c.md:1: the link `gone.png`",
     "docs/c.md:3: the link `../nowhere.md`",
+  ]);
+});
+
+it("a root-absolute link is reported: it resolves against a website's root, not against the package", () => {
+  // Guards: `/docs/a.md` names a file the package ships, and is still broken for a reader of the
+  // tarball or of the files on disk; the message says why and the same three ways out.
+  expect(check("docs/rules/c.md", "See [a](/docs/a.md#top).")).toEqual([
+    "docs/rules/c.md:1: the link `/docs/a.md#top` is a root path, which a reader of the package cannot follow from the file that holds it, so it is broken in the published package. Rewrite it as a path relative to the file, link the public repository's URL, or — for a file that should ship — add it to `files` in package.json.",
   ]);
 });
 

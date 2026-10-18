@@ -7,8 +7,10 @@
  * published package (#187). The list is read from `npm pack --dry-run --json`, so the check moves with
  * the definition of the package instead of keeping a second list.
  *
- * A link with a scheme (`https:`, `mailto:`), a link to an anchor of the same file (`#x`), and a
- * link whose target is generated text rather than a path are not relative links and are not read.
+ * A link with a scheme (`https:`, `mailto:`), a protocol-relative URL (`//host/x`) and a link to an
+ * anchor of the same file (`#x`) are not paths in the package and are not read. A root path (`/x`)
+ * is read, and is always broken: it resolves against a website's root, which a reader of the
+ * tarball, or of the files on disk, does not have.
  */
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -50,11 +52,14 @@ export const hrefsOf = (
       }),
     );
 
-/** A target that is a path relative to the file: no scheme, not an anchor of the same file, not root-absolute. */
-const isRelative = (href: string): boolean =>
+/** A link to a path: not a URL (a scheme, or `//host`), and not an anchor of the same file. */
+const isPath = (href: string): boolean =>
   !/^[a-z][a-z0-9+.-]*:/iu.test(href) &&
   !href.startsWith("#") &&
-  !href.startsWith("/");
+  !href.startsWith("//");
+
+/** A root path (`/x`) resolves against a website's root: no reader of the package can follow it. */
+const isRoot = (href: string): boolean => href.startsWith("/");
 
 /** The path `href` names from the directory of `file`, without its fragment or query. */
 const targetOf = (file: string, href: string): string =>
@@ -72,7 +77,7 @@ const decoded = (path: string): string => {
 };
 
 /**
- * The relative links of the shipped Markdown `texts` (by path in the package) that lead outside the
+ * The path links of the shipped Markdown `texts` (by path in the package) that lead outside the
  * package or to a path `shipped` does not list; a directory is shipped when a file under it is.
  */
 export const brokenLinks = (
@@ -81,7 +86,7 @@ export const brokenLinks = (
 ): readonly BrokenLink[] =>
   [...texts].flatMap(([file, text]) =>
     hrefsOf(text)
-      .filter(({ href }) => isRelative(href))
+      .filter(({ href }) => isPath(href))
       .map(({ href, line }) => ({
         file,
         line,
@@ -89,7 +94,8 @@ export const brokenLinks = (
         target: targetOf(file, href),
       }))
       .filter(
-        ({ target }) =>
+        ({ href, target }) =>
+          isRoot(href) ||
           target === ".." ||
           target.startsWith("../") ||
           !(
@@ -101,6 +107,8 @@ export const brokenLinks = (
 
 /** What to tell the author of `b`: which file, which link, where it leads, and what to do. */
 export const brokenLinkMessage = (b: BrokenLink): string => {
+  if (isRoot(b.href))
+    return `${b.file}:${String(b.line)}: the link \`${b.href}\` is a root path, which a reader of the package cannot follow from the file that holds it, so it is broken in the published package. Rewrite it as a path relative to the file, link the public repository's URL, or — for a file that should ship — add it to \`files\` in package.json.`;
   const outside = b.target === ".." || b.target.startsWith("../");
   const where = outside
     ? `outside the package (${b.target})`
