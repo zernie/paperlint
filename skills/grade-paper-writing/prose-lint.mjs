@@ -501,13 +501,15 @@ function pdfTextOnly(t) {
     .replace(/\f/g, "\n\n");
 }
 
-// 🔴 `--flags-only` and a NON-ZERO EXIT, added 2026-08-05, are what let anything downstream act.
-// Until today this file printed a wall of numbers and always exited 0, and it was wired to no hook
-// at all — it ran only if a human or a skill remembered it existed. Its epanorthosis metric sat at
-// 50.8 per 10,000 words (the LLM baseline is 7.8) through five consecutive writing passes and never
-// once flagged, because it had no threshold. The corpus owner found the tic by eye in a single reading and
-// asked why the tooling had not. It had not because it was measuring, and measuring is not checking
-// — which is, word for word, this paper's own thesis running loose inside its own toolchain.
+// 🔴 WHAT `--flags-only` IS TODAY, AND WHAT IT IS NOT. It prints only the caption findings, silent
+// on a clean paper, and exits 1 when there is one; no hook or script in this repository calls it.
+// It does NOT carry the metric flags: the report's FLAG lines (the metadiscourse rate, the
+// "not X, but Y" density, the wasted stress positions…) are printed by the report only, which exits
+// 0 — so nothing downstream can act on those through an exit code. (The mode was added 2026-08-05
+// after the "not X, but Y" metric sat at 50.8 per 10,000 words, against an LLM baseline of 7.8,
+// through five writing passes without a flag, because it had no threshold. The thresholds fixed
+// that; the exit code was never extended to them.) Whether `--flags-only` should carry every flag,
+// or go, is the maintainer's decision.
 const flagsOnly = args.includes("--flags-only");
 let flagged = 0;
 for (const f of args.filter((a) => !a.startsWith("--"))) {
