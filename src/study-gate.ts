@@ -12,7 +12,7 @@
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
-  modeStudyFor,
+  readModeStudy,
   onDisk,
   type ModeStudy,
   type StudyDeps,
@@ -151,8 +151,11 @@ const gateRow = (
 ): StudyRun => {
   const escaping = escapingRow(paper, shown, row, deps);
   if (escaping !== null) return refused(escaping);
-  const s = modeStudyFor(paper, row, deps);
-  if (s === null) return refused(noModeRefusal(shown, row.id));
+  const read = readModeStudy(paper, row, deps);
+  if (read.kind === "linked")
+    return refused(linkedPlanRefusal(shown, row, read));
+  if (read.kind === "none") return refused(noModeRefusal(shown, row.id));
+  const s = read.study;
   if (s.empty.length > 0) return refused(draftRefusal(row.id, s));
   return s.mode.kind === "decide_before_run"
     ? gateDecided(paper, s.row, s.mode, deps)
@@ -163,6 +166,16 @@ const gateRow = (
         ],
       };
 };
+
+/** The refusal of a plan whose path passes through a symbolic link. */
+const linkedPlanRefusal = (
+  shown: string,
+  row: Study,
+  { plan, link }: { readonly plan: string; readonly link: string },
+): StudyRefusal =>
+  refusal(
+    `${row.id}: its plan ${plan} in ${shown}/${REPRO_DIR}/${row.folder} passes through the symbolic link \`${link}\`; nothing is read through a link. Replace the link with the plan file itself, then run this again.`,
+  );
 
 /** The refusal of an id no row declares a mode for. */
 const noModeRefusal = (shown: string, id: string): StudyRefusal =>

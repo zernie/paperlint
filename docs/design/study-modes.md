@@ -139,7 +139,14 @@ separator or NUL) and not a symbolic link (`ListEntries`, read without following
 is never read through: `studies index` and `new` refuse the registry, the gate refuses the study,
 the order rule treats it as no study, and `repro/study-registered` reads its plan and results as
 missing. A plan's path is held inside its folder by the registry rule's own `isInside`, the same on
-every platform (a backslash is refused outright); the decision file is held inside the paper by the
+every platform (a backslash is refused outright), and read through one reader that follows no link
+(`studyFolder`, `src/study-folder.ts`, over `ListEntries`): the path is walked one component at a time,
+and a plan or a result file whose path passes through a symbolic link — the file itself, or a
+directory above it — is never read. The gate refuses it naming the link, the order rule treats the
+study as declaring no mode, and `repro/study-registered` reports it (`bad-plan`, `result-file`) with
+the link. The plan reads and the result-file existence checks all take that reader and not `Files`,
+so a read that follows a link cannot be written there; a study's outputs are only listed, by the same
+`ListEntries`. The decision file is held inside the paper by the
 schema (`staysInside`) and must be a regular file on disk — a directory or a symbolic link is refused
 by the gate and reported by the rule (`decision-not-file`). Only a **ready** plan's mode decides
 anything: the gate refuses a draft, naming its empty fields, and the order rule judges no draft — a
@@ -232,6 +239,7 @@ Read for this note (2026-10-16):
 | what the app asks of git                                      | `src/ports/git-history.ts`            | port    |
 | a directory's entries, links not followed                     | `src/ports/list-entries.ts`           | port    |
 | the studies with a mode, and the files under a study's folder | `src/study-modes.ts`                  | app     |
+| the one reader of a study's folder, links not followed        | `src/study-folder.ts`                 | app     |
 | the order rule                                                | `src/outputs-before-decision-rule.ts` | app     |
 | the plans and histories `studies index` and `new` write from  | `src/study-index-input.ts`            | app     |
 | `gate`; `new` and `index`                                     | `src/study-gate.ts`, `src/studies.ts` | app     |

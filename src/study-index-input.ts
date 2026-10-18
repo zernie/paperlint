@@ -8,7 +8,8 @@ import {
   decideFirstStudies,
   type OrderDeps,
 } from "./outputs-before-decision-rule.ts";
-import { plansOf, readableFolders } from "./study-registry-rule.ts";
+import { studyFolder } from "./study-folder.ts";
+import { plansOf } from "./study-registry-rule.ts";
 
 /** The plans and the histories of the paper folder `paper`, whose registry is `r`. */
 export const indexInputOf = (
@@ -16,7 +17,7 @@ export const indexInputOf = (
   r: RegistryState,
   deps: OrderDeps,
 ): IndexInput => ({
-  plans: plansOf(paper, r, deps, readableFolders(paper, deps)),
+  plans: plansOf(r, studyFolder(paper, deps), deps.codec),
   history: new Map(
     decideFirstStudies(paper, deps).map((s) => [s.id, indexHistory(s)]),
   ),

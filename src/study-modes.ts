@@ -6,19 +6,15 @@
  */
 import { basename, dirname, join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import { REPRO_DIR } from "./domain/repro-layout.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
 import type { NotAFile } from "./domain/decide-first.ts";
-import {
-  isInside,
-  type PlanTextField,
-  type Study,
-} from "./domain/study-registry.ts";
+import type { PlanTextField, Study } from "./domain/study-registry.ts";
 import type { Files } from "./ports/files.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type { DirEntry, ListEntries } from "./ports/list-entries.ts";
 import type { ListDir } from "./ports/talk-media.ts";
-import { readableFolders, registryOf, textAt } from "./study-registry-rule.ts";
+import { studyFolder } from "./study-folder.ts";
+import { registryOf } from "./study-registry-rule.ts";
 
 /** What reading a paper's studies needs: the disk, its listings with and without kinds, and the parsers. */
 export interface StudyDeps {
@@ -76,53 +72,53 @@ export interface ModeStudy {
   readonly empty: readonly PlanTextField[];
 }
 
-/**
- * The study `s`'s plan, when it is a plan inside a folder every reader may read through
- * (`readableFolders`), by the registry rule's own containment test (`isInside`), that parsed with a
- * mode; else null.
- */
-const modeStudyOf = (
-  paper: string,
-  s: Study,
-  deps: Pick<StudyDeps, "files" | "codec">,
-  readable: (folder: string) => boolean,
-): ModeStudy | null => {
-  const plan = s.plan;
-  const text =
-    plan === undefined ||
-    !readable(s.folder) ||
-    !isInside(plan) ||
-    plan.includes("\0")
-      ? null
-      : textAt(deps.files, join(paper, REPRO_DIR, s.folder, plan));
-  if (plan === undefined || text === null) return null;
-  const parsed = deps.codec.parsePlan(text, s.kind);
-  if (parsed.kind === "unreadable" || parsed.plan.mode === undefined)
-    return null;
-  const empty = parsed.kind === "draft" ? parsed.empty : [];
-  return { row: s, plan, mode: parsed.plan.mode, empty };
-};
+/** What reading the plan of one row gave: its mode study, nothing, or a link on the way to it. */
+export type ModeRead =
+  | { readonly kind: "mode"; readonly study: ModeStudy }
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "linked";
+      readonly plan: string;
+      readonly link: string;
+    };
 
-/** The mode study of the one row `s` of the paper folder `paper`; null when its plan declares none. */
-export const modeStudyFor = (
+/**
+ * The plan of the row `s`, read through the study folder's reader (`src/study-folder.ts`, which
+ * follows no link and enters no folder that is not one inside `repro/`): its mode study when the
+ * plan parsed with a mode; a link on the way to it; else nothing.
+ */
+export const readModeStudy = (
   paper: string,
   s: Study,
   deps: Pick<StudyDeps, "files" | "codec" | "entries">,
-): ModeStudy | null =>
-  modeStudyOf(paper, s, deps, readableFolders(paper, deps));
+): ModeRead => {
+  const plan = s.plan;
+  if (plan === undefined) return { kind: "none" };
+  const read = studyFolder(paper, deps).read(s.folder, plan);
+  if (read.kind === "linked") return { kind: "linked", plan, link: read.link };
+  if (read.kind === "absent") return { kind: "none" };
+  const parsed = deps.codec.parsePlan(read.text, s.kind);
+  if (parsed.kind === "unreadable" || parsed.plan.mode === undefined)
+    return { kind: "none" };
+  const empty = parsed.kind === "draft" ? parsed.empty : [];
+  return {
+    kind: "mode",
+    study: { row: s, plan, mode: parsed.plan.mode, empty },
+  };
+};
 
 /**
  * Every study of the paper folder `paper` whose plan declares a mode, in registry order. A plan that
- * does not parse is `repro/study-registered`'s to report; here it declares nothing.
+ * does not parse, or is reached through a link, is `repro/study-registered`'s to report; here it
+ * declares nothing.
  */
 export const modeStudies = (
   paper: string,
   deps: Pick<StudyDeps, "files" | "codec" | "entries">,
 ): readonly ModeStudy[] => {
   const r = registryOf(paper, deps);
-  const readable = readableFolders(paper, deps);
   return (r.kind === "read" ? r.registry.studies : []).flatMap((s) => {
-    const m = modeStudyOf(paper, s, deps, readable);
-    return m === null ? [] : [m];
+    const m = readModeStudy(paper, s, deps);
+    return m.kind === "mode" ? [m.study] : [];
   });
 };

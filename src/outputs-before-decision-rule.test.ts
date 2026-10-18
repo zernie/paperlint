@@ -204,3 +204,26 @@ it("never reads through a study folder that is a symbolic link", () => {
   // Guards: the outputs behind the link are not this paper's study; nothing is read through it.
   expect(lint(repo)).toEqual([]);
 });
+
+it("a plan that is a symbolic link declares no mode: the order of its study is not judged", () => {
+  const repo = join(root, "plan-link");
+  initRepo(repo);
+  mkdirSync(join(repo, "p/elsewhere"), { recursive: true });
+  writeFileSync(join(repo, "p/elsewhere/plan.json"), planText(planOf(DECIDED)));
+  mkdirSync(join(repo, S), { recursive: true });
+  symlinkSync("../../elsewhere/plan.json", join(repo, S, "plan.json"));
+  commit(
+    repo,
+    {
+      ...Object.fromEntries(
+        Object.entries(PAPER).filter(([k]) => k !== `${S}/plan.json`),
+      ),
+      [`${S}/RESULTS.md`]: "41 of 60\n",
+    },
+    T(9),
+  );
+  commit(repo, { [`${S}/decision.md`]: "exclude run 7\n" }, T(10));
+  // Guards: read through the link, the plan is a decide-first one and its output precedes its
+  // decision (`output-before-decision`); a link is read through by nothing, so the study declares no mode.
+  expect(lint(repo)).toEqual([]);
+});

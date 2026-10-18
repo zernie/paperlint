@@ -5,12 +5,13 @@
  */
 import { expect, it } from "vitest";
 import type { StudyMode } from "./domain/study-mode.ts";
-import { registryText } from "./domain/study-registry.ts";
+import { planText, registryText } from "./domain/study-registry.ts";
 import {
   DATE,
   DECIDED,
   DIR,
   ROW,
+  S,
   SHA,
   planOf,
   studies,
@@ -340,6 +341,42 @@ it("refuses an id that two rows share, even when the first row is exploratory: e
     [],
     [
       "P1-S01: 2 rows of papers/example/repro/studies.json carry this id (folders `P1-S01-outcome`, `P1-S01-again`); the gate answers for exactly one study. Give each other row the next free id and rename its folder to match, then run this again.",
+    ],
+  ]);
+});
+
+it("refuses a plan that is a symbolic link, or sits under a linked directory, naming the link: exit 1", () => {
+  const exploratory = planOf({ kind: "exploratory", reason: "a first look" });
+  const asLink = studies(
+    "gate",
+    tree({}, exploratory),
+    {},
+    { links: [`${S}/plan.json`] },
+  );
+  const sub = { ...ROW, plan: "sub/plan.json" };
+  const underLink = studies(
+    "gate",
+    tree({ [`${S}/sub/plan.json`]: planText(exploratory) }, exploratory, sub),
+    {},
+    { links: [`${S}/sub`] },
+  );
+  // Guards: a plan read through a link would open the gate on a file git does not store as the
+  // study's; the refusal names the row, the plan, the link and the fix. The files behind the link
+  // are ready exploratory plans, so a read through it would exit 0.
+  expect([asLink, underLink].map((r) => [r.code, r.log, r.err])).toEqual([
+    [
+      1,
+      [],
+      [
+        "P1-S01: its plan plan.json in papers/example/repro/P1-S01-outcome passes through the symbolic link `plan.json`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+      ],
+    ],
+    [
+      1,
+      [],
+      [
+        "P1-S01: its plan sub/plan.json in papers/example/repro/P1-S01-outcome passes through the symbolic link `sub`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+      ],
     ],
   ]);
 });

@@ -249,7 +249,11 @@ export type ParsedPlan =
   | { readonly kind: "unreadable"; readonly why: string };
 
 /** What a study's folder holds of the plan its row names: absent, or what its text parsed to. */
-export type PlanState = { readonly kind: "absent" } | ParsedPlan;
+export type PlanState =
+  | { readonly kind: "absent" }
+  /** The plan's path passes through a symbolic link, `link` (relative to the folder); never read. */
+  | { readonly kind: "linked"; readonly link: string }
+  | ParsedPlan;
 
 /** The decision file `paperlint studies new` names for a study in `folder`, relative to the paper. */
 export const decisionPath = (folder: string): string =>
@@ -305,6 +309,8 @@ export interface StudyInput {
   readonly readme: string | null;
   /** Each `<folder>/<result_file>` of the registry that is a file. */
   readonly existingResults: ReadonlySet<string>;
+  /** Each `<folder>/<result_file>` whose path passes through a symbolic link, by the link; never read. */
+  readonly linkedResults?: ReadonlyMap<string, string>;
   /** The plan each row names, by `<folder>/<plan>`; one not listed is absent. */
   readonly plans: ReadonlyMap<string, PlanState>;
 }
@@ -352,6 +358,13 @@ export type StudyFinding =
       readonly why: "missing" | "outside";
     }
   | {
+      readonly problem: "result-file";
+      readonly id: string;
+      readonly path: string;
+      readonly why: "linked";
+      readonly link: string;
+    }
+  | {
       readonly problem: "no-successor";
       readonly id: string;
       readonly superseded_by: string | null;
@@ -389,6 +402,13 @@ export type StudyFinding =
       readonly id: string;
       readonly path: string;
       readonly why: "missing" | "outside";
+    }
+  | {
+      readonly problem: "bad-plan";
+      readonly id: string;
+      readonly path: string;
+      readonly why: "linked";
+      readonly link: string;
     }
   | {
       readonly problem: "bad-plan";
@@ -492,11 +512,19 @@ export const planRefs = (
 ): readonly {
   readonly key: string;
   readonly folder: string;
+  readonly plan: string;
   readonly kind: StudyKind;
 }[] =>
   r.studies.flatMap((s) =>
     s.plan !== undefined && isInside(s.plan) && isFolderName(s.folder)
-      ? [{ key: `${s.folder}/${s.plan}`, folder: s.folder, kind: s.kind }]
+      ? [
+          {
+            key: `${s.folder}/${s.plan}`,
+            folder: s.folder,
+            plan: s.plan,
+            kind: s.kind,
+          },
+        ]
       : [],
   );
 
@@ -595,7 +623,11 @@ const resultFile: RowCheck = ({ s, input }) => {
   if (path === undefined) return null;
   if (!isInside(path))
     return { problem: "result-file", id: s.id, path, why: "outside" };
-  return input.existingResults.has(`${s.folder}/${path}`)
+  const key = `${s.folder}/${path}`;
+  const link = input.linkedResults?.get(key);
+  if (link !== undefined)
+    return { problem: "result-file", id: s.id, path, why: "linked", link };
+  return input.existingResults.has(key)
     ? null
     : { problem: "result-file", id: s.id, path, why: "missing" };
 };
@@ -636,6 +668,8 @@ const planFinding = (
   switch (state.kind) {
     case "absent":
       return { ...at, why: "missing" };
+    case "linked":
+      return { ...at, why: "linked", link: state.link };
     case "unreadable":
       return { ...at, why: "unreadable", reasons: state.why };
     case "draft":
@@ -843,6 +877,7 @@ const declaredMode = (
       : undefined;
   return state === undefined ||
     state.kind === "absent" ||
+    state.kind === "linked" ||
     state.kind === "unreadable"
     ? null
     : (state.plan.mode ?? null);
@@ -1062,7 +1097,9 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
   "no-result": (f) =>
     `${REGISTRY}: ${tick(f.id)} is \`done\` without ${f.missing.map(tick).join(" and ")}. What to do: write the one-line result and the file it is read from (\`result\`, \`result_file\`), or set the status it really has.`,
   "result-file": (f) =>
-    `${REGISTRY}: the \`result_file\` of ${tick(f.id)}, ${tick(f.path)}, ${f.why === "missing" ? "is not a file in its folder" : "is outside its folder"}. What to do: name a file that exists, relative to the study's folder.`,
+    f.why === "linked"
+      ? `${REGISTRY}: the \`result_file\` of ${tick(f.id)}, ${tick(f.path)}, passes through the symbolic link ${tick(f.link)} in its folder; nothing is read through a link. What to do: name a regular file inside the study's folder, or replace the link with the file itself.`
+      : `${REGISTRY}: the \`result_file\` of ${tick(f.id)}, ${tick(f.path)}, ${f.why === "missing" ? "is not a file in its folder" : "is outside its folder"}. What to do: name a file that exists, relative to the study's folder.`,
   "no-successor": (f) =>
     `${REGISTRY}: ${tick(f.id)} is \`superseded\` ${f.superseded_by === null ? "without `superseded_by`" : `by ${tick(f.superseded_by)}, which is no study in the registry`}. What to do: name the id of the study that replaced it.`,
   "stale-index": (f) => `${STALE_HEAD[f.why]} ${RUN_INDEX}`,
@@ -1082,6 +1119,8 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
     switch (f.why) {
       case "missing":
         return `${REGISTRY}: ${of} is not a file in its folder. What to do: write the plan there (its fields are on the rule's page), or correct the row's \`plan\`.`;
+      case "linked":
+        return `${REGISTRY}: ${of} passes through the symbolic link ${tick(f.link)} in its folder; nothing is read through a link. What to do: replace the link with the plan file itself.`;
       case "outside":
         return `${REGISTRY}: ${of} is outside its folder. What to do: keep the plan in the study's folder, as \`${PLAN_FILE}\`, and name it relative to the folder.`;
       case "unreadable":

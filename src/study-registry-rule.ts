@@ -36,6 +36,7 @@ import {
   type PlanState,
   type RegistryState,
   type StudyFinding,
+  type StudyInput,
 } from "./domain/study-registry.ts";
 import type { FolderLayoutDeps } from "./folder-layout-rule.ts";
 import type {
@@ -46,6 +47,7 @@ import type { Files } from "./ports/files.ts";
 import type { ListEntries } from "./ports/list-entries.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import { reproEntriesOf } from "./repro-layout-rule.ts";
+import { studyFolder, type StudyFolder } from "./study-folder.ts";
 import { rulePageUrl } from "./venue-rules.ts";
 
 const STATUS_FILE = "PIPELINE-STATUS.md";
@@ -111,70 +113,84 @@ const studyFolders = (dir: string, deps: FolderLayoutDeps): readonly string[] =>
     )
     .map((e) => e.name);
 
-/** Each `<folder>/<result_file>` of `r` that is a file. */
-const existingResults = (
-  dir: string,
+/**
+ * The results of `r`'s rows: each `<folder>/<result_file>` that is a file, and each that is reached
+ * through a link, by the link — both from the study folder's reader, which follows none.
+ */
+const resultsOf = (
   r: RegistryState,
-  files: Files,
-  readable: (folder: string) => boolean,
-): ReadonlySet<string> =>
-  new Set(
-    (r.kind === "read" ? r.registry.studies : [])
-      // A row whose folder is not one inside `repro/`, or is a link, is never read through.
-      .filter((s) => readable(s.folder))
-      .flatMap((s) =>
-        s.result_file === undefined ? [] : [`${s.folder}/${s.result_file}`],
-      )
-      // A NUL is no path the disk can hold, and probing one throws: such a row reads as missing.
-      .filter(
-        (p) =>
-          !p.includes("\0") &&
-          files.isFile(callerPath(join(dir, REPRO_DIR, p))),
-      ),
+  folder: StudyFolder,
+): Pick<StudyInput, "existingResults" | "linkedResults"> => {
+  const located = (r.kind === "read" ? r.registry.studies : []).flatMap((s) =>
+    s.result_file === undefined
+      ? []
+      : [
+          {
+            key: `${s.folder}/${s.result_file}`,
+            at: folder.locate(s.folder, s.result_file),
+          },
+        ],
   );
+  return {
+    existingResults: new Set(
+      located.filter((l) => l.at.kind === "file").map((l) => l.key),
+    ),
+    linkedResults: new Map(
+      located.flatMap(({ key, at }) =>
+        at.kind === "linked" ? [[key, at.link] as const] : [],
+      ),
+    ),
+  };
+};
 
 /**
  * The plan each row of `r` names, read and parsed, by `<folder>/<plan>`; a plan not there is left out.
  * A plan still named `prereg.json` is parsed by the loose schema of its old name.
  */
 export const plansOf = (
-  dir: string,
   r: RegistryState,
-  deps: Pick<StudyRegistryDeps, "files" | "codec">,
-  readable: (folder: string) => boolean,
+  folder: StudyFolder,
+  codec: StudyRegistryCodec,
 ): ReadonlyMap<string, PlanState> =>
   new Map(
-    (r.kind === "read" ? planRefs(r.registry) : [])
-      // A NUL is no path the disk can hold, and probing one throws: such a plan reads as missing. A
-      // folder that is a link is never read through.
-      .filter(({ key, folder }) => !key.includes("\0") && readable(folder))
-      .flatMap(({ key, kind }): readonly (readonly [string, PlanState])[] => {
-        const text = textAt(deps.files, join(dir, REPRO_DIR, key));
-        if (text === null) return [];
-        return [
-          [
-            key,
-            posix.basename(key) === LEGACY_PLAN_FILE
-              ? deps.codec.parseLegacyPlan(text)
-              : deps.codec.parsePlan(text, kind),
-          ],
-        ];
-      }),
+    (r.kind === "read" ? planRefs(r.registry) : []).flatMap((ref) => {
+      const state = planStateOf(ref, folder, codec);
+      return state === null ? [] : [[ref.key, state] as const];
+    }),
   );
+
+/** The state of the plan `ref` names, read through `folder`; null when it is not there. */
+const planStateOf = (
+  { key, folder: of, plan, kind }: ReturnType<typeof planRefs>[number],
+  folder: StudyFolder,
+  codec: StudyRegistryCodec,
+): PlanState | null => {
+  const read = folder.read(of, plan);
+  switch (read.kind) {
+    case "absent":
+      return null;
+    case "linked":
+      return { kind: "linked", link: read.link };
+    case "text":
+      return posix.basename(key) === LEGACY_PLAN_FILE
+        ? codec.parseLegacyPlan(read.text)
+        : codec.parsePlan(read.text, kind);
+  }
+};
 
 /** Every finding of the paper folder `dir`'s study registry — THE function behind both rules. */
 export function studyFindings(
   dir: string,
   deps: StudyRegistryDeps,
 ): readonly StudyFinding[] {
-  const readable = readableFolders(dir, deps);
   const registry = registryOf(dir, deps);
+  const folder = studyFolder(dir, deps);
   return judgeStudies({
     folders: studyFolders(dir, deps),
     registry,
     readme: textAt(deps.files, join(dir, REPRO_DIR, README)),
-    existingResults: existingResults(dir, registry, deps.files, readable),
-    plans: plansOf(dir, registry, deps, readable),
+    ...resultsOf(registry, folder),
+    plans: plansOf(registry, folder, deps.codec),
   });
 }
 
