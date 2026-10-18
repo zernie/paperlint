@@ -180,7 +180,13 @@ const linkedPlanRefusal = (
 /** The refusal of an id no row declares a mode for. */
 const noModeRefusal = (shown: string, id: string): StudyRefusal =>
   refusal(
-    `${id} declares no mode in ${shown}: no row of ${shown}/${REPRO_DIR}/studies.json with this id names a plan.json that parses with \`mode\`. Lint the paper (\`npx paperlint lint\`) to see why.`,
+    `${id} declares no mode in ${shown}: the plan its row names in ${shown}/${REPRO_DIR}/${STUDIES_FILE} is missing, does not parse, or has no \`mode\`. Lint the paper (\`npx paperlint lint\`) to see why.`,
+  );
+
+/** The refusal of an id that no row of the registry carries. */
+const unknownIdRefusal = (shown: string, id: string): StudyRefusal =>
+  refusal(
+    `${id}: no row of ${shown}/${REPRO_DIR}/${STUDIES_FILE} carries this id. Use an id from the registry, or register the study with \`npx paperlint studies new\`, then run this again.`,
   );
 
 /** `studies gate`: 0 when the run may start, 1 with the reason when not. */
@@ -194,7 +200,7 @@ export function runGate(
   const found = studyById(r.kind === "read" ? r.registry.studies : [], id);
   switch (found.kind) {
     case "none":
-      return refused(noModeRefusal(shown, id));
+      return refused(unknownIdRefusal(shown, id));
     case "ambiguous":
       return refused(ambiguousRefusal(shown, id, found.rows));
     case "one":

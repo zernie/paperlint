@@ -122,7 +122,7 @@ it("refuses a study that declares no mode, and one whose row names a folder outs
     [
       1,
       [
-        "P1-S01 declares no mode in papers/example: no row of papers/example/repro/studies.json with this id names a plan.json that parses with `mode`. Lint the paper (`npx paperlint lint`) to see why.",
+        "P1-S01 declares no mode in papers/example: the plan its row names in papers/example/repro/studies.json is missing, does not parse, or has no `mode`. Lint the paper (`npx paperlint lint`) to see why.",
       ],
     ],
     [
@@ -165,11 +165,24 @@ it("a plan it cannot read through declares no mode: no registry, a plan outside 
   );
   // Guards: each is refused as declaring no mode — none is read past, none opens the gate.
   expect([
-    noMode(withoutRegistry),
     noMode(tree({}, planOf(DECIDED), { ...ROW, plan: "../plan.json" })),
     noMode(tree({}, planOf(DECIDED), { ...ROW, plan: "a\0b.json" })),
     noMode({ ...decided(), [`${DIR}/repro/P1-S01-outcome/plan.json`]: "{" }),
-  ]).toEqual(Array(4).fill("P1-S01 declares no mode in papers/example"));
+  ]).toEqual(Array(3).fill("P1-S01 declares no mode in papers/example"));
+  // …and a registry that is not there has no row for the id: its own refusal, not a mode's.
+  expect(noMode(withoutRegistry)).toBe("P1-S01");
+});
+
+it("refuses an id no row of the registry carries, saying so and what to do: exit 1", () => {
+  const r = studies("gate", decided(), { title: "P1-S09" });
+  // Guards: an id that is not in the registry is not a study that "declares no mode".
+  expect([r.code, r.log, r.err]).toEqual([
+    1,
+    [],
+    [
+      "P1-S09: no row of papers/example/repro/studies.json carries this id. Use an id from the registry, or register the study with `npx paperlint studies new`, then run this again.",
+    ],
+  ]);
 });
 
 it("refuses a decision that names a directory, whatever git says of it", () => {
