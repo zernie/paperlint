@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
-import { cpSync } from "node:fs";
+import { cpSync, readFileSync } from "node:fs";
 import { layRecord, recordedTree } from "../../test/recorded-fixture.ts";
 import { runNode, useTempDir, writeTree } from "../../test/support.ts";
 
@@ -301,4 +301,51 @@ test("🔴 a caption commented out or quoted in verbatim is not measured; a real
     },
     { status: 1, findings: ["Real"] },
   );
+});
+
+/** The `prose-lint.mjs` invocations SKILL.md documents (Step 6), their arguments with `<paper-dir>` filled in. */
+const documentedInvocations = (paperDir: string): readonly string[][] =>
+  readFileSync(join(dirname(SCRIPT), "SKILL.md"), "utf8")
+    .split("\n")
+    .flatMap((line) => {
+      const m =
+        /node \$\{CLAUDE_SKILL_DIR\}\/prose-lint\.mjs ([^#]+?)\s*(#|$)/.exec(
+          line,
+        );
+      return m?.[1] === undefined
+        ? []
+        : [m[1].replaceAll("<paper-dir>", paperDir).split(/\s+/)];
+    });
+
+test("🔴 the invocation SKILL.md documents reports an over-long caption, with no flag the skill does not name", () => {
+  const documented = documentedInvocations(join(root, "p"));
+  // Guards: the report is the documented way to run the checks (Step 6), and captions were
+  // measured only under an undocumented flag — an over-long caption produced no finding.
+  const report = documented.find((a) => !a.includes("--headings"));
+  assert.ok(report !== undefined, "SKILL.md documents a report invocation");
+  const r = runNode(SCRIPT, report);
+  assert.deepEqual(
+    {
+      status: r.status,
+      flagged: r.stdout
+        .split("\n")
+        .filter(
+          (l) => l.startsWith("FLAG figure captions") || l.includes("caption"),
+        ),
+    },
+    {
+      status: 0,
+      flagged: [
+        "FLAG figure captions over the limit: 2",
+        '       > figures/fig1.tex: caption sentence of 46 words (warn >40) — "Big. word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 wor…"',
+        "       > figures/fig1.tex: caption is 106 words (warn >100) — a caption this long is a section under a picture",
+      ],
+    },
+  );
+});
+
+test("the report says a paper whose captions are within the limits is clean on that line", () => {
+  const r = runNode(SCRIPT, [join(root, "clean", "paper.tex")]);
+  // Guards: the line is printed on a clean paper too, so its absence is never read as a pass.
+  assert.match(r.stdout, /^ok {3}figure captions over the limit: 0$/m);
 });

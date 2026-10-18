@@ -17,10 +17,12 @@
  *
  * A `.txt` is the text of the rendered PDF — the page a reviewer actually reads.
  *
- * The figure captions are measured too (`--flags-only`): every `\caption{}` in `paper.tex` and the
- * files it includes, or, beside a rendered page, in `figures/*.tex`.
+ * The figure captions are measured too, in the report: every `\caption{}` in `paper.tex` and the
+ * files it includes, or, beside a rendered page, in `figures/*.tex`. `--flags-only` prints only those
+ * caption findings (nothing on a clean paper) and exits with code 1 if there is one — the form for a
+ * hook; it reads them from the same function as the report.
  *
- * Advisory: it prints findings; `--flags-only` exits with code 1 if anything was found.
+ * Advisory: the report prints findings and exits 0.
  */
 import { paperProse } from "#src/paper-prose";
 import { paperRecord } from "#src/paper-record";
@@ -411,7 +413,28 @@ function captions(sources) {
   return out;
 }
 
-function report(name, r) {
+/**
+ * The findings on the captions of the file `f`: one line per caption sentence or caption over its
+ * limit. A paper's captions are in its own files — paper.tex and what it includes, wherever a figure
+ * is set; a rendered page has the `.tex` of `figures/` beside it. The report and `--flags-only` both
+ * read them from here.
+ */
+function captionFindings(f, tex, fs, path) {
+  return captions(tex ? tex.files : figureFiles(f, fs, path)).flatMap((c) => [
+    ...(c.longest > THRESHOLDS.captionSentenceWords.warn
+      ? [
+          `${c.file}: caption sentence of ${c.longest} words (warn >${THRESHOLDS.captionSentenceWords.warn}) — "${c.longestSentence.slice(0, 110)}…"`,
+        ]
+      : []),
+    ...(c.words > THRESHOLDS.captionWords.warn
+      ? [
+          `${c.file}: caption is ${c.words} words (warn >${THRESHOLDS.captionWords.warn}) — a caption this long is a section under a picture`,
+        ]
+      : []),
+  ]);
+}
+
+function report(name, r, captionLines) {
   const flag = (ok) => (ok ? "ok  " : "FLAG");
   console.log(`\n=== ${name} — ${r.words} words, ${r.sentences} sentences ===`);
   console.log(
@@ -431,6 +454,10 @@ function report(name, r) {
   console.log(
     `${flag(r.negatedSentencePct <= THRESHOLDS.negatedMainClausePct.warn)} sentences whose main claim is a negation: ${r.negatedSentencePct}%`,
   );
+  console.log(
+    `${flag(captionLines.length === 0)} figure captions over the limit: ${captionLines.length}`,
+  );
+  captionLines.forEach((l) => console.log(`       > ${l}`));
   console.log(
     `     topic positions (whose story is this?): ${r.topics.map((t) => `"${t}"`).join(" | ")}`,
   );
@@ -510,19 +537,7 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
   }
   const r = analyse(text, sentences);
   if (flagsOnly) {
-    const lines = [];
-    // A paper's captions are in its own files — paper.tex and what it includes, wherever a figure
-    // is set; a rendered page has the `.tex` of `figures/` beside it.
-    for (const c of captions(tex ? tex.files : figureFiles(f, fs, path))) {
-      if (c.longest > THRESHOLDS.captionSentenceWords.warn)
-        lines.push(
-          `   ${c.file}: caption sentence of ${c.longest} words (warn >${THRESHOLDS.captionSentenceWords.warn}) — "${c.longestSentence.slice(0, 110)}…"`,
-        );
-      if (c.words > THRESHOLDS.captionWords.warn)
-        lines.push(
-          `   ${c.file}: caption is ${c.words} words (warn >${THRESHOLDS.captionWords.warn}) — a caption this long is a section under a picture`,
-        );
-    }
+    const lines = captionFindings(f, tex, fs, path).map((l) => `   ${l}`);
     if (lines.length) {
       flagged += lines.length;
       // The header STATES the count, so a caller need not count output lines — header and footer
@@ -558,7 +573,7 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
       'a linter, a configuration, a repository, a rule — not "answers", "kinds", "moves".',
     );
   } else {
-    report(f.split("/").pop(), r);
+    report(f.split("/").pop(), r, captionFindings(f, tex, fs, path));
   }
 }
 if (!flagsOnly)

@@ -4,7 +4,7 @@ description: Grade how a paper reads and fix it sentence by sentence. Use when a
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:1897016b69f3f9b8 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:2b7193c739a374e6 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
@@ -223,7 +223,9 @@ is what happened.
    ```
 
    It measures the prose a reader sees — the files the last build read spliced in, no preamble,
-   comments, floats or inline `.bib` — so its rates are the paper's, not the source file's. Run
+   comments, floats or inline `.bib` — so its rates are the paper's, not the source file's — and, on
+   its own line, the figure captions that float outside that prose, flagging a caption sentence over
+   40 words or a caption over 100. Run
    `npx paperlint build` first: with no current build record it reads `paper.tex` alone and says so. The skill is what must ACT on it.
    Its thresholds are sourced; a FLAG means the text sits above a published human or machine
    baseline, which is a defect with a number attached, not an opinion.
