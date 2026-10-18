@@ -339,7 +339,7 @@ it("refuses an id that two rows share, even when the first row is exploratory: e
     1,
     [],
     [
-      "P1-S01: 2 rows of papers/example/repro/studies.json carry this id (folders `P1-S01-outcome`, `P1-S01-again`); the gate needs exactly one. Give each other row the next free id, then run this again.",
+      "P1-S01: 2 rows of papers/example/repro/studies.json carry this id (folders `P1-S01-outcome`, `P1-S01-again`); the gate answers for exactly one study. Give each other row the next free id and rename its folder to match, then run this again.",
     ],
   ]);
 });

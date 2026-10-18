@@ -19,6 +19,7 @@ import {
   studyIndex,
   studyMessage,
   studyReadme,
+  studyById,
   studySlug,
   withIndex,
   type RegistryState,
@@ -669,5 +670,26 @@ describe("studyReadme", () => {
         "",
       ].join("\n"),
     );
+  });
+});
+
+describe("studyById — the one way to address a study by its id", () => {
+  const a = study({ id: "P1-S01", folder: "P1-S01-a" });
+  const b = study({ id: "P1-S01", folder: "P1-S01-b" });
+  const c = study({ id: "P1-S02", folder: "P1-S02-c" });
+
+  it("exactly one row: that row; no row: none; two or more: all of them, in registry order", () => {
+    // Guards: a caller can take a row only from `one`, never "the first" of an ambiguous id.
+    expect([
+      studyById([a, c], "P1-S01"),
+      studyById([a, c], "P1-S09"),
+      studyById([], "P1-S01"),
+      studyById([a, c, b], "P1-S01"),
+    ]).toEqual([
+      { kind: "one", row: a },
+      { kind: "none" },
+      { kind: "none" },
+      { kind: "ambiguous", rows: [a, b] },
+    ]);
   });
 });

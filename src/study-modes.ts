@@ -103,6 +103,14 @@ const modeStudyOf = (
   return { row: s, plan, mode: parsed.plan.mode, empty };
 };
 
+/** The mode study of the one row `s` of the paper folder `paper`; null when its plan declares none. */
+export const modeStudyFor = (
+  paper: string,
+  s: Study,
+  deps: Pick<StudyDeps, "files" | "codec" | "entries">,
+): ModeStudy | null =>
+  modeStudyOf(paper, s, deps, readableFolders(paper, deps));
+
 /**
  * Every study of the paper folder `paper` whose plan declares a mode, in registry order. A plan that
  * does not parse is `repro/study-registered`'s to report; here it declares nothing.

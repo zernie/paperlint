@@ -512,6 +512,29 @@ interface Row {
 type RowCheck = (row: Row) => StudyFinding | null;
 
 /** Whether the row is the first of the registry with its value of `key`. */
+/**
+ * The rows of a registry that carry an id: exactly one, none, or several. The one way to address a
+ * study by its id — a caller that wants "the study P1-S01" gets a row only when there is exactly one,
+ * so no command can act on the first of two rows by accident. A registry may still hold two rows of
+ * one id (`repro/study-registered` reports it); this says so instead of choosing.
+ */
+export type StudyLookup =
+  | { readonly kind: "one"; readonly row: Study }
+  | { readonly kind: "none" }
+  | { readonly kind: "ambiguous"; readonly rows: readonly Study[] };
+
+/** The rows of `studies` whose id is `id`, as a `StudyLookup`. */
+export const studyById = (
+  studies: readonly Study[],
+  id: string,
+): StudyLookup => {
+  const [first, ...rest] = studies.filter((s) => s.id === id);
+  if (first === undefined) return { kind: "none" };
+  return rest.length === 0
+    ? { kind: "one", row: first }
+    : { kind: "ambiguous", rows: [first, ...rest] };
+};
+
 const isFirst = ({ r, s, i }: Row, key: (o: Study) => string): boolean =>
   r.studies.findIndex((o) => key(o) === key(s)) === i;
 
@@ -522,7 +545,7 @@ const badId: RowCheck = ({ r, s }) =>
 
 /** Reported once, on the first row that holds the id. */
 const duplicateId: RowCheck = (row) =>
-  row.r.studies.filter((o) => o.id === row.s.id).length > 1 &&
+  studyById(row.r.studies, row.s.id).kind === "ambiguous" &&
   isFirst(row, (o) => o.id)
     ? { problem: "duplicate-id", id: row.s.id }
     : null;

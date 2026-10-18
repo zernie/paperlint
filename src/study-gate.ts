@@ -12,14 +12,18 @@
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
-  modeStudies,
+  modeStudyFor,
   onDisk,
   type ModeStudy,
   type StudyDeps,
 } from "./study-modes.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
 import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
-import { STUDIES_FILE, type Study } from "./domain/study-registry.ts";
+import {
+  STUDIES_FILE,
+  studyById,
+  type Study,
+} from "./domain/study-registry.ts";
 import type { Committed, GitHistory } from "./ports/git-history.ts";
 import { readableFolders, registryOf } from "./study-registry-rule.ts";
 import {
@@ -106,46 +110,28 @@ const gateDecided = (
   return g.open ? { ok: true, lines: [g.line] } : refused(refusal(g.line));
 };
 
-/**
- * The refusal when more than one row of the registry carries `id`: the gate answers for one study,
- * and a later row of the same id may decide before its run though the first does not. Naming every
- * folder; null when at most one row has the id.
- */
-const sharedId = (
-  paper: string,
-  shown: string,
-  id: string,
-  deps: GateDeps,
-): StudyRefusal | null => {
-  const r = registryOf(paper, deps);
-  const rows = (r.kind === "read" ? r.registry.studies : []).filter(
-    (x) => x.id === id,
-  );
-  return rows.length < 2
-    ? null
-    : refusal(
-        `${id}: ${String(rows.length)} rows of ${shown}/${REPRO_DIR}/${STUDIES_FILE} carry this id (folders ${rows.map((x) => `\`${x.folder}\``).join(", ")}); the gate needs exactly one. Give each other row the next free id, then run this again.`,
-      );
-};
-
-/** The refusal when the row of `id` names a folder that is not one inside `repro/`; null when none does. */
+/** The refusal when the row names a folder that is not one inside `repro/`; null when it names one. */
 const escapingRow = (
   paper: string,
   shown: string,
-  id: string,
+  row: Study,
   deps: GateDeps,
-): StudyRefusal | null => {
-  const r = registryOf(paper, deps);
-  const readable = readableFolders(paper, deps);
-  const row = (r.kind === "read" ? r.registry.studies : []).find(
-    (x) => x.id === id && !readable(x.folder),
-  );
-  return row === undefined
+): StudyRefusal | null =>
+  readableFolders(paper, deps)(row.folder)
     ? null
     : refusal(
-        `${id}: its row names the folder \`${row.folder}\`, which is not one folder inside ${shown}/${REPRO_DIR}/; nothing is read through it. Give the row its own folder's name.`,
+        `${row.id}: its row names the folder \`${row.folder}\`, which is not one folder inside ${shown}/${REPRO_DIR}/; nothing is read through it. Give the row its own folder's name.`,
       );
-};
+
+/** The refusal of an id that two or more rows carry: the gate answers for exactly one study. */
+const ambiguousRefusal = (
+  shown: string,
+  id: string,
+  rows: readonly Study[],
+): StudyRefusal =>
+  refusal(
+    `${id}: ${String(rows.length)} rows of ${shown}/${REPRO_DIR}/${STUDIES_FILE} carry this id (folders ${rows.map((x) => `\`${x.folder}\``).join(", ")}); the gate answers for exactly one study. Give each other row the next free id and rename its folder to match, then run this again.`,
+  );
 
 /** The refusal of a study whose plan is still a draft: a mode decides nothing until its plan is ready. */
 const draftRefusal = (id: string, s: ModeStudy): StudyRefusal => {
@@ -156,6 +142,34 @@ const draftRefusal = (id: string, s: ModeStudy): StudyRefusal => {
   );
 };
 
+/** The gate of the one row `row`. */
+const gateRow = (
+  paper: string,
+  shown: string,
+  row: Study,
+  deps: GateDeps,
+): StudyRun => {
+  const escaping = escapingRow(paper, shown, row, deps);
+  if (escaping !== null) return refused(escaping);
+  const s = modeStudyFor(paper, row, deps);
+  if (s === null) return refused(noModeRefusal(shown, row.id));
+  if (s.empty.length > 0) return refused(draftRefusal(row.id, s));
+  return s.mode.kind === "decide_before_run"
+    ? gateDecided(paper, s.row, s.mode, deps)
+    : {
+        ok: true,
+        lines: [
+          `${row.id} is exploratory (${s.mode.reason}): it has no gate, and its results are reported as exploratory.`,
+        ],
+      };
+};
+
+/** The refusal of an id no row declares a mode for. */
+const noModeRefusal = (shown: string, id: string): StudyRefusal =>
+  refusal(
+    `${id} declares no mode in ${shown}: no row of ${shown}/${REPRO_DIR}/studies.json with this id names a plan.json that parses with \`mode\`. Lint the paper (\`npx paperlint lint\`) to see why.`,
+  );
+
 /** `studies gate`: 0 when the run may start, 1 with the reason when not. */
 export function runGate(
   paper: string,
@@ -163,24 +177,14 @@ export function runGate(
   id: string,
   deps: GateDeps,
 ): StudyRun {
-  const shared = sharedId(paper, shown, id, deps);
-  if (shared !== null) return refused(shared);
-  const escaping = escapingRow(paper, shown, id, deps);
-  if (escaping !== null) return refused(escaping);
-  const s = modeStudies(paper, deps).find((m) => m.row.id === id);
-  if (s === undefined)
-    return refused(
-      refusal(
-        `${id} declares no mode in ${shown}: no row of ${shown}/${REPRO_DIR}/studies.json with this id names a plan.json that parses with \`mode\`. Lint the paper (\`npx paperlint lint\`) to see why.`,
-      ),
-    );
-  if (s.empty.length > 0) return refused(draftRefusal(id, s));
-  return s.mode.kind === "decide_before_run"
-    ? gateDecided(paper, s.row, s.mode, deps)
-    : {
-        ok: true,
-        lines: [
-          `${id} is exploratory (${s.mode.reason}): it has no gate, and its results are reported as exploratory.`,
-        ],
-      };
+  const r = registryOf(paper, deps);
+  const found = studyById(r.kind === "read" ? r.registry.studies : [], id);
+  switch (found.kind) {
+    case "none":
+      return refused(noModeRefusal(shown, id));
+    case "ambiguous":
+      return refused(ambiguousRefusal(shown, id, found.rows));
+    case "one":
+      return gateRow(paper, shown, found.row, deps);
+  }
 }
