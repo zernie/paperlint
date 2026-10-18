@@ -67,8 +67,9 @@ decision that is a directory, a decision its own outputs match). A runner calls 
 npx paperlint studies gate papers/my-paper P1-S03 && ./run.sh
 ```
 
-For an exploratory study it exits 0 and says it has no gate. A study that declares no mode, or whose
-plan is still a draft, is refused.
+For an exploratory study it exits 0 and says it has no gate. A study that declares no mode, whose
+plan is still a draft, or whose id two rows of the registry share (the gate answers for exactly one
+study), is refused.
 
 ### 3. `repro/outputs-before-decision` — the proof of order a reviewer can re-run
 

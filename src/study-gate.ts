@@ -6,7 +6,8 @@
  *   npx paperlint studies gate papers/my-paper P1-S03 && ./run.sh
  *
  * An exploratory study has no gate: it exits 0 and says so. A study that declares no mode, names no
- * decision file, or whose row names a folder that is not one inside `repro/`, is refused.
+ * decision file, whose row names a folder that is not one inside `repro/`, or whose id two rows
+ * share, is refused.
  */
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
@@ -18,7 +19,7 @@ import {
 } from "./study-modes.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
 import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
-import type { Study } from "./domain/study-registry.ts";
+import { STUDIES_FILE, type Study } from "./domain/study-registry.ts";
 import type { Committed, GitHistory } from "./ports/git-history.ts";
 import { readableFolders, registryOf } from "./study-registry-rule.ts";
 import {
@@ -105,6 +106,28 @@ const gateDecided = (
   return g.open ? { ok: true, lines: [g.line] } : refused(refusal(g.line));
 };
 
+/**
+ * The refusal when more than one row of the registry carries `id`: the gate answers for one study,
+ * and a later row of the same id may decide before its run though the first does not. Naming every
+ * folder; null when at most one row has the id.
+ */
+const sharedId = (
+  paper: string,
+  shown: string,
+  id: string,
+  deps: GateDeps,
+): StudyRefusal | null => {
+  const r = registryOf(paper, deps);
+  const rows = (r.kind === "read" ? r.registry.studies : []).filter(
+    (x) => x.id === id,
+  );
+  return rows.length < 2
+    ? null
+    : refusal(
+        `${id}: ${String(rows.length)} rows of ${shown}/${REPRO_DIR}/${STUDIES_FILE} carry this id (folders ${rows.map((x) => `\`${x.folder}\``).join(", ")}); the gate needs exactly one. Give each other row the next free id, then run this again.`,
+      );
+};
+
 /** The refusal when the row of `id` names a folder that is not one inside `repro/`; null when none does. */
 const escapingRow = (
   paper: string,
@@ -140,6 +163,8 @@ export function runGate(
   id: string,
   deps: GateDeps,
 ): StudyRun {
+  const shared = sharedId(paper, shown, id, deps);
+  if (shared !== null) return refused(shared);
   const escaping = escapingRow(paper, shown, id, deps);
   if (escaping !== null) return refused(escaping);
   const s = modeStudies(paper, deps).find((m) => m.row.id === id);

@@ -5,6 +5,7 @@
  */
 import { expect, it } from "vitest";
 import type { StudyMode } from "./domain/study-mode.ts";
+import { registryText } from "./domain/study-registry.ts";
 import {
   DATE,
   DECIDED,
@@ -313,4 +314,32 @@ it("never reads a plan through a backslash: `..\\x\\plan.json` is outside the fo
   expect(r.err[0]?.split(":")[0]).toBe(
     "P1-S01 declares no mode in papers/example",
   );
+});
+
+it("refuses an id that two rows share, even when the first row is exploratory: exit 1, naming both folders", () => {
+  const second = { ...ROW, folder: "P1-S01-again" };
+  const t = {
+    ...tree(
+      {
+        [`${DIR}/repro/P1-S01-again/plan.json`]: JSON.stringify(
+          planOf(DECIDED),
+        ),
+      },
+      planOf({ kind: "exploratory", reason: "a first look" }),
+    ),
+    [`${DIR}/repro/studies.json`]: registryText({
+      prefix: "P1",
+      studies: [ROW, second],
+    }),
+  };
+  const r = studies("gate", t);
+  // Guards: `gate && run` must not start on the first row's mode while a later row of the same id
+  // decides before its run; lint need not have run first.
+  expect([r.code, r.log, r.err]).toEqual([
+    1,
+    [],
+    [
+      "P1-S01: 2 rows of papers/example/repro/studies.json carry this id (folders `P1-S01-outcome`, `P1-S01-again`); the gate needs exactly one. Give each other row the next free id, then run this again.",
+    ],
+  ]);
 });
