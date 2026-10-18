@@ -19,6 +19,9 @@ export const indexInputOf = (
 ): IndexInput => ({
   plans: plansOf(r, studyFolder(paper, deps), deps.codec),
   history: new Map(
-    decideFirstStudies(paper, deps).map((s) => [s.id, indexHistory(s)]),
+    decideFirstStudies(paper, deps).map((s) => [
+      `${s.folder}/${s.plan}`,
+      indexHistory(s),
+    ]),
   ),
 });

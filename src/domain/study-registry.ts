@@ -858,8 +858,8 @@ const cell = (s: string): string =>
 
 /**
  * What the index is generated from beyond the registry: the plans by `<folder>/<plan>` (as
- * `StudyInput.plans`), and the history of each decide-first study by id. A study with no history
- * listed shows `not read` — the lint, which never compares those columns, asks none.
+ * `StudyInput.plans`), and the history of each decide-first study by the same key. A study with no
+ * history listed shows `not read` — the lint, which never compares those columns, asks none.
  */
 export interface IndexInput {
   readonly plans: ReadonlyMap<string, PlanState>;
@@ -886,7 +886,10 @@ const declaredMode = (
 /** What the index shows of `s` beyond its row. */
 const factsOf = (s: Study, at: IndexInput): IndexFacts => ({
   mode: declaredMode(s, at.plans),
-  history: at.history.get(s.id) ?? null,
+  history:
+    (s.plan === undefined
+      ? undefined
+      : at.history.get(`${s.folder}/${s.plan}`)) ?? null,
 });
 
 /**
