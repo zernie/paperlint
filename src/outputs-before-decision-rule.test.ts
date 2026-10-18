@@ -227,3 +227,27 @@ it("a plan that is a symbolic link declares no mode: the order of its study is n
   // decision (`output-before-decision`); a link is read through by nothing, so the study declares no mode.
   expect(lint(repo)).toEqual([]);
 });
+
+it("loud on a decision under a linked directory: git records the link, not the files behind it", () => {
+  const repo = join(root, "decision-dir-link");
+  initRepo(repo);
+  mkdirSync(join(repo, "p/elsewhere"), { recursive: true });
+  writeFileSync(join(repo, "p/elsewhere/decision.md"), "exclude run 7\n");
+  const file = "repro/P1-S01-outcome/sub/decision.md";
+  commit(
+    repo,
+    {
+      ...PAPER,
+      [`${S}/plan.json`]: planText(
+        planOf({ ...DECIDED, decision: { file, note: "n" } }),
+      ),
+    },
+    T(9),
+  );
+  symlinkSync("../../elsewhere", join(repo, S, "sub"));
+  commit(repo, {}, T(10));
+  commit(repo, { [`${S}/RESULTS.md`]: "41 of 60\n" }, T(11));
+  // Guards: the decision file exists, and is committed as a path through a link; the order proof
+  // would be read from the link's history. The study is reported instead.
+  expect(lint(repo)).toEqual(["decision-linked"]);
+});

@@ -6,7 +6,7 @@
  */
 import { expect, it } from "vitest";
 import { memoryFiles, memoryListEntries } from "./adapters/memory/index.ts";
-import { studyFolder } from "./study-folder.ts";
+import { folderRefusalText, studyFolder } from "./study-folder.ts";
 
 const PAPER = "/work/papers/example";
 const FOLDER = `${PAPER}/repro/P1-S01-outcome`;
@@ -15,6 +15,7 @@ const TREE = {
   [`${FOLDER}/sub/plan.json`]: "{ }",
   [`${FOLDER}/sub/deeper/out.tsv`]: "x\n",
   [`${FOLDER}/other/note.md`]: "n\n",
+  [`${PAPER}/repro/P1-S01-linked/plan.json`]: "{}",
 };
 
 /** The reader over `TREE`, `links` being absolute paths the listing reports as links; plus every path the disk was asked for. */
@@ -143,4 +144,52 @@ it("a link is named as far down as the walk got, even when its name repeats abov
     kind: "linked",
     link: "a/a",
   });
+});
+
+it("a row's folder may be entered unless it is no one folder inside repro/ or is a link", () => {
+  const { sf } = reader([`${PAPER}/repro/P1-S01-linked`]);
+  // Guards: the one place the folder check lives; each refusal is its own reason.
+  expect([
+    sf.refusal("P1-S01-outcome"),
+    sf.refusal("../x"),
+    sf.refusal("a/b"),
+    sf.refusal("P1-S01-linked"),
+  ]).toEqual([null, "not-a-folder", "not-a-folder", "symbolic-link"]);
+  expect([
+    folderRefusalText("not-a-folder", "p"),
+    folderRefusalText("symbolic-link", "p"),
+  ]).toEqual([
+    {
+      reason: "is not one folder inside p/repro/",
+      fix: "Give the row its own folder's name",
+    },
+    {
+      reason: "is a symbolic link",
+      fix: "Give the row a real folder inside p/repro/",
+    },
+  ]);
+});
+
+it("a path in the paper is a file, a directory, nothing, or a link on the way — the first one, from the paper's root", () => {
+  const { sf, asked } = reader([`${FOLDER}/sub`, `${FOLDER}/plan.json`]);
+  const at = (p: string) => sf.entryAt(p);
+  // Guards: the decision file is judged by every component of its path, not by its last one.
+  expect([
+    at("repro/P1-S01-outcome/other/note.md"),
+    at("repro/P1-S01-outcome/other"),
+    at("repro/P1-S01-outcome/nope.md"),
+    at("repro/P1-S01-outcome/sub/plan.json"),
+    at("repro/P1-S01-outcome/plan.json"),
+    at("../outside.md"),
+    at("a\0b"),
+  ]).toEqual([
+    { kind: "file" },
+    { kind: "dir" },
+    { kind: "absent" },
+    { kind: "linked", link: "repro/P1-S01-outcome/sub" },
+    { kind: "linked", link: "repro/P1-S01-outcome/plan.json" },
+    { kind: "absent" },
+    { kind: "absent" },
+  ]);
+  expect(asked).toEqual([]);
 });

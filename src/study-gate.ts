@@ -11,12 +11,7 @@
  */
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import {
-  readModeStudy,
-  onDisk,
-  type ModeStudy,
-  type StudyDeps,
-} from "./study-modes.ts";
+import { decisionPath, readModeStudy, type ModeStudy } from "./study-modes.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
 import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
 import {
@@ -25,7 +20,13 @@ import {
   type Study,
 } from "./domain/study-registry.ts";
 import type { Committed, GitHistory } from "./ports/git-history.ts";
-import { readableFolders, registryOf } from "./study-registry-rule.ts";
+import {
+  folderRefusalText,
+  studyFolder,
+  type StudyDeps,
+  type StudyFolder,
+} from "./study-folder.ts";
+import { registryOf } from "./study-registry-rule.ts";
 import {
   refusal,
   refused,
@@ -73,34 +74,48 @@ export const gateLine = (
  * directory (git answers for a directory with the last commit of anything under it); null when usable.
  */
 const unusable = (
-  paper: string,
-  { id, folder }: Pick<Study, "id" | "folder">,
+  { id, folder: studyDir }: Pick<Study, "id" | "folder">,
   mode: DecideFirst,
-  deps: GateDeps,
+  folder: StudyFolder,
 ): StudyRefusal | null => {
   const file = mode.decision.file;
-  const glob = decisionAsOutput(folder, mode);
+  const glob = decisionAsOutput(studyDir, mode);
   if (glob !== null)
     return refusal(
       `${id}: its decision ${file} is matched by its output \`${glob}\`; a decision cannot be what its own run produces.`,
     );
-  const on = onDisk(join(paper, file), deps);
-  return on === "directory" || on === "symbolic link"
-    ? refusal(
-        `${id}: its decision ${file} is a ${on}, not a file; the run cannot be gated on it. Name the decision file in \`mode.decision.file\`.`,
-      )
-    : null;
+  const on = decisionPath(folder, file);
+  switch (on.kind) {
+    case "not-a-file":
+      return refusal(
+        `${id}: its decision ${file} is a ${on.what}, not a file; the run cannot be gated on it. Name the decision file in \`mode.decision.file\`.`,
+      );
+    case "linked":
+      return refusal(
+        `${id}: its decision ${file} passes through the symbolic link \`${on.link}\`; git records the link, not the files behind it, so the run cannot be gated on it. Name a decision file that lies in real directories in \`mode.decision.file\`.`,
+      );
+    case "ok":
+      return null;
+  }
 };
+
+/** What one gate run reads with: the paper's folder, how it is shown, the study folders' reader, git. */
+interface GateRun {
+  readonly paper: string;
+  readonly shown: string;
+  readonly folder: StudyFolder;
+  readonly deps: GateDeps;
+}
 
 /** The gate of a decide-first study. */
 const gateDecided = (
-  paper: string,
-  { id, folder }: Study,
+  { paper, folder, deps }: GateRun,
+  row: Study,
   mode: DecideFirst,
-  deps: GateDeps,
 ): StudyRun => {
+  const { id } = row;
   const file = mode.decision.file;
-  const blocked = unusable(paper, { id, folder }, mode, deps);
+  const blocked = unusable(row, mode, folder);
   if (blocked !== null) return refused(blocked);
   const g = gateLine(
     id,
@@ -110,18 +125,19 @@ const gateDecided = (
   return g.open ? { ok: true, lines: [g.line] } : refused(refusal(g.line));
 };
 
-/** The refusal when the row names a folder that is not one inside `repro/`; null when it names one. */
+/** The refusal when the row names a folder that may not be entered; null when it may. */
 const escapingRow = (
-  paper: string,
   shown: string,
   row: Study,
-  deps: GateDeps,
-): StudyRefusal | null =>
-  readableFolders(paper, deps)(row.folder)
-    ? null
-    : refusal(
-        `${row.id}: its row names the folder \`${row.folder}\`, which is not one folder inside ${shown}/${REPRO_DIR}/; nothing is read through it. Give the row its own folder's name.`,
-      );
+  folder: StudyFolder,
+): StudyRefusal | null => {
+  const why = folder.refusal(row.folder);
+  if (why === null) return null;
+  const { reason, fix } = folderRefusalText(why, shown);
+  return refusal(
+    `${row.id}: its row names the folder \`${row.folder}\`, which ${reason}; nothing is read through it. ${fix}.`,
+  );
+};
 
 /** The refusal of an id that two or more rows carry: the gate answers for exactly one study. */
 const ambiguousRefusal = (
@@ -143,22 +159,18 @@ const draftRefusal = (id: string, s: ModeStudy): StudyRefusal => {
 };
 
 /** The gate of the one row `row`. */
-const gateRow = (
-  paper: string,
-  shown: string,
-  row: Study,
-  deps: GateDeps,
-): StudyRun => {
-  const escaping = escapingRow(paper, shown, row, deps);
+const gateRow = (run: GateRun, row: Study): StudyRun => {
+  const { shown, folder, deps } = run;
+  const escaping = escapingRow(shown, row, folder);
   if (escaping !== null) return refused(escaping);
-  const read = readModeStudy(paper, row, deps);
+  const read = readModeStudy(row, folder, deps.codec);
   if (read.kind === "linked")
-    return refused(linkedPlanRefusal(shown, row, read));
+    return refused(linkedPlanRefusal(shown, row, read.link));
   if (read.kind === "none") return refused(noModeRefusal(shown, row.id));
   const s = read.study;
   if (s.empty.length > 0) return refused(draftRefusal(row.id, s));
   return s.mode.kind === "decide_before_run"
-    ? gateDecided(paper, s.row, s.mode, deps)
+    ? gateDecided(run, s.row, s.mode)
     : {
         ok: true,
         lines: [
@@ -171,10 +183,10 @@ const gateRow = (
 const linkedPlanRefusal = (
   shown: string,
   row: Study,
-  { plan, link }: { readonly plan: string; readonly link: string },
+  link: string,
 ): StudyRefusal =>
   refusal(
-    `${row.id}: its plan ${plan} in ${shown}/${REPRO_DIR}/${row.folder} passes through the symbolic link \`${link}\`; nothing is read through a link. Replace the link with the plan file itself, then run this again.`,
+    `${row.id}: the plan its row names, in ${shown}/${REPRO_DIR}/${row.folder}, passes through the symbolic link \`${link}\`; nothing is read through a link. Replace the link with the plan file itself, then run this again.`,
   );
 
 /** The refusal of an id no row declares a mode for. */
@@ -204,6 +216,9 @@ export function runGate(
     case "ambiguous":
       return refused(ambiguousRefusal(shown, id, found.rows));
     case "one":
-      return gateRow(paper, shown, found.row, deps);
+      return gateRow(
+        { paper, shown, folder: studyFolder(paper, deps), deps },
+        found.row,
+      );
   }
 }

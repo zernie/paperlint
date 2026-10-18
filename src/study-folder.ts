@@ -1,13 +1,18 @@
 /**
- * The one reader of what lies inside a study's folder: `repro/<folder>/<path>`. Every read of a
- * plan or a result file goes through it, and it never follows a symbolic link: the path is walked
- * one component at a time by the folder's entries (`ListEntries`, which does not follow links), and
- * a path that passes through a link — the file itself, or any directory above it — is `linked`,
- * naming the link, before a single byte is read. The readers of a study take this and not `Files`,
- * so a read that follows a link cannot be written there.
+ * The one reader of what lies inside a study's folder, `repro/<folder>/<path>`, and of the decision
+ * file that lies elsewhere in the paper. It never follows a symbolic link: a path is walked one
+ * component at a time by the entries of each directory (`ListEntries`, which does not follow links),
+ * and a path that passes through a link — the file itself, or any directory above it — is `linked`,
+ * naming the link, before a single byte is read. Every reader of a study takes a `StudyFolder` and
+ * not `Files`, so a read that follows a link cannot be written there; `eslint.config.mjs` holds the
+ * other half, that no other `src/study-*.ts` imports the `Files` port.
  *
- * What is read, by whom: the plan of a row (`repro/study-registered`, `repro/outputs-before-decision`,
- * `studies gate`, the index's mode columns), and the result file of a row (`repro/study-registered`).
+ * What goes through it, and who builds it (once per run, from the paper's folder):
+ *   - the plan of a row: `repro/study-registered`, `repro/outputs-before-decision`, `studies gate`
+ *     and the index's mode columns;
+ *   - the result file of a row: `repro/study-registered`;
+ *   - whether a row's folder may be entered at all (`refusal`): `studies gate`, `studies index|new`;
+ *   - the decision file's path (`entryAt`): the gate and the order rule.
  * The outputs of a study are listed, not read (`filesUnder` in `src/study-modes.ts`, entries again).
  * A study folder that is itself a link, or a folder name that is not one folder inside `repro/`, is
  * never entered: its files read as `absent`.
@@ -18,16 +23,23 @@
 import { join, posix } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
-import { isFolderName, isInside } from "./domain/study-registry.ts";
+import {
+  isFolderName,
+  isInside,
+  type Located,
+} from "./domain/study-registry.ts";
 import type { Files } from "./ports/files.ts";
 import type { DirEntry, ListEntries } from "./ports/list-entries.ts";
+import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
+import type { ListDir } from "./ports/talk-media.ts";
 
-/** What a path inside a study's folder is, found without reading it. */
-export type Located =
-  | { readonly kind: "file" }
-  | { readonly kind: "absent" }
-  /** `link`: the first symbolic link on the path, relative to the study's folder. */
-  | { readonly kind: "linked"; readonly link: string };
+/** What reading a paper's studies needs: the disk, its listings with and without kinds, and the parsers. */
+export interface StudyDeps {
+  readonly files: Files;
+  readonly listDir: ListDir;
+  readonly entries: ListEntries;
+  readonly codec: StudyRegistryCodec;
+}
 
 /** What reading a path inside a study's folder gave. */
 export type FolderRead =
@@ -35,12 +47,37 @@ export type FolderRead =
   | { readonly kind: "absent" }
   | { readonly kind: "linked"; readonly link: string };
 
-/** The reads a study's folder allows. */
+/** What a path in the paper is: `Located`, and a directory. */
+export type PathEntry = Located | { readonly kind: "dir" };
+
+/** Why a row's folder may not be entered: it is no one folder inside `repro/`, or it is a link. */
+export type FolderRefusal = "not-a-folder" | "symbolic-link";
+
+/** What a refusal says of the folder a row names: `which <reason>`, and the fix without its full stop. */
+export const folderRefusalText = (
+  why: FolderRefusal,
+  shown: string,
+): { readonly reason: string; readonly fix: string } =>
+  why === "not-a-folder"
+    ? {
+        reason: `is not one folder inside ${shown}/${REPRO_DIR}/`,
+        fix: "Give the row its own folder's name",
+      }
+    : {
+        reason: "is a symbolic link",
+        fix: `Give the row a real folder inside ${shown}/${REPRO_DIR}/`,
+      };
+
+/** The reads a paper's study folders allow. */
 export interface StudyFolder {
+  /** Why `folder` may not be entered; null when it may. */
+  readonly refusal: (folder: string) => FolderRefusal | null;
   /** What `path` in `folder` is; nothing is read. */
   readonly locate: (folder: string, path: string) => Located;
   /** The text of the file at `path` in `folder`. */
   readonly read: (folder: string, path: string) => FolderRead;
+  /** What `path`, relative to the paper, is: a decision file is held to be a regular file. */
+  readonly entryAt: (path: string) => PathEntry;
 }
 
 /** What the entry `name` of the directory `dir` is; undefined when there is none. */
@@ -51,8 +88,11 @@ const kindAt = (
 ): DirEntry["kind"] | undefined =>
   entries(callerPath(dir)).find((e) => e.name === name)?.kind;
 
+const ENTRY: Readonly<Record<Exclude<DirEntry["kind"], "symlink">, PathEntry>> =
+  { file: { kind: "file" }, dir: { kind: "dir" } };
+
 /**
- * What the file `name` below `dir`/`above` is: every component on the way is looked up in its
+ * What the entry `name` below `dir`/`above` is: every component on the way is looked up in its
  * directory's entries, and the first that is a symbolic link ends the walk (an entry under a
  * directory that is not there is not listed, so it can be no link).
  */
@@ -61,15 +101,33 @@ const walk = (
   above: readonly string[],
   name: string,
   entries: ListEntries,
-): Located => {
+): PathEntry => {
   const path = [...above, name];
   const at = path.findIndex(
     (c, i) => kindAt(entries, join(dir, ...path.slice(0, i)), c) === "symlink",
   );
   if (at >= 0) return { kind: "linked", link: path.slice(0, at + 1).join("/") };
-  return kindAt(entries, join(dir, ...above), name) === "file"
-    ? { kind: "file" }
-    : { kind: "absent" };
+  const kind = kindAt(entries, join(dir, ...above), name);
+  return kind === undefined || kind === "symlink"
+    ? { kind: "absent" }
+    : ENTRY[kind];
+};
+
+/** `path` as the directories above its last component, and that component. */
+const split = (
+  path: string,
+): {
+  readonly above: readonly string[];
+  readonly name: string;
+} => {
+  const normal = posix.normalize(path);
+  return {
+    above: posix
+      .dirname(normal)
+      .split("/")
+      .filter((c) => c !== "."),
+    name: posix.basename(normal),
+  };
 };
 
 /** What `path` in `folder` is, by the entries of the paper folder `paper`; nothing is read. */
@@ -82,20 +140,10 @@ const locateIn = (
   // A NUL is no path the disk can hold, and probing one throws; the rest never leaves the folder.
   if (!isFolderName(folder) || !isInside(path) || path.includes("\0"))
     return { kind: "absent" };
+  const { above, name } = split(path);
   // The folder is walked too: one that is a link is never entered, and reads as absent.
-  const normal = posix.normalize(path);
-  const found = walk(
-    join(paper, REPRO_DIR),
-    [
-      folder,
-      ...posix
-        .dirname(normal)
-        .split("/")
-        .filter((c) => c !== "."),
-    ],
-    posix.basename(normal),
-    entries,
-  );
+  const found = walk(join(paper, REPRO_DIR), [folder, ...above], name, entries);
+  if (found.kind === "dir") return { kind: "absent" };
   if (found.kind !== "linked") return found;
   return found.link === folder
     ? { kind: "absent" }
@@ -107,6 +155,12 @@ export const studyFolder = (
   paper: string,
   deps: { readonly files: Files; readonly entries: ListEntries },
 ): StudyFolder => ({
+  refusal: (folder) => {
+    if (!isFolderName(folder)) return "not-a-folder";
+    return kindAt(deps.entries, join(paper, REPRO_DIR), folder) === "symlink"
+      ? "symbolic-link"
+      : null;
+  },
   locate: (folder, path) => locateIn(paper, deps.entries, folder, path),
   read: (folder, path) => {
     const at = locateIn(paper, deps.entries, folder, path);
@@ -116,5 +170,10 @@ export const studyFolder = (
     return bytes === null
       ? { kind: "absent" }
       : { kind: "text", text: new TextDecoder().decode(bytes) };
+  },
+  entryAt: (path) => {
+    if (!isInside(path) || path.includes("\0")) return { kind: "absent" };
+    const { above, name } = split(path);
+    return walk(paper, above, name, deps.entries);
   },
 });

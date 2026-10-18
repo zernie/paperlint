@@ -36,6 +36,9 @@ A study decided before its run — its plan's `mode` is `decide_before_run`, the
   a directory with the commits of anything under it, and records a link rather than the file it
   points to, so no order is read from either. (A path that names the paper's folder
   itself, `.`, or ends in `/` is refused when the plan is parsed.)
+- **`decision-linked`** — the decision path passes through a symbolic link above the file: git
+  records the link, not the files behind it, so no order is read from it, and the finding names the
+  link.
 - **`shallow`** — the clone is shallow, so every file's first commit is the clone's: no order can be
   read, and the rule says so instead of judging.
 - **`no-history`** — git could not answer (not installed, not a repository).

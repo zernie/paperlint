@@ -15,12 +15,7 @@
  */
 import { basename, dirname, join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import {
-  filesUnder,
-  modeStudies,
-  onDisk,
-  type StudyDeps,
-} from "./study-modes.ts";
+import { filesUnder, decisionPath, modeStudies } from "./study-modes.ts";
 import {
   judgeOrder,
   orderMessage,
@@ -33,6 +28,8 @@ import type {
   FolderRuleModule,
 } from "./folder-venue-rule.ts";
 import type { GitOrder } from "./ports/git-history.ts";
+import { studyFolder, type StudyDeps } from "./study-folder.ts";
+import { registryOf } from "./study-registry-rule.ts";
 import { rulePageUrl } from "./venue-rules.ts";
 
 const STATUS_FILE = "PIPELINE-STATUS.md";
@@ -46,32 +43,37 @@ export interface OrderDeps extends StudyDeps {
 export const decideFirstStudies = (
   paper: string,
   deps: OrderDeps,
-): readonly DecideFirstStudy[] =>
-  modeStudies(paper, deps).flatMap(({ row, plan, mode, empty }) => {
-    // Only a ready plan decides: a draft may name no outputs, or an empty decision file.
-    if (mode.kind !== "decide_before_run" || empty.length > 0) return [];
-    const folder = join(paper, REPRO_DIR, row.folder);
-    const decision = join(paper, mode.decision.file);
-    const on = onDisk(decision, deps);
-    return [
-      {
-        id: row.id,
-        folder: row.folder,
-        plan,
-        mode,
-        tree: filesUnder(folder, deps),
-        facts:
-          on === "directory" || on === "symbolic link"
-            ? { kind: "not-a-file", what: on }
-            : deps.git.order(callerPath(folder), callerPath(decision)),
-      },
-    ];
-  });
+): readonly DecideFirstStudy[] => {
+  const reader = studyFolder(paper, deps);
+  return modeStudies(registryOf(paper, deps), reader, deps.codec).flatMap(
+    ({ row, plan, mode, empty }) => {
+      // Only a ready plan decides: a draft may name no outputs, or an empty decision file.
+      if (mode.kind !== "decide_before_run" || empty.length > 0) return [];
+      const folder = join(paper, REPRO_DIR, row.folder);
+      const decision = join(paper, mode.decision.file);
+      const on = decisionPath(reader, mode.decision.file);
+      return [
+        {
+          id: row.id,
+          folder: row.folder,
+          plan,
+          mode,
+          tree: filesUnder(folder, deps),
+          facts:
+            on.kind === "ok"
+              ? deps.git.order(callerPath(folder), callerPath(decision))
+              : on,
+        },
+      ];
+    },
+  );
+};
 
 const PROBLEMS: readonly OrderFinding["problem"][] = [
   "decision-is-output",
   "decision-deleted",
   "decision-not-file",
+  "decision-linked",
   "no-history",
   "shallow",
   "undecided-output",

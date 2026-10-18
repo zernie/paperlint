@@ -85,6 +85,8 @@ export const indexHistory = (s: DecideFirstStudy): IndexHistory => {
   switch (s.facts.kind) {
     case "not-a-file":
       return { kind: "unread", why: `the decision is a ${s.facts.what}` };
+    case "linked":
+      return { kind: "unread", why: "the decision is behind a symbolic link" };
     case "unknown":
       return { kind: "unread", why: "git could not answer" };
     case "shallow":

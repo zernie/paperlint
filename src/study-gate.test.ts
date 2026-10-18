@@ -302,7 +302,7 @@ it("refuses a decision or a study folder that is a symbolic link", () => {
     [
       1,
       [
-        "P1-S01: its row names the folder `P1-S01-outcome`, which is not one folder inside papers/example/repro/; nothing is read through it. Give the row its own folder's name.",
+        "P1-S01: its row names the folder `P1-S01-outcome`, which is a symbolic link; nothing is read through it. Give the row a real folder inside papers/example/repro/.",
       ],
     ],
   ]);
@@ -381,15 +381,41 @@ it("refuses a plan that is a symbolic link, or sits under a linked directory, na
       1,
       [],
       [
-        "P1-S01: its plan plan.json in papers/example/repro/P1-S01-outcome passes through the symbolic link `plan.json`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+        "P1-S01: the plan its row names, in papers/example/repro/P1-S01-outcome, passes through the symbolic link `plan.json`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
       ],
     ],
     [
       1,
       [],
       [
-        "P1-S01: its plan sub/plan.json in papers/example/repro/P1-S01-outcome passes through the symbolic link `sub`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+        "P1-S01: the plan its row names, in papers/example/repro/P1-S01-outcome, passes through the symbolic link `sub`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
       ],
+    ],
+  ]);
+});
+
+it("refuses a decision under a linked directory, naming the link: git cannot vouch for what lies behind it", () => {
+  const file = "repro/P1-S01-outcome/sub/decision.md";
+  const r = studies(
+    "gate",
+    tree(
+      { [`${DIR}/${file}`]: "exclude run 7\n" },
+      planOf({ ...DECIDED, decision: { file, note: "n" } }),
+    ),
+    {},
+    {
+      git: {
+        [`${DIR}/${file}`]: { kind: "committed", commit: SHA, date: DATE },
+      },
+      links: [`${S}/sub`],
+    },
+  );
+  // Guards: only the last component of the decision path was looked at, so a linked directory above
+  // it passed and git was asked about a path it stores as a link's target.
+  expect([r.code, r.err]).toEqual([
+    1,
+    [
+      `P1-S01: its decision ${file} passes through the symbolic link \`repro/P1-S01-outcome/sub\`; git records the link, not the files behind it, so the run cannot be gated on it. Name a decision file that lies in real directories in \`mode.decision.file\`.`,
     ],
   ]);
 });

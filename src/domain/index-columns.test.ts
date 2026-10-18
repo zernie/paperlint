@@ -224,6 +224,7 @@ describe("indexHistory", () => {
       indexHistory(study({ kind: "unknown", why: "not a repository" })),
       indexHistory(study({ kind: "shallow" })),
       indexHistory(study({ kind: "not-a-file", what: "directory" })),
+      indexHistory(study({ kind: "linked", link: "repro/sub" })),
       indexHistory(
         study({
           kind: "read",
@@ -247,6 +248,7 @@ describe("indexHistory", () => {
       { kind: "unread", why: "git could not answer" },
       { kind: "unread", why: "shallow clone" },
       { kind: "unread", why: "the decision is a directory" },
+      { kind: "unread", why: "the decision is behind a symbolic link" },
       { kind: "read", decision: D, decisionDeleted: false, firstOutput: A },
       {
         kind: "read",

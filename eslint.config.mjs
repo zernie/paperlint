@@ -231,6 +231,13 @@ export const APP_EXTERNALS = [
   "node:module",
 ];
 
+/** The bibtex parser is one adapter's: every other file reads a `.bib` through the `BibReader` port. */
+const BIBTEX_FENCE = {
+  name: ["@retorquere/bibtex-parser", "@retorquere/bibtex-parser/**"],
+  message:
+    "The bibtex parser is src/adapters/bibtex/'s: read a .bib through the BibReader port (src/ports/bib-reader.ts), or a path through bibliographyAt (src/paper-sources.ts).",
+};
+
 const ORIGINS = ["external", "core"];
 const modules = (source) => ({ to: { module: { origin: ORIGINS, source } } });
 const elements = (...types) => ({ element: { types: { anyOf: types } } });
@@ -820,14 +827,32 @@ export default [
     files: ["**/*.{ts,mts,mjs,js,cjs}"],
     ignores: ["src/adapters/bibtex/**"],
     plugins: { n },
+    rules: { "n/no-restricted-import": ["error", [BIBTEX_FENCE]] },
+  },
+  // 🔴 A STUDY'S FOLDER IS READ THROUGH ONE READER. `src/study-folder.ts` walks a path by the entries
+  // of each directory and never follows a symbolic link (#227); the modules that read a study —
+  // the order rule, the gate, the index's input and the mode reader — take a `StudyFolder` and may
+  // not import the `Files` port, so a read that follows a link cannot be written in them. The rest of
+  // the `src/study-*.ts` family reads the registry and the README, which are not in a study's folder.
+  // Same rule id as the bibtex fence, so this block repeats that entry: a later block replaces the
+  // earlier one for the files it matches (test/eslint-study-folder.test.ts).
+  {
+    files: [
+      "src/study-modes.ts",
+      "src/study-gate.ts",
+      "src/study-index-input.ts",
+      "src/outputs-before-decision-rule.ts",
+    ],
+    plugins: { n },
     rules: {
       "n/no-restricted-import": [
         "error",
         [
+          BIBTEX_FENCE,
           {
-            name: ["@retorquere/bibtex-parser", "@retorquere/bibtex-parser/**"],
+            name: ["**/ports/files.ts"],
             message:
-              "The bibtex parser is src/adapters/bibtex/'s: read a .bib through the BibReader port (src/ports/bib-reader.ts), or a path through bibliographyAt (src/paper-sources.ts).",
+              "A study's folder is read through StudyFolder (src/study-folder.ts), which follows no symbolic link: take a StudyFolder, not the Files port.",
           },
         ],
       ],

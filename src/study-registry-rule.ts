@@ -29,14 +29,14 @@ import {
   LEGACY_PLAN_FILE,
   PLAN_NAME_PROBLEMS,
   STUDIES_FILE,
-  isFolderName,
   judgeStudies,
   planRefs,
   studyMessage,
   type PlanState,
   type RegistryState,
   type StudyFinding,
-  type StudyInput,
+  type Located,
+  type PlanRef,
 } from "./domain/study-registry.ts";
 import type { FolderLayoutDeps } from "./folder-layout-rule.ts";
 import type {
@@ -58,30 +58,6 @@ export interface StudyRegistryDeps extends FolderLayoutDeps {
   /** `repro/`'s entries, links not followed: a study folder that is a link is never read through. */
   readonly entries: ListEntries;
 }
-
-/** The names at the top of `<dir>/repro/` that are symbolic links. */
-const linksIn = (
-  dir: string,
-  deps: Pick<StudyRegistryDeps, "entries">,
-): ReadonlySet<string> =>
-  new Set(
-    deps
-      .entries(callerPath(join(dir, REPRO_DIR)))
-      .filter((e) => e.kind === "symlink")
-      .map((e) => e.name),
-  );
-
-/**
- * The test every reader of a study's folder passes a row through: its folder is one folder name
- * inside `repro/` (`isFolderName`) and not a symbolic link, which would lead the reads anywhere.
- */
-export const readableFolders = (
-  dir: string,
-  deps: Pick<StudyRegistryDeps, "entries">,
-): ((folder: string) => boolean) => {
-  const links = linksIn(dir, deps);
-  return (folder) => isFolderName(folder) && !links.has(folder);
-};
 
 /** The text of the file at `p`; null when there is none, or a directory sits there. */
 export const textAt = (files: Files, p: string): string | null => {
@@ -113,35 +89,23 @@ const studyFolders = (dir: string, deps: FolderLayoutDeps): readonly string[] =>
     )
     .map((e) => e.name);
 
-/**
- * The results of `r`'s rows: each `<folder>/<result_file>` that is a file, and each that is reached
- * through a link, by the link — both from the study folder's reader, which follows none.
- */
+/** What each `<folder>/<result_file>` of `r`'s rows is, as the study folder's reader finds it. */
 const resultsOf = (
   r: RegistryState,
   folder: StudyFolder,
-): Pick<StudyInput, "existingResults" | "linkedResults"> => {
-  const located = (r.kind === "read" ? r.registry.studies : []).flatMap((s) =>
-    s.result_file === undefined
-      ? []
-      : [
-          {
-            key: `${s.folder}/${s.result_file}`,
-            at: folder.locate(s.folder, s.result_file),
-          },
-        ],
+): ReadonlyMap<string, Located> =>
+  new Map(
+    (r.kind === "read" ? r.registry.studies : []).flatMap((s) =>
+      s.result_file === undefined
+        ? []
+        : [
+            [
+              `${s.folder}/${s.result_file}`,
+              folder.locate(s.folder, s.result_file),
+            ] as const,
+          ],
+    ),
   );
-  return {
-    existingResults: new Set(
-      located.filter((l) => l.at.kind === "file").map((l) => l.key),
-    ),
-    linkedResults: new Map(
-      located.flatMap(({ key, at }) =>
-        at.kind === "linked" ? [[key, at.link] as const] : [],
-      ),
-    ),
-  };
-};
 
 /**
  * The plan each row of `r` names, read and parsed, by `<folder>/<plan>`; a plan not there is left out.
@@ -161,7 +125,7 @@ export const plansOf = (
 
 /** The state of the plan `ref` names, read through `folder`; null when it is not there. */
 const planStateOf = (
-  { key, folder: of, plan, kind }: ReturnType<typeof planRefs>[number],
+  { key, folder: of, plan, kind }: PlanRef,
   folder: StudyFolder,
   codec: StudyRegistryCodec,
 ): PlanState | null => {
@@ -189,7 +153,7 @@ export function studyFindings(
     folders: studyFolders(dir, deps),
     registry,
     readme: textAt(deps.files, join(dir, REPRO_DIR, README)),
-    ...resultsOf(registry, folder),
+    results: resultsOf(registry, folder),
     plans: plansOf(registry, folder, deps.codec),
   });
 }

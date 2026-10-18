@@ -248,6 +248,16 @@ export type ParsedPlan =
     }
   | { readonly kind: "unreadable"; readonly why: string };
 
+/**
+ * What a path inside a study's folder is, found without reading it or following a link: a regular
+ * file, nothing, or a path that passes through a symbolic link (`link`: the first one, relative to
+ * the folder).
+ */
+export type Located =
+  | { readonly kind: "file" }
+  | { readonly kind: "absent" }
+  | { readonly kind: "linked"; readonly link: string };
+
 /** What a study's folder holds of the plan its row names: absent, or what its text parsed to. */
 export type PlanState =
   | { readonly kind: "absent" }
@@ -307,10 +317,8 @@ export interface StudyInput {
   readonly registry: RegistryState;
   /** `repro/README.md`'s text; null when there is none. */
   readonly readme: string | null;
-  /** Each `<folder>/<result_file>` of the registry that is a file. */
-  readonly existingResults: ReadonlySet<string>;
-  /** Each `<folder>/<result_file>` whose path passes through a symbolic link, by the link; never read. */
-  readonly linkedResults?: ReadonlyMap<string, string>;
+  /** What each `<folder>/<result_file>` of the registry is, as `locate` found it; one not listed is absent. */
+  readonly results: ReadonlyMap<string, Located>;
   /** The plan each row names, by `<folder>/<plan>`; one not listed is absent. */
   readonly plans: ReadonlyMap<string, PlanState>;
 }
@@ -500,21 +508,46 @@ export const isFolderName = (folder: string): boolean =>
   folder !== "." && folder !== ".." && /^[^/\\\0]+$/u.test(folder);
 
 /**
+ * The rows of a registry that carry an id: exactly one, none, or several. The one way to address a
+ * study by its id — a caller that wants "the study P1-S01" gets a row only when there is exactly one,
+ * so no command can act on the first of two rows by accident. A registry may still hold two rows of
+ * one id (`repro/study-registered` reports it); this says so instead of choosing.
+ */
+export type StudyLookup =
+  | { readonly kind: "one"; readonly row: Study }
+  | { readonly kind: "none" }
+  | { readonly kind: "ambiguous"; readonly rows: readonly Study[] };
+
+/** The rows of `studies` whose id is `id`, as a `StudyLookup`. */
+export const studyById = (
+  studies: readonly Study[],
+  id: string,
+): StudyLookup => {
+  const [first, ...rest] = studies.filter((s) => s.id === id);
+  if (first === undefined) return { kind: "none" };
+  return rest.length === 0
+    ? { kind: "one", row: first }
+    : { kind: "ambiguous", rows: [first, ...rest] };
+};
+
+/**
  * The `<folder>/<plan>` of each row whose plan lies inside its folder: the files the judge needs read
  * (`StudyInput.plans`). A plan outside its folder is reported without being read.
  */
 export const planKeys = (r: StudyRegistry): readonly string[] =>
   planRefs(r).map((p) => p.key);
 
-/** Each plan `planKeys` names, with the kind of the study whose row names it: what its parser needs. */
-export const planRefs = (
-  r: StudyRegistry,
-): readonly {
+/** A plan a row names: where it is read from, and the kind of the study — what its parser needs. */
+export interface PlanRef {
+  /** `<folder>/<plan>`: the key of `StudyInput.plans`. */
   readonly key: string;
   readonly folder: string;
   readonly plan: string;
   readonly kind: StudyKind;
-}[] =>
+}
+
+/** Each plan `planKeys` names. */
+export const planRefs = (r: StudyRegistry): readonly PlanRef[] =>
   r.studies.flatMap((s) =>
     s.plan !== undefined && isInside(s.plan) && isFolderName(s.folder)
       ? [
@@ -540,29 +573,6 @@ interface Row {
 type RowCheck = (row: Row) => StudyFinding | null;
 
 /** Whether the row is the first of the registry with its value of `key`. */
-/**
- * The rows of a registry that carry an id: exactly one, none, or several. The one way to address a
- * study by its id — a caller that wants "the study P1-S01" gets a row only when there is exactly one,
- * so no command can act on the first of two rows by accident. A registry may still hold two rows of
- * one id (`repro/study-registered` reports it); this says so instead of choosing.
- */
-export type StudyLookup =
-  | { readonly kind: "one"; readonly row: Study }
-  | { readonly kind: "none" }
-  | { readonly kind: "ambiguous"; readonly rows: readonly Study[] };
-
-/** The rows of `studies` whose id is `id`, as a `StudyLookup`. */
-export const studyById = (
-  studies: readonly Study[],
-  id: string,
-): StudyLookup => {
-  const [first, ...rest] = studies.filter((s) => s.id === id);
-  if (first === undefined) return { kind: "none" };
-  return rest.length === 0
-    ? { kind: "one", row: first }
-    : { kind: "ambiguous", rows: [first, ...rest] };
-};
-
 const isFirst = ({ r, s, i }: Row, key: (o: Study) => string): boolean =>
   r.studies.findIndex((o) => key(o) === key(s)) === i;
 
@@ -623,13 +633,21 @@ const resultFile: RowCheck = ({ s, input }) => {
   if (path === undefined) return null;
   if (!isInside(path))
     return { problem: "result-file", id: s.id, path, why: "outside" };
-  const key = `${s.folder}/${path}`;
-  const link = input.linkedResults?.get(key);
-  if (link !== undefined)
-    return { problem: "result-file", id: s.id, path, why: "linked", link };
-  return input.existingResults.has(key)
-    ? null
-    : { problem: "result-file", id: s.id, path, why: "missing" };
+  const found = input.results.get(`${s.folder}/${path}`) ?? { kind: "absent" };
+  switch (found.kind) {
+    case "file":
+      return null;
+    case "linked":
+      return {
+        problem: "result-file",
+        id: s.id,
+        path,
+        why: "linked",
+        link: found.link,
+      };
+    case "absent":
+      return { problem: "result-file", id: s.id, path, why: "missing" };
+  }
 };
 
 const noSuccessor: RowCheck = ({ r, s }) => {

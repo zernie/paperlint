@@ -133,24 +133,35 @@ make a command or a rule read, judge or write files that belong to nothing in it
 
 Every command and rule that reads a study's folder — `studies gate`, `studies index` and `new`,
 `repro/outputs-before-decision`, and `repro/study-registered`'s reads of plans and result files —
-reads a row only through one predicate, `readableFolders` (`src/study-registry-rule.ts`): its
-`folder` is one folder directly inside `repro/` (`isFolderName`: not empty, not `.` or `..`, no
-separator or NUL) and not a symbolic link (`ListEntries`, read without following links). Such a row
-is never read through: `studies index` and `new` refuse the registry, the gate refuses the study,
-the order rule treats it as no study, and `repro/study-registered` reads its plan and results as
-missing. A plan's path is held inside its folder by the registry rule's own `isInside`, the same on
-every platform (a backslash is refused outright), and read through one reader that follows no link
-(`studyFolder`, `src/study-folder.ts`, over `ListEntries`): the path is walked one component at a time,
-and a plan or a result file whose path passes through a symbolic link — the file itself, or a
-directory above it — is never read. The gate refuses it naming the link, the order rule treats the
-study as declaring no mode, and `repro/study-registered` reports it (`bad-plan`, `result-file`) with
-the link. The plan reads and the result-file existence checks all take that reader and not `Files`,
-so a read that follows a link cannot be written there; a study's outputs are only listed, by the same
-`ListEntries`. The decision file is held inside the paper by the
-schema (`staysInside`) and must be a regular file on disk — a directory or a symbolic link is refused
-by the gate and reported by the rule (`decision-not-file`). Only a **ready** plan's mode decides
-anything: the gate refuses a draft, naming its empty fields, and the order rule judges no draft — a
-draft may name no outputs, or an empty decision file.
+goes through one reader, `studyFolder` (`src/study-folder.ts`), built once per run from the paper's
+folder over `ListEntries`, which does not follow links. It decides first whether a row's folder may
+be entered at all (`refusal`): its `folder` is one folder directly inside `repro/` (`isFolderName`:
+not empty, not `.` or `..`, no separator or NUL) and not a symbolic link. Such a row is never read
+through: `studies index` and `new` refuse the registry, the gate refuses the study, the order rule
+treats it as no study, and `repro/study-registered` reads its plan and results as missing.
+
+A plan's path is held inside its folder by the registry rule's own `isInside`, the same on every
+platform (a backslash is refused outright). The reader walks the path one component at a time, and a
+plan or a result file whose path passes through a symbolic link — the file itself, or a directory
+above it — is never read. The gate refuses it naming the link, the order rule treats the study as
+declaring no mode, and `repro/study-registered` reports it (`bad-plan`, `result-file`) with the link.
+
+The decision file is held inside the paper by the schema (`staysInside`) and is judged by the same
+walk (`decisionPath`, `entryAt`): every component of its path must be a real directory and the last
+a regular file. A directory or a symbolic link as the file itself is refused by the gate and reported
+by the rule (`decision-not-file`); a symbolic link above the file is refused naming that link
+(`decision-linked`).
+
+What cannot be written: the plan reads, the result-file existence checks and the decision's path
+check take a `StudyFolder` and not `Files`, and `eslint.config.mjs` bans the `Files` port in the
+modules that read a study's folder (`src/study-modes.ts`, `src/study-gate.ts`,
+`src/study-index-input.ts`, `src/outputs-before-decision-rule.ts`; `test/eslint-study-folder.test.ts`).
+The ban cannot cover every `src/study-*.ts`: `src/study-registry-rule.ts` reads `repro/studies.json`
+and `repro/README.md`, which are not in a study's folder, with `Files`, and so does `src/studies.ts`
+when it writes the index. A study's outputs are only listed (`filesUnder`), by the same `ListEntries`.
+
+Only a **ready** plan's mode decides anything: the gate refuses a draft, naming its empty fields, and
+the order rule judges no draft — a draft may name no outputs, or an empty decision file.
 
 ### 6. Legacy plans
 

@@ -54,6 +54,8 @@ export interface FirstCommit extends CommitAt {
  */
 export type OrderFacts =
   | { readonly kind: "not-a-file"; readonly what: NotAFile }
+  /** The decision's path passes through a symbolic link above the file (`link`: the first, relative to the paper). */
+  | { readonly kind: "linked"; readonly link: string }
   | { readonly kind: "unknown"; readonly why: string }
   /** A shallow clone: every file's first commit is the clone's first, so no order can be read. */
   | { readonly kind: "shallow" }
@@ -96,6 +98,12 @@ export type OrderFinding =
       readonly id: string;
       readonly file: string;
       readonly what: NotAFile;
+    }
+  | {
+      readonly problem: "decision-linked";
+      readonly id: string;
+      readonly file: string;
+      readonly link: string;
     }
   | {
       readonly problem: "no-history";
@@ -188,6 +196,10 @@ const historyFindings = (s: DecideFirstStudy): readonly OrderFinding[] => {
       return [
         { problem: "decision-not-file", id: s.id, file, what: s.facts.what },
       ];
+    case "linked":
+      return [
+        { problem: "decision-linked", id: s.id, file, link: s.facts.link },
+      ];
     case "unknown":
       return [{ problem: "no-history", id: s.id, why: s.facts.why }];
     case "shallow":
@@ -225,6 +237,8 @@ const HEADS: {
     `The decision of \`${f.id}\`, \`${f.file}\`, was committed and then deleted: it is not in HEAD, so the study has no decision its outputs could follow. What to do: restore the decision file as it was decided and commit it — never write a new one after the outputs; if the decision no longer holds, declare the study \`exploratory\` with the reason.`,
   "decision-not-file": (f) =>
     `The decision of \`${f.id}\`, \`${f.file}\`, is a ${f.what}, not a file: ${NOT_A_FILE[f.what]}, so no order can be read from it. What to do: name the decision file itself in \`mode.decision.file\`.`,
+  "decision-linked": (f) =>
+    `The decision of \`${f.id}\`, \`${f.file}\`, passes through the symbolic link \`${f.link}\`: git records the link, not the files behind it, so no order can be read from it. What to do: name a decision file that lies in real directories in \`mode.decision.file\`.`,
   "no-history": (f) =>
     `\`${f.id}\` is decided before its run, and git's history is the proof of that order, but git could not answer: ${f.why}. What to do: lint the paper inside its git repository, with git installed.`,
   shallow: (f) =>

@@ -268,12 +268,39 @@ describe.skipIf(SKIP)(
       ).toEqual([
         [
           1,
-          "P1-S01: its plan plan.json in papers/example/repro/P1-S01-outcome passes through the symbolic link `plan.json`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+          "P1-S01: the plan its row names, in papers/example/repro/P1-S01-outcome, passes through the symbolic link `plan.json`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
         ],
         [
           1,
-          "P1-S01: its plan sub/plan.json in papers/example/repro/P1-S01-outcome passes through the symbolic link `sub`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+          "P1-S01: the plan its row names, in papers/example/repro/P1-S01-outcome, passes through the symbolic link `sub`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
         ],
+      ]);
+    });
+  },
+);
+
+describe.skipIf(SKIP)(
+  "a decision reached through a symbolic link, through the real binary on a real disk",
+  () => {
+    it("the gate refuses a decision under a linked directory, naming the link", () => {
+      const dir = project("link-decision");
+      const plan = join(dir, STUDY, "plan.json");
+      const file = "repro/P1-S01-outcome/sub/decision.md";
+      writeFileSync(
+        plan,
+        readFileSync(plan, "utf8").replace(
+          "repro/P1-S01-outcome/decision.md",
+          file,
+        ),
+      );
+      mkdirSync(join(dir, "elsewhere"), { recursive: true });
+      writeFileSync(join(dir, "elsewhere", "decision.md"), "exclude run 7\n");
+      symlinkSync(join(dir, "elsewhere"), join(dir, STUDY, "sub"));
+      const r = paperlint(dir, ["studies", "gate", "papers/example", "P1-S01"]);
+      // Guards: the file behind the link exists; the message names the link and the fix.
+      expect([r.status, r.err.trim()]).toEqual([
+        1,
+        `P1-S01: its decision ${file} passes through the symbolic link \`repro/P1-S01-outcome/sub\`; git records the link, not the files behind it, so the run cannot be gated on it. Name a decision file that lies in real directories in \`mode.decision.file\`.`,
       ]);
     });
   },
