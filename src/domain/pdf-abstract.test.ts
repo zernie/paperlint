@@ -55,11 +55,8 @@ test("🔴 no «Abstract» line, no end, or nothing between: refused by what was
     error: "the PDF's first two pages have no line beginning with «Abstract»",
   });
   const noEnd = abstractOfPages(["Abstract\ntext only"], "");
-  assert.equal(noEnd.ok, false);
-  assert.match(
-    noEnd.ok ? "" : noEnd.error,
-    /^the PDF's abstract has no end paperlint knows/,
-  );
+  assert.ok(!noEnd.ok);
+  assert.match(noEnd.error, /^the PDF's abstract has no end paperlint knows/);
   assert.deepEqual(abstractOfPages(["ABSTRACT\nKEYWORDS\nx"], ""), {
     ok: false,
     error: "the PDF's abstract is empty between its heading and the next block",

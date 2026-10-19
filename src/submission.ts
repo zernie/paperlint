@@ -570,12 +570,8 @@ function recordId(
   return ok(null);
 }
 
-/** What `new` sends, or the first line saying what is missing. */
-function newSubmissionOf(
-  t: SubmissionTarget,
-  a: SubmissionArgs & { readonly pdfPath: string; readonly paperDir: string },
-  deps: SubmissionDeps,
-): Result<{ readonly paper: NewSubmission; readonly shown: string }, string> {
+//** Why `new` cannot run for this paper, or the authors it sends: checked before anything is read. */
+function readyForNew(t: SubmissionTarget): Result<readonly Author[], string> {
   if (t.id !== null)
     return err(
       `${t.config}: the paper already has submission ${String(t.id)} on ${t.portal.url} — \`paperlint submission show\` reads it, \`paperlint submission update\` changes it`,
@@ -584,24 +580,26 @@ function newSubmissionOf(
     return err(
       `${t.config}: the current attempt is accepted — a new submission belongs to a new cycle`,
     );
-  if (t.authors === null)
-    return err(
-      `${t.config}: no "authors" — add "authors": [{ "name": "…", "email": "…", "affiliation": "…" }], every author in the paper's order, as ${hostOf(t.portal.url)} should record them; paperlint never guesses them`,
-    );
-  const shown = shownPath(deps.cwd, a.pdfPath);
-  const pdf = bytesAt(deps.files, a.pdfPath);
-  if (pdf === null)
-    return err(`no PDF at ${shown} — build the paper, or name one with --pdf`);
+  return t.authors === null
+    ? err(
+        `${t.config}: no "authors" — add "authors": [{ "name": "…", "email": "…", "affiliation": "…" }], every author in the paper's order, as ${hostOf(t.portal.url)} should record them; paperlint never guesses them`,
+      )
+    : ok(t.authors);
+}
+
+/** The title and the abstract: the paper's `\title`, and `--abstract`'s file or the build's PDF text. */
+function titleAndAbstract(
+  a: SubmissionArgs & { readonly paperDir: string },
+  pdf: Uint8Array,
+  deps: SubmissionDeps,
+): Result<{ readonly title: string; readonly abstract: string }, string> {
   const own = abstractOf(a, deps);
   if (!own.ok) return own;
   const facts = factsFor(a.paperDir, pdf, deps);
   const srcBytes = bytesAt(deps.files, join(a.paperDir, MAIN));
   const source = srcBytes === null ? null : new TextDecoder().decode(srcBytes);
-  const title = titleOf(
-    source,
-    deps.latex,
-    facts.ok ? facts.value.text.metadata : null,
-  );
+  const metadata = facts.ok ? facts.value.text.metadata : null;
+  const title = titleOf(source, deps.latex, metadata);
   if (!title.ok) return title;
   const abstract =
     own.value !== null
@@ -609,20 +607,62 @@ function newSubmissionOf(
       : facts.ok
         ? abstractOfPages(facts.value.text.pages, source ?? "")
         : facts;
-  if (!abstract.ok)
-    return err(
-      `the abstract: ${abstract.error} — give it with --abstract <file>, a plain-text file`,
-    );
-  return ok({
-    paper: {
-      title: title.value,
-      abstract: abstract.value,
-      authors: t.authors,
-      pdf: { name: basename(a.pdfPath), bytes: pdf },
-    },
-    shown,
-  });
+  return abstract.ok
+    ? ok({ title: title.value, abstract: abstract.value })
+    : err(
+        `the abstract: ${abstract.error} — give it with --abstract <file>, a plain-text file`,
+      );
 }
+
+/** What `new` sends, or the first line saying what is missing. */
+function newSubmissionOf(
+  t: SubmissionTarget,
+  a: SubmissionArgs & { readonly pdfPath: string; readonly paperDir: string },
+  deps: SubmissionDeps,
+): Result<{ readonly paper: NewSubmission; readonly shown: string }, string> {
+  const authors = readyForNew(t);
+  if (!authors.ok) return authors;
+  const shown = shownPath(deps.cwd, a.pdfPath);
+  const pdf = bytesAt(deps.files, a.pdfPath);
+  if (pdf === null)
+    return err(`no PDF at ${shown} — build the paper, or name one with --pdf`);
+  const text = titleAndAbstract(a, pdf, deps);
+  if (!text.ok) return text;
+  const paper = {
+    ...text.value,
+    authors: authors.value,
+    pdf: { name: basename(a.pdfPath), bytes: pdf },
+  };
+  return ok({ paper, shown });
+}
+
+//** After a save that created one: the id written into `paperlint.json`, and the next command. */
+function recordCreated(
+  t: SubmissionTarget,
+  id: number,
+  paperArg: string,
+  deps: RunDeps,
+): number {
+  const config = shownPath(deps.cwd, t.config);
+  const recorded = recordId(t.config, id, deps);
+  if (!recorded.ok) {
+    deps.err(
+      `submission ${String(id)} was created, but ${config} was not changed (${recorded.error}) — add "submission": { "id": ${String(id)} } to the current attempt by hand`,
+    );
+    return 1;
+  }
+  deps.log(`recorded      "submission": { "id": ${String(id)} } in ${config}`);
+  deps.log(
+    `next          npx paperlint submission show ${paperArg} — it should say "match yes"`,
+  );
+  return 0;
+}
+
+const logAll = (lines: readonly string[], deps: RunDeps): void => {
+  lines.forEach((l) => {
+    deps.log(l);
+  });
+};
 
 /**
  * `new`: create the paper's submission — title and abstract from the build, the authors the paper
@@ -638,38 +678,26 @@ async function runNew(
   if (!n.ok) return (deps.err(n.error), 2);
   const { paper, shown } = n.value;
   deps.log(checkPdfLine(shown, t.call));
-  newLines(paper.title, paper.abstract, paper.authors).forEach((l) => {
-    deps.log(l);
-  });
+  logAll(newLines(paper.title, paper.abstract, paper.authors), deps);
   const r = await portal.create(paper, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
-  createLines(r.value, a.save).forEach((l) => {
-    deps.log(l);
-  });
-  const paperArg =
-    a.paperDir === deps.cwd ? "." : shownPath(deps.cwd, a.paperDir);
+  logAll(createLines(r.value, a.save), deps);
   const fine =
     r.value.valid && r.value.httpStatus >= 200 && r.value.httpStatus < 300;
   if (!fine || (a.save && r.value.id === null)) return 1;
-  onTheSiteLines(t.portal, r.value.id, paperArg).forEach((l) => {
-    deps.log(l);
-  });
-  if (r.value.id === null) return 0;
-  const recorded = recordId(t.config, r.value.id, deps);
-  if (!recorded.ok) {
-    deps.err(
-      `submission ${String(r.value.id)} was created, but ${shownPath(deps.cwd, t.config)} was not changed (${recorded.error}) — add "submission": { "id": ${String(r.value.id)} } to the current attempt by hand`,
-    );
-    return 1;
-  }
-  deps.log(
-    `recorded      "submission": { "id": ${String(r.value.id)} } in ${shownPath(deps.cwd, t.config)}`,
-  );
-  deps.log(
-    `next          npx paperlint submission show ${paperArg} — it should say "match yes"`,
-  );
-  return 0;
+  const paperArg =
+    a.paperDir === deps.cwd ? "." : shownPath(deps.cwd, a.paperDir);
+  logAll(onTheSiteLines(t.portal, r.value.id, paperArg), deps);
+  return r.value.id === null ? 0 : recordCreated(t, r.value.id, paperArg, deps);
 }
+
+//** The flags that change something, as given. */
+const writingFlags = (a: SubmissionArgs): readonly string[] =>
+  [
+    a.abstract === null ? null : "--abstract",
+    a.submit ? "--submit" : null,
+    a.save ? "--save" : null,
+  ].filter((f) => f !== null);
 
 /** Why the command line cannot be run as asked; null when it can. Pure. */
 export function usageProblem(a: SubmissionArgs): string | null {
@@ -677,16 +705,24 @@ export function usageProblem(a: SubmissionArgs): string | null {
     return `\`submission\` needs a subcommand: ${SUBCOMMANDS.join(" or ")} — got \`${a.sub ?? ""}\``;
   if (a.extra.length > 0)
     return `\`submission ${a.sub}\` takes one paper folder — got also \`${a.extra.join(" ")}\``;
-  const writing = [
-    a.abstract === null ? null : "--abstract",
-    a.submit ? "--submit" : null,
-    a.save ? "--save" : null,
-  ].filter((f) => f !== null);
+  const writing = writingFlags(a);
   if (a.sub === "show" && writing.length > 0)
     return `${writing.join(", ")}: only \`submission new\` and \`submission update\` change anything; \`show\` reads`;
   return a.sub === "new" && a.submit
     ? "--submit: `submission new` creates the submission; mark it submitted with `submission update --submit` once `show` says the portal holds this build"
     : null;
+}
+
+/** No token to use: the complete instruction, exit 2 — nothing is sent. */
+function tokenMissing(
+  portal: SupportedPortal,
+  p: TokenProblem,
+  deps: SubmissionDeps,
+): number {
+  tokenProblemLines(portal, p).forEach((l) => {
+    deps.err(l);
+  });
+  return 2;
 }
 
 /** `paperlint submission <new|show|update> [paper-dir]` — exit 0, 1 (the portal said no), or 2 (usage). */
@@ -702,18 +738,12 @@ export async function runSubmission(
   const id = a.sub === "new" ? ok(null) : idOf(t.value);
   if (!id.ok) return (deps.err(id.error), 2);
   const found = lookUpToken(t.value.portal, deps.env);
-  if (!found.ok) {
-    tokenProblemLines(t.value.portal, found.error).forEach((l) => {
-      deps.err(l);
-    });
-    return 2;
-  }
+  if (!found.ok) return tokenMissing(t.value.portal, found.error, deps);
   const portal = deps.portalFor(t.value.portal, found.value.token);
   const pdfPath = a.pdf === null ? t.value.pdf : resolve(deps.cwd, a.pdf);
   const withToken: RunDeps = {
     ...deps,
-    refused: (f: PortalFailure) =>
-      tokenRefusedLines(t.value.portal, found.value.variable, f),
+    refused: (f) => tokenRefusedLines(t.value.portal, found.value.variable, f),
   };
   if (id.value === null)
     return runNew(t.value, portal, { ...a, pdfPath, paperDir }, withToken);

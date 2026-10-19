@@ -10,6 +10,7 @@ import { nodeFiles } from "./adapters/node/index.ts";
 import type { Files } from "./ports/files.ts";
 import { ok, err, type Result } from "./domain/result.ts";
 import { sha256Hex } from "./domain/sha256.ts";
+import { absolutePath } from "./domain/paths.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import type {
   CreateOutcome,
@@ -835,7 +836,8 @@ test("new: a dry run by default — title from \\title, abstract from the build'
   assert.deepEqual(
     JSON.parse(
       new TextDecoder().decode(
-        fs.readBytes(`${PAPER}/paperlint.json` as never) ?? new Uint8Array(),
+        fs.readBytes(absolutePath(`${PAPER}/paperlint.json`)) ??
+          new Uint8Array(),
       ),
     ),
     { extends: "../../venue.jsonc", authors: AUTHORS },
@@ -858,7 +860,7 @@ test("🔴 new --save: the id the portal chose is written into paperlint.json, a
     ),
   );
   const written = new TextDecoder().decode(
-    fs.readBytes(`${PAPER}/paperlint.json` as never) ?? new Uint8Array(),
+    fs.readBytes(absolutePath(`${PAPER}/paperlint.json`)) ?? new Uint8Array(),
   );
   assert.deepEqual(JSON.parse(written), {
     extends: "../../venue.jsonc",
@@ -894,7 +896,7 @@ test("new --save in the cycles form: the id goes into the open attempt, the last
   assert.equal(r.code, 0, r.errs.join("\n"));
   const written: unknown = JSON.parse(
     new TextDecoder().decode(
-      fs.readBytes(`${PAPER}/paperlint.json` as never) ?? new Uint8Array(),
+      fs.readBytes(absolutePath(`${PAPER}/paperlint.json`)) ?? new Uint8Array(),
     ),
   );
   assert.deepEqual(written, {
@@ -939,8 +941,6 @@ test("new --abstract <file>: its text is sent instead of the build's, whitespace
     facts: null,
     paper: { extends: "../../venue.jsonc", authors: AUTHORS },
   });
-  const withFile = memoryFiles({});
-  void withFile;
   const r = await run(
     { sub: "new", abstract: "abs.txt" },
     {
@@ -954,9 +954,9 @@ test("new --abstract <file>: its text is sent instead of the build's, whitespace
     },
   );
   assert.equal(r.code, 0, r.errs.join("\n"));
-  const call = r.seen[0]?.calls[0];
-  assert.ok(Array.isArray(call));
-  assert.equal((call[1] as NewSubmission).abstract, "Line one. Line two.");
+  assert.deepEqual(r.seen[0]?.calls, [
+    ["create", { ...WANT, abstract: "Line one. Line two." }, { save: false }],
+  ]);
 });
 
 test("new: the paper already accepted in its current cycle — refused; a new submission is a new cycle", async () => {

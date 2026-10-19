@@ -135,6 +135,23 @@ const endpoint = (
   params: Readonly<Record<string, string>>,
 ): string => `${base}/api/paper?${new URLSearchParams(params).toString()}`;
 
+/** What one `POST /api/paper` sends: which submission, its object, the PDF, and whether to save. */
+interface Post {
+  readonly p: string;
+  readonly object: Readonly<Record<string, unknown>>;
+  readonly pdf: { readonly name: string; readonly bytes: Uint8Array } | null;
+  readonly save: boolean;
+}
+
+/** A `POST /api/paper` carrying the object and the PDF, a dry run unless saving. */
+const post = (o: HotcrpOptions, w: Post): Promise<Answer> =>
+  call(
+    endpoint(o.url, { p: w.p, ...(w.save ? {} : { dry_run: "1" }) }),
+    { method: "POST", body: formOf(w.object, w.pdf) },
+    o.token,
+    WRITE_TIMEOUT_MS,
+  );
+
 /** HotCRP at `o.url`, read and changed with `o.token`. */
 export function hotcrpPortal(o: HotcrpOptions): SubmissionPortal {
   return {
@@ -144,31 +161,13 @@ export function hotcrpPortal(o: HotcrpOptions): SubmissionPortal {
       return a.ok ? parseShow(a.value.status, a.value.body) : a;
     },
     async update(id, change, { save }) {
-      const url = endpoint(o.url, {
-        p: String(id),
-        ...(save ? {} : { dry_run: "1" }),
-      });
-      const body = formOf(changeObject(id, change), change.pdf);
-      const a = await call(
-        url,
-        { method: "POST", body },
-        o.token,
-        WRITE_TIMEOUT_MS,
-      );
+      const object = changeObject(id, change);
+      const a = await post(o, { p: String(id), object, pdf: change.pdf, save });
       return a.ok ? parseUpdate(a.value.status, a.value.body) : a;
     },
     async create(paper, { save }) {
-      const url = endpoint(o.url, {
-        p: "new",
-        ...(save ? {} : { dry_run: "1" }),
-      });
-      const body = formOf(createObject(paper), paper.pdf);
-      const a = await call(
-        url,
-        { method: "POST", body },
-        o.token,
-        WRITE_TIMEOUT_MS,
-      );
+      const object = createObject(paper);
+      const a = await post(o, { p: "new", object, pdf: paper.pdf, save });
       return a.ok ? parseCreate(a.value.status, a.value.body) : a;
     },
   };

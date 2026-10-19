@@ -188,8 +188,8 @@ export function parsePaperAuthors(
   if (!Array.isArray(v) || v.length === 0) return err(AUTHORS_SHAPE);
   const list: readonly unknown[] = v;
   const parsed = list.map(authorOf);
-  const bad = parsed.find((r) => !r.ok);
-  if (bad !== undefined && !bad.ok) return bad;
+  const [problem] = parsed.flatMap((r) => (r.ok ? [] : [r.error]));
+  if (problem !== undefined) return err(problem);
   const authors = parsed.flatMap((r) => (r.ok ? [r.value] : []));
   const emails = authors.map((a) => a.email.toLowerCase());
   const twice = emails.find((e, i) => emails.indexOf(e) !== i);
