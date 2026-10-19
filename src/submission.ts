@@ -21,7 +21,11 @@ import { err, ok, type Result } from "./domain/result.ts";
 import { sha256Hex, type Sha256 } from "./domain/sha256.ts";
 import {
   supportedPortal,
+  withSubmissionId,
   wordCount,
+  type Author,
+  type CreateOutcome,
+  type NewSubmission,
   type PortalFailure,
   type PortalMessage,
   type SubmissionView,
@@ -44,19 +48,79 @@ import {
   type Observation,
 } from "./domain/deadline.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
+import {
+  hostOf,
+  lookUpToken,
+  type TokenProblem,
+} from "./domain/portal-token.ts";
+import { abstractOfPages } from "./domain/pdf-abstract.ts";
+import { LINE_BREAK, OPAQUE, runText } from "./domain/tex-document.ts";
+import type { LatexReader } from "./ports/latex.ts";
+import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
+import { MAIN } from "./build.ts";
+import { parsePaperSettings } from "./paper-settings.ts";
 
-/** The environment variable each portal kind's token is read from. */
-export const TOKEN_ENV: Readonly<Record<SupportedPortal["kind"], string>> = {
-  hotcrp: "HOTCRP_TOKEN",
+/** Where on a portal's site an author creates a token, and the scopes each subcommand needs. */
+const TOKEN_PAGE: Readonly<
+  Record<
+    SupportedPortal["kind"],
+    { readonly path: string; readonly where: string; readonly scopes: string }
+  >
+> = {
+  hotcrp: {
+    // HotCRP's own link to it: `hotlink("Profile > Developer", "profile", ["t" => "developer"])`
+    // (src/help/h_developer.php in kohler/hotcrp).
+    path: "/profile?t=developer",
+    where: "Account settings → Developer → API tokens",
+    scopes:
+      "submeta:read and document:read (show), submeta:write and document:write (update, new) — tick all four to use every subcommand",
+  },
 };
 
-/** Where each portal kind lets an author create a token. */
-const TOKEN_HELP: Readonly<Record<SupportedPortal["kind"], string>> = {
-  hotcrp:
-    "create one on the HotCRP site under Account settings → Developer, with the scopes submeta:read and document:read (show) and submeta:write and document:write (update)",
-};
+/** How to make and set the site's token: the page, the scopes, the variable. Pure. */
+export function tokenSteps(
+  portal: SupportedPortal,
+  variable: string,
+): readonly string[] {
+  const page = TOKEN_PAGE[portal.kind];
+  return [
+    `  1. create a token on this site: ${portal.url}${page.path} (${page.where}), with the scopes ${page.scopes}`,
+    `  2. set it in your environment — never paste it into a chat: export ${variable}=<the token>`,
+    `  tokens are per ${portal.kind} site: ${variable} is read for ${hostOf(portal.url)} alone, so two venues take two variables`,
+  ];
+}
 
-export const SUBCOMMANDS = ["show", "update"] as const;
+/** Why there is no token, as the complete instruction the author follows. Pure. */
+export function tokenProblemLines(
+  portal: SupportedPortal,
+  p: TokenProblem,
+): readonly string[] {
+  const head =
+    p.kind === "missing"
+      ? `no ${portal.kind} token for ${portal.url}: ${p.variable} is not set`
+      : `${p.siteLess} is no longer read: tokens are per ${portal.kind} site. Rename it to ${p.variable} for ${hostOf(portal.url)} (the site it was made on) and unset ${p.siteLess}; if it was made on another site, create one here instead:`;
+  return [head, ...tokenSteps(portal, p.variable)];
+}
+
+/**
+ * What to do when the portal turned the token away: 401 is "this site does not know the token", 403
+ * a token without the scope — both answered with the site's token page. Empty for anything else. Pure.
+ */
+export function tokenRefusedLines(
+  portal: SupportedPortal,
+  variable: string,
+  f: PortalFailure,
+): readonly string[] {
+  if (f.kind !== "refused" || (f.httpStatus !== 401 && f.httpStatus !== 403))
+    return [];
+  const why =
+    f.httpStatus === 401
+      ? `${variable} was used; it may belong to another ${portal.kind} site (tokens are per site), or be revoked or expired`
+      : `${variable} was used; the site turned the request away — the token may lack a scope this subcommand needs`;
+  return [why, ...tokenSteps(portal, variable)];
+}
+
+export const SUBCOMMANDS = ["new", "show", "update"] as const;
 export type Subcommand = (typeof SUBCOMMANDS)[number];
 const isSubcommand = (s: string | undefined): s is Subcommand =>
   SUBCOMMANDS.some((x) => x === s);
@@ -69,7 +133,10 @@ export interface SubmissionArgs {
   readonly extra: readonly string[];
   /** `--pdf <file>`, relative to `cwd`; null: the paper's own PDF. */
   readonly pdf: string | null;
-  /** `--abstract <file>`, relative to `cwd`; null: leave the abstract as it is. */
+  /**
+   * `--abstract <file>`, relative to `cwd`; null: `update` leaves the abstract as it is, `new` reads
+   * it from the build.
+   */
   readonly abstract: string | null;
   readonly submit: boolean;
   readonly save: boolean;
@@ -82,6 +149,8 @@ export interface SubmissionDeps {
   /** The value of an environment variable; the root reads the environment. */
   readonly env: (name: string) => string | undefined;
   readonly portalFor: (p: SupportedPortal, token: string) => SubmissionPortal;
+  /** Reads the paper's `\title` (`new`). */
+  readonly latex: Pick<LatexReader, "headings">;
   readonly log: (line: string) => void;
   readonly err: (line: string) => void;
 }
@@ -89,7 +158,14 @@ export interface SubmissionDeps {
 /** A paper's portal, its submission there, and the PDF the paper builds. */
 export interface SubmissionTarget {
   readonly portal: SupportedPortal;
-  readonly id: number;
+  /** The paper's submission on the portal; null before `new` created one. */
+  readonly id: number | null;
+  /** The paper's `paperlint.json`, absolute. */
+  readonly config: string;
+  /** The authors the paper declares for the portal; null when it declares none. */
+  readonly authors: readonly Author[] | null;
+  /** The cycle attempt is accepted: a new submission belongs to a new cycle. */
+  readonly accepted: boolean;
   /** The paper's built PDF, absolute. */
   readonly pdf: string;
   /** The venue's call for papers (the preset's `url`); null when the preset names no venue. */
@@ -122,11 +198,6 @@ function targetOf(
     return err(
       `the venue preset declares no "portal" (read: ${p.preset.chain.join(", ")}) — add "portal": { "kind": "hotcrp", "url": "<the site>" } to the venue's preset, or upload by hand`,
     );
-  const sub = p.settings.submission;
-  if (sub === null)
-    return err(
-      `${configOf(paperDir)}: no "submission" — add "submission": { "id": <the submission number on ${declared.url}> }`,
-    );
   const portal = supportedPortal(declared);
   if (!portal.ok) return portal;
   const pdf = join(paperDir, p.settings.pdf ?? "paper.pdf");
@@ -137,7 +208,16 @@ function targetOf(
       ? []
       : currentDeadlines(p.settings.cycles.current);
   const deadlines = deadlinesInForce(own, p.preset.deadlines);
-  return ok({ portal: portal.value, id: sub.id, pdf, call, deadlines });
+  return ok({
+    portal: portal.value,
+    id: p.settings.submission?.id ?? null,
+    config: configOf(paperDir),
+    authors: p.settings.authors,
+    accepted: p.settings.cycles?.current.kind === "accepted",
+    pdf,
+    call,
+    deadlines,
+  });
 }
 
 /** The paper directory → its portal and submission, or the line naming the file and key to set. */
@@ -155,20 +235,6 @@ export function submissionTarget(
     case "resolved":
       return targetOf(paperDir, p);
   }
-}
-
-/** The token from the environment, or the line naming the variable and where to get one. */
-export function tokenFor(
-  portal: SupportedPortal,
-  env: (name: string) => string | undefined,
-): Result<string, string> {
-  const name = TOKEN_ENV[portal.kind];
-  const v = env(name)?.trim();
-  return v
-    ? ok(v)
-    : err(
-        `${name} is not set — the ${portal.kind} API needs a token: ${TOKEN_HELP[portal.kind]}. Then: export ${name}=…`,
-      );
 }
 
 const iso = (seconds: number | null): string =>
@@ -283,15 +349,36 @@ const shownPath = (cwd: string, p: string): string =>
 const bytesAt = (files: Files, p: string): Uint8Array | null =>
   files.readBytes(absolutePath(p));
 
+/** The deps a subcommand runs with: the command's, and what to say when the portal turns the token away. */
+type RunDeps = SubmissionDeps & {
+  readonly refused: (f: PortalFailure) => readonly string[];
+};
+
+/** A failure printed — the portal's words, then what to do about the token if it was the token — exit 1. */
+function failed(f: PortalFailure, deps: RunDeps): number {
+  [failureText(f), ...deps.refused(f)].forEach((l) => {
+    deps.err(l);
+  });
+  return 1;
+}
+
+/** The submission's id, or the line naming the key to set — `show` and `update` need one. */
+const idOf = (t: SubmissionTarget): Result<number, string> =>
+  t.id === null
+    ? err(
+        `${t.config}: no "submission" — add "submission": { "id": <the submission number on ${t.portal.url}> }, or create the submission with \`paperlint submission new\``,
+      )
+    : ok(t.id);
+
 /** `show`: read the submission and compare its PDF with the local one. */
 async function runShow(
-  t: SubmissionTarget,
+  t: SubmissionTarget & { readonly id: number },
   portal: SubmissionPortal,
   pdfPath: string,
-  deps: SubmissionDeps,
+  deps: RunDeps,
 ): Promise<number> {
   const view = await portal.show(t.id);
-  if (!view.ok) return (deps.err(failureText(view.error)), 1);
+  if (!view.ok) return failed(view.error, deps);
   const bytes = bytesAt(deps.files, pdfPath);
   const local = {
     shown: shownPath(deps.cwd, pdfPath),
@@ -329,10 +416,10 @@ const changeOf = (
 
 /** `update`: send the PDF (and the abstract, and "submitted" when asked); a dry run unless saving. */
 async function runUpdate(
-  t: SubmissionTarget,
+  t: SubmissionTarget & { readonly id: number },
   portal: SubmissionPortal,
   a: SubmissionArgs & { readonly pdfPath: string },
-  deps: SubmissionDeps,
+  deps: RunDeps,
 ): Promise<number> {
   const bytes = bytesAt(deps.files, a.pdfPath);
   const shown = shownPath(deps.cwd, a.pdfPath);
@@ -347,7 +434,7 @@ async function runUpdate(
   const r = await portal.update(t.id, changeOf(a, bytes, abstract.value), {
     save: a.save,
   });
-  if (!r.ok) return (deps.err(failureText(r.error)), 1);
+  if (!r.ok) return failed(r.error, deps);
   const local = { shown, sha256: sha256Hex(bytes) };
   updateLines(r.value, local, a.save).forEach((l) => {
     deps.log(l);
@@ -357,23 +444,252 @@ async function runUpdate(
   return fine ? 0 : 1;
 }
 
+// ── new ──────────────────────────────────────────────────────────────────────────────
+
+/** The build's facts about the PDF that is sent, or why they cannot be used. */
+function factsFor(
+  paperDir: string,
+  pdf: Uint8Array,
+  deps: SubmissionDeps,
+): Result<ReadFacts, string> {
+  const path = factsPath(paperDir);
+  const shown = shownPath(deps.cwd, path);
+  const bytes = bytesAt(deps.files, path);
+  const rebuild = `run \`npx paperlint build\` on the paper first, or give the abstract with --abstract <file>`;
+  if (bytes === null) return err(`no ${shown} — ${rebuild}`);
+  const facts = parseFactsText(new TextDecoder().decode(bytes));
+  if (!facts.ok) return err(`${shown} cannot be read — ${rebuild}`);
+  return facts.value.sha === sha256Hex(pdf)
+    ? facts
+    : err(
+        `${shown} describes another PDF than the one sent (its sha256 differs) — ${rebuild}`,
+      );
+}
+
+/**
+ * The title as the paper sets it: its `\title`, as text — or, when the title holds a command
+ * paperlint cannot read (a macro of the author's own), the PDF's own Title (`pdftitle`). Pure.
+ */
+export function titleOf(
+  source: string | null,
+  latex: Pick<LatexReader, "headings">,
+  metadata: Readonly<Record<string, string>> | null,
+): Result<string, string> {
+  const heading = (source === null ? [] : latex.headings(source)).find(
+    (h) => h.command.kind === "title" && h.argument === "title",
+  );
+  const text =
+    heading === undefined
+      ? ""
+      : runText(heading.title)
+          .replaceAll(LINE_BREAK, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+  if (text !== "" && !text.includes(OPAQUE)) return ok(text);
+  const pdfTitle = metadata?.["Title"]?.trim() ?? "";
+  if (pdfTitle !== "") return ok(pdfTitle);
+  return err(
+    text === ""
+      ? `no \\title in ${MAIN}, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild`
+      : `the \\title in ${MAIN} uses a command paperlint does not read («${text.replaceAll(OPAQUE, "…")}»), and the PDF names no Title — set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild`,
+  );
+}
+
+/** What `new` will send, as the author reads it before saying yes. Pure. */
+export function newLines(
+  title: string,
+  abstract: string,
+  authors: readonly Author[],
+): readonly string[] {
+  return [
+    `title         ${title}`,
+    ...authors.map(
+      (a, i) =>
+        `author ${String(i + 1).padEnd(6)} ${a.name} <${a.email}>${a.affiliation === null ? "" : `, ${a.affiliation}`}`,
+    ),
+    `abstract      ${String(wordCount(abstract))} words:`,
+    `  ${abstract}`,
+  ];
+}
+
+/** What the author does on the site after `new`: what paperlint does not send. Pure. */
+export function onTheSiteLines(
+  portal: SupportedPortal,
+  id: number | null,
+  paperArg: string,
+): readonly string[] {
+  const page =
+    id === null
+      ? `${portal.url}/paper/<its number>`
+      : `${portal.url}/paper/${String(id)}`;
+  return [
+    `do on the site, ${page} — paperlint sends only the title, the abstract, the authors and the PDF:`,
+    "  - PC conflicts (HotCRP's API takes them as pc_conflicts; paperlint does not send them)",
+    "  - topics, and every field the venue adds (paper type, artifact, consent boxes …)",
+    `  - then mark it submitted: npx paperlint submission update ${paperArg} --submit (a dry run; --save after your yes)`,
+  ];
+}
+
+/** `new`'s report of the portal's answer. Pure. */
+export function createLines(
+  o: CreateOutcome,
+  save: boolean,
+): readonly string[] {
+  const mode = save
+    ? o.id === null
+      ? "NOTHING CREATED — the portal did not save it"
+      : `created submission ${String(o.id)}`
+    : "dry run — the portal checked the new submission and kept nothing; --save creates it for real";
+  return [
+    mode,
+    `HTTP          ${String(o.httpStatus)}`,
+    `valid         ${o.valid ? "yes" : "NO"}`,
+    `changes       ${o.changes.length ? o.changes.join(", ") : "—"}`,
+    ...o.messages.map(messageLine),
+  ];
+}
+
+/** `paperlint.json` with the new id recorded in it, written; or why it was not. */
+function recordId(
+  config: string,
+  id: number,
+  deps: SubmissionDeps,
+): Result<null, string> {
+  const bytes = bytesAt(deps.files, config);
+  const json: unknown =
+    bytes === null ? {} : JSON.parse(new TextDecoder().decode(bytes));
+  const next = withSubmissionId(json, id);
+  if (!next.ok) return next;
+  const back = parsePaperSettings(next.value);
+  if (!back.ok || back.value.submission?.id !== id)
+    return err(back.ok ? "the id does not read back" : back.error);
+  deps.files.writeAtomic(
+    absolutePath(config),
+    new TextEncoder().encode(`${JSON.stringify(next.value, null, 2)}\n`),
+  );
+  return ok(null);
+}
+
+/** What `new` sends, or the first line saying what is missing. */
+function newSubmissionOf(
+  t: SubmissionTarget,
+  a: SubmissionArgs & { readonly pdfPath: string; readonly paperDir: string },
+  deps: SubmissionDeps,
+): Result<{ readonly paper: NewSubmission; readonly shown: string }, string> {
+  if (t.id !== null)
+    return err(
+      `${t.config}: the paper already has submission ${String(t.id)} on ${t.portal.url} — \`paperlint submission show\` reads it, \`paperlint submission update\` changes it`,
+    );
+  if (t.accepted)
+    return err(
+      `${t.config}: the current attempt is accepted — a new submission belongs to a new cycle`,
+    );
+  if (t.authors === null)
+    return err(
+      `${t.config}: no "authors" — add "authors": [{ "name": "…", "email": "…", "affiliation": "…" }], every author in the paper's order, as ${hostOf(t.portal.url)} should record them; paperlint never guesses them`,
+    );
+  const shown = shownPath(deps.cwd, a.pdfPath);
+  const pdf = bytesAt(deps.files, a.pdfPath);
+  if (pdf === null)
+    return err(`no PDF at ${shown} — build the paper, or name one with --pdf`);
+  const own = abstractOf(a, deps);
+  if (!own.ok) return own;
+  const facts = factsFor(a.paperDir, pdf, deps);
+  const srcBytes = bytesAt(deps.files, join(a.paperDir, MAIN));
+  const source = srcBytes === null ? null : new TextDecoder().decode(srcBytes);
+  const title = titleOf(
+    source,
+    deps.latex,
+    facts.ok ? facts.value.text.metadata : null,
+  );
+  if (!title.ok) return title;
+  const abstract =
+    own.value !== null
+      ? ok(own.value.replace(/\s+/g, " "))
+      : facts.ok
+        ? abstractOfPages(facts.value.text.pages, source ?? "")
+        : facts;
+  if (!abstract.ok)
+    return err(
+      `the abstract: ${abstract.error} — give it with --abstract <file>, a plain-text file`,
+    );
+  return ok({
+    paper: {
+      title: title.value,
+      abstract: abstract.value,
+      authors: t.authors,
+      pdf: { name: basename(a.pdfPath), bytes: pdf },
+    },
+    shown,
+  });
+}
+
+/**
+ * `new`: create the paper's submission — title and abstract from the build, the authors the paper
+ * declares, the PDF. A dry run unless `--save`; after a save, the id goes into `paperlint.json`.
+ */
+async function runNew(
+  t: SubmissionTarget,
+  portal: SubmissionPortal,
+  a: SubmissionArgs & { readonly pdfPath: string; readonly paperDir: string },
+  deps: RunDeps,
+): Promise<number> {
+  const n = newSubmissionOf(t, a, deps);
+  if (!n.ok) return (deps.err(n.error), 2);
+  const { paper, shown } = n.value;
+  deps.log(checkPdfLine(shown, t.call));
+  newLines(paper.title, paper.abstract, paper.authors).forEach((l) => {
+    deps.log(l);
+  });
+  const r = await portal.create(paper, { save: a.save });
+  if (!r.ok) return failed(r.error, deps);
+  createLines(r.value, a.save).forEach((l) => {
+    deps.log(l);
+  });
+  const paperArg =
+    a.paperDir === deps.cwd ? "." : shownPath(deps.cwd, a.paperDir);
+  const fine =
+    r.value.valid && r.value.httpStatus >= 200 && r.value.httpStatus < 300;
+  if (!fine || (a.save && r.value.id === null)) return 1;
+  onTheSiteLines(t.portal, r.value.id, paperArg).forEach((l) => {
+    deps.log(l);
+  });
+  if (r.value.id === null) return 0;
+  const recorded = recordId(t.config, r.value.id, deps);
+  if (!recorded.ok) {
+    deps.err(
+      `submission ${String(r.value.id)} was created, but ${shownPath(deps.cwd, t.config)} was not changed (${recorded.error}) — add "submission": { "id": ${String(r.value.id)} } to the current attempt by hand`,
+    );
+    return 1;
+  }
+  deps.log(
+    `recorded      "submission": { "id": ${String(r.value.id)} } in ${shownPath(deps.cwd, t.config)}`,
+  );
+  deps.log(
+    `next          npx paperlint submission show ${paperArg} — it should say "match yes"`,
+  );
+  return 0;
+}
+
 /** Why the command line cannot be run as asked; null when it can. Pure. */
 export function usageProblem(a: SubmissionArgs): string | null {
   if (!isSubcommand(a.sub))
     return `\`submission\` needs a subcommand: ${SUBCOMMANDS.join(" or ")} — got \`${a.sub ?? ""}\``;
   if (a.extra.length > 0)
     return `\`submission ${a.sub}\` takes one paper folder — got also \`${a.extra.join(" ")}\``;
-  const updateOnly = [
+  const writing = [
     a.abstract === null ? null : "--abstract",
     a.submit ? "--submit" : null,
     a.save ? "--save" : null,
   ].filter((f) => f !== null);
-  return a.sub === "show" && updateOnly.length > 0
-    ? `${updateOnly.join(", ")}: only \`submission update\` changes anything; \`show\` reads`
+  if (a.sub === "show" && writing.length > 0)
+    return `${writing.join(", ")}: only \`submission new\` and \`submission update\` change anything; \`show\` reads`;
+  return a.sub === "new" && a.submit
+    ? "--submit: `submission new` creates the submission; mark it submitted with `submission update --submit` once `show` says the portal holds this build"
     : null;
 }
 
-/** `paperlint submission <show|update> [paper-dir]` — exit 0, 1 (the portal said no), or 2 (usage). */
+/** `paperlint submission <new|show|update> [paper-dir]` — exit 0, 1 (the portal said no), or 2 (usage). */
 export async function runSubmission(
   a: SubmissionArgs,
   deps: SubmissionDeps,
@@ -383,11 +699,26 @@ export async function runSubmission(
   const paperDir = resolve(deps.cwd, a.paperDir);
   const t = submissionTarget(paperDir, deps.presets);
   if (!t.ok) return (deps.err(t.error), 2);
-  const token = tokenFor(t.value.portal, deps.env);
-  if (!token.ok) return (deps.err(token.error), 2);
-  const portal = deps.portalFor(t.value.portal, token.value);
+  const id = a.sub === "new" ? ok(null) : idOf(t.value);
+  if (!id.ok) return (deps.err(id.error), 2);
+  const found = lookUpToken(t.value.portal, deps.env);
+  if (!found.ok) {
+    tokenProblemLines(t.value.portal, found.error).forEach((l) => {
+      deps.err(l);
+    });
+    return 2;
+  }
+  const portal = deps.portalFor(t.value.portal, found.value.token);
   const pdfPath = a.pdf === null ? t.value.pdf : resolve(deps.cwd, a.pdf);
+  const withToken: RunDeps = {
+    ...deps,
+    refused: (f: PortalFailure) =>
+      tokenRefusedLines(t.value.portal, found.value.variable, f),
+  };
+  if (id.value === null)
+    return runNew(t.value, portal, { ...a, pdfPath, paperDir }, withToken);
+  const target = { ...t.value, id: id.value };
   return a.sub === "show"
-    ? runShow(t.value, portal, pdfPath, deps)
-    : runUpdate(t.value, portal, { ...a, pdfPath }, deps);
+    ? runShow(target, portal, pdfPath, withToken)
+    : runUpdate(target, portal, { ...a, pdfPath }, withToken);
 }

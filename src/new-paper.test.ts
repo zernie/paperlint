@@ -85,6 +85,7 @@ describe("paperlint new — paperlint.json", () => {
         identity: null,
         talk: null,
         submission: null,
+        authors: null,
         cycles: null,
       },
     });

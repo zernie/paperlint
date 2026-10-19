@@ -1738,6 +1738,7 @@ const SIMPLE: Readonly<
         cwd,
         env: (name) => process.env[name],
         portalFor,
+        latex: latexReader,
         log,
         err,
       },

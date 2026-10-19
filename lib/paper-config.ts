@@ -141,6 +141,8 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
   talk: 'how this paper is presented: { "mode": "remote-video", "dir"?, "files"?, "one_slide"? } — the talk/ rules. A paper\'s own; refused in the root file',
   submission:
     "which submission on the venue's portal is this paper's: { \"id\": <number> } — paperlint submission, with the preset's \"portal\". A paper's own; refused in the root file",
+  authors:
+    'the authors as the venue\'s portal should record them, in order: [{ "name", "email", "affiliation"? }] — paperlint submission new. A paper\'s own; refused in the root file',
   cycles:
     "the paper's attempts at venues, oldest first: [{ id, venue, kind, opened, phase?, deadlines, submission?, outcome }] — extends, kind and submission are then the current attempt's, and the cycle/ rules judge the record. A paper's own; refused in the root file",
   scripts: "how skill prose names the scripts — consumer.mjs",

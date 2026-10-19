@@ -14,11 +14,16 @@ import {
 import { afterAll, beforeAll, test } from "vitest";
 import { fieldOf } from "../../domain/record.ts";
 import { sha256Hex } from "../../domain/sha256.ts";
-import type { SubmissionChange } from "../../domain/submission.ts";
+import type {
+  NewSubmission,
+  SubmissionChange,
+} from "../../domain/submission.ts";
 import {
   CONTENT_FIELD,
   changeObject,
+  createObject,
   hotcrpPortal,
+  parseCreate,
   parseShow,
   parseUpdate,
   sha256OfHash,
@@ -340,6 +345,104 @@ test("update with save: no dry_run parameter at all", async () => {
       dryRun: false,
     },
   });
+});
+
+const NEW: NewSubmission = {
+  title: "Agents That Lie",
+  abstract: "One paragraph.",
+  authors: [
+    {
+      name: "Ada Lovelace",
+      email: "ada@example.org",
+      affiliation: "Analytical",
+    },
+    { name: "Bob", email: "bob@example.org", affiliation: null },
+  ],
+  pdf: { name: "paper.pdf", bytes: PDF },
+};
+
+test("create: a dry run by default — p=new, dry_run=1, title/abstract/authors and the PDF; no id", async () => {
+  // HotCRP's dry-run answer: `Paper_API_Status` sends `"pid": "new"` until a save chose one
+  // (src/api/api_paper.php, kohler/hotcrp 9a01097).
+  answer(200, {
+    ok: true,
+    valid: true,
+    change_list: ["new", "title", "abstract", "authors", "submission"],
+    pid: "new",
+    dry_run: true,
+    message_list: [],
+  });
+  const r = await portal().create(NEW, { save: false });
+  const s = last();
+  assert.equal(s.method, "POST");
+  assert.equal(s.url.pathname, "/api/paper");
+  assert.deepEqual(Object.fromEntries(s.url.searchParams), {
+    p: "new",
+    dry_run: "1",
+  });
+  assert.equal(s.headers.authorization, `bearer ${TOKEN}`);
+  const parts = partsOf(s);
+  assert.deepEqual([...parts.keys()], ["json", CONTENT_FIELD]);
+  assert.deepEqual(JSON.parse(parts.get("json")?.body.toString("utf8") ?? ""), {
+    object: "paper",
+    pid: "new",
+    title: "Agents That Lie",
+    abstract: "One paragraph.",
+    authors: [
+      {
+        name: "Ada Lovelace",
+        email: "ada@example.org",
+        affiliation: "Analytical",
+      },
+      { name: "Bob", email: "bob@example.org" },
+    ],
+    submission: { content_file: CONTENT_FIELD },
+  });
+  assert.deepEqual(new Uint8Array(parts.get(CONTENT_FIELD)?.body ?? []), PDF);
+  assert.deepEqual(r, {
+    ok: true,
+    value: {
+      httpStatus: 200,
+      valid: true,
+      changes: ["new", "title", "abstract", "authors", "submission"],
+      messages: [],
+      dryRun: true,
+      id: null,
+    },
+  });
+});
+
+test("create with save: no dry_run, and the id HotCRP chose", async () => {
+  answer(200, { ok: true, valid: true, change_list: ["new"], pid: 42 });
+  const r = await portal().create(NEW, { save: true });
+  assert.deepEqual(Object.fromEntries(last().url.searchParams), { p: "new" });
+  assert.deepEqual(r.ok ? r.value.id : r, 42);
+});
+
+test("🔴 parseCreate: an id only for a valid, saved creation", () => {
+  assert.deepEqual(
+    [
+      parseCreate(200, { ok: false, valid: false, pid: 42 }),
+      parseCreate(200, { ok: true, valid: true, pid: "new", dry_run: true }),
+      parseCreate(200, { ok: true, valid: true, pid: "new" }),
+    ].map((r) => (r.ok ? r.value.id : r)),
+    [null, null, null],
+  );
+  assert.deepEqual(parseCreate(401, { ok: false, status_code: 401 }), {
+    ok: false,
+    error: { kind: "refused", httpStatus: 401, messages: [] },
+  });
+});
+
+test("createObject: an author without an affiliation sends none", () => {
+  assert.deepEqual(fieldOf(createObject(NEW), "authors"), [
+    {
+      name: "Ada Lovelace",
+      email: "ada@example.org",
+      affiliation: "Analytical",
+    },
+    { name: "Bob", email: "bob@example.org" },
+  ]);
 });
 
 test("update: valid:false is an outcome with HotCRP's messages, at any HTTP status", async () => {

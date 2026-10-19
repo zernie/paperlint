@@ -5,9 +5,15 @@
 export {
   CONTENT_FIELD,
   changeObject,
+  createObject,
   hotcrpPortal,
   type HotcrpOptions,
 } from "./portal.io.ts";
-export { parseShow, parseUpdate, sha256OfHash } from "./response.ts";
+export {
+  parseCreate,
+  parseShow,
+  parseUpdate,
+  sha256OfHash,
+} from "./response.ts";
 export { hotcrpDeadlines } from "./deadlines.io.ts";
 export { parseDeadlinesPage, whatOf } from "./deadlines.ts";

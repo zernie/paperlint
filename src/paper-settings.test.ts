@@ -33,6 +33,7 @@ describe("parsePaperSettings", () => {
         identity: null,
         talk: null,
         submission: null,
+        authors: null,
         cycles: null,
       },
     });
@@ -46,6 +47,7 @@ describe("parsePaperSettings", () => {
         identity: null,
         talk: null,
         submission: null,
+        authors: null,
         cycles: null,
       },
     });
@@ -62,6 +64,7 @@ describe("parsePaperSettings", () => {
         identity: null,
         talk: null,
         submission: null,
+        authors: null,
         cycles: null,
       },
     });
@@ -167,6 +170,7 @@ const UNSET = {
   identity: null,
   talk: null,
   submission: null,
+  authors: null,
   cycles: null,
 };
 
@@ -224,6 +228,7 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
       identity: null,
       talk: null,
       submission: null,
+      authors: null,
       cycles: null,
     });
   });
@@ -274,6 +279,7 @@ describe("paperRules — `rules` in paperlint.json", () => {
     identity: null,
     talk: null,
     submission: null,
+    authors: null,
     cycles: null,
   });
 

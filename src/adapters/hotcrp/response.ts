@@ -11,6 +11,7 @@ import { z } from "zod";
 import { err, ok, type Result } from "../../domain/result.ts";
 import { parseSha256, type Sha256 } from "../../domain/sha256.ts";
 import type {
+  CreateOutcome,
   PortalDocument,
   PortalFailure,
   PortalMessage,
@@ -55,6 +56,8 @@ const UpdateBody = z.object({
   change_list: z.array(z.string()).optional(),
   message_list: Messages,
   dry_run: z.boolean().optional(),
+  // The submission's id: a number once saved, `"new"` for a creation that was not.
+  pid: z.union([z.number(), z.string()]).optional(),
 });
 
 const Envelope = z.object({ message_list: Messages });
@@ -177,5 +180,23 @@ export function parseUpdate(
     changes: b.data.change_list ?? [],
     messages: messagesOf(b.data.message_list),
     dryRun: b.data.dry_run ?? false,
+  });
+}
+
+/**
+ * `POST /api/paper?p=new` → the outcome, with the id HotCRP chose: its `pid`, a number only when the
+ * submission was saved (a dry run answers `"pid": "new"`).
+ */
+export function parseCreate(
+  httpStatus: number,
+  body: unknown,
+): Result<CreateOutcome, PortalFailure> {
+  const u = parseUpdate(httpStatus, body);
+  if (!u.ok) return u;
+  const pid = UpdateBody.safeParse(body).data?.pid;
+  const saved = u.value.valid && !u.value.dryRun;
+  return ok({
+    ...u.value,
+    id: saved && typeof pid === "number" ? pid : null,
   });
 }
