@@ -24,7 +24,7 @@ import {
 import type { Committed, GitHistory } from "./ports/git-history.ts";
 import type { StudyFolder } from "./ports/study-folder.ts";
 import { folderRefusalText, studyFolder } from "./study-folder.ts";
-import type { StudyDeps } from "./study-deps.ts";
+import type { StudyDeps } from "./ports/study-deps.ts";
 import { registryOf } from "./study-registry-rule.ts";
 import {
   refusal,
