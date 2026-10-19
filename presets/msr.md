@@ -23,16 +23,20 @@ whereas last year it was ACM format.»), and limits and dates change between edi
   2027-01-08; camera-ready 2027-01-26. The call's prose names the weekdays «Mon, 20 Oct 2026» and
   «Thurs, 23 Oct 2026», its date table «Tue 20 Oct 2026» and «Fri 23 Oct 2026»; the calendar sides
   with the table (2026-10-20 is a Tuesday).
-- 🔴 **The portal closes earlier than the call says.** Read 2026-10-05 on
-  `https://msr2027.hotcrp.com/deadlines`: «Submission deadline: Tuesday Oct 20, 2026, 12 AM EDT»
-  (`"sub":1792468800`, 2026-10-20 04:00 UTC) and «Resubmission deadline: Friday Oct 23, 2026, 12 AM
-  EDT» («Completed submissions may be updated until this deadline»). Midnight EDT at the start of
-  each day is about a day and a half before the end of that day AoE. The portal is what refuses the
-  upload: plan for its times. The preset carries them as `deadlines` (`source: "portal"`, with the
-  day read), refreshed by paperlint's scheduled workflow when the portal changes them; a paper whose
-  current cycle names `paperlint:msr` derives them. Recording the call's days in the paper's own
-  cycle maps «abstract» to `registration` and «paper» to `submission` — and the portal's earlier
-  `submission` is then the one in force.
+- 🔴 **The portal's submission deadline is the call's ABSTRACT day, not its paper day.** Read
+  2026-10-19 18:05 UTC on `https://msr2027.hotcrp.com/deadlines`: «Submission deadline: Wednesday
+  Oct 21, 2026, 7:59:59 AM EDT — Submissions must be completed by this deadline to be reviewed»
+  (`"sub":1792583999`, 2026-10-21 11:59:59 UTC, the end of 2026-10-20 AoE) and «Resubmission
+  deadline: Saturday Oct 24, 2026, 7:59:59 AM EDT — Completed submissions may be updated until this
+  deadline» (2026-10-24 11:59:59 UTC, the end of 2026-10-23 AoE). So a submission must be complete
+  by the abstract day, and the paper day is the last day to update it. The reading of 2026-10-05
+  was earlier on both («Tuesday Oct 20, 2026, 12 AM EDT», `"sub":1792468800`, and «Friday Oct 23,
+  2026, 12 AM EDT»): the portal moved them. The portal is what refuses the upload: plan for its
+  times. The preset carries them as `deadlines` (`source: "portal"`, with the day read), refreshed
+  by paperlint's scheduled workflow when the portal changes them; a paper whose current cycle names
+  `paperlint:msr` derives them. Recording the call's days in the paper's own cycle maps «abstract»
+  to `registration` and «paper» to `submission` — and the portal's `submission`, at the end of the
+  abstract day, is then the one in force.
 - **Format**, verbatim from the call: «LaTeX users must use \documentclass[10pt,conference]{IEEEtran}
   without including the compsoc or compsocconf options», «title in 24pt font and full text in 10pt
   type», and «Alterations of spacing, font size, and other changes that deviate from the

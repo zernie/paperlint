@@ -91,8 +91,8 @@ Failing — a cycle at `paperlint:msr` that copies the portal's reading the pres
 
 ```text
   1:1  error  paperlint.json, cycle «msr-2027»: the "submission" deadline records a portal reading,
-              and the preset paperlint:msr carries the portal's reading of it (2026-10-20T04:00:00Z,
-              read 2026-10-05) — a second copy drifts when paperlint updates the preset: delete this
+              and the preset paperlint:msr carries the portal's reading of it (2026-10-21T11:59:59Z,
+              read 2026-10-19) — a second copy drifts when paperlint updates the preset: delete this
               one (the call's reading and an override stay)  cycle/record
 ```
 
@@ -101,7 +101,7 @@ Passing:
 - the first record with the registration on `2026-10-20 AoE`;
 - a cycle at `paperlint:msr` recording the call's abstract day as `registration` (`2026-10-20 AoE`)
   and its paper day as `submission` (`2026-10-23 AoE`): the preset's portal `submission`
-  (`2026-10-20T04:00:00Z`) is earlier than both, binds, and is not a contradiction;
+  (`2026-10-21T11:59:59Z`, the end of the abstract day AoE) binds, and is not a contradiction;
 - a cycle with no `deadlines` at all;
 - a paper whose `paperlint.json` has no `cycles` (the flat form, `"extends": "paperlint:…"`).
 

@@ -38,23 +38,25 @@
   "portal": { "kind": "hotcrp", "url": "https://msr2027.hotcrp.com" },
 
   // Read from the portal's public deadlines page (no account) by the adapter in src/adapters/hotcrp/.
-  // «Submissions must be completed by this deadline» is the `submission`: on the CALL's abstract
-  // day, 04:00 UTC — four days before the call's paper day. «Completed submissions may be updated
-  // until this deadline» is the `resubmission`.
+  // «Submissions must be completed by this deadline» is the `submission`, «Completed submissions
+  // may be updated until this deadline» the `resubmission`. Read 2026-10-19 18:05 UTC: «Wednesday
+  // Oct 21, 2026, 7:59:59 AM EDT» (`"sub":1792583999`) and «Saturday Oct 24, 2026, 7:59:59 AM EDT»
+  // — the ends of the call's abstract and paper days AoE. The reading of 2026-10-05 was 04:00 UTC
+  // on the abstract and paper days themselves; the portal moved both later on or before 2026-10-19.
   "deadlines": [
     {
       "what": "submission",
-      "at": "2026-10-20T04:00:00Z",
+      "at": "2026-10-21T11:59:59Z",
       "source": "portal",
       "url": "https://msr2027.hotcrp.com/deadlines",
-      "read": "2026-10-05",
+      "read": "2026-10-19",
     },
     {
       "what": "resubmission",
-      "at": "2026-10-23T04:00:00Z",
+      "at": "2026-10-24T11:59:59Z",
       "source": "portal",
       "url": "https://msr2027.hotcrp.com/deadlines",
-      "read": "2026-10-05",
+      "read": "2026-10-19",
     },
   ],
 

@@ -103,23 +103,26 @@ describe("shipped presets: paperlint:msr", () => {
       kind: "hotcrp",
       url: "https://msr2027.hotcrp.com",
     });
-    // The portal's deadlines, read 2026-10-05 off cassette/deadlines-msr2027.html's page.
+    // The portal's deadlines, read 2026-10-19 18:05 UTC off https://msr2027.hotcrp.com/deadlines:
+    // «Wednesday Oct 21, 2026, 7:59:59 AM EDT» (`"sub":1792583999`) and «Saturday Oct 24, 2026,
+    // 7:59:59 AM EDT» (#235).
     expect(r.value.deadlines).toEqual([
       {
         what: "submission",
-        at: "2026-10-20T04:00:00Z",
+        at: "2026-10-21T11:59:59Z",
         source: "portal",
         url: "https://msr2027.hotcrp.com/deadlines",
-        read: "2026-10-05",
+        read: "2026-10-19",
       },
       {
         what: "resubmission",
-        at: "2026-10-23T04:00:00Z",
+        at: "2026-10-24T11:59:59Z",
         source: "portal",
         url: "https://msr2027.hotcrp.com/deadlines",
-        read: "2026-10-05",
+        read: "2026-10-19",
       },
     ]);
+    expect(Date.parse("2026-10-21T11:59:59Z") / 1000).toBe(1792583999);
     // No rule turned on: the IEEE capitalization rule has not been read and quoted.
     expect(r.value.rules).toEqual({});
     expect(r.value.registerAnchors).toEqual([]);

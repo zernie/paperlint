@@ -615,8 +615,8 @@ test("show prints the current attempt's deadlines in force: the preset's portal 
   assert.ok(t.ok, JSON.stringify(t));
   assert.deepEqual(t.value.deadlines.map(deadlineLine), [
     "deadline      registration 2026-10-21T11:59:59Z — call, read 2026-10-05",
-    "deadline      submission 2026-10-20T04:00:00Z — portal, read 2026-10-05; also call 2026-10-24T11:59:59Z, read 2026-10-05",
-    "deadline      resubmission 2026-10-27T04:00:00Z — override: the chairs extended updates by mail (mail/extension.eml); also portal 2026-10-23T04:00:00Z, read 2026-10-05",
+    "deadline      submission 2026-10-21T11:59:59Z — portal, read 2026-10-19; also call 2026-10-24T11:59:59Z, read 2026-10-05",
+    "deadline      resubmission 2026-10-27T04:00:00Z — override: the chairs extended updates by mail (mail/extension.eml); also portal 2026-10-24T11:59:59Z, read 2026-10-19",
   ]);
 });
 
@@ -634,7 +634,7 @@ test("show, in the flat form: the deadlines in force are the preset's readings a
     venuesDir: presetsDir(),
   });
   assert.deepEqual(f.ok ? f.value.deadlines.map((d) => [d.what, d.at]) : f, [
-    ["submission", "2026-10-20T04:00:00Z"],
-    ["resubmission", "2026-10-23T04:00:00Z"],
+    ["submission", "2026-10-21T11:59:59Z"],
+    ["resubmission", "2026-10-24T11:59:59Z"],
   ]);
 });
