@@ -30,7 +30,11 @@ import {
 import type { Files } from "./ports/files.ts";
 import type { DirEntry, ListEntries } from "./ports/list-entries.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
-import type { PathEntry, StudyFolder } from "./ports/study-folder.ts";
+import type {
+  FolderRefusal,
+  PathEntry,
+  StudyFolder,
+} from "./ports/study-folder.ts";
 import type { ListDir } from "./ports/talk-media.ts";
 
 /** What reading a paper's studies needs: the disk, its listings with and without kinds, and the parsers. */
@@ -40,6 +44,21 @@ export interface StudyDeps {
   readonly entries: ListEntries;
   readonly codec: StudyRegistryCodec;
 }
+
+/** What a refusal says of the folder a row names: `which <reason>`, and the fix without its full stop. */
+export const folderRefusalText = (
+  why: FolderRefusal,
+  shown: string,
+): { readonly reason: string; readonly fix: string } =>
+  why === "not-a-folder"
+    ? {
+        reason: `is not one folder inside ${shown}/${REPRO_DIR}/`,
+        fix: "Give the row its own folder's name",
+      }
+    : {
+        reason: "is a symbolic link",
+        fix: `Give the row a real folder inside ${shown}/${REPRO_DIR}/`,
+      };
 
 /** What the entry `name` of the directory `dir` is; undefined when there is none. */
 const kindAt = (

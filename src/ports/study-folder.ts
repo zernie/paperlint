@@ -4,7 +4,6 @@
  * none of it by following a symbolic link. The reader of every plan, result file and decision
  * (`src/study-folder.ts`) is this port's one implementation.
  */
-import type { FolderRefusal } from "../domain/study-folder.ts";
 import type { Located } from "../domain/study-registry.ts";
 
 /** What reading a path inside a study's folder gave. */
@@ -15,6 +14,9 @@ export type FolderRead =
 
 /** What a path in the paper is: `Located`, and a directory. */
 export type PathEntry = Located | { readonly kind: "dir" };
+
+/** Why a row's folder may not be entered: it is no one folder inside `repro/`, or it is a link. */
+export type FolderRefusal = "not-a-folder" | "symbolic-link";
 
 /** The reads a paper's study folders allow. */
 export interface StudyFolder {
