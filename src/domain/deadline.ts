@@ -121,7 +121,7 @@ export interface InForce {
 
 /**
  * What a venue's portal says about its deadlines, in paperlint's words — what the scheduled refresh
- * of the shipped presets reads (`scripts/refresh-deadlines.ts`). One adapter per portal kind.
+ * of the shipped presets reads (`src/refresh-deadlines.ts`). One adapter per portal kind.
  */
 export interface PortalDeadlines {
   /** The portal's clock when it answered, Unix seconds. */

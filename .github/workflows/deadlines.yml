@@ -2,7 +2,7 @@
 #
 # A shipped venue preset (presets/msr.jsonc, presets/aidc.jsonc) carries its portal's deadlines,
 # each with the day it was read. Chairs move deadlines; a paper only learns it if the preset does.
-# So this job reads every preset's portal (`scripts/refresh-deadlines.ts`, through the HotCRP adapter
+# So this job reads every preset's portal (`npm run refresh-deadlines`, through the HotCRP adapter
 # in src/adapters/hotcrp/ — the public deadlines page, no account, no secret) and, when a value
 # changed, opens ONE pull request with the new values, or updates the one already open. Its commit
 # and title are `fix(presets): …`, which semantic-release (.releaserc.json, conventionalcommits)
@@ -13,7 +13,8 @@
 # line in the pull request's body, and the script exits 0: the venue's outage is not a defect of this
 # repository, and tomorrow's run reads it again. Only a preset that does not parse fails the run
 # (exit 1) — that one IS ours, and `ci` fails on it too. `ci` itself never touches the network for
-# this: scripts/refresh-deadlines.test.ts replays the pages recorded in src/adapters/hotcrp/cassette/.
+# this: src/refresh-deadlines.test.ts and scripts/refresh-deadlines.test.ts replay the pages recorded in
+# src/adapters/hotcrp/cassette/.
 #
 # ⚠️ A pull request opened with GITHUB_TOKEN does not start other workflows (GitHub's rule against
 # loops), so `ci` would never run on it and the PR could not show green. The last step therefore
@@ -59,18 +60,17 @@ jobs:
           node-version: "22"
           cache: npm
 
-      # `--ignore-scripts`: no `prepare` build, so there is no `dist/`. The script runs from source
-      # (Node strips the types) — and `--conditions=paperlint-source` below is what makes that true:
-      # without it `#lib/*` (imported by skills/paper-pipeline/scripts/consumer.mjs) resolves to
-      # `dist/`, and every run from 2026-10-06 to 2026-10-19 died on ERR_MODULE_NOT_FOUND
-      # dist/lib/paper-config.js. scripts/refresh-deadlines.test.ts runs this exact `run:` line on
-      # every pull request under test/no-dist.ts, which refuses any module in `dist/`.
+      # `--ignore-scripts`: no `prepare` build, so there is no `dist/`. The npm script runs the code
+      # from source with `--conditions=paperlint-source` (package.json); without it `#lib/*` resolves
+      # to `dist/`, and every run from 2026-10-06 to 2026-10-19 died on ERR_MODULE_NOT_FOUND
+      # dist/lib/paper-config.js. scripts/refresh-deadlines.test.ts runs the same npm script on every
+      # pull request under test/no-dist.ts, which refuses any module in `dist/`.
       - name: npm ci
         run: npm ci --ignore-scripts
         timeout-minutes: 5
 
       - name: read every preset's portal
-        run: node --conditions=paperlint-source scripts/refresh-deadlines.ts --summary "$RUNNER_TEMP/deadlines.md"
+        run: npm run refresh-deadlines -- --summary "$RUNNER_TEMP/deadlines.md"
         timeout-minutes: 3
 
       - name: open or update the pull request
@@ -91,7 +91,7 @@ jobs:
           git commit -F - <<'MSG'
           fix(presets): venue deadlines as their portals publish them now
 
-          Re-read by .github/workflows/deadlines.yml (scripts/refresh-deadlines.ts); the pull
+          Re-read by .github/workflows/deadlines.yml (npm run refresh-deadlines); the pull
           request's body lists each value that changed and where it was read.
           MSG
           # The branch is the bot's own and is rebuilt from main on every run: force is the point.
@@ -108,21 +108,13 @@ jobs:
       # 🔴 A FAILED RUN IS AN ISSUE, NOT A RED DOT NOBODY OPENS. The job failed on every scheduled run
       # from 2026-10-06 to 2026-10-19 and nobody looked: MSR moved both deadlines and the preset kept
       # the old ones (#235). So any failure opens ONE issue titled "deadline refresh failing", or
-      # comments on it when it is already open, with the run's link. A portal that is down is not a
-      # failure (the script warns and exits 0), so this fires only for a defect of ours.
+      # comments on the open one, with the run's link (scripts/report-refresh-failure.ts). A portal
+      # that is down is not a failure (the script warns and exits 0), so this fires only for a defect
+      # of ours.
       - name: report a failed refresh in one issue
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          set -euo pipefail
-          title="deadline refresh failing"
-          body="The scheduled refresh of the venue presets' deadlines (.github/workflows/deadlines.yml) failed: $RUN_URL — until it is fixed, a deadline a portal moves is not picked up by the presets."
-          open=$(gh issue list --repo "$REPO" --state open --search "in:title \"$title\"" --json number,title --jq "map(select(.title == \"$title\")) | .[0].number // empty")
-          if [ -z "$open" ]; then
-            gh issue create --repo "$REPO" --title "$title" --body "$body"
-          else
-            gh issue comment "$open" --repo "$REPO" --body "$body"
-          fi
+        run: npm run report-refresh-failure
