@@ -18,11 +18,11 @@
  * A `.txt` is the text of the rendered PDF — the page a reviewer actually reads.
  *
  * The figure captions are measured too, in the report: every `\caption{}` in `paper.tex` and the
- * files it includes, or, beside a rendered page, in `figures/*.tex`. `--flags-only` prints only those
- * caption findings (nothing on a clean paper) and exits with code 1 if there is one — the form for a
- * hook; it reads them from the same function as the report.
+ * files it includes, or, beside a rendered page, in `figures/*.tex`.
  *
- * Advisory: the report prints findings and exits 0.
+ * Advisory: the report prints every check and exits 0. `--flags-only` prints the checks the report
+ * marks FLAG, each with the lines under it, and nothing on a clean paper; it exits 1 when there is
+ * one — the form for a hook.
  */
 import { paperProse } from "#src/paper-prose";
 import { paperRecord } from "#src/paper-record";
@@ -446,33 +446,63 @@ const CAPTION_LIMITS = [
 const over = (c) => (limit) => limit.measure(c) > THRESHOLDS[limit.key].warn;
 const say = (c) => (limit) => limit.say(c, THRESHOLDS[limit.key].warn);
 
-function report(name, r, captionLines) {
-  const flag = (ok) => (ok ? "ok  " : "FLAG");
+/**
+ * Every line of the report as data, in the order it is printed: `ok` is true (passed), false (a
+ * finding, marked `FLAG`) or null (a figure, no check), `under` the lines that name the offenders.
+ * The report prints all of it; `--flags-only` prints the findings: one list, two renderings.
+ */
+function checks(r, captionLines) {
+  const T = THRESHOLDS;
+  return [
+    {
+      ok: r.metadiscoursePer1000 <= T.metadiscourseTotalPer1000.warn,
+      text: `all metadiscourse/1000w  ${r.metadiscoursePer1000}   (Hyland RA baseline 64.9, warn >${T.metadiscourseTotalPer1000.warn})`,
+      under: [],
+    },
+    {
+      ok: null,
+      text: `nominalisations/1000w    ${r.nominalisationsPer1000}`,
+      under: [],
+    },
+    {
+      ok: r.contrastivePer10k <= T.contrastivePer10k.warn,
+      text: `"rather than"/instead-of/10,000w  ${r.contrastivePer10k}   (warn >${T.contrastivePer10k.warn}; not epanorthosis, no published baseline)`,
+      under: [],
+    },
+    {
+      ok: r.wastedStress.length === 0,
+      text: `sentences ending on a cross-ref/citation/hedge (wasted stress position): ${r.wastedStress.length}`,
+      under: r.wastedStress.map((s) => `…${s.slice(-70)}`),
+    },
+    {
+      ok: r.negatedSentencePct <= T.negatedMainClausePct.warn,
+      text: `sentences whose main claim is a negation: ${r.negatedSentencePct}%`,
+      under: [],
+    },
+    {
+      ok: captionLines.length === 0,
+      text: `figure captions over the limit: ${captionLines.length}`,
+      under: captionLines,
+    },
+    {
+      ok: null,
+      text: `topic positions (whose story is this?): ${r.topics.map((t) => `"${t}"`).join(" | ")}`,
+      under: [],
+    },
+  ];
+}
+
+const MARK = { true: "ok  ", false: "FLAG", null: "    " };
+
+function report(name, r, rows) {
   console.log(`\n=== ${name} — ${r.words} words, ${r.sentences} sentences ===`);
   console.log(
     `sentence lengths ${JSON.stringify(r.sentenceLens)}  mean ${r.meanLen}  sd ${r.sdLen}  CV ${r.cv}`,
   );
-  console.log(
-    `${flag(r.metadiscoursePer1000 <= THRESHOLDS.metadiscourseTotalPer1000.warn)} all metadiscourse/1000w  ${r.metadiscoursePer1000}   (Hyland RA baseline 64.9, warn >${THRESHOLDS.metadiscourseTotalPer1000.warn})`,
-  );
-  console.log(`     nominalisations/1000w    ${r.nominalisationsPer1000}`);
-  console.log(
-    `${flag(r.contrastivePer10k <= THRESHOLDS.contrastivePer10k.warn)} "rather than"/instead-of/10,000w  ${r.contrastivePer10k}   (warn >${THRESHOLDS.contrastivePer10k.warn}; not epanorthosis, no published baseline)`,
-  );
-  console.log(
-    `${flag(r.wastedStress.length === 0)} sentences ending on a cross-ref/citation/hedge (wasted stress position): ${r.wastedStress.length}`,
-  );
-  r.wastedStress.forEach((s) => console.log(`       > …${s.slice(-70)}`));
-  console.log(
-    `${flag(r.negatedSentencePct <= THRESHOLDS.negatedMainClausePct.warn)} sentences whose main claim is a negation: ${r.negatedSentencePct}%`,
-  );
-  console.log(
-    `${flag(captionLines.length === 0)} figure captions over the limit: ${captionLines.length}`,
-  );
-  captionLines.forEach((l) => console.log(`       > ${l}`));
-  console.log(
-    `     topic positions (whose story is this?): ${r.topics.map((t) => `"${t}"`).join(" | ")}`,
-  );
+  rows.forEach(({ ok, text, under }) => {
+    console.log(`${MARK[ok]} ${text}`);
+    under.forEach((l) => console.log(`       > ${l}`));
+  });
 }
 
 const args = process.argv.slice(2);
@@ -513,15 +543,9 @@ function pdfTextOnly(t) {
     .replace(/\f/g, "\n\n");
 }
 
-// 🔴 WHAT `--flags-only` IS TODAY, AND WHAT IT IS NOT. It prints only the caption findings, silent
-// on a clean paper, and exits 1 when there is one; no hook or script in this repository calls it.
-// It does NOT carry the metric flags: the report's FLAG lines (the metadiscourse rate, the
-// "not X, but Y" density, the wasted stress positions…) are printed by the report only, which exits
-// 0 — so nothing downstream can act on those through an exit code. (The mode was added 2026-08-05
-// after the "not X, but Y" metric sat at 50.8 per 10,000 words, against an LLM baseline of 7.8,
-// through five writing passes without a flag, because it had no threshold. The thresholds fixed
-// that; the exit code was never extended to them.) Whether `--flags-only` should carry every flag,
-// or go, is the maintainer's decision.
+// `--flags-only` prints the findings of the report (every line it marks FLAG, with the lines under
+// it) and nothing on a clean paper, and exits 1 when there is one: the form for a hook. The report
+// prints all of `checks` and exits 0.
 const flagsOnly = args.includes("--flags-only");
 let flagged = 0;
 for (const f of args.filter((a) => !a.startsWith("--"))) {
@@ -550,16 +574,23 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
     process.exit(2);
   }
   const r = analyse(text, sentences);
+  const rows =
+    flagsOnly || !args.includes("--headings")
+      ? checks(r, captionFindings(f, tex, fs, path))
+      : [];
   if (flagsOnly) {
-    const lines = captionFindings(f, tex, fs, path).map((l) => `   ${l}`);
-    if (lines.length) {
-      flagged += lines.length;
+    const found = rows.filter((row) => row.ok === false);
+    if (found.length) {
+      flagged += found.length;
       // The header STATES the count, so a caller need not count output lines — header and footer
       // are not findings.
       console.error(
-        `✍️  prose-lint — ${f.split("/").pop()} — ${lines.length} finding(s):`,
+        `✍️  prose-lint — ${f.split("/").pop()} — ${found.length} finding(s):`,
       );
-      lines.forEach((l) => console.error(l));
+      found.forEach(({ text, under }) => {
+        console.error(`   ${text}`);
+        under.forEach((l) => console.error(`      > ${l}`));
+      });
       console.error(
         "   run prose-lint.mjs on the file without --flags-only for the sentences",
       );
@@ -587,7 +618,7 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
       'a linter, a configuration, a repository, a rule — not "answers", "kinds", "moves".',
     );
   } else {
-    report(f.split("/").pop(), r, captionFindings(f, tex, fs, path));
+    report(f.split("/").pop(), r, rows);
   }
 }
 if (!flagsOnly)

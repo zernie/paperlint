@@ -62,6 +62,9 @@ const TREE = {
   "commented/paper.tex": tex(
     `Prose here.\n% \\caption{Commented ${LONG_CAPTION_SENTENCE}.}\n\\begin{verbatim}\n\\caption{Quoted ${LONG_CAPTION_SENTENCE}.}\n\\end{verbatim}\n\\begin{figure}\\caption{Real ${LONG_CAPTION_SENTENCE}.}\\end{figure}`,
   ),
+  "negated/paper.tex": tex(
+    "It is not fast. It is not small. It is not red. Nothing here is plain.",
+  ),
   "ends-on-marks/paper.tex": tex(
     "The method holds on every input~\\cite{knuth}. The proof is given in full (Section~\\ref{proof}). The result is new.",
   ),
@@ -83,6 +86,7 @@ const READ: Readonly<Record<string, readonly string[]>> = {
   inline: ["paper.tex", "sec/results.tex"],
   commented: ["paper.tex"],
   "ends-on-marks": ["paper.tex"],
+  negated: ["paper.tex"],
   empty: ["paper.tex"],
 };
 writeTree(
@@ -182,6 +186,23 @@ test("--flags-only: an over-long caption flags and exits 1", () => {
   expect(r.stderr).toMatchSnapshot();
 });
 
+test("--flags-only: a metric over its threshold (not a caption) is a finding too, and the report flags the same line", () => {
+  const file = join(root, "negated", "paper.tex");
+  const only = runNode(SCRIPT, ["--flags-only", file]);
+  const report = runNode(SCRIPT, [file]);
+  // Guards: the mode promised "print nothing on a clean paper, any output means a finding" and
+  // looked only at captions; the metrics the report FLAGs are findings of the same kind.
+  assert.deepEqual(
+    { status: only.status, stdout: only.stdout },
+    { status: 1, stdout: "" },
+  );
+  expect(only.stderr).toMatchSnapshot();
+  assert.match(
+    report.stdout,
+    /^FLAG sentences whose main claim is a negation: 75%$/m,
+  );
+});
+
 test("--flags-only: a paper with no figures directory is clean, exit 0 and silent", () => {
   assert.deepEqual(
     runNode(SCRIPT, ["--flags-only", join(root, "clean", "paper.tex")]),
@@ -248,17 +269,13 @@ test("🔴 --flags-only reads the captions of the paper.tex and of the files it 
       stdout: r.stdout,
       flagged: r.stderr
         .split("\n")
-        .filter((l) => l.startsWith("   "))
+        .filter((l) => l.startsWith("      > "))
         .map((l) => l.split(":")[0]),
     },
     {
       status: 1,
       stdout: "",
-      flagged: [
-        "   paper.tex",
-        "   sec/results.tex",
-        "   run prose-lint.mjs on the file without --flags-only for the sentences",
-      ],
+      flagged: ["      > paper.tex", "      > sec/results.tex"],
     },
   );
 });
@@ -274,8 +291,14 @@ test("--flags-only on a rendered page reads the captions in figures/*.tex beside
     join(root, "rendered", "page.txt"),
   ]);
   assert.deepEqual(
-    { status: r.status, first: r.stderr.split("\n")[1]?.split(":")[0] },
-    { status: 1, first: "   figures/f.tex" },
+    {
+      status: r.status,
+      first: r.stderr
+        .split("\n")
+        .find((l) => l.startsWith("      > "))
+        ?.split(":")[0],
+    },
+    { status: 1, first: "      > figures/f.tex" },
   );
   // …and a page with no figures/ beside it has no caption to flag.
   assert.deepEqual(runNode(SCRIPT, ["--flags-only", join(root, "page.txt")]), {
@@ -296,7 +319,7 @@ test("🔴 a caption commented out or quoted in verbatim is not measured; a real
       status: r.status,
       findings: r.stderr
         .split("\n")
-        .filter((l) => l.startsWith("   paper.tex:"))
+        .filter((l) => l.startsWith("      > paper.tex:"))
         .map((l) => /— "(\w+)/.exec(l)?.[1]),
     },
     { status: 1, findings: ["Real"] },

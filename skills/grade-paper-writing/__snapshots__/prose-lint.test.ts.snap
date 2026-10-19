@@ -1,9 +1,18 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`--flags-only: a metric over its threshold (not a caption) is a finding too, and the report flags the same line 1`] = `
+"✍️  prose-lint — paper.tex — 1 finding(s):
+   sentences whose main claim is a negation: 75%
+   run prose-lint.mjs on the file without --flags-only for the sentences
+"
+`;
+
 exports[`--flags-only: an over-long caption flags and exits 1 1`] = `
 "✍️  prose-lint — paper.tex — 2 finding(s):
-   figures/fig1.tex: caption sentence of 46 words (warn >40) — "Big. word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 wor…"
-   figures/fig1.tex: caption is 106 words (warn >100) — a caption this long is a section under a picture
+   all metadiscourse/1000w  363.6   (Hyland RA baseline 64.9, warn >90)
+   figure captions over the limit: 2
+      > figures/fig1.tex: caption sentence of 46 words (warn >40) — "Big. word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 wor…"
+      > figures/fig1.tex: caption is 106 words (warn >100) — a caption this long is a section under a picture
    run prose-lint.mjs on the file without --flags-only for the sentences
 "
 `;
