@@ -420,19 +420,31 @@ function captions(sources) {
  * read them from here.
  */
 function captionFindings(f, tex, fs, path) {
-  return captions(tex ? tex.files : figureFiles(f, fs, path)).flatMap((c) => [
-    ...(c.longest > THRESHOLDS.captionSentenceWords.warn
-      ? [
-          `${c.file}: caption sentence of ${c.longest} words (warn >${THRESHOLDS.captionSentenceWords.warn}) — "${c.longestSentence.slice(0, 110)}…"`,
-        ]
-      : []),
-    ...(c.words > THRESHOLDS.captionWords.warn
-      ? [
-          `${c.file}: caption is ${c.words} words (warn >${THRESHOLDS.captionWords.warn}) — a caption this long is a section under a picture`,
-        ]
-      : []),
-  ]);
+  return captions(tex ? tex.files : figureFiles(f, fs, path)).flatMap((c) =>
+    CAPTION_LIMITS.filter(over(c)).map(say(c)),
+  );
 }
+
+/**
+ * The two limits a caption is held to: the `THRESHOLDS` key, what of a caption it is measured on, and
+ * how a finding reads. A caption is over a limit when its measure exceeds the threshold's `warn`.
+ */
+const CAPTION_LIMITS = [
+  {
+    key: "captionSentenceWords",
+    measure: (c) => c.longest,
+    say: (c, warn) =>
+      `${c.file}: caption sentence of ${c.longest} words (warn >${warn}) — "${c.longestSentence.slice(0, 110)}…"`,
+  },
+  {
+    key: "captionWords",
+    measure: (c) => c.words,
+    say: (c, warn) =>
+      `${c.file}: caption is ${c.words} words (warn >${warn}) — a caption this long is a section under a picture`,
+  },
+];
+const over = (c) => (limit) => limit.measure(c) > THRESHOLDS[limit.key].warn;
+const say = (c) => (limit) => limit.say(c, THRESHOLDS[limit.key].warn);
 
 function report(name, r, captionLines) {
   const flag = (ok) => (ok ? "ok  " : "FLAG");
