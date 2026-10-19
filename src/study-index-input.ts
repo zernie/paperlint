@@ -3,7 +3,11 @@
  * row's plan, and each decide-first study's history as git gives it now (src/domain/index-columns.ts).
  */
 import { indexHistory } from "./domain/index-columns.ts";
-import type { IndexInput, RegistryState } from "./domain/study-registry.ts";
+import {
+  planKey,
+  type IndexInput,
+  type RegistryState,
+} from "./domain/study-registry.ts";
 import {
   decideFirstStudies,
   type OrderDeps,
@@ -20,7 +24,7 @@ export const indexInputOf = (
   plans: plansOf(r, studyFolder(paper, deps), deps.codec),
   history: new Map(
     decideFirstStudies(paper, deps).map((s) => [
-      `${s.folder}/${s.plan}`,
+      planKey(s.folder, s.plan),
       indexHistory(s),
     ]),
   ),

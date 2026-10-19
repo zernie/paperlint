@@ -22,6 +22,7 @@ import {
   type StudyPlan,
   type StudyRegistry,
   type IndexInput,
+  planKey,
 } from "./study-registry.ts";
 
 /** No plan and no history: the index with every mode column `—`. */
@@ -113,7 +114,7 @@ const input = (
   results: new Map(),
   plans: new Map(
     r.studies.flatMap((s) =>
-      s.plan === undefined ? [] : [[`${s.folder}/${s.plan}`, read(PLAN)]],
+      s.plan === undefined ? [] : [[planKey(s.folder, s.plan), read(PLAN)]],
     ),
   ),
   ...over,

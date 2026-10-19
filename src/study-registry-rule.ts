@@ -31,6 +31,7 @@ import {
   PLAN_NAME_PROBLEMS,
   STUDIES_FILE,
   judgeStudies,
+  planKey,
   planRefs,
   studiesOf,
   studyMessage,
@@ -128,13 +129,15 @@ export const plansOf = (
   new Map(
     (r.kind === "read" ? planRefs(r.registry) : []).flatMap((ref) => {
       const state = planStateOf(ref, folder, codec);
-      return state === null ? [] : [[ref.key, state] as const];
+      return state === null
+        ? []
+        : [[planKey(ref.folder, ref.plan), state] as const];
     }),
   );
 
 /** The state of the plan `ref` names, read through `folder`; null when it is not there. */
 const planStateOf = (
-  { key, folder: of, plan, kind }: PlanRef,
+  { folder: of, plan, kind }: PlanRef,
   folder: StudyFolder,
   codec: StudyRegistryCodec,
 ): PlanState | null => {
@@ -145,7 +148,7 @@ const planStateOf = (
     case "linked":
       return { kind: "linked", link: read.link };
     case "text":
-      return posix.basename(key) === LEGACY_PLAN_FILE
+      return posix.basename(plan) === LEGACY_PLAN_FILE
         ? codec.parseLegacyPlan(read.text)
         : codec.parsePlan(read.text, kind);
   }
