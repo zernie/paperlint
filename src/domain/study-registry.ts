@@ -711,16 +711,13 @@ const planFinding = (
 };
 
 /** The plan a row names is a file inside its folder, of the schema, and ready once the study has run. */
-const badPlan: RowCheck = ({ s, input }) => {
+const badPlan: RowCheck = (row) => {
+  const { s } = row;
   const path = s.plan;
   if (path === undefined) return null;
   if (!isInside(path))
     return { problem: "bad-plan", id: s.id, path, why: "outside" };
-  return planFinding(
-    s,
-    path,
-    input.plans.get(`${s.folder}/${path}`) ?? { kind: "absent" },
-  );
+  return planFinding(s, path, planOf(row) ?? { kind: "absent" });
 };
 
 /** A plan under its old name: read, and named for renaming. */
