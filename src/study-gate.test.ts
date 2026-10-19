@@ -446,3 +446,22 @@ it("refuses a decision under a linked directory, naming the link: git cannot vou
     ],
   ]);
 });
+
+it("refuses a decision that is a FIFO or another special file: git tracks no such thing", () => {
+  const r = studies(
+    "gate",
+    { ...decided(), [DECISION]: "" },
+    {},
+    {
+      git: { [DECISION]: { kind: "committed", commit: SHA, date: DATE } },
+      others: [DECISION],
+    },
+  );
+  // Guards: a decision the listing called a file passed, and git was asked about it.
+  expect([r.code, r.err]).toEqual([
+    1,
+    [
+      "P1-S01: its decision repro/P1-S01-outcome/decision.md is a special file, not a file; the run cannot be gated on it. Name the decision file in `mode.decision.file`.",
+    ],
+  ]);
+});

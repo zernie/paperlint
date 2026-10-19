@@ -59,7 +59,11 @@ const kindAt = (
   entries(callerPath(dir)).find((e) => e.name === name)?.kind;
 
 const ENTRY: Readonly<Record<Exclude<DirEntry["kind"], "symlink">, PathEntry>> =
-  { file: { kind: "file" }, dir: { kind: "dir" } };
+  {
+    file: { kind: "file" },
+    dir: { kind: "dir" },
+    other: { kind: "other" },
+  };
 
 /**
  * What the entry `name` below `dir`/`above` is: every component on the way is looked up in its
@@ -113,7 +117,8 @@ const locateIn = (
   const { above, name } = split(path);
   // The folder is walked too: one that is a link is never entered, and reads as absent.
   const found = walk(join(paper, REPRO_DIR), [folder, ...above], name, entries);
-  if (found.kind === "dir") return { kind: "absent" };
+  // A directory or a special file is no file to read: it reads as nothing.
+  if (found.kind === "dir" || found.kind === "other") return { kind: "absent" };
   if (found.kind !== "linked") return found;
   return found.link === folder
     ? { kind: "absent" }

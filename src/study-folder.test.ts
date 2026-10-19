@@ -18,8 +18,8 @@ const TREE = {
   [`${PAPER}/repro/P1-S01-linked/plan.json`]: "{}",
 };
 
-/** The reader over `TREE`, `links` being absolute paths the listing reports as links; plus every path the disk was asked for. */
-const reader = (links: readonly string[]) => {
+/** The reader over `TREE`, `links` and `others` being absolute paths the listing reports as links and as neither file nor directory (a FIFO); plus every path the disk was asked for. */
+const reader = (links: readonly string[], others: readonly string[] = []) => {
   const files = memoryFiles(TREE);
   const asked: string[] = [];
   return {
@@ -37,11 +37,13 @@ const reader = (links: readonly string[]) => {
         },
       },
       entries: (dir) =>
-        memoryListEntries(files)(dir).map((e) =>
-          links.includes(`${dir}/${e.name}`)
-            ? { ...e, kind: "symlink" as const }
-            : e,
-        ),
+        memoryListEntries(files)(dir).map((e) => {
+          if (links.includes(`${dir}/${e.name}`))
+            return { ...e, kind: "symlink" as const };
+          return others.includes(`${dir}/${e.name}`)
+            ? { ...e, kind: "other" as const }
+            : e;
+        }),
     }),
   };
 };
@@ -214,4 +216,22 @@ it("lists nothing of a folder that may not be entered or is not there", () => {
     sf.list("../x"),
     sf.list("P1-S09-missing"),
   ]).toEqual([[], [], []]);
+});
+
+it("something that is not a regular file — a FIFO, a socket — is absent as a plan or a result, other as a path, and still listed by name", () => {
+  const { sf, asked } = reader([], [`${FOLDER}/plan.json`]);
+  // Guards: the listing used to call every such entry a file, so the reader would open it (a FIFO
+  // blocks) and report it present.
+  expect([
+    sf.locate("P1-S01-outcome", "plan.json"),
+    sf.read("P1-S01-outcome", "plan.json"),
+    sf.entryAt("repro/P1-S01-outcome/plan.json"),
+    sf.list("P1-S01-outcome"),
+  ]).toEqual([
+    { kind: "absent" },
+    { kind: "absent" },
+    { kind: "other" },
+    ["plan.json", "sub/plan.json", "sub/deeper/out.tsv", "other/note.md"],
+  ]);
+  expect(asked).toEqual([]);
 });

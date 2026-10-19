@@ -2,6 +2,7 @@
  * `nodeListEntries`: a directory's entries with their kinds, a symbolic link reported as one and never
  * followed; none for a missing directory or a file; other errors thrown.
  */
+import { spawnSync } from "node:child_process";
 import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -28,6 +29,23 @@ describe("nodeListEntries", () => {
       { name: "out", kind: "dir" },
     ]);
   });
+
+  // A FIFO needs `mkfifo`, which Windows does not have; the reason is said, not hidden.
+  it.skipIf(process.platform === "win32")(
+    "names a FIFO as neither a file nor a directory: other",
+    () => {
+      const d = join(root, "fifo");
+      mkdirSync(d, { recursive: true });
+      const made = spawnSync("mkfifo", [join(d, "pipe")]);
+      expect(made.status).toBe(0);
+      writeFileSync(join(d, "a.md"), "");
+      // Guards: it was reported as a file, so a reader would open it and block.
+      expect(sorted(d)).toEqual([
+        { name: "a.md", kind: "file" },
+        { name: "pipe", kind: "other" },
+      ]);
+    },
+  );
 
   it("is empty for a directory that does not exist, and for a file", () => {
     writeFileSync(join(root, "f"), "");

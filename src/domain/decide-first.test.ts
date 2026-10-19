@@ -212,6 +212,12 @@ const ALL: readonly OrderFinding[] = [
   {
     problem: "decision-not-file",
     id: "P1-S01",
+    file: "repro/p",
+    what: "special file",
+  },
+  {
+    problem: "decision-not-file",
+    id: "P1-S01",
     file: "repro/d",
     what: "directory",
   },
@@ -262,6 +268,8 @@ it("each finding's message: what is wrong, what to do, the rule's page", () => {
     "The decision of `P1-S01`, `repro/P1-S01-x/decision.md`, is matched by its output `**/*.md`: the decision would be one of the files its own run produces. What to do: keep the decision out of the outputs — a file the globs do not match, or one elsewhere in the paper — and set `mode.decision.file`." +
       PAGE,
     "The decision of `P1-S01`, `repro/d.md`, was committed and then deleted: it is not in HEAD, so the study has no decision its outputs could follow. What to do: restore the decision file as it was decided and commit it — never write a new one after the outputs; if the decision no longer holds, declare the study `exploratory` with the reason." +
+      PAGE,
+    "The decision of `P1-S01`, `repro/p`, is a special file, not a file: git tracks only regular files, so no order can be read from it. What to do: name the decision file itself in `mode.decision.file`." +
       PAGE,
     "The decision of `P1-S01`, `repro/d`, is a directory, not a file: git answers for a directory with the commits of anything under it, so no order can be read from it. What to do: name the decision file itself in `mode.decision.file`." +
       PAGE,

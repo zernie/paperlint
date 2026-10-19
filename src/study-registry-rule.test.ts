@@ -415,6 +415,44 @@ describe("repro/study-registered — a plan or a result file reached through a l
   });
 });
 
+describe("repro/study-registered — a result file or a plan that is a FIFO", () => {
+  it("is not a file in its folder: reported as missing, never opened", () => {
+    const r = P1(
+      study({
+        status: "done",
+        result: "41 of 60",
+        result_file: "r.txt",
+        plan: "plan.json",
+      }),
+    );
+    const S = `${DIR}/repro/P1-S01-baseline`;
+    const files = memoryFiles({
+      ...registered(r),
+      [`${S}/plan.json`]: "{}",
+      [`${S}/r.txt`]: "41 of 60\n",
+    });
+    const found = studyFindings(DIR, {
+      files,
+      listDir: memoryListDir(files),
+      entries: (dir) =>
+        memoryListEntries(files)(dir).map((e) =>
+          [`${S}/plan.json`, `${S}/r.txt`].includes(`${dir}/${e.name}`)
+            ? { ...e, kind: "other" as const }
+            : e,
+        ),
+      codec: studyRegistryCodec,
+    });
+    // Guards: `existingResults` used `Files.isFile`; the listing said "file" for a FIFO and the result passed.
+    expect(
+      found.map((f) =>
+        f.problem === "bad-plan" || f.problem === "result-file"
+          ? `${f.problem}:${f.why}`
+          : f.problem,
+      ),
+    ).toEqual(["result-file:missing", "bad-plan:missing"]);
+  });
+});
+
 describe("repro/study-registered — a row whose folder leads outside repro/", () => {
   it("is reported by name, and nothing is read through it: its plan and result read as missing", () => {
     const r = P1(

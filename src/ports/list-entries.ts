@@ -7,12 +7,14 @@
 import type { AbsolutePath } from "../domain/paths.ts";
 
 /**
- * One entry of a directory: a directory, a symbolic link (not followed), or a file — anything else on
- * disk (a socket, a FIFO) reads as a file: a name, never descended into.
+ * One entry of a directory: a regular file, a directory, a symbolic link (not followed), or `other` —
+ * anything that is none of those (a FIFO, a socket, a device). An `other` entry is a name and nothing
+ * more: it is never read (opening a FIFO blocks) and never descended into, and an outputs listing
+ * still names it.
  */
 export interface DirEntry {
   readonly name: string;
-  readonly kind: "file" | "dir" | "symlink";
+  readonly kind: "file" | "dir" | "symlink" | "other";
 }
 
 /** The entries of `dir`; none when it does not exist or is not a directory. */

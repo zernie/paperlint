@@ -35,6 +35,7 @@ export const decisionEntry = (
 ): DecisionEntry => {
   const at = folder.entryAt(file);
   if (at.kind === "dir") return { kind: "not-a-file", what: "directory" };
+  if (at.kind === "other") return { kind: "not-a-file", what: "special file" };
   if (at.kind !== "linked") return { kind: "ok" };
   return at.link === posix.normalize(file)
     ? { kind: "not-a-file", what: "symbolic link" }

@@ -23,7 +23,7 @@ import {
 } from "./study-mode.ts";
 
 /** What a decision path names on disk when it is no file git can vouch for. */
-export type NotAFile = "directory" | "symbolic link";
+export type NotAFile = "directory" | "symbolic link" | "special file";
 
 /** A commit, and its committer date (ISO 8601 with its offset). */
 export interface CommitAt {
@@ -224,6 +224,7 @@ const NOT_A_FILE: Readonly<Record<NotAFile, string>> = {
   directory:
     "git answers for a directory with the commits of anything under it",
   "symbolic link": "git records the link, not the file it points to",
+  "special file": "git tracks only regular files",
 };
 
 const short = (c: CommitAt): string => `${c.commit.slice(0, 12)} (${c.date})`;

@@ -12,8 +12,9 @@ export type FolderRead =
   | { readonly kind: "absent" }
   | { readonly kind: "linked"; readonly link: string };
 
-/** What a path in the paper is: `Located`, and a directory. */
-export type PathEntry = Located | { readonly kind: "dir" };
+/** What a path in the paper is: `Located`, a directory, or something that is no regular file (a FIFO, a socket). */
+export type PathEntry =
+  Located | { readonly kind: "dir" } | { readonly kind: "other" };
 
 /** Why a row's folder may not be entered: it is no one folder inside `repro/`, or it is a link. */
 export type FolderRefusal = "not-a-folder" | "symbolic-link";
@@ -28,7 +29,8 @@ export interface StudyFolder {
   readonly read: (folder: string, path: string) => FolderRead;
   /**
    * Every file under `folder`, relative to it and `/`-separated: a symbolic link is listed as a file
-   * (git stores it as one) and never descended into. None for a folder that may not be entered.
+   * (git stores it as one) and never descended into; a FIFO or a socket is listed by name too (it is
+   * never read). None for a folder that may not be entered.
    */
   readonly list: (folder: string) => readonly string[];
   /** What `path`, relative to the paper, is: a decision file is held to be a regular file. */

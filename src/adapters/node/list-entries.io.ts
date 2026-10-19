@@ -7,7 +7,8 @@ import type { DirEntry, ListEntries } from "../../ports/list-entries.ts";
 /** What a directory entry is, its link never followed. */
 const kindOf = (d: Readonly<Dirent>): DirEntry["kind"] => {
   if (d.isSymbolicLink()) return "symlink";
-  return d.isDirectory() ? "dir" : "file";
+  if (d.isDirectory()) return "dir";
+  return d.isFile() ? "file" : "other";
 };
 
 export const nodeListEntries: ListEntries = (
