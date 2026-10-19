@@ -54,11 +54,11 @@ submission; the response will contain the chosen submission ID». It sends four 
 
 - **the title** — the paper's `\title` as text; when it holds a command of your own, the PDF's Title
   (`\hypersetup{pdftitle=…}`);
-- **the abstract** — as the PDF shows it, macros resolved: read from the build's page text
-  (`_build/paper.facts.json`, which must describe the PDF being sent — run `paperlint build` first),
-  from the line beginning «Abstract» to the next block (CCS Concepts, Keywords, Index Terms, ACM
-  Reference Format, or the first section), words TeX hyphenated across lines rejoined. Or
-  `--abstract <file>`, plain text;
+- **the abstract** — the body of `\begin{abstract}…\end{abstract}` in your source, as plain text:
+  your own argument-less macros (`\newcommand`, `\renewcommand`, `\def`) expanded, dashes and
+  quotes as TeX sets them, citations and comments dropped. Anything else — a macro you did not
+  define, one with arguments, math beyond digits and symbols — stops the command with the macro and
+  its line. Or `--abstract <file>`, plain text;
 - **the authors** — from the paper's `"authors"`, never guessed: without it, `new` stops and names the key;
 - **the PDF** — the paper's own, or `--pdf <file>`.
 

@@ -12,6 +12,9 @@ import { ok, err, type Result } from "./domain/result.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { absolutePath } from "./domain/paths.ts";
 import { latexReader } from "./adapters/latex/index.ts";
+import type { LatexReader } from "./ports/latex.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
+import { builtPaper } from "../test/recorded-fixture.ts";
 import { hotcrpSite } from "./adapters/hotcrp/index.ts";
 import type {
   CreateOutcome,
@@ -164,6 +167,7 @@ async function run(
     readonly env?: Readonly<Record<string, string>>;
     readonly portal?: ReturnType<typeof fakePortal>;
     readonly cwd?: string;
+    readonly latex?: LatexReader;
   } = {},
 ) {
   const out: string[] = [];
@@ -181,7 +185,8 @@ async function run(
         ...hotcrpSite(p.url),
         connect: (token) => portal.portalFor(p, token),
       }),
-      latex: latexReader,
+      latex: o.latex ?? latexReader,
+      codec: sourcesCodec,
       log: (l) => out.push(l),
       err: (l) => errs.push(l),
     },
@@ -761,16 +766,6 @@ const AUTHORS = [
   { name: "Bob Bobson", email: "bob@example.org" },
 ];
 
-/** The page text an IEEEtran build gives pdf.js, as the facts file holds it. */
-const PAGE_1 = [
-  "Agents That Lie",
-  "Anonymous Author(s)",
-  "Abstract—Coding agents report green builds that never ran. We mea-",
-  "sure how often, with \\ours resolved to TestLie.",
-  "Index Terms—agents",
-  "I. INTRODUCTION",
-].join("\n");
-
 const facts = (o: { readonly sha?: string; readonly title?: string } = {}) =>
   JSON.stringify({
     schema: 3,
@@ -778,15 +773,18 @@ const facts = (o: { readonly sha?: string; readonly title?: string } = {}) =>
     pdf_sha256: o.sha ?? HEX,
     fonts: [],
     geometry_source: null,
-    pages_text: [PAGE_1],
+    pages_text: [],
     metadata: o.title === undefined ? {} : { Title: o.title },
     links: [],
     bib_anchor_page: null,
     appendix_anchor_page: null,
   });
 
-const DEFAULT_TEX =
-  "\\documentclass{article}\n\\title{Agents That\\\\ Lie}\n\\begin{document}\\maketitle\\end{document}\n";
+/** The abstract of the made-up paper, its macro defined in the preamble. */
+const ABSTRACT_TEX =
+  "\\begin{abstract}\nCoding agents report green builds that never ran.\nWe measure how often, with \\ours{} resolved to TestLie.\n\\end{abstract}\n";
+
+const DEFAULT_TEX = `\\documentclass{article}\n\\newcommand{\\ours}{TestLie}\n\\title{Agents That\\\\ Lie}\n\\begin{document}\\maketitle\n${ABSTRACT_TEX}\\end{document}\n`;
 
 /** A paper ready for `new`: authors declared, no submission yet, a build with its facts. */
 const newFiles = (o: {
@@ -809,7 +807,7 @@ const newFiles = (o: {
 const WANT: NewSubmission = {
   title: "Agents That Lie",
   abstract:
-    "Coding agents report green builds that never ran. We measure how often, with \\ours resolved to TestLie.",
+    "Coding agents report green builds that never ran. We measure how often, with TestLie resolved to TestLie.",
   authors: [
     {
       name: "Ada Lovelace",
@@ -821,7 +819,7 @@ const WANT: NewSubmission = {
   pdf: { name: "paper.pdf", bytes: PDF },
 };
 
-test("new: a dry run by default — title from \\title, abstract from the build's page text, the declared authors, the PDF", async () => {
+test("new: a dry run by default — title from \\title, abstract from \\begin{abstract} with the author's macro expanded, the declared authors, the PDF", async () => {
   const fs = newFiles({});
   const r = await run({ sub: "new" }, { files: fs });
   assert.equal(r.code, 0, r.errs.join("\n"));
@@ -928,23 +926,38 @@ test('🔴 new without "authors": refused with the key to fill — never guessed
   ]);
 });
 
-test("🔴 new: no facts, or facts about another PDF — refused, with the build or --abstract as the way out", async () => {
-  const none = await run({ sub: "new" }, { files: newFiles({ facts: null }) });
-  assert.equal(none.code, 2);
-  assert.deepEqual(none.errs, [
-    "the abstract: no papers/p/_build/paper.facts.json — run `npx paperlint build` on the paper first, or give the abstract with --abstract <file> — give it with --abstract <file>, a plain-text file",
-  ]);
-  const stale = await run(
-    { sub: "new" },
-    { files: newFiles({ facts: facts({ sha: "0".repeat(64) }) }) },
+test("the build's facts only stand in for the title: none, stale or broken change nothing when \\title reads", async () => {
+  const runs = await Promise.all(
+    [null, facts({ sha: "0".repeat(64) }), "{"].map((f) =>
+      run({ sub: "new" }, { files: newFiles({ facts: f }) }),
+    ),
   );
-  assert.match(stale.errs[0] ?? "", /describes another PDF than the one sent/);
-  const broken = await run({ sub: "new" }, { files: newFiles({ facts: "{" }) });
-  assert.match(broken.errs[0] ?? "", /paper\.facts\.json cannot be read/);
   assert.deepEqual(
-    [none, stale, broken].map((r) => r.seen[0]?.calls),
-    [[], [], []],
+    runs.map((r) => [r.code, r.seen[0]?.calls]),
+    runs.map(() => [0, [["create", WANT, { save: false }]]]),
   );
+});
+
+test("🔴 an abstract in a file paper.tex includes is read there, as the build recorded it", async () => {
+  const tex = DEFAULT_TEX.replace(ABSTRACT_TEX, "\\input{abstract}\n");
+  const r = await run(
+    { sub: "new" },
+    {
+      files: files({
+        paper: { extends: "../../venue.jsonc", authors: AUTHORS },
+        extra: builtPaper(
+          PAPER,
+          { "paper.tex": tex, "abstract.tex": ABSTRACT_TEX },
+          [
+            { path: "paper.tex", role: "body" },
+            { path: "abstract.tex", role: "body" },
+          ],
+        ),
+      }),
+    },
+  );
+  assert.equal(r.code, 0, r.errs.join("\n"));
+  assert.deepEqual(r.seen[0]?.calls, [["create", WANT, { save: false }]]);
 });
 
 test("new --abstract <file>: its text is sent instead of the build's, whitespace as one space", async () => {
@@ -1053,22 +1066,30 @@ test("new: no PDF, a portal that says invalid, a save the portal did not make �
   );
 });
 
-test("new: the abstract the PDF does not delimit — refused with --abstract as the way out", async () => {
-  const r = await run(
+test("🔴 an abstract paperlint cannot read without guessing is refused, naming the construct and its line — nothing sent", async () => {
+  const undefinedMacro = await run(
     { sub: "new" },
     {
       files: newFiles({
-        facts: JSON.stringify({
-          ...JSON.parse(facts()),
-          pages_text: ["Title\nBody"],
-        }),
+        tex: DEFAULT_TEX.replace("\\ours{} resolved", "\\nope{} resolved"),
       }),
     },
   );
-  assert.equal(r.code, 2);
-  assert.deepEqual(r.errs, [
-    "the abstract: the PDF's first two pages have no line beginning with «Abstract» — give it with --abstract <file>, a plain-text file",
+  assert.equal(undefinedMacro.code, 2);
+  assert.deepEqual(undefinedMacro.errs, [
+    "the abstract, paper.tex:7:28: \\nope, which no \\newcommand, \\renewcommand or \\def in the paper defines — paperlint sends no text it would have to guess; give the abstract with --abstract <file>, a plain-text file",
   ]);
+  const none = await run(
+    { sub: "new" },
+    { files: newFiles({ tex: DEFAULT_TEX.replace(ABSTRACT_TEX, "") }) },
+  );
+  assert.deepEqual(none.errs, [
+    "paper.tex has no \\begin{abstract}…\\end{abstract} — give the abstract with --abstract <file>, a plain-text file",
+  ]);
+  assert.deepEqual(
+    [undefinedMacro, none].map((r) => r.seen[0]?.calls),
+    [[], []],
+  );
 });
 
 test("titleOf: \\title as text; an author's macro in it → the PDF's Title; neither → the fix", () => {
@@ -1161,12 +1182,31 @@ test("🔴 new --save, but paperlint.json changed under it: the id is printed wi
 });
 
 test("new: no paper.tex — the PDF's Title stands in; without one either, the fix is named", async () => {
+  const noTex = newFiles({
+    tex: null,
+    facts: facts({ title: "From The PDF" }),
+  });
   const titled = await run(
-    { sub: "new" },
-    { files: newFiles({ tex: null, facts: facts({ title: "From The PDF" }) }) },
+    { sub: "new", abstract: "abs.txt" },
+    {
+      files: {
+        ...noTex,
+        readBytes: (p) =>
+          p === "/w/abs.txt"
+            ? new TextEncoder().encode("Given.")
+            : noTex.readBytes(p),
+      },
+    },
   );
   assert.equal(titled.code, 0, titled.errs.join("\n"));
   assert.equal(titled.out[1], "title         From The PDF");
+  const noAbstract = await run(
+    { sub: "new" },
+    { files: newFiles({ tex: null, facts: facts({ title: "From The PDF" }) }) },
+  );
+  assert.deepEqual(noAbstract.errs, [
+    "no paper.tex to read the abstract from — give the abstract with --abstract <file>, a plain-text file",
+  ]);
   const untitled = await run(
     { sub: "new" },
     { files: newFiles({ tex: null }) },
@@ -1209,4 +1249,23 @@ test("new: --abstract naming no file is refused before anything is sent; run fro
       "  - then mark it submitted: npx paperlint submission update . --submit (a dry run; --save after your yes)",
     ),
   );
+});
+
+test("a refusal at a place no file of the paper holds is named at paper.tex", async () => {
+  const r = await run(
+    { sub: "new" },
+    {
+      files: newFiles({}),
+      latex: {
+        ...latexReader,
+        abstractText: () => ({
+          ok: false,
+          error: { kind: "unreadable", what: "\\x", at: 1_000_000 },
+        }),
+      },
+    },
+  );
+  assert.deepEqual(r.errs, [
+    "the abstract, paper.tex: \\x — paperlint sends no text it would have to guess; give the abstract with --abstract <file>, a plain-text file",
+  ]);
 });

@@ -1749,6 +1749,7 @@ const SIMPLE: Readonly<
         env: (name) => process.env[name],
         site: portalSite,
         latex: latexReader,
+        codec: sourcesCodec,
         log,
         err,
       },

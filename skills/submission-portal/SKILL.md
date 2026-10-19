@@ -4,7 +4,7 @@ description: "Create, read or change a paper's submission on the venue's HotCRP 
 allowed-tools: [Read, Grep, Glob, Bash]
 ---
 
-<!-- vigiles:sha256:505959477281a1d9 compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a910f1e41a269a16 compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — create, read and update the submission on the portal, then prove it landed
 
@@ -52,7 +52,8 @@ and run again.
 ## The procedure — always in this order
 
 0. **Create it, once — only when the paper has no `submission` id.** Build first
-   (`npx paperlint build papers/<paper>`): the abstract is read from that build's PDF text.
+   (`npx paperlint build papers/<paper>`): the abstract is read from the source's
+   `\begin{abstract}`, the files it includes as that build recorded them.
    `npx paperlint submission new papers/<paper>` is a DRY RUN (`dry_run=1`): it prints the title,
    the authors and the whole abstract it would send, then HotCRP's verdict, and keeps nothing. Read
    them with the author; an abstract paperlint cannot delimit, or one that reads wrong, is given as a

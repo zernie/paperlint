@@ -26,6 +26,17 @@ export interface Filecontents {
   readonly body: Span;
 }
 
+/** Why a source's abstract cannot be read as plain text. */
+export type AbstractProblem =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "unreadable";
+      /** What it is, in words: `\toolname, which no \newcommand … defines`. */
+      readonly what: string;
+      /** Its offset in the source. */
+      readonly at: number;
+    };
+
 export interface LatexReader {
   /** The source's `\documentclass`, as one of its states. */
   readonly documentClass: (src: string) => ClassLine;
@@ -76,12 +87,9 @@ export interface LatexReader {
     jobname: string,
   ) => readonly Filecontents[];
   /**
-   * The abstract as a built PDF shows it — `pages` is the text of its pages (the build's facts),
-   * `src` the paper's LaTeX, read only to tell a compound from a hyphenated word — as one paragraph
-   * of plain text; or why it cannot be delimited.
+   * The body of `src`'s `abstract` environment as one paragraph of plain text — the author's
+   * argument-less macros expanded, TeX's dashes and quotes, citations and comments dropped — or
+   * what stops it, with its offset in `src`.
    */
-  readonly abstractInPdf: (
-    pages: readonly string[],
-    src: string,
-  ) => Result<string, string>;
+  readonly abstractText: (src: string) => Result<string, AbstractProblem>;
 }

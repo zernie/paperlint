@@ -59,7 +59,10 @@ import {
 } from "./domain/portal-token.ts";
 import { LINE_BREAK, OPAQUE, runText } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
-import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
+import { factsPath, parseFactsText } from "./facts-file.ts";
+import { lineColumn, readPaper } from "./tex-paper.ts";
+import { originOf, type PaperSource } from "./domain/paper-source.ts";
+import type { SourcesCodec } from "./ports/sources-codec.ts";
 import { MAIN } from "./build.ts";
 
 /** How to make and set the site's token: the page, the scopes, the variable. Pure. */
@@ -138,8 +141,10 @@ export interface SubmissionDeps {
   readonly env: (name: string) => string | undefined;
   /** The portal site of a supported kind: its token variable and help, and its API once there is a token. */
   readonly site: (p: SupportedPortal) => PortalSite;
-  /** Reads the paper's `\title`, and the abstract in its built PDF (`new`). */
-  readonly latex: Pick<LatexReader, "headings" | "abstractInPdf">;
+  /** Reads the paper's `\title` and its abstract, its includes spliced in (`new`). */
+  readonly latex: LatexReader;
+  /** Reads the build's record of the files TeX read, for the includes (`new`). */
+  readonly codec: SourcesCodec;
   readonly log: (line: string) => void;
   readonly err: (line: string) => void;
 }
@@ -433,23 +438,48 @@ async function runUpdate(
 
 // ── new ──────────────────────────────────────────────────────────────────────────────
 
-/** The build's facts about the PDF that is sent, or why they cannot be used. */
-function factsFor(
+/**
+ * The metadata of the PDF that is sent, from the build's facts — the title's fallback; null when
+ * there are no facts, or they describe another PDF.
+ */
+function pdfMetadata(
   paperDir: string,
   pdf: Uint8Array,
   deps: SubmissionDeps,
-): Result<ReadFacts, string> {
-  const path = factsPath(paperDir);
-  const shown = shownPath(deps.cwd, path);
-  const bytes = bytesAt(deps.files, path);
-  const rebuild = `run \`npx paperlint build\` on the paper first, or give the abstract with --abstract <file>`;
-  if (bytes === null) return err(`no ${shown} — ${rebuild}`);
-  const facts = parseFactsText(new TextDecoder().decode(bytes));
-  if (!facts.ok) return err(`${shown} cannot be read — ${rebuild}`);
-  return facts.value.sha === sha256Hex(pdf)
-    ? facts
+): Readonly<Record<string, string>> | null {
+  const bytes = bytesAt(deps.files, factsPath(paperDir));
+  const facts =
+    bytes === null ? null : parseFactsText(new TextDecoder().decode(bytes));
+  return facts?.ok === true && facts.value.sha === sha256Hex(pdf)
+    ? facts.value.text.metadata
+    : null;
+}
+
+/** Where an offset of the assembled paper stands in its own file: `file:line:column`. */
+function placeIn(paper: PaperSource, offset: number): string {
+  const o = originOf(paper, { start: offset, end: offset });
+  return o === null ? MAIN : `${o.file}:${lineColumn(o.source, o.span.start)}`;
+}
+
+/**
+ * The abstract from the paper's source: its `abstract` environment, with the files it includes
+ * spliced in as the build recorded them, as plain text — or why it cannot be read without guessing.
+ */
+function sourceAbstract(
+  paperDir: string,
+  source: string | null,
+  deps: SubmissionDeps,
+): Result<string, string> {
+  const instead = "give the abstract with --abstract <file>, a plain-text file";
+  if (source === null)
+    return err(`no ${MAIN} to read the abstract from — ${instead}`);
+  const paper = readPaper(join(paperDir, MAIN), source, deps);
+  const r = deps.latex.abstractText(paper.text);
+  if (r.ok) return r;
+  return r.error.kind === "none"
+    ? err(`${MAIN} has no \\begin{abstract}…\\end{abstract} — ${instead}`)
     : err(
-        `${shown} describes another PDF than the one sent (its sha256 differs) — ${rebuild}`,
+        `the abstract, ${placeIn(paper, r.error.at)}: ${r.error.what} — paperlint sends no text it would have to guess; ${instead}`,
       );
 }
 
@@ -580,7 +610,7 @@ function readyForNew(t: SubmissionTarget): Result<readonly Author[], string> {
     : ok(t.authors);
 }
 
-/** The title and the abstract: the paper's `\title`, and `--abstract`'s file or the build's PDF text. */
+/** The title and the abstract: the paper's `\title`, and `--abstract`'s file or the source's abstract. */
 function titleAndAbstract(
   a: SubmissionArgs & { readonly paperDir: string },
   pdf: Uint8Array,
@@ -588,23 +618,18 @@ function titleAndAbstract(
 ): Result<{ readonly title: string; readonly abstract: string }, string> {
   const own = abstractOf(a, deps);
   if (!own.ok) return own;
-  const facts = factsFor(a.paperDir, pdf, deps);
   const srcBytes = bytesAt(deps.files, join(a.paperDir, MAIN));
   const source = srcBytes === null ? null : new TextDecoder().decode(srcBytes);
-  const metadata = facts.ok ? facts.value.text.metadata : null;
+  const metadata = pdfMetadata(a.paperDir, pdf, deps);
   const title = titleOf(source, deps.latex, metadata);
   if (!title.ok) return title;
   const abstract =
-    own.value !== null
-      ? ok(own.value.replace(/\s+/g, " "))
-      : facts.ok
-        ? deps.latex.abstractInPdf(facts.value.text.pages, source ?? "")
-        : facts;
+    own.value === null
+      ? sourceAbstract(a.paperDir, source, deps)
+      : ok(own.value.replace(/\s+/g, " "));
   return abstract.ok
     ? ok({ title: title.value, abstract: abstract.value })
-    : err(
-        `the abstract: ${abstract.error} — give it with --abstract <file>, a plain-text file`,
-      );
+    : abstract;
 }
 
 /** What `new` sends, or the first line saying what is missing. */
