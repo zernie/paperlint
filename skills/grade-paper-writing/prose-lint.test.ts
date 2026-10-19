@@ -62,6 +62,13 @@ const TREE = {
   "commented/paper.tex": tex(
     `Prose here.\n% \\caption{Commented ${LONG_CAPTION_SENTENCE}.}\n\\begin{verbatim}\n\\caption{Quoted ${LONG_CAPTION_SENTENCE}.}\n\\end{verbatim}\n\\begin{figure}\\caption{Real ${LONG_CAPTION_SENTENCE}.}\\end{figure}`,
   ),
+  // The caption command with an optional argument, and with a space before its brace.
+  "optarg/paper.tex": tex(
+    `Prose here. \\begin{figure}\\caption[Short]{${LONG_CAPTION_SENTENCE}.}\\end{figure}`,
+  ),
+  "spaced/paper.tex": tex(
+    `Prose here. \\begin{figure}\\caption {${LONG_CAPTION_SENTENCE}.}\\end{figure}`,
+  ),
   "negated/paper.tex": tex(
     "It is not fast. It is not small. It is not red. Nothing here is plain.",
   ),
@@ -87,6 +94,8 @@ const READ: Readonly<Record<string, readonly string[]>> = {
   commented: ["paper.tex"],
   "ends-on-marks": ["paper.tex"],
   negated: ["paper.tex"],
+  optarg: ["paper.tex"],
+  spaced: ["paper.tex"],
   empty: ["paper.tex"],
 };
 writeTree(
@@ -371,4 +380,34 @@ test("the report says a paper whose captions are within the limits is clean on t
   const r = runNode(SCRIPT, [join(root, "clean", "paper.tex")]);
   // Guards: the line is printed on a clean paper too, so its absence is never read as a pass.
   assert.match(r.stdout, /^ok {3}figure captions over the limit: 0$/m);
+});
+
+test("🔴 a caption with an optional argument, or a space before its brace, is measured", () => {
+  const found = (dir: string) => {
+    const r = runNode(SCRIPT, [join(root, dir, "paper.tex")]);
+    return [
+      r.status,
+      /^FLAG figure captions over the limit: (\d+)$/m.exec(r.stdout)?.[1],
+    ];
+  };
+  // Guards: the scan matched `\caption{` only, so `\caption[Short]{…}` and `\caption {…}` were never
+  // read and the report printed "ok ... 0" for a long caption.
+  expect([found("optarg"), found("spaced")]).toEqual([
+    [0, "1"],
+    [0, "1"],
+  ]);
+});
+
+test("🔴 the caption of the package's own p1 fixture, which has an optional argument, is reported", () => {
+  const p1 = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "..",
+    "fixtures",
+    "paper-sources",
+    "p1",
+    "paper.tex",
+  );
+  const r = runNode(SCRIPT, ["--flags-only", p1]);
+  assert.match(r.stderr, /— "Optional-arg caption this sentence/);
 });

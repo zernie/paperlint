@@ -93,6 +93,12 @@ const DECLARATION_SIGNATURES = Object.fromEntries([
 ]);
 
 /**
+ * `\caption` takes a star, an optional short caption and the text (`\caption*[Short]{Text}`). unified-latex
+ * signs it `o m`, so a starred caption came back with its star as the text and the text as a group beside it.
+ */
+const CAPTION_SIGNATURES = Object.fromEntries(signed(["caption"], "s o m"));
+
+/**
  * Macros that define other macros or environments. A heading in a body is no section where it is
  * written, so the outline skips these; the rendered text reads a body as written, since nothing here
  * expands macros. `\def` and its kin get a signature so the name and the body attach to them; a
@@ -133,6 +139,7 @@ const parser = once(() =>
       ...LINK_SIGNATURES,
       ...DECLARATION_SIGNATURES,
       ...DEF_SIGNATURES,
+      ...CAPTION_SIGNATURES,
     },
   }),
 );

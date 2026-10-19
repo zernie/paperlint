@@ -26,10 +26,9 @@
  */
 import { paperProse } from "#src/paper-prose";
 import { paperRecord } from "#src/paper-record";
-import { latexReader } from "#src/adapters/latex/index";
+import { captionsOf, latexReader, parseLatex } from "#src/adapters/latex/index";
 import { nodeFiles } from "#src/adapters/node/index";
 import { sourcesCodec } from "#src/adapters/sources-record/index";
-import { texToMdast } from "#eslint-rules/latex-language";
 
 const THRESHOLDS = {
   metadiscourseTotalPer1000: {
@@ -365,52 +364,24 @@ function figureFiles(pagePath, fs, path) {
 }
 
 /**
- * Every `\caption{…}` of `sources` (`{ file, text }`) a reader sees, measured. The LaTeX
- * language's projection blanks what never typesets — verbatim and code, macro definitions, the
- * preamble — and keeps a caption's argument; it keeps comments too, as `html` nodes of its tree,
- * for the rules that read notes. So a caption is skipped when its argument is blank in the
- * projection or it starts inside a comment: a quoted or commented-out `\caption` is not one.
+ * Every `\caption` of `sources` (`{ file, text }`) a reader sees, measured. The captions come from the
+ * parsed source (`captionsOf`, src/adapters/latex/captions.ts): its optional argument, star and spacing
+ * are the parser's, and a caption that is commented out, in verbatim or in a macro's definition is not one.
  */
 function captions(sources) {
-  const out = [];
-  for (const { file: f, text: s } of sources) {
-    const { root, text: seen } = texToMdast(s);
-    const comments = root.children
-      .filter((n) => n.type === "html")
-      .map((n) => [n.position.start.offset, n.position.end.offset]);
-    for (const m of s.matchAll(/\\caption\{/g)) {
-      let i = m.index + m[0].length,
-        depth = 1,
-        j = i;
-      while (j < s.length && depth) {
-        if (s[j] === "{") depth++;
-        else if (s[j] === "}") depth--;
-        j++;
-      }
-      if (
-        !/\S/.test(seen.slice(i, j - 1)) ||
-        comments.some(([a, b]) => m.index >= a && m.index < b)
-      )
-        continue;
-      const text = s
-        .slice(i, j - 1)
-        .replace(/\\[a-zA-Z]+\s*/g, " ")
-        .replace(/[{}]/g, " ")
-        .replace(/---/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-      if (!text) continue;
-      // A non-empty caption splits into at least one sentence.
-      const sents = splitSentences(text);
-      out.push({
-        file: f,
-        words: words(text),
+  return sources.flatMap(({ file, text }) =>
+    captionsOf(parseLatex(text)).map((raw) => {
+      // A dash with no spaces round it joins two words in the count, as it never did here.
+      const caption = raw.replace(/---/g, " ");
+      const sents = splitSentences(caption);
+      return {
+        file,
+        words: words(caption),
         longest: Math.max(...sents.map(words)),
         longestSentence: sents.slice().sort((a, b) => words(b) - words(a))[0],
-      });
-    }
-  }
-  return out;
+      };
+    }),
+  );
 }
 
 /**
