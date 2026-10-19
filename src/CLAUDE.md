@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:f51051aae2ef09f8 compiled from src/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:1fa9e52d1eaa6eae compiled from src/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -21,8 +21,8 @@ test — a parser for banal's JSON is pure and is still banal's.
 
 | element   | where                  | holds                                                                                                                                                              | may import                                                                                                              |
 | --------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `domain`  | `src/domain/`          | values and decisions in the paper's vocabulary                                                                                                                     | `domain`; `ts-essentials`, `node:path`, `node:crypto`                                                                   |
-| `port`    | `src/ports/`           | interfaces **shaped by what the inside needs**, never by what a tool does (Graça: "created to fit the Application Core needs and not simply mimic the tools APIs") | `domain`, `port`; the same three externals                                                                              |
+| `domain`  | `src/domain/`          | values and decisions in the paper's vocabulary                                                                                                                     | `domain`; `ts-essentials`, `remeda`, `node:path`, `node:crypto`                                                         |
+| `port`    | `src/ports/`           | interfaces **shaped by what the inside needs**, never by what a tool does (Graça: "created to fit the Application Core needs and not simply mimic the tools APIs") | `domain`, `port`; the same externals                                                                              |
 | `app`     | `src/*.ts`             | use cases over ports; **no I/O defaults** — a use case without its deps does not compile                                                                           | `domain`, `port`, `app`, the package's `.mjs`; Node's `util`/`url`/`module`                                             |
 | `adapter` | `src/adapters/<tool>/` | everything that knows `<tool>` exists, pure parsers included; used through its `index.ts`                                                                          | `domain`, `port`, its own folder, its tool's packages, the package's `.mjs`. **Never** `app`, **never** another adapter |
 | `root`    | `src/cli.ts`           | reads `process.*`, builds adapters, wires ports                                                                                                                    | anything                                                                                                                |

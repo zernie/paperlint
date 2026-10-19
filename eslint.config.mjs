@@ -255,9 +255,10 @@ export const IO_MODULES = [
   "readline/promises",
 ].flatMap((m) => [m, `node:${m}`]);
 
-/** What the inside may import from outside the repository: types, pure path arithmetic, hashing. */
+/** What the inside may import from outside the repository: types, pure collection helpers, pure path arithmetic, hashing. */
 export const INSIDE_EXTERNALS = [
   "ts-essentials",
+  "remeda",
   "path",
   "node:path",
   "crypto",
