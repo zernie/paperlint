@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  readingText,
   deadlineOrderProblems,
   deadlinesInForce,
   instantOf,
@@ -382,5 +383,33 @@ describe("instantOf", () => {
       const r = instantOf(bad);
       expect(r.ok, bad).toBe(false);
     }
+  });
+});
+
+describe("readingText — the one way a reading is printed", () => {
+  it("🔴 a portal's reading says when and where it was read, that venues move dates, and to re-check", () => {
+    expect(
+      readingText({
+        at: "2026-10-21T11:59:59Z",
+        source: "portal",
+        url: "https://msr2027.hotcrp.com/deadlines",
+        read: "2026-10-19",
+      }),
+    ).toBe(
+      "2026-10-21T11:59:59Z, the portal's reading on 2026-10-19 from https://msr2027.hotcrp.com/deadlines — venues move dates: re-check there before relying on it",
+    );
+  });
+
+  it("a call's reading: when and where it was read", () => {
+    expect(
+      readingText({
+        at: "2026-10-24T11:59:59Z",
+        source: "call",
+        url: "https://2027.msrconf.org/cfp",
+        read: "2026-10-05",
+      }),
+    ).toBe(
+      "2026-10-24T11:59:59Z, the call's reading on 2026-10-05 from https://2027.msrconf.org/cfp",
+    );
   });
 });

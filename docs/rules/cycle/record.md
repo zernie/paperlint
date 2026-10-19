@@ -91,8 +91,9 @@ Failing — a cycle at `paperlint:msr` that copies the portal's reading the pres
 
 ```text
   1:1  error  paperlint.json, cycle «msr-2027»: the "submission" deadline records a portal reading,
-              and the preset paperlint:msr carries the portal's reading of it (2026-10-21T11:59:59Z,
-              read 2026-10-19) — a second copy drifts when paperlint updates the preset: delete this
+              and the preset paperlint:msr carries it (2026-10-21T11:59:59Z, the portal's reading on
+              2026-10-19 from https://msr2027.hotcrp.com/deadlines — venues move dates: re-check there
+              before relying on it) — a second copy drifts when paperlint updates the preset: delete this
               one (the call's reading and an override stay)  cycle/record
 ```
 

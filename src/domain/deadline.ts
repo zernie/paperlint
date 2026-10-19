@@ -75,6 +75,17 @@ export interface Observation {
   readonly read: IsoDate;
 }
 
+/**
+ * THE ONE WAY a deadline reading is printed: the instant, and where and when it was read. A portal's
+ * reading adds that venues move dates and to re-check the page before relying on it — MSR moved both
+ * its deadlines after the preset read them, and the preset kept the old ones for two weeks (#235).
+ * Used by `submission show` and the `cycle/record` messages. Pure.
+ */
+export const readingText = (o: Observation): string =>
+  o.source === "portal"
+    ? `${o.at}, the portal's reading on ${o.read} from ${o.url} — venues move dates: re-check there before relying on it`
+    : `${o.at}, the ${o.source}'s reading on ${o.read} from ${o.url}`;
+
 /** A human decision that another instant binds, with why and the file it rests on. */
 export interface Override {
   readonly at: Instant;

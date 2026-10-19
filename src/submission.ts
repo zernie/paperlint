@@ -45,8 +45,8 @@ import type { PaperSettings } from "./paper-settings.ts";
 import { currentDeadlines } from "./domain/cycle.ts";
 import {
   deadlinesInForce,
+  readingText,
   type InForce,
-  type Observation,
 } from "./domain/deadline.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import {
@@ -273,23 +273,20 @@ const pdfLine = (view: SubmissionView): string =>
     ? "portal PDF    none"
     : `portal PDF    ${view.pdf.hash}, ${view.pdf.size === null ? "?" : String(view.pdf.size)} bytes, uploaded ${iso(view.pdf.uploadedAt)}`;
 
-const readingText = (o: Observation): string =>
-  `${o.source} ${o.at}, read ${o.read}`;
-
 /** One deadline in force, what set it, and the other readings of it. Pure. */
 export function deadlineLine(d: InForce): string {
   const by = d.by;
-  const why =
+  const set =
     by.kind === "override"
-      ? `override: ${by.override.reason} (${by.override.evidence})`
-      : `${by.reading.source}, read ${by.reading.read}`;
+      ? `${d.at} — override: ${by.override.reason} (${by.override.evidence})`
+      : readingText(by.reading);
   const others = d.readings.filter(
     (r) => by.kind === "override" || r !== by.reading,
   );
   const also = others.length
     ? `; also ${others.map(readingText).join("; ")}`
     : "";
-  return `deadline      ${d.what} ${d.at} — ${why}${also}`;
+  return `deadline      ${d.what} ${set}${also}`;
 }
 
 /** `show`'s report. Pure. */

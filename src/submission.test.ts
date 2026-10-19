@@ -722,9 +722,9 @@ test("show prints the current attempt's deadlines in force: the preset's portal 
   });
   assert.ok(t.ok, JSON.stringify(t));
   assert.deepEqual(t.value.deadlines.map(deadlineLine), [
-    "deadline      registration 2026-10-21T11:59:59Z — call, read 2026-10-05",
-    "deadline      submission 2026-10-21T11:59:59Z — portal, read 2026-10-19; also call 2026-10-24T11:59:59Z, read 2026-10-05",
-    "deadline      resubmission 2026-10-27T04:00:00Z — override: the chairs extended updates by mail (mail/extension.eml); also portal 2026-10-24T11:59:59Z, read 2026-10-19",
+    "deadline      registration 2026-10-21T11:59:59Z, the call's reading on 2026-10-05 from https://2027.msrconf.org/cfp",
+    "deadline      submission 2026-10-21T11:59:59Z, the portal's reading on 2026-10-19 from https://msr2027.hotcrp.com/deadlines — venues move dates: re-check there before relying on it; also 2026-10-24T11:59:59Z, the call's reading on 2026-10-05 from https://2027.msrconf.org/cfp",
+    "deadline      resubmission 2026-10-27T04:00:00Z — override: the chairs extended updates by mail (mail/extension.eml); also 2026-10-24T11:59:59Z, the portal's reading on 2026-10-19 from https://msr2027.hotcrp.com/deadlines — venues move dates: re-check there before relying on it",
   ]);
 });
 
