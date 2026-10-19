@@ -162,6 +162,7 @@ async function run(
     readonly files?: Files;
     readonly env?: Readonly<Record<string, string>>;
     readonly portal?: ReturnType<typeof fakePortal>;
+    readonly cwd?: string;
   } = {},
 ) {
   const out: string[] = [];
@@ -173,7 +174,7 @@ async function run(
     {
       files: fs,
       presets: { files: fs, venuesDir: presetsDir() },
-      cwd: "/w",
+      cwd: o.cwd ?? "/w",
       env: (n) => (o.env ?? { HOTCRP_TOKEN_127: "hct_secret" })[n],
       portalFor: portal.portalFor,
       latex: latexReader,
@@ -487,7 +488,7 @@ test("🔴 only the site-less HOTCRP_TOKEN set: the rename instruction, and noth
   assert.equal(r.code, 2);
   assert.deepEqual(r.seen, []);
   assert.deepEqual(r.errs, [
-    "HOTCRP_TOKEN is no longer read: tokens are per hotcrp site. Rename it to HOTCRP_TOKEN_127 for 127.0.0.1 (the site it was made on) and unset HOTCRP_TOKEN; if it was made on another site, create one here instead:",
+    "HOTCRP_TOKEN is no longer read: tokens are per hotcrp site. If it was made on 127.0.0.1, rename it to HOTCRP_TOKEN_127; if it was made on another site, rename it to that site's variable (HOTCRP_TOKEN_<LABEL>) and create a token here:",
     ...STEPS,
   ]);
   assert.doesNotMatch(r.errs.join("\n"), /hct_old/);
@@ -777,18 +778,21 @@ const facts = (o: { readonly sha?: string; readonly title?: string } = {}) =>
     appendix_anchor_page: null,
   });
 
+const DEFAULT_TEX =
+  "\\documentclass{article}\n\\title{Agents That\\\\ Lie}\n\\begin{document}\\maketitle\\end{document}\n";
+
 /** A paper ready for `new`: authors declared, no submission yet, a build with its facts. */
 const newFiles = (o: {
   readonly paper?: Readonly<Record<string, unknown>>;
-  readonly tex?: string;
+  readonly tex?: string | null;
   readonly facts?: string | null;
 }) =>
   files({
     paper: o.paper ?? { extends: "../../venue.jsonc", authors: AUTHORS },
     extra: {
-      [`${PAPER}/paper.tex`]:
-        o.tex ??
-        "\\documentclass{article}\n\\title{Agents That\\\\ Lie}\n\\begin{document}\\maketitle\\end{document}\n",
+      ...(o.tex === null
+        ? {}
+        : { [`${PAPER}/paper.tex`]: o.tex ?? DEFAULT_TEX }),
       ...(o.facts === null
         ? {}
         : { [`${PAPER}/_build/paper.facts.json`]: o.facts ?? facts() }),
@@ -1081,4 +1085,111 @@ test("titleOf: \\title as text; an author's macro in it → the PDF's Title; nei
     error:
       "no \\title in paper.tex, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild",
   });
+});
+
+test("🔴 new --save, but paperlint.json changed under it: the id is printed with the line to add by hand, exit 1", async () => {
+  const config = absolutePath(`${PAPER}/paperlint.json`);
+  for (const [swap, why] of [
+    [null, "the file is gone"],
+    ["{", "not JSON: "],
+    ["[1]", "must be a JSON object"],
+  ] as const) {
+    const fs = newFiles({});
+    const created = { now: false };
+    const portal = fakePortal({});
+    const r = await run(
+      { sub: "new", save: true },
+      {
+        files: {
+          ...fs,
+          readBytes: (p) =>
+            created.now && p === config
+              ? swap === null
+                ? null
+                : new TextEncoder().encode(swap)
+              : fs.readBytes(p),
+        },
+        portal: {
+          ...portal,
+          portalFor: (site, token) => {
+            const inner = portal.portalFor(site, token);
+            return {
+              ...inner,
+              create: async (paper, o) => {
+                const a = await inner.create(paper, o);
+                created.now = true;
+                return a;
+              },
+            };
+          },
+        },
+      },
+    );
+    assert.equal(r.code, 1, why);
+    assert.equal(r.errs.length, 1);
+    const line = r.errs[0] ?? "";
+    assert.ok(
+      line.startsWith(
+        "submission 42 was created, but papers/p/paperlint.json was not changed (",
+      ),
+      line,
+    );
+    assert.ok(line.includes(why), line);
+    assert.ok(
+      (r.errs[0] ?? "").endsWith(
+        `) — add "submission": { "id": 42 } to the current attempt by hand`,
+      ),
+    );
+  }
+});
+
+test("new: no paper.tex — the PDF's Title stands in; without one either, the fix is named", async () => {
+  const titled = await run(
+    { sub: "new" },
+    { files: newFiles({ tex: null, facts: facts({ title: "From The PDF" }) }) },
+  );
+  assert.equal(titled.code, 0, titled.errs.join("\n"));
+  assert.equal(titled.out[1], "title         From The PDF");
+  const untitled = await run(
+    { sub: "new" },
+    { files: newFiles({ tex: null }) },
+  );
+  assert.equal(untitled.code, 2);
+  assert.deepEqual(untitled.errs, [
+    "no \\title in paper.tex, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild",
+  ]);
+});
+
+test("new: --abstract naming no file is refused before anything is sent; run from the paper folder, the next command says `.`", async () => {
+  const missing = await run(
+    { sub: "new", abstract: "nope.txt" },
+    { files: newFiles({}) },
+  );
+  assert.equal(missing.code, 2);
+  assert.deepEqual(missing.errs, ["--abstract: no file at nope.txt"]);
+  assert.deepEqual(missing.seen[0]?.calls, []);
+  const here = await run(
+    { sub: "new", paperDir: "." },
+    {
+      files: newFiles({}),
+      cwd: PAPER,
+      portal: fakePortal({
+        create: ok({
+          httpStatus: 200,
+          valid: true,
+          changes: [],
+          messages: [],
+          dryRun: true,
+          id: null,
+        }),
+      }),
+    },
+  );
+  assert.equal(here.code, 0, here.errs.join("\n"));
+  assert.ok(here.out.includes("changes       —"));
+  assert.ok(
+    here.out.includes(
+      "  - then mark it submitted: npx paperlint submission update . --submit (a dry run; --save after your yes)",
+    ),
+  );
 });

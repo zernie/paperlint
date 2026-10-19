@@ -61,8 +61,8 @@ test("GET <site>/deadlines, no credential; the page parses to the venue's deadli
   assert.deepEqual(
     r.value.deadlines.map((d) => [d.what, d.at]),
     [
-      ["submission", "2026-10-20T04:00:00Z"],
-      ["resubmission", "2026-10-23T04:00:00Z"],
+      ["submission", "2026-10-21T11:59:59Z"],
+      ["resubmission", "2026-10-24T11:59:59Z"],
     ],
   );
 });

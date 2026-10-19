@@ -19,12 +19,10 @@ const START = /^\s*abstract\b\s*[-—–:.]?\s*/iu;
 const END =
   /^\s*(ccs\s+concepts|keywords|key\s+words|index\s+terms|acm\s+reference\s+format|(1|i)\.?\s+introduction)\b/iu;
 
-/** A hyphen glued to the word before it, at the end of a line: the ASCII one or the Unicode hyphen. */
-const GLUED_HYPHEN = /[\p{L}\p{N}][-\u2010]$/u;
-
-const lastWord = (line: string): string =>
-  /(\p{L}+)[-\u2010]$/u.exec(line)?.[1] ?? "";
-const firstWord = (line: string): string => /^(\p{L}+)/u.exec(line)?.[1] ?? "";
+/** The word a line ends on, with the hyphen glued to it: the ASCII one or the Unicode hyphen. */
+const GLUED_HYPHEN = /[\p{L}\p{N}]+[-\u2010]$/u;
+/** The lower-case word a line starts with. */
+const LOWER_START = /^\p{Ll}+/u;
 
 /**
  * Two lines as one text. A hyphen glued to its word: before a lower-case word, a hyphenated word
@@ -36,15 +34,25 @@ function joinLines(source: string): (acc: string, line: string) => string {
   return (acc, line) => {
     if (acc === "") return line;
     if (acc.endsWith("\u00ad")) return `${acc.slice(0, -1)}${line}`;
-    if (!GLUED_HYPHEN.test(acc)) return `${acc} ${line}`;
-    if (!/^\p{Ll}/u.test(line)) return `${acc}${line}`;
-    const compound = `${lastWord(acc)}-${firstWord(line)}`.toLowerCase();
+    const left = GLUED_HYPHEN.exec(acc);
+    if (left === null) return `${acc} ${line}`;
+    const right = LOWER_START.exec(line);
+    if (right === null) return `${acc}${line}`;
+    const compound = `${left[0].slice(0, -1)}-${right[0]}`.toLowerCase();
     const stem = acc.slice(0, -1);
     return lowerSource.includes(compound)
       ? `${stem}-${line}`
       : `${stem}${line}`;
   };
 }
+
+/** The first two pages' lines, trimmed: where an abstract and the block after it stand. */
+const linesOf = (pages: readonly string[]): readonly string[] =>
+  pages
+    .slice(0, 2)
+    .join("\n")
+    .split("\n")
+    .map((l) => l.trim());
 
 /**
  * The abstract in the text of a PDF's pages, as one paragraph of plain text; `source` is the paper's
@@ -54,11 +62,7 @@ export function abstractOfPages(
   pages: readonly string[],
   source: string,
 ): Result<string, string> {
-  const lines = pages
-    .slice(0, 2)
-    .join("\n")
-    .split("\n")
-    .map((l) => l.trim());
+  const lines = linesOf(pages);
   const start = lines.findIndex((l) => START.test(l));
   if (start < 0)
     return err(
@@ -70,8 +74,9 @@ export function abstractOfPages(
     return err(
       "the PDF's abstract has no end paperlint knows: no «CCS Concepts», «Keywords», «Index Terms», «ACM Reference Format» or first section after it on the first two pages",
     );
-  const first = (lines[start] ?? "").replace(START, "");
-  const text = [first, ...rest.slice(0, end)]
+  const text = lines
+    .slice(start, start + 1 + end)
+    .map((l, i) => (i === 0 ? l.replace(START, "") : l))
     .filter((l) => l !== "")
     .reduce(joinLines(source), "")
     .replace(/\s+/gu, " ")

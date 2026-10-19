@@ -86,7 +86,7 @@ describe("refreshPreset on the recorded MSR 2027 page", () => {
 
   test("the portal moved the submission: that reading changes, with today's read day; the resubmission keeps its own", async () => {
     const earlier = msrText.replace(
-      '"at": "2026-10-20T04:00:00Z"',
+      '"at": "2026-10-21T11:59:59Z"',
       '"at": "2026-10-19T04:00:00Z"',
     );
     const o = as(
@@ -94,22 +94,22 @@ describe("refreshPreset on the recorded MSR 2027 page", () => {
         file: MSR,
         text: earlier,
         read: recorded("msr2027"),
-        today: "2026-10-06",
+        today: "2026-10-20",
       }),
       "changed",
     );
     expect(o.changes).toEqual([
-      "submission: 2026-10-19T04:00:00Z → 2026-10-20T04:00:00Z",
+      "submission: 2026-10-19T04:00:00Z → 2026-10-21T11:59:59Z",
     ]);
     expect(readings(o.text).map((r) => [r.what, r.at, r.read])).toEqual([
-      ["submission", "2026-10-20T04:00:00Z", "2026-10-06"],
-      ["resubmission", "2026-10-23T04:00:00Z", "2026-10-05"],
+      ["submission", "2026-10-21T11:59:59Z", "2026-10-20"],
+      ["resubmission", "2026-10-24T11:59:59Z", "2026-10-19"],
     ]);
     // Only the deadlines block differs: the comments and every other key are the file's own.
     expect(o.text).toBe(
       msrText.replace(
-        '"read": "2026-10-05",\n    },\n    {\n      "what": "resubmission"',
-        '"read": "2026-10-06",\n    },\n    {\n      "what": "resubmission"',
+        '"read": "2026-10-19",\n    },\n    {\n      "what": "resubmission"',
+        '"read": "2026-10-20",\n    },\n    {\n      "what": "resubmission"',
       ),
     );
   });
@@ -125,13 +125,13 @@ describe("refreshPreset — a preset with no readings yet, and the ones it skips
         file: MSR,
         text: bare,
         read: recorded("msr2027"),
-        today: "2026-10-05",
+        today: "2026-10-19",
       }),
       "changed",
     );
     expect(o.changes).toEqual([
-      "submission: added 2026-10-20T04:00:00Z",
-      "resubmission: added 2026-10-23T04:00:00Z",
+      "submission: added 2026-10-21T11:59:59Z",
+      "resubmission: added 2026-10-24T11:59:59Z",
     ]);
     expect(readings(o.text)).toEqual(readings(msrText));
   });
@@ -233,11 +233,11 @@ describe("refreshReadings — what the page says, over what the preset said", ()
   test("a reading the portal no longer lists is kept and noted; a call's reading is never touched", () => {
     const r = refreshReadings(
       [
-        reading("submission", "2026-10-20T04:00:00Z"),
+        reading("submission", "2026-10-21T11:59:59Z"),
         reading("submission", "2026-10-21T11:59:59Z", "call"),
         reading("camera-ready", "2026-12-01T00:00:00Z"),
       ],
-      page([{ what: "submission", at: "2026-10-20T04:00:00Z" }]),
+      page([{ what: "submission", at: "2026-10-21T11:59:59Z" }]),
       "https://x.example/deadlines",
       "2026-10-06",
     );
@@ -246,7 +246,7 @@ describe("refreshReadings — what the page says, over what the preset said", ()
       "camera-ready: no longer on the page — kept as read 2026-10-01",
     ]);
     expect(r.readings).toEqual([
-      reading("submission", "2026-10-20T04:00:00Z"),
+      reading("submission", "2026-10-21T11:59:59Z"),
       reading("submission", "2026-10-21T11:59:59Z", "call"),
       reading("camera-ready", "2026-12-01T00:00:00Z"),
     ]);
@@ -257,7 +257,7 @@ describe("refreshReadings — what the page says, over what the preset said", ()
       [],
       page([
         { what: "submission", at: "2026-10-22T04:00:00Z" },
-        { what: "submission", at: "2026-10-20T04:00:00Z" },
+        { what: "submission", at: "2026-10-21T11:59:59Z" },
         { what: null, at: "2026-09-01T00:00:00Z" },
       ]),
       "https://x.example/deadlines",
@@ -266,14 +266,14 @@ describe("refreshReadings — what the page says, over what the preset said", ()
     expect(r.readings).toEqual([
       {
         what: "submission",
-        at: "2026-10-20T04:00:00Z",
+        at: "2026-10-21T11:59:59Z",
         source: "portal",
         url: "https://x.example/deadlines",
         read: "2026-10-06",
       },
     ]);
     expect(r.notes).toEqual([
-      "submission: the page lists 2026-10-20T04:00:00Z, 2026-10-22T04:00:00Z — the earliest is recorded",
+      "submission: the page lists 2026-10-21T11:59:59Z, 2026-10-22T04:00:00Z — the earliest is recorded",
     ]);
   });
 });
@@ -332,7 +332,7 @@ function presetsDirWith(): string {
   writeFileSync(
     join(dir, "msr.jsonc"),
     atServer("msr").replace(
-      '"at": "2026-10-20T04:00:00Z"',
+      '"at": "2026-10-21T11:59:59Z"',
       '"at": "2026-10-19T04:00:00Z"',
     ),
   );
@@ -366,13 +366,13 @@ describe("the script, as .github/workflows/deadlines.yml runs it", () => {
       ]); // rejects on a non-zero exit, with the output
       expect(
         readings(readFileSync(join(dir, "msr.jsonc"), "utf8"))[0]?.at,
-      ).toBe("2026-10-20T04:00:00Z");
+      ).toBe("2026-10-21T11:59:59Z");
       expect(r.stdout).toMatch(
         /^::warning title=deadlines::gone\.jsonc: could not read http:\/\/127\.0\.0\.1:\d+\/gone\/deadlines — HTTP 404: No such conference$/m,
       );
       const md = readFileSync(summary, "utf8");
       expect(md).toMatch(
-        /^- `msr\.jsonc` \(http:\/\/127\.0\.0\.1:\d+\/msr\/deadlines\)\n {2}- submission: 2026-10-19T04:00:00Z → 2026-10-20T04:00:00Z$/m,
+        /^- `msr\.jsonc` \(http:\/\/127\.0\.0\.1:\d+\/msr\/deadlines\)\n {2}- submission: 2026-10-19T04:00:00Z → 2026-10-21T11:59:59Z$/m,
       );
       expect(md).toMatch(/could not read/);
     },

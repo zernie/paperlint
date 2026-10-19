@@ -544,6 +544,7 @@ test("a portal that does not answer is unreachable, with the network's words", a
   for (const r of [
     await down.show(7),
     await down.update(7, CHANGE, { save: false }),
+    await down.create(NEW, { save: false }),
   ]) {
     assert.equal(!r.ok && r.error.kind, "unreachable");
     assert.ok(!r.ok && r.error.kind === "unreachable" && r.error.detail !== "");

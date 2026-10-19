@@ -1,10 +1,10 @@
 ---
 name: submission-portal
-description: "Create, read or change a paper's submission on the venue's HotCRP portal via `paperlint submission new|show|update`: register the paper (title, abstract, authors, PDF), replace the PDF or abstract, mark it submitted, check it is really \"Submitted\", and verify by sha256 that the portal holds the latest build. Use when the paper is not yet registered on HotCRP, when the PDF or abstract there needs replacing, when asked whether the paper is truly submitted or which PDF reviewers see, or before a deadline. Composes with submit-paper (what to submit); this gets it onto the portal and proves it landed."
+description: "Create, read or change a paper's submission on the venue's HotCRP portal via `paperlint submission new|show|update`: register the paper, replace the PDF or abstract, mark it submitted, and verify by sha256 that the portal holds the latest build. Use when the paper is not yet on HotCRP, when its PDF or abstract there needs replacing, when asked whether it is truly submitted, or before a deadline. Composes with submit-paper (what to submit)."
 allowed-tools: [Read, Grep, Glob, Bash]
 ---
 
-<!-- vigiles:sha256:759071eb22c9d421 compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:ab427273e95d68f2 compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — create, read and update the submission on the portal, then prove it landed
 
@@ -22,7 +22,8 @@ run; HotCRP's own complaints about a missing required field arrive as `portal sa
 
 ## Token
 
-One variable per HotCRP site: `HOTCRP_TOKEN_<first label of the host, upper-cased>` —
+One variable per HotCRP site: `HOTCRP_TOKEN_<first label of the host, upper-cased>` (the last path
+segment instead, for a site served under a path) —
 `HOTCRP_TOKEN_MSR2027` for `msr2027.hotcrp.com`, `HOTCRP_TOKEN_AIDC` for `aidc.submit.acsac.org`. A
 token works only on the site it was made on, so two venues take two variables. A plain
 `HOTCRP_TOKEN` is NOT read: set alone, the command stops and says to rename it.
@@ -79,7 +80,8 @@ The same steps as commands, in order (`<paper>` is the paper's folder):
 
 ```bash
 npx paperlint build papers/<paper>
-npx paperlint submission new papers/<paper>          # only without a submission id
+# only while the paper has no submission id:
+npx paperlint submission new papers/<paper>
 # … the author reads the dry run and says yes …
 npx paperlint submission new papers/<paper> --save
 npx paperlint submission show papers/<paper>

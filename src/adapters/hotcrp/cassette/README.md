@@ -26,7 +26,7 @@ These files ship in the npm package with the rest of `src/`, like the tests besi
 ## The deadlines pages
 
 `deadlines-<site>.html` are five live sites' `GET /deadlines` pages and one site that does not exist,
-recorded whole on 2026-10-05 (`curl`, no account): the page is public and carries no personal data,
+recorded whole on 2026-10-05 (`curl`, no account; `deadlines-msr2027.html` re-recorded 2026-10-19 18:27 UTC, when the portal had moved both its deadlines — #235): the page is public and carries no personal data,
 so nothing is replaced. `deadlines.test.ts` parses each through the adapter's real parser; the
 expected values were read off the pages' text by hand first. `/api/deadlines` on the same sites
 answers 401 «Missing credentials», so the HTML page is the source.

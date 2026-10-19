@@ -14,13 +14,48 @@ test("tokenVariable: the kind's prefix and the host's first label, upper-cased, 
   assert.equal(
     tokenVariable({
       kind: "hotcrp",
-      url: "https://ase-2027.hotcrp.com:8443/x",
+      url: "https://ase-2027.hotcrp.com:8443",
     }),
     "HOTCRP_TOKEN_ASE_2027",
   );
   assert.equal(
     tokenVariable({ kind: "hotcrp", url: "http://127.0.0.1:9" }),
     "HOTCRP_TOKEN_127",
+  );
+});
+
+test("🔴 tokenVariable: a site served under a path takes its last path segment — one host, many conferences", () => {
+  assert.equal(
+    tokenVariable({
+      kind: "hotcrp",
+      url: "https://hotcrp.example.edu/conf2027",
+    }),
+    "HOTCRP_TOKEN_CONF2027",
+  );
+  assert.equal(
+    tokenVariable({
+      kind: "hotcrp",
+      url: "https://hotcrp.example.edu/conf2027/",
+    }),
+    "HOTCRP_TOKEN_CONF2027",
+  );
+  assert.equal(
+    tokenVariable({
+      kind: "hotcrp",
+      url: "https://hotcrp.example.edu/sec/2027-fall",
+    }),
+    "HOTCRP_TOKEN_2027_FALL",
+  );
+  assert.equal(
+    tokenVariable({ kind: "hotcrp", url: "https://msr2027.hotcrp.com/" }),
+    "HOTCRP_TOKEN_MSR2027",
+  );
+});
+
+test("tokenVariable: a portal URL that does not parse is named by its first label", () => {
+  assert.equal(
+    tokenVariable({ kind: "hotcrp", url: "msr2027.hotcrp.com" }),
+    "HOTCRP_TOKEN_MSR2027",
   );
 });
 

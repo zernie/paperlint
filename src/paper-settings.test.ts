@@ -72,6 +72,15 @@ describe("parsePaperSettings", () => {
 });
 
 describe("parsePaperSettings — optional keys", () => {
+  it("reads authors, in order, an absent affiliation as null", () => {
+    const r = parsePaperSettings({
+      authors: [{ name: "Ada", email: "ada@example.org" }],
+    });
+    expect(r.ok && r.value.authors).toEqual([
+      { name: "Ada", email: "ada@example.org", affiliation: null },
+    ]);
+  });
+
   it("accepts $comment, JSON Schema's comment keyword, and ignores it", () => {
     expect(
       parsePaperSettings({ extends: "paperlint:aisec", $comment: "why" }).ok,
@@ -110,6 +119,11 @@ describe("parsePaperSettings — optional keys", () => {
       /"papersDir" is a project setting — set it in the root paperlint\.json/,
     ],
     ["not an object at all", ["aisec"], /must be a JSON object/],
+    [
+      "authors that are not a list of authors",
+      { authors: [{ name: "A" }] },
+      /"authors"\[0\]: "email" must be an email address/,
+    ],
   ])("refuses %s", (_, json, why) => {
     const r = parsePaperSettings(json);
     expect(r.ok).toBe(false);

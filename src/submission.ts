@@ -17,6 +17,7 @@
  */
 import { basename, join, resolve } from "node:path";
 import { absolutePath } from "./domain/paths.ts";
+import { messageOf } from "./domain/text.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import { sha256Hex, type Sha256 } from "./domain/sha256.ts";
 import {
@@ -58,7 +59,6 @@ import { LINE_BREAK, OPAQUE, runText } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
 import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
 import { MAIN } from "./build.ts";
-import { parsePaperSettings } from "./paper-settings.ts";
 
 /** Where on a portal's site an author creates a token, and the scopes each subcommand needs. */
 const TOKEN_PAGE: Readonly<
@@ -98,7 +98,7 @@ export function tokenProblemLines(
   const head =
     p.kind === "missing"
       ? `no ${portal.kind} token for ${portal.url}: ${p.variable} is not set`
-      : `${p.siteLess} is no longer read: tokens are per ${portal.kind} site. Rename it to ${p.variable} for ${hostOf(portal.url)} (the site it was made on) and unset ${p.siteLess}; if it was made on another site, create one here instead:`;
+      : `${p.siteLess} is no longer read: tokens are per ${portal.kind} site. If it was made on ${hostOf(portal.url)}, rename it to ${p.variable}; if it was made on another site, rename it to that site's variable (${p.siteLess}_<LABEL>) and create a token here:`;
   return [head, ...tokenSteps(portal, p.variable)];
 }
 
@@ -549,20 +549,27 @@ export function createLines(
   ];
 }
 
+/** A file's JSON, or why there is none: gone, or not JSON. */
+function jsonAt(files: Files, path: string): Result<unknown, string> {
+  const bytes = bytesAt(files, path);
+  if (bytes === null) return err("the file is gone");
+  try {
+    return ok(JSON.parse(new TextDecoder().decode(bytes)));
+  } catch (e) {
+    return err(`not JSON: ${messageOf(e)}`);
+  }
+}
+
 /** `paperlint.json` with the new id recorded in it, written; or why it was not. */
 function recordId(
   config: string,
   id: number,
   deps: SubmissionDeps,
 ): Result<null, string> {
-  const bytes = bytesAt(deps.files, config);
-  const json: unknown =
-    bytes === null ? {} : JSON.parse(new TextDecoder().decode(bytes));
-  const next = withSubmissionId(json, id);
+  const json = jsonAt(deps.files, config);
+  if (!json.ok) return json;
+  const next = withSubmissionId(json.value, id);
   if (!next.ok) return next;
-  const back = parsePaperSettings(next.value);
-  if (!back.ok || back.value.submission?.id !== id)
-    return err(back.ok ? "the id does not read back" : back.error);
   deps.files.writeAtomic(
     absolutePath(config),
     new TextEncoder().encode(`${JSON.stringify(next.value, null, 2)}\n`),

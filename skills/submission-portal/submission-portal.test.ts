@@ -34,12 +34,15 @@ const argvOf = (command: string): string[] =>
     .split(/\s+/)
     .filter(Boolean);
 
-test("the skill names show, a dry run and a save — and nothing else", () => {
+test("the skill names new, show, a dry run and a save of each change — and nothing else", () => {
   const kinds = commands.map((c) => {
     const a = parseArgs(argvOf(c));
     return `${String(a.paths[0])}${a.save ? " --save" : ""}`;
   });
-  assert.deepEqual([...new Set(kinds)], ["show", "update", "update --save"]);
+  assert.deepEqual(
+    [...new Set(kinds)],
+    ["new", "new --save", "show", "update", "update --save"],
+  );
 });
 
 test("every `paperlint submission` command in the skill is one the CLI runs", () => {
@@ -65,15 +68,24 @@ test("every `paperlint submission` command in the skill is one the CLI runs", ()
   }
 });
 
-test("🔴 the procedure reads, dry-runs, then saves, then reads again — never saves first", () => {
+test("🔴 each change is dry-run before it is saved, read before it is changed, and read again after", () => {
   const order = commands.map((c) => {
     const a = parseArgs(argvOf(c));
-    return a.paths[0] === "show" ? "show" : a.save ? "save" : "dry";
+    const sub = String(a.paths[0]);
+    return sub === "show" ? "show" : `${sub} ${a.save ? "save" : "dry"}`;
   });
-  const firstSave = order.indexOf("save");
-  assert.ok(firstSave > order.indexOf("dry"), order.join(" → "));
-  assert.ok(order.indexOf("dry") > order.indexOf("show"), order.join(" → "));
-  assert.ok(order.lastIndexOf("show") > firstSave, order.join(" → "));
+  const at = (step: string): number => order.indexOf(step);
+  const shown = order.join(" → ");
+  for (const sub of ["new", "update"]) {
+    assert.ok(at(`${sub} dry`) >= 0, shown);
+    assert.ok(at(`${sub} save`) > at(`${sub} dry`), shown);
+  }
+  assert.ok(at("show") > at("new save"), shown);
+  assert.ok(at("update dry") > at("show"), shown);
+  assert.ok(
+    order.lastIndexOf("show") > order.lastIndexOf("update save"),
+    shown,
+  );
 });
 
 test("the shared per-skill checks pass", async () => {

@@ -32,9 +32,10 @@ Keys, each in the file that owns the fact, and a token:
 ```
 
 **The token** is per HotCRP site — one made on one site gets `401` from every other — so it is read
-from one variable per site: `HOTCRP_TOKEN_` and the first label of the portal's host, upper-cased,
-anything but a letter or digit as `_` (`msr2027.hotcrp.com` → `HOTCRP_TOKEN_MSR2027`,
-`aidc.submit.acsac.org` → `HOTCRP_TOKEN_AIDC`). A plain `HOTCRP_TOKEN` is not read; set alone, the
+from one variable per site: `HOTCRP_TOKEN_` and the first label of the portal's host — or, for a
+site served under a path, the path's last segment — upper-cased, anything but a letter or digit as
+`_` (`msr2027.hotcrp.com` → `HOTCRP_TOKEN_MSR2027`, `aidc.submit.acsac.org` → `HOTCRP_TOKEN_AIDC`,
+`hotcrp.example.edu/conf2027` → `HOTCRP_TOKEN_CONF2027`). A plain `HOTCRP_TOKEN` is not read; set alone, the
 command stops and tells you to rename it. Create the token on the site at `<site>/profile?t=developer`
 (**Account settings → Developer**) with the scopes `submeta:read` and `document:read` (`show`), and
 `submeta:write` and `document:write` (`update`, `new`). Set it in your environment — never paste it

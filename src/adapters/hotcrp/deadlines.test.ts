@@ -23,19 +23,19 @@ const read = (site: Site, status = 200) => {
 describe("parseDeadlinesPage", () => {
   it("a conference with a resubmission deadline: the list carries it, the status object does not", () => {
     expect(read("msr2027")).toEqual({
-      now: 1791194488.329003,
+      now: 1792434476.311902,
       open: true,
       blind: true,
       deadlines: [
         {
           what: "submission",
           label: "Submission deadline",
-          at: "2026-10-20T04:00:00Z",
+          at: "2026-10-21T11:59:59Z",
         },
         {
           what: "resubmission",
           label: "Resubmission deadline",
-          at: "2026-10-23T04:00:00Z",
+          at: "2026-10-24T11:59:59Z",
         },
       ],
     });
