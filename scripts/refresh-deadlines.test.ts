@@ -25,6 +25,8 @@ import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseDeadlinesPage } from "../src/adapters/hotcrp/index.ts";
 import { err } from "../src/domain/result.ts";
+import { fieldOf } from "../src/domain/record.ts";
+import yaml from "js-yaml";
 import { parsePreset } from "../src/tex-requirements.ts";
 import {
   argsOf,
@@ -345,7 +347,32 @@ function presetsDirWith(): string {
   return dir;
 }
 
+/** The flags `.github/workflows/deadlines.yml` gives `node` before the refresh script. */
+function workflowNodeFlags(): readonly string[] {
+  const text = readFileSync(
+    join(ROOT, ".github", "workflows", "deadlines.yml"),
+    "utf8",
+  );
+  const line = text
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => /^run: node .*scripts\/refresh-deadlines\.ts/.test(l));
+  assert.ok(
+    line,
+    "deadlines.yml has no `run: node … scripts/refresh-deadlines.ts`",
+  );
+  const words = line.replace(/^run: node /, "").split(/\s+/);
+  return words.slice(
+    0,
+    words.findIndex((w) => w.endsWith("refresh-deadlines.ts")),
+  );
+}
+
 describe("the script, as .github/workflows/deadlines.yml runs it", () => {
+  test("🔴 the workflow's own command runs with no dist/: the job installs with --ignore-scripts", () => {
+    expect(workflowNodeFlags()).toEqual(["--conditions=paperlint-source"]);
+  });
+
   // A real `node` process: Node strips the types of the script and everything it imports (TypeScript's
   // JSON parser, Prettier) cold — about a second alone, several on a loaded machine, past vitest's 5 s.
   test(
@@ -357,13 +384,23 @@ describe("the script, as .github/workflows/deadlines.yml runs it", () => {
       const dir = presetsDirWith();
       const summary = join(dir, "summary.md");
       // Asynchronously: the local server answers from THIS process, which a synchronous spawn blocks.
-      const r = await promisify(execFile)(process.execPath, [
-        join(ROOT, "scripts", "refresh-deadlines.ts"),
-        "--presets",
-        dir,
-        "--summary",
-        summary,
-      ]); // rejects on a non-zero exit, with the output
+      // The node flags are the workflow's own, the inherited NODE_OPTIONS are dropped, and
+      // test/no-dist.ts refuses any module in `dist/`: the job installs with --ignore-scripts.
+      const env = { ...process.env, NODE_OPTIONS: "" };
+      const r = await promisify(execFile)(
+        process.execPath,
+        [
+          ...workflowNodeFlags(),
+          "--import",
+          join(ROOT, "test", "no-dist.ts"),
+          join(ROOT, "scripts", "refresh-deadlines.ts"),
+          "--presets",
+          dir,
+          "--summary",
+          summary,
+        ],
+        { env },
+      ); // rejects on a non-zero exit, with the output
       expect(
         readings(readFileSync(join(dir, "msr.jsonc"), "utf8"))[0]?.at,
       ).toBe("2026-10-21T11:59:59Z");
@@ -428,4 +465,97 @@ describe("argsOf", () => {
       summary: null,
     });
   });
+});
+
+// ── a failed run is reported in one issue ──────────────────────────────────────────────
+
+/** The `run:` script of deadlines.yml's step named `name`, and its `if:`. */
+function workflowStep(name: string): {
+  readonly run: string;
+  readonly if: unknown;
+} {
+  const doc: unknown = yaml.load(
+    readFileSync(join(ROOT, ".github", "workflows", "deadlines.yml"), "utf8"),
+  );
+  const steps = fieldOf(fieldOf(fieldOf(doc, "jobs"), "refresh"), "steps");
+  assert.ok(Array.isArray(steps));
+  const list: readonly unknown[] = steps;
+  const step = list.find((s) => fieldOf(s, "name") === name);
+  const run = fieldOf(step, "run");
+  assert.ok(typeof run === "string", `no step "${name}" with a run script`);
+  return { run, if: fieldOf(step, "if") };
+}
+
+/**
+ * Runs the step's script under bash with a fake `gh` first on PATH: it records every call, and
+ * answers `issue list … --jq <expr>` with `issues` filtered through the real `jq`.
+ */
+async function runReportStep(issues: unknown): Promise<readonly string[]> {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "gh-fake-")));
+  const calls = join(dir, "calls.log");
+  writeFileSync(join(dir, "issues.json"), JSON.stringify(issues));
+  writeFileSync(
+    join(dir, "gh"),
+    [
+      "#!/usr/bin/env bash",
+      `printf '%s\\n' "$*" >> "${calls}"`,
+      'if [ "$1 $2" = "issue list" ]; then',
+      '  while [ "$#" -gt 0 ] && [ "$1" != "--jq" ]; do shift; done',
+      `  jq -r "$2" < "${join(dir, "issues.json")}"`,
+      "fi",
+    ].join("\n"),
+    { mode: 0o755 },
+  );
+  await promisify(execFile)(
+    "bash",
+    ["-c", workflowStep("report a failed refresh in one issue").run],
+    {
+      env: {
+        ...process.env,
+        PATH: `${dir}:${process.env["PATH"] ?? ""}`,
+        REPO: "zernie/paperlint",
+        RUN_URL: "https://github.com/zernie/paperlint/actions/runs/1",
+      },
+    },
+  );
+  return readFileSync(calls, "utf8").trim().split("\n");
+}
+
+describe("deadlines.yml — a failed refresh is reported, once", () => {
+  test("🔴 the step runs on failure only", () => {
+    expect(workflowStep("report a failed refresh in one issue").if).toBe(
+      "failure()",
+    );
+  });
+
+  test(
+    "no open issue: one is created, titled and linked to the run",
+    { timeout: 30_000 },
+    async () => {
+      const calls = await runReportStep([
+        { number: 9, title: "something else" },
+      ]);
+      expect(calls).toHaveLength(2);
+      expect(calls[0]).toMatch(
+        /^issue list --repo zernie\/paperlint --state open /,
+      );
+      expect(calls[1]).toMatch(
+        /^issue create --repo zernie\/paperlint --title deadline refresh failing --body .*https:\/\/github\.com\/zernie\/paperlint\/actions\/runs\/1/,
+      );
+    },
+  );
+
+  test(
+    "an open issue: it gets a comment with the run's link, no second issue",
+    { timeout: 30_000 },
+    async () => {
+      const calls = await runReportStep([
+        { number: 41, title: "deadline refresh failing" },
+      ]);
+      expect(calls).toHaveLength(2);
+      expect(calls[1]).toMatch(
+        /^issue comment 41 --repo zernie\/paperlint --body .*actions\/runs\/1/,
+      );
+    },
+  );
 });
