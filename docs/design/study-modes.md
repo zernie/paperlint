@@ -246,6 +246,8 @@ Read for this note (2026-10-16):
 | what the app asks of git                                      | `src/ports/git-history.ts`            | port    |
 | a directory's entries, links not followed                     | `src/ports/list-entries.ts`           | port    |
 | the studies with a mode, and the files under a study's folder | `src/study-modes.ts`                  | app     |
+| why a folder may not be entered, and how that is worded       | `src/domain/study-folder.ts`          | domain  |
+| what the study readers need of a study's folder               | `src/ports/study-folder.ts`           | port    |
 | the one reader of a study's folder, links not followed        | `src/study-folder.ts`                 | app     |
 | the order rule                                                | `src/outputs-before-decision-rule.ts` | app     |
 | the plans and histories `studies index` and `new` write from  | `src/study-index-input.ts`            | app     |

@@ -47,7 +47,8 @@ import type { Files } from "./ports/files.ts";
 import type { ListEntries } from "./ports/list-entries.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import { reproEntriesOf } from "./repro-layout-rule.ts";
-import { studyFolder, type StudyFolder } from "./study-folder.ts";
+import type { StudyFolder } from "./ports/study-folder.ts";
+import { studyFolder } from "./study-folder.ts";
 import { rulePageUrl } from "./venue-rules.ts";
 
 const STATUS_FILE = "PIPELINE-STATUS.md";

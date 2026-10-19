@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { decisionPath, readModeStudy, type ModeStudy } from "./study-modes.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
+import { folderRefusalText } from "./domain/study-folder.ts";
 import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
 import {
   STUDIES_FILE,
@@ -20,12 +21,8 @@ import {
   type Study,
 } from "./domain/study-registry.ts";
 import type { Committed, GitHistory } from "./ports/git-history.ts";
-import {
-  folderRefusalText,
-  studyFolder,
-  type StudyDeps,
-  type StudyFolder,
-} from "./study-folder.ts";
+import type { StudyFolder } from "./ports/study-folder.ts";
+import { studyFolder, type StudyDeps } from "./study-folder.ts";
 import { registryOf } from "./study-registry-rule.ts";
 import {
   refusal,

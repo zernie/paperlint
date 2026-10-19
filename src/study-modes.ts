@@ -14,7 +14,8 @@ import type {
   Study,
 } from "./domain/study-registry.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
-import type { StudyDeps, StudyFolder } from "./study-folder.ts";
+import type { StudyFolder } from "./ports/study-folder.ts";
+import type { StudyDeps } from "./study-folder.ts";
 
 /**
  * Every file under `dir`, relative to it, `/`-separated; none when it is not a directory. A symbolic

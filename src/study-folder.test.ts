@@ -6,7 +6,8 @@
  */
 import { expect, it } from "vitest";
 import { memoryFiles, memoryListEntries } from "./adapters/memory/index.ts";
-import { folderRefusalText, studyFolder } from "./study-folder.ts";
+import { folderRefusalText } from "./domain/study-folder.ts";
+import { studyFolder } from "./study-folder.ts";
 
 const PAPER = "/work/papers/example";
 const FOLDER = `${PAPER}/repro/P1-S01-outcome`;
