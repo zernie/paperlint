@@ -4,8 +4,7 @@
  * component at a time by the entries of each directory (`ListEntries`, which does not follow links),
  * and a path that passes through a link — the file itself, or any directory above it — is `linked`,
  * naming the link, before a single byte is read. Every reader of a study takes a `StudyFolder` and
- * not `Files`, so a read that follows a link cannot be written there; `eslint.config.mjs` holds the
- * other half, that no other `src/study-*.ts` imports the `Files` port.
+ * not `Files`, so a read that follows a link is not what those readers are handed.
  *
  * What goes through it, and who builds it (once per run, from the paper's folder):
  *   - the plan of a row: `repro/study-registered`, `repro/outputs-before-decision`, `studies gate`

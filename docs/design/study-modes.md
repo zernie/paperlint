@@ -152,13 +152,9 @@ a regular file. A directory or a symbolic link as the file itself is refused by 
 by the rule (`decision-not-file`); a symbolic link above the file is refused naming that link
 (`decision-linked`).
 
-What cannot be written: the plan reads, the result-file existence checks and the decision's path
-check take a `StudyFolder` and not `Files`, and `eslint.config.mjs` bans the `Files` port in the
-modules that read a study's folder (`src/study-modes.ts`, `src/study-gate.ts`,
-`src/study-index-input.ts`, `src/outputs-before-decision-rule.ts`; `test/eslint-study-folder.test.ts`).
-The ban cannot cover every `src/study-*.ts`: `src/study-registry-rule.ts` reads `repro/studies.json`
-and `repro/README.md`, which are not in a study's folder, with `Files`, and so does `src/studies.ts`
-when it writes the index. A study's outputs are only listed (`filesUnder`), by the same `ListEntries`.
+The plan reads, the result-file existence checks and the decision's path check take a `StudyFolder`
+and not `Files`, so a read that follows a link is not what those readers are handed. A study's
+outputs are only listed (`filesUnder`), by the same `ListEntries`.
 
 Only a **ready** plan's mode decides anything: the gate refuses a draft, naming its empty fields, and
 the order rule judges no draft — a draft may name no outputs, or an empty decision file.
