@@ -157,6 +157,7 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
 export const PAPER_ONLY_KEYS: readonly string[] = Object.freeze([
   "talk",
   "submission",
+  "authors",
   "cycles",
 ]);
 

@@ -150,20 +150,21 @@ Each stage's skills, what it writes and what checks it, drawn as one flow, with 
 
 ## 🧰 Commands
 
-| command                                                     | what it does                                                                   |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `npx paperlint init`                                        | sets the project up                                                            |
-| `npx paperlint new my-paper --venue <preset> --kind <kind>` | creates a paper folder for that venue, or completes an existing one            |
-| `npx paperlint build <paper>`                               | compiles `paper.tex` to `paper.pdf`, measures it, checks the references online |
-| `npx paperlint lint`                                        | runs every check over your papers; `--fix` fixes what can be fixed             |
-| `npx paperlint toolchain`                                   | installs TeX Live with the packages your venues need (~270 MB, ~3 min, once)   |
-| `npx paperlint doctor`                                      | checks the setup and exits non-zero if something is miswired                   |
-| `npx paperlint submission show <paper>`                     | the paper's submission on the venue's portal, and whether it holds your build  |
-| `npx paperlint submission update <paper>`                   | checks a new PDF/abstract against the portal; `--save` sends it for real       |
-| `npx paperlint studies new <paper> "<title>"`               | registers a study: the next id in `repro/studies.json`, its folder, the index  |
-| `npx paperlint studies index <paper>`                       | regenerates the index of the studies in `repro/README.md`                      |
-| `npx paperlint studies gate <paper> <id>`                   | exits 0 only once the study's decision is committed: run it before the study   |
-| `npx paperlint --help`                                      | every command and flag                                                         |
+| command                                                     | what it does                                                                            |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `npx paperlint init`                                        | sets the project up                                                                     |
+| `npx paperlint new my-paper --venue <preset> --kind <kind>` | creates a paper folder for that venue, or completes an existing one                     |
+| `npx paperlint build <paper>`                               | compiles `paper.tex` to `paper.pdf`, measures it, checks the references online          |
+| `npx paperlint lint`                                        | runs every check over your papers; `--fix` fixes what can be fixed                      |
+| `npx paperlint toolchain`                                   | installs TeX Live with the packages your venues need (~270 MB, ~3 min, once)            |
+| `npx paperlint doctor`                                      | checks the setup and exits non-zero if something is miswired                            |
+| `npx paperlint submission new <paper>`                      | creates the submission on the portal (title, abstract, authors, PDF); `--save` for real |
+| `npx paperlint submission show <paper>`                     | the paper's submission on the venue's portal, and whether it holds your build           |
+| `npx paperlint submission update <paper>`                   | checks a new PDF/abstract against the portal; `--save` sends it for real                |
+| `npx paperlint studies new <paper> "<title>"`               | registers a study: the next id in `repro/studies.json`, its folder, the index           |
+| `npx paperlint studies index <paper>`                       | regenerates the index of the studies in `repro/README.md`                               |
+| `npx paperlint studies gate <paper> <id>`                   | exits 0 only once the study's decision is committed: run it before the study            |
+| `npx paperlint --help`                                      | every command and flag                                                                  |
 
 ## 🧠 Skills
 
@@ -276,7 +277,7 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 - [`docs/configuration.md`](docs/configuration.md) — every setting, how `build` compiles, using your own ESLint
 - [`docs/rules.md`](docs/rules.md) — every check, venue presets, recording a submitted PDF
 - [`docs/references.md`](docs/references.md) — the reference check, and the cache file to commit
-- [`docs/submission.md`](docs/submission.md) — reading and updating a submission on the venue's portal (HotCRP)
+- [`docs/submission.md`](docs/submission.md) — creating, reading and updating a submission on the venue's portal (HotCRP); one token variable per site
 - [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need
 - [`docs/toolchain.md`](docs/toolchain.md) — TeX Live, and Banal (HotCRP's page-geometry checker, GPL)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how the package is tested and released, and adding a venue to it
