@@ -4,81 +4,58 @@ description: "Create, read or change a paper's submission on the venue's HotCRP 
 allowed-tools: [Read, Grep, Glob, Bash]
 ---
 
-<!-- vigiles:sha256:a910f1e41a269a16 compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:7943ef9074c90c27 compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — create, read and update the submission on the portal, then prove it landed
 
-`paperlint submission` talks to the venue's submission portal through its API. Only HotCRP is
-supported; for any other portal the command says so and the upload is done by hand.
+`paperlint submission` creates, reads and updates the paper's submission on the venue's portal.
+Only HotCRP is supported; for any other portal the command says so and the upload is done by hand.
 
-## What the API does, and what stays on the site
+## What the command does, and what stays on the site
 
-`submission new` CREATES the submission through HotCRP's API: `POST /api/paper` with `p=new`
-(HotCRP's own documentation: «Setting `p=new` will create a new submission; the response will contain
-the chosen submission ID»). It sends the title, the abstract, the authors and the PDF — nothing else.
-**Done on the site, by the author:** PC conflicts, topics, and every field the venue adds (paper
-type, artifact, consent boxes). The command prints that list with the submission's page after every
-run; HotCRP's own complaints about a missing required field arrive as `portal says:` lines.
+`submission new` creates the submission with the title, the abstract, the authors and the PDF.
+Everything else — conflicts, topics, the venue's own fields — is done on the site by the author: the
+command prints that list, with the submission's page, after every run.
 
 ## Token
 
-One variable per HotCRP site, never shared by two: `HOTCRP_TOKEN_<subdomain>` on the hosted service
-(`*.hotcrp.com`), `HOTCRP_TOKEN_<host and path>` anywhere else, upper-cased —
-`HOTCRP_TOKEN_MSR2027` for `msr2027.hotcrp.com`, `HOTCRP_TOKEN_AIDC_SUBMIT_ACSAC_ORG` for
-`aidc.submit.acsac.org`. The command names the exact variable when it is missing. A
-token works only on the site it was made on, so two venues take two variables. A plain
-`HOTCRP_TOKEN` is NOT read: set alone, the command stops and says to rename it.
-
-When the command reports a missing token, a refused one (HTTP 401 or 403) or the rename, **relay its
-message to the author verbatim and stop.** The message already names the site's token page, the
-scopes to tick and the variable to set. 🔴 Never ask for the token in chat, never print it, never
-write it to a file: the author sets it in their own environment, and the command sends it only as
-the `Authorization` header.
+One variable per site: `HOTCRP_TOKEN_MSR2027` for `msr2027.hotcrp.com`; for a site not on
+hotcrp.com, its whole host and path. A plain `HOTCRP_TOKEN` is not read. When the command reports
+a missing, misnamed or refused token, **relay its message to the author verbatim and stop**: it
+already says where on the site to make one, which permissions to tick, and which variable to set.
+🔴 Never ask for the token in chat, never print it, never write it to a file — the author sets it in
+their own environment.
 
 ## What must be in place
 
 - **The venue preset declares the portal**: `"portal": { "kind": "hotcrp", "url": "<the site>" }`
-  (`paperlint:aidc` and `paperlint:msr` have it). For your own venue preset, add it there.
-- **The site's token variable**, as above.
-- **For `new`: the paper's `paperlint.json` declares the authors** — `"authors": [{ "name": "…",
-  "email": "…", "affiliation": "…" }]`, every author in the paper's order, the email the portal knows
-  each by. The author writes this list; never fill it in from the paper, a profile or memory.
-- **For `show` and `update`: the paper's `paperlint.json` names its submission** —
-  `"submission": { "id": <number> }` (in the open cycle, with `cycles`). `new --save` writes it.
+  (`paperlint:aidc` and `paperlint:msr` have it).
+- **For `new`: `"authors"` in the paper's `paperlint.json`** — `[{ "name", "email",
+  "affiliation" }]`, every author in the paper's order. The author writes this list; never fill it
+  in from the paper, a profile or memory.
+- **For `show` and `update`: `"submission": { "id": <number> }`** — `new --save` writes it.
 
-A missing key stops the command with exit 2 and a line naming the file and key — fix exactly that
-and run again.
+A missing key or token stops the command with exit 2 and a line naming what to set — fix exactly that.
 
 ## The procedure — always in this order
 
-0. **Create it, once — only when the paper has no `submission` id.** Build first
-   (`npx paperlint build papers/<paper>`): the abstract is read from the source's
-   `\begin{abstract}`, the files it includes as that build recorded them.
-   `npx paperlint submission new papers/<paper>` is a DRY RUN (`dry_run=1`): it prints the title,
-   the authors and the whole abstract it would send, then HotCRP's verdict, and keeps nothing. Read
-   them with the author; an abstract paperlint cannot delimit, or one that reads wrong, is given as a
-   plain-text file with `--abstract <file>`. Then ask for an explicit yes, and only after it run
-   `npx paperlint submission new papers/<paper> --save`. 🔴 `--save` CREATES A REAL SUBMISSION:
-   never without the author's yes in this conversation, never "to test". The new id is written into
-   `paperlint.json`; then do the "on the site" list with the author.
-1. **Read it.** `npx paperlint submission show papers/<paper>` — status, title, type, topics,
-   abstract length, the PDF the portal holds, and `match`: whether that PDF's sha256 equals the
-   local `paper.pdf`. Rebuild first if the local PDF is stale.
-2. **Dry run.** `npx paperlint submission update papers/<paper>` — sends the PDF (add
-   `--abstract <file>` for a plain-text abstract, `--submit` to mark it submitted) with HotCRP's
-   `dry_run=1`: the portal checks the change and **keeps nothing**. Read `valid`, `changes` and every
-   `portal says:` line. Exit 1 means the portal would refuse it — report why, do not go on.
-3. **Ask the author.** Show the dry run's output and ask for an explicit yes to change the real
-   submission.
-4. **Save — only after that yes.** `npx paperlint submission update papers/<paper> --save` (same
-   flags as the dry run). 🔴 `--save` CHANGES A REAL SUBMISSION that reviewers will see. Never run it
-   without the author's explicit yes in this conversation, never "to test", and never because a
-   dry run was valid.
-5. **Prove it landed.** `npx paperlint submission show papers/<paper>` again: `match` must read
-   `yes — the portal holds this build`, and the status must be what was intended (`submitted` if
-   `--submit` was sent). Anything else is not done — say so.
+0. **Create it, once — only while the paper has no `submission` id.**
+   `npx paperlint submission new papers/<paper>` is a dry run: the portal checks it and keeps
+   nothing. It prints the title, the authors and the whole abstract (read from the source's
+   `\begin{abstract}`). Read them with the author; an abstract the command cannot read, or one
+   that reads wrong, is given as a plain-text file with `--abstract <file>`.
+1. **Ask the author** for an explicit yes, then `npx paperlint submission new papers/<paper> --save`,
+   and do the printed "on the site" list with the author.
+2. **Read it.** `npx paperlint submission show papers/<paper>` — status, the PDF the portal holds,
+   and `match`: whether it is the local build. Rebuild first if the local PDF is stale.
+3. **Dry run the change.** `npx paperlint submission update papers/<paper>` (`--abstract <file>`,
+   `--submit` to mark it submitted). Exit 1 means the portal would refuse it — report why, stop.
+4. **Ask the author** for an explicit yes, then the same command with `--save`.
+5. **Prove it landed.** `show` again: `match` must read `yes — the portal holds this build`, and
+   the status must be what was intended. Anything else is not done — say so.
 
-The same steps as commands, in order (`<paper>` is the paper's folder):
+🔴 `--save` creates or changes a real submission that reviewers will see: never without the
+author's yes in this conversation, never "to test", never because a dry run passed.
 
 ```bash
 npx paperlint build papers/<paper>
@@ -95,14 +72,12 @@ npx paperlint submission show papers/<paper>
 
 ## Reading the answers
 
-- `match yes` is the only proof the reviewers get the local build; a status of `submitted` alone
-  says nothing about WHICH PDF.
-- `the portal refused (HTTP 401): …` followed by `<variable> was used; …` — the token is from
-  another site, revoked or expired; `403` — the token lacks the scope, or the deadline has passed for
-  this change. The text after the colon is HotCRP's own; quote it, and relay the steps under it.
-- `SAVE WITHHELD by the portal` or `NOTHING CREATED` — HotCRP did not save; nothing changed.
+- `match yes` is the only proof the reviewers get the local build; `submitted` alone says nothing
+  about WHICH PDF.
+- `portal says: …` lines are the portal's own words; quote them.
+- `SAVE WITHHELD` or `NOTHING CREATED` — the portal saved nothing.
 
 ## What this skill does not do
 
-It does not decide whether the paper is ready (that is `harden-paper`), anonymize it, or set the
-portal's other fields (conflicts, topics) — see `submit-paper`.
+It does not decide whether the paper is ready (`harden-paper`), anonymize it, or set the portal's
+other fields — see `submit-paper`.
