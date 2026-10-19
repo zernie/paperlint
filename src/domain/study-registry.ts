@@ -677,13 +677,15 @@ const unknownMeasurement: RowCheck = ({ r, s }) =>
     ? null
     : { problem: "unknown-measurement", id: s.id, measurement: s.measurement };
 
-/** The state of the plan the row names (absent when outside its folder); null when it names none. */
-const planOf = ({ s, input }: Row): PlanState | null => {
-  if (s.plan === undefined) return null;
-  return isInside(s.plan)
-    ? (input.plans.get(folderKey(s.folder, s.plan)) ?? { kind: "absent" })
+/** The state of the plan `plan` of the row `s` (absent when outside its folder): the one place a plan is looked up. */
+const planStateOf = (input: StudyInput, s: Study, plan: string): PlanState =>
+  isInside(plan)
+    ? (input.plans.get(folderKey(s.folder, plan)) ?? { kind: "absent" })
     : { kind: "absent" };
-};
+
+/** The state of the plan the row names; null when it names none. */
+const planOf = ({ s, input }: Row): PlanState | null =>
+  s.plan === undefined ? null : planStateOf(input, s, s.plan);
 
 const hasRun = (s: Study): boolean => RAN_STATUSES.includes(s.status);
 
@@ -711,13 +713,12 @@ const planFinding = (
 };
 
 /** The plan a row names is a file inside its folder, of the schema, and ready once the study has run. */
-const badPlan: RowCheck = (row) => {
-  const { s } = row;
+const badPlan: RowCheck = ({ s, input }) => {
   const path = s.plan;
   if (path === undefined) return null;
   if (!isInside(path))
     return { problem: "bad-plan", id: s.id, path, why: "outside" };
-  return planFinding(s, path, planOf(row) ?? { kind: "absent" });
+  return planFinding(s, path, planStateOf(input, s, path));
 };
 
 /** A plan under its old name: read, and named for renaming. */
