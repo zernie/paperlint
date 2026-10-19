@@ -19,6 +19,7 @@ import {
   studyIndex,
   studyMessage,
   studyReadme,
+  studyById,
   studySlug,
   withIndex,
   type RegistryState,
@@ -61,7 +62,7 @@ const input = (
   folders: r.studies.map((s) => s.folder),
   registry: read(r),
   readme: withIndex("# Reproduction index\n", r, NO_FACTS),
-  existingResults: new Set(),
+  results: new Map(),
   plans: new Map(),
   ...over,
 });
@@ -88,7 +89,9 @@ describe("judgeStudies — silent", () => {
     expect(
       judgeStudies(
         input(r, {
-          existingResults: new Set(["P1-S02-ablation/out/results.tsv"]),
+          results: new Map([
+            ["P1-S02-ablation/out/results.tsv", { kind: "file" as const }],
+          ]),
         }),
       ),
     ).toEqual([]);
@@ -100,7 +103,7 @@ describe("judgeStudies — silent", () => {
         folders: [],
         registry: { kind: "absent" },
         readme: null,
-        existingResults: new Set(),
+        results: new Map(),
         plans: new Map(),
       }),
     ).toEqual([]);
@@ -129,7 +132,7 @@ describe("judgeStudies — the registry itself", () => {
         folders: ["a-2026-10-01", "b-2026-10-02"],
         registry: { kind: "absent" },
         readme: null,
-        existingResults: new Set(),
+        results: new Map(),
         plans: new Map(),
       }),
     ).toEqual([
@@ -143,7 +146,7 @@ describe("judgeStudies — the registry itself", () => {
         folders: ["a-2026-10-01"],
         registry: { kind: "unreadable", why: "prefix: required" },
         readme: null,
-        existingResults: new Set(),
+        results: new Map(),
         plans: new Map(),
       }),
     ).toEqual([{ problem: "unreadable", why: "prefix: required" }]);
@@ -259,7 +262,11 @@ describe("judgeStudies — status", () => {
     const r = reg(study({ status: "running", result_file: "r.tsv" }));
     expect(
       judgeStudies(
-        input(r, { existingResults: new Set(["P1-S01-baseline/r.tsv"]) }),
+        input(r, {
+          results: new Map([
+            ["P1-S01-baseline/r.tsv", { kind: "file" as const }],
+          ]),
+        }),
       ),
     ).toEqual([]);
   });
@@ -669,5 +676,26 @@ describe("studyReadme", () => {
         "",
       ].join("\n"),
     );
+  });
+});
+
+describe("studyById — the one way to address a study by its id", () => {
+  const a = study({ id: "P1-S01", folder: "P1-S01-a" });
+  const b = study({ id: "P1-S01", folder: "P1-S01-b" });
+  const c = study({ id: "P1-S02", folder: "P1-S02-c" });
+
+  it("exactly one row: that row; no row: none; two or more: all of them, in registry order", () => {
+    // Guards: a caller can take a row only from `one`, never "the first" of an ambiguous id.
+    expect([
+      studyById([a, c], "P1-S01"),
+      studyById([a, c], "P1-S09"),
+      studyById([], "P1-S01"),
+      studyById([a, c, b], "P1-S01"),
+    ]).toEqual([
+      { kind: "one", row: a },
+      { kind: "none" },
+      { kind: "none" },
+      { kind: "ambiguous", rows: [a, b] },
+    ]);
   });
 });

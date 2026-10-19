@@ -82,11 +82,11 @@ const NINE_AT: IndexInput = {
   ]),
   history: new Map([
     [
-      "P1-S01",
+      "P1-S01-hint/plan.json",
       { kind: "read", decision: D, decisionDeleted: false, firstOutput: A },
     ],
     [
-      "P1-S02",
+      "P1-S02-s/plan.json",
       {
         kind: "read",
         decision: null,
@@ -94,7 +94,7 @@ const NINE_AT: IndexInput = {
         firstOutput: null,
       },
     ],
-    ["P1-S04", { kind: "unread", why: "shallow clone" }],
+    ["P1-S04-s/plan.json", { kind: "unread", why: "shallow clone" }],
   ]),
 };
 
@@ -124,7 +124,7 @@ describe("the mode columns of the index", () => {
       plans,
       history: new Map([
         [
-          "P1-S01",
+          "P1-S01-s/plan.json",
           {
             kind: "read",
             decision: D,
@@ -149,6 +149,49 @@ describe("the mode columns of the index", () => {
       indexCurrent(null, r, was),
     ]).toEqual([true, false, false, true, false]);
   });
+});
+
+it("two rows of one id each show their own history, keyed by folder and plan", () => {
+  const r: StudyRegistry = {
+    prefix: "P1",
+    studies: [row(1, { folder: "P1-S01-a" }), row(1, { folder: "P1-S01-b" })],
+  };
+  const at: IndexInput = {
+    plans: new Map([
+      ["P1-S01-a/plan.json", plan(DECIDED)],
+      ["P1-S01-b/plan.json", plan(DECIDED)],
+    ]),
+    history: new Map([
+      [
+        "P1-S01-a/plan.json",
+        { kind: "read", decision: D, decisionDeleted: false, firstOutput: A },
+      ],
+      [
+        "P1-S01-b/plan.json",
+        {
+          kind: "read",
+          decision: null,
+          decisionDeleted: false,
+          firstOutput: null,
+        },
+      ],
+    ]),
+  };
+  // Guards: keyed by id, the second row's history was shown on both rows (the later one wins).
+  expect(
+    studyIndex(r, at)
+      .split("\n")
+      .slice(2)
+      .map((l) =>
+        l
+          .split("|")
+          .slice(6, 9)
+          .map((c) => c.trim()),
+      ),
+  ).toEqual([
+    ["decide_before_run", "dddddddddddd 2026-10-14", "aaaaaaaaaaaa 2026-10-16"],
+    ["decide_before_run", "not committed", "none"],
+  ]);
 });
 
 it("a decision committed and since deleted shows its commit, and that it is gone", () => {
@@ -181,6 +224,7 @@ describe("indexHistory", () => {
       indexHistory(study({ kind: "unknown", why: "not a repository" })),
       indexHistory(study({ kind: "shallow" })),
       indexHistory(study({ kind: "not-a-file", what: "directory" })),
+      indexHistory(study({ kind: "linked", link: "repro/sub" })),
       indexHistory(
         study({
           kind: "read",
@@ -204,6 +248,7 @@ describe("indexHistory", () => {
       { kind: "unread", why: "git could not answer" },
       { kind: "unread", why: "shallow clone" },
       { kind: "unread", why: "the decision is a directory" },
+      { kind: "unread", why: "the decision is behind a symbolic link" },
       { kind: "read", decision: D, decisionDeleted: false, firstOutput: A },
       {
         kind: "read",

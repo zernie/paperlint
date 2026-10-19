@@ -96,6 +96,8 @@ export function studies(
     readonly order?: OrderFacts;
     /** Paths (absolute) the stand-in disk reports as symbolic links: memory holds none of its own. */
     readonly links?: readonly string[];
+    /** Paths (absolute) the stand-in disk reports as neither file, directory nor link (a FIFO, a socket). */
+    readonly others?: readonly string[];
   } = {},
 ) {
   const files = memoryFiles(t);
@@ -114,11 +116,13 @@ export function studies(
       files,
       listDir: memoryListDir(files),
       entries: (dir) =>
-        memoryListEntries(files)(dir).map((e) =>
-          (o.links ?? []).includes(`${dir}/${e.name}`)
-            ? { ...e, kind: "symlink" as const }
-            : e,
-        ),
+        memoryListEntries(files)(dir).map((e) => {
+          if ((o.links ?? []).includes(`${dir}/${e.name}`))
+            return { ...e, kind: "symlink" as const };
+          return (o.others ?? []).includes(`${dir}/${e.name}`)
+            ? { ...e, kind: "other" as const }
+            : e;
+        }),
       codec: studyRegistryCodec,
       cwd: "/work",
       today: "2026-10-16",

@@ -10,7 +10,6 @@ import { expect, it } from "vitest";
 import { gitHistory } from "./adapters/git/index.ts";
 import {
   nodeFiles,
-  nodeListDir,
   nodeListEntries,
   spawnProcess,
 } from "./adapters/node/index.ts";
@@ -42,7 +41,6 @@ const T = (h: number): string =>
 const lint = (repo: string, file = "p/PIPELINE-STATUS.md"): string[] => {
   const rule = outputsBeforeDecisionRules({
     files: nodeFiles,
-    listDir: nodeListDir,
     entries: nodeListEntries,
     codec: studyRegistryCodec,
     git: gitHistory(spawnProcess(), { PATH: String(process.env.PATH) }),
@@ -203,4 +201,51 @@ it("never reads through a study folder that is a symbolic link", () => {
   commit(repo, {}, T(10));
   // Guards: the outputs behind the link are not this paper's study; nothing is read through it.
   expect(lint(repo)).toEqual([]);
+});
+
+it("a plan that is a symbolic link declares no mode: the order of its study is not judged", () => {
+  const repo = join(root, "plan-link");
+  initRepo(repo);
+  mkdirSync(join(repo, "p/elsewhere"), { recursive: true });
+  writeFileSync(join(repo, "p/elsewhere/plan.json"), planText(planOf(DECIDED)));
+  mkdirSync(join(repo, S), { recursive: true });
+  symlinkSync("../../elsewhere/plan.json", join(repo, S, "plan.json"));
+  commit(
+    repo,
+    {
+      ...Object.fromEntries(
+        Object.entries(PAPER).filter(([k]) => k !== `${S}/plan.json`),
+      ),
+      [`${S}/RESULTS.md`]: "41 of 60\n",
+    },
+    T(9),
+  );
+  commit(repo, { [`${S}/decision.md`]: "exclude run 7\n" }, T(10));
+  // Guards: read through the link, the plan is a decide-first one and its output precedes its
+  // decision (`output-before-decision`); a link is read through by nothing, so the study declares no mode.
+  expect(lint(repo)).toEqual([]);
+});
+
+it("loud on a decision under a linked directory: git records the link, not the files behind it", () => {
+  const repo = join(root, "decision-dir-link");
+  initRepo(repo);
+  mkdirSync(join(repo, "p/elsewhere"), { recursive: true });
+  writeFileSync(join(repo, "p/elsewhere/decision.md"), "exclude run 7\n");
+  const file = "repro/P1-S01-outcome/sub/decision.md";
+  commit(
+    repo,
+    {
+      ...PAPER,
+      [`${S}/plan.json`]: planText(
+        planOf({ ...DECIDED, decision: { file, note: "n" } }),
+      ),
+    },
+    T(9),
+  );
+  symlinkSync("../../elsewhere", join(repo, S, "sub"));
+  commit(repo, {}, T(10));
+  commit(repo, { [`${S}/RESULTS.md`]: "41 of 60\n" }, T(11));
+  // Guards: the decision file exists, and is committed as a path through a link; the order proof
+  // would be read from the link's history. The study is reported instead.
+  expect(lint(repo)).toEqual(["decision-linked"]);
 });

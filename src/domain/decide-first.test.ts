@@ -180,6 +180,23 @@ it("a decision that names a directory is reported, and no history is judged", ()
   ]);
 });
 
+it("a decision behind a linked directory is reported with the link, and no history is judged", () => {
+  // Guards: git records a path through a link as what lies behind the link.
+  expect(
+    judgeOrder({
+      ...STUDY,
+      facts: { kind: "linked", link: "repro/P1-S01-x/sub" },
+    }),
+  ).toEqual([
+    {
+      problem: "decision-linked",
+      id: "P1-S01",
+      file: "repro/P1-S01-x/decision.md",
+      link: "repro/P1-S01-x/sub",
+    },
+  ]);
+});
+
 const PAGE =
   "\nRule repro/outputs-before-decision: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/outputs-before-decision.md";
 
@@ -195,6 +212,12 @@ const ALL: readonly OrderFinding[] = [
   {
     problem: "decision-not-file",
     id: "P1-S01",
+    file: "repro/p",
+    what: "special file",
+  },
+  {
+    problem: "decision-not-file",
+    id: "P1-S01",
     file: "repro/d",
     what: "directory",
   },
@@ -203,6 +226,12 @@ const ALL: readonly OrderFinding[] = [
     id: "P1-S01",
     file: "repro/l.md",
     what: "symbolic link",
+  },
+  {
+    problem: "decision-linked",
+    id: "P1-S01",
+    file: "repro/sub/d.md",
+    link: "repro/sub",
   },
   { problem: "no-history", id: "P1-S01", why: "git is not installed" },
   { problem: "shallow", id: "P1-S01" },
@@ -240,9 +269,13 @@ it("each finding's message: what is wrong, what to do, the rule's page", () => {
       PAGE,
     "The decision of `P1-S01`, `repro/d.md`, was committed and then deleted: it is not in HEAD, so the study has no decision its outputs could follow. What to do: restore the decision file as it was decided and commit it — never write a new one after the outputs; if the decision no longer holds, declare the study `exploratory` with the reason." +
       PAGE,
+    "The decision of `P1-S01`, `repro/p`, is a special file, not a file: git tracks only regular files, so no order can be read from it. What to do: name the decision file itself in `mode.decision.file`." +
+      PAGE,
     "The decision of `P1-S01`, `repro/d`, is a directory, not a file: git answers for a directory with the commits of anything under it, so no order can be read from it. What to do: name the decision file itself in `mode.decision.file`." +
       PAGE,
     "The decision of `P1-S01`, `repro/l.md`, is a symbolic link, not a file: git records the link, not the file it points to, so no order can be read from it. What to do: name the decision file itself in `mode.decision.file`." +
+      PAGE,
+    "The decision of `P1-S01`, `repro/sub/d.md`, passes through the symbolic link `repro/sub`: git records the link, not the files behind it, so no order can be read from it. What to do: name a decision file that lies in real directories in `mode.decision.file`." +
       PAGE,
     "`P1-S01` is decided before its run, and git's history is the proof of that order, but git could not answer: git is not installed. What to do: lint the paper inside its git repository, with git installed." +
       PAGE,

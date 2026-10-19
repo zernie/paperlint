@@ -23,6 +23,7 @@ import {
   type StudyRegistry,
   type IndexInput,
 } from "./domain/study-registry.ts";
+import { planOf } from "../test/study-tree.ts";
 import {
   registryOf,
   STUDY_REGISTRY_RULE_LEVELS,
@@ -356,6 +357,92 @@ describe("repro/study-registered — a study folder that is a symbolic link", ()
       codec: studyRegistryCodec,
     });
     // Guards: the files behind the link are not read — the plan and the result read as missing.
+    expect(
+      found.map((f) =>
+        f.problem === "bad-plan" || f.problem === "result-file"
+          ? `${f.problem}:${f.why}`
+          : f.problem,
+      ),
+    ).toEqual(["result-file:missing", "bad-plan:missing"]);
+  });
+});
+
+describe("repro/study-registered — a plan or a result file reached through a link inside a study folder", () => {
+  const r = P1(
+    study({
+      kind: "spike",
+      status: "done",
+      result: "41 of 60",
+      result_file: "out/r.txt",
+      plan: "sub/plan.json",
+    }),
+  );
+  const S = `${DIR}/repro/P1-S01-baseline`;
+  const found = (links: readonly string[]) => {
+    const files = memoryFiles({
+      ...registered(r),
+      [`${S}/sub/plan.json`]: planText(planOf(undefined)),
+      [`${S}/out/r.txt`]: "41 of 60\n",
+    });
+    return studyFindings(DIR, {
+      files,
+      listDir: memoryListDir(files),
+      entries: (dir) =>
+        memoryListEntries(files)(dir).map((e) =>
+          links.includes(`${dir}/${e.name}`)
+            ? { ...e, kind: "symlink" as const }
+            : e,
+        ),
+      codec: studyRegistryCodec,
+    });
+  };
+
+  it("silent while no link is on the way; each link is reported with its name, and the file behind it is not read", () => {
+    const linked = found([`${S}/sub`, `${S}/out`]).map((f) =>
+      f.problem === "bad-plan" || f.problem === "result-file"
+        ? studyMessage(f).split("\n")[0]
+        : f.problem,
+    );
+    // Guards: both files exist and parse, so only the link can make a finding. The text names the
+    // file, the link and the fix.
+    expect([found([]).map((f) => f.problem), linked]).toEqual([
+      [],
+      [
+        "`repro/studies.json`: the `result_file` of `P1-S01`, `out/r.txt`, passes through the symbolic link `out` in its folder; nothing is read through a link. What to do: name a regular file inside the study's folder, or replace the link with the file itself.",
+        "`repro/studies.json`: the `plan` of `P1-S01`, `sub/plan.json`, passes through the symbolic link `sub` in its folder; nothing is read through a link. What to do: replace the link with the plan file itself.",
+      ],
+    ]);
+  });
+});
+
+describe("repro/study-registered — a result file or a plan that is a FIFO", () => {
+  it("is not a file in its folder: reported as missing, never opened", () => {
+    const r = P1(
+      study({
+        status: "done",
+        result: "41 of 60",
+        result_file: "r.txt",
+        plan: "plan.json",
+      }),
+    );
+    const S = `${DIR}/repro/P1-S01-baseline`;
+    const files = memoryFiles({
+      ...registered(r),
+      [`${S}/plan.json`]: "{}",
+      [`${S}/r.txt`]: "41 of 60\n",
+    });
+    const found = studyFindings(DIR, {
+      files,
+      listDir: memoryListDir(files),
+      entries: (dir) =>
+        memoryListEntries(files)(dir).map((e) =>
+          [`${S}/plan.json`, `${S}/r.txt`].includes(`${dir}/${e.name}`)
+            ? { ...e, kind: "other" as const }
+            : e,
+        ),
+      codec: studyRegistryCodec,
+    });
+    // Guards: `existingResults` used `Files.isFile`; the listing said "file" for a FIFO and the result passed.
     expect(
       found.map((f) =>
         f.problem === "bad-plan" || f.problem === "result-file"

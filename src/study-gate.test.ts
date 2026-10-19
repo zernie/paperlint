@@ -5,11 +5,13 @@
  */
 import { expect, it } from "vitest";
 import type { StudyMode } from "./domain/study-mode.ts";
+import { planText, registryText } from "./domain/study-registry.ts";
 import {
   DATE,
   DECIDED,
   DIR,
   ROW,
+  S,
   SHA,
   planOf,
   studies,
@@ -120,7 +122,7 @@ it("refuses a study that declares no mode, and one whose row names a folder outs
     [
       1,
       [
-        "P1-S01 declares no mode in papers/example: no row of papers/example/repro/studies.json with this id names a plan.json that parses with `mode`. Lint the paper (`npx paperlint lint`) to see why.",
+        "P1-S01 declares no mode in papers/example: the plan its row names in papers/example/repro/studies.json is missing, does not parse, or has no `mode`. Lint the paper (`npx paperlint lint`) to see why.",
       ],
     ],
     [
@@ -158,16 +160,56 @@ it("refuses a command line without the study's id, or with an argument too many"
 it("a plan it cannot read through declares no mode: no registry, a plan outside its folder, a NUL, not JSON", () => {
   const noMode = (t: Readonly<Record<string, string>>) =>
     studies("gate", t).err[0]?.split(":")[0];
-  const withoutRegistry = Object.fromEntries(
-    Object.entries(decided()).filter(([k]) => !k.endsWith("studies.json")),
-  );
   // Guards: each is refused as declaring no mode — none is read past, none opens the gate.
   expect([
-    noMode(withoutRegistry),
     noMode(tree({}, planOf(DECIDED), { ...ROW, plan: "../plan.json" })),
     noMode(tree({}, planOf(DECIDED), { ...ROW, plan: "a\0b.json" })),
     noMode({ ...decided(), [`${DIR}/repro/P1-S01-outcome/plan.json`]: "{" }),
-  ]).toEqual(Array(4).fill("P1-S01 declares no mode in papers/example"));
+  ]).toEqual(Array(3).fill("P1-S01 declares no mode in papers/example"));
+});
+
+it("refuses when the registry is missing or does not parse, naming the file and the way to see why", () => {
+  const withoutRegistry = Object.fromEntries(
+    Object.entries(decided()).filter(([k]) => !k.endsWith("studies.json")),
+  );
+  const unparseable = {
+    ...decided(),
+    [`${DIR}/repro/studies.json`]: "{ not json",
+  };
+  // Guards: "no row carries this id" would send a person to the registry that is the problem.
+  expect(
+    [withoutRegistry, unparseable].map((t) => {
+      const r = studies("gate", t);
+      return [r.code, r.err];
+    }),
+  ).toEqual([
+    [
+      1,
+      [
+        "P1-S01: the registry papers/example/repro/studies.json is missing, so no row can carry this id. Run `npx paperlint lint` to see why, then run this again.",
+      ],
+    ],
+    [
+      1,
+      [
+        expect.stringMatching(
+          /^P1-S01: the registry papers\/example\/repro\/studies\.json does not parse \(.+\), so no row can carry this id\. Run `npx paperlint lint` to see why, then run this again\.$/u,
+        ),
+      ],
+    ],
+  ]);
+});
+
+it("refuses an id no row of the registry carries, saying so and what to do: exit 1", () => {
+  const r = studies("gate", decided(), { title: "P1-S09" });
+  // Guards: an id that is not in the registry is not a study that "declares no mode".
+  expect([r.code, r.log, r.err]).toEqual([
+    1,
+    [],
+    [
+      "P1-S09: no row of papers/example/repro/studies.json carries this id. Use an id from the registry, or register the study with `npx paperlint studies new`, then run this again.",
+    ],
+  ]);
 });
 
 it("refuses a decision that names a directory, whatever git says of it", () => {
@@ -287,7 +329,7 @@ it("refuses a decision or a study folder that is a symbolic link", () => {
     [
       1,
       [
-        "P1-S01: its row names the folder `P1-S01-outcome`, which is not one folder inside papers/example/repro/; nothing is read through it. Give the row its own folder's name.",
+        "P1-S01: its row names the folder `P1-S01-outcome`, which is a symbolic link; nothing is read through it. Give the row a real folder inside papers/example/repro/.",
       ],
     ],
   ]);
@@ -313,4 +355,113 @@ it("never reads a plan through a backslash: `..\\x\\plan.json` is outside the fo
   expect(r.err[0]?.split(":")[0]).toBe(
     "P1-S01 declares no mode in papers/example",
   );
+});
+
+it("refuses an id that two rows share, even when the first row is exploratory: exit 1, naming both folders", () => {
+  const second = { ...ROW, folder: "P1-S01-again" };
+  const t = {
+    ...tree(
+      {
+        [`${DIR}/repro/P1-S01-again/plan.json`]: JSON.stringify(
+          planOf(DECIDED),
+        ),
+      },
+      planOf({ kind: "exploratory", reason: "a first look" }),
+    ),
+    [`${DIR}/repro/studies.json`]: registryText({
+      prefix: "P1",
+      studies: [ROW, second],
+    }),
+  };
+  const r = studies("gate", t);
+  // Guards: `gate && run` must not start on the first row's mode while a later row of the same id
+  // decides before its run; lint need not have run first.
+  expect([r.code, r.log, r.err]).toEqual([
+    1,
+    [],
+    [
+      "P1-S01: 2 rows of papers/example/repro/studies.json carry this id (folders `P1-S01-outcome`, `P1-S01-again`); the gate answers for exactly one study. Give each other row the next free id and rename its folder to match, then run this again.",
+    ],
+  ]);
+});
+
+it("refuses a plan that is a symbolic link, or sits under a linked directory, naming the link: exit 1", () => {
+  const exploratory = planOf({ kind: "exploratory", reason: "a first look" });
+  const asLink = studies(
+    "gate",
+    tree({}, exploratory),
+    {},
+    { links: [`${S}/plan.json`] },
+  );
+  const sub = { ...ROW, plan: "sub/plan.json" };
+  const underLink = studies(
+    "gate",
+    tree({ [`${S}/sub/plan.json`]: planText(exploratory) }, exploratory, sub),
+    {},
+    { links: [`${S}/sub`] },
+  );
+  // Guards: a plan read through a link would open the gate on a file git does not store as the
+  // study's; the refusal names the row, the plan, the link and the fix. The files behind the link
+  // are ready exploratory plans, so a read through it would exit 0.
+  expect([asLink, underLink].map((r) => [r.code, r.log, r.err])).toEqual([
+    [
+      1,
+      [],
+      [
+        "P1-S01: the plan its row names, in papers/example/repro/P1-S01-outcome, passes through the symbolic link `plan.json`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+      ],
+    ],
+    [
+      1,
+      [],
+      [
+        "P1-S01: the plan its row names, in papers/example/repro/P1-S01-outcome, passes through the symbolic link `sub`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+      ],
+    ],
+  ]);
+});
+
+it("refuses a decision under a linked directory, naming the link: git cannot vouch for what lies behind it", () => {
+  const file = "repro/P1-S01-outcome/sub/decision.md";
+  const r = studies(
+    "gate",
+    tree(
+      { [`${DIR}/${file}`]: "exclude run 7\n" },
+      planOf({ ...DECIDED, decision: { file, note: "n" } }),
+    ),
+    {},
+    {
+      git: {
+        [`${DIR}/${file}`]: { kind: "committed", commit: SHA, date: DATE },
+      },
+      links: [`${S}/sub`],
+    },
+  );
+  // Guards: only the last component of the decision path was looked at, so a linked directory above
+  // it passed and git was asked about a path it stores as a link's target.
+  expect([r.code, r.err]).toEqual([
+    1,
+    [
+      `P1-S01: its decision ${file} passes through the symbolic link \`repro/P1-S01-outcome/sub\`; git records the link, not the files behind it, so the run cannot be gated on it. Name a decision file that lies in real directories in \`mode.decision.file\`.`,
+    ],
+  ]);
+});
+
+it("refuses a decision that is a FIFO or another special file: git tracks no such thing", () => {
+  const r = studies(
+    "gate",
+    { ...decided(), [DECISION]: "" },
+    {},
+    {
+      git: { [DECISION]: { kind: "committed", commit: SHA, date: DATE } },
+      others: [DECISION],
+    },
+  );
+  // Guards: a decision the listing called a file passed, and git was asked about it.
+  expect([r.code, r.err]).toEqual([
+    1,
+    [
+      "P1-S01: its decision repro/P1-S01-outcome/decision.md is a special file, not a file; the run cannot be gated on it. Name the decision file in `mode.decision.file`.",
+    ],
+  ]);
 });

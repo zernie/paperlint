@@ -3,12 +3,17 @@
  * row's plan, and each decide-first study's history as git gives it now (src/domain/index-columns.ts).
  */
 import { indexHistory } from "./domain/index-columns.ts";
-import type { IndexInput, RegistryState } from "./domain/study-registry.ts";
+import {
+  folderKey,
+  type IndexInput,
+  type RegistryState,
+} from "./domain/study-registry.ts";
 import {
   decideFirstStudies,
   type OrderDeps,
 } from "./outputs-before-decision-rule.ts";
-import { plansOf, readableFolders } from "./study-registry-rule.ts";
+import { studyFolder } from "./study-folder.ts";
+import { plansOf } from "./study-registry-rule.ts";
 
 /** The plans and the histories of the paper folder `paper`, whose registry is `r`. */
 export const indexInputOf = (
@@ -16,8 +21,11 @@ export const indexInputOf = (
   r: RegistryState,
   deps: OrderDeps,
 ): IndexInput => ({
-  plans: plansOf(paper, r, deps, readableFolders(paper, deps)),
+  plans: plansOf(r, studyFolder(paper, deps), deps.codec),
   history: new Map(
-    decideFirstStudies(paper, deps).map((s) => [s.id, indexHistory(s)]),
+    decideFirstStudies(paper, deps).map((s) => [
+      folderKey(s.folder, s.plan),
+      indexHistory(s),
+    ]),
   ),
 });

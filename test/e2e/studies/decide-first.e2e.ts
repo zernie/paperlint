@@ -12,10 +12,12 @@
  */
 import { spawnSync } from "node:child_process";
 import {
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -216,6 +218,89 @@ describe.skipIf(SKIP)(
       ]);
       expect(orderFindings(shallow)).toEqual([
         "`P1-S01` is decided before its run, and this clone is shallow: every file's first commit is the clone's first, so the order of decision and outputs cannot be read. What to do: fetch the whole history (`git fetch --unshallow`; in GitHub Actions, `actions/checkout` with `fetch-depth: 0`).",
+      ]);
+    });
+  },
+);
+
+describe.skipIf(SKIP)(
+  "a plan reached through a symbolic link, through the real binary on a real disk",
+  () => {
+    /** The project of `name` with its plan made exploratory (a gate that would open) and moved to `elsewhere/`. */
+    const withPlanElsewhere = (name: string): string => {
+      const dir = project(name);
+      const plan = join(dir, STUDY, "plan.json");
+      const moved = join(dir, "elsewhere", "plan.json");
+      mkdirSync(dirname(moved), { recursive: true });
+      writeFileSync(
+        moved,
+        readFileSync(plan, "utf8").replace(
+          /"mode": \{[\s\S]*?\n {2}\}/u,
+          '"mode": { "kind": "exploratory", "reason": "a first look" }',
+        ),
+      );
+      rmSync(plan);
+      return dir;
+    };
+    const gate = (dir: string) =>
+      paperlint(dir, ["studies", "gate", "papers/example", "P1-S01"]);
+
+    it("the gate refuses a linked plan file, and a plan under a linked directory, naming the link", () => {
+      const file = withPlanElsewhere("link-file");
+      symlinkSync(
+        join(file, "elsewhere", "plan.json"),
+        join(file, STUDY, "plan.json"),
+      );
+      const sub = withPlanElsewhere("link-dir");
+      symlinkSync(join(sub, "elsewhere"), join(sub, STUDY, "sub"));
+      const registry = join(sub, "papers/example/repro/studies.json");
+      writeFileSync(
+        registry,
+        readFileSync(registry, "utf8").replace(
+          '"plan": "plan.json"',
+          '"plan": "sub/plan.json"',
+        ),
+      );
+      // Guards: the files behind both links are ready exploratory plans, so a read through either
+      // would exit 0; the exit is 1 and the message names the link and the fix.
+      expect(
+        [file, sub].map((d) => [gate(d).status, gate(d).err.trim()]),
+      ).toEqual([
+        [
+          1,
+          "P1-S01: the plan its row names, in papers/example/repro/P1-S01-outcome, passes through the symbolic link `plan.json`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+        ],
+        [
+          1,
+          "P1-S01: the plan its row names, in papers/example/repro/P1-S01-outcome, passes through the symbolic link `sub`; nothing is read through a link. Replace the link with the plan file itself, then run this again.",
+        ],
+      ]);
+    });
+  },
+);
+
+describe.skipIf(SKIP)(
+  "a decision reached through a symbolic link, through the real binary on a real disk",
+  () => {
+    it("the gate refuses a decision under a linked directory, naming the link", () => {
+      const dir = project("link-decision");
+      const plan = join(dir, STUDY, "plan.json");
+      const file = "repro/P1-S01-outcome/sub/decision.md";
+      writeFileSync(
+        plan,
+        readFileSync(plan, "utf8").replace(
+          "repro/P1-S01-outcome/decision.md",
+          file,
+        ),
+      );
+      mkdirSync(join(dir, "elsewhere"), { recursive: true });
+      writeFileSync(join(dir, "elsewhere", "decision.md"), "exclude run 7\n");
+      symlinkSync(join(dir, "elsewhere"), join(dir, STUDY, "sub"));
+      const r = paperlint(dir, ["studies", "gate", "papers/example", "P1-S01"]);
+      // Guards: the file behind the link exists; the message names the link and the fix.
+      expect([r.status, r.err.trim()]).toEqual([
+        1,
+        `P1-S01: its decision ${file} passes through the symbolic link \`repro/P1-S01-outcome/sub\`; git records the link, not the files behind it, so the run cannot be gated on it. Name a decision file that lies in real directories in \`mode.decision.file\`.`,
       ]);
     });
   },

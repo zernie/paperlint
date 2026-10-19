@@ -16,6 +16,7 @@
  * registry is refused with the file to write rather than given a guessed one.
  */
 import { join, relative, resolve } from "node:path";
+import { find, map, pipe } from "remeda";
 import { callerPath } from "./caller-path.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { README, REPRO_DIR } from "./domain/repro-layout.ts";
@@ -37,10 +38,12 @@ import {
   type StudyRegistry,
 } from "./domain/study-registry.ts";
 import type { Files } from "./ports/files.ts";
+import type { FolderRefusal } from "./ports/study-folder.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type { ListEntries } from "./ports/list-entries.ts";
 import type { ListDir } from "./ports/talk-media.ts";
-import { readableFolders, registryOf } from "./study-registry-rule.ts";
+import { registryOf } from "./study-registry-rule.ts";
+import { folderRefusalText, studyFolder } from "./study-folder.ts";
 import { runGate } from "./study-gate.ts";
 import { indexInputOf } from "./study-index-input.ts";
 import type { GitHistory, GitOrder } from "./ports/git-history.ts";
@@ -106,20 +109,26 @@ function registryIn(p: Paper, deps: StudiesDeps): StudyRegistry | Refusal {
   }
 }
 
-/** The refusal when a row names a folder that is not one inside `repro/`; null when none does. */
+/** The refusal when a row names a folder that may not be entered; null when none does. */
 function escaping(
   p: Paper,
   r: StudyRegistry,
   deps: StudiesDeps,
 ): Refusal | null {
-  const readable = readableFolders(p.dir, deps);
-  const s = r.studies.find((row) => !readable(row.folder));
-  return s === undefined
-    ? null
-    : refuse(
-        1,
-        `${s.id} in ${p.shown}/${REPRO_DIR}/${STUDIES_FILE} names the folder \`${s.folder}\`, which is not one folder inside ${REPRO_DIR}/: nothing is read or written through it. Give the row its own folder's name, then run this again.`,
-      );
+  const folder = studyFolder(p.dir, deps);
+  const found = pipe(
+    r.studies,
+    map((row) => ({ row, why: folder.refusal(row.folder) })),
+    find(
+      (x): x is typeof x & { readonly why: FolderRefusal } => x.why !== null,
+    ),
+  );
+  if (found === undefined) return null;
+  const { reason, fix } = folderRefusalText(found.why, p.shown);
+  return refuse(
+    1,
+    `${found.row.id} in ${p.shown}/${REPRO_DIR}/${STUDIES_FILE} names the folder \`${found.row.folder}\`, which ${reason}: nothing is read or written through it. ${fix}, then run this again.`,
+  );
 }
 
 const isRefusal = (v: unknown): v is Refusal =>

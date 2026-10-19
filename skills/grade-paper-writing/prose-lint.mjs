@@ -17,17 +17,18 @@
  *
  * A `.txt` is the text of the rendered PDF — the page a reviewer actually reads.
  *
- * The figure captions are measured too (`--flags-only`): every `\caption{}` in `paper.tex` and the
+ * The figure captions are measured too, in the report: every `\caption{}` in `paper.tex` and the
  * files it includes, or, beside a rendered page, in `figures/*.tex`.
  *
- * Advisory: it prints findings; `--flags-only` exits with code 1 if anything was found.
+ * Advisory: the report prints every check and exits 0. `--flags-only` prints the checks the report
+ * marks FLAG, each with the lines under it, and nothing on a clean paper; it exits 1 when there is
+ * one — the form for a hook.
  */
 import { paperProse } from "#src/paper-prose";
 import { paperRecord } from "#src/paper-record";
-import { latexReader } from "#src/adapters/latex/index";
+import { captionsOf, latexReader, parseLatex } from "#src/adapters/latex/index";
 import { nodeFiles } from "#src/adapters/node/index";
 import { sourcesCodec } from "#src/adapters/sources-record/index";
-import { texToMdast } from "#eslint-rules/latex-language";
 
 const THRESHOLDS = {
   metadiscourseTotalPer1000: {
@@ -363,77 +364,116 @@ function figureFiles(pagePath, fs, path) {
 }
 
 /**
- * Every `\caption{…}` of `sources` (`{ file, text }`) a reader sees, measured. The LaTeX
- * language's projection blanks what never typesets — verbatim and code, macro definitions, the
- * preamble — and keeps a caption's argument; it keeps comments too, as `html` nodes of its tree,
- * for the rules that read notes. So a caption is skipped when its argument is blank in the
- * projection or it starts inside a comment: a quoted or commented-out `\caption` is not one.
+ * Every `\caption` of `sources` (`{ file, text }`) a reader sees, measured. The captions come from the
+ * parsed source (`captionsOf`, src/adapters/latex/captions.ts): its optional argument, star and spacing
+ * are the parser's, and a caption that is commented out, in verbatim or in a macro's definition is not one.
  */
 function captions(sources) {
-  const out = [];
-  for (const { file: f, text: s } of sources) {
-    const { root, text: seen } = texToMdast(s);
-    const comments = root.children
-      .filter((n) => n.type === "html")
-      .map((n) => [n.position.start.offset, n.position.end.offset]);
-    for (const m of s.matchAll(/\\caption\{/g)) {
-      let i = m.index + m[0].length,
-        depth = 1,
-        j = i;
-      while (j < s.length && depth) {
-        if (s[j] === "{") depth++;
-        else if (s[j] === "}") depth--;
-        j++;
-      }
-      if (
-        !/\S/.test(seen.slice(i, j - 1)) ||
-        comments.some(([a, b]) => m.index >= a && m.index < b)
-      )
-        continue;
-      const text = s
-        .slice(i, j - 1)
-        .replace(/\\[a-zA-Z]+\s*/g, " ")
-        .replace(/[{}]/g, " ")
-        .replace(/---/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-      if (!text) continue;
-      // A non-empty caption splits into at least one sentence.
-      const sents = splitSentences(text);
-      out.push({
-        file: f,
-        words: words(text),
+  return sources.flatMap(({ file, text }) =>
+    captionsOf(parseLatex(text)).map((raw) => {
+      // A dash with no spaces round it joins two words in the count, as it never did here.
+      const caption = raw.replace(/---/g, " ");
+      const sents = splitSentences(caption);
+      return {
+        file,
+        words: words(caption),
         longest: Math.max(...sents.map(words)),
         longestSentence: sents.slice().sort((a, b) => words(b) - words(a))[0],
-      });
-    }
-  }
-  return out;
+      };
+    }),
+  );
 }
 
-function report(name, r) {
-  const flag = (ok) => (ok ? "ok  " : "FLAG");
+/**
+ * The findings on the captions of the file `f`: one line per caption sentence or caption over its
+ * limit. A paper's captions are in its own files — paper.tex and what it includes, wherever a figure
+ * is set; a rendered page has the `.tex` of `figures/` beside it. The report and `--flags-only` both
+ * read them from here.
+ */
+function captionFindings(f, tex, fs, path) {
+  return captions(tex ? tex.files : figureFiles(f, fs, path)).flatMap((c) =>
+    CAPTION_LIMITS.filter(over(c)).map(say(c)),
+  );
+}
+
+/**
+ * The two limits a caption is held to: the `THRESHOLDS` key, what of a caption it is measured on, and
+ * how a finding reads. A caption is over a limit when its measure exceeds the threshold's `warn`.
+ */
+const CAPTION_LIMITS = [
+  {
+    key: "captionSentenceWords",
+    measure: (c) => c.longest,
+    say: (c, warn) =>
+      `${c.file}: caption sentence of ${c.longest} words (warn >${warn}) — "${c.longestSentence.slice(0, 110)}…"`,
+  },
+  {
+    key: "captionWords",
+    measure: (c) => c.words,
+    say: (c, warn) =>
+      `${c.file}: caption is ${c.words} words (warn >${warn}) — a caption this long is a section under a picture`,
+  },
+];
+const over = (c) => (limit) => limit.measure(c) > THRESHOLDS[limit.key].warn;
+const say = (c) => (limit) => limit.say(c, THRESHOLDS[limit.key].warn);
+
+/**
+ * Every line of the report as data, in the order it is printed: `ok` is true (passed), false (a
+ * finding, marked `FLAG`) or null (a figure, no check), `under` the lines that name the offenders.
+ * The report prints all of it; `--flags-only` prints the findings: one list, two renderings.
+ */
+function checks(r, captionLines) {
+  const T = THRESHOLDS;
+  return [
+    {
+      ok: r.metadiscoursePer1000 <= T.metadiscourseTotalPer1000.warn,
+      text: `all metadiscourse/1000w  ${r.metadiscoursePer1000}   (Hyland RA baseline 64.9, warn >${T.metadiscourseTotalPer1000.warn})`,
+      under: [],
+    },
+    {
+      ok: null,
+      text: `nominalisations/1000w    ${r.nominalisationsPer1000}`,
+      under: [],
+    },
+    {
+      ok: r.contrastivePer10k <= T.contrastivePer10k.warn,
+      text: `"rather than"/instead-of/10,000w  ${r.contrastivePer10k}   (warn >${T.contrastivePer10k.warn}; not epanorthosis, no published baseline)`,
+      under: [],
+    },
+    {
+      ok: r.wastedStress.length === 0,
+      text: `sentences ending on a cross-ref/citation/hedge (wasted stress position): ${r.wastedStress.length}`,
+      under: r.wastedStress.map((s) => `…${s.slice(-70)}`),
+    },
+    {
+      ok: r.negatedSentencePct <= T.negatedMainClausePct.warn,
+      text: `sentences whose main claim is a negation: ${r.negatedSentencePct}%`,
+      under: [],
+    },
+    {
+      ok: captionLines.length === 0,
+      text: `figure captions over the limit: ${captionLines.length}`,
+      under: captionLines,
+    },
+    {
+      ok: null,
+      text: `topic positions (whose story is this?): ${r.topics.map((t) => `"${t}"`).join(" | ")}`,
+      under: [],
+    },
+  ];
+}
+
+const MARK = { true: "ok  ", false: "FLAG", null: "    " };
+
+function report(name, r, rows) {
   console.log(`\n=== ${name} — ${r.words} words, ${r.sentences} sentences ===`);
   console.log(
     `sentence lengths ${JSON.stringify(r.sentenceLens)}  mean ${r.meanLen}  sd ${r.sdLen}  CV ${r.cv}`,
   );
-  console.log(
-    `${flag(r.metadiscoursePer1000 <= THRESHOLDS.metadiscourseTotalPer1000.warn)} all metadiscourse/1000w  ${r.metadiscoursePer1000}   (Hyland RA baseline 64.9, warn >${THRESHOLDS.metadiscourseTotalPer1000.warn})`,
-  );
-  console.log(`     nominalisations/1000w    ${r.nominalisationsPer1000}`);
-  console.log(
-    `${flag(r.contrastivePer10k <= THRESHOLDS.contrastivePer10k.warn)} "rather than"/instead-of/10,000w  ${r.contrastivePer10k}   (warn >${THRESHOLDS.contrastivePer10k.warn}; not epanorthosis, no published baseline)`,
-  );
-  console.log(
-    `${flag(r.wastedStress.length === 0)} sentences ending on a cross-ref/citation/hedge (wasted stress position): ${r.wastedStress.length}`,
-  );
-  r.wastedStress.forEach((s) => console.log(`       > …${s.slice(-70)}`));
-  console.log(
-    `${flag(r.negatedSentencePct <= THRESHOLDS.negatedMainClausePct.warn)} sentences whose main claim is a negation: ${r.negatedSentencePct}%`,
-  );
-  console.log(
-    `     topic positions (whose story is this?): ${r.topics.map((t) => `"${t}"`).join(" | ")}`,
-  );
+  rows.forEach(({ ok, text, under }) => {
+    console.log(`${MARK[ok]} ${text}`);
+    under.forEach((l) => console.log(`       > ${l}`));
+  });
 }
 
 const args = process.argv.slice(2);
@@ -474,14 +514,14 @@ function pdfTextOnly(t) {
     .replace(/\f/g, "\n\n");
 }
 
-// 🔴 `--flags-only` and a NON-ZERO EXIT, added 2026-08-05, are what let anything downstream act.
-// Until today this file printed a wall of numbers and always exited 0, and it was wired to no hook
-// at all — it ran only if a human or a skill remembered it existed. Its epanorthosis metric sat at
-// 50.8 per 10,000 words (the LLM baseline is 7.8) through five consecutive writing passes and never
-// once flagged, because it had no threshold. The corpus owner found the tic by eye in a single reading and
-// asked why the tooling had not. It had not because it was measuring, and measuring is not checking
-// — which is, word for word, this paper's own thesis running loose inside its own toolchain.
-const flagsOnly = args.includes("--flags-only");
+// `--flags-only` prints the findings of the report (every line it marks FLAG, with the lines under
+// it) and nothing on a clean paper, and exits 1 when there is one: the form for a hook. The report
+// prints all of `checks` and exits 0.
+const mode = args.includes("--flags-only")
+  ? "flags"
+  : args.includes("--headings")
+    ? "headings"
+    : "report";
 let flagged = 0;
 for (const f of args.filter((a) => !a.startsWith("--"))) {
   const raw = fs.readFileSync(f, "utf8");
@@ -509,33 +549,25 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
     process.exit(2);
   }
   const r = analyse(text, sentences);
-  if (flagsOnly) {
-    const lines = [];
-    // A paper's captions are in its own files — paper.tex and what it includes, wherever a figure
-    // is set; a rendered page has the `.tex` of `figures/` beside it.
-    for (const c of captions(tex ? tex.files : figureFiles(f, fs, path))) {
-      if (c.longest > THRESHOLDS.captionSentenceWords.warn)
-        lines.push(
-          `   ${c.file}: caption sentence of ${c.longest} words (warn >${THRESHOLDS.captionSentenceWords.warn}) — "${c.longestSentence.slice(0, 110)}…"`,
-        );
-      if (c.words > THRESHOLDS.captionWords.warn)
-        lines.push(
-          `   ${c.file}: caption is ${c.words} words (warn >${THRESHOLDS.captionWords.warn}) — a caption this long is a section under a picture`,
-        );
-    }
-    if (lines.length) {
-      flagged += lines.length;
+  const rows = () => checks(r, captionFindings(f, tex, fs, path));
+  if (mode === "flags") {
+    const found = rows().filter((row) => row.ok === false);
+    if (found.length) {
+      flagged += found.length;
       // The header STATES the count, so a caller need not count output lines — header and footer
       // are not findings.
       console.error(
-        `✍️  prose-lint — ${f.split("/").pop()} — ${lines.length} finding(s):`,
+        `✍️  prose-lint — ${f.split("/").pop()} — ${found.length} finding(s):`,
       );
-      lines.forEach((l) => console.error(l));
+      found.forEach(({ text, under }) => {
+        console.error(`   ${text}`);
+        under.forEach((l) => console.error(`      > ${l}`));
+      });
       console.error(
-        "   run prose-lint.mjs on the file without --flags-only for the sentences",
+        "   run prose-lint.mjs on the file without --flags-only for every metric",
       );
     }
-  } else if (args.includes("--headings")) {
+  } else if (mode === "headings") {
     // The whole-document question, printed as one list. Not a gate: "does this heading name a
     // concrete noun" is judgement and pretending otherwise would be the exact failure this file
     // exists to stop. What was missing is cheaper and was the real cause — nobody had ever seen the
@@ -558,10 +590,10 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
       'a linter, a configuration, a repository, a rule — not "answers", "kinds", "moves".',
     );
   } else {
-    report(f.split("/").pop(), r);
+    report(f.split("/").pop(), r, rows());
   }
 }
-if (!flagsOnly)
+if (mode !== "flags")
   console.log(
     "\n(thresholds and their sources are in THRESHOLDS at the top of this file)",
   );

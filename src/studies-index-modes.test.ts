@@ -98,7 +98,7 @@ it("refuses a registry whose row names a folder outside repro/, for index and fo
     { ...ROW, folder: "../x" },
   );
   const line =
-    "P1-S01 in papers/example/repro/studies.json names the folder `../x`, which is not one folder inside repro/: nothing is read or written through it. Give the row its own folder's name, then run this again.";
+    "P1-S01 in papers/example/repro/studies.json names the folder `../x`, which is not one folder inside papers/example/repro/: nothing is read or written through it. Give the row its own folder's name, then run this again.";
   const index = studies("index", escaping, { title: undefined });
   const added = studies("new", escaping, { title: "Second" });
   // Guards: nothing is written — no README, no new folder — when a row could lead outside the paper.
@@ -122,7 +122,7 @@ it("refuses a registry whose study folder is a symbolic link, for index", () => 
   expect([r.code, r.err, README in r.after]).toEqual([
     1,
     [
-      "P1-S01 in papers/example/repro/studies.json names the folder `P1-S01-outcome`, which is not one folder inside repro/: nothing is read or written through it. Give the row its own folder's name, then run this again.",
+      "P1-S01 in papers/example/repro/studies.json names the folder `P1-S01-outcome`, which is a symbolic link: nothing is read or written through it. Give the row a real folder inside papers/example/repro/, then run this again.",
     ],
     false,
   ]);

@@ -22,6 +22,7 @@ import {
   type StudyPlan,
   type StudyRegistry,
   type IndexInput,
+  folderKey,
 } from "./study-registry.ts";
 
 /** No plan and no history: the index with every mode column `—`. */
@@ -110,10 +111,10 @@ const input = (
   folders: r.studies.map((s) => s.folder),
   registry: { kind: "read", registry: r },
   readme: withIndex("# Reproduction index\n", r, NO_FACTS),
-  existingResults: new Set(),
+  results: new Map(),
   plans: new Map(
     r.studies.flatMap((s) =>
-      s.plan === undefined ? [] : [[`${s.folder}/${s.plan}`, read(PLAN)]],
+      s.plan === undefined ? [] : [[folderKey(s.folder, s.plan), read(PLAN)]],
     ),
   ),
   ...over,
@@ -385,7 +386,10 @@ describe("plans — the parser decides ready or draft", () => {
     });
     const plans = new Map([[`P1-S01-census/${PLAN_FILE}`, read(PLAN)]]);
     expect(
-      findings(r, { plans, existingResults: new Set(["P1-S01-census/r.tsv"]) }),
+      findings(r, {
+        plans,
+        results: new Map([["P1-S01-census/r.tsv", { kind: "file" as const }]]),
+      }),
     ).toEqual([]);
   });
 

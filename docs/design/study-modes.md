@@ -67,8 +67,9 @@ decision that is a directory, a decision its own outputs match). A runner calls 
 npx paperlint studies gate papers/my-paper P1-S03 && ./run.sh
 ```
 
-For an exploratory study it exits 0 and says it has no gate. A study that declares no mode, or whose
-plan is still a draft, is refused.
+For an exploratory study it exits 0 and says it has no gate. A study that declares no mode, whose
+plan is still a draft, or whose id two rows of the registry share (the gate answers for exactly one
+study), is refused.
 
 ### 3. `repro/outputs-before-decision` — the proof of order a reviewer can re-run
 
@@ -132,17 +133,31 @@ make a command or a rule read, judge or write files that belong to nothing in it
 
 Every command and rule that reads a study's folder — `studies gate`, `studies index` and `new`,
 `repro/outputs-before-decision`, and `repro/study-registered`'s reads of plans and result files —
-reads a row only through one predicate, `readableFolders` (`src/study-registry-rule.ts`): its
-`folder` is one folder directly inside `repro/` (`isFolderName`: not empty, not `.` or `..`, no
-separator or NUL) and not a symbolic link (`ListEntries`, read without following links). Such a row
-is never read through: `studies index` and `new` refuse the registry, the gate refuses the study,
-the order rule treats it as no study, and `repro/study-registered` reads its plan and results as
-missing. A plan's path is held inside its folder by the registry rule's own `isInside`, the same on
-every platform (a backslash is refused outright); the decision file is held inside the paper by the
-schema (`staysInside`) and must be a regular file on disk — a directory or a symbolic link is refused
-by the gate and reported by the rule (`decision-not-file`). Only a **ready** plan's mode decides
-anything: the gate refuses a draft, naming its empty fields, and the order rule judges no draft — a
-draft may name no outputs, or an empty decision file.
+goes through one reader, `studyFolder` (`src/study-folder.ts`), built once per run from the paper's
+folder over `ListEntries`, which does not follow links. It decides first whether a row's folder may
+be entered at all (`refusal`): its `folder` is one folder directly inside `repro/` (`isFolderName`:
+not empty, not `.` or `..`, no separator or NUL) and not a symbolic link. Such a row is never read
+through: `studies index` and `new` refuse the registry, the gate refuses the study, the order rule
+treats it as no study, and `repro/study-registered` reads its plan and results as missing.
+
+A plan's path is held inside its folder by the registry rule's own `isInside`, the same on every
+platform (a backslash is refused outright). The reader walks the path one component at a time, and a
+plan or a result file whose path passes through a symbolic link — the file itself, or a directory
+above it — is never read. The gate refuses it naming the link, the order rule treats the study as
+declaring no mode, and `repro/study-registered` reports it (`bad-plan`, `result-file`) with the link.
+
+The decision file is held inside the paper by the schema (`staysInside`) and is judged by the same
+walk (`decisionEntry`, `entryAt`): every component of its path must be a real directory and the last
+a regular file. A directory or a symbolic link as the file itself is refused by the gate and reported
+by the rule (`decision-not-file`); a symbolic link above the file is refused naming that link
+(`decision-linked`).
+
+The plan reads, the result-file existence checks and the decision's path check take a `StudyFolder`
+and not `Files`, so a read that follows a link is not what those readers are handed. A study's
+outputs are listed through it too (`StudyFolder.list`).
+
+Only a **ready** plan's mode decides anything: the gate refuses a draft, naming its empty fields, and
+the order rule judges no draft — a draft may name no outputs, or an empty decision file.
 
 ### 6. Legacy plans
 
@@ -220,21 +235,24 @@ Read for this note (2026-10-16):
 
 ## Where each part lives
 
-| part                                                          | file                                  | layer   |
-| ------------------------------------------------------------- | ------------------------------------- | ------- |
-| the modes, what is an output, which decision a mode waits on  | `src/domain/study-mode.ts`            | domain  |
-| the order judge and its messages                              | `src/domain/decide-first.ts`          | domain  |
-| the index's mode columns and the history they show            | `src/domain/index-columns.ts`         | domain  |
-| the index, which columns the lint compares, `isFolderName`    | `src/domain/study-registry.ts`        | domain  |
-| the schema of `mode`; readiness by kind                       | `src/adapters/study-registry/`        | adapter |
-| git: committed state, first commits, ancestry, shallow        | `src/adapters/git/`                   | adapter |
-| what the app asks of git                                      | `src/ports/git-history.ts`            | port    |
-| a directory's entries, links not followed                     | `src/ports/list-entries.ts`           | port    |
-| the studies with a mode, and the files under a study's folder | `src/study-modes.ts`                  | app     |
-| the order rule                                                | `src/outputs-before-decision-rule.ts` | app     |
-| the plans and histories `studies index` and `new` write from  | `src/study-index-input.ts`            | app     |
-| `gate`; `new` and `index`                                     | `src/study-gate.ts`, `src/studies.ts` | app     |
-| wiring: git with PATH and HOME, the clock                     | `src/cli.ts`                          | root    |
+| part                                                         | file                                  | layer   |
+| ------------------------------------------------------------ | ------------------------------------- | ------- |
+| the modes, what is an output, which decision a mode waits on | `src/domain/study-mode.ts`            | domain  |
+| the order judge and its messages                             | `src/domain/decide-first.ts`          | domain  |
+| the index's mode columns and the history they show           | `src/domain/index-columns.ts`         | domain  |
+| the index, which columns the lint compares, `isFolderName`   | `src/domain/study-registry.ts`        | domain  |
+| the schema of `mode`; readiness by kind                      | `src/adapters/study-registry/`        | adapter |
+| git: committed state, first commits, ancestry, shallow       | `src/adapters/git/`                   | adapter |
+| what the app asks of git                                     | `src/ports/git-history.ts`            | port    |
+| a directory's entries, links not followed                    | `src/ports/list-entries.ts`           | port    |
+| the studies with a mode, and how a decision's path stands    | `src/study-modes.ts`                  | app     |
+| what the study readers need of a study's folder              | `src/ports/study-folder.ts`           | port    |
+| what the study readers are handed                            | `src/ports/study-deps.ts`             | port    |
+| the one reader of a study's folder, links not followed       | `src/study-folder.ts`                 | app     |
+| the order rule                                               | `src/outputs-before-decision-rule.ts` | app     |
+| the plans and histories `studies index` and `new` write from | `src/study-index-input.ts`            | app     |
+| `gate`; `new` and `index`                                    | `src/study-gate.ts`, `src/studies.ts` | app     |
+| wiring: git with PATH and HOME, the clock                    | `src/cli.ts`                          | root    |
 
 ## What it does not check
 

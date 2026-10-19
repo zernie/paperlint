@@ -209,7 +209,7 @@ The rule reports:
   must meet a requirement the registry does not hold (`unknown-requirement`);
 - a `headline` measurement with no `approval`, or, when the registry names its `author`, one approved
   by anyone else (`headline-approval`);
-- a row's `plan` that is outside its folder, not a file, or not of the plan's shape — and, once the
+- a row's `plan` that is outside its folder, not a file, reached through a symbolic link, or not of the plan's shape — and, once the
   study has run (`running`, `done`, `stopped`, `superseded`), a plan that leaves `question`,
   `population.source`, `population.draw.method` or `primary_outcome` empty, or — for a measurement —
   declares no `mode` or leaves one of its texts empty (`bad-plan`);
@@ -316,7 +316,8 @@ No rule options.
 - Whether the paper cites a study: `in_paper` is declared, not detected.
 - The index's `decision` and `first output` cells: they name commits a squash merge renames.
 - Inside a study folder that is a symbolic link: nothing is read through it, so its plan and its
-  result file read as missing.
+  result file read as missing. A plan or a result file whose path passes through a link inside the
+  folder is not read either, and is reported naming the link (`bad-plan`, `result-file`).
 - What may stand at the top of `repro/` besides the study folders, and whether a study folder has a
   `README.md`: that is [`repro/allowed-files-only`](allowed-files-only.md).
 

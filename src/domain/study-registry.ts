@@ -248,8 +248,22 @@ export type ParsedPlan =
     }
   | { readonly kind: "unreadable"; readonly why: string };
 
+/**
+ * What a path inside a study's folder is, found without reading it or following a link: a regular
+ * file, nothing, or a path that passes through a symbolic link (`link`: the first one, relative to
+ * the folder).
+ */
+export type Located =
+  | { readonly kind: "file" }
+  | { readonly kind: "absent" }
+  | { readonly kind: "linked"; readonly link: string };
+
 /** What a study's folder holds of the plan its row names: absent, or what its text parsed to. */
-export type PlanState = { readonly kind: "absent" } | ParsedPlan;
+export type PlanState =
+  | { readonly kind: "absent" }
+  /** The plan's path passes through a symbolic link, `link` (relative to the folder); never read. */
+  | { readonly kind: "linked"; readonly link: string }
+  | ParsedPlan;
 
 /** The decision file `paperlint studies new` names for a study in `folder`, relative to the paper. */
 export const decisionPath = (folder: string): string =>
@@ -303,8 +317,8 @@ export interface StudyInput {
   readonly registry: RegistryState;
   /** `repro/README.md`'s text; null when there is none. */
   readonly readme: string | null;
-  /** Each `<folder>/<result_file>` of the registry that is a file. */
-  readonly existingResults: ReadonlySet<string>;
+  /** What each `<folder>/<result_file>` of the registry is, as `locate` found it; one not listed is absent. */
+  readonly results: ReadonlyMap<string, Located>;
   /** The plan each row names, by `<folder>/<plan>`; one not listed is absent. */
   readonly plans: ReadonlyMap<string, PlanState>;
 }
@@ -352,6 +366,13 @@ export type StudyFinding =
       readonly why: "missing" | "outside";
     }
   | {
+      readonly problem: "result-file";
+      readonly id: string;
+      readonly path: string;
+      readonly why: "linked";
+      readonly link: string;
+    }
+  | {
       readonly problem: "no-successor";
       readonly id: string;
       readonly superseded_by: string | null;
@@ -389,6 +410,13 @@ export type StudyFinding =
       readonly id: string;
       readonly path: string;
       readonly why: "missing" | "outside";
+    }
+  | {
+      readonly problem: "bad-plan";
+      readonly id: string;
+      readonly path: string;
+      readonly why: "linked";
+      readonly link: string;
     }
   | {
       readonly problem: "bad-plan";
@@ -480,23 +508,65 @@ export const isFolderName = (folder: string): boolean =>
   folder !== "." && folder !== ".." && /^[^/\\\0]+$/u.test(folder);
 
 /**
+ * The rows of a registry that carry an id: exactly one, none, or several. The one way to address a
+ * study by its id — a caller that wants "the study P1-S01" gets a row only when there is exactly one,
+ * so no command can act on the first of two rows by accident. A registry may still hold two rows of
+ * one id (`repro/study-registered` reports it); this says so instead of choosing.
+ */
+export type StudyLookup =
+  | { readonly kind: "one"; readonly row: Study }
+  | { readonly kind: "none" }
+  | { readonly kind: "ambiguous"; readonly rows: readonly Study[] };
+
+/** The rows of a registry that was read; none when there is no registry, or it does not parse. */
+export const studiesOf = (state: RegistryState): readonly Study[] =>
+  state.kind === "read" ? state.registry.studies : [];
+
+/** The rows of `studies` whose id is `id`, as a `StudyLookup`. */
+export const studyById = (
+  studies: readonly Study[],
+  id: string,
+): StudyLookup => {
+  const [first, ...rest] = studies.filter((s) => s.id === id);
+  if (first === undefined) return { kind: "none" };
+  return rest.length === 0
+    ? { kind: "one", row: first }
+    : { kind: "ambiguous", rows: [first, ...rest] };
+};
+
+/**
+ * The key a path inside a study's folder is held under: `<folder>/<path>`. A plan (`StudyInput.plans`,
+ * `IndexInput.plans`), the history of its study (`IndexInput.history`) and a result file
+ * (`StudyInput.results`) are all found by it.
+ */
+export const folderKey = (folder: string, path: string): string =>
+  `${folder}/${path}`;
+
+/**
  * The `<folder>/<plan>` of each row whose plan lies inside its folder: the files the judge needs read
  * (`StudyInput.plans`). A plan outside its folder is reported without being read.
  */
 export const planKeys = (r: StudyRegistry): readonly string[] =>
-  planRefs(r).map((p) => p.key);
+  planRefs(r).map((p) => folderKey(p.folder, p.plan));
 
-/** Each plan `planKeys` names, with the kind of the study whose row names it: what its parser needs. */
-export const planRefs = (
-  r: StudyRegistry,
-): readonly {
-  readonly key: string;
+/** A plan a row names: where it is read from, and the kind of the study — what its parser needs. */
+export interface PlanRef {
   readonly folder: string;
+  readonly plan: string;
   readonly kind: StudyKind;
-}[] =>
+}
+
+/** Each plan `planKeys` names. */
+export const planRefs = (r: StudyRegistry): readonly PlanRef[] =>
   r.studies.flatMap((s) =>
     s.plan !== undefined && isInside(s.plan) && isFolderName(s.folder)
-      ? [{ key: `${s.folder}/${s.plan}`, folder: s.folder, kind: s.kind }]
+      ? [
+          {
+            folder: s.folder,
+            plan: s.plan,
+            kind: s.kind,
+          },
+        ]
       : [],
   );
 
@@ -522,7 +592,7 @@ const badId: RowCheck = ({ r, s }) =>
 
 /** Reported once, on the first row that holds the id. */
 const duplicateId: RowCheck = (row) =>
-  row.r.studies.filter((o) => o.id === row.s.id).length > 1 &&
+  studyById(row.r.studies, row.s.id).kind === "ambiguous" &&
   isFirst(row, (o) => o.id)
     ? { problem: "duplicate-id", id: row.s.id }
     : null;
@@ -572,9 +642,23 @@ const resultFile: RowCheck = ({ s, input }) => {
   if (path === undefined) return null;
   if (!isInside(path))
     return { problem: "result-file", id: s.id, path, why: "outside" };
-  return input.existingResults.has(`${s.folder}/${path}`)
-    ? null
-    : { problem: "result-file", id: s.id, path, why: "missing" };
+  const found = input.results.get(folderKey(s.folder, path)) ?? {
+    kind: "absent",
+  };
+  switch (found.kind) {
+    case "file":
+      return null;
+    case "linked":
+      return {
+        problem: "result-file",
+        id: s.id,
+        path,
+        why: "linked",
+        link: found.link,
+      };
+    case "absent":
+      return { problem: "result-file", id: s.id, path, why: "missing" };
+  }
 };
 
 const noSuccessor: RowCheck = ({ r, s }) => {
@@ -593,13 +677,15 @@ const unknownMeasurement: RowCheck = ({ r, s }) =>
     ? null
     : { problem: "unknown-measurement", id: s.id, measurement: s.measurement };
 
-/** The state of the plan the row names (absent when outside its folder); null when it names none. */
-const planOf = ({ s, input }: Row): PlanState | null => {
-  if (s.plan === undefined) return null;
-  return isInside(s.plan)
-    ? (input.plans.get(`${s.folder}/${s.plan}`) ?? { kind: "absent" })
+/** The state of the plan `plan` of the row `s` (absent when outside its folder): the one place a plan is looked up. */
+const planStateOf = (input: StudyInput, s: Study, plan: string): PlanState =>
+  isInside(plan)
+    ? (input.plans.get(folderKey(s.folder, plan)) ?? { kind: "absent" })
     : { kind: "absent" };
-};
+
+/** The state of the plan the row names; null when it names none. */
+const planOf = ({ s, input }: Row): PlanState | null =>
+  s.plan === undefined ? null : planStateOf(input, s, s.plan);
 
 const hasRun = (s: Study): boolean => RAN_STATUSES.includes(s.status);
 
@@ -613,6 +699,8 @@ const planFinding = (
   switch (state.kind) {
     case "absent":
       return { ...at, why: "missing" };
+    case "linked":
+      return { ...at, why: "linked", link: state.link };
     case "unreadable":
       return { ...at, why: "unreadable", reasons: state.why };
     case "draft":
@@ -630,11 +718,7 @@ const badPlan: RowCheck = ({ s, input }) => {
   if (path === undefined) return null;
   if (!isInside(path))
     return { problem: "bad-plan", id: s.id, path, why: "outside" };
-  return planFinding(
-    s,
-    path,
-    input.plans.get(`${s.folder}/${path}`) ?? { kind: "absent" },
-  );
+  return planFinding(s, path, planStateOf(input, s, path));
 };
 
 /** A plan under its old name: read, and named for renaming. */
@@ -801,8 +885,8 @@ const cell = (s: string): string =>
 
 /**
  * What the index is generated from beyond the registry: the plans by `<folder>/<plan>` (as
- * `StudyInput.plans`), and the history of each decide-first study by id. A study with no history
- * listed shows `not read` — the lint, which never compares those columns, asks none.
+ * `StudyInput.plans`), and the history of each decide-first study by the same key. A study with no
+ * history listed shows `not read` — the lint, which never compares those columns, asks none.
  */
 export interface IndexInput {
   readonly plans: ReadonlyMap<string, PlanState>;
@@ -816,10 +900,11 @@ const declaredMode = (
 ): StudyMode | null => {
   const state =
     s.plan !== undefined && isInside(s.plan)
-      ? plans.get(`${s.folder}/${s.plan}`)
+      ? plans.get(folderKey(s.folder, s.plan))
       : undefined;
   return state === undefined ||
     state.kind === "absent" ||
+    state.kind === "linked" ||
     state.kind === "unreadable"
     ? null
     : (state.plan.mode ?? null);
@@ -828,7 +913,10 @@ const declaredMode = (
 /** What the index shows of `s` beyond its row. */
 const factsOf = (s: Study, at: IndexInput): IndexFacts => ({
   mode: declaredMode(s, at.plans),
-  history: at.history.get(s.id) ?? null,
+  history:
+    (s.plan === undefined
+      ? undefined
+      : at.history.get(folderKey(s.folder, s.plan))) ?? null,
 });
 
 /**
@@ -1039,7 +1127,9 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
   "no-result": (f) =>
     `${REGISTRY}: ${tick(f.id)} is \`done\` without ${f.missing.map(tick).join(" and ")}. What to do: write the one-line result and the file it is read from (\`result\`, \`result_file\`), or set the status it really has.`,
   "result-file": (f) =>
-    `${REGISTRY}: the \`result_file\` of ${tick(f.id)}, ${tick(f.path)}, ${f.why === "missing" ? "is not a file in its folder" : "is outside its folder"}. What to do: name a file that exists, relative to the study's folder.`,
+    f.why === "linked"
+      ? `${REGISTRY}: the \`result_file\` of ${tick(f.id)}, ${tick(f.path)}, passes through the symbolic link ${tick(f.link)} in its folder; nothing is read through a link. What to do: name a regular file inside the study's folder, or replace the link with the file itself.`
+      : `${REGISTRY}: the \`result_file\` of ${tick(f.id)}, ${tick(f.path)}, ${f.why === "missing" ? "is not a file in its folder" : "is outside its folder"}. What to do: name a file that exists, relative to the study's folder.`,
   "no-successor": (f) =>
     `${REGISTRY}: ${tick(f.id)} is \`superseded\` ${f.superseded_by === null ? "without `superseded_by`" : `by ${tick(f.superseded_by)}, which is no study in the registry`}. What to do: name the id of the study that replaced it.`,
   "stale-index": (f) => `${STALE_HEAD[f.why]} ${RUN_INDEX}`,
@@ -1059,6 +1149,8 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
     switch (f.why) {
       case "missing":
         return `${REGISTRY}: ${of} is not a file in its folder. What to do: write the plan there (its fields are on the rule's page), or correct the row's \`plan\`.`;
+      case "linked":
+        return `${REGISTRY}: ${of} passes through the symbolic link ${tick(f.link)} in its folder; nothing is read through a link. What to do: replace the link with the plan file itself.`;
       case "outside":
         return `${REGISTRY}: ${of} is outside its folder. What to do: keep the plan in the study's folder, as \`${PLAN_FILE}\`, and name it relative to the folder.`;
       case "unreadable":

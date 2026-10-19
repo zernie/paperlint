@@ -18,6 +18,7 @@
  * file in `repro/`.
  */
 import { basename, dirname, join, posix } from "node:path";
+import { filter, map, pipe } from "remeda";
 import { callerPath } from "./caller-path.ts";
 import {
   README,
@@ -29,13 +30,17 @@ import {
   LEGACY_PLAN_FILE,
   PLAN_NAME_PROBLEMS,
   STUDIES_FILE,
-  isFolderName,
   judgeStudies,
+  folderKey,
   planRefs,
+  studiesOf,
   studyMessage,
   type PlanState,
   type RegistryState,
+  type Study,
   type StudyFinding,
+  type Located,
+  type PlanRef,
 } from "./domain/study-registry.ts";
 import type { FolderLayoutDeps } from "./folder-layout-rule.ts";
 import type {
@@ -46,6 +51,8 @@ import type { Files } from "./ports/files.ts";
 import type { ListEntries } from "./ports/list-entries.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import { reproEntriesOf } from "./repro-layout-rule.ts";
+import type { StudyFolder } from "./ports/study-folder.ts";
+import { studyFolder } from "./study-folder.ts";
 import { rulePageUrl } from "./venue-rules.ts";
 
 const STATUS_FILE = "PIPELINE-STATUS.md";
@@ -56,30 +63,6 @@ export interface StudyRegistryDeps extends FolderLayoutDeps {
   /** `repro/`'s entries, links not followed: a study folder that is a link is never read through. */
   readonly entries: ListEntries;
 }
-
-/** The names at the top of `<dir>/repro/` that are symbolic links. */
-const linksIn = (
-  dir: string,
-  deps: Pick<StudyRegistryDeps, "entries">,
-): ReadonlySet<string> =>
-  new Set(
-    deps
-      .entries(callerPath(join(dir, REPRO_DIR)))
-      .filter((e) => e.kind === "symlink")
-      .map((e) => e.name),
-  );
-
-/**
- * The test every reader of a study's folder passes a row through: its folder is one folder name
- * inside `repro/` (`isFolderName`) and not a symbolic link, which would lead the reads anywhere.
- */
-export const readableFolders = (
-  dir: string,
-  deps: Pick<StudyRegistryDeps, "entries">,
-): ((folder: string) => boolean) => {
-  const links = linksIn(dir, deps);
-  return (folder) => isFolderName(folder) && !links.has(folder);
-};
 
 /** The text of the file at `p`; null when there is none, or a directory sits there. */
 export const textAt = (files: Files, p: string): string | null => {
@@ -111,70 +94,79 @@ const studyFolders = (dir: string, deps: FolderLayoutDeps): readonly string[] =>
     )
     .map((e) => e.name);
 
-/** Each `<folder>/<result_file>` of `r` that is a file. */
-const existingResults = (
-  dir: string,
+/** What each `<folder>/<result_file>` of `r`'s rows is, as the study folder's reader finds it. */
+const resultsOf = (
   r: RegistryState,
-  files: Files,
-  readable: (folder: string) => boolean,
-): ReadonlySet<string> =>
-  new Set(
-    (r.kind === "read" ? r.registry.studies : [])
-      // A row whose folder is not one inside `repro/`, or is a link, is never read through.
-      .filter((s) => readable(s.folder))
-      .flatMap((s) =>
-        s.result_file === undefined ? [] : [`${s.folder}/${s.result_file}`],
-      )
-      // A NUL is no path the disk can hold, and probing one throws: such a row reads as missing.
-      .filter(
-        (p) =>
-          !p.includes("\0") &&
-          files.isFile(callerPath(join(dir, REPRO_DIR, p))),
-      ),
+  folder: StudyFolder,
+): ReadonlyMap<string, Located> =>
+  pipe(
+    studiesOf(r),
+    filter(hasResultFile),
+    map(
+      (s) =>
+        [
+          folderKey(s.folder, s.result_file),
+          folder.locate(s.folder, s.result_file),
+        ] as const,
+    ),
+    (entries) => new Map(entries),
   );
+
+/** A row that names a result file. */
+const hasResultFile = (
+  s: Study,
+): s is Study & { readonly result_file: string } => s.result_file !== undefined;
 
 /**
  * The plan each row of `r` names, read and parsed, by `<folder>/<plan>`; a plan not there is left out.
  * A plan still named `prereg.json` is parsed by the loose schema of its old name.
  */
 export const plansOf = (
-  dir: string,
   r: RegistryState,
-  deps: Pick<StudyRegistryDeps, "files" | "codec">,
-  readable: (folder: string) => boolean,
+  folder: StudyFolder,
+  codec: StudyRegistryCodec,
 ): ReadonlyMap<string, PlanState> =>
   new Map(
-    (r.kind === "read" ? planRefs(r.registry) : [])
-      // A NUL is no path the disk can hold, and probing one throws: such a plan reads as missing. A
-      // folder that is a link is never read through.
-      .filter(({ key, folder }) => !key.includes("\0") && readable(folder))
-      .flatMap(({ key, kind }): readonly (readonly [string, PlanState])[] => {
-        const text = textAt(deps.files, join(dir, REPRO_DIR, key));
-        if (text === null) return [];
-        return [
-          [
-            key,
-            posix.basename(key) === LEGACY_PLAN_FILE
-              ? deps.codec.parseLegacyPlan(text)
-              : deps.codec.parsePlan(text, kind),
-          ],
-        ];
-      }),
+    (r.kind === "read" ? planRefs(r.registry) : []).flatMap((ref) => {
+      const state = planStateOf(ref, folder, codec);
+      return state === null
+        ? []
+        : [[folderKey(ref.folder, ref.plan), state] as const];
+    }),
   );
+
+/** The state of the plan `ref` names, read through `folder`; null when it is not there. */
+const planStateOf = (
+  { folder: of, plan, kind }: PlanRef,
+  folder: StudyFolder,
+  codec: StudyRegistryCodec,
+): PlanState | null => {
+  const read = folder.read(of, plan);
+  switch (read.kind) {
+    case "absent":
+      return null;
+    case "linked":
+      return { kind: "linked", link: read.link };
+    case "text":
+      return posix.basename(plan) === LEGACY_PLAN_FILE
+        ? codec.parseLegacyPlan(read.text)
+        : codec.parsePlan(read.text, kind);
+  }
+};
 
 /** Every finding of the paper folder `dir`'s study registry — THE function behind both rules. */
 export function studyFindings(
   dir: string,
   deps: StudyRegistryDeps,
 ): readonly StudyFinding[] {
-  const readable = readableFolders(dir, deps);
   const registry = registryOf(dir, deps);
+  const folder = studyFolder(dir, deps);
   return judgeStudies({
     folders: studyFolders(dir, deps),
     registry,
     readme: textAt(deps.files, join(dir, REPRO_DIR, README)),
-    existingResults: existingResults(dir, registry, deps.files, readable),
-    plans: plansOf(dir, registry, deps, readable),
+    results: resultsOf(registry, folder),
+    plans: plansOf(registry, folder, deps.codec),
   });
 }
 

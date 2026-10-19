@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
-import { cpSync } from "node:fs";
+import { cpSync, readFileSync } from "node:fs";
 import { layRecord, recordedTree } from "../../test/recorded-fixture.ts";
 import { runNode, useTempDir, writeTree } from "../../test/support.ts";
 
@@ -62,6 +62,16 @@ const TREE = {
   "commented/paper.tex": tex(
     `Prose here.\n% \\caption{Commented ${LONG_CAPTION_SENTENCE}.}\n\\begin{verbatim}\n\\caption{Quoted ${LONG_CAPTION_SENTENCE}.}\n\\end{verbatim}\n\\begin{figure}\\caption{Real ${LONG_CAPTION_SENTENCE}.}\\end{figure}`,
   ),
+  // The caption command with an optional argument, and with a space before its brace.
+  "optarg/paper.tex": tex(
+    `Prose here. \\begin{figure}\\caption[Short]{${LONG_CAPTION_SENTENCE}.}\\end{figure}`,
+  ),
+  "spaced/paper.tex": tex(
+    `Prose here. \\begin{figure}\\caption {${LONG_CAPTION_SENTENCE}.}\\end{figure}`,
+  ),
+  "negated/paper.tex": tex(
+    "It is not fast. It is not small. It is not red. Nothing here is plain.",
+  ),
   "ends-on-marks/paper.tex": tex(
     "The method holds on every input~\\cite{knuth}. The proof is given in full (Section~\\ref{proof}). The result is new.",
   ),
@@ -83,6 +93,9 @@ const READ: Readonly<Record<string, readonly string[]>> = {
   inline: ["paper.tex", "sec/results.tex"],
   commented: ["paper.tex"],
   "ends-on-marks": ["paper.tex"],
+  negated: ["paper.tex"],
+  optarg: ["paper.tex"],
+  spaced: ["paper.tex"],
   empty: ["paper.tex"],
 };
 writeTree(
@@ -182,6 +195,23 @@ test("--flags-only: an over-long caption flags and exits 1", () => {
   expect(r.stderr).toMatchSnapshot();
 });
 
+test("--flags-only: a metric over its threshold (not a caption) is a finding too, and the report flags the same line", () => {
+  const file = join(root, "negated", "paper.tex");
+  const only = runNode(SCRIPT, ["--flags-only", file]);
+  const report = runNode(SCRIPT, [file]);
+  // Guards: the mode promised "print nothing on a clean paper, any output means a finding" and
+  // looked only at captions; the metrics the report FLAGs are findings of the same kind.
+  assert.deepEqual(
+    { status: only.status, stdout: only.stdout },
+    { status: 1, stdout: "" },
+  );
+  expect(only.stderr).toMatchSnapshot();
+  assert.match(
+    report.stdout,
+    /^FLAG sentences whose main claim is a negation: 75%$/m,
+  );
+});
+
 test("--flags-only: a paper with no figures directory is clean, exit 0 and silent", () => {
   assert.deepEqual(
     runNode(SCRIPT, ["--flags-only", join(root, "clean", "paper.tex")]),
@@ -248,17 +278,13 @@ test("🔴 --flags-only reads the captions of the paper.tex and of the files it 
       stdout: r.stdout,
       flagged: r.stderr
         .split("\n")
-        .filter((l) => l.startsWith("   "))
+        .filter((l) => l.startsWith("      > "))
         .map((l) => l.split(":")[0]),
     },
     {
       status: 1,
       stdout: "",
-      flagged: [
-        "   paper.tex",
-        "   sec/results.tex",
-        "   run prose-lint.mjs on the file without --flags-only for the sentences",
-      ],
+      flagged: ["      > paper.tex", "      > sec/results.tex"],
     },
   );
 });
@@ -274,8 +300,14 @@ test("--flags-only on a rendered page reads the captions in figures/*.tex beside
     join(root, "rendered", "page.txt"),
   ]);
   assert.deepEqual(
-    { status: r.status, first: r.stderr.split("\n")[1]?.split(":")[0] },
-    { status: 1, first: "   figures/f.tex" },
+    {
+      status: r.status,
+      first: r.stderr
+        .split("\n")
+        .find((l) => l.startsWith("      > "))
+        ?.split(":")[0],
+    },
+    { status: 1, first: "      > figures/f.tex" },
   );
   // …and a page with no figures/ beside it has no caption to flag.
   assert.deepEqual(runNode(SCRIPT, ["--flags-only", join(root, "page.txt")]), {
@@ -296,9 +328,86 @@ test("🔴 a caption commented out or quoted in verbatim is not measured; a real
       status: r.status,
       findings: r.stderr
         .split("\n")
-        .filter((l) => l.startsWith("   paper.tex:"))
+        .filter((l) => l.startsWith("      > paper.tex:"))
         .map((l) => /— "(\w+)/.exec(l)?.[1]),
     },
     { status: 1, findings: ["Real"] },
   );
+});
+
+/** The `prose-lint.mjs` invocations SKILL.md documents (Step 6), their arguments with `<paper-dir>` filled in. */
+const documentedInvocations = (paperDir: string): readonly string[][] =>
+  readFileSync(join(dirname(SCRIPT), "SKILL.md"), "utf8")
+    .split("\n")
+    .flatMap((line) => {
+      const m =
+        /node \$\{CLAUDE_SKILL_DIR\}\/prose-lint\.mjs ([^#]+?)\s*(#|$)/.exec(
+          line,
+        );
+      return m?.[1] === undefined
+        ? []
+        : [m[1].replaceAll("<paper-dir>", paperDir).split(/\s+/)];
+    });
+
+test("🔴 the invocation SKILL.md documents reports an over-long caption, with no flag the skill does not name", () => {
+  const documented = documentedInvocations(join(root, "p"));
+  // Guards: the report is the documented way to run the checks (Step 6), and captions were
+  // measured only under an undocumented flag — an over-long caption produced no finding.
+  const report = documented.find((a) => !a.includes("--headings"));
+  assert.ok(report !== undefined, "SKILL.md documents a report invocation");
+  const r = runNode(SCRIPT, report);
+  assert.deepEqual(
+    {
+      status: r.status,
+      flagged: r.stdout
+        .split("\n")
+        .filter(
+          (l) => l.startsWith("FLAG figure captions") || l.includes("caption"),
+        ),
+    },
+    {
+      status: 0,
+      flagged: [
+        "FLAG figure captions over the limit: 2",
+        '       > figures/fig1.tex: caption sentence of 46 words (warn >40) — "Big. word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 wor…"',
+        "       > figures/fig1.tex: caption is 106 words (warn >100) — a caption this long is a section under a picture",
+      ],
+    },
+  );
+});
+
+test("the report says a paper whose captions are within the limits is clean on that line", () => {
+  const r = runNode(SCRIPT, [join(root, "clean", "paper.tex")]);
+  // Guards: the line is printed on a clean paper too, so its absence is never read as a pass.
+  assert.match(r.stdout, /^ok {3}figure captions over the limit: 0$/m);
+});
+
+test("🔴 a caption with an optional argument, or a space before its brace, is measured", () => {
+  const found = (dir: string) => {
+    const r = runNode(SCRIPT, [join(root, dir, "paper.tex")]);
+    return [
+      r.status,
+      /^FLAG figure captions over the limit: (\d+)$/m.exec(r.stdout)?.[1],
+    ];
+  };
+  // Guards: the scan matched `\caption{` only, so `\caption[Short]{…}` and `\caption {…}` were never
+  // read and the report printed "ok ... 0" for a long caption.
+  expect([found("optarg"), found("spaced")]).toEqual([
+    [0, "1"],
+    [0, "1"],
+  ]);
+});
+
+test("🔴 the caption of the package's own p1 fixture, which has an optional argument, is reported", () => {
+  const p1 = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "..",
+    "fixtures",
+    "paper-sources",
+    "p1",
+    "paper.tex",
+  );
+  const r = runNode(SCRIPT, ["--flags-only", p1]);
+  assert.match(r.stderr, /— "Optional-arg caption this sentence/);
 });
