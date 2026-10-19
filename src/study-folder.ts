@@ -29,21 +29,11 @@ import {
 } from "./domain/study-registry.ts";
 import type { Files } from "./ports/files.ts";
 import type { DirEntry, ListEntries } from "./ports/list-entries.ts";
-import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type {
   FolderRefusal,
   PathEntry,
   StudyFolder,
 } from "./ports/study-folder.ts";
-import type { ListDir } from "./ports/talk-media.ts";
-
-/** What reading a paper's studies needs: the disk, its listings with and without kinds, and the parsers. */
-export interface StudyDeps {
-  readonly files: Files;
-  readonly listDir: ListDir;
-  readonly entries: ListEntries;
-  readonly codec: StudyRegistryCodec;
-}
 
 /** What a refusal says of the folder a row names: `which <reason>`, and the fix without its full stop. */
 export const folderRefusalText = (

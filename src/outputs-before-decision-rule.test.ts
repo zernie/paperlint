@@ -10,7 +10,6 @@ import { expect, it } from "vitest";
 import { gitHistory } from "./adapters/git/index.ts";
 import {
   nodeFiles,
-  nodeListDir,
   nodeListEntries,
   spawnProcess,
 } from "./adapters/node/index.ts";
@@ -42,7 +41,6 @@ const T = (h: number): string =>
 const lint = (repo: string, file = "p/PIPELINE-STATUS.md"): string[] => {
   const rule = outputsBeforeDecisionRules({
     files: nodeFiles,
-    listDir: nodeListDir,
     entries: nodeListEntries,
     codec: studyRegistryCodec,
     git: gitHistory(spawnProcess(), { PATH: String(process.env.PATH) }),

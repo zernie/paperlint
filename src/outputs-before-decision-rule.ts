@@ -35,7 +35,8 @@ import type {
   FolderRuleModule,
 } from "./folder-venue-rule.ts";
 import type { GitOrder } from "./ports/git-history.ts";
-import { studyFolder, type StudyDeps } from "./study-folder.ts";
+import type { StudyDeps } from "./study-deps.ts";
+import { studyFolder } from "./study-folder.ts";
 import { registryOf } from "./study-registry-rule.ts";
 import { rulePageUrl } from "./venue-rules.ts";
 
