@@ -52,6 +52,18 @@ describe("abstractText — what TeX prints, as plain text", () => {
     ).toEqual({ ok: true, value: "As shown and, this is code. Next.On." });
   });
 
+  it("commands that only steer line breaking print nothing; a group in math is only grouping", () => {
+    expect(
+      text(
+        "",
+        "long\\allowbreak/word, no\\nobreak\\ break, hy\\-phen, it\\/ and ${\\sim}12{,}345$ items.",
+      ),
+    ).toEqual({
+      ok: true,
+      value: "long/word, no break, hyphen, it and ∼12,345 items.",
+    });
+  });
+
   it("escaped characters, \\ldots, and math that is only digits and symbols", () => {
     expect(
       text(
@@ -137,7 +149,8 @@ describe("abstractText — the edges of what the source may hold", () => {
 
   it.each([
     ["$a@b$", "the math $a@b$"],
-    ["${x}$", "the math ${x}$"],
+    ["$x^2$", "the math $x^2$"],
+    ["$1 %c\n2$", "the math $1 %c\n2$"],
     ["\\begin{equation}x\\end{equation}", "the equation environment"],
     ["\\[x\\]", "the displaymath"],
   ])("%s is refused as %s", (body, what) => {

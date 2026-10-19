@@ -32,8 +32,23 @@ const COMMAND_DEFINERS = new Set([
 ]);
 const DEF_DEFINERS = new Set(["def", "gdef", "edef", "xdef"]);
 
-/** Commands that put nothing on the page an abstract's reader sees as text. */
-const DROPPED = new Set([...CITATION_MACROS, "label", "xspace", "noindent"]);
+/**
+ * Commands that put nothing on the page an abstract's reader sees as text: citations and labels,
+ * and the ones that only steer spacing and line breaking (`\allowbreak`, `\-`, `\/`, …).
+ */
+const DROPPED = new Set([
+  ...CITATION_MACROS,
+  "label",
+  "xspace",
+  "noindent",
+  "allowbreak",
+  "nobreak",
+  "nolinebreak",
+  "-",
+  "/",
+  "relax",
+  "protect",
+]);
 
 /** Commands that print one character or a fixed word. */
 const CHARACTERS: ReadonlyMap<string, string> = new Map([
@@ -219,6 +234,8 @@ function mathNode(n: Node, r: Reading, math: Node): Text {
       math,
     );
   if (n.type === "whitespace") return ok(" ");
+  // A group in math only groups: `{\sim}`, `{,}` read as what they hold.
+  if (n.type === "group") return joined(n.content, (c) => mathNode(c, r, math));
   if (n.type === "string")
     return PLAIN_MATH.test(n.content) ? ok(n.content) : whole();
   if (n.type !== "macro") return whole();
