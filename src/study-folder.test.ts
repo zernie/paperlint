@@ -193,3 +193,25 @@ it("a path in the paper is a file, a directory, nothing, or a link on the way â€
   ]);
   expect(asked).toEqual([]);
 });
+
+it("lists every file under a study's folder, relative and /-separated; a link is one entry, never descended into", () => {
+  const { sf, asked } = reader([`${FOLDER}/sub`, `${FOLDER}/other/note.md`]);
+  // Guards: the outputs of a study are listed by the same reader that reads its plan â€” a linked
+  // directory is a file as git stores it, and what lies behind it is not the study's.
+  expect(sf.list("P1-S01-outcome")).toEqual([
+    "plan.json",
+    "sub",
+    "other/note.md",
+  ]);
+  expect(asked).toEqual([]);
+});
+
+it("lists nothing of a folder that may not be entered or is not there", () => {
+  const { sf } = reader([`${PAPER}/repro/P1-S01-linked`]);
+  // Guards: a linked study folder brings no foreign file into the study, nor does a name outside repro/.
+  expect([
+    sf.list("P1-S01-linked"),
+    sf.list("../x"),
+    sf.list("P1-S09-missing"),
+  ]).toEqual([[], [], []]);
+});

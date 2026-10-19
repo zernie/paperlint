@@ -16,12 +16,7 @@
 import { basename, dirname, join } from "node:path";
 import { filter, map, pipe } from "remeda";
 import { callerPath } from "./caller-path.ts";
-import {
-  decisionEntry,
-  filesUnder,
-  modeStudies,
-  type ModeStudy,
-} from "./study-modes.ts";
+import { decisionEntry, modeStudies, type ModeStudy } from "./study-modes.ts";
 import {
   judgeOrder,
   orderMessage,
@@ -65,7 +60,7 @@ export const decideFirstStudies = (
         folder: row.folder,
         plan,
         mode,
-        tree: filesUnder(folder, deps),
+        tree: reader.list(row.folder),
         facts:
           on.kind === "ok"
             ? deps.git.order(callerPath(folder), callerPath(decision))

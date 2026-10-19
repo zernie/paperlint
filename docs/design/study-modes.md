@@ -154,7 +154,7 @@ by the rule (`decision-not-file`); a symbolic link above the file is refused nam
 
 The plan reads, the result-file existence checks and the decision's path check take a `StudyFolder`
 and not `Files`, so a read that follows a link is not what those readers are handed. A study's
-outputs are only listed (`filesUnder`), by the same `ListEntries`.
+outputs are listed through it too (`StudyFolder.list`).
 
 Only a **ready** plan's mode decides anything: the gate refuses a draft, naming its empty fields, and
 the order rule judges no draft — a draft may name no outputs, or an empty decision file.

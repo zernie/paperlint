@@ -12,7 +12,7 @@
  *   - the result file of a row: `repro/study-registered`;
  *   - whether a row's folder may be entered at all (`refusal`): `studies gate`, `studies index|new`;
  *   - the decision file's path (`entryAt`): the gate and the order rule.
- * The outputs of a study are listed, not read (`filesUnder` in `src/study-modes.ts`, entries again).
+ * The outputs of a study are listed through it too (`list`).
  * A study folder that is itself a link, or a folder name that is not one folder inside `repro/`, is
  * never entered: its files read as `absent`.
  *
@@ -120,17 +120,35 @@ const locateIn = (
     : { kind: "linked", link: found.link.slice(folder.length + 1) };
 };
 
+/** Why `folder` may not be entered in the paper folder `paper`; null when it may. */
+const refusalOf = (
+  paper: string,
+  entries: ListEntries,
+  folder: string,
+): FolderRefusal | null => {
+  if (!isFolderName(folder)) return "not-a-folder";
+  return kindAt(entries, join(paper, REPRO_DIR), folder) === "symlink"
+    ? "symbolic-link"
+    : null;
+};
+
+/** Every file under `dir`, relative to it; a link is a file, and is not entered. */
+const filesUnder = (
+  dir: string,
+  entries: ListEntries,
+  prefix = "",
+): readonly string[] =>
+  entries(callerPath(dir)).flatMap(({ name, kind }) => {
+    const rel = prefix === "" ? name : `${prefix}/${name}`;
+    return kind === "dir" ? filesUnder(join(dir, name), entries, rel) : [rel];
+  });
+
 /** The reader of the study folders of the paper folder `paper`. */
 export const studyFolder = (
   paper: string,
   deps: { readonly files: Files; readonly entries: ListEntries },
 ): StudyFolder => ({
-  refusal: (folder) => {
-    if (!isFolderName(folder)) return "not-a-folder";
-    return kindAt(deps.entries, join(paper, REPRO_DIR), folder) === "symlink"
-      ? "symbolic-link"
-      : null;
-  },
+  refusal: (folder) => refusalOf(paper, deps.entries, folder),
   locate: (folder, path) => locateIn(paper, deps.entries, folder, path),
   read: (folder, path) => {
     const at = locateIn(paper, deps.entries, folder, path);
@@ -141,6 +159,10 @@ export const studyFolder = (
       ? { kind: "absent" }
       : { kind: "text", text: new TextDecoder().decode(bytes) };
   },
+  list: (folder) =>
+    refusalOf(paper, deps.entries, folder) === null
+      ? filesUnder(join(paper, REPRO_DIR, folder), deps.entries)
+      : [],
   entryAt: (path) => {
     if (!isInside(path) || path.includes("\0")) return { kind: "absent" };
     const { above, name } = split(path);

@@ -1,12 +1,11 @@
 /**
  * Reading a paper's studies with their modes: each registered study whose `plan.json` parses with a
- * `mode`, and the files under a study's folder. What `repro/outputs-before-decision`, `studies gate`
+ * `mode`, and how a decision's path stands. What `repro/outputs-before-decision`, `studies gate`
  * and the index's mode columns read with (docs/design/study-modes.md). A row whose folder is not one
  * folder inside `repro/` is never read through.
  */
-import { join, posix } from "node:path";
+import { posix } from "node:path";
 import { filter, map, pipe } from "remeda";
-import { callerPath } from "./caller-path.ts";
 import type { NotAFile } from "./domain/decide-first.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
 import {
@@ -17,22 +16,6 @@ import {
 } from "./domain/study-registry.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type { StudyFolder } from "./ports/study-folder.ts";
-import type { StudyDeps } from "./study-deps.ts";
-
-/**
- * Every file under `dir`, relative to it, `/`-separated; none when it is not a directory. A symbolic
- * link is listed as a file — git stores it as one — and never followed: a link to the folder itself
- * would recurse forever, and one to a tree outside would bring its files into the study.
- */
-export const filesUnder = (
-  dir: string,
-  deps: Pick<StudyDeps, "entries">,
-  prefix = "",
-): readonly string[] =>
-  deps.entries(callerPath(dir)).flatMap(({ name, kind }) => {
-    const rel = prefix === "" ? name : `${prefix}/${name}`;
-    return kind === "dir" ? filesUnder(join(dir, name), deps, rel) : [rel];
-  });
 
 /** Whether a decision path is one git can vouch for: a file or nothing yet; else why not. */
 export type DecisionEntry =
