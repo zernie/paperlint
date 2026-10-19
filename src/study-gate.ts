@@ -17,6 +17,7 @@ import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
 import {
   STUDIES_FILE,
   studiesOf,
+  type RegistryState,
   studyById,
   type Study,
 } from "./domain/study-registry.ts";
@@ -199,6 +200,16 @@ const unknownIdRefusal = (shown: string, id: string): StudyRefusal =>
     `${id}: no row of ${shown}/${REPRO_DIR}/${STUDIES_FILE} carries this id. Use an id from the registry, or register the study with \`npx paperlint studies new\`, then run this again.`,
   );
 
+/** The refusal of a registry that is not there or does not parse: no row can carry the id. */
+const registryRefusal = (
+  shown: string,
+  id: string,
+  r: Exclude<RegistryState, { readonly kind: "read" }>,
+): StudyRefusal =>
+  refusal(
+    `${id}: the registry ${shown}/${REPRO_DIR}/${STUDIES_FILE} ${r.kind === "absent" ? "is missing" : `does not parse (${r.why})`}, so no row can carry this id. Run \`npx paperlint lint\` to see why, then run this again.`,
+  );
+
 /** `studies gate`: 0 when the run may start, 1 with the reason when not. */
 export function runGate(
   paper: string,
@@ -207,6 +218,7 @@ export function runGate(
   deps: GateDeps,
 ): StudyRun {
   const r = registryOf(paper, deps);
+  if (r.kind !== "read") return refused(registryRefusal(shown, id, r));
   const found = studyById(studiesOf(r), id);
   switch (found.kind) {
     case "none":

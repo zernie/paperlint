@@ -160,17 +160,44 @@ it("refuses a command line without the study's id, or with an argument too many"
 it("a plan it cannot read through declares no mode: no registry, a plan outside its folder, a NUL, not JSON", () => {
   const noMode = (t: Readonly<Record<string, string>>) =>
     studies("gate", t).err[0]?.split(":")[0];
-  const withoutRegistry = Object.fromEntries(
-    Object.entries(decided()).filter(([k]) => !k.endsWith("studies.json")),
-  );
   // Guards: each is refused as declaring no mode — none is read past, none opens the gate.
   expect([
     noMode(tree({}, planOf(DECIDED), { ...ROW, plan: "../plan.json" })),
     noMode(tree({}, planOf(DECIDED), { ...ROW, plan: "a\0b.json" })),
     noMode({ ...decided(), [`${DIR}/repro/P1-S01-outcome/plan.json`]: "{" }),
   ]).toEqual(Array(3).fill("P1-S01 declares no mode in papers/example"));
-  // …and a registry that is not there has no row for the id: its own refusal, not a mode's.
-  expect(noMode(withoutRegistry)).toBe("P1-S01");
+});
+
+it("refuses when the registry is missing or does not parse, naming the file and the way to see why", () => {
+  const withoutRegistry = Object.fromEntries(
+    Object.entries(decided()).filter(([k]) => !k.endsWith("studies.json")),
+  );
+  const unparseable = {
+    ...decided(),
+    [`${DIR}/repro/studies.json`]: "{ not json",
+  };
+  // Guards: "no row carries this id" would send a person to the registry that is the problem.
+  expect(
+    [withoutRegistry, unparseable].map((t) => {
+      const r = studies("gate", t);
+      return [r.code, r.err];
+    }),
+  ).toEqual([
+    [
+      1,
+      [
+        "P1-S01: the registry papers/example/repro/studies.json is missing, so no row can carry this id. Run `npx paperlint lint` to see why, then run this again.",
+      ],
+    ],
+    [
+      1,
+      [
+        expect.stringMatching(
+          /^P1-S01: the registry papers\/example\/repro\/studies\.json does not parse \(.+\), so no row can carry this id\. Run `npx paperlint lint` to see why, then run this again\.$/u,
+        ),
+      ],
+    ],
+  ]);
 });
 
 it("refuses an id no row of the registry carries, saying so and what to do: exit 1", () => {
