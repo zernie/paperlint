@@ -57,7 +57,8 @@ const TRANSPARENT: ReadonlySet<string> = new Set([
 
 /** Commands that break the line: the title goes on as a second part, a subtitle. */
 const LINE_BREAKS: ReadonlySet<string> = new Set([
-  "\\\\",
+  // `\\` is the macro unified-latex names with ONE backslash (`{ type: "macro", content: "\\" }`).
+  "\\",
   "newline",
   "linebreak",
 ]);

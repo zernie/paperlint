@@ -789,17 +789,26 @@ const submissionPaper = (dir: string, site: string): void => {
   });
 };
 
-test("🔴 submission: without HOTCRP_TOKEN it names the variable and asks the portal nothing", async () => {
+test("🔴 submission: without the site's token variable it names it and asks the portal nothing", async () => {
   const dir = join(root, "submission-no-token");
   submissionPaper(dir, "http://127.0.0.1:9");
-  const saved = process.env["HOTCRP_TOKEN"];
+  const saved = {
+    site: process.env["HOTCRP_TOKEN_127"],
+    plain: process.env["HOTCRP_TOKEN"],
+  };
+  delete process.env["HOTCRP_TOKEN_127"];
   delete process.env["HOTCRP_TOKEN"];
   try {
     const r = await cli(["submission", "show", "papers/p"], dir);
     assert.equal(r.code, 2);
-    assert.match(r.err, /^HOTCRP_TOKEN is not set — /);
+    assert.match(
+      r.err,
+      /^no hotcrp token for http:\/\/127\.0\.0\.1:9: HOTCRP_TOKEN_127 is not set$/m,
+    );
+    assert.match(r.err, /export HOTCRP_TOKEN_127=<the token>/);
   } finally {
-    if (saved !== undefined) process.env["HOTCRP_TOKEN"] = saved;
+    if (saved.site !== undefined) process.env["HOTCRP_TOKEN_127"] = saved.site;
+    if (saved.plain !== undefined) process.env["HOTCRP_TOKEN"] = saved.plain;
   }
 });
 
@@ -820,8 +829,8 @@ test("submission show: through the HotCRP adapter to a local portal, the token i
   assert.ok(address !== null && typeof address === "object");
   const dir = join(root, "submission-show");
   submissionPaper(dir, `http://127.0.0.1:${String(address.port)}`);
-  const saved = process.env["HOTCRP_TOKEN"];
-  process.env["HOTCRP_TOKEN"] = "hct_cli_test";
+  const saved = process.env["HOTCRP_TOKEN_127"];
+  process.env["HOTCRP_TOKEN_127"] = "hct_cli_test";
   try {
     const r = await cli(["submission", "show"], join(dir, "papers/p"));
     assert.equal(r.code, 0, r.err);
@@ -835,8 +844,8 @@ test("submission show: through the HotCRP adapter to a local portal, the token i
     assert.match(r.out, /^match {9}NO — the portal holds no PDF$/m);
     assert.doesNotMatch(r.out + r.err, /hct_cli_test/);
   } finally {
-    if (saved === undefined) delete process.env["HOTCRP_TOKEN"];
-    else process.env["HOTCRP_TOKEN"] = saved;
+    if (saved === undefined) delete process.env["HOTCRP_TOKEN_127"];
+    else process.env["HOTCRP_TOKEN_127"] = saved;
     await new Promise<void>((r) => {
       server.close(() => {
         r();

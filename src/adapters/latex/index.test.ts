@@ -770,3 +770,21 @@ describe("latexReader.filecontents — a file name on a line of its own", () => 
     ]);
   });
 });
+
+describe("headings — a line break in a title", () => {
+  it("🔴 `\\\\`, `\\newline` and `\\linebreak` are line breaks, never an opaque command", () => {
+    const titles = [
+      "A\\\\ B",
+      "A\\\\[1ex] B",
+      "A\\newline B",
+      "A\\linebreak[3] B",
+    ].map((t) =>
+      latexReader
+        .headings(
+          `\\documentclass{article}\\title{${t}}\\begin{document}\\end{document}`,
+        )
+        .map((h) => runText(h.title)),
+    );
+    expect(titles).toEqual([["A  B"], ["A  B"], ["A  B"], ["A  B"]]);
+  });
+});

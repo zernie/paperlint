@@ -10,7 +10,10 @@ import { nodeFiles } from "./adapters/node/index.ts";
 import type { Files } from "./ports/files.ts";
 import { ok, err, type Result } from "./domain/result.ts";
 import { sha256Hex } from "./domain/sha256.ts";
+import { latexReader } from "./adapters/latex/index.ts";
 import type {
+  CreateOutcome,
+  NewSubmission,
   PortalFailure,
   SubmissionChange,
   SubmissionView,
@@ -24,7 +27,9 @@ import {
   runSubmission,
   deadlineLine,
   submissionTarget,
-  tokenFor,
+  titleOf,
+  tokenProblemLines,
+  tokenRefusedLines,
   usageProblem,
   type SubmissionArgs,
 } from "./submission.ts";
@@ -90,6 +95,7 @@ interface Recorded {
 const fakePortal = (answers: {
   readonly show?: Result<SubmissionView, PortalFailure>;
   readonly update?: Result<UpdateOutcome, PortalFailure>;
+  readonly create?: Result<CreateOutcome, PortalFailure>;
 }) => {
   const seen: Recorded[] = [];
   const portalFor = (
@@ -113,6 +119,20 @@ const fakePortal = (answers: {
               changes: ["submission"],
               messages: [],
               dryRun: !o.save,
+            }),
+        );
+      },
+      create: (paper: NewSubmission, o) => {
+        r.calls.push(["create", paper, o]);
+        return Promise.resolve(
+          answers.create ??
+            ok({
+              httpStatus: 200,
+              valid: true,
+              changes: ["new", "title", "abstract", "authors", "submission"],
+              messages: [],
+              dryRun: !o.save,
+              id: o.save ? 42 : null,
             }),
         );
       },
@@ -153,8 +173,9 @@ async function run(
       files: fs,
       presets: { files: fs, venuesDir: presetsDir() },
       cwd: "/w",
-      env: (n) => (o.env ?? { HOTCRP_TOKEN: "hct_secret" })[n],
+      env: (n) => (o.env ?? { HOTCRP_TOKEN_127: "hct_secret" })[n],
       portalFor: portal.portalFor,
+      latex: latexReader,
       log: (l) => out.push(l),
       err: (l) => errs.push(l),
     },
@@ -162,7 +183,7 @@ async function run(
   return { code, out, errs, seen: portal.seen };
 }
 
-test("show: the portal from the preset, the id from the paper, the token from HOTCRP_TOKEN", async () => {
+test("show: the portal from the preset, the id from the paper, the token from the site's variable", async () => {
   const r = await run({});
   assert.equal(r.code, 0);
   assert.deepEqual(r.errs, []);
@@ -261,6 +282,8 @@ test("🔴 the portal's refusal is printed with its own message, exit 1", async 
   assert.equal(r.code, 1);
   assert.deepEqual(r.errs, [
     "the portal refused (HTTP 401): Missing credentials",
+    "HOTCRP_TOKEN_127 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
+    ...STEPS,
   ]);
 });
 
@@ -438,24 +461,95 @@ test("update: no PDF to send, or no abstract file, is refused before the portal 
   assert.deepEqual(r2.errs, ["--abstract: no file at nope.txt"]);
 });
 
-test("🔴 no token: the variable is named, with where to make one — and nothing is called", async () => {
+/** The steps every token message ends with, for the test site. */
+const STEPS = [
+  `  1. create a token on this site: ${SITE}/profile?t=developer (Account settings → Developer → API tokens), with the scopes submeta:read and document:read (show), submeta:write and document:write (update, new) — tick all four to use every subcommand`,
+  "  2. set it in your environment — never paste it into a chat: export HOTCRP_TOKEN_127=<the token>",
+  "  tokens are per hotcrp site: HOTCRP_TOKEN_127 is read for 127.0.0.1 alone, so two venues take two variables",
+];
+
+test("🔴 no token: the site's variable is named, with this site's token page, the scopes and the export — and nothing is called", async () => {
   const r = await run({}, { env: {} });
   assert.equal(r.code, 2);
   assert.deepEqual(r.seen, []);
-  assert.match(
-    r.errs[0] ?? "",
-    /^HOTCRP_TOKEN is not set — .*Account settings → Developer/,
+  assert.deepEqual(r.errs, [
+    `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127 is not set`,
+    ...STEPS,
+  ]);
+});
+
+test("🔴 only the site-less HOTCRP_TOKEN set: the rename instruction, and nothing is sent with it", async () => {
+  const r = await run(
+    { sub: "update", save: true },
+    { env: { HOTCRP_TOKEN: "hct_old" } },
+  );
+  assert.equal(r.code, 2);
+  assert.deepEqual(r.seen, []);
+  assert.deepEqual(r.errs, [
+    "HOTCRP_TOKEN is no longer read: tokens are per hotcrp site. Rename it to HOTCRP_TOKEN_127 for 127.0.0.1 (the site it was made on) and unset HOTCRP_TOKEN; if it was made on another site, create one here instead:",
+    ...STEPS,
+  ]);
+  assert.doesNotMatch(r.errs.join("\n"), /hct_old/);
+});
+
+test("the site's variable set beside a site-less one: the site's token is the one used", async () => {
+  const r = await run(
+    {},
+    { env: { HOTCRP_TOKEN_127: "hct_site", HOTCRP_TOKEN: "hct_old" } },
+  );
+  assert.equal(r.code, 0);
+  assert.equal(r.seen[0]?.token, "hct_site");
+});
+
+test("🔴 a 401 from the portal: the portal's words, which variable was used, and how to make this site's token", async () => {
+  const refused = err({
+    kind: "refused" as const,
+    httpStatus: 401,
+    messages: [{ message: "Unauthorized", field: null, status: 2 }],
+  });
+  for (const sub of ["show", "update", "new"] as const) {
+    const r = await run(
+      { sub },
+      {
+        portal: fakePortal({ show: refused, update: refused, create: refused }),
+        files: sub === "new" ? newFiles({}) : files({}),
+      },
+    );
+    assert.equal(r.code, 1, sub);
+    assert.deepEqual(r.errs, [
+      "the portal refused (HTTP 401): Unauthorized",
+      "HOTCRP_TOKEN_127 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
+      ...STEPS,
+    ]);
+  }
+});
+
+test("a 403 names a missing scope; any other failure says nothing about the token", () => {
+  const portal = { kind: "hotcrp", url: SITE } as const;
+  const f = (httpStatus: number) =>
+    ({ kind: "refused", httpStatus, messages: [] }) as const;
+  assert.deepEqual(tokenRefusedLines(portal, "HOTCRP_TOKEN_127", f(403)), [
+    "HOTCRP_TOKEN_127 was used; the site turned the request away — the token may lack a scope this subcommand needs",
+    ...STEPS,
+  ]);
+  assert.deepEqual(tokenRefusedLines(portal, "HOTCRP_TOKEN_127", f(500)), []);
+  assert.deepEqual(
+    tokenRefusedLines(portal, "HOTCRP_TOKEN_127", {
+      kind: "unreachable",
+      detail: "x",
+    }),
+    [],
   );
   assert.deepEqual(
-    tokenFor({ kind: "hotcrp", url: SITE }, () => "  "),
-    {
-      ok: false,
-      error: r.errs[0],
-    },
+    tokenProblemLines(portal, {
+      kind: "missing",
+      variable: "HOTCRP_TOKEN_127",
+    }),
+    [`no hotcrp token for ${SITE}: HOTCRP_TOKEN_127 is not set`, ...STEPS],
   );
 });
 
-test("🔴 the file and key to set: no portal in the preset, no submission in the paper, no preset", () => {
+test("🔴 the file and key to set: no portal in the preset, no submission in the paper, no preset", async () => {
   const deps = (fs: Files) => ({
     files: withPresets(fs),
     venuesDir: presetsDir(),
@@ -473,10 +567,14 @@ test("🔴 the file and key to set: no portal in the preset, no submission in th
     /^the venue preset declares no "portal" \(read: .*ieee-conference\.jsonc\) — add "portal": \{ "kind": "hotcrp"/,
   );
   const noId = files({ paper: { extends: "../../venue.jsonc" } });
-  assert.deepEqual(submissionTarget(PAPER, deps(noId)), {
-    ok: false,
-    error: `${PAPER}/paperlint.json: no "submission" — add "submission": { "id": <the submission number on ${SITE}/> }`,
-  });
+  for (const sub of ["show", "update"] as const) {
+    const r = await run({ sub }, { files: noId });
+    assert.equal(r.code, 2);
+    assert.deepEqual(r.seen, []);
+    assert.deepEqual(r.errs, [
+      `${PAPER}/paperlint.json: no "submission" — add "submission": { "id": <the submission number on ${SITE}> }, or create the submission with \`paperlint submission new\``,
+    ]);
+  }
   const noExtends = files({ paper: { submission: { id: 7 } } });
   const t3 = submissionTarget(PAPER, deps(noExtends));
   assert.match(!t3.ok ? t3.error : "", /paperlint\.json: no "extends"/);
@@ -547,7 +645,7 @@ test("usage: refused before anything is read, exit 2", async () => {
 test("usage: a subcommand is required, one paper folder, update-only flags refused on show", () => {
   assert.match(
     usageProblem({ ...ARGS, sub: undefined }) ?? "",
-    /needs a subcommand: show or update — got ``/,
+    /needs a subcommand: new or show or update — got ``/,
   );
   assert.match(usageProblem({ ...ARGS, sub: "upload" }) ?? "", /got `upload`/);
   assert.equal(
@@ -556,9 +654,17 @@ test("usage: a subcommand is required, one paper folder, update-only flags refus
   );
   assert.equal(
     usageProblem({ ...ARGS, save: true, submit: true, abstract: "a" }),
-    "--abstract, --submit, --save: only `submission update` changes anything; `show` reads",
+    "--abstract, --submit, --save: only `submission new` and `submission update` change anything; `show` reads",
   );
   assert.equal(usageProblem({ ...ARGS, sub: "update", save: true }), null);
+  assert.equal(
+    usageProblem({ ...ARGS, sub: "new", save: true, abstract: "a" }),
+    null,
+  );
+  assert.equal(
+    usageProblem({ ...ARGS, sub: "new", submit: true }),
+    "--submit: `submission new` creates the submission; mark it submitted with `submission update --submit` once `show` says the portal holds this build",
+  );
 });
 
 test("show prints the current attempt's deadlines in force: the preset's portal readings, the paper's call readings and override over them", () => {
@@ -637,4 +743,342 @@ test("show, in the flat form: the deadlines in force are the preset's readings a
     ["submission", "2026-10-21T11:59:59Z"],
     ["resubmission", "2026-10-24T11:59:59Z"],
   ]);
+});
+
+// ── new ───────────────────────────────────────────────────────────────────────────────
+
+const AUTHORS = [
+  { name: "Ada Lovelace", email: "ada@example.org", affiliation: "Analytical" },
+  { name: "Bob Bobson", email: "bob@example.org" },
+];
+
+/** The page text an IEEEtran build gives pdf.js, as the facts file holds it. */
+const PAGE_1 = [
+  "Agents That Lie",
+  "Anonymous Author(s)",
+  "Abstract—Coding agents report green builds that never ran. We mea-",
+  "sure how often, with \\ours resolved to TestLie.",
+  "Index Terms—agents",
+  "I. INTRODUCTION",
+].join("\n");
+
+const facts = (o: { readonly sha?: string; readonly title?: string } = {}) =>
+  JSON.stringify({
+    schema: 3,
+    pdf: "paper.pdf",
+    pdf_sha256: o.sha ?? HEX,
+    fonts: [],
+    geometry_source: null,
+    pages_text: [PAGE_1],
+    metadata: o.title === undefined ? {} : { Title: o.title },
+    links: [],
+    bib_anchor_page: null,
+    appendix_anchor_page: null,
+  });
+
+/** A paper ready for `new`: authors declared, no submission yet, a build with its facts. */
+const newFiles = (o: {
+  readonly paper?: Readonly<Record<string, unknown>>;
+  readonly tex?: string;
+  readonly facts?: string | null;
+}) =>
+  files({
+    paper: o.paper ?? { extends: "../../venue.jsonc", authors: AUTHORS },
+    extra: {
+      [`${PAPER}/paper.tex`]:
+        o.tex ??
+        "\\documentclass{article}\n\\title{Agents That\\\\ Lie}\n\\begin{document}\\maketitle\\end{document}\n",
+      ...(o.facts === null
+        ? {}
+        : { [`${PAPER}/_build/paper.facts.json`]: o.facts ?? facts() }),
+    },
+  });
+
+const WANT: NewSubmission = {
+  title: "Agents That Lie",
+  abstract:
+    "Coding agents report green builds that never ran. We measure how often, with \\ours resolved to TestLie.",
+  authors: [
+    {
+      name: "Ada Lovelace",
+      email: "ada@example.org",
+      affiliation: "Analytical",
+    },
+    { name: "Bob Bobson", email: "bob@example.org", affiliation: null },
+  ],
+  pdf: { name: "paper.pdf", bytes: PDF },
+};
+
+test("new: a dry run by default — title from \\title, abstract from the build's page text, the declared authors, the PDF", async () => {
+  const fs = newFiles({});
+  const r = await run({ sub: "new" }, { files: fs });
+  assert.equal(r.code, 0, r.errs.join("\n"));
+  assert.deepEqual(r.errs, []);
+  assert.deepEqual(r.seen[0]?.calls, [["create", WANT, { save: false }]]);
+  assert.deepEqual(r.out, [
+    CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
+    "title         Agents That Lie",
+    "author 1      Ada Lovelace <ada@example.org>, Analytical",
+    "author 2      Bob Bobson <bob@example.org>",
+    "abstract      17 words:",
+    `  ${WANT.abstract}`,
+    "dry run — the portal checked the new submission and kept nothing; --save creates it for real",
+    "HTTP          200",
+    "valid         yes",
+    "changes       new, title, abstract, authors, submission",
+    `do on the site, ${SITE}/paper/<its number> — paperlint sends only the title, the abstract, the authors and the PDF:`,
+    "  - PC conflicts (HotCRP's API takes them as pc_conflicts; paperlint does not send them)",
+    "  - topics, and every field the venue adds (paper type, artifact, consent boxes …)",
+    "  - then mark it submitted: npx paperlint submission update papers/p --submit (a dry run; --save after your yes)",
+  ]);
+  // A dry run writes nothing.
+  assert.deepEqual(
+    JSON.parse(
+      new TextDecoder().decode(
+        fs.readBytes(`${PAPER}/paperlint.json` as never) ?? new Uint8Array(),
+      ),
+    ),
+    { extends: "../../venue.jsonc", authors: AUTHORS },
+  );
+});
+
+test("🔴 new --save: the id the portal chose is written into paperlint.json, and `show` is the next command", async () => {
+  const fs = newFiles({});
+  const r = await run({ sub: "new", save: true }, { files: fs });
+  assert.equal(r.code, 0, r.errs.join("\n"));
+  assert.deepEqual(r.seen[0]?.calls, [["create", WANT, { save: true }]]);
+  assert.deepEqual(r.out.slice(6, 7), ["created submission 42"]);
+  assert.deepEqual(r.out.slice(-2), [
+    `recorded      "submission": { "id": 42 } in papers/p/paperlint.json`,
+    `next          npx paperlint submission show papers/p — it should say "match yes"`,
+  ]);
+  assert.ok(
+    r.out.includes(
+      `do on the site, ${SITE}/paper/42 — paperlint sends only the title, the abstract, the authors and the PDF:`,
+    ),
+  );
+  const written = new TextDecoder().decode(
+    fs.readBytes(`${PAPER}/paperlint.json` as never) ?? new Uint8Array(),
+  );
+  assert.deepEqual(JSON.parse(written), {
+    extends: "../../venue.jsonc",
+    authors: AUTHORS,
+    submission: { id: 42 },
+  });
+  // And the next run reads it: `new` again is refused, `show` asks for 42.
+  const again = await run({ sub: "new" }, { files: fs });
+  assert.equal(again.code, 2);
+  assert.deepEqual(again.errs, [
+    `${PAPER}/paperlint.json: the paper already has submission 42 on ${SITE} — \`paperlint submission show\` reads it, \`paperlint submission update\` changes it`,
+  ]);
+  const show = await run({ sub: "show" }, { files: fs });
+  assert.deepEqual(show.seen[0]?.calls, [["show", 42]]);
+});
+
+test("new --save in the cycles form: the id goes into the open attempt, the last cycle", async () => {
+  const cycle = (id: string, outcome: unknown) => ({
+    id,
+    venue: { kind: "preset", extends: "../../venue.jsonc" },
+    opened: "2026-10-01",
+    ...(outcome === null ? {} : { outcome }),
+  });
+  const closed = cycle("first", {
+    kind: "rejected",
+    date: "2026-10-05",
+    evidence: "mail.eml",
+  });
+  const fs = newFiles({
+    paper: { authors: AUTHORS, cycles: [closed, cycle("second", null)] },
+  });
+  const r = await run({ sub: "new", save: true }, { files: fs });
+  assert.equal(r.code, 0, r.errs.join("\n"));
+  const written: unknown = JSON.parse(
+    new TextDecoder().decode(
+      fs.readBytes(`${PAPER}/paperlint.json` as never) ?? new Uint8Array(),
+    ),
+  );
+  assert.deepEqual(written, {
+    authors: AUTHORS,
+    cycles: [closed, { ...cycle("second", null), submission: { id: 42 } }],
+  });
+});
+
+test('🔴 new without "authors": refused with the key to fill — never guessed, nothing sent', async () => {
+  const r = await run(
+    { sub: "new" },
+    { files: newFiles({ paper: { extends: "../../venue.jsonc" } }) },
+  );
+  assert.equal(r.code, 2);
+  assert.deepEqual(r.seen[0]?.calls, []);
+  assert.deepEqual(r.errs, [
+    `${PAPER}/paperlint.json: no "authors" — add "authors": [{ "name": "…", "email": "…", "affiliation": "…" }], every author in the paper's order, as 127.0.0.1 should record them; paperlint never guesses them`,
+  ]);
+});
+
+test("🔴 new: no facts, or facts about another PDF — refused, with the build or --abstract as the way out", async () => {
+  const none = await run({ sub: "new" }, { files: newFiles({ facts: null }) });
+  assert.equal(none.code, 2);
+  assert.deepEqual(none.errs, [
+    "the abstract: no papers/p/_build/paper.facts.json — run `npx paperlint build` on the paper first, or give the abstract with --abstract <file> — give it with --abstract <file>, a plain-text file",
+  ]);
+  const stale = await run(
+    { sub: "new" },
+    { files: newFiles({ facts: facts({ sha: "0".repeat(64) }) }) },
+  );
+  assert.match(stale.errs[0] ?? "", /describes another PDF than the one sent/);
+  const broken = await run({ sub: "new" }, { files: newFiles({ facts: "{" }) });
+  assert.match(broken.errs[0] ?? "", /paper\.facts\.json cannot be read/);
+  assert.deepEqual(
+    [none, stale, broken].map((r) => r.seen[0]?.calls),
+    [[], [], []],
+  );
+});
+
+test("new --abstract <file>: its text is sent instead of the build's, whitespace as one space", async () => {
+  const fs = newFiles({
+    facts: null,
+    paper: { extends: "../../venue.jsonc", authors: AUTHORS },
+  });
+  const withFile = memoryFiles({});
+  void withFile;
+  const r = await run(
+    { sub: "new", abstract: "abs.txt" },
+    {
+      files: {
+        ...fs,
+        readBytes: (p) =>
+          p === "/w/abs.txt"
+            ? new TextEncoder().encode(" Line one.\n\nLine two. \n")
+            : fs.readBytes(p),
+      },
+    },
+  );
+  assert.equal(r.code, 0, r.errs.join("\n"));
+  const call = r.seen[0]?.calls[0];
+  assert.ok(Array.isArray(call));
+  assert.equal((call[1] as NewSubmission).abstract, "Line one. Line two.");
+});
+
+test("new: the paper already accepted in its current cycle — refused; a new submission is a new cycle", async () => {
+  const r = await run(
+    { sub: "new" },
+    {
+      files: newFiles({
+        paper: {
+          authors: AUTHORS,
+          cycles: [
+            {
+              id: "one",
+              venue: { kind: "preset", extends: "../../venue.jsonc" },
+              opened: "2026-10-01",
+              outcome: {
+                kind: "accepted",
+                date: "2026-10-09",
+                evidence: "m.eml",
+              },
+            },
+          ],
+        },
+      }),
+    },
+  );
+  assert.equal(r.code, 2);
+  assert.deepEqual(r.errs, [
+    `${PAPER}/paperlint.json: the current attempt is accepted — a new submission belongs to a new cycle`,
+  ]);
+});
+
+test("new: no PDF, a portal that says invalid, a save the portal did not make — each exits non-zero", async () => {
+  const noPdf = await run(
+    { sub: "new", pdf: "nope.pdf" },
+    { files: newFiles({}) },
+  );
+  assert.equal(noPdf.code, 2);
+  assert.deepEqual(noPdf.errs, [
+    "no PDF at nope.pdf — build the paper, or name one with --pdf",
+  ]);
+  const invalid = await run(
+    { sub: "new" },
+    {
+      files: newFiles({}),
+      portal: fakePortal({
+        create: ok({
+          httpStatus: 200,
+          valid: false,
+          changes: ["new"],
+          messages: [
+            { message: "Entry required.", field: "topics", status: 2 },
+          ],
+          dryRun: true,
+          id: null,
+        }),
+      }),
+    },
+  );
+  assert.equal(invalid.code, 1);
+  assert.deepEqual(invalid.out.slice(-2), [
+    "changes       new",
+    "  portal says: topics: Entry required.",
+  ]);
+  const withheld = await run(
+    { sub: "new", save: true },
+    {
+      files: newFiles({}),
+      portal: fakePortal({
+        create: ok({
+          httpStatus: 200,
+          valid: true,
+          changes: ["new"],
+          messages: [],
+          dryRun: true,
+          id: null,
+        }),
+      }),
+    },
+  );
+  assert.equal(withheld.code, 1);
+  assert.ok(
+    withheld.out.includes("NOTHING CREATED — the portal did not save it"),
+  );
+});
+
+test("new: the abstract the PDF does not delimit — refused with --abstract as the way out", async () => {
+  const r = await run(
+    { sub: "new" },
+    {
+      files: newFiles({
+        facts: JSON.stringify({
+          ...JSON.parse(facts()),
+          pages_text: ["Title\nBody"],
+        }),
+      }),
+    },
+  );
+  assert.equal(r.code, 2);
+  assert.deepEqual(r.errs, [
+    "the abstract: the PDF's first two pages have no line beginning with «Abstract» — give it with --abstract <file>, a plain-text file",
+  ]);
+});
+
+test("titleOf: \\title as text; an author's macro in it → the PDF's Title; neither → the fix", () => {
+  const src = (t: string) =>
+    `\\documentclass{article}\\title{${t}}\\begin{document}\\end{document}`;
+  assert.deepEqual(titleOf(src("Plain  Title"), latexReader, null), {
+    ok: true,
+    value: "Plain Title",
+  });
+  assert.deepEqual(
+    titleOf(src("\\ours{}: Lies"), latexReader, { Title: "TestLie: Lies" }),
+    { ok: true, value: "TestLie: Lies" },
+  );
+  assert.deepEqual(titleOf(src("\\ours{}: Lies"), latexReader, {}), {
+    ok: false,
+    error:
+      "the \\title in paper.tex uses a command paperlint does not read («…: Lies»), and the PDF names no Title — set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild",
+  });
+  assert.deepEqual(titleOf(null, latexReader, null), {
+    ok: false,
+    error:
+      "no \\title in paper.tex, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild",
+  });
 });

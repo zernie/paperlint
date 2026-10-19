@@ -234,6 +234,11 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
+  npx paperlint submission new [paper] [--abstract <file>] [--save]
+                                      create the paper's submission on the venue's portal: the title
+                                      and abstract from the build, the authors from paperlint.json,
+                                      the PDF. A DRY RUN unless --save; a save records the new id in
+                                      paperlint.json
   npx paperlint submission show [paper]
                                       the paper's submission on the venue's portal: status, title,
                                       type, topics, abstract length, the PDF the portal holds, and
@@ -285,13 +290,17 @@ studies:
 
 submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
-  paper's paperlint.json its submission there — "submission": { "id": <number> }. The token comes
-  only from the environment: HOTCRP_TOKEN (HotCRP: Account settings → Developer).
+  paper's paperlint.json its submission there — "submission": { "id": <number> }, written by new
+  — and, for new, its "authors": [{ "name", "email", "affiliation"? }]. The token comes only from
+  the environment, one variable per site: HOTCRP_TOKEN_<first label of the host>, e.g.
+  HOTCRP_TOKEN_MSR2027 for msr2027.hotcrp.com (HotCRP: Account settings → Developer). A plain
+  HOTCRP_TOKEN is not read.
   [paper]             the paper's folder; default the current directory
   --pdf <file>        the PDF to compare (show) or send (update) instead of the paper's own
-  --abstract <file>   update: a plain-text file whose text replaces the abstract
+  --abstract <file>   new, update: a plain-text file whose text is sent as the abstract
   --submit            update: mark the submission submitted
-  --save              update: really change the submission. Without it, nothing is saved
+  --save              new, update: really create or change the submission. Without it, nothing
+                      is saved
 
 lint:
   npx paperlint lint [paths…] [--fix] [--config <file.json>] [--json]
