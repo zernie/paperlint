@@ -147,7 +147,7 @@ above it — is never read. The gate refuses it naming the link, the order rule 
 declaring no mode, and `repro/study-registered` reports it (`bad-plan`, `result-file`) with the link.
 
 The decision file is held inside the paper by the schema (`staysInside`) and is judged by the same
-walk (`decisionPath`, `entryAt`): every component of its path must be a real directory and the last
+walk (`decisionEntry`, `entryAt`): every component of its path must be a real directory and the last
 a regular file. A directory or a symbolic link as the file itself is refused by the gate and reported
 by the rule (`decision-not-file`); a symbolic link above the file is refused naming that link
 (`decision-linked`).

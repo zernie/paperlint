@@ -11,7 +11,7 @@
  */
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import { decisionPath, readModeStudy, type ModeStudy } from "./study-modes.ts";
+import { decisionEntry, readModeStudy, type ModeStudy } from "./study-modes.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
 import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
 import {
@@ -85,7 +85,7 @@ const unusable = (
     return refusal(
       `${id}: its decision ${file} is matched by its output \`${glob}\`; a decision cannot be what its own run produces.`,
     );
-  const on = decisionPath(folder, file);
+  const on = decisionEntry(folder, file);
   switch (on.kind) {
     case "not-a-file":
       return refusal(

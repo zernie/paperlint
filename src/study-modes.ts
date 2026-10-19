@@ -35,7 +35,7 @@ export const filesUnder = (
   });
 
 /** Whether a decision path is one git can vouch for: a file or nothing yet; else why not. */
-export type DecisionPath =
+export type DecisionEntry =
   | { readonly kind: "ok" }
   | { readonly kind: "not-a-file"; readonly what: NotAFile }
   | { readonly kind: "linked"; readonly link: string };
@@ -46,10 +46,10 @@ export type DecisionPath =
  * the commits of anything under it, for a link with the link and not the file it points to, and for a
  * path through a linked directory with what lies behind the link.
  */
-export const decisionPath = (
+export const decisionEntry = (
   folder: StudyFolder,
   file: string,
-): DecisionPath => {
+): DecisionEntry => {
   const at = folder.entryAt(file);
   if (at.kind === "dir") return { kind: "not-a-file", what: "directory" };
   if (at.kind !== "linked") return { kind: "ok" };

@@ -17,7 +17,7 @@ import { basename, dirname, join } from "node:path";
 import { filter, map, pipe } from "remeda";
 import { callerPath } from "./caller-path.ts";
 import {
-  decisionPath,
+  decisionEntry,
   filesUnder,
   modeStudies,
   type ModeStudy,
@@ -58,7 +58,7 @@ export const decideFirstStudies = (
     map(({ row, plan, mode }): DecideFirstStudy => {
       const folder = join(paper, REPRO_DIR, row.folder);
       const decision = join(paper, mode.decision.file);
-      const on = decisionPath(reader, mode.decision.file);
+      const on = decisionEntry(reader, mode.decision.file);
       return {
         id: row.id,
         folder: row.folder,
