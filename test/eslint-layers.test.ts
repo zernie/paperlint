@@ -51,7 +51,7 @@ test(
     const results = await eslint.lintFiles(["src"]);
     // Guards: a glob that matched nothing lints nothing and reports clean — the fixture must be seen.
     assert.ok(
-      results.length >= 24,
+      results.length >= 26,
       `linted ${String(results.length)} fixture files`,
     );
     for (const r of results) {

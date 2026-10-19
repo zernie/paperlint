@@ -212,28 +212,33 @@ export const IO_MODULES = [
   "readline/promises",
 ].flatMap((m) => [m, `node:${m}`]);
 
-/** What the inside may import from outside the repository: types, pure collection helpers, pure path arithmetic, hashing. */
-export const INSIDE_EXTERNALS = [
-  "ts-essentials",
-  "remeda",
-  "path",
-  "node:path",
-  "crypto",
-  "node:crypto",
-];
-/** What the flat app files may import besides: Node's pure helpers, measured on the first v7 run. */
-export const APP_EXTERNALS = [
-  ...INSIDE_EXTERNALS,
-  "util",
-  "node:util",
-  "url",
-  "node:url",
-  "module",
-  "node:module",
-];
+/**
+ * The npm packages that exist because of ONE external program or format, from `dependencies` in
+ * package.json: only that tool's adapter (or `src/cli.ts`, the root) imports them; the domain, a
+ * port and the app take a port. A package that exists because of one external tool goes here in the
+ * same PR that adds its adapter. A pure utility library (remeda, zod, ts-essentials) needs nothing:
+ * the inside may import every package and Node built-in that is not listed here and is not an effect
+ * (`IO_MODULES`).
+ */
+export const TOOL_PACKAGES = [
+  "@eslint/markdown", // ESLint's Markdown language
+  "@eslint/plugin-kit",
+  "@retorquere/bibtex-parser", // BibTeX
+  "@unified-latex/unified-latex-types", // LaTeX
+  "@unified-latex/unified-latex-util-parse",
+  "@unified-latex/unified-latex-util-visit",
+  "ajv", // JSON Schema
+  "eslint",
+  "js-yaml", // YAML
+  "markdown-it", // Markdown
+  "mp4box", // MP4
+  "srt-parser-2", // SRT subtitles
+  "typescript", // the compiler API
+  "unpdf", // PDF
+  "vigiles", // the agent harness
+].flatMap((m) => [m, `${m}/**`]);
 
 const ORIGINS = ["external", "core"];
-const modules = (source) => ({ to: { module: { origin: ORIGINS, source } } });
 const elements = (...types) => ({ element: { types: { anyOf: types } } });
 const APP = { file: { categories: "app" } };
 const ROOT = { file: { categories: "root" } };
@@ -338,14 +343,20 @@ export const layerBoundaries = (root) => ({
             allow: { to: elements("js-module") },
           },
           // ── libraries and built-ins (the plugin calls Node built-ins origin "core") ──
+          // Everyone may import any package and built-in …
           {
-            from: elements("domain", "port"),
-            allow: modules(INSIDE_EXTERNALS),
-          },
-          { from: APP, allow: modules(APP_EXTERNALS) },
-          {
-            from: [elements("adapter"), ROOT],
+            from: [elements("domain", "port", "adapter"), APP, ROOT],
             allow: { to: { module: { origin: ORIGINS } } },
+          },
+          // … but the inside — not an adapter, not the root — not a package that exists because of
+          // one external tool (TOOL_PACKAGES). Effects are axis B's, below.
+          {
+            from: [elements("domain", "port"), APP],
+            disallow: {
+              to: { module: { origin: "external", source: TOOL_PACKAGES } },
+            },
+            message:
+              "{{ dependency.source }} exists because of one external tool or format: only that tool's adapter (src/adapters/<tool>/) and src/cli.ts import it; this file takes a port (src/CLAUDE.md, layers). A new package of that kind is listed in TOOL_PACKAGES in the PR that adds its adapter.",
           },
           // Tests may import anything, fakes included …
           {

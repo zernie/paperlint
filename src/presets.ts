@@ -406,8 +406,7 @@ export type ShippedVenue = Pick<
 >;
 
 /**
- * A resolved preset as a name knows it: its label, its aliases, its chain. Pure. (Not Remeda's
- * `pick`: the app layer may not import it — `boundaries/dependencies`, `APP_EXTERNALS`.)
+ * A resolved preset as a name knows it: its label, its aliases, its chain. Pure.
  */
 export const venueOf = ({
   label,
