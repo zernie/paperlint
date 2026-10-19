@@ -27,10 +27,53 @@ import {
   projectStructureParser,
   projectStructurePlugin,
 } from "eslint-plugin-project-structure";
+import shippedLinkRules from "#eslint-rules/shipped-links";
+import { packedPaths } from "#src/pack-list";
 import { presetCardRules } from "#src/preset-card-rule";
-import { nodeFiles } from "#src/adapters/node/index";
+import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+/** `fn`, run on its first call and remembered: `npm pack` runs once per lint run, not once per file. */
+const once = (fn) => {
+  let done = false;
+  let value;
+  return () => {
+    if (!done) {
+      value = fn();
+      done = true;
+    }
+    return value;
+  };
+};
+
+/**
+ * 🔴 A LINK IN SHIPPED MARKDOWN LEADS TO A FILE THE PACKAGE SHIPS (#187). `package/md-link-shipped`
+ * (eslint-rules/shipped-links.ts) judges the links of every Markdown file in the pack list — what
+ * `npm pack` puts in the tarball from `files` in package.json — against that same list, so a link to
+ * a sibling of the package, to a file `files` leaves out or to a root path is an error here and not a
+ * broken link in the published package. The list is read once per lint run, when the first link needs
+ * it (about three seconds); a Markdown file outside it is not judged. `root` is a parameter only so a
+ * test can point it at a copy of the package.
+ */
+export const shippedLinks = (root) => ({
+  files: ["**/*.md"],
+  plugins: {
+    markdown,
+    package: shippedLinkRules({
+      root,
+      shipped: once(() =>
+        packedPaths(spawnProcess(), root, {
+          PATH: String(process.env.PATH),
+          HOME: String(process.env.HOME),
+        }),
+      ),
+    }),
+  },
+  language: "markdown/gfm",
+  languageOptions: { frontmatter: "yaml" },
+  rules: { "package/md-link-shipped": "error" },
+});
 
 /** This repository's own rules, one plugin: `local/<rule>`. */
 const localRules = {
@@ -779,6 +822,7 @@ export default [
     rules: { "port/md-install-path": "warn" },
   },
   ...presetCards(dirname(fileURLToPath(import.meta.url))),
+  shippedLinks(dirname(fileURLToPath(import.meta.url))),
   {
     files: ["**/*.tex"],
     plugins: {
