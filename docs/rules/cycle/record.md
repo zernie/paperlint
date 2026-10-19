@@ -81,9 +81,11 @@ Failing — `paperlint.json`, the call's own dates inverted:
 
 ```text
 papers/my-paper/PIPELINE-STATUS.md
-  1:1  error  paperlint.json, cycle «conf-2027»: the call's "registration" (2026-10-26T11:59:59Z) is
-              after its "submission" (2026-10-24T11:59:59Z) — a date typed wrong, or an AoE day
-              miscounted (write a call's date as "YYYY-MM-DD AoE" and paperlint converts it)
+  1:1  error  paperlint.json, cycle «conf-2027»: the call's "registration" (2026-10-26T11:59:59Z,
+              the call's reading on 2026-09-09 from https://conf.example/cfp) is after its
+              "submission" (2026-10-24T11:59:59Z, the call's reading on 2026-09-09 from
+              https://conf.example/cfp) — a date typed wrong, or an AoE day miscounted (write a
+              call's date as "YYYY-MM-DD AoE" and paperlint converts it)
               cycle/record
 ```
 

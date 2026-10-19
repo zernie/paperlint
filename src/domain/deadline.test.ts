@@ -326,8 +326,8 @@ describe("deadlineOrderProblems — within ONE source; across sources is the dis
       reading("notification", "2027-02-01T00:00:00Z"),
     ];
     expect(deadlineOrderProblems(own, preset)).toEqual([
-      'the portal\'s "notification" (2027-02-01T00:00:00Z) is after its "camera-ready" (2027-01-01T00:00:00Z)',
-      'the call\'s "registration" (2026-10-26T11:59:59Z) is after its "submission" (2026-10-24T11:59:59Z)',
+      'the portal\'s "notification" (2027-02-01T00:00:00Z, the portal\'s reading on 2026-10-05 from https://example.org/portal — venues move dates: re-check there before relying on it) is after its "camera-ready" (2027-01-01T00:00:00Z, the portal\'s reading on 2026-10-05 from https://example.org/portal — venues move dates: re-check there before relying on it)',
+      'the call\'s "registration" (2026-10-26T11:59:59Z, the call\'s reading on 2026-10-05 from https://beta2027.example.org/call) is after its "submission" (2026-10-24T11:59:59Z, the call\'s reading on 2026-10-05 from https://beta2027.example.org/call)',
     ]);
   });
 

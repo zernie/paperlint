@@ -417,40 +417,51 @@ export function deadlinesInForce(
   });
 }
 
-/** One instant per kind, the earliest a layer holds for it, in the order of the kinds. */
-type Layer = readonly { readonly what: DeadlineWhat; readonly at: Instant }[];
+/** One instant per kind — and the reading it came from, an override's none. */
+type Entry = {
+  readonly what: DeadlineWhat;
+  readonly at: Instant;
+  readonly reading: Observation | null;
+};
+/** One entry per kind, the earliest a layer holds for it, in the order of the kinds. */
+type Layer = readonly Entry[];
 
 const layerOf = (entries: Layer): Layer =>
   DEADLINE_WHATS.flatMap((what) => {
-    const ats = entries.filter((e) => e.what === what).map((e) => e.at);
-    const first = ats.toSorted()[0];
-    return first === undefined ? [] : [{ what, at: first }];
+    const first = entries
+      .filter((e) => e.what === what)
+      .toSorted((a, b) => a.at.localeCompare(b.at))[0];
+    return first === undefined ? [] : [first];
   });
 
 /** The pairs of a layer out of the order registration ≤ submission ≤ resubmission < notification < camera-ready. */
 const inversions = (
   layer: Layer,
-  says: (what: DeadlineWhat, at: Instant, later: boolean) => string,
+  says: (e: Entry, later: boolean) => string,
 ): readonly string[] =>
   layer.flatMap((d, i) => {
     const before = layer[i - 1];
     return before !== undefined && before.at > d.at
-      ? [
-          `${says(before.what, before.at, false)} is after ${says(d.what, d.at, true)}`,
-        ]
+      ? [`${says(before, false)} is after ${says(d, true)}`]
       : [];
   });
+
+/** An entry's instant, with where and when it was read when it is a reading. */
+const entryText = (e: Entry): string =>
+  e.reading === null ? e.at : readingText(e.reading);
 
 const readingsOf = (
   own: readonly Deadline[],
   preset: readonly Reading[],
   source: DeadlineSource,
 ): Layer => [
-  ...preset.filter((r) => r.source === source),
+  ...preset
+    .filter((r) => r.source === source)
+    .map((r) => ({ what: r.what, at: r.at, reading: r })),
   ...own.flatMap((d) =>
     d.observed
       .filter((o) => o.source === source)
-      .map((o) => ({ what: d.what, at: o.at })),
+      .map((o) => ({ what: d.what, at: o.at, reading: o })),
   ),
 ];
 
@@ -464,20 +475,24 @@ export function deadlineOrderProblems(
   preset: readonly Reading[],
 ): readonly string[] {
   const overrides = own.flatMap((d) =>
-    d.override === null ? [] : [{ what: d.what, at: d.override.at }],
+    d.override === null
+      ? []
+      : [{ what: d.what, at: d.override.at, reading: null }],
   );
   return [
     ...inversions(
       layerOf(readingsOf(own, preset, "portal")),
-      (w, at, later) => `${later ? "its" : "the portal's"} "${w}" (${at})`,
+      (e, later) =>
+        `${later ? "its" : "the portal's"} "${e.what}" (${entryText(e)})`,
     ),
     ...inversions(
       layerOf(readingsOf(own, preset, "call")),
-      (w, at, later) => `${later ? "its" : "the call's"} "${w}" (${at})`,
+      (e, later) =>
+        `${later ? "its" : "the call's"} "${e.what}" (${entryText(e)})`,
     ),
     ...inversions(
       layerOf(overrides),
-      (w, at) => `the override of "${w}" (${at})`,
+      (e) => `the override of "${e.what}" (${entryText(e)})`,
     ),
   ];
 }

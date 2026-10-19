@@ -185,7 +185,7 @@ describe("cycle/record — the deadlines, over the venue preset's readings", () 
     });
     expect(fs.map((f) => f.messageId)).toEqual(["order"]);
     expect(fs[0]?.message).toBe(
-      'paperlint.json, cycle «msr-2027»: the call\'s "registration" (2026-10-26T11:59:59Z) is after its "submission" (2026-10-24T11:59:59Z) — a date typed wrong, or an AoE day miscounted (write a call\'s date as "YYYY-MM-DD AoE" and paperlint converts it)',
+      'paperlint.json, cycle «msr-2027»: the call\'s "registration" (2026-10-26T11:59:59Z, the call\'s reading on 2026-10-05 from https://2027.msrconf.org/track/msr-2027-technical-papers) is after its "submission" (2026-10-24T11:59:59Z, the call\'s reading on 2026-10-05 from https://2027.msrconf.org/track/msr-2027-technical-papers) — a date typed wrong, or an AoE day miscounted (write a call\'s date as "YYYY-MM-DD AoE" and paperlint converts it)',
     );
   });
 });
