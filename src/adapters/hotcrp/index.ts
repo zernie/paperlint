@@ -1,6 +1,6 @@
 /**
- * HotCRP, as the `SubmissionPortal` port: its REST API read and written over `fetch`, its answers
- * parsed here. Everything that changes if HotCRP's API does lives in this folder.
+ * HotCRP, as the `PortalSite` and `SubmissionPortal` ports: its token variables and token page, its
+ * REST API read and written over `fetch`, its answers parsed here. Everything that changes if HotCRP's API does lives in this folder.
  */
 export {
   CONTENT_FIELD,
@@ -16,4 +16,10 @@ export {
   sha256OfHash,
 } from "./response.ts";
 export { hotcrpDeadlines } from "./deadlines.io.ts";
+export { hotcrpSite } from "./site.ts";
+export {
+  SITE_LESS_VARIABLE,
+  VARIABLE_PATTERN,
+  tokenVariable,
+} from "./token.ts";
 export { parseDeadlinesPage, whatOf } from "./deadlines.ts";

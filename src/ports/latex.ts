@@ -3,6 +3,7 @@
  * parser. The one implementation is `src/adapters/latex/` (unified-latex); `src/cli.ts` wires it.
  */
 import type { Include } from "../domain/paper-source.ts";
+import type { Result } from "../domain/result.ts";
 import type {
   ClassLine,
   DocumentClass,
@@ -74,4 +75,13 @@ export interface LatexReader {
     src: string,
     jobname: string,
   ) => readonly Filecontents[];
+  /**
+   * The abstract as a built PDF shows it — `pages` is the text of its pages (the build's facts),
+   * `src` the paper's LaTeX, read only to tell a compound from a hyphenated word — as one paragraph
+   * of plain text; or why it cannot be delimited.
+   */
+  readonly abstractInPdf: (
+    pages: readonly string[],
+    src: string,
+  ) => Result<string, string>;
 }

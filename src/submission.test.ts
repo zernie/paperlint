@@ -12,6 +12,7 @@ import { ok, err, type Result } from "./domain/result.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { absolutePath } from "./domain/paths.ts";
 import { latexReader } from "./adapters/latex/index.ts";
+import { hotcrpSite } from "./adapters/hotcrp/index.ts";
 import type {
   CreateOutcome,
   NewSubmission,
@@ -176,7 +177,10 @@ async function run(
       presets: { files: fs, venuesDir: presetsDir() },
       cwd: o.cwd ?? "/w",
       env: (n) => (o.env ?? { HOTCRP_TOKEN_127: "hct_secret" })[n],
-      portalFor: portal.portalFor,
+      site: (p) => ({
+        ...hotcrpSite(p.url),
+        connect: (token) => portal.portalFor(p, token),
+      }),
       latex: latexReader,
       log: (l) => out.push(l),
       err: (l) => errs.push(l),
@@ -530,20 +534,20 @@ test("a 403 names a missing scope; any other failure says nothing about the toke
   const portal = { kind: "hotcrp", url: SITE } as const;
   const f = (httpStatus: number) =>
     ({ kind: "refused", httpStatus, messages: [] }) as const;
-  assert.deepEqual(tokenRefusedLines(portal, "HOTCRP_TOKEN_127", f(403)), [
+  assert.deepEqual(tokenRefusedLines(portal, hotcrpSite(SITE), f(403)), [
     "HOTCRP_TOKEN_127 was used; the site turned the request away — the token may lack a scope this subcommand needs",
     ...STEPS,
   ]);
-  assert.deepEqual(tokenRefusedLines(portal, "HOTCRP_TOKEN_127", f(500)), []);
+  assert.deepEqual(tokenRefusedLines(portal, hotcrpSite(SITE), f(500)), []);
   assert.deepEqual(
-    tokenRefusedLines(portal, "HOTCRP_TOKEN_127", {
+    tokenRefusedLines(portal, hotcrpSite(SITE), {
       kind: "unreachable",
       detail: "x",
     }),
     [],
   );
   assert.deepEqual(
-    tokenProblemLines(portal, {
+    tokenProblemLines(portal, hotcrpSite(SITE), {
       kind: "missing",
       variable: "HOTCRP_TOKEN_127",
     }),

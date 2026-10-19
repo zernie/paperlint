@@ -34,7 +34,10 @@ import {
   type UpdateOutcome,
 } from "./domain/submission.ts";
 import type { Files } from "./ports/files.ts";
-import type { SubmissionPortal } from "./ports/submission-portal.ts";
+import type {
+  PortalSite,
+  SubmissionPortal,
+} from "./ports/submission-portal.ts";
 import {
   paperPreset,
   unusablePresetLine,
@@ -54,37 +57,20 @@ import {
   lookUpToken,
   type TokenProblem,
 } from "./domain/portal-token.ts";
-import { abstractOfPages } from "./domain/pdf-abstract.ts";
 import { LINE_BREAK, OPAQUE, runText } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
 import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
 import { MAIN } from "./build.ts";
 
-/** Where on a portal's site an author creates a token, and the scopes each subcommand needs. */
-const TOKEN_PAGE: Readonly<
-  Record<
-    SupportedPortal["kind"],
-    { readonly path: string; readonly where: string; readonly scopes: string }
-  >
-> = {
-  hotcrp: {
-    // HotCRP's own link to it: `hotlink("Profile > Developer", "profile", ["t" => "developer"])`
-    // (src/help/h_developer.php in kohler/hotcrp).
-    path: "/profile?t=developer",
-    where: "Account settings → Developer → API tokens",
-    scopes:
-      "submeta:read and document:read (show), submeta:write and document:write (update, new) — tick all four to use every subcommand",
-  },
-};
-
 /** How to make and set the site's token: the page, the scopes, the variable. Pure. */
 export function tokenSteps(
   portal: SupportedPortal,
+  site: PortalSite,
   variable: string,
 ): readonly string[] {
-  const page = TOKEN_PAGE[portal.kind];
+  const c = site.credentials;
   return [
-    `  1. create a token on this site: ${portal.url}${page.path} (${page.where}), with the scopes ${page.scopes}`,
+    `  1. create a token on this site: ${c.page} (${c.where}), with the scopes ${c.scopes}`,
     `  2. set it in your environment — never paste it into a chat: export ${variable}=<the token>`,
     `  tokens are per ${portal.kind} site: ${variable} is read for ${hostOf(portal.url)} alone, so two venues take two variables`,
   ];
@@ -93,13 +79,14 @@ export function tokenSteps(
 /** Why there is no token, as the complete instruction the author follows. Pure. */
 export function tokenProblemLines(
   portal: SupportedPortal,
+  site: PortalSite,
   p: TokenProblem,
 ): readonly string[] {
   const head =
     p.kind === "missing"
       ? `no ${portal.kind} token for ${portal.url}: ${p.variable} is not set`
-      : `${p.siteLess} is no longer read: tokens are per ${portal.kind} site. If it was made on ${hostOf(portal.url)}, rename it to ${p.variable}; if it was made on another site, rename it to that site's variable (${p.siteLess}_<LABEL>) and create a token here:`;
-  return [head, ...tokenSteps(portal, p.variable)];
+      : `${p.siteLess} is no longer read: tokens are per ${portal.kind} site. If it was made on ${hostOf(portal.url)}, rename it to ${p.variable}; if it was made on another site, rename it to that site's variable (${site.variablePattern}) and create a token here:`;
+  return [head, ...tokenSteps(portal, site, p.variable)];
 }
 
 /**
@@ -108,16 +95,17 @@ export function tokenProblemLines(
  */
 export function tokenRefusedLines(
   portal: SupportedPortal,
-  variable: string,
+  site: PortalSite,
   f: PortalFailure,
 ): readonly string[] {
   if (f.kind !== "refused" || (f.httpStatus !== 401 && f.httpStatus !== 403))
     return [];
+  const variable = site.tokenVariable;
   const why =
     f.httpStatus === 401
       ? `${variable} was used; it may belong to another ${portal.kind} site (tokens are per site), or be revoked or expired`
       : `${variable} was used; the site turned the request away — the token may lack a scope this subcommand needs`;
-  return [why, ...tokenSteps(portal, variable)];
+  return [why, ...tokenSteps(portal, site, variable)];
 }
 
 export const SUBCOMMANDS = ["new", "show", "update"] as const;
@@ -148,9 +136,10 @@ export interface SubmissionDeps {
   readonly cwd: string;
   /** The value of an environment variable; the root reads the environment. */
   readonly env: (name: string) => string | undefined;
-  readonly portalFor: (p: SupportedPortal, token: string) => SubmissionPortal;
-  /** Reads the paper's `\title` (`new`). */
-  readonly latex: Pick<LatexReader, "headings">;
+  /** The portal site of a supported kind: its token variable and help, and its API once there is a token. */
+  readonly site: (p: SupportedPortal) => PortalSite;
+  /** Reads the paper's `\title`, and the abstract in its built PDF (`new`). */
+  readonly latex: Pick<LatexReader, "headings" | "abstractInPdf">;
   readonly log: (line: string) => void;
   readonly err: (line: string) => void;
 }
@@ -348,6 +337,7 @@ const bytesAt = (files: Files, p: string): Uint8Array | null =>
 
 /** The deps a subcommand runs with: the command's, and what to say when the portal turns the token away. */
 type RunDeps = SubmissionDeps & {
+  readonly portalSite: PortalSite;
   readonly refused: (f: PortalFailure) => readonly string[];
 };
 
@@ -511,18 +501,13 @@ export function newLines(
 
 /** What the author does on the site after `new`: what paperlint does not send. Pure. */
 export function onTheSiteLines(
-  portal: SupportedPortal,
+  site: PortalSite,
   id: number | null,
   paperArg: string,
 ): readonly string[] {
-  const page =
-    id === null
-      ? `${portal.url}/paper/<its number>`
-      : `${portal.url}/paper/${String(id)}`;
   return [
-    `do on the site, ${page} — paperlint sends only the title, the abstract, the authors and the PDF:`,
-    "  - PC conflicts (HotCRP's API takes them as pc_conflicts; paperlint does not send them)",
-    "  - topics, and every field the venue adds (paper type, artifact, consent boxes …)",
+    `do on the site, ${site.submissionPage(id)} — paperlint sends only the title, the abstract, the authors and the PDF:`,
+    ...site.siteOnly.map((f) => `  - ${f}`),
     `  - then mark it submitted: npx paperlint submission update ${paperArg} --submit (a dry run; --save after your yes)`,
   ];
 }
@@ -609,7 +594,7 @@ function titleAndAbstract(
     own.value !== null
       ? ok(own.value.replace(/\s+/g, " "))
       : facts.ok
-        ? abstractOfPages(facts.value.text.pages, source ?? "")
+        ? deps.latex.abstractInPdf(facts.value.text.pages, source ?? "")
         : facts;
   return abstract.ok
     ? ok({ title: title.value, abstract: abstract.value })
@@ -691,7 +676,7 @@ async function runNew(
   if (!fine || (a.save && r.value.id === null)) return 1;
   const paperArg =
     a.paperDir === deps.cwd ? "." : shownPath(deps.cwd, a.paperDir);
-  logAll(onTheSiteLines(t.portal, r.value.id, paperArg), deps);
+  logAll(onTheSiteLines(deps.portalSite, r.value.id, paperArg), deps);
   return r.value.id === null ? 0 : recordCreated(t, r.value.id, paperArg, deps);
 }
 
@@ -717,13 +702,20 @@ export function usageProblem(a: SubmissionArgs): string | null {
     : null;
 }
 
+/** The variables a site's token lookup reads. */
+const tokenNames = (site: PortalSite) => ({
+  variable: site.tokenVariable,
+  siteLess: site.siteLessVariable,
+});
+
 /** No token to use: the complete instruction, exit 2 — nothing is sent. */
 function tokenMissing(
   portal: SupportedPortal,
+  site: PortalSite,
   p: TokenProblem,
   deps: SubmissionDeps,
 ): number {
-  tokenProblemLines(portal, p).forEach((l) => {
+  tokenProblemLines(portal, site, p).forEach((l) => {
     deps.err(l);
   });
   return 2;
@@ -741,13 +733,15 @@ export async function runSubmission(
   if (!t.ok) return (deps.err(t.error), 2);
   const id = a.sub === "new" ? ok(null) : idOf(t.value);
   if (!id.ok) return (deps.err(id.error), 2);
-  const found = lookUpToken(t.value.portal, deps.env);
-  if (!found.ok) return tokenMissing(t.value.portal, found.error, deps);
-  const portal = deps.portalFor(t.value.portal, found.value.token);
+  const site = deps.site(t.value.portal);
+  const found = lookUpToken(tokenNames(site), deps.env);
+  if (!found.ok) return tokenMissing(t.value.portal, site, found.error, deps);
+  const portal = site.connect(found.value.token);
   const pdfPath = a.pdf === null ? t.value.pdf : resolve(deps.cwd, a.pdf);
   const withToken: RunDeps = {
     ...deps,
-    refused: (f) => tokenRefusedLines(t.value.portal, found.value.variable, f),
+    portalSite: site,
+    refused: (f) => tokenRefusedLines(t.value.portal, site, f),
   };
   if (id.value === null)
     return runNew(t.value, portal, { ...a, pdfPath, paperDir }, withToken);

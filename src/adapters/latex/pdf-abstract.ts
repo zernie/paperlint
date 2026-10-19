@@ -1,7 +1,11 @@
 /**
  * THE ABSTRACT AS THE PDF SHOWS IT — read from the build's facts (`pages_text`, pdf.js's text of each
  * page), so every macro is already what TeX made of it. What `paperlint submission new` sends as the
- * abstract. Pure.
+ * abstract, through the `LatexReader` port (`abstractInPdf`). Pure.
+ *
+ * In the LaTeX adapter, not the domain: where an abstract starts and ends on the page is what the
+ * document classes typeset (acmart's «CCS Concepts», IEEEtran's «Index Terms», LLNCS's «Abstract.»).
+ * If LaTeX's classes changed their front matter, this file would change; pdf.js only supplies text.
  *
  * Where it starts: the first line of the first two pages that begins with «Abstract» (acmart's
  * «ABSTRACT» heading on its own line, IEEEtran's «Abstract—…», LLNCS's «Abstract.»). Where it ends:
@@ -13,7 +17,7 @@
  * hyphen whose next line starts with a lower-case letter is one word — unless the paper's own
  * source spells the two halves with a hyphen (`agent-based`), which is a compound kept as written.
  */
-import { err, ok, type Result } from "./result.ts";
+import { err, ok, type Result } from "../../domain/result.ts";
 
 const START = /^\s*abstract\b\s*[-—–:.]?\s*/iu;
 const END =

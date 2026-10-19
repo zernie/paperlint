@@ -100,10 +100,10 @@ import { texOutput } from "./adapters/tex-output/index.ts";
 import { BIB_RULE_LEVELS, bibRules } from "./bib-rules.ts";
 import { bibliographyReader } from "./references.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
-import { hotcrpPortal } from "./adapters/hotcrp/index.ts";
+import { hotcrpSite } from "./adapters/hotcrp/index.ts";
 import { runSubmission } from "./submission.ts";
 import type { PortalKind, SupportedPortal } from "./domain/submission.ts";
-import type { SubmissionPortal } from "./ports/submission-portal.ts";
+import type { PortalSite } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import {
   narrowToOwners,
@@ -1747,7 +1747,7 @@ const SIMPLE: Readonly<
         presets: PRESET_DEPS,
         cwd,
         env: (name) => process.env[name],
-        portalFor,
+        site: portalSite,
         latex: latexReader,
         log,
         err,
@@ -1756,13 +1756,10 @@ const SIMPLE: Readonly<
 };
 
 /** The adapter of each portal kind — one per kind, chosen here at the root. */
-const PORTALS: Readonly<
-  Record<PortalKind, (url: string, token: string) => SubmissionPortal>
-> = {
-  hotcrp: (url, token) => hotcrpPortal({ url, token }),
+const PORTALS: Readonly<Record<PortalKind, (url: string) => PortalSite>> = {
+  hotcrp: hotcrpSite,
 };
-const portalFor = (p: SupportedPortal, token: string): SubmissionPortal =>
-  PORTALS[p.kind](p.url, token);
+const portalSite = (p: SupportedPortal): PortalSite => PORTALS[p.kind](p.url);
 
 /** banal's installer, wired from this process's environment: the composition root's work. */
 function hostBanalInstaller(): ToolInstaller {

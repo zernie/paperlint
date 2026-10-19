@@ -1,7 +1,9 @@
 /** The abstract out of the PDF's page text: the classes' headings, hyphenation, and the refusals. */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { abstractOfPages } from "./pdf-abstract.ts";
+import { latexReader } from "./index.ts";
+
+const abstractOfPages = latexReader.abstractInPdf;
 
 test("IEEEtran: «Abstract—» to «Index Terms—», a hyphenated word rejoined, a compound kept", () => {
   const page = [
