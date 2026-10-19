@@ -292,10 +292,10 @@ submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
   paper's paperlint.json its submission there — "submission": { "id": <number> }, written by new
   — and, for new, its "authors": [{ "name", "email", "affiliation"? }]. The token comes only from
-  the environment, one variable per site: HOTCRP_TOKEN_<first label of the host, or the last
-  path segment of a site served under a path>, e.g.
-  HOTCRP_TOKEN_MSR2027 for msr2027.hotcrp.com (HotCRP: Account settings → Developer). A plain
-  HOTCRP_TOKEN is not read.
+  the environment, one variable per site: HOTCRP_TOKEN_<subdomain> on *.hotcrp.com, else
+  HOTCRP_TOKEN_<host and path> — e.g. HOTCRP_TOKEN_MSR2027 for msr2027.hotcrp.com,
+  HOTCRP_TOKEN_AIDC_SUBMIT_ACSAC_ORG for aidc.submit.acsac.org (HotCRP: Account settings →
+  Developer). A plain HOTCRP_TOKEN is not read.
   [paper]             the paper's folder; default the current directory
   --pdf <file>        the PDF to compare (show) or send (update) instead of the paper's own
   --abstract <file>   new, update: a plain-text file whose text is sent as the abstract

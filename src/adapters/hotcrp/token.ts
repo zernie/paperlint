@@ -4,9 +4,9 @@
  *
  * A HotCRP token works on the site it was made on and nowhere else (measured 2026-10-19: a token
  * made on one HotCRP site gets `401 Unauthorized` from `msr2027.hotcrp.com`'s `/api/whoami`). So the
- * variable is named after the site — `HOTCRP_TOKEN_<first label of the host>`, or of the last path
- * segment for a site served under a path — and an author with live submissions at two venues sets
- * two variables (#236). The site-less `HOTCRP_TOKEN` is no longer read; the policy that refuses it
+ * variable is named after the site, and no two sites share one — `HOTCRP_TOKEN_<subdomain>` on the
+ * hosted service, `HOTCRP_TOKEN_<host and path>` anywhere else — and an author with live submissions
+ * at two venues sets two variables (#236). The site-less `HOTCRP_TOKEN` is no longer read; the policy that refuses it
  * by name is the domain's (`src/domain/portal-token.ts`).
  */
 import { hostOf } from "../../domain/portal-token.ts";
@@ -17,27 +17,34 @@ export const SITE_LESS_VARIABLE = "HOTCRP_TOKEN";
 /** The shape of a site's variable, as a message names it. */
 export const VARIABLE_PATTERN = `${SITE_LESS_VARIABLE}_<LABEL>`;
 
+/** The hosted service, where each conference is a subdomain of its own. */
+const HOSTED = ".hotcrp.com";
+
 /**
- * What names a site: the last segment of its URL's path when it has one — one HotCRP install can
- * serve several conferences under paths of one host (`https://hotcrp.example.edu/conf2027`) — else
- * the first label of its host.
+ * What names a site, and no other: on the hosted service the subdomain alone
+ * (`msr2027.hotcrp.com` → `msr2027`); anywhere else the whole host and path
+ * (`hotcrp.example.edu/conf2027`), because one install may serve several conferences under
+ * paths and two hosts may share a first label.
  */
 function siteLabel(url: string): string {
+  const host = hostOf(url);
+  if (host.endsWith(HOSTED)) return host.slice(0, -HOSTED.length);
   const path = URL.canParse(url) ? new URL(url).pathname : "";
-  const segment = path
-    .split("/")
-    .filter((s) => s !== "")
-    .at(-1);
-  return segment ?? hostOf(url).split(".", 1).join("");
+  return `${host}${path}`;
 }
 
 /**
  * The variable a HotCRP site's token is read from: `HOTCRP_TOKEN_` and the site's label upper-cased,
- * every character but a letter or digit made `_`. `https://msr2027.hotcrp.com` →
- * `HOTCRP_TOKEN_MSR2027`; `https://aidc.submit.acsac.org` → `HOTCRP_TOKEN_AIDC`;
- * `https://hotcrp.example.edu/conf2027` → `HOTCRP_TOKEN_CONF2027`.
+ * every run of characters but letters and digits made one `_`, none at either end.
+ * `https://msr2027.hotcrp.com` → `HOTCRP_TOKEN_MSR2027`; `https://aidc.submit.acsac.org` →
+ * `HOTCRP_TOKEN_AIDC_SUBMIT_ACSAC_ORG`; `https://hotcrp.example.edu/conf2027` →
+ * `HOTCRP_TOKEN_HOTCRP_EXAMPLE_EDU_CONF2027`.
  */
 export function tokenVariable(url: string): string {
   const label = siteLabel(url);
-  return `${SITE_LESS_VARIABLE}_${label.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`;
+  const name = label
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return `${SITE_LESS_VARIABLE}_${name}`;
 }

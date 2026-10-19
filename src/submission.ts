@@ -473,7 +473,11 @@ export function titleOf(
           .replace(/\s+/g, " ")
           .trim();
   if (text !== "" && !text.includes(OPAQUE)) return ok(text);
-  const pdfTitle = metadata?.["Title"]?.trim() ?? "";
+  // The Info dictionary's Title, else the XMP packet's dc:title (pdf-content.ts keeps both).
+  const pdfTitle =
+    [metadata?.["Title"], metadata?.["dc:title"]]
+      .map((t) => t?.trim() ?? "")
+      .find((t) => t !== "") ?? "";
   if (pdfTitle !== "") return ok(pdfTitle);
   return err(
     text === ""

@@ -23,9 +23,10 @@ run; HotCRP's own complaints about a missing required field arrive as \`portal s
 
 ## Token
 
-One variable per HotCRP site: \`HOTCRP_TOKEN_<first label of the host, upper-cased>\` (the last path
-segment instead, for a site served under a path) —
-\`HOTCRP_TOKEN_MSR2027\` for \`msr2027.hotcrp.com\`, \`HOTCRP_TOKEN_AIDC\` for \`aidc.submit.acsac.org\`. A
+One variable per HotCRP site, never shared by two: \`HOTCRP_TOKEN_<subdomain>\` on the hosted service
+(\`*.hotcrp.com\`), \`HOTCRP_TOKEN_<host and path>\` anywhere else, upper-cased —
+\`HOTCRP_TOKEN_MSR2027\` for \`msr2027.hotcrp.com\`, \`HOTCRP_TOKEN_AIDC_SUBMIT_ACSAC_ORG\` for
+\`aidc.submit.acsac.org\`. The command names the exact variable when it is missing. A
 token works only on the site it was made on, so two venues take two variables. A plain
 \`HOTCRP_TOKEN\` is NOT read: set alone, the command stops and says to rename it.
 

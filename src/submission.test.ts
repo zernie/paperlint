@@ -176,7 +176,7 @@ async function run(
       files: fs,
       presets: { files: fs, venuesDir: presetsDir() },
       cwd: o.cwd ?? "/w",
-      env: (n) => (o.env ?? { HOTCRP_TOKEN_127: "hct_secret" })[n],
+      env: (n) => (o.env ?? { HOTCRP_TOKEN_127_0_0_1: "hct_secret" })[n],
       site: (p) => ({
         ...hotcrpSite(p.url),
         connect: (token) => portal.portalFor(p, token),
@@ -288,7 +288,7 @@ test("🔴 the portal's refusal is printed with its own message, exit 1", async 
   assert.equal(r.code, 1);
   assert.deepEqual(r.errs, [
     "the portal refused (HTTP 401): Missing credentials",
-    "HOTCRP_TOKEN_127 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
+    "HOTCRP_TOKEN_127_0_0_1 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
     ...STEPS,
   ]);
 });
@@ -470,8 +470,8 @@ test("update: no PDF to send, or no abstract file, is refused before the portal 
 /** The steps every token message ends with, for the test site. */
 const STEPS = [
   `  1. create a token on this site: ${SITE}/profile?t=developer (Account settings → Developer → API tokens), with the scopes submeta:read and document:read (show), submeta:write and document:write (update, new) — tick all four to use every subcommand`,
-  "  2. set it in your environment — never paste it into a chat: export HOTCRP_TOKEN_127=<the token>",
-  "  tokens are per hotcrp site: HOTCRP_TOKEN_127 is read for 127.0.0.1 alone, so two venues take two variables",
+  "  2. set it in your environment — never paste it into a chat: export HOTCRP_TOKEN_127_0_0_1=<the token>",
+  "  tokens are per hotcrp site: HOTCRP_TOKEN_127_0_0_1 is read for 127.0.0.1 alone, so two venues take two variables",
 ];
 
 test("🔴 no token: the site's variable is named, with this site's token page, the scopes and the export — and nothing is called", async () => {
@@ -479,7 +479,7 @@ test("🔴 no token: the site's variable is named, with this site's token page, 
   assert.equal(r.code, 2);
   assert.deepEqual(r.seen, []);
   assert.deepEqual(r.errs, [
-    `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127 is not set`,
+    `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127_0_0_1 is not set`,
     ...STEPS,
   ]);
 });
@@ -492,7 +492,7 @@ test("🔴 only the site-less HOTCRP_TOKEN set: the rename instruction, and noth
   assert.equal(r.code, 2);
   assert.deepEqual(r.seen, []);
   assert.deepEqual(r.errs, [
-    "HOTCRP_TOKEN is no longer read: tokens are per hotcrp site. If it was made on 127.0.0.1, rename it to HOTCRP_TOKEN_127; if it was made on another site, rename it to that site's variable (HOTCRP_TOKEN_<LABEL>) and create a token here:",
+    "HOTCRP_TOKEN is no longer read: tokens are per hotcrp site. If it was made on 127.0.0.1, rename it to HOTCRP_TOKEN_127_0_0_1; if it was made on another site, rename it to that site's variable (HOTCRP_TOKEN_<LABEL>) and create a token here:",
     ...STEPS,
   ]);
   assert.doesNotMatch(r.errs.join("\n"), /hct_old/);
@@ -501,7 +501,7 @@ test("🔴 only the site-less HOTCRP_TOKEN set: the rename instruction, and noth
 test("the site's variable set beside a site-less one: the site's token is the one used", async () => {
   const r = await run(
     {},
-    { env: { HOTCRP_TOKEN_127: "hct_site", HOTCRP_TOKEN: "hct_old" } },
+    { env: { HOTCRP_TOKEN_127_0_0_1: "hct_site", HOTCRP_TOKEN: "hct_old" } },
   );
   assert.equal(r.code, 0);
   assert.equal(r.seen[0]?.token, "hct_site");
@@ -524,7 +524,7 @@ test("🔴 a 401 from the portal: the portal's words, which variable was used, a
     assert.equal(r.code, 1, sub);
     assert.deepEqual(r.errs, [
       "the portal refused (HTTP 401): Unauthorized",
-      "HOTCRP_TOKEN_127 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
+      "HOTCRP_TOKEN_127_0_0_1 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
       ...STEPS,
     ]);
   }
@@ -535,7 +535,7 @@ test("a 403 names a missing scope; any other failure says nothing about the toke
   const f = (httpStatus: number) =>
     ({ kind: "refused", httpStatus, messages: [] }) as const;
   assert.deepEqual(tokenRefusedLines(portal, hotcrpSite(SITE), f(403)), [
-    "HOTCRP_TOKEN_127 was used; the site turned the request away — the token may lack a scope this subcommand needs",
+    "HOTCRP_TOKEN_127_0_0_1 was used; the site turned the request away — the token may lack a scope this subcommand needs",
     ...STEPS,
   ]);
   assert.deepEqual(tokenRefusedLines(portal, hotcrpSite(SITE), f(500)), []);
@@ -549,9 +549,12 @@ test("a 403 names a missing scope; any other failure says nothing about the toke
   assert.deepEqual(
     tokenProblemLines(portal, hotcrpSite(SITE), {
       kind: "missing",
-      variable: "HOTCRP_TOKEN_127",
+      variable: "HOTCRP_TOKEN_127_0_0_1",
     }),
-    [`no hotcrp token for ${SITE}: HOTCRP_TOKEN_127 is not set`, ...STEPS],
+    [
+      `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127_0_0_1 is not set`,
+      ...STEPS,
+    ],
   );
 });
 
@@ -1078,6 +1081,16 @@ test("titleOf: \\title as text; an author's macro in it → the PDF's Title; nei
   assert.deepEqual(
     titleOf(src("\\ours{}: Lies"), latexReader, { Title: "TestLie: Lies" }),
     { ok: true, value: "TestLie: Lies" },
+  );
+  assert.deepEqual(
+    titleOf(src("\\ours{}: Lies"), latexReader, {
+      "dc:title": "From The XMP",
+    }),
+    { ok: true, value: "From The XMP" },
+  );
+  assert.deepEqual(
+    titleOf(null, latexReader, { Title: "Info", "dc:title": "XMP" }),
+    { ok: true, value: "Info" },
   );
   assert.deepEqual(titleOf(src("\\ours{}: Lies"), latexReader, {}), {
     ok: false,
