@@ -16,6 +16,7 @@
  * registry is refused with the file to write rather than given a guessed one.
  */
 import { join, relative, resolve } from "node:path";
+import { find, map, pipe } from "remeda";
 import { callerPath } from "./caller-path.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { README, REPRO_DIR } from "./domain/repro-layout.ts";
@@ -37,6 +38,7 @@ import {
   type StudyRegistry,
 } from "./domain/study-registry.ts";
 import type { Files } from "./ports/files.ts";
+import type { FolderRefusal } from "./ports/study-folder.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type { ListEntries } from "./ports/list-entries.ts";
 import type { ListDir } from "./ports/talk-media.ts";
@@ -114,10 +116,13 @@ function escaping(
   deps: StudiesDeps,
 ): Refusal | null {
   const folder = studyFolder(p.dir, deps);
-  const found = r.studies.flatMap((row) => {
-    const why = folder.refusal(row.folder);
-    return why === null ? [] : [{ row, why }];
-  })[0];
+  const found = pipe(
+    r.studies,
+    map((row) => ({ row, why: folder.refusal(row.folder) })),
+    find(
+      (x): x is typeof x & { readonly why: FolderRefusal } => x.why !== null,
+    ),
+  );
   if (found === undefined) return null;
   const { reason, fix } = folderRefusalText(found.why, p.shown);
   return refuse(

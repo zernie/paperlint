@@ -517,7 +517,11 @@ function pdfTextOnly(t) {
 // `--flags-only` prints the findings of the report (every line it marks FLAG, with the lines under
 // it) and nothing on a clean paper, and exits 1 when there is one: the form for a hook. The report
 // prints all of `checks` and exits 0.
-const flagsOnly = args.includes("--flags-only");
+const mode = args.includes("--flags-only")
+  ? "flags"
+  : args.includes("--headings")
+    ? "headings"
+    : "report";
 let flagged = 0;
 for (const f of args.filter((a) => !a.startsWith("--"))) {
   const raw = fs.readFileSync(f, "utf8");
@@ -545,12 +549,9 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
     process.exit(2);
   }
   const r = analyse(text, sentences);
-  const rows =
-    flagsOnly || !args.includes("--headings")
-      ? checks(r, captionFindings(f, tex, fs, path))
-      : [];
-  if (flagsOnly) {
-    const found = rows.filter((row) => row.ok === false);
+  const rows = () => checks(r, captionFindings(f, tex, fs, path));
+  if (mode === "flags") {
+    const found = rows().filter((row) => row.ok === false);
     if (found.length) {
       flagged += found.length;
       // The header STATES the count, so a caller need not count output lines — header and footer
@@ -563,10 +564,10 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
         under.forEach((l) => console.error(`      > ${l}`));
       });
       console.error(
-        "   run prose-lint.mjs on the file without --flags-only for the sentences",
+        "   run prose-lint.mjs on the file without --flags-only for every metric",
       );
     }
-  } else if (args.includes("--headings")) {
+  } else if (mode === "headings") {
     // The whole-document question, printed as one list. Not a gate: "does this heading name a
     // concrete noun" is judgement and pretending otherwise would be the exact failure this file
     // exists to stop. What was missing is cheaper and was the real cause — nobody had ever seen the
@@ -589,10 +590,10 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
       'a linter, a configuration, a repository, a rule — not "answers", "kinds", "moves".',
     );
   } else {
-    report(f.split("/").pop(), r, rows);
+    report(f.split("/").pop(), r, rows());
   }
 }
-if (!flagsOnly)
+if (mode !== "flags")
   console.log(
     "\n(thresholds and their sources are in THRESHOLDS at the top of this file)",
   );

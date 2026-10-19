@@ -534,16 +534,20 @@ export const studyById = (
     : { kind: "ambiguous", rows: [first, ...rest] };
 };
 
-/** The key a plan is held under (`StudyInput.plans`, `IndexInput.plans`, `IndexInput.history`): `<folder>/<plan>`. */
-export const planKey = (folder: string, plan: string): string =>
-  `${folder}/${plan}`;
+/**
+ * The key a path inside a study's folder is held under: `<folder>/<path>`. A plan (`StudyInput.plans`,
+ * `IndexInput.plans`), the history of its study (`IndexInput.history`) and a result file
+ * (`StudyInput.results`) are all found by it.
+ */
+export const folderKey = (folder: string, path: string): string =>
+  `${folder}/${path}`;
 
 /**
  * The `<folder>/<plan>` of each row whose plan lies inside its folder: the files the judge needs read
  * (`StudyInput.plans`). A plan outside its folder is reported without being read.
  */
 export const planKeys = (r: StudyRegistry): readonly string[] =>
-  planRefs(r).map((p) => planKey(p.folder, p.plan));
+  planRefs(r).map((p) => folderKey(p.folder, p.plan));
 
 /** A plan a row names: where it is read from, and the kind of the study — what its parser needs. */
 export interface PlanRef {
@@ -638,7 +642,9 @@ const resultFile: RowCheck = ({ s, input }) => {
   if (path === undefined) return null;
   if (!isInside(path))
     return { problem: "result-file", id: s.id, path, why: "outside" };
-  const found = input.results.get(`${s.folder}/${path}`) ?? { kind: "absent" };
+  const found = input.results.get(folderKey(s.folder, path)) ?? {
+    kind: "absent",
+  };
   switch (found.kind) {
     case "file":
       return null;
@@ -675,7 +681,7 @@ const unknownMeasurement: RowCheck = ({ r, s }) =>
 const planOf = ({ s, input }: Row): PlanState | null => {
   if (s.plan === undefined) return null;
   return isInside(s.plan)
-    ? (input.plans.get(planKey(s.folder, s.plan)) ?? { kind: "absent" })
+    ? (input.plans.get(folderKey(s.folder, s.plan)) ?? { kind: "absent" })
     : { kind: "absent" };
 };
 
@@ -896,7 +902,7 @@ const declaredMode = (
 ): StudyMode | null => {
   const state =
     s.plan !== undefined && isInside(s.plan)
-      ? plans.get(planKey(s.folder, s.plan))
+      ? plans.get(folderKey(s.folder, s.plan))
       : undefined;
   return state === undefined ||
     state.kind === "absent" ||
@@ -912,7 +918,7 @@ const factsOf = (s: Study, at: IndexInput): IndexFacts => ({
   history:
     (s.plan === undefined
       ? undefined
-      : at.history.get(planKey(s.folder, s.plan))) ?? null,
+      : at.history.get(folderKey(s.folder, s.plan))) ?? null,
 });
 
 /**

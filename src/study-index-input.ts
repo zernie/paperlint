@@ -4,7 +4,7 @@
  */
 import { indexHistory } from "./domain/index-columns.ts";
 import {
-  planKey,
+  folderKey,
   type IndexInput,
   type RegistryState,
 } from "./domain/study-registry.ts";
@@ -24,7 +24,7 @@ export const indexInputOf = (
   plans: plansOf(r, studyFolder(paper, deps), deps.codec),
   history: new Map(
     decideFirstStudies(paper, deps).map((s) => [
-      planKey(s.folder, s.plan),
+      folderKey(s.folder, s.plan),
       indexHistory(s),
     ]),
   ),

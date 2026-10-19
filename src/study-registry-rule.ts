@@ -31,7 +31,7 @@ import {
   PLAN_NAME_PROBLEMS,
   STUDIES_FILE,
   judgeStudies,
-  planKey,
+  folderKey,
   planRefs,
   studiesOf,
   studyMessage,
@@ -105,7 +105,7 @@ const resultsOf = (
     map(
       (s) =>
         [
-          `${s.folder}/${s.result_file}`,
+          folderKey(s.folder, s.result_file),
           folder.locate(s.folder, s.result_file),
         ] as const,
     ),
@@ -131,7 +131,7 @@ export const plansOf = (
       const state = planStateOf(ref, folder, codec);
       return state === null
         ? []
-        : [[planKey(ref.folder, ref.plan), state] as const];
+        : [[folderKey(ref.folder, ref.plan), state] as const];
     }),
   );
 

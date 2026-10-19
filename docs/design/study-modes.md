@@ -235,23 +235,24 @@ Read for this note (2026-10-16):
 
 ## Where each part lives
 
-| part                                                          | file                                  | layer   |
-| ------------------------------------------------------------- | ------------------------------------- | ------- |
-| the modes, what is an output, which decision a mode waits on  | `src/domain/study-mode.ts`            | domain  |
-| the order judge and its messages                              | `src/domain/decide-first.ts`          | domain  |
-| the index's mode columns and the history they show            | `src/domain/index-columns.ts`         | domain  |
-| the index, which columns the lint compares, `isFolderName`    | `src/domain/study-registry.ts`        | domain  |
-| the schema of `mode`; readiness by kind                       | `src/adapters/study-registry/`        | adapter |
-| git: committed state, first commits, ancestry, shallow        | `src/adapters/git/`                   | adapter |
-| what the app asks of git                                      | `src/ports/git-history.ts`            | port    |
-| a directory's entries, links not followed                     | `src/ports/list-entries.ts`           | port    |
-| the studies with a mode, and the files under a study's folder | `src/study-modes.ts`                  | app     |
-| what the study readers need of a study's folder               | `src/ports/study-folder.ts`           | port    |
-| the one reader of a study's folder, links not followed        | `src/study-folder.ts`                 | app     |
-| the order rule                                                | `src/outputs-before-decision-rule.ts` | app     |
-| the plans and histories `studies index` and `new` write from  | `src/study-index-input.ts`            | app     |
-| `gate`; `new` and `index`                                     | `src/study-gate.ts`, `src/studies.ts` | app     |
-| wiring: git with PATH and HOME, the clock                     | `src/cli.ts`                          | root    |
+| part                                                         | file                                  | layer   |
+| ------------------------------------------------------------ | ------------------------------------- | ------- |
+| the modes, what is an output, which decision a mode waits on | `src/domain/study-mode.ts`            | domain  |
+| the order judge and its messages                             | `src/domain/decide-first.ts`          | domain  |
+| the index's mode columns and the history they show           | `src/domain/index-columns.ts`         | domain  |
+| the index, which columns the lint compares, `isFolderName`   | `src/domain/study-registry.ts`        | domain  |
+| the schema of `mode`; readiness by kind                      | `src/adapters/study-registry/`        | adapter |
+| git: committed state, first commits, ancestry, shallow       | `src/adapters/git/`                   | adapter |
+| what the app asks of git                                     | `src/ports/git-history.ts`            | port    |
+| a directory's entries, links not followed                    | `src/ports/list-entries.ts`           | port    |
+| the studies with a mode, and how a decision's path stands    | `src/study-modes.ts`                  | app     |
+| what the study readers need of a study's folder              | `src/ports/study-folder.ts`           | port    |
+| what the study readers are handed                            | `src/ports/study-deps.ts`             | port    |
+| the one reader of a study's folder, links not followed       | `src/study-folder.ts`                 | app     |
+| the order rule                                               | `src/outputs-before-decision-rule.ts` | app     |
+| the plans and histories `studies index` and `new` write from | `src/study-index-input.ts`            | app     |
+| `gate`; `new` and `index`                                    | `src/study-gate.ts`, `src/studies.ts` | app     |
+| wiring: git with PATH and HOME, the clock                    | `src/cli.ts`                          | root    |
 
 ## What it does not check
 
