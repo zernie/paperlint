@@ -518,6 +518,10 @@ export type StudyLookup =
   | { readonly kind: "none" }
   | { readonly kind: "ambiguous"; readonly rows: readonly Study[] };
 
+/** The rows of a registry that was read; none when there is no registry, or it does not parse. */
+export const studiesOf = (state: RegistryState): readonly Study[] =>
+  state.kind === "read" ? state.registry.studies : [];
+
 /** The rows of `studies` whose id is `id`, as a `StudyLookup`. */
 export const studyById = (
   studies: readonly Study[],

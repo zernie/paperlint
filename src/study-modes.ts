@@ -5,13 +5,15 @@
  * folder inside `repro/` is never read through.
  */
 import { join, posix } from "node:path";
+import { filter, map, pipe } from "remeda";
 import { callerPath } from "./caller-path.ts";
 import type { NotAFile } from "./domain/decide-first.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
-import type {
-  PlanTextField,
-  RegistryState,
-  Study,
+import {
+  studiesOf,
+  type PlanTextField,
+  type RegistryState,
+  type Study,
 } from "./domain/study-registry.ts";
 import type { StudyRegistryCodec } from "./ports/study-registry-codec.ts";
 import type { StudyFolder } from "./ports/study-folder.ts";
@@ -109,7 +111,13 @@ export const modeStudies = (
   folder: StudyFolder,
   codec: StudyRegistryCodec,
 ): readonly ModeStudy[] =>
-  (r.kind === "read" ? r.registry.studies : []).flatMap((s) => {
-    const m = readModeStudy(s, folder, codec);
-    return m.kind === "mode" ? [m.study] : [];
-  });
+  pipe(
+    studiesOf(r),
+    map((s) => readModeStudy(s, folder, codec)),
+    filter(isMode),
+    map((m) => m.study),
+  );
+
+/** A plan read that declared a mode. */
+const isMode = (m: ModeRead): m is Extract<ModeRead, { kind: "mode" }> =>
+  m.kind === "mode";

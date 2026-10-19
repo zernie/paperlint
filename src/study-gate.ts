@@ -16,6 +16,7 @@ import { REPRO_DIR } from "./domain/repro-layout.ts";
 import { decisionAsOutput, type DecideFirst } from "./domain/study-mode.ts";
 import {
   STUDIES_FILE,
+  studiesOf,
   studyById,
   type Study,
 } from "./domain/study-registry.ts";
@@ -209,7 +210,7 @@ export function runGate(
   deps: GateDeps,
 ): StudyRun {
   const r = registryOf(paper, deps);
-  const found = studyById(r.kind === "read" ? r.registry.studies : [], id);
+  const found = studyById(studiesOf(r), id);
   switch (found.kind) {
     case "none":
       return refused(unknownIdRefusal(shown, id));

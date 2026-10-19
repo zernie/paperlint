@@ -18,6 +18,7 @@
  * file in `repro/`.
  */
 import { basename, dirname, join, posix } from "node:path";
+import { filter, map, pipe } from "remeda";
 import { callerPath } from "./caller-path.ts";
 import {
   README,
@@ -31,9 +32,11 @@ import {
   STUDIES_FILE,
   judgeStudies,
   planRefs,
+  studiesOf,
   studyMessage,
   type PlanState,
   type RegistryState,
+  type Study,
   type StudyFinding,
   type Located,
   type PlanRef,
@@ -95,18 +98,23 @@ const resultsOf = (
   r: RegistryState,
   folder: StudyFolder,
 ): ReadonlyMap<string, Located> =>
-  new Map(
-    (r.kind === "read" ? r.registry.studies : []).flatMap((s) =>
-      s.result_file === undefined
-        ? []
-        : [
-            [
-              `${s.folder}/${s.result_file}`,
-              folder.locate(s.folder, s.result_file),
-            ] as const,
-          ],
+  pipe(
+    studiesOf(r),
+    filter(hasResultFile),
+    map(
+      (s) =>
+        [
+          `${s.folder}/${s.result_file}`,
+          folder.locate(s.folder, s.result_file),
+        ] as const,
     ),
+    (entries) => new Map(entries),
   );
+
+/** A row that names a result file. */
+const hasResultFile = (
+  s: Study,
+): s is Study & { readonly result_file: string } => s.result_file !== undefined;
 
 /**
  * The plan each row of `r` names, read and parsed, by `<folder>/<plan>`; a plan not there is left out.
