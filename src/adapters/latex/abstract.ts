@@ -37,6 +37,7 @@ import {
   ACCENT_SYMBOLS,
   CITATION_MACROS,
   DEF_MACROS,
+  liveRoot,
   LOGO_MACROS,
   MATH_CHARACTERS,
   parseLatex,
@@ -249,9 +250,9 @@ function typeset(
   return body;
 }
 
-/** The abstract of `src` as one paragraph of plain text, or what stops it. */
+/** The abstract of `src` as one paragraph of plain text, or what stops it; nothing after `\\end{document}` is read. */
 export const abstractText = (src: string): Result<string, AbstractProblem> =>
-  abstractOfTree(parseLatex(src).root, src);
+  abstractOfTree(liveRoot(parseLatex(src)), src);
 
 /** The same, over a tree already parsed from `src`. */
 export function abstractOfTree(

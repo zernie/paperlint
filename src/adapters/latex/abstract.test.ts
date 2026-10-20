@@ -130,12 +130,28 @@ describe("abstractText — refused by name and place, never guessed", () => {
       what: "the itemize environment",
     });
   });
+});
 
+describe("abstractText — where the refusal stands, and what is not read at all", () => {
   it("the place is the offset of the construct in the source", () => {
     const src = doc("", "Fine. \\nope{} here.");
     const r = latexReader.abstractText(src);
     const at = !r.ok && r.error.kind === "unreadable" ? r.error.at : -1;
     expect(src.slice(at, at + "\\nope".length)).toBe("\\nope");
+  });
+
+  it("nothing after \\end{document} is read: neither an abstract nor a definition there", () => {
+    expect([
+      latexReader.abstractText(
+        `${doc("\\newcommand{\\x}{a}", "\\x.")}\\def\\x{b}\n\\begin{abstract}late\\end{abstract}\n`,
+      ),
+      latexReader.abstractText(
+        "\\documentclass{article}\\begin{document}Body.\\end{document}\\begin{abstract}x\\end{abstract}",
+      ),
+    ]).toStrictEqual([
+      { ok: true, value: "a." },
+      { ok: false, error: { kind: "none" } },
+    ]);
   });
 
   it("no abstract environment: said so", () => {
