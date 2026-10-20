@@ -8,11 +8,12 @@
  * `paperlint submission …` the skill writes goes through the CLI's own argument parser and its
  * usage check, and must come out runnable.
  */
-import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { test } from "vitest";
+import { dropWhile, map } from "remeda";
+import { parse } from "shell-quote";
+import { expect, test } from "vitest";
 import { commandsIn } from "vigiles";
 import { checkSkill } from "../../lib/skill-checks.mjs";
 import { parseArgs } from "../../src/cli.ts";
@@ -22,70 +23,76 @@ const SKILL = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "SKILL.md"),
   "utf8",
 );
-const commands = commandsIn(
-  SKILL,
-  /(^|[|;&]\s*)npx paperlint submission\b/,
-).map((c) => c.text);
+const commands = map(
+  commandsIn(SKILL, /(^|[|;&]\s*)npx paperlint submission\b/),
+  (c) => c.text,
+);
 
-/** A command as the CLI receives it: the words after `npx paperlint`. */
-const argvOf = (command: string): string[] =>
-  command
-    .replace(/^.*?npx paperlint /, "")
-    .split(/\s+/)
-    .filter(Boolean);
+/**
+ * A command as the CLI receives it: the words after `npx paperlint`, split as a shell splits them, so
+ * a quoted argument stays one word. A shell operator in the line is kept as its text, and fails below.
+ */
+const argvOf = (command: string): readonly string[] =>
+  dropWhile(
+    // `<paper>` is a placeholder the reader fills with one word, not a shell redirection.
+    map(parse(command.replace(/<([\w-]+)>/g, "$1")), (w) =>
+      typeof w === "string" ? w : JSON.stringify(w),
+    ),
+    (w) => w !== "paperlint",
+  ).slice(1);
 
-test("the skill names new, show, a dry run and a save of each change — and nothing else", () => {
-  const kinds = commands.map((c) => {
-    const a = parseArgs(argvOf(c));
-    return `${String(a.paths[0])}${a.save ? " --save" : ""}`;
-  });
-  assert.deepEqual(
-    [...new Set(kinds)],
-    ["new", "new --save", "show", "update", "update --save"],
-  );
+/** A command as a step of the procedure: the subcommand, and for a change whether it saves. */
+const stepOf = (command: string): string => {
+  const a = parseArgs([...argvOf(command)]);
+  const sub = String(a.paths[0]);
+  return sub === "show" ? "show" : `${sub} ${a.save ? "save" : "dry"}`;
+};
+
+test("the skill's commands are, in order: create (dry, then save), read, change (dry, then save), read again", () => {
+  expect(map(commands, stepOf)).toEqual([
+    "new dry",
+    "new save",
+    "show",
+    "update dry",
+    "update save",
+    "show",
+  ]);
 });
 
 test("every `paperlint submission` command in the skill is one the CLI runs", () => {
-  assert.ok(
-    commands.length > 0,
-    "the skill names no `paperlint submission` command",
+  const verdicts = map(commands, (c) => {
+    const a = parseArgs([...argvOf(c)]);
+    return {
+      command: c,
+      cmd: a.cmd,
+      unknownFlag: a.unknownFlag,
+      missingValue: a.missingValue,
+      problem: usageProblem({
+        sub: a.paths[0],
+        paperDir: a.paths[1] ?? ".",
+        extra: a.paths.slice(2),
+        pdf: a.pdf,
+        abstract: a.abstract,
+        submit: a.submit,
+        save: a.save,
+      }),
+    };
+  });
+  expect(verdicts).toEqual(
+    map(commands, (command) => ({
+      command,
+      cmd: "submission",
+      unknownFlag: undefined,
+      missingValue: undefined,
+      problem: null,
+    })),
   );
-  for (const c of commands) {
-    const a = parseArgs(argvOf(c));
-    assert.equal(a.cmd, "submission", c);
-    assert.equal(a.unknownFlag, undefined, c);
-    assert.equal(a.missingValue, undefined, c);
-    const problem = usageProblem({
-      sub: a.paths[0],
-      paperDir: a.paths[1] ?? ".",
-      extra: a.paths.slice(2),
-      pdf: a.pdf,
-      abstract: a.abstract,
-      submit: a.submit,
-      save: a.save,
-    });
-    assert.equal(problem, null, c);
-  }
 });
 
-test("🔴 each change is dry-run before it is saved, read before it is changed, and read again after", () => {
-  const order = commands.map((c) => {
-    const a = parseArgs(argvOf(c));
-    const sub = String(a.paths[0]);
-    return sub === "show" ? "show" : `${sub} ${a.save ? "save" : "dry"}`;
-  });
-  const at = (step: string): number => order.indexOf(step);
-  const shown = order.join(" → ");
-  for (const sub of ["new", "update"]) {
-    assert.ok(at(`${sub} dry`) >= 0, shown);
-    assert.ok(at(`${sub} save`) > at(`${sub} dry`), shown);
-  }
-  assert.ok(at("show") > at("new save"), shown);
-  assert.ok(at("update dry") > at("show"), shown);
-  assert.ok(
-    order.lastIndexOf("show") > order.lastIndexOf("update save"),
-    shown,
-  );
+test("a quoted argument stays one word", () => {
+  expect(
+    argvOf(`npx paperlint submission update "my paper" --abstract 'a b.txt'`),
+  ).toEqual(["submission", "update", "my paper", "--abstract", "a b.txt"]);
 });
 
 test("the shared per-skill checks pass", async () => {

@@ -107,14 +107,14 @@ jobs:
 
       # 🔴 A FAILED RUN IS AN ISSUE, NOT A RED DOT NOBODY OPENS. The job failed on every scheduled run
       # from 2026-10-06 to 2026-10-19 and nobody looked: MSR moved both deadlines and the preset kept
-      # the old ones (#235). So any failure opens ONE issue titled "deadline refresh failing", or
-      # comments on the open one, with the run's link (scripts/report-refresh-failure.ts). A portal
-      # that is down is not a failure (the script warns and exits 0), so this fires only for a defect
-      # of ours.
+      # the old ones (#235). So any failure opens ONE issue labelled and titled "deadline refresh
+      # failing", or comments on the open one, with the run's link. A portal that is down is not a
+      # failure (the script warns and exits 0), so this fires only for a defect of ours.
       - name: report a failed refresh in one issue
         if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: npm run report-refresh-failure
+        uses: jayqi/failed-build-issue-action@940568ce50eeef3f31a920614cefcc6102d2f930 # v1.3.0
+        with:
+          label-name: deadline refresh failing
+          title-template: deadline refresh failing
+          body-template: |
+            The scheduled refresh of the venue presets' deadlines failed: {{serverUrl}}/{{repo.owner}}/{{repo.repo}}/actions/runs/{{runId}} — until it is fixed, a deadline a portal moves is not picked up by the presets.
