@@ -13,8 +13,8 @@
 # line in the pull request's body, and the script exits 0: the venue's outage is not a defect of this
 # repository, and tomorrow's run reads it again. Only a preset that does not parse fails the run
 # (exit 1) — that one IS ours, and `ci` fails on it too. `ci` itself never touches the network for
-# this: scripts/refresh-deadlines/main.test.ts replays the pages recorded in
-# src/adapters/hotcrp/cassette/.
+# this: scripts/refresh-deadlines/main.test.ts replays the MSR page recorded in
+# src/adapters/hotcrp/cassette/, and refresh.test.ts fakes the portal.
 #
 # ⚠️ A pull request opened with GITHUB_TOKEN does not start other workflows (GitHub's rule against
 # loops), so `ci` would never run on it and the PR could not show green. The last step therefore

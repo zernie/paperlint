@@ -15,7 +15,7 @@ import {
   type IsoDate,
   type PortalDeadlines,
   type Reading,
-} from "../../src/domain/deadline.ts";
+} from "#src/domain/deadline";
 
 /** The preset's readings after the page's answer, what changed, and what is worth a note. */
 export interface Refreshed {

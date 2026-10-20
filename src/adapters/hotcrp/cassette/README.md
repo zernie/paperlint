@@ -30,8 +30,8 @@ recorded whole on 2026-10-05 (`curl`, no account; `deadlines-msr2027.html` re-re
 so nothing is replaced. `deadlines.test.ts` parses each through the adapter's real parser; the
 expected values were read off the pages' text by hand first. `/api/deadlines` on the same sites
 answers 401 «Missing credentials», so the HTML page is the source.
-`scripts/refresh-deadlines/main.test.ts` replays the MSR and AIDC pages through the scheduled refresh of
-the presets' `deadlines` (`.github/workflows/deadlines.yml`). Re-read live through the adapter at
+`scripts/refresh-deadlines/main.test.ts` replays the MSR page through `npm run refresh-deadlines`, the
+scheduled refresh of the presets' `deadlines` (`.github/workflows/deadlines.yml`). Re-read live through the adapter at
 14:38 UTC the same day, both pages differed from these files only in the script nonces and `now`.
 
 | file                      | site                  | HTTP | what it shows                                                      |
