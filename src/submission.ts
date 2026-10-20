@@ -496,13 +496,19 @@ function sourceAbstract(
  * paperlint cannot read (a macro of the author's own), the PDF's own Title (`pdftitle`). Pure.
  */
 export function titleOf(
-  source: string | null,
+  source: {
+    readonly text: string;
+    /** Where an offset of `text` stands, as a message names it (file:line:column). */
+    readonly where: (offset: number) => string;
+  } | null,
   latex: Pick<LatexReader, "headings">,
   metadata: Readonly<Record<string, string>> | null,
 ): Result<string, string> {
-  const heading = (source === null ? [] : latex.headings(source)).find(
+  const titles = (source === null ? [] : latex.headings(source.text)).filter(
     (h) => h.command.kind === "title" && h.argument === "title",
   );
+  // One \title is read; several are not chosen between — the PDF's own Title stands in, or the fix.
+  const [heading] = titles.length === 1 ? titles : [];
   const text =
     heading === undefined
       ? ""
@@ -511,18 +517,28 @@ export function titleOf(
           .replace(/\s+/g, " ")
           .trim();
   if (text !== "" && !text.includes(OPAQUE)) return ok(text);
-  // The Info dictionary's Title, else the XMP packet's dc:title (pdf-content.ts keeps both).
-  const pdfTitle =
-    [metadata?.["Title"], metadata?.["dc:title"]]
-      .map((t) => t?.trim() ?? "")
-      .find((t) => t !== "") ?? "";
+  const pdfTitle = pdfTitleOf(metadata);
   if (pdfTitle !== "") return ok(pdfTitle);
   return err(
-    text === ""
-      ? `no \\title in ${MAIN}, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild`
-      : `the \\title in ${MAIN} uses a command paperlint does not read («${text.replaceAll(OPAQUE, "…")}»), and the PDF names no Title — set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild`,
+    titles.length > 1
+      ? `the paper sets \\title ${String(titles.length)} times (${titles.map((h) => source?.where(h.title.segments[0].at)).join(", ")}), and the PDF names no Title — which one to send is not guessed: keep one \\title, or set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild`
+      : noReadableTitle(text),
   );
 }
+
+/** The Info dictionary's Title, else the XMP packet's dc:title (pdf-content.ts keeps both); "" for none. */
+const pdfTitleOf = (
+  metadata: Readonly<Record<string, string>> | null,
+): string =>
+  [metadata?.["Title"], metadata?.["dc:title"]]
+    .map((t) => t?.trim() ?? "")
+    .find((t) => t !== "") ?? "";
+
+/** The fix when the one \\title is missing (`text` "") or holds a command paperlint does not read. */
+const noReadableTitle = (text: string): string =>
+  text === ""
+    ? `no \\title in ${MAIN}, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild`
+    : `the \\title in ${MAIN} uses a command paperlint does not read («${text.replaceAll(OPAQUE, "…")}»), and the PDF names no Title — set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild`;
 
 /** What `new` will send, as the author reads it before saying yes. Pure. */
 export function newLines(
@@ -623,6 +639,17 @@ function readyForNew(t: SubmissionTarget): Result<readonly Author[], string> {
     : ok(t.authors);
 }
 
+/** The paper as the build read it: paper.tex with the files it includes spliced in; null without one. */
+function assembledPaper(
+  paperDir: string,
+  deps: SubmissionDeps,
+): PaperSource | null {
+  const bytes = bytesAt(deps.files, join(paperDir, MAIN));
+  return bytes === null
+    ? null
+    : readPaper(join(paperDir, MAIN), new TextDecoder().decode(bytes), deps);
+}
+
 /** The title and the abstract: the paper's `\title`, and `--abstract`'s file or the source's abstract. */
 function titleAndAbstract(
   a: SubmissionArgs & { readonly paperDir: string },
@@ -631,18 +658,15 @@ function titleAndAbstract(
 ): Result<{ readonly title: string; readonly abstract: string }, string> {
   const own = abstractOf(a, deps);
   if (!own.ok) return own;
-  const srcBytes = bytesAt(deps.files, join(a.paperDir, MAIN));
-  // The paper as the build read it: paper.tex with the files it includes spliced in.
-  const paper =
-    srcBytes === null
-      ? null
-      : readPaper(
-          join(a.paperDir, MAIN),
-          new TextDecoder().decode(srcBytes),
-          deps,
-        );
+  const paper = assembledPaper(a.paperDir, deps);
   const metadata = pdfMetadata(a.paperDir, pdf, deps);
-  const title = titleOf(paper?.text ?? null, deps.latex, metadata);
+  const title = titleOf(
+    paper === null
+      ? null
+      : { text: paper.text, where: (o: number) => placeIn(paper, o) },
+    deps.latex,
+    metadata,
+  );
   if (!title.ok) return title;
   const abstract =
     own.value === null

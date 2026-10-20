@@ -160,6 +160,27 @@ test("an abstract in a file paper.tex includes is read there, as the build recor
   expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: false }]]);
 });
 
+test("two \\title declarations and no PDF Title: refused, naming each place — nothing sent", async () => {
+  const r = await run(
+    { sub: "new" },
+    {
+      files: newFiles({
+        tex: DEFAULT_TEX.replace(
+          "\\title{Agents That\\\\ Lie}\n",
+          "\\title{Agents That\\\\ Lie}\n\\title{Second}\n",
+        ),
+      }),
+    },
+  );
+  expect([r.code, r.errs, r.seen[0]?.calls]).toStrictEqual([
+    2,
+    [
+      "the paper sets \\title 2 times (paper.tex:3:8, paper.tex:4:8), and the PDF names no Title — which one to send is not guessed: keep one \\title, or set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild",
+    ],
+    [],
+  ]);
+});
+
 test("a \\title in a file paper.tex includes is read there, as the build recorded it", async () => {
   const title = "\\title{Agents That\\\\ Lie}\n";
   expect(DEFAULT_TEX).toContain(title);
@@ -335,29 +356,34 @@ test("an abstract paperlint cannot read without guessing is refused, naming the 
   ]);
 });
 
-test("titleOf: the source's \\title as text; one the reader cannot read whole → the PDF's Info Title, then its XMP dc:title; neither → the fix", () => {
-  /** A LaTeX reader whose source `"plain"` has a readable title, `"opaque"` one it cannot read, any other none. */
-  const titled = (text: string): Pick<LatexReader, "headings"> => ({
+test("titleOf: the source's one \\title as text; one the reader cannot read whole, or several → the PDF's Info Title, then its XMP dc:title; neither → the fix", () => {
+  /** A LaTeX reader whose source has a `\\title` with each text in `texts` (at offsets 0, 40, …); `"none"` has none. */
+  const titled = (...texts: string[]): Pick<LatexReader, "headings"> => ({
     headings: (src) =>
       src === "none"
         ? []
-        : [
-            {
-              command: { kind: "title" },
-              argument: "title",
-              title: { segments: [{ text, at: 0 }] },
-            },
-          ],
+        : texts.map((text, i) => ({
+            command: { kind: "title" },
+            argument: "title",
+            title: { segments: [{ text, at: 40 * i }] },
+          })),
   });
   const plain = titled("Plain \u2028 Title");
   const opaque = titled(`${OPAQUE}: Lies`);
+  const twice = titled("One", "Two");
+  const where = (o: number) => `@${String(o)}`;
   expect([
-    titleOf("src", plain, { Title: "Ignored" }),
-    titleOf("src", opaque, { Title: "Info", "dc:title": "XMP" }),
-    titleOf("src", opaque, { "dc:title": "From The XMP" }),
+    titleOf({ text: "src", where }, plain, { Title: "Ignored" }),
+    titleOf({ text: "src", where }, opaque, {
+      Title: "Info",
+      "dc:title": "XMP",
+    }),
+    titleOf({ text: "src", where }, opaque, { "dc:title": "From The XMP" }),
     titleOf(null, plain, { Title: "Info" }),
-    titleOf("src", opaque, {}),
-    titleOf("none", plain, null),
+    titleOf({ text: "src", where }, opaque, {}),
+    titleOf({ text: "none", where }, plain, null),
+    titleOf({ text: "src", where }, twice, { Title: "Info" }),
+    titleOf({ text: "src", where }, twice, null),
   ]).toStrictEqual([
     ok("Plain Title"),
     ok("Info"),
@@ -368,6 +394,10 @@ test("titleOf: the source's \\title as text; one the reader cannot read whole �
     ),
     err(
       "no \\title in paper.tex, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild",
+    ),
+    ok("Info"),
+    err(
+      "the paper sets \\title 2 times (@0, @40), and the PDF names no Title — which one to send is not guessed: keep one \\title, or set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild",
     ),
   ]);
 });
