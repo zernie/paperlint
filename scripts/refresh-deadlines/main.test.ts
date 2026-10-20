@@ -1,7 +1,7 @@
 /**
- * The scheduled refresh over the recorded portal pages (src/adapters/hotcrp/cassette/): what one
- * preset becomes, what a run prints, writes and returns, and the npm script the workflow runs —
- * against a local server replaying the MSR page, with no `dist/`.
+ * The scheduled refresh: what one preset becomes, what a run prints, writes and returns — over a
+ * fake VenueDeadlines port that answers plain domain values (how HotCRP's page is parsed is
+ * src/adapters/hotcrp/deadlines.test.ts's) — and the npm script the workflow runs, end to end.
  */
 import { execFile } from "node:child_process";
 import {
@@ -22,8 +22,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { parseDeadlinesPage } from "../../src/adapters/hotcrp/index.ts";
-import { err } from "../../src/domain/result.ts";
+import type { PortalDeadlines } from "../../src/domain/deadline.ts";
+import { err, ok, type Result } from "../../src/domain/result.ts";
+import type { PortalFailure } from "../../src/domain/submission.ts";
 import type { VenueDeadlines } from "../../src/ports/venue-deadlines.ts";
 import { parsePreset } from "../../src/tex-requirements.ts";
 import {
@@ -48,23 +49,46 @@ const earlier = msrText.replace(
 const tempDir = (prefix: string) =>
   realpathSync(mkdtempSync(join(tmpdir(), prefix)));
 
-const recorded =
-  (site: string, status = 200) =>
-  async () =>
-    Promise.resolve(
-      parseDeadlinesPage(
-        status,
-        readFileSync(join(CASSETTE, `deadlines-${site}.html`), "utf8"),
-      ),
-    );
-/** A portal that answers `read`. */
-const answering = (read: VenueDeadlines["read"]) => (): VenueDeadlines => ({
-  read,
-});
-/** Each site's recorded page, by the URL the preset names. */
-const bySite = (url: string): VenueDeadlines => ({
-  read: recorded(url.includes("acsac") ? "aidc26" : "msr2027"),
-});
+/** What MSR 2027's portal lists — the readings presets/msr.jsonc holds. */
+const MSR_PAGE: PortalDeadlines = {
+  now: 1792434476,
+  open: true,
+  blind: true,
+  deadlines: [
+    {
+      what: "submission",
+      label: "Submission deadline",
+      at: "2026-10-21T11:59:59Z",
+    },
+    {
+      what: "resubmission",
+      label: "Resubmission deadline",
+      at: "2026-10-24T11:59:59Z",
+    },
+  ],
+};
+/** What AIDC 2026's portal lists — the readings presets/aidc.jsonc holds. */
+const AIDC_PAGE: PortalDeadlines = {
+  now: 1791194489,
+  open: true,
+  blind: true,
+  deadlines: [
+    {
+      what: "submission",
+      label: "Submission deadline",
+      at: "2026-10-03T11:59:59Z",
+    },
+    { what: "camera-ready", label: "camera-ready", at: "2026-10-31T11:59:59Z" },
+  ],
+};
+/** A portal that answers `answer`. */
+const answering =
+  (answer: Result<PortalDeadlines, PortalFailure>) => (): VenueDeadlines => ({
+    read: () => Promise.resolve(answer),
+  });
+/** Each site's page, by the URL the preset names. */
+const bySite = (url: string): VenueDeadlines =>
+  answering(ok(url.includes("acsac") ? AIDC_PAGE : MSR_PAGE))();
 
 /** The outcome, known to be of `kind` — or the test fails naming what it was. */
 function as<K extends Outcome["kind"]>(
@@ -90,7 +114,7 @@ test("a preset with a portal and no `deadlines` yet: each reading added, the blo
     await refreshPreset({
       file: MSR,
       text: msrText.slice(0, start) + msrText.slice(end),
-      portal: answering(recorded("msr2027")),
+      portal: answering(ok(MSR_PAGE)),
       today: "2026-10-19",
     }),
     "changed",
@@ -105,12 +129,12 @@ test("a preset with a portal and no `deadlines` yet: each reading added, the blo
   );
 });
 
-describe("refreshPreset on the recorded MSR 2027 page", () => {
+describe("refreshPreset on MSR 2027's page", () => {
   test("the portal says what the preset says: unchanged", async () => {
     const o = await refreshPreset({
       file: MSR,
       text: msrText,
-      portal: answering(recorded("msr2027")),
+      portal: answering(ok(MSR_PAGE)),
       today: "2026-10-06",
     });
     expect(o).toEqual({
@@ -125,7 +149,7 @@ describe("refreshPreset on the recorded MSR 2027 page", () => {
       await refreshPreset({
         file: MSR,
         text: earlier,
-        portal: answering(recorded("msr2027")),
+        portal: answering(ok(MSR_PAGE)),
         today: "2026-10-20",
       }),
       "changed",
@@ -151,7 +175,7 @@ describe("refreshPreset — what it skips, and a portal it cannot read", () => {
       await refreshPreset({
         file: aisec,
         text: readFileSync(aisec, "utf8"),
-        portal: answering(recorded("msr2027")),
+        portal: answering(ok(MSR_PAGE)),
         today: "2026-10-05",
       }),
     ).toEqual(skipped);
@@ -159,40 +183,40 @@ describe("refreshPreset — what it skips, and a portal it cannot read", () => {
       await refreshPreset({
         file: MSR,
         text: msrText.replace('"kind": "hotcrp"', '"kind": "easychair"'),
-        portal: answering(recorded("msr2027")),
+        portal: answering(ok(MSR_PAGE)),
         today: "2026-10-05",
       }),
     ).toEqual(skipped);
   });
 
-  test.each<[string, VenueDeadlines["read"], string]>([
+  test.each<[string, PortalFailure, string]>([
     [
       "a site that answers 404",
-      recorded("nosuch", 404),
+      {
+        kind: "refused",
+        httpStatus: 404,
+        messages: [
+          { message: "No such conference", field: null, status: null },
+        ],
+      },
       "HTTP 404: No such conference",
     ],
     [
       "a site that does not answer",
-      () =>
-        Promise.resolve(
-          err({ kind: "unreachable", detail: "connect ECONNREFUSED" }),
-        ),
+      { kind: "unreachable", detail: "connect ECONNREFUSED" },
       "unreachable: connect ECONNREFUSED",
     ],
     [
       "a page that is not a HotCRP deadlines page",
-      () =>
-        Promise.resolve(
-          err({ kind: "malformed", httpStatus: 200, detail: "no init" }),
-        ),
+      { kind: "malformed", httpStatus: 200, detail: "no init" },
       "not the page expected (HTTP 200): no init",
     ],
-  ])("%s is reported, never guessed", async (_what, read, why) => {
+  ])("%s is reported, never guessed", async (_what, failure, why) => {
     expect(
       await refreshPreset({
         file: MSR,
         text: msrText,
-        portal: answering(read),
+        portal: answering(err(failure)),
         today: "2026-10-05",
       }),
     ).toEqual({
@@ -273,11 +297,11 @@ describe("runRefresh — a changed preset", () => {
   });
 });
 
-const MSR_PAGE = readFileSync(join(CASSETTE, "deadlines-msr2027.html"), "utf8");
+const MSR_HTML = readFileSync(join(CASSETTE, "deadlines-msr2027.html"), "utf8");
 const server = createServer((req: IncomingMessage, res: ServerResponse) => {
   const ok = req.url === "/msr/deadlines";
   res.writeHead(ok ? 200 : 404, { "content-type": "text/html" });
-  res.end(ok ? MSR_PAGE : '<h1 id="h-title">No such conference</h1>');
+  res.end(ok ? MSR_HTML : '<h1 id="h-title">No such conference</h1>');
 });
 const base = { url: "" };
 beforeAll(async () => {
@@ -294,6 +318,7 @@ afterAll(
     ),
 );
 
+// The one end-to-end test: main.ts's isMain block wires the real HotCRP adapter, run against the cassette.
 describe("`npm run refresh-deadlines`, the command the workflow runs — with no dist/", () => {
   // A real `node` process: Node strips the types of the script and everything it imports cold —
   // about a second alone, several on a loaded machine, past vitest's 5 s.
