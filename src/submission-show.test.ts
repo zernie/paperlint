@@ -1,4 +1,5 @@
 /** `paperlint submission show`: what the portal holds, whether it is the local build, the deadlines in force. */
+import { join } from "node:path";
 import { expect, test } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { err, ok } from "./domain/result.ts";
@@ -20,6 +21,12 @@ import {
   run,
   STEPS,
 } from "../test/submission-fixtures.ts";
+import { frozenText } from "../test/frozen-presets.ts";
+
+/** msr FROZEN (test/frozen-presets.ts): the shipped file's deadlines are the scheduled refresh's output. */
+const frozenMsr = {
+  [join(presetsDir(), "msr.jsonc")]: frozenText("msr.jsonc"),
+};
 
 test("show: the portal from the preset, the id from the paper, the token from the site's variable", async () => {
   const r = await run({});
@@ -130,6 +137,7 @@ test("show sends nothing, so it asks for no check", async () => {
 
 test("show prints the current attempt's deadlines in force: the preset's portal readings, the paper's call readings and override over them", () => {
   const fs = memoryFiles({
+    ...frozenMsr,
     "/w/package.json": "{}",
     [`${PAPER}/paperlint.json`]: JSON.stringify({
       cycles: [
@@ -188,6 +196,7 @@ test("show prints the current attempt's deadlines in force: the preset's portal 
 
 test("show, in the flat form: the deadlines in force are the preset's readings alone", () => {
   const flat = memoryFiles({
+    ...frozenMsr,
     "/w/package.json": "{}",
     [`${PAPER}/paperlint.json`]: JSON.stringify({
       extends: "paperlint:msr",

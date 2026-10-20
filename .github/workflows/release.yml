@@ -10,6 +10,16 @@ name: Release
 on:
   push:
     branches: [main]
+  # dependabot-automerge.yml merges with GITHUB_TOKEN, and such a push starts no workflow: it
+  # dispatches this one instead.
+  workflow_dispatch:
+
+# One release at a time: two runs started close together (a push and a dispatch, or two bot merges)
+# would both read the same last tag, and the one that loses the tag race leaves its merge
+# unreleased. A queued run reads every commit since the tag, so the last one in still releases all.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
   contents: write

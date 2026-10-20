@@ -10,6 +10,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
+import { frozenText } from "../test/frozen-presets.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { parsePreset } from "./tex-requirements.ts";
 import {
@@ -23,18 +24,27 @@ import {
 } from "./presets.ts";
 
 const VENUES = presetsDir();
-const shipped = Object.fromEntries(
+const live = Object.fromEntries(
   readdirSync(VENUES)
     .filter((f) => f.endsWith(".jsonc") || f.endsWith(".json"))
     .map((f) => [join(VENUES, f), readFileSync(join(VENUES, f))]),
 );
+// The shipped msr.jsonc's deadlines are rewritten by the scheduled refresh, so the tests of LOGIC
+// read it FROZEN (test/frozen-presets.ts); only the shape test below reads the shipped file.
+const shipped = {
+  ...live,
+  [join(VENUES, "msr.jsonc")]: frozenText("msr.jsonc"),
+};
 const PAPER_FILE = "/work/papers/p/paperlint.json";
-const deps = (extra: Record<string, string> = {}) => ({
-  files: memoryFiles({ ...shipped, ...extra }),
+const deps = (extra: Record<string, string> = {}, base = shipped) => ({
+  files: memoryFiles({ ...base, ...extra }),
   venuesDir: VENUES,
 });
-const resolve = (spec: string, extra: Record<string, string> = {}) =>
-  resolvePreset(spec, PAPER_FILE, deps(extra));
+const resolve = (
+  spec: string,
+  extra: Record<string, string> = {},
+  base = shipped,
+) => resolvePreset(spec, PAPER_FILE, deps(extra, base));
 /** A venue preset of a project's own: the identity every venue declares, then `body`. */
 const venue = (body: Record<string, unknown>, name = "Our Workshop"): string =>
   JSON.stringify({
@@ -80,7 +90,7 @@ describe("shipped presets", () => {
 
 describe("shipped presets: paperlint:msr", () => {
   it("paperlint:msr → msr over ieee-conference: one kind, appendices counted as body, compsoc forbidden", () => {
-    const r = resolve("paperlint:msr");
+    const r = resolve("paperlint:msr", {}, live);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
@@ -103,26 +113,26 @@ describe("shipped presets: paperlint:msr", () => {
       kind: "hotcrp",
       url: "https://msr2027.hotcrp.com",
     });
-    // The portal's deadlines, read 2026-10-19 18:05 UTC off https://msr2027.hotcrp.com/deadlines:
-    // «Wednesday Oct 21, 2026, 7:59:59 AM EDT» (`"sub":1792583999`) and «Saturday Oct 24, 2026,
-    // 7:59:59 AM EDT» (#235).
-    expect(r.value.deadlines).toEqual([
-      {
-        what: "submission",
-        at: "2026-10-21T11:59:59Z",
+    // The deadlines' SHAPE, never their dates: the scheduled refresh rewrites those whenever the
+    // portal moves them (deadlines.yml), and a date asserted here turns its pull request red.
+    // Guards: the shipped preset keeps a submission deadline, every reading is the portal's own
+    // from the venue's deadlines page, with a read day and an instant that carries its zone.
+    expect(r.value.deadlines.map((d) => d.what)).toContain("submission");
+    expect(
+      r.value.deadlines.map((d) => ({
+        source: d.source,
+        url: d.url,
+        read: /^\d{4}-\d{2}-\d{2}$/.test(d.read),
+        at: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(d.at),
+      })),
+    ).toEqual(
+      r.value.deadlines.map(() => ({
         source: "portal",
         url: "https://msr2027.hotcrp.com/deadlines",
-        read: "2026-10-19",
-      },
-      {
-        what: "resubmission",
-        at: "2026-10-24T11:59:59Z",
-        source: "portal",
-        url: "https://msr2027.hotcrp.com/deadlines",
-        read: "2026-10-19",
-      },
-    ]);
-    expect(Date.parse("2026-10-21T11:59:59Z") / 1000).toBe(1792583999);
+        read: true,
+        at: true,
+      })),
+    );
     // No rule turned on: the IEEE capitalization rule has not been read and quoted.
     expect(r.value.rules).toEqual({});
     expect(r.value.registerAnchors).toEqual([]);

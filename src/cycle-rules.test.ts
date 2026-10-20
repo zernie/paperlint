@@ -8,15 +8,23 @@ import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { cycleRules } from "./cycle-rules.ts";
+import { frozenText } from "../test/frozen-presets.ts";
 
 const VENUES = presetsDir();
 const DIR = "/work/papers/p";
-/** The shipped presets, so a cycle naming `paperlint:msr` resolves through the memory files. */
-const SHIPPED = Object.fromEntries(
-  readdirSync(VENUES)
-    .filter((f) => f.endsWith(".jsonc"))
-    .map((f) => [join(VENUES, f), readFileSync(join(VENUES, f), "utf8")]),
-);
+/**
+ * The shipped presets, so a cycle naming `paperlint:msr` resolves through the memory files — msr
+ * FROZEN (test/frozen-presets.ts): its deadlines are rewritten by the scheduled refresh, and the
+ * tests below assert the readings they sit beside.
+ */
+const SHIPPED = {
+  ...Object.fromEntries(
+    readdirSync(VENUES)
+      .filter((f) => f.endsWith(".jsonc"))
+      .map((f) => [join(VENUES, f), readFileSync(join(VENUES, f), "utf8")]),
+  ),
+  [join(VENUES, "msr.jsonc")]: frozenText("msr.jsonc"),
+};
 
 interface Reported {
   readonly rule: string;
