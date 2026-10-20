@@ -247,6 +247,9 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       send the PDF (default: the paper's own), an abstract, or
                                       "submitted". A DRY RUN unless --save: the portal checks the
                                       change and keeps nothing
+  npx paperlint submission topics [paper]
+                                      the topics the venue's portal offers, against the ones its
+                                      preset records; exit 1 when they differ
   npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]
                                       register a study: the next id in repro/studies.json, the folder
                                       repro/<id>-<slug>/ with its README.md and plan.json (a template),
@@ -291,7 +294,9 @@ studies:
 submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
   paper's paperlint.json its submission there — "submission": { "id": <number> }, written by new
-  — and, for new, its "authors": [{ "name", "email", "affiliation"? }]. The token comes only from
+  — and, for new, its "authors": [{ "name", "email", "affiliation"? }]. Its "fields" answer the
+  form's own fields the preset records in "submission_fields" ({ "topics": [...], "pc_conflicts":
+  { "<pc email>": "<type>" }, … }); new and update send them, checked first. The token comes only from
   the environment, one variable per site: HOTCRP_TOKEN_<subdomain> on *.hotcrp.com, else
   HOTCRP_TOKEN_<host and path> — e.g. HOTCRP_TOKEN_MSR2027 for msr2027.hotcrp.com,
   HOTCRP_TOKEN_AIDC_SUBMIT_ACSAC_ORG for aidc.submit.acsac.org (HotCRP: Account settings →

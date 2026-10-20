@@ -41,12 +41,34 @@ Creates the submission and sends four things, printing them first — the abstra
   read without guessing stops the command with the macro and its line; then pass
   `--abstract <file>`, plain text;
 - **the authors** — from `"authors"`; without it, `new` stops and names the key;
-- **the PDF** — the paper's own, or `--pdf <file>`.
+- **the PDF** — the paper's own, or `--pdf <file>`;
+- **the fields** — from `"fields"`: the paper's answers to the venue's own form fields.
 
 Without `--save` it is a dry run. With `--save` the new id is written into `paperlint.json` (the
-open cycle, with `cycles`), and the next command is `show`. Every run prints what is left to do on
-the site (conflicts, topics, the venue's own fields). `new` is refused when the paper already has a
-submission id.
+open cycle, with `cycles`), and the next command is `show`. Every run prints what is left to do: the
+venue's fields the paper did not answer, and what only the site takes. `new` is refused when the
+paper already has a submission id.
+
+## The venue's own fields
+
+A venue preset records its form's own fields in `"submission_fields"`, as read (`source`, `url`,
+`read`), each by the API's key with a kind: `checkboxes` (with its `options`), `text`, `email`,
+`pc_conflicts`. The paper answers them in `"fields"`:
+
+```json
+"fields": {
+  "topics": ["SE Topic: AI for software engineering"],
+  "pc_conflicts": { "someone@example.org": "collaborator" },
+  "ACMCorAut": "you@example.org"
+}
+```
+
+They are checked against the preset before anything is sent: a key the form does not ask, a topic it
+does not offer, a missing required one, each stops the command with exit 2. HotCRP keeps a topic it
+does not know as nothing, without an error (a bare `"AI for software engineering"`, without its
+group, is one), so after the portal answers, a topic list it did not take prints `NOT TAKEN` and
+exits 1. `paperlint submission topics` reads the topics the portal offers and marks each against
+the preset.
 
 ## `show`
 
@@ -57,7 +79,8 @@ deadlines in force for the current attempt, each with when and where it was read
 
 ## `update`
 
-Sends the PDF and, when asked, a new abstract (`--abstract <file>`) and "submitted" (`--submit`).
+Sends the PDF, the paper's `"fields"`, and, when asked, a new abstract (`--abstract <file>`) and
+"submitted" (`--submit`).
 Without `--save` it is a dry run. It prints the portal's verdict and its messages; exit 1 when the
 portal would not take the change. Before sending, it asks you to open that exact PDF and check it
 against the venue's call for papers.
@@ -67,6 +90,6 @@ until it says `match yes`. Every `--save` comes after the author has read the dr
 
 ## What it does not do
 
-- It does not set conflicts, topics or the venue's other fields, change the authors after `new`, or
+- It does not set a field the venue preset does not record, change the authors after `new`, or
   upload supplementary files.
 - It does not check the PDF against the venue; that is `paperlint lint`.

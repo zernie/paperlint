@@ -17,6 +17,7 @@ verbatim.
 | `get-noauth.json` | the same without a token                                                                                                                                  |  401 |
 | `post-dot.json`   | `POST /api/paper?p=<id>&dry_run=1`, PDF part named `paper.pdf`, `content_file` the same — PHP renames the field to `paper_pdf`, so HotCRP finds no upload |  200 |
 | `post-ok.json`    | the same with the part and `content_file` named `paperlint_pdf`                                                                                           |  200 |
+| `get-searchcompletion.json` | `GET /api/searchcompletion` on msr2027.hotcrp.com with an author's token, 2026-10-20 — the site's search completions, its topics among them; no personal data, nothing replaced | 200 |
 
 To re-record: run the same four requests with `curl` against a HotCRP site where you have a
 submission and a token (`Authorization: bearer $HOTCRP_TOKEN_<SITE>`), always with `dry_run=1` on a `POST`,
