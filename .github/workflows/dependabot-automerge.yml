@@ -31,19 +31,29 @@ on:
     workflows: ["ci"]
     types: [completed]
 
-# Merge and delete branch — nothing else this workflow needs.
+# Merge and delete branch, then start release.yml — nothing else this workflow needs.
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   merge:
-    # Three conditions, each blocking a case: the run was for a PR (not a push to main) ·
-    # the run is GREEN · the author is a bot, not a person. Remove any one and meaning changes.
+    # Three conditions, each blocking a case: the run is GREEN · it was for one of two bots' pull
+    # requests, never a person's · and that pull request is the bot's own. Remove any one and
+    # meaning changes. The two bots:
+    #   - Dependabot: its PR's `ci` is an ordinary `pull_request` run.
+    #   - the deadline refresh (deadlines.yml): a PR opened with GITHUB_TOKEN starts no workflow, so
+    #     deadlines.yml dispatches `ci` on its branch; that run is `workflow_dispatch` by
+    #     github-actions[bot] on `bot/preset-deadlines`, and GitHub still lists the PR in
+    #     `pull_requests` (measured on run 39489222900, PR #248).
     if: >
-      github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.actor.login == 'dependabot[bot]'
+      github.event.workflow_run.conclusion == 'success' && (
+        (github.event.workflow_run.event == 'pull_request' &&
+         github.event.workflow_run.actor.login == 'dependabot[bot]') ||
+        (github.event.workflow_run.event == 'workflow_dispatch' &&
+         github.event.workflow_run.actor.login == 'github-actions[bot]' &&
+         github.event.workflow_run.head_branch == 'bot/preset-deadlines'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -68,3 +78,7 @@ jobs:
           fi
           gh pr merge "${PR}" --repo "${REPO}" --squash --delete-branch --match-head-commit "${HEAD_SHA}"
           echo "merged PR #${PR} on green ci run ${RUN_ID}"
+          # A merge made with GITHUB_TOKEN pushes to main without starting release.yml (GitHub's rule
+          # against loops), so a `fix(presets):` would never be released. Start it by hand; a
+          # `deps:` merge releases nothing either way, so the dispatch is harmless there.
+          gh workflow run release.yml --repo "${REPO}" --ref main

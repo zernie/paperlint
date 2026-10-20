@@ -21,12 +21,15 @@ import { promisify } from "node:util";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parsePreset } from "#src/tex-requirements";
 import { argsOf, presetsIn, summaryTo } from "./main.ts";
+import { FROZEN_DIR, frozenText } from "../../test/frozen-presets.ts";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const PRESETS = join(ROOT, "presets");
 const CASSETTE = join(ROOT, "src", "adapters", "hotcrp", "cassette");
-const MSR = join(PRESETS, "msr.jsonc");
-const msrText = readFileSync(MSR, "utf8");
+// Frozen at the portal's reading of 2026-10-19 (test/frozen-presets.ts): the shipped file's dates
+// are the refresh's own output.
+const MSR = join(FROZEN_DIR, "msr.jsonc");
+const msrText = frozenText("msr.jsonc");
 const readings = (text: string) => parsePreset(text, MSR).deadlines ?? [];
 /** MSR with its submission deadline two days before the portal's. */
 const earlier = msrText.replace(

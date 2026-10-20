@@ -12,6 +12,7 @@ import { err, ok, type Result } from "#src/domain/result";
 import type { PortalFailure } from "#src/domain/submission";
 import type { VenueDeadlines } from "#src/ports/venue-deadlines";
 import { parsePreset } from "#src/tex-requirements";
+import { FROZEN_DIR, frozenText } from "../../test/frozen-presets.ts";
 import {
   refreshPreset,
   runRefresh,
@@ -22,8 +23,11 @@ import {
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const PRESETS = join(ROOT, "presets");
-const MSR = join(PRESETS, "msr.jsonc");
-const msrText = readFileSync(MSR, "utf8");
+// The logic is tested over presets FROZEN at the portal's reading of 2026-10-19 (test/frozen-presets.ts):
+// the shipped files' dates are the refresh's own output, and a test of the refresh that read them
+// would turn red on the refresh's own pull request.
+const MSR = join(FROZEN_DIR, "msr.jsonc");
+const msrText = frozenText("msr.jsonc");
 const readings = (text: string) => parsePreset(text, MSR).deadlines ?? [];
 /** MSR with its submission deadline two days before the portal's. */
 const earlier = msrText.replace(
@@ -39,12 +43,12 @@ function inMemory(files: Readonly<Record<string, string>>) {
     write: (name, text) => {
       written[name] = text;
     },
-    path: (name) => join(PRESETS, name),
+    path: (name) => join(FROZEN_DIR, name),
   };
   return { presets, written };
 }
 
-/** What MSR 2027's portal lists — the readings presets/msr.jsonc holds. */
+/** What MSR 2027's portal lists — the readings the frozen msr.jsonc holds. */
 const MSR_PAGE: PortalDeadlines = {
   now: 1792434476,
   open: true,
@@ -226,9 +230,9 @@ describe("runRefresh — what it prints, writes and returns", () => {
   test("nothing changed: one line, no preset written, exit 0", async () => {
     const { presets, written } = inMemory(
       Object.fromEntries(
-        readdirSync(PRESETS)
+        readdirSync(FROZEN_DIR)
           .filter((f) => f.endsWith(".jsonc"))
-          .map((f) => [f, readFileSync(join(PRESETS, f), "utf8")]),
+          .map((f) => [f, frozenText(f)]),
       ),
     );
     const lines: string[] = [];

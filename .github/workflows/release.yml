@@ -10,6 +10,9 @@ name: Release
 on:
   push:
     branches: [main]
+  # dependabot-automerge.yml merges with GITHUB_TOKEN, and such a push starts no workflow: it
+  # dispatches this one instead.
+  workflow_dispatch:
 
 permissions:
   contents: write
