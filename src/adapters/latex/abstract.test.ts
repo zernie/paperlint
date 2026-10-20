@@ -145,6 +145,31 @@ describe("abstractText — refused by name and place, never guessed", () => {
 });
 
 describe("abstractText — the edges of what the source may hold", () => {
+  it("a macro reads as its last definition BEFORE the abstract — not a later one, not one in a group closed by then; \\gdef is global", () => {
+    expect([
+      text(
+        "\\def\\x{old}",
+        "\\x.\n\\end{abstract}\\def\\x{new}\\begin{abstract}",
+      ),
+      text("\\def\\x{outer}{\\def\\x{inner}}", "\\x."),
+      text("{\\gdef\\x{global}}", "\\x."),
+      text("\\newcommand{\\x}{a}\\renewcommand{\\x}{b}", "\\x."),
+    ]).toEqual([
+      { ok: true, value: "old." },
+      { ok: true, value: "outer." },
+      { ok: true, value: "global." },
+      { ok: true, value: "b." },
+    ]);
+  });
+
+  it("a macro defined only inside a group closed before the abstract is undefined there", () => {
+    const r = text("{\\newcommand{\\y}{gone}}", "\\y.");
+    expect(r.ok ? r : r.error).toMatchObject({
+      kind: "unreadable",
+      what: "\\y, which no \\newcommand, \\renewcommand or \\def in the paper defines",
+    });
+  });
+
   it("malformed definitions define nothing; an author's macro reads inside math too", () => {
     expect(
       text(
