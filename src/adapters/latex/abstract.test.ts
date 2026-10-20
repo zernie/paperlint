@@ -3,6 +3,7 @@
  * author's argument-less macros expanded, TeX's ligatures for dashes and quotes, citations and
  * comments dropped — and anything else refused by name and place, never guessed.
  */
+import { map } from "remeda";
 import { describe, expect, it } from "vitest";
 import type * as Ast from "@unified-latex/unified-latex-types";
 import { abstractOfTree } from "./abstract.ts";
@@ -22,7 +23,7 @@ describe("abstractText — what TeX prints, as plain text", () => {
     });
   });
 
-  it("🔴 argument-less macros of the author's own are expanded — \\newcommand, \\renewcommand, \\def — nested too", () => {
+  it("argument-less macros of the author's own are expanded — \\newcommand, \\renewcommand, \\def — nested too", () => {
     expect(
       text(
         "\\newcommand{\\numX}{83}\\renewcommand\\tool{GateBench}\\def\\pct{\\numX\\%}",
@@ -78,7 +79,7 @@ describe("abstractText — what TeX prints, as plain text", () => {
 });
 
 describe("abstractText — refused by name and place, never guessed", () => {
-  it("🔴 a macro nobody defined", () => {
+  it("a macro nobody defined", () => {
     const r = text("", "We use \\toolname{} here.");
     expect(r.ok ? r : r.error).toMatchObject({
       kind: "unreadable",
@@ -86,20 +87,27 @@ describe("abstractText — refused by name and place, never guessed", () => {
     });
   });
 
-  it("🔴 a macro that takes arguments — \\newcommand with [n], \\def with #1", () => {
-    for (const preamble of [
-      "\\newcommand{\\two}[1]{x#1}",
-      "\\def\\two#1{x#1}",
-    ]) {
-      const r = text(preamble, "See \\two{a}.");
-      expect(r.ok ? r : r.error).toMatchObject({
+  it("a macro that takes arguments — \\newcommand with [n], \\def with #1", () => {
+    const preambles = ["\\newcommand{\\two}[1]{x#1}", "\\def\\two#1{x#1}"];
+    expect(
+      map(preambles, (preamble) => {
+        const r = text(preamble, "See \\two{a}.");
+        return r.ok
+          ? r
+          : {
+              kind: r.error.kind,
+              what: "what" in r.error ? r.error.what : null,
+            };
+      }),
+    ).toStrictEqual(
+      map(preambles, () => ({
         kind: "unreadable",
         what: "\\two, which takes arguments",
-      });
-    }
+      })),
+    );
   });
 
-  it("🔴 math beyond digits and symbols, and any other construct", () => {
+  it("math beyond digits and symbols, and any other construct", () => {
     const math = text("", "Accuracy $\\alpha_i$ rises.");
     expect(math.ok ? math : math.error).toMatchObject({
       kind: "unreadable",
@@ -115,9 +123,8 @@ describe("abstractText — refused by name and place, never guessed", () => {
   it("the place is the offset of the construct in the source", () => {
     const src = doc("", "Fine. \\nope{} here.");
     const r = latexReader.abstractText(src);
-    expect(r.ok ? -1 : r.error.kind === "unreadable" && r.error.at).toBe(
-      src.indexOf("\\nope"),
-    );
+    const at = r.ok || r.error.kind === "none" ? -1 : r.error.at;
+    expect(src.slice(at, at + "\\nope".length)).toBe("\\nope");
   });
 
   it("no abstract environment: said so", () => {

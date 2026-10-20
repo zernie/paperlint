@@ -1,6 +1,5 @@
 /** `paperlint submission update`: a dry run by default, what is sent, the portal's verdict and the exit. */
-import assert from "node:assert/strict";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { err, ok } from "./domain/result.ts";
 import { type PortalFailure, type UpdateOutcome } from "./domain/submission.ts";
@@ -17,8 +16,8 @@ import {
 
 test("update: a dry run by default — the paper's PDF sent, nothing saved, exit 0", async () => {
   const r = await run({ sub: "update" });
-  assert.equal(r.code, 0);
-  assert.deepEqual(r.seen[0]?.calls, [
+  expect(r.code).toBe(0);
+  expect(r.seen[0]?.calls).toStrictEqual([
     [
       "update",
       7,
@@ -26,7 +25,7 @@ test("update: a dry run by default — the paper's PDF sent, nothing saved, exit
       { save: false },
     ],
   ]);
-  assert.deepEqual(r.out, [
+  expect(r.out).toStrictEqual([
     CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
     "dry run — the portal checked the change and kept nothing; --save sends it for real",
     "HTTP          200",
@@ -50,8 +49,8 @@ test("update --save --submit --abstract --pdf: all of it sent, and said to be sa
     },
     { files: fs },
   );
-  assert.equal(r.code, 0);
-  assert.deepEqual(r.seen[0]?.calls, [
+  expect(r.code).toBe(0);
+  expect(r.seen[0]?.calls).toStrictEqual([
     [
       "update",
       7,
@@ -64,13 +63,13 @@ test("update --save --submit --abstract --pdf: all of it sent, and said to be sa
     ],
   ]);
   // Guards: the PDF that is sent is the one named, and --save is told to check it too.
-  assert.deepEqual(r.out.slice(0, 2), [
+  expect(r.out.slice(0, 2)).toStrictEqual([
     CHECK("other.pdf", "the call for papers, https://example.org/cfp"),
     "saved",
   ]);
 });
 
-test("🔴 update: the check line names the venue's call from the preset's `url`; a preset that names no venue gets the generic line", async () => {
+test("update: the check line names the venue's call from the preset's `url`; a preset that names no venue gets the generic line", async () => {
   const family = memoryFiles({
     "/w/package.json": "{}",
     "/w/house.jsonc": JSON.stringify({
@@ -85,9 +84,8 @@ test("🔴 update: the check line names the venue's call from the preset's `url`
     [`${PAPER}/paper.pdf`]: PDF,
   });
   const r = await run({ sub: "update" }, { files: family });
-  assert.equal(r.code, 0);
-  assert.equal(
-    r.out[0],
+  expect(r.code).toBe(0);
+  expect(r.out[0]).toBe(
     CHECK("papers/p/paper.pdf", "the venue's call for papers"),
   );
 });
@@ -104,8 +102,8 @@ test("update: valid:false, or a non-2xx status, exits 1 with the portal's messag
     { sub: "update" },
     { portal: fakePortal({ update: invalid }) },
   );
-  assert.equal(r1.code, 1);
-  assert.deepEqual(r1.out.slice(3), [
+  expect(r1.code).toBe(1);
+  expect(r1.out.slice(3)).toStrictEqual([
     "valid         NO",
     "changes       —",
     `local PDF     papers/p/paper.pdf sha2-${HEX}`,
@@ -118,11 +116,10 @@ test("update: valid:false, or a non-2xx status, exits 1 with the portal's messag
     messages: [],
     dryRun: false,
   });
-  assert.equal(
+  expect(
     (await run({ sub: "update" }, { portal: fakePortal({ update: status }) }))
       .code,
-    1,
-  );
+  ).toBe(1);
   const unreachable = err<PortalFailure>({
     kind: "unreachable",
     detail: "down",
@@ -131,8 +128,8 @@ test("update: valid:false, or a non-2xx status, exits 1 with the portal's messag
     { sub: "update" },
     { portal: fakePortal({ update: unreachable }) },
   );
-  assert.equal(r3.code, 1);
-  assert.deepEqual(r3.errs, ["the portal cannot be reached: down"]);
+  expect(r3.code).toBe(1);
+  expect(r3.errs).toStrictEqual(["the portal cannot be reached: down"]);
 });
 
 test("update --save that the portal withheld says so", async () => {
@@ -147,17 +144,17 @@ test("update --save that the portal withheld says so", async () => {
     { sub: "update", save: true },
     { portal: fakePortal({ update: withheld }) },
   );
-  assert.equal(r.out[1], "SAVE WITHHELD by the portal — nothing changed");
+  expect(r.out[1]).toBe("SAVE WITHHELD by the portal — nothing changed");
 });
 
 test("update: no PDF to send, or no abstract file, is refused before the portal is asked", async () => {
   const r1 = await run({ sub: "update", pdf: "nope.pdf" });
-  assert.equal(r1.code, 2);
-  assert.deepEqual(r1.errs, [
+  expect(r1.code).toBe(2);
+  expect(r1.errs).toStrictEqual([
     "no PDF at nope.pdf — build the paper, or name one with --pdf",
   ]);
-  assert.deepEqual(r1.seen[0]?.calls, []);
+  expect(r1.seen[0]?.calls).toStrictEqual([]);
   const r2 = await run({ sub: "update", abstract: "nope.txt" });
-  assert.equal(r2.code, 2);
-  assert.deepEqual(r2.errs, ["--abstract: no file at nope.txt"]);
+  expect(r2.code).toBe(2);
+  expect(r2.errs).toStrictEqual(["--abstract: no file at nope.txt"]);
 });

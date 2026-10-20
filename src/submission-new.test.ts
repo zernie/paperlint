@@ -1,7 +1,6 @@
 /** `paperlint submission new`: what it reads and sends, the dry run, the save that records the id, the refusals. */
-import assert from "node:assert/strict";
 import { map } from "remeda";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import { builtPaper } from "../test/recorded-fixture.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import { absolutePath } from "./domain/paths.ts";
@@ -25,10 +24,10 @@ import {
 test("new: a dry run by default — title from \\title, abstract from \\begin{abstract} with the author's macro expanded, the declared authors, the PDF", async () => {
   const fs = newFiles({});
   const r = await run({ sub: "new" }, { files: fs });
-  assert.equal(r.code, 0, r.errs.join("\n"));
-  assert.deepEqual(r.errs, []);
-  assert.deepEqual(r.seen[0]?.calls, [["create", WANT, { save: false }]]);
-  assert.deepEqual(r.out, [
+  expect(r.code, r.errs.join("\n")).toBe(0);
+  expect(r.errs).toStrictEqual([]);
+  expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: false }]]);
+  expect(r.out).toStrictEqual([
     CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
     "title         Agents That Lie",
     "author 1      Ada Lovelace <ada@example.org>, Analytical",
@@ -45,48 +44,45 @@ test("new: a dry run by default — title from \\title, abstract from \\begin{ab
     "  - then mark it submitted: npx paperlint submission update papers/p --submit (a dry run; --save after your yes)",
   ]);
   // A dry run writes nothing.
-  assert.deepEqual(
+  expect(
     JSON.parse(
       new TextDecoder().decode(
         fs.readBytes(absolutePath(`${PAPER}/paperlint.json`)) ??
           new Uint8Array(),
       ),
     ),
-    { extends: "../../venue.jsonc", authors: AUTHORS },
-  );
+  ).toStrictEqual({ extends: "../../venue.jsonc", authors: AUTHORS });
 });
 
-test("🔴 new --save: the id the portal chose is written into paperlint.json, and `show` is the next command", async () => {
+test("new --save: the id the portal chose is written into paperlint.json, and `show` is the next command", async () => {
   const fs = newFiles({});
   const r = await run({ sub: "new", save: true }, { files: fs });
-  assert.equal(r.code, 0, r.errs.join("\n"));
-  assert.deepEqual(r.seen[0]?.calls, [["create", WANT, { save: true }]]);
-  assert.deepEqual(r.out.slice(6, 7), ["created submission 42"]);
-  assert.deepEqual(r.out.slice(-2), [
+  expect(r.code, r.errs.join("\n")).toBe(0);
+  expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: true }]]);
+  expect(r.out.slice(6, 7)).toStrictEqual(["created submission 42"]);
+  expect(r.out.slice(-2)).toStrictEqual([
     `recorded      "submission": { "id": 42 } in papers/p/paperlint.json`,
     `next          npx paperlint submission show papers/p — it should say "match yes"`,
   ]);
-  assert.ok(
-    r.out.includes(
-      `do on the site, ${SITE}/paper/42 — paperlint sends only the title, the abstract, the authors and the PDF:`,
-    ),
+  expect(r.out).toContain(
+    `do on the site, ${SITE}/paper/42 — paperlint sends only the title, the abstract, the authors and the PDF:`,
   );
   const written = new TextDecoder().decode(
     fs.readBytes(absolutePath(`${PAPER}/paperlint.json`)) ?? new Uint8Array(),
   );
-  assert.deepEqual(JSON.parse(written), {
+  expect(JSON.parse(written)).toStrictEqual({
     extends: "../../venue.jsonc",
     authors: AUTHORS,
     submission: { id: 42 },
   });
   // And the next run reads it: `new` again is refused, `show` asks for 42.
   const again = await run({ sub: "new" }, { files: fs });
-  assert.equal(again.code, 2);
-  assert.deepEqual(again.errs, [
+  expect(again.code).toBe(2);
+  expect(again.errs).toStrictEqual([
     `${PAPER}/paperlint.json: the paper already has submission 42 on ${SITE} — \`paperlint submission show\` reads it, \`paperlint submission update\` changes it`,
   ]);
   const show = await run({ sub: "show" }, { files: fs });
-  assert.deepEqual(show.seen[0]?.calls, [["show", 42]]);
+  expect(show.seen[0]?.calls).toStrictEqual([["show", 42]]);
 });
 
 test("new --save in the cycles form: the id goes into the open attempt, the last cycle", async () => {
@@ -105,26 +101,26 @@ test("new --save in the cycles form: the id goes into the open attempt, the last
     paper: { authors: AUTHORS, cycles: [closed, cycle("second", null)] },
   });
   const r = await run({ sub: "new", save: true }, { files: fs });
-  assert.equal(r.code, 0, r.errs.join("\n"));
+  expect(r.code, r.errs.join("\n")).toBe(0);
   const written: unknown = JSON.parse(
     new TextDecoder().decode(
       fs.readBytes(absolutePath(`${PAPER}/paperlint.json`)) ?? new Uint8Array(),
     ),
   );
-  assert.deepEqual(written, {
+  expect(written).toStrictEqual({
     authors: AUTHORS,
     cycles: [closed, { ...cycle("second", null), submission: { id: 42 } }],
   });
 });
 
-test('🔴 new without "authors": refused with the key to fill — never guessed, nothing sent', async () => {
+test('new without "authors": refused with the key to fill — never guessed, nothing sent', async () => {
   const r = await run(
     { sub: "new" },
     { files: newFiles({ paper: { extends: "../../venue.jsonc" } }) },
   );
-  assert.equal(r.code, 2);
-  assert.deepEqual(r.seen[0]?.calls, []);
-  assert.deepEqual(r.errs, [
+  expect(r.code).toBe(2);
+  expect(r.seen[0]?.calls).toStrictEqual([]);
+  expect(r.errs).toStrictEqual([
     `${PAPER}/paperlint.json: no "authors" — add "authors": [{ "name": "…", "email": "…", "affiliation": "…" }], every author in the paper's order, as 127.0.0.1 should record them; paperlint never guesses them`,
   ]);
 });
@@ -135,13 +131,12 @@ test("the build's facts only stand in for the title: none, stale or broken chang
       run({ sub: "new" }, { files: newFiles({ facts: f }) }),
     ),
   );
-  assert.deepEqual(
-    runs.map((r) => [r.code, r.seen[0]?.calls]),
+  expect(runs.map((r) => [r.code, r.seen[0]?.calls])).toStrictEqual(
     runs.map(() => [0, [["create", WANT, { save: false }]]]),
   );
 });
 
-test("🔴 an abstract in a file paper.tex includes is read there, as the build recorded it", async () => {
+test("an abstract in a file paper.tex includes is read there, as the build recorded it", async () => {
   const tex = DEFAULT_TEX.replace(ABSTRACT_TEX, "\\input{abstract}\n");
   const r = await run(
     { sub: "new" },
@@ -159,8 +154,8 @@ test("🔴 an abstract in a file paper.tex includes is read there, as the build 
       }),
     },
   );
-  assert.equal(r.code, 0, r.errs.join("\n"));
-  assert.deepEqual(r.seen[0]?.calls, [["create", WANT, { save: false }]]);
+  expect(r.code, r.errs.join("\n")).toBe(0);
+  expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: false }]]);
 });
 
 test("new --abstract <file>: its text is sent instead of the build's, whitespace as one space", async () => {
@@ -180,8 +175,8 @@ test("new --abstract <file>: its text is sent instead of the build's, whitespace
       },
     },
   );
-  assert.equal(r.code, 0, r.errs.join("\n"));
-  assert.deepEqual(r.seen[0]?.calls, [
+  expect(r.code, r.errs.join("\n")).toBe(0);
+  expect(r.seen[0]?.calls).toStrictEqual([
     ["create", { ...WANT, abstract: "Line one. Line two." }, { save: false }],
   ]);
 });
@@ -209,8 +204,8 @@ test("new: the paper already accepted in its current cycle — refused; a new su
       }),
     },
   );
-  assert.equal(r.code, 2);
-  assert.deepEqual(r.errs, [
+  expect(r.code).toBe(2);
+  expect(r.errs).toStrictEqual([
     `${PAPER}/paperlint.json: the current attempt is accepted — a new submission belongs to a new cycle`,
   ]);
 });
@@ -220,8 +215,8 @@ test("new: no PDF, a portal that says invalid, a save the portal did not make �
     { sub: "new", pdf: "nope.pdf" },
     { files: newFiles({}) },
   );
-  assert.equal(noPdf.code, 2);
-  assert.deepEqual(noPdf.errs, [
+  expect(noPdf.code).toBe(2);
+  expect(noPdf.errs).toStrictEqual([
     "no PDF at nope.pdf — build the paper, or name one with --pdf",
   ]);
   const invalid = await run(
@@ -242,8 +237,8 @@ test("new: no PDF, a portal that says invalid, a save the portal did not make �
       }),
     },
   );
-  assert.equal(invalid.code, 1);
-  assert.deepEqual(invalid.out.slice(-2), [
+  expect(invalid.code).toBe(1);
+  expect(invalid.out.slice(-2)).toStrictEqual([
     "changes       new",
     "  portal says: topics: Entry required.",
   ]);
@@ -263,13 +258,13 @@ test("new: no PDF, a portal that says invalid, a save the portal did not make �
       }),
     },
   );
-  assert.equal(withheld.code, 1);
-  assert.ok(
-    withheld.out.includes("NOTHING CREATED — the portal did not save it"),
+  expect(withheld.code).toBe(1);
+  expect(withheld.out).toContain(
+    "NOTHING CREATED — the portal did not save it",
   );
 });
 
-test("🔴 an abstract paperlint cannot read without guessing is refused, naming the construct and its line — nothing sent", async () => {
+test("an abstract paperlint cannot read without guessing is refused, naming the construct and its line — nothing sent", async () => {
   const undefinedMacro = await run(
     { sub: "new" },
     {
@@ -278,57 +273,54 @@ test("🔴 an abstract paperlint cannot read without guessing is refused, naming
       }),
     },
   );
-  assert.equal(undefinedMacro.code, 2);
-  assert.deepEqual(undefinedMacro.errs, [
+  expect(undefinedMacro.code).toBe(2);
+  expect(undefinedMacro.errs).toStrictEqual([
     "the abstract, paper.tex:7:28: \\nope, which no \\newcommand, \\renewcommand or \\def in the paper defines — paperlint sends no text it would have to guess; give the abstract with --abstract <file>, a plain-text file",
   ]);
   const none = await run(
     { sub: "new" },
     { files: newFiles({ tex: DEFAULT_TEX.replace(ABSTRACT_TEX, "") }) },
   );
-  assert.deepEqual(none.errs, [
+  expect(none.errs).toStrictEqual([
     "paper.tex has no \\begin{abstract}…\\end{abstract} — give the abstract with --abstract <file>, a plain-text file",
   ]);
-  assert.deepEqual(
-    [undefinedMacro, none].map((r) => r.seen[0]?.calls),
-    [[], []],
-  );
+  expect([undefinedMacro, none].map((r) => r.seen[0]?.calls)).toStrictEqual([
+    [],
+    [],
+  ]);
 });
 
 test("titleOf: \\title as text; an author's macro in it → the PDF's Title; neither → the fix", () => {
   const src = (t: string) =>
     `\\documentclass{article}\\title{${t}}\\begin{document}\\end{document}`;
-  assert.deepEqual(titleOf(src("Plain  Title"), latexReader, null), {
+  expect(titleOf(src("Plain  Title"), latexReader, null)).toStrictEqual({
     ok: true,
     value: "Plain Title",
   });
-  assert.deepEqual(
+  expect(
     titleOf(src("\\ours{}: Lies"), latexReader, { Title: "TestLie: Lies" }),
-    { ok: true, value: "TestLie: Lies" },
-  );
-  assert.deepEqual(
+  ).toStrictEqual({ ok: true, value: "TestLie: Lies" });
+  expect(
     titleOf(src("\\ours{}: Lies"), latexReader, {
       "dc:title": "From The XMP",
     }),
-    { ok: true, value: "From The XMP" },
-  );
-  assert.deepEqual(
+  ).toStrictEqual({ ok: true, value: "From The XMP" });
+  expect(
     titleOf(null, latexReader, { Title: "Info", "dc:title": "XMP" }),
-    { ok: true, value: "Info" },
-  );
-  assert.deepEqual(titleOf(src("\\ours{}: Lies"), latexReader, {}), {
+  ).toStrictEqual({ ok: true, value: "Info" });
+  expect(titleOf(src("\\ours{}: Lies"), latexReader, {})).toStrictEqual({
     ok: false,
     error:
       "the \\title in paper.tex uses a command paperlint does not read («…: Lies»), and the PDF names no Title — set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild",
   });
-  assert.deepEqual(titleOf(null, latexReader, null), {
+  expect(titleOf(null, latexReader, null)).toStrictEqual({
     ok: false,
     error:
       "no \\title in paper.tex, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild",
   });
 });
 
-test("🔴 new --save, but paperlint.json changed under it: the id is printed with the line to add by hand, exit 1", async () => {
+test("new --save, but paperlint.json changed under it: the id is printed with the line to add by hand, exit 1", async () => {
   const config = absolutePath(`${PAPER}/paperlint.json`);
   const cases = [
     [null, "the file is gone"],
@@ -373,7 +365,7 @@ test("🔴 new --save, but paperlint.json changed under it: the id is printed wi
   const head =
     "submission 42 was created, but papers/p/paperlint.json was not changed (";
   const tail = `) — add "submission": { "id": 42 } to the current attempt by hand`;
-  assert.deepEqual(
+  expect(
     map(runs, (r, i) => {
       const line = r.errs[0] ?? "";
       return [
@@ -384,8 +376,7 @@ test("🔴 new --save, but paperlint.json changed under it: the id is printed wi
         line.endsWith(tail),
       ];
     }),
-    map(cases, () => [1, 1, true, true, true]),
-  );
+  ).toStrictEqual(map(cases, () => [1, 1, true, true, true]));
 });
 
 test("new: no paper.tex — the PDF's Title stands in; without one either, the fix is named", async () => {
@@ -405,21 +396,21 @@ test("new: no paper.tex — the PDF's Title stands in; without one either, the f
       },
     },
   );
-  assert.equal(titled.code, 0, titled.errs.join("\n"));
-  assert.equal(titled.out[1], "title         From The PDF");
+  expect(titled.code, titled.errs.join("\n")).toBe(0);
+  expect(titled.out[1]).toBe("title         From The PDF");
   const noAbstract = await run(
     { sub: "new" },
     { files: newFiles({ tex: null, facts: facts({ title: "From The PDF" }) }) },
   );
-  assert.deepEqual(noAbstract.errs, [
+  expect(noAbstract.errs).toStrictEqual([
     "no paper.tex to read the abstract from — give the abstract with --abstract <file>, a plain-text file",
   ]);
   const untitled = await run(
     { sub: "new" },
     { files: newFiles({ tex: null }) },
   );
-  assert.equal(untitled.code, 2);
-  assert.deepEqual(untitled.errs, [
+  expect(untitled.code).toBe(2);
+  expect(untitled.errs).toStrictEqual([
     "no \\title in paper.tex, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild",
   ]);
 });
@@ -429,9 +420,9 @@ test("new: --abstract naming no file is refused before anything is sent; run fro
     { sub: "new", abstract: "nope.txt" },
     { files: newFiles({}) },
   );
-  assert.equal(missing.code, 2);
-  assert.deepEqual(missing.errs, ["--abstract: no file at nope.txt"]);
-  assert.deepEqual(missing.seen[0]?.calls, []);
+  expect(missing.code).toBe(2);
+  expect(missing.errs).toStrictEqual(["--abstract: no file at nope.txt"]);
+  expect(missing.seen[0]?.calls).toStrictEqual([]);
   const here = await run(
     { sub: "new", paperDir: "." },
     {
@@ -449,12 +440,10 @@ test("new: --abstract naming no file is refused before anything is sent; run fro
       }),
     },
   );
-  assert.equal(here.code, 0, here.errs.join("\n"));
-  assert.ok(here.out.includes("changes       —"));
-  assert.ok(
-    here.out.includes(
-      "  - then mark it submitted: npx paperlint submission update . --submit (a dry run; --save after your yes)",
-    ),
+  expect(here.code, here.errs.join("\n")).toBe(0);
+  expect(here.out).toContain("changes       —");
+  expect(here.out).toContain(
+    "  - then mark it submitted: npx paperlint submission update . --submit (a dry run; --save after your yes)",
   );
 });
 
@@ -472,7 +461,7 @@ test("a refusal at a place no file of the paper holds is named at paper.tex", as
       },
     },
   );
-  assert.deepEqual(r.errs, [
+  expect(r.errs).toStrictEqual([
     "the abstract, paper.tex: \\x — paperlint sends no text it would have to guess; give the abstract with --abstract <file>, a plain-text file",
   ]);
 });
