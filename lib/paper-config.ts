@@ -138,13 +138,13 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
   pdf: "where the built PDF is, relative to the paper, when it is not paper.pdf — the facts",
   identity:
     "what identifies the authors — names, handles, emails, affiliations, own project names; a blind venue's PDF must not say any of them — anonymity/identity. The root's list and a paper's are joined",
-  talk: 'how this paper is presented: { "mode": "remote-video", "dir"?, "files"?, "one_slide"? } — the talk/ rules. A paper\'s own; refused in the root file',
+  talk: 'how this paper is presented: { "mode": "remote-video", "dir"?, "files"?, "one_slide"? } — the talk/ rules. Set only in a paper\'s own paperlint.json; in the root paperlint.json it is an error',
   submission:
-    "which submission on the venue's portal is this paper's: { \"id\": <number> } — paperlint submission, with the preset's \"portal\". A paper's own; refused in the root file",
+    "which submission on the venue's portal is this paper's: { \"id\": <number> } — paperlint submission, with the preset's \"portal\". Set only in a paper's own paperlint.json; in the root paperlint.json it is an error",
   authors:
-    'the authors as the venue\'s portal should record them, in order: [{ "name", "email", "affiliation"? }] — paperlint submission new. A paper\'s own; refused in the root file',
+    'the authors as the venue\'s portal should record them, in order: [{ "name", "email", "affiliation"? }] — paperlint submission new. Set only in a paper\'s own paperlint.json; in the root paperlint.json it is an error',
   cycles:
-    "the paper's attempts at venues, oldest first: [{ id, venue, kind, opened, phase?, deadlines, submission?, outcome }] — extends, kind and submission are then the current attempt's, and the cycle/ rules judge the record. A paper's own; refused in the root file",
+    "the paper's attempts at venues, oldest first: [{ id, venue, kind, opened, phase?, deadlines, submission?, outcome }] — extends, kind and submission are then the current attempt's, and the cycle/ rules judge the record. Set only in a paper's own paperlint.json; in the root paperlint.json it is an error",
   scripts: "how skill prose names the scripts — consumer.mjs",
   timezone: "the zone deadline anchors are written in — consumer.mjs",
   contactEmail: "the polite-pool address for citation lookups — consumer.mjs",
@@ -153,7 +153,7 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
   $comment: "a note for humans (JSON Schema's own comment keyword); ignored",
 });
 
-/** The keys that only mean something for one paper: refused in the root `paperlint.json`. */
+/** The keys that only mean something for one paper: an error in the root `paperlint.json`. */
 export const PAPER_ONLY_KEYS: readonly string[] = Object.freeze([
   "talk",
   "submission",
