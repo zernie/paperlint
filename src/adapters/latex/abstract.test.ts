@@ -52,6 +52,17 @@ describe("abstractText — what TeX prints, as plain text", () => {
       ),
     ).toEqual({ ok: true, value: "As shown and, this is code. Next.On." });
   });
+});
+
+describe("abstractText — what prints nothing, a space, or a fixed word", () => {
+  it("a forced line break is a space; a label, a footnote and \\relax print nothing; the logos print their word", () => {
+    expect(
+      text(
+        "",
+        "One\\\\two\\newline three\\label{x}\\footnote{aside}\\relax{} in \\LaTeX.",
+      ),
+    ).toEqual({ ok: true, value: "One two three in LaTeX." });
+  });
 
   it("commands that only steer line breaking print nothing; a group in math is only grouping", () => {
     expect(
@@ -123,7 +134,7 @@ describe("abstractText — refused by name and place, never guessed", () => {
   it("the place is the offset of the construct in the source", () => {
     const src = doc("", "Fine. \\nope{} here.");
     const r = latexReader.abstractText(src);
-    const at = r.ok || r.error.kind === "none" ? -1 : r.error.at;
+    const at = !r.ok && r.error.kind === "unreadable" ? r.error.at : -1;
     expect(src.slice(at, at + "\\nope".length)).toBe("\\nope");
   });
 
@@ -144,36 +155,44 @@ describe("abstractText — refused by name and place, never guessed", () => {
   });
 });
 
-describe("abstractText — the edges of what the source may hold", () => {
-  it("a macro reads as its last definition BEFORE the abstract — not a later one, not one in a group closed by then; \\gdef is global", () => {
+describe("abstractText — a macro defined more than once is refused, never resolved", () => {
+  const redefined = (preamble: string, abstract: string) => {
+    const src = doc(preamble, abstract);
+    const r = latexReader.abstractText(src);
+    return r.ok || r.error.kind !== "redefined"
+      ? r
+      : { name: r.error.name, at: r.error.at.map((o) => src.slice(o, o + 12)) };
+  };
+
+  it("\\newcommand then \\providecommand (TeX keeps the first), and a \\def again after the abstract", () => {
     expect([
-      text(
+      redefined(
+        "\\newcommand{\\x}{old}\\providecommand{\\x}{fallback}",
+        "\\x.",
+      ),
+      redefined(
         "\\def\\x{old}",
         "\\x.\n\\end{abstract}\\def\\x{new}\\begin{abstract}",
       ),
-      text("\\def\\x{outer}{\\def\\x{inner}}", "\\x."),
-      text("{\\gdef\\x{global}}", "\\x."),
-      text("\\newcommand{\\x}{a}\\renewcommand{\\x}{b}", "\\x."),
-    ]).toEqual([
-      { ok: true, value: "old." },
-      { ok: true, value: "outer." },
-      { ok: true, value: "global." },
-      { ok: true, value: "b." },
+    ]).toStrictEqual([
+      { name: "x", at: ["\\newcommand{", "\\providecomm"] },
+      { name: "x", at: ["\\def\\x{old}\n", "\\def\\x{new}\\"] },
     ]);
   });
 
-  it("a macro defined only inside a group closed before the abstract is undefined there", () => {
-    const r = text("{\\newcommand{\\y}{gone}}", "\\y.");
-    expect(r.ok ? r : r.error).toMatchObject({
-      kind: "unreadable",
-      what: "\\y, which no \\newcommand, \\renewcommand or \\def in the paper defines",
+  it("one definition, wherever it stands, is expanded", () => {
+    expect(text("{\\gdef\\x{once}}", "\\x.")).toEqual({
+      ok: true,
+      value: "once.",
     });
   });
+});
 
+describe("abstractText — the edges of what the source may hold", () => {
   it("malformed definitions define nothing; an author's macro reads inside math too", () => {
     expect(
       text(
-        "\\newcommand{oops}{x}\\newcommand{\\half}\\def{y}{z}\\newcommand{\\n}{83}",
+        "\\newcommand{oops}{x}\\newcommand{}{x}\\newcommand{\\half}\\def{y}{z}\\newcommand{\\n}{83}",
         "We saw $\\n\\%$ of runs.",
       ),
     ).toEqual({ ok: true, value: "We saw 83% of runs." });
@@ -208,5 +227,22 @@ describe("abstractText — the edges of what the source may hold", () => {
       ok: false,
       error: { kind: "unreadable", what: "the math ", at: -1 },
     });
+  });
+
+  it("a formatting command the parser gave no argument prints nothing", () => {
+    const tree: Ast.Root = {
+      type: "root",
+      content: [
+        {
+          type: "environment",
+          env: "abstract",
+          content: [
+            { type: "string", content: "A" },
+            { type: "macro", content: "emph" },
+          ],
+        },
+      ],
+    };
+    expect(abstractOfTree(tree, "")).toEqual({ ok: true, value: "A" });
   });
 });

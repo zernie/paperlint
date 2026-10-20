@@ -43,7 +43,7 @@ const LEVELS: ReadonlyMap<string, HeadingLevel> = new Map<string, HeadingLevel>(
 );
 
 /** Formatting commands: they say what their argument says. */
-const TRANSPARENT: ReadonlySet<string> = new Set([
+export const TRANSPARENT: ReadonlySet<string> = new Set([
   "emph",
   "textit",
   "textbf",
@@ -56,7 +56,7 @@ const TRANSPARENT: ReadonlySet<string> = new Set([
 ]);
 
 /** Commands that break the line: the title goes on as a second part, a subtitle. */
-const LINE_BREAKS: ReadonlySet<string> = new Set([
+export const LINE_BREAKS: ReadonlySet<string> = new Set([
   // `\\` is the macro unified-latex names with ONE backslash (`{ type: "macro", content: "\\" }`).
   "\\",
   "newline",
@@ -64,7 +64,7 @@ const LINE_BREAKS: ReadonlySet<string> = new Set([
 ]);
 
 /** Commands that put nothing in the title's words: a label, a footnote, an index entry. */
-const INVISIBLE: ReadonlySet<string> = new Set([
+export const INVISIBLE: ReadonlySet<string> = new Set([
   "label",
   "footnote",
   "thanks",

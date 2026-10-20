@@ -277,6 +277,23 @@ test("an abstract paperlint cannot read without guessing is refused, naming the 
   expect(undefinedMacro.errs).toStrictEqual([
     "the abstract, paper.tex:7:28: \\nope, which no \\newcommand, \\renewcommand or \\def in the paper defines — paperlint sends no text it would have to guess; give the abstract with --abstract <file>, a plain-text file",
   ]);
+  const twice = await run(
+    { sub: "new" },
+    {
+      files: newFiles({
+        tex: DEFAULT_TEX.replace(
+          "\\newcommand{\\ours}{TestLie}\n",
+          "\\newcommand{\\ours}{TestLie}\n\\providecommand{\\ours}{Other}\n",
+        ),
+      }),
+    },
+  );
+  expect([twice.code, twice.errs]).toStrictEqual([
+    2,
+    [
+      "the abstract uses \\ours, which the paper defines 2 times (paper.tex:2:1, paper.tex:3:1) — which one TeX uses there is not guessed; give the abstract with --abstract <file>, a plain-text file",
+    ],
+  ]);
   const none = await run(
     { sub: "new" },
     { files: newFiles({ tex: DEFAULT_TEX.replace(ABSTRACT_TEX, "") }) },

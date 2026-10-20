@@ -476,11 +476,21 @@ function sourceAbstract(
   const paper = readPaper(join(paperDir, MAIN), source, deps);
   const r = deps.latex.abstractText(paper.text);
   if (r.ok) return r;
-  return r.error.kind === "none"
-    ? err(`${MAIN} has no \\begin{abstract}…\\end{abstract} — ${instead}`)
-    : err(
-        `the abstract, ${placeIn(paper, r.error.at)}: ${r.error.what} — paperlint sends no text it would have to guess; ${instead}`,
+  const guess = "paperlint sends no text it would have to guess";
+  switch (r.error.kind) {
+    case "none":
+      return err(
+        `${MAIN} has no \\begin{abstract}…\\end{abstract} — ${instead}`,
       );
+    case "unreadable":
+      return err(
+        `the abstract, ${placeIn(paper, r.error.at)}: ${r.error.what} — ${guess}; ${instead}`,
+      );
+    case "redefined":
+      return err(
+        `the abstract uses \\${r.error.name}, which the paper defines ${String(r.error.at.length)} times (${r.error.at.map((o) => placeIn(paper, o)).join(", ")}) — which one TeX uses there is not guessed; ${instead}`,
+      );
+  }
 }
 
 /**

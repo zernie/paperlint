@@ -35,6 +35,13 @@ export type AbstractProblem =
       readonly what: string;
       /** Its offset in the source. */
       readonly at: number;
+    }
+  | {
+      /** A macro the abstract uses that the source defines more than once: which one TeX uses is not guessed. */
+      readonly kind: "redefined";
+      readonly name: string;
+      /** Each definition's offset in the source, in order. */
+      readonly at: readonly number[];
     };
 
 export interface LatexReader {
