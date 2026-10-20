@@ -54,6 +54,27 @@ test("a venue without the link to its call for papers is refused at load, saying
   );
 });
 
+test("🔴 submission_fields naming a key the submission object carries itself is refused, naming it", () => {
+  // Guards: a field `submission` spread over the PDF's `content_file` would drop the upload.
+  const preset = (key: string) => ({
+    type: "venue",
+    name: "X",
+    url: "https://example.org/cfp",
+    extends: "paperlint:acm-sigconf",
+    submission_fields: {
+      source: "form",
+      url: "https://example.org/paper/new",
+      read: "2026-10-20",
+      fields: { [key]: { kind: "text" } },
+    },
+  });
+  assert.equal(
+    refusalOf("v.jsonc", preset("submission")),
+    'v.jsonc: "submission_fields" names "submission", which paperlint sends itself (object, pid, title, abstract, authors, submission, status) — a field of that name would overwrite it',
+  );
+  assert.equal(refusalOf("v.jsonc", preset("topics")), "");
+});
+
 test("a template family with a venue's name and url is refused, naming each key", () => {
   assert.equal(
     refusalOf("f.jsonc", {

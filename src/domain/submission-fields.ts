@@ -31,6 +31,24 @@ export const FIELD_KINDS = [
 ] as const;
 export type FieldKind = (typeof FIELD_KINDS)[number];
 
+/**
+ * The keys the submission object carries itself (`src/adapters/hotcrp/portal.io.ts`): a venue field
+ * of one of these names would be spread over it — `submission` would drop the PDF's upload.
+ */
+export const RESERVED_FIELD_KEYS = [
+  "object",
+  "pid",
+  "title",
+  "abstract",
+  "authors",
+  "submission",
+  "status",
+] as const;
+
+/** The first of `keys` that is reserved, or null. Pure. */
+export const reservedKey = (keys: readonly string[]): string | null =>
+  keys.find((k) => RESERVED_FIELD_KEYS.some((r) => r === k)) ?? null;
+
 /** One field of the form, as the preset records it. */
 export interface FieldDeclaration {
   readonly kind: FieldKind;

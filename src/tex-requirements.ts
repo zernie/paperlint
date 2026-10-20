@@ -36,7 +36,12 @@ import {
 } from "./domain/talk.ts";
 import type { VenuePortal } from "./domain/submission.ts";
 import type { Reading } from "./domain/deadline.ts";
-import type { FieldKind, VenueFields } from "./domain/submission-fields.ts";
+import {
+  RESERVED_FIELD_KEYS,
+  reservedKey,
+  type FieldKind,
+  type VenueFields,
+} from "./domain/submission-fields.ts";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -304,28 +309,34 @@ interface SubmissionFieldsJson {
   >;
 }
 
-/** A preset's `submission_fields`, or null when it records none. */
-const submissionFieldsOf = (
+/** A preset's `submission_fields`, or null when it records none; a reserved field name is refused. */
+function submissionFieldsOf(
   j: SubmissionFieldsJson | undefined,
-): VenueFields | null =>
-  j === undefined
-    ? null
-    : {
-        source: j.source,
-        url: j.url,
-        read: j.read,
-        fields: Object.fromEntries(
-          Object.entries(j.fields).map(([key, f]) => [
-            key,
-            {
-              kind: f.kind,
-              required: f.required ?? false,
-              label: f.label ?? null,
-              options: f.options ?? [],
-            },
-          ]),
-        ),
-      };
+  file: string,
+): VenueFields | null {
+  if (j === undefined) return null;
+  const reserved = reservedKey(Object.keys(j.fields));
+  if (reserved !== null)
+    throw new Error(
+      `${file}: "submission_fields" names "${reserved}", which paperlint sends itself (${RESERVED_FIELD_KEYS.join(", ")}) — a field of that name would overwrite it`,
+    );
+  return {
+    source: j.source,
+    url: j.url,
+    read: j.read,
+    fields: Object.fromEntries(
+      Object.entries(j.fields).map(([key, f]) => [
+        key,
+        {
+          kind: f.kind,
+          required: f.required ?? false,
+          label: f.label ?? null,
+          options: f.options ?? [],
+        },
+      ]),
+    ),
+  };
+}
 
 /** An optional field as the typed preset holds it: absent is null. */
 const orNull = <T>(v: T | undefined): T | null => (v === undefined ? null : v);
@@ -476,7 +487,7 @@ const portalBlocks = (
 ): Pick<PresetFile, "portal" | "deadlines" | "submissionFields"> => ({
   portal: portalOf(j.portal),
   deadlines: deadlinesOf(j.deadlines, file),
-  submissionFields: submissionFieldsOf(j.submission_fields),
+  submissionFields: submissionFieldsOf(j.submission_fields, file),
 });
 
 /**
