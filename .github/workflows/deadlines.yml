@@ -13,7 +13,7 @@
 # line in the pull request's body, and the script exits 0: the venue's outage is not a defect of this
 # repository, and tomorrow's run reads it again. Only a preset that does not parse fails the run
 # (exit 1) — that one IS ours, and `ci` fails on it too. `ci` itself never touches the network for
-# this: src/refresh-deadlines.test.ts and scripts/refresh-deadlines.test.ts replay the pages recorded in
+# this: scripts/refresh-deadlines/main.test.ts replays the pages recorded in
 # src/adapters/hotcrp/cassette/.
 #
 # ⚠️ A pull request opened with GITHUB_TOKEN does not start other workflows (GitHub's rule against
@@ -63,7 +63,7 @@ jobs:
       # `--ignore-scripts`: no `prepare` build, so there is no `dist/`. The npm script runs the code
       # from source with `--conditions=paperlint-source` (package.json); without it `#lib/*` resolves
       # to `dist/`, and every run from 2026-10-06 to 2026-10-19 died on ERR_MODULE_NOT_FOUND
-      # dist/lib/paper-config.js. scripts/refresh-deadlines.test.ts runs the same npm script on every
+      # dist/lib/paper-config.js. scripts/refresh-deadlines/main.test.ts runs the same npm script on every
       # pull request under test/no-dist.ts, which refuses any module in `dist/`.
       - name: npm ci
         run: npm ci --ignore-scripts

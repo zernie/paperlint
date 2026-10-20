@@ -1,6 +1,6 @@
 /**
  * A PRESET'S PORTAL READINGS AGAINST WHAT THE PORTAL'S PAGE SAYS NOW — the comparison the scheduled
- * refresh of the shipped presets makes (`src/refresh-deadlines.ts`). Pure.
+ * refresh of the shipped presets makes (`main.ts` beside this file). Pure.
  *
  *   a kind the page lists at the instant the preset holds   kept as it is, its `read` day too
  *   a kind the page lists at another instant                rewritten, `read` = today
@@ -15,7 +15,7 @@ import {
   type IsoDate,
   type PortalDeadlines,
   type Reading,
-} from "./deadline.ts";
+} from "../../src/domain/deadline.ts";
 
 /** The preset's readings after the page's answer, what changed, and what is worth a note. */
 export interface Refreshed {

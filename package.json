@@ -15,7 +15,7 @@
     "coverage": "NODE_OPTIONS=\"--import=./test/coverage-src.ts $NODE_OPTIONS\" c8 --check-coverage npm test --",
     "lint": "eslint .",
     "check": "node scripts/check.ts",
-    "refresh-deadlines": "node --conditions=paperlint-source scripts/refresh-deadlines.ts",
+    "refresh-deadlines": "node --conditions=paperlint-source scripts/refresh-deadlines/main.ts",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check ."
   },

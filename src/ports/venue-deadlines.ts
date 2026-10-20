@@ -1,6 +1,6 @@
 /**
  * A venue's deadlines as its portal publishes them — the port the scheduled refresh of the shipped
- * presets reads through (`src/refresh-deadlines.ts`). Shaped by what the refresh needs (the
+ * presets reads through (`scripts/refresh-deadlines/`). Shaped by what the refresh needs (the
  * portal's deadlines, once), not by any portal's page; one adapter per portal kind
  * (`src/adapters/hotcrp/`).
  */

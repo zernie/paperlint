@@ -213,7 +213,7 @@ export const NOT_COVERED: Readonly<Record<string, string>> = {
   refresh:
     "deadlines.yml reads the venue presets' portals over the network once a day and opens a pull " +
     "request when a deadline moved; npm test replays the recorded portal pages through " +
-    "scripts/refresh-deadlines.test.ts, and nothing local should read the live portals on every check.",
+    "scripts/refresh-deadlines/main.test.ts, and nothing local should read the live portals on every check.",
 };
 
 /**

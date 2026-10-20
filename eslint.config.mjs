@@ -232,7 +232,6 @@ export const TOOL_PACKAGES = [
   "js-yaml", // YAML
   "markdown-it", // Markdown
   "mp4box", // MP4
-  "prettier", // the formatter a rewritten JSONC preset is printed with
   "srt-parser-2", // SRT subtitles
   "typescript", // the compiler API
   "unpdf", // PDF

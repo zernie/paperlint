@@ -1,6 +1,6 @@
 /** A preset's portal readings against the page: kept, rewritten, added, noted — a call's never touched. */
 import { describe, expect, test } from "vitest";
-import { refreshReadings } from "./deadline-refresh.ts";
+import { refreshReadings } from "./compare.ts";
 
 const reading = (
   what: "submission" | "resubmission" | "camera-ready",

@@ -36,4 +36,3 @@ export { spawnProcess, type SpawnSync } from "./process.io.ts";
 export { hostDirs } from "./host.io.ts";
 export { nodeListDir } from "./list-dir.io.ts";
 export { nodeListEntries } from "./list-entries.io.ts";
-export { presetFilesIn } from "./preset-files.io.ts";
