@@ -29,7 +29,6 @@ test("tokenVariable: any other host — the whole host and path, upper-cased, no
   expect(tokenVariable("https://hotcrp.example.edu/conf2027/")).toBe(
     "HOTCRP_TOKEN_HOTCRP_EXAMPLE_EDU_CONF2027",
   );
-  expect(tokenVariable("http://127.0.0.1:9")).toBe("HOTCRP_TOKEN_127_0_0_1");
   expect(tokenVariable("hotcrp.example.edu")).toBe(
     "HOTCRP_TOKEN_HOTCRP_EXAMPLE_EDU",
   );
@@ -46,4 +45,25 @@ test("tokenVariable: two sites never share a variable — same first label, same
   ];
   const names = map(sites, tokenVariable);
   expect(unique(names)).toStrictEqual(names);
+});
+
+test("tokenVariable: a port other than the scheme's default is part of the site; the default changes nothing", () => {
+  expect(
+    map(
+      [
+        "https://review.example.org:8443/conf",
+        "https://review.example.org:9443/conf",
+        "https://review.example.org:443/conf",
+        "https://review.example.org/conf",
+        "http://127.0.0.1:9",
+      ],
+      tokenVariable,
+    ),
+  ).toStrictEqual([
+    "HOTCRP_TOKEN_REVIEW_EXAMPLE_ORG_8443_CONF",
+    "HOTCRP_TOKEN_REVIEW_EXAMPLE_ORG_9443_CONF",
+    "HOTCRP_TOKEN_REVIEW_EXAMPLE_ORG_CONF",
+    "HOTCRP_TOKEN_REVIEW_EXAMPLE_ORG_CONF",
+    "HOTCRP_TOKEN_127_0_0_1_9",
+  ]);
 });

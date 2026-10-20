@@ -53,7 +53,7 @@ test("no token: the site's variable is named, with this site's token page, the s
   expect(r.code).toBe(2);
   expect(r.seen).toStrictEqual([]);
   expect(r.errs).toStrictEqual([
-    `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127_0_0_1 is not set`,
+    `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127_0_0_1_9 is not set`,
     ...STEPS,
   ]);
 });
@@ -66,7 +66,7 @@ test("only the site-less HOTCRP_TOKEN set: the rename instruction, and nothing i
   expect(r.code).toBe(2);
   expect(r.seen).toStrictEqual([]);
   expect(r.errs).toStrictEqual([
-    "HOTCRP_TOKEN is no longer read: tokens are per hotcrp site. If it was made on 127.0.0.1, rename it to HOTCRP_TOKEN_127_0_0_1; if it was made on another site, rename it to that site's variable (HOTCRP_TOKEN_<LABEL>) and create a token here:",
+    "HOTCRP_TOKEN is no longer read: tokens are per hotcrp site. If it was made on 127.0.0.1:9, rename it to HOTCRP_TOKEN_127_0_0_1_9; if it was made on another site, rename it to that site's variable (HOTCRP_TOKEN_<LABEL>) and create a token here:",
     ...STEPS,
   ]);
   expect(r.errs.join("\n")).not.toMatch(/hct_old/);
@@ -75,7 +75,7 @@ test("only the site-less HOTCRP_TOKEN set: the rename instruction, and nothing i
 test("the site's variable set beside a site-less one: the site's token is the one used", async () => {
   const r = await run(
     {},
-    { env: { HOTCRP_TOKEN_127_0_0_1: "hct_site", HOTCRP_TOKEN: "hct_old" } },
+    { env: { HOTCRP_TOKEN_127_0_0_1_9: "hct_site", HOTCRP_TOKEN: "hct_old" } },
   );
   expect(r.code).toBe(0);
   expect(r.seen[0]?.token).toBe("hct_site");
@@ -105,7 +105,7 @@ test("a 401 from the portal: the portal's words, which variable was used, and ho
   );
   const said = [
     "the portal refused (HTTP 401): Unauthorized",
-    "HOTCRP_TOKEN_127_0_0_1 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
+    "HOTCRP_TOKEN_127_0_0_1_9 was used; it may belong to another hotcrp site (tokens are per site), or be revoked or expired",
     ...STEPS,
   ];
   expect(map(runs, (r) => [r.code, r.errs])).toStrictEqual(
@@ -118,7 +118,7 @@ test("a 403 names a missing scope; any other failure says nothing about the toke
   const f = (httpStatus: number) =>
     ({ kind: "refused", httpStatus, messages: [] }) as const;
   expect(tokenRefusedLines(portal, hotcrpSite(SITE), f(403))).toStrictEqual([
-    "HOTCRP_TOKEN_127_0_0_1 was used; the site turned the request away — the token may lack a scope this subcommand needs",
+    "HOTCRP_TOKEN_127_0_0_1_9 was used; the site turned the request away — the token may lack a scope this subcommand needs",
     ...STEPS,
   ]);
   expect(tokenRefusedLines(portal, hotcrpSite(SITE), f(500))).toStrictEqual([]);
@@ -131,10 +131,10 @@ test("a 403 names a missing scope; any other failure says nothing about the toke
   expect(
     tokenProblemLines(portal, hotcrpSite(SITE), {
       kind: "missing",
-      variable: "HOTCRP_TOKEN_127_0_0_1",
+      variable: "HOTCRP_TOKEN_127_0_0_1_9",
     }),
   ).toStrictEqual([
-    `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127_0_0_1 is not set`,
+    `no hotcrp token for ${SITE}: HOTCRP_TOKEN_127_0_0_1_9 is not set`,
     ...STEPS,
   ]);
 });

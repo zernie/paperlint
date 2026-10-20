@@ -165,7 +165,7 @@ export async function run(
       files: fs,
       presets: { files: fs, venuesDir: presetsDir() },
       cwd: o.cwd ?? "/w",
-      env: (n) => (o.env ?? { HOTCRP_TOKEN_127_0_0_1: "hct_secret" })[n],
+      env: (n) => (o.env ?? { HOTCRP_TOKEN_127_0_0_1_9: "hct_secret" })[n],
       site: (p) => ({
         ...hotcrpSite(p.url),
         connect: (token) => portal.portalFor(p, token),
@@ -182,8 +182,8 @@ export async function run(
 /** The steps every token message ends with, for the test site. */
 export const STEPS = [
   `  1. create a token on this site: ${SITE}/profile?t=developer (Account settings → Developer → API tokens), with the scopes submeta:read and document:read (show), submeta:write and document:write (update, new) — tick all four to use every subcommand`,
-  "  2. set it in your environment — never paste it into a chat: export HOTCRP_TOKEN_127_0_0_1=<the token>",
-  "  tokens are per hotcrp site: HOTCRP_TOKEN_127_0_0_1 is read for 127.0.0.1 alone, so two venues take two variables",
+  "  2. set it in your environment — never paste it into a chat: export HOTCRP_TOKEN_127_0_0_1_9=<the token>",
+  "  tokens are per hotcrp site: HOTCRP_TOKEN_127_0_0_1_9 is read for 127.0.0.1:9 alone, so two venues take two variables",
 ];
 
 export const AUTHORS = [

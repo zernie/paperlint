@@ -4,7 +4,7 @@ description: "Create, read or change a paper's submission on the venue's HotCRP 
 allowed-tools: [Read, Grep, Glob, Bash]
 ---
 
-<!-- vigiles:sha256:3b146d930a786656 compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:03bc35623dbd7911 compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — create, read and update the submission on the portal, then prove it landed
 
@@ -20,7 +20,7 @@ command prints that list, with the submission's page, after every run.
 ## Token
 
 One variable per site: `HOTCRP_TOKEN_MSR2027` for `msr2027.hotcrp.com`; for a site not on
-hotcrp.com, its whole host and path. A plain `HOTCRP_TOKEN` is not read. When the command reports
+hotcrp.com, its whole host (with a port other than the default) and path. A plain `HOTCRP_TOKEN` is not read. When the command reports
 a missing, misnamed or refused token, **relay its message to the author verbatim and stop**: it
 already says where on the site to make one, which permissions to tick, and which variable to set.
 🔴 Never ask for the token in chat, never print it, never write it to a file — the author sets it in

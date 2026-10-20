@@ -8,9 +8,13 @@
  */
 import { err, ok, type Result } from "./result.ts";
 
-/** The site's host as written in its URL; the URL itself when it does not parse. */
+/**
+ * The site's host as written in its URL, with its port when it is not the scheme's default
+ * (`review.example.org:8443`): two sites on one host differ by port. The URL itself when it does
+ * not parse.
+ */
 export const hostOf = (url: string): string =>
-  URL.canParse(url) ? new URL(url).hostname : url;
+  URL.canParse(url) ? new URL(url).host : url;
 
 /** The variables a lookup reads: the site's own, and the site-less one it refuses. */
 export interface TokenNames {

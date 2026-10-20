@@ -22,9 +22,10 @@ const HOSTED = ".hotcrp.com";
 
 /**
  * What names a site, and no other: on the hosted service the subdomain alone
- * (`msr2027.hotcrp.com` → `msr2027`); anywhere else the whole host and path
- * (`hotcrp.example.edu/conf2027`), because one install may serve several conferences under
- * paths and two hosts may share a first label.
+ * (`msr2027.hotcrp.com` → `msr2027`); anywhere else the whole host, with a port other than the
+ * scheme's default, and path (`hotcrp.example.edu/conf2027`, `review.example.org:8443/conf`),
+ * because one install may serve several conferences under paths or ports, and two hosts may share a
+ * first label.
  */
 function siteLabel(url: string): string {
   const host = hostOf(url);

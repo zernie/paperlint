@@ -22,8 +22,8 @@ npx paperlint submission update papers/my-paper --save    # changes the real sub
 | the environment              | `HOTCRP_TOKEN_<SITE>`, e.g. `HOTCRP_TOKEN_MSR2027`   | your API token for that site                                          |
 
 **The token** works on the site it was made on only, so each site has its own variable:
-`HOTCRP_TOKEN_MSR2027` for `msr2027.hotcrp.com`; for a site not on hotcrp.com, its whole host and
-path. A plain `HOTCRP_TOKEN` is not read. When the token is missing, misnamed or refused, the
+`HOTCRP_TOKEN_MSR2027` for `msr2027.hotcrp.com`; for a site not on hotcrp.com, its whole host
+(with a port other than the default) and path. A plain `HOTCRP_TOKEN` is not read. When the token is missing, misnamed or refused, the
 command prints where on that site to make one, which permissions to tick, and the exact variable
 to set. Set it in your environment — never paste it into a chat; paperlint never prints it.
 
