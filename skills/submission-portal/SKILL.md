@@ -4,7 +4,7 @@ description: "Create, read or change a paper's submission on the venue's HotCRP 
 allowed-tools: [Read, Grep, Glob, Bash]
 ---
 
-<!-- vigiles:sha256:7943ef9074c90c27 compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3b146d930a786656 compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — create, read and update the submission on the portal, then prove it landed
 
@@ -39,16 +39,18 @@ A missing key or token stops the command with exit 2 and a line naming what to s
 
 ## The procedure — always in this order
 
+`papers/my-paper` stands for the paper's folder.
+
 0. **Create it, once — only while the paper has no `submission` id.**
-   `npx paperlint submission new papers/<paper>` is a dry run: the portal checks it and keeps
+   `npx paperlint submission new papers/my-paper` is a dry run: the portal checks it and keeps
    nothing. It prints the title, the authors and the whole abstract (read from the source's
    `\begin{abstract}`). Read them with the author; an abstract the command cannot read, or one
    that reads wrong, is given as a plain-text file with `--abstract <file>`.
-1. **Ask the author** for an explicit yes, then `npx paperlint submission new papers/<paper> --save`,
+1. **Ask the author** for an explicit yes, then `npx paperlint submission new papers/my-paper --save`,
    and do the printed "on the site" list with the author.
-2. **Read it.** `npx paperlint submission show papers/<paper>` — status, the PDF the portal holds,
+2. **Read it.** `npx paperlint submission show papers/my-paper` — status, the PDF the portal holds,
    and `match`: whether it is the local build. Rebuild first if the local PDF is stale.
-3. **Dry run the change.** `npx paperlint submission update papers/<paper>` (`--abstract <file>`,
+3. **Dry run the change.** `npx paperlint submission update papers/my-paper` (`--abstract <file>`,
    `--submit` to mark it submitted). Exit 1 means the portal would refuse it — report why, stop.
 4. **Ask the author** for an explicit yes, then the same command with `--save`.
 5. **Prove it landed.** `show` again: `match` must read `yes — the portal holds this build`, and
@@ -58,16 +60,16 @@ A missing key or token stops the command with exit 2 and a line naming what to s
 author's yes in this conversation, never "to test", never because a dry run passed.
 
 ```bash
-npx paperlint build papers/<paper>
+npx paperlint build papers/my-paper
 # only while the paper has no submission id:
-npx paperlint submission new papers/<paper>
+npx paperlint submission new papers/my-paper
 # … the author reads the dry run and says yes …
-npx paperlint submission new papers/<paper> --save
-npx paperlint submission show papers/<paper>
-npx paperlint submission update papers/<paper> --submit
+npx paperlint submission new papers/my-paper --save
+npx paperlint submission show papers/my-paper
+npx paperlint submission update papers/my-paper --submit
 # … the author reads the dry run and says yes …
-npx paperlint submission update papers/<paper> --submit --save
-npx paperlint submission show papers/<paper>
+npx paperlint submission update papers/my-paper --submit --save
+npx paperlint submission show papers/my-paper
 ```
 
 ## Reading the answers
