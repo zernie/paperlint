@@ -6,7 +6,12 @@
  */
 import type * as Ast from "@unified-latex/unified-latex-types";
 import { describe, expect, it } from "vitest";
-import { runText, spanIn, type ProsePiece } from "../../domain/tex-document.ts";
+import {
+  OPAQUE,
+  runText,
+  spanIn,
+  type ProsePiece,
+} from "../../domain/tex-document.ts";
 import {
   bodyEmphasis,
   bodyProse,
@@ -779,12 +784,19 @@ const titleTexts = (t: string): readonly string[] =>
     )
     .map((h) => runText(h.title));
 
-describe("headings — a line break in a title", () => {
-  it("🔴 `\\\\`, `\\newline` and `\\linebreak` are line breaks, never an opaque command", () => {
+describe("headings — the paper's \\title as text", () => {
+  it("`\\\\`, `\\newline` and `\\linebreak` are line breaks, never an opaque command", () => {
     expect(
       ["A\\\\ B", "A\\\\[1ex] B", "A\\newline B", "A\\linebreak[3] B"].map(
         titleTexts,
       ),
     ).toEqual([["A\u2028 B"], ["A\u2028 B"], ["A\u2028 B"], ["A\u2028 B"]]);
+  });
+
+  it("plain words read as written, a run of spaces as one; a macro of the author's own stands as OPAQUE", () => {
+    expect(["Plain  Title", "\\ours{}: Lies"].map(titleTexts)).toEqual([
+      ["Plain Title"],
+      [`${OPAQUE}: Lies`],
+    ]);
   });
 });

@@ -466,14 +466,12 @@ function placeIn(paper: PaperSource, offset: number): string {
  * spliced in as the build recorded them, as plain text — or why it cannot be read without guessing.
  */
 function sourceAbstract(
-  paperDir: string,
-  source: string | null,
+  paper: PaperSource | null,
   deps: SubmissionDeps,
 ): Result<string, string> {
   const instead = "give the abstract with --abstract <file>, a plain-text file";
-  if (source === null)
+  if (paper === null)
     return err(`no ${MAIN} to read the abstract from — ${instead}`);
-  const paper = readPaper(join(paperDir, MAIN), source, deps);
   const r = deps.latex.abstractText(paper.text);
   if (r.ok) return r;
   const guess = "paperlint sends no text it would have to guess";
@@ -634,13 +632,21 @@ function titleAndAbstract(
   const own = abstractOf(a, deps);
   if (!own.ok) return own;
   const srcBytes = bytesAt(deps.files, join(a.paperDir, MAIN));
-  const source = srcBytes === null ? null : new TextDecoder().decode(srcBytes);
+  // The paper as the build read it: paper.tex with the files it includes spliced in.
+  const paper =
+    srcBytes === null
+      ? null
+      : readPaper(
+          join(a.paperDir, MAIN),
+          new TextDecoder().decode(srcBytes),
+          deps,
+        );
   const metadata = pdfMetadata(a.paperDir, pdf, deps);
-  const title = titleOf(source, deps.latex, metadata);
+  const title = titleOf(paper?.text ?? null, deps.latex, metadata);
   if (!title.ok) return title;
   const abstract =
     own.value === null
-      ? sourceAbstract(a.paperDir, source, deps)
+      ? sourceAbstract(paper, deps)
       : ok(own.value.replace(/\s+/g, " "));
   return abstract.ok
     ? ok({ title: title.value, abstract: abstract.value })

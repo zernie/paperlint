@@ -4,7 +4,9 @@ import { expect, test } from "vitest";
 import { builtPaper } from "../test/recorded-fixture.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import { absolutePath } from "./domain/paths.ts";
-import { ok } from "./domain/result.ts";
+import { err, ok } from "./domain/result.ts";
+import { OPAQUE } from "./domain/tex-document.ts";
+import type { LatexReader } from "./ports/latex.ts";
 import { titleOf } from "./submission.ts";
 import {
   PAPER,
@@ -121,7 +123,7 @@ test('new without "authors": refused with the key to fill — never guessed, not
   expect(r.code).toBe(2);
   expect(r.seen[0]?.calls).toStrictEqual([]);
   expect(r.errs).toStrictEqual([
-    `${PAPER}/paperlint.json: no "authors" — add "authors": [{ "name": "…", "email": "…", "affiliation": "…" }], every author in the paper's order, as 127.0.0.1 should record them; paperlint never guesses them`,
+    `${PAPER}/paperlint.json: no "authors" — add "authors": [{ "name": "…", "email": "…", "affiliation": "…" }], every author in the paper's order, as 127.0.0.1:9 should record them; paperlint never guesses them`,
   ]);
 });
 
@@ -149,6 +151,32 @@ test("an abstract in a file paper.tex includes is read there, as the build recor
           [
             { path: "paper.tex", role: "body" },
             { path: "abstract.tex", role: "body" },
+          ],
+        ),
+      }),
+    },
+  );
+  expect(r.code, r.errs.join("\n")).toBe(0);
+  expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: false }]]);
+});
+
+test("a \\title in a file paper.tex includes is read there, as the build recorded it", async () => {
+  const title = "\\title{Agents That\\\\ Lie}\n";
+  expect(DEFAULT_TEX).toContain(title);
+  const r = await run(
+    { sub: "new" },
+    {
+      files: files({
+        paper: { extends: "../../venue.jsonc", authors: AUTHORS },
+        extra: builtPaper(
+          PAPER,
+          {
+            "paper.tex": DEFAULT_TEX.replace(title, "\\input{front}\n"),
+            "front.tex": title,
+          },
+          [
+            { path: "paper.tex", role: "body" },
+            { path: "front.tex", role: "body" },
           ],
         ),
       }),
@@ -307,34 +335,41 @@ test("an abstract paperlint cannot read without guessing is refused, naming the 
   ]);
 });
 
-test("titleOf: \\title as text; an author's macro in it → the PDF's Title; neither → the fix", () => {
-  const src = (t: string) =>
-    `\\documentclass{article}\\title{${t}}\\begin{document}\\end{document}`;
-  expect(titleOf(src("Plain  Title"), latexReader, null)).toStrictEqual({
-    ok: true,
-    value: "Plain Title",
+test("titleOf: the source's \\title as text; one the reader cannot read whole → the PDF's Info Title, then its XMP dc:title; neither → the fix", () => {
+  /** A LaTeX reader whose source `"plain"` has a readable title, `"opaque"` one it cannot read, any other none. */
+  const titled = (text: string): Pick<LatexReader, "headings"> => ({
+    headings: (src) =>
+      src === "none"
+        ? []
+        : [
+            {
+              command: { kind: "title" },
+              argument: "title",
+              title: { segments: [{ text, at: 0 }] },
+            },
+          ],
   });
-  expect(
-    titleOf(src("\\ours{}: Lies"), latexReader, { Title: "TestLie: Lies" }),
-  ).toStrictEqual({ ok: true, value: "TestLie: Lies" });
-  expect(
-    titleOf(src("\\ours{}: Lies"), latexReader, {
-      "dc:title": "From The XMP",
-    }),
-  ).toStrictEqual({ ok: true, value: "From The XMP" });
-  expect(
-    titleOf(null, latexReader, { Title: "Info", "dc:title": "XMP" }),
-  ).toStrictEqual({ ok: true, value: "Info" });
-  expect(titleOf(src("\\ours{}: Lies"), latexReader, {})).toStrictEqual({
-    ok: false,
-    error:
+  const plain = titled("Plain \u2028 Title");
+  const opaque = titled(`${OPAQUE}: Lies`);
+  expect([
+    titleOf("src", plain, { Title: "Ignored" }),
+    titleOf("src", opaque, { Title: "Info", "dc:title": "XMP" }),
+    titleOf("src", opaque, { "dc:title": "From The XMP" }),
+    titleOf(null, plain, { Title: "Info" }),
+    titleOf("src", opaque, {}),
+    titleOf("none", plain, null),
+  ]).toStrictEqual([
+    ok("Plain Title"),
+    ok("Info"),
+    ok("From The XMP"),
+    ok("Info"),
+    err(
       "the \\title in paper.tex uses a command paperlint does not read («…: Lies»), and the PDF names no Title — set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild",
-  });
-  expect(titleOf(null, latexReader, null)).toStrictEqual({
-    ok: false,
-    error:
+    ),
+    err(
       "no \\title in paper.tex, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild",
-  });
+    ),
+  ]);
 });
 
 test("new --save, but paperlint.json changed under it: the id is printed with the line to add by hand, exit 1", async () => {
