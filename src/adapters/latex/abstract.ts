@@ -5,7 +5,7 @@
  * unified-latex does the TeX: util-macros reads `\newcommand`/`\renewcommand`/`\providecommand` and
  * expands them, util-ligatures turns `--`, ``` `` ```, `~`, `\%`, `\ldots`, accents… into the
  * characters TeX prints. The macro categories are the adapter's shared sets (parse.ts, headings.ts).
- * What is ours is the policy. A macro the source defines once is expanded (`\def`, which
+ * What is ours is the policy. A macro the source defines once, before the abstract, is expanded (`\def`, which
  * util-macros does not read, by hand). One it defines more than once is refused with every
  * definition's place: which one TeX uses depends on order, groups and the definer
  * (`\providecommand` keeps an earlier one), and paperlint does not reimplement that. Refused too, with
@@ -48,6 +48,8 @@ import {
 interface Definition {
   readonly body: readonly Node[] | null;
   readonly at: readonly number[];
+  /** Where this body's own definition stands: the last one read. */
+  readonly own: number;
 }
 type Text = Result<string, Exclude<AbstractProblem, { readonly kind: "none" }>>;
 
@@ -96,6 +98,7 @@ function definitionsIn(
       {
         body: d.body,
         at: found.filter((e) => e.name === d.name).map((e) => e.at),
+        own: d.at,
       },
     ]),
   );
@@ -110,6 +113,8 @@ const joined = (nodes: readonly Node[], one: (n: Node) => Text): Text =>
   }, ok(""));
 
 interface Reading {
+  /** Where `\\begin{abstract}` stands: a definition from here on is not applied backwards. */
+  readonly start: number;
   readonly src: string;
   readonly defs: ReadonlyMap<string, Definition>;
 }
@@ -120,6 +125,12 @@ function definedProblem(m: Macro, r: Reading): Text | null {
   if (def === undefined) return null;
   if (def.at.length > 1)
     return err({ kind: "redefined", name: m.content, at: def.at });
+  if (def.own >= r.start)
+    return err({
+      kind: "unreadable",
+      what: `\\${m.content}, which the paper defines only after the abstract begins`,
+      at: def.own,
+    });
   const why = def.body === null ? "takes arguments" : "expands into itself";
   return refuse(`\\${m.content}, which ${why}`, m);
 }
@@ -211,9 +222,11 @@ const paragraph = (raw: string): string =>
 function typeset(
   content: readonly Node[],
   defs: ReadonlyMap<string, Definition>,
+  start: number,
 ): Readonly<Ast.Root> {
+  // Expanded: a macro with one definition, standing before the abstract.
   const plain = [...defs].flatMap(([name, d]) =>
-    d.body === null || d.at.length > 1
+    d.body === null || d.at.length > 1 || d.own >= start
       ? []
       : [{ name, body: structuredClone([...d.body]) }],
   );
@@ -251,7 +264,8 @@ export function abstractOfTree(
   );
   if (env?.type !== "environment") return err({ kind: "none" });
   const defs = definitionsIn(nodes);
-  const body = typeset(env.content, defs);
-  const t = joined(body.content, (n) => textNode(n, { src, defs }));
+  const start = at(env);
+  const body = typeset(env.content, defs, start);
+  const t = joined(body.content, (n) => textNode(n, { src, defs, start }));
   return t.ok ? ok(paragraph(t.value)) : t;
 }

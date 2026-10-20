@@ -180,7 +180,23 @@ describe("abstractText — a macro defined more than once is refused, never reso
     ]);
   });
 
-  it("one definition, wherever it stands, is expanded", () => {
+  it("a single definition at or after \\begin{abstract} is refused at that definition, not applied backwards", () => {
+    const src = doc(
+      "",
+      "\\today.\n\\end{abstract}\\def\\today{new}\\begin{abstract}",
+    );
+    const r = latexReader.abstractText(src);
+    expect(
+      r.ok || r.error.kind !== "unreadable"
+        ? r
+        : { what: r.error.what, at: src.slice(r.error.at, r.error.at + 11) },
+    ).toStrictEqual({
+      what: "\\today, which the paper defines only after the abstract begins",
+      at: "\\def\\today{",
+    });
+  });
+
+  it("one definition before the abstract, even in a closed group, is expanded", () => {
     expect(text("{\\gdef\\x{once}}", "\\x.")).toEqual({
       ok: true,
       value: "once.",
