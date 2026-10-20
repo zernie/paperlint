@@ -239,7 +239,7 @@ test("usage: refused before anything is read, exit 2", async () => {
 
 test("usage: a subcommand is required, one paper folder, update-only flags refused on show", () => {
   expect(usageProblem({ ...ARGS, sub: undefined }) ?? "").toMatch(
-    /needs a subcommand: new or show or update — got ``/,
+    /needs a subcommand: new or show or update or topics — got ``/,
   );
   expect(usageProblem({ ...ARGS, sub: "upload" }) ?? "").toMatch(
     /got `upload`/,

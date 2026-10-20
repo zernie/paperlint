@@ -244,4 +244,9 @@ export const WANT: NewSubmission = {
     { name: "Bob Bobson", email: "bob@example.org", affiliation: null },
   ],
   pdf: { name: "paper.pdf", bytes: PDF },
+  fields: {},
 };
+
+/** What `new` leaves to the site of a venue whose preset records none of the form's own fields. */
+export const ON_THE_SITE =
+  '  - on the site: every field of the form the venue preset does not record in "submission_fields" (with none recorded: the topics, the PC conflicts, a paper type, consent boxes …)';
