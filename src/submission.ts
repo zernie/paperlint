@@ -170,7 +170,12 @@ export interface SubmissionTarget {
   readonly config: string;
   /** The authors the paper declares for the portal; null when it declares none. */
   readonly authors: readonly Author[] | null;
-  /** The paper's answers to the venue's own form fields, checked against `venueFields`. */
+  /**
+   * The paper's answers to the venue's own form fields, checked against `venueFields`: only `new`
+   * and `update` send them, so only they stop on a problem — `show` and `topics` read past it.
+   */
+  readonly answers: Result<FieldValues, string>;
+  /** The answers to send: `answers`' value once a sending subcommand checked it; empty otherwise. */
   readonly fields: FieldValues;
   /** The venue's own form fields, as its preset records them; null when it records none. */
   readonly venueFields: VenueFields | null;
@@ -235,14 +240,13 @@ function targetOf(
     p.settings.cycles === null
       ? []
       : currentDeadlines(p.settings.cycles.current);
-  const fields = fieldsOf(paperDir, p);
-  if (!fields.ok) return fields;
   return ok({
     portal: portal.value,
     id: p.settings.submission?.id ?? null,
     config: configOf(paperDir),
     authors: p.settings.authors,
-    fields: fields.value,
+    answers: fieldsOf(paperDir, p),
+    fields: {},
     venueFields: p.preset.submissionFields,
     accepted: p.settings.cycles?.current.kind === "accepted",
     pdf: join(paperDir, p.settings.pdf ?? "paper.pdf"),
@@ -833,7 +837,26 @@ async function runNew(
 }
 
 /** The subcommands that run before the paper has a submission id: `new` creates it, `topics` needs none. */
-const NEEDS_NO_ID: readonly Subcommand[] = ["new", "topics"];
+const NEEDS_NO_ID: readonly string[] = ["new", "topics"];
+/** The subcommands that send the paper's answers to the venue's fields. */
+const SENDS_FIELDS: readonly string[] = ["new", "update"];
+
+/**
+ * What the subcommand needs before a token is looked up: the submission id (`show`, `update`) and
+ * the paper's checked answers (`new`, `update`) — or the line naming what to fix.
+ */
+function readyFor(
+  sub: string | undefined,
+  t: SubmissionTarget,
+): Result<
+  { readonly id: number | null; readonly fields: FieldValues },
+  string
+> {
+  const id = NEEDS_NO_ID.some((s) => s === sub) ? ok(null) : idOf(t);
+  if (!id.ok) return id;
+  const fields = SENDS_FIELDS.some((s) => s === sub) ? t.answers : ok({});
+  return fields.ok ? ok({ id: id.value, fields: fields.value }) : fields;
+}
 
 /** The checkbox field the preset records the portal's topics under: the one named `topics`. */
 const TOPICS = "topics";
@@ -933,8 +956,8 @@ export async function runSubmission(
   const paperDir = resolve(deps.cwd, a.paperDir);
   const t = submissionTarget(paperDir, deps.presets);
   if (!t.ok) return (deps.err(t.error), 2);
-  const id = NEEDS_NO_ID.some((s) => s === a.sub) ? ok(null) : idOf(t.value);
-  if (!id.ok) return (deps.err(id.error), 2);
+  const ready = readyFor(a.sub, t.value);
+  if (!ready.ok) return (deps.err(ready.error), 2);
   const site = deps.site(t.value.portal);
   const found = lookUpToken(tokenNames(site), deps.env);
   if (!found.ok) return tokenMissing(t.value.portal, site, found.error, deps);
@@ -945,10 +968,11 @@ export async function runSubmission(
     portalSite: site,
     refused: (f) => tokenRefusedLines(t.value.portal, site, f),
   };
-  if (a.sub === "topics") return runTopics(t.value, portal, withToken);
-  if (id.value === null)
-    return runNew(t.value, portal, { ...a, pdfPath, paperDir }, withToken);
-  const target = { ...t.value, id: id.value };
+  const sending = { ...t.value, fields: ready.value.fields };
+  if (a.sub === "topics") return runTopics(sending, portal, withToken);
+  if (ready.value.id === null)
+    return runNew(sending, portal, { ...a, pdfPath, paperDir }, withToken);
+  const target = { ...sending, id: ready.value.id };
   return a.sub === "show"
     ? runShow(target, portal, pdfPath, withToken)
     : runUpdate(target, portal, { ...a, pdfPath }, withToken);

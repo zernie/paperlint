@@ -564,6 +564,7 @@ test("a portal that does not answer is unreachable, with the network's words", a
     await down.show(7),
     await down.update(7, CHANGE, { save: false }),
     await down.create(NEW, { save: false }),
+    await down.options(),
   ]) {
     assert.equal(!r.ok && r.error.kind, "unreachable");
     assert.ok(!r.ok && r.error.kind === "unreachable" && r.error.detail !== "");
@@ -601,6 +602,14 @@ test("🔴 parseOptions: the recorded msr2027 completions → its 41 topics, the
   assert.ok(r.value.topics.includes("SE Topic: AI for software engineering"));
   assert.ok(r.value.topics.includes("Performance analysis and testing"));
   assert.ok(!r.value.topics.includes("SE Topic"));
+  // A completion that is no string is no topic.
+  assert.deepEqual(
+    parseOptions(200, {
+      ok: true,
+      searchcompletion: [{ q: "x" }, 'topic:"Only"'],
+    }),
+    { ok: true, value: { topics: ["Only"] } },
+  );
   assert.deepEqual(parseOptions(401, parsed("get-noauth")), {
     ok: false,
     error: {

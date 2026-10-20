@@ -166,6 +166,65 @@ test("topics: a preset that records none — the portal's list, and what to reco
   ]);
 });
 
+test("🔴 show and topics read past a paper's invalid fields — the commands that diagnose the drift", async () => {
+  const bad = paperWith({ topics: ["Topic A"] });
+  const shown = await run({ sub: "show" }, { files: bad });
+  expect(shown.code).toBe(0);
+  const topics = await run(
+    { sub: "topics" },
+    {
+      files: bad,
+      portal: fakePortal({
+        options: ok({ topics: ["Group: Topic A", "Topic B"] }),
+      }),
+    },
+  );
+  expect(topics.code).toBe(0);
+});
+
+test("🔴 update on a venue whose form requires a topic, the paper giving no fields: refused, nothing sent", async () => {
+  const r = await run({ sub: "update" }, { files: paperWith(undefined) });
+  expect(r.code).toBe(2);
+  expect(r.seen).toStrictEqual([]);
+  expect(r.errs[0]).toMatch(/paperlint\.json: "fields"\.topics: /);
+});
+
+test("🔴 new: a topic the portal did not take — said, and exit 1 even though it created the submission", async () => {
+  const fs = files({
+    submissionFields: SUBMISSION_FIELDS,
+    paper: {
+      extends: "../../venue.jsonc",
+      authors: [{ name: "Ada", email: "ada@example.org" }],
+      fields: { topics: ["Topic B"] },
+    },
+    extra: {
+      [`${PAPER}/paper.tex`]:
+        "\\title{T}\\begin{document}\\begin{abstract}An abstract.\\end{abstract}\\end{document}",
+    },
+  });
+  const portal = fakePortal({
+    create: ok({
+      httpStatus: 200,
+      valid: true,
+      changes: ["new", "title"],
+      messages: [
+        {
+          message: "At least one selection required",
+          field: "topics",
+          status: 2,
+        },
+      ],
+      dryRun: true,
+      id: null,
+    }),
+  });
+  const r = await run({ sub: "new" }, { files: fs, portal });
+  expect(r.code).toBe(1);
+  expect(r.out).toContain(
+    'NOT TAKEN     topics: the portal kept none of ["Topic B"] — an option it does not know is dropped without an error; `paperlint submission topics` lists what it offers',
+  );
+});
+
 test("topics: a writing flag is refused — topics reads", async () => {
   const r = await run({ sub: "topics", save: true });
   expect(r.code).toBe(2);

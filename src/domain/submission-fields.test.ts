@@ -1,6 +1,6 @@
 /** A paper's answers to its venue's own form fields: checked against the preset's kinds before anything is sent. */
 import assert from "node:assert/strict";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import {
   droppedFields,
   parsePaperFields,
@@ -38,11 +38,7 @@ const VENUE: VenueFields = {
   },
 };
 
-test("parsePaperFields: absent → nothing to send; every kind's value passes as given", () => {
-  assert.deepEqual(parsePaperFields(null, VENUE, "msr.jsonc"), {
-    ok: true,
-    value: {},
-  });
+test("parsePaperFields: absent on a venue that records no fields → nothing to send; every kind's value passes as given", () => {
   assert.deepEqual(parsePaperFields(null, null, "msr.jsonc"), {
     ok: true,
     value: {},
@@ -115,6 +111,31 @@ test("🔴 parsePaperFields: each other wrong answer is refused by key", () => {
   );
   assert.match(refused({}), /^"fields"\.topics: /);
   assert.match(refused([]), /^"fields": /);
+});
+
+test("🔴 parsePaperFields: no fields at all, on a venue whose form requires one — refused, not sent empty", () => {
+  const r = parsePaperFields(null, VENUE, "msr.jsonc");
+  expect(r.ok ? "accepted" : r.error).toMatch(/^"fields"\.topics: /);
+});
+
+test("parsePaperFields: an optional checkbox list may be empty; a required text may not", () => {
+  const venue: VenueFields = {
+    ...VENUE,
+    fields: {
+      tags: {
+        kind: "checkboxes",
+        required: false,
+        label: null,
+        options: ["x"],
+      },
+      title2: { kind: "text", required: true, label: null, options: [] },
+    },
+  };
+  expect(parsePaperFields({ tags: [], title2: "t" }, venue, "v")).toStrictEqual(
+    { ok: true, value: { tags: [], title2: "t" } },
+  );
+  const r = parsePaperFields({ title2: "  " }, venue, "v");
+  expect(r.ok ? "accepted" : r.error).toMatch(/^"fields"\.title2: /);
 });
 
 test("🔴 parsePaperFields: fields on a venue whose preset records none — refused, naming where it looked", () => {

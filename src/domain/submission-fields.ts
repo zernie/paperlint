@@ -120,8 +120,9 @@ function problemOf(issue: z.core.$ZodIssue, v: VenueFields): string {
 }
 
 /**
- * A paper's `fields` key, checked against its venue's form → the values to send (empty when the
- * paper gives none), or one line saying what is wrong. Pure.
+ * A paper's `fields` key, checked against its venue's form → the values to send, or one line saying
+ * what is wrong. Pure. A paper that gives none answers nothing: fine for a venue whose preset records
+ * no fields, refused when the venue's form requires one.
  *
  * @param raw    the paper's `fields`, null when absent
  * @param venue  the venue preset's `submission_fields`; null when it records none
@@ -132,19 +133,16 @@ export function parsePaperFields(
   venue: VenueFields | null,
   where: string,
 ): Result<FieldValues, string> {
-  if (raw === null) return ok({});
   if (venue === null)
-    return err(
-      `"fields" is set, but the venue preset records no "submission_fields" (read: ${where}) — record the form's fields in the venue's preset first, or drop "fields"`,
-    );
-  const parsed = fieldValuesSchema(venue).safeParse(raw);
-  if (parsed.success) return ok(parsed.data);
-  const [first] = parsed.error.issues;
-  return err(
-    first === undefined
-      ? `"fields" does not match the venue's form`
-      : problemOf(first, venue),
-  );
+    return raw === null
+      ? ok({})
+      : err(
+          `"fields" is set, but the venue preset records no "submission_fields" (read: ${where}) — record the form's fields in the venue's preset first, or drop "fields"`,
+        );
+  const parsed = fieldValuesSchema(venue).safeParse(raw ?? {});
+  return parsed.success
+    ? ok(parsed.data)
+    : err(parsed.error.issues.map((i) => problemOf(i, venue)).join("; "));
 }
 
 /**
