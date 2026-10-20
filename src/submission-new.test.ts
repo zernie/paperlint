@@ -21,6 +21,7 @@ import {
   DEFAULT_TEX,
   newFiles,
   WANT,
+  ON_THE_SITE,
 } from "../test/submission-fixtures.ts";
 
 test("new: a dry run by default — title from \\title, abstract from \\begin{abstract} with the author's macro expanded, the declared authors, the PDF", async () => {
@@ -40,9 +41,8 @@ test("new: a dry run by default — title from \\title, abstract from \\begin{ab
     "HTTP          200",
     "valid         yes",
     "changes       new, title, abstract, authors, submission",
-    `do on the site, ${SITE}/paper/<its number> — paperlint sends only the title, the abstract, the authors and the PDF:`,
-    "  - PC conflicts (HotCRP's API takes them as pc_conflicts; paperlint does not send them)",
-    "  - topics, and every field the venue adds (paper type, artifact, consent boxes …)",
+    `still to do for ${SITE}/paper/<its number> — paperlint sent the title, the abstract, the authors and the PDF:`,
+    ON_THE_SITE,
     "  - then mark it submitted: npx paperlint submission update papers/p --submit (a dry run; --save after your yes)",
   ]);
   // A dry run writes nothing.
@@ -67,7 +67,7 @@ test("new --save: the id the portal chose is written into paperlint.json, and `s
     `next          npx paperlint submission show papers/p — it should say "match yes"`,
   ]);
   expect(r.out).toContain(
-    `do on the site, ${SITE}/paper/42 — paperlint sends only the title, the abstract, the authors and the PDF:`,
+    `still to do for ${SITE}/paper/42 — paperlint sent the title, the abstract, the authors and the PDF:`,
   );
   const written = new TextDecoder().decode(
     fs.readBytes(absolutePath(`${PAPER}/paperlint.json`)) ?? new Uint8Array(),

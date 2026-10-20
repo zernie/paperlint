@@ -9,6 +9,7 @@ import type {
   CreateOutcome,
   NewSubmission,
   PortalFailure,
+  PortalOptions,
   SubmissionChange,
   SubmissionView,
   UpdateOutcome,
@@ -34,6 +35,8 @@ export interface SubmissionPortal {
     paper: NewSubmission,
     o: { readonly save: boolean },
   ): Promise<Result<CreateOutcome, PortalFailure>>;
+  /** What the form offers an author to choose: its topics. */
+  options(): Promise<Result<PortalOptions, PortalFailure>>;
 }
 
 /** How an author makes a token for a portal site, in the words the command prints. */

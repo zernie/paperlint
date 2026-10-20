@@ -1,7 +1,7 @@
 /**
  * A HotCRP site before any token, as the `PortalSite` port: the variable its token is read from,
  * where on the site an author makes one and with which scopes, what `submission new` leaves to the
- * site, a submission's page — and the API, once there is a token. Every word here is HotCRP's.
+ * site (what the venue preset records no field for), a submission's page — and the API, once there is a token. Every word here is HotCRP's.
  */
 import type { PortalSite } from "../../ports/submission-portal.ts";
 import { hotcrpPortal } from "./portal.io.ts";
@@ -25,8 +25,7 @@ export const hotcrpSite = (url: string): PortalSite => ({
       "submeta:read and document:read (show), submeta:write and document:write (update, new) — tick all four to use every subcommand",
   },
   siteOnly: [
-    "PC conflicts (HotCRP's API takes them as pc_conflicts; paperlint does not send them)",
-    "topics, and every field the venue adds (paper type, artifact, consent boxes …)",
+    'every field of the form the venue preset does not record in "submission_fields" (with none recorded: the topics, the PC conflicts, a paper type, consent boxes …)',
   ],
   submissionPage: (id) =>
     `${url}/paper/${id === null ? "<its number>" : String(id)}`,

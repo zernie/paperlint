@@ -21,7 +21,12 @@ test("update: a dry run by default — the paper's PDF sent, nothing saved, exit
     [
       "update",
       7,
-      { pdf: { name: "paper.pdf", bytes: PDF }, abstract: null, submit: false },
+      {
+        pdf: { name: "paper.pdf", bytes: PDF },
+        abstract: null,
+        submit: false,
+        fields: {},
+      },
       { save: false },
     ],
   ]);
@@ -58,6 +63,7 @@ test("update --save --submit --abstract --pdf: all of it sent, and said to be sa
         pdf: { name: "other.pdf", bytes: PDF },
         abstract: "The abstract.",
         submit: true,
+        fields: {},
       },
       { save: true },
     ],

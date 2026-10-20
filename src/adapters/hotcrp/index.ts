@@ -11,6 +11,7 @@ export {
 } from "./portal.io.ts";
 export {
   parseCreate,
+  parseOptions,
   parseShow,
   parseUpdate,
   sha256OfHash,

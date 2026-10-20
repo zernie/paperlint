@@ -4,7 +4,8 @@
  * Only the fields the command uses are read; every other key HotCRP sends is dropped here. The field
  * names are HotCRP's (`devel/openapi.json` and `devel/apidoc/submissions.md` in kohler/hotcrp):
  * `GET /api/paper` answers `{ ok, paper, message_list? }`, `POST /api/paper` answers
- * `{ ok, valid, change_list, message_list, dry_run?, pid }`. A document's `hash` is
+ * `{ ok, valid, change_list, message_list, dry_run?, pid }`, `GET /api/searchcompletion` answers
+ * `{ ok, searchcompletion: [<completion>, …] }`. A document's `hash` is
  * `sha2-<64 hex>` when HotCRP stored a sha256; timestamps are Unix seconds.
  */
 import { z } from "zod";
@@ -15,6 +16,7 @@ import type {
   PortalDocument,
   PortalFailure,
   PortalMessage,
+  PortalOptions,
   SubmissionView,
   UpdateOutcome,
 } from "../../domain/submission.ts";
@@ -70,9 +72,15 @@ export function sha256OfHash(hash: string): Sha256 | null {
   return hex === undefined ? null : parseSha256(hex);
 }
 
-/** HotCRP prefixes a message with its format (`<0>` plain text, `<5>` HTML); the text is the rest. */
-const textOf = (message: string | undefined): string =>
-  (message ?? "").replace(/^<\d+>/, "").trim();
+/**
+ * HotCRP prefixes a message with its format (`<0>` plain text, `<5>` HTML); the text is the rest,
+ * an HTML one's tags dropped («You may have missed conflicts of interest with <a href=…>…</a>»).
+ */
+function textOf(message: string | undefined): string {
+  const m = /^<(\d+)>/.exec(message ?? "");
+  const rest = (message ?? "").slice(m?.[0].length ?? 0);
+  return (m?.[1] === "5" ? rest.replace(/<[^>]*>/g, "") : rest).trim();
+}
 
 /** The messages that say something: HotCRP also sends entries with no text, which print as blanks. */
 const messagesOf = (
@@ -199,4 +207,37 @@ export function parseCreate(
     ...u.value,
     id: saved && typeof pid === "number" ? pid : null,
   });
+}
+
+const OptionsBody = z.object({
+  ok: z.literal(true),
+  searchcompletion: z.array(z.unknown()),
+});
+
+const TOPIC = /^topic:"(.+)"$/s;
+
+/** A quoted search operand with its backslash escapes undone: the name as the form spells it. */
+const unquoted = (quoted: string): string => quoted.replace(/\\(.)/gs, "$1");
+
+/**
+ * `GET /api/searchcompletion` → the topics an author can choose. A completion `topic:"<name>"` names
+ * a topic; a name that only groups others (`SE Topic`, beside `SE Topic: Human aspects`) is not one
+ * a submission can carry — measured 2026-10-20, HotCRP drops it — so it is left out.
+ */
+export function parseOptions(
+  httpStatus: number,
+  body: unknown,
+): Result<PortalOptions, PortalFailure> {
+  const status = statusOf(httpStatus, body);
+  const b = OptionsBody.safeParse(body);
+  if (!b.success || !is2xx(status))
+    return err(refusal(status, body, "the answer has no `searchcompletion`"));
+  const names = b.data.searchcompletion
+    .map((c) => (typeof c === "string" ? TOPIC.exec(c)?.[1] : undefined))
+    .filter((n) => n !== undefined)
+    .map(unquoted);
+  const groups = new Set(
+    names.filter((n) => names.some((x) => x.startsWith(`${n}: `))),
+  );
+  return ok({ topics: names.filter((n) => !groups.has(n)) });
 }

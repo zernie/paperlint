@@ -117,6 +117,47 @@
         }
       }
     },
+    "submission_fields": {
+      "description": "The fields the edition's submission form asks beyond the title, the abstract, the authors and the PDF, as READ — where (`source`: `portal`, through the portal's API; `form`, copied from the form), from which page and on which day. Read by `paperlint submission`: a paper answers them in its paperlint.json `fields`, checked against these before anything is sent, so an option the form does not offer is refused here instead of dropped by the portal without a word. `fields` maps the portal API's key to its kind: `checkboxes` (a list of `options`, HotCRP's topics spelled \"Group: Topic\"), `text`, `email`, `pc_conflicts` (PC member's email → conflict type). `required`: the form does not complete without it. A child's value replaces its parent's.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "url", "read", "fields"],
+      "properties": {
+        "source": { "type": "string", "enum": ["portal", "form"] },
+        "url": { "type": "string", "pattern": "^https?://[^\\s/]+[^\\s]*$" },
+        "read": {
+          "description": "The day the fields were read, YYYY-MM-DD.",
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "fields": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind"],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["checkboxes", "text", "email", "pc_conflicts"]
+              },
+              "required": { "type": "boolean" },
+              "label": { "type": "string", "minLength": 1 },
+              "options": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            },
+            "if": { "properties": { "kind": { "const": "checkboxes" } } },
+            "then": { "required": ["options"] },
+            "else": { "not": { "required": ["options"] } }
+          }
+        }
+      }
+    },
     "required_sections": {
       "description": "Sections the venue requires, read by `tex/required-section`. Each is a `\\section` or `\\section*` whose title equals `title` once whitespace is collapsed. `position: \"last\"`: after every section of the body (the ones before the appendix and the bibliography); it may stand after the bibliography. A child preset's list replaces its parent's.",
       "type": "array",

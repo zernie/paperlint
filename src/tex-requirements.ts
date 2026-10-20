@@ -36,6 +36,12 @@ import {
 } from "./domain/talk.ts";
 import type { VenuePortal } from "./domain/submission.ts";
 import type { Reading } from "./domain/deadline.ts";
+import {
+  RESERVED_FIELD_KEYS,
+  reservedKey,
+  type FieldKind,
+  type VenueFields,
+} from "./domain/submission-fields.ts";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -222,6 +228,8 @@ export interface PresetFile {
   readonly portal: VenuePortal | null;
   /** The edition's deadlines as they were read; null when the file names none (a child's list replaces its parent's). */
   readonly deadlines: readonly Reading[] | null;
+  /** The fields the edition's submission form asks, as read; null when the file records none. */
+  readonly submissionFields: VenueFields | null;
 }
 
 type KindsJson = Readonly<
@@ -280,6 +288,54 @@ interface PresetBodyJson {
   readonly talk?: VenueTalkJson;
   readonly portal?: VenuePortal;
   readonly deadlines?: readonly Reading[];
+  readonly submission_fields?: SubmissionFieldsJson;
+}
+
+/** A preset's `submission_fields` after the schema accepted it. */
+interface SubmissionFieldsJson {
+  readonly source: VenueFields["source"];
+  readonly url: string;
+  readonly read: string;
+  readonly fields: Readonly<
+    Record<
+      string,
+      {
+        readonly kind: FieldKind;
+        readonly required?: boolean;
+        readonly label?: string;
+        readonly options?: readonly string[];
+      }
+    >
+  >;
+}
+
+/** A preset's `submission_fields`, or null when it records none; a reserved field name is refused. */
+function submissionFieldsOf(
+  j: SubmissionFieldsJson | undefined,
+  file: string,
+): VenueFields | null {
+  if (j === undefined) return null;
+  const reserved = reservedKey(Object.keys(j.fields));
+  if (reserved !== null)
+    throw new Error(
+      `${file}: "submission_fields" names "${reserved}", which paperlint sends itself (${RESERVED_FIELD_KEYS.join(", ")}) — a field of that name would overwrite it`,
+    );
+  return {
+    source: j.source,
+    url: j.url,
+    read: j.read,
+    fields: Object.fromEntries(
+      Object.entries(j.fields).map(([key, f]) => [
+        key,
+        {
+          kind: f.kind,
+          required: f.required ?? false,
+          label: f.label ?? null,
+          options: f.options ?? [],
+        },
+      ]),
+    ),
+  };
 }
 
 /** An optional field as the typed preset holds it: absent is null. */
@@ -424,6 +480,16 @@ function deadlinesOf(
   }));
 }
 
+/** A preset's blocks about its portal: where, the deadlines read there, the form's own fields. */
+const portalBlocks = (
+  j: PresetJson,
+  file: string,
+): Pick<PresetFile, "portal" | "deadlines" | "submissionFields"> => ({
+  portal: portalOf(j.portal),
+  deadlines: deadlinesOf(j.deadlines, file),
+  submissionFields: submissionFieldsOf(j.submission_fields, file),
+});
+
 /**
  * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
  * of a preset: the toolchain reads its `tex`, the venue rules its `format`, the config its `rules`.
@@ -458,8 +524,7 @@ export function parsePreset(
     rules: j.rules ?? {},
     registerAnchors: anchorsOf(j.register),
     talk: j.talk === undefined ? null : venueTalkOf(j.talk),
-    portal: portalOf(j.portal),
-    deadlines: deadlinesOf(j.deadlines, file),
+    ...portalBlocks(j, file),
   };
 }
 

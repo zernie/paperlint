@@ -4,8 +4,8 @@ import { experimental_skill } from "vigiles/spec";
 export default experimental_skill({
   name: "submission-portal",
   description:
-    "Create, read or change a paper's submission on the venue's HotCRP portal via `paperlint submission new|show|update`: register the paper, replace the PDF or abstract, mark it submitted, and verify by sha256 that the portal holds the latest build. Use when the paper is not yet on HotCRP, when its PDF or abstract there needs replacing, when asked whether it is truly submitted, or before a deadline. Composes with submit-paper (what to submit).",
-  tools: ["Read", "Grep", "Glob", "Bash"],
+    "Create, read or change a paper's submission on the venue's HotCRP portal via `paperlint submission new|show|update|topics`: register the paper, choose its topics and PC conflicts, replace the PDF or abstract, mark it submitted, and verify by sha256 that the portal holds the latest build. Use when the paper is not yet on HotCRP, when its topics or conflicts are unset, when its PDF or abstract there needs replacing, when asked whether it is truly submitted, or before a deadline. Composes with submit-paper (what to submit).",
+  tools: ["Read", "Grep", "Glob", "Bash", "Edit", "AskUserQuestion"],
   // The `npx paperlint submission …` commands in the body are not verified at compile time until
   // zernie/vigiles#395 (cmd() for the package's own CLI): keep them in step with src/cli.ts by hand.
   // Do not re-add a test that re-parses the compiled SKILL.md — that check belongs in vigiles.
@@ -17,9 +17,13 @@ Only HotCRP is supported; for any other portal the command says so and the uploa
 
 ## What the command does, and what stays on the site
 
-\`submission new\` creates the submission with the title, the abstract, the authors and the PDF.
-Everything else — conflicts, topics, the venue's own fields — is done on the site by the author: the
-command prints that list, with the submission's page, after every run.
+\`submission new\` creates the submission with the title, the abstract, the authors and the PDF;
+\`new\` and \`update\` also send the paper's \`"fields"\` — its answers to the venue's own form
+fields (topics, PC conflicts, a corresponding author …), which the venue preset records in
+\`"submission_fields"\` (\`paperlint:msr\` does). A value the form does not offer is refused before
+anything is sent; a topic the portal did not take prints \`NOT TAKEN\` and fails the command. What
+the preset records no field for stays on the site: the command prints that list, with the
+submission's page, after \`new\`.
 
 ## Token
 
@@ -38,6 +42,10 @@ their own environment.
   "affiliation" }]\`, every author in the paper's order. The author writes this list; never fill it
   in from the paper, a profile or memory.
 - **For \`show\` and \`update\`: \`"submission": { "id": <number> }\`** — \`new --save\` writes it.
+- **\`"fields"\` in the paper's \`paperlint.json\`**, keyed as the preset's \`"submission_fields"\`
+  names them: \`{ "topics": ["<an option, spelled as listed>"], "pc_conflicts": { "<pc email>":
+  "<conflict type>" }, "ACMCorAut": "<an author's email>" }\`. Written only with the author's
+  choices, below.
 
 A missing key or token stops the command with exit 2 and a line naming what to set — fix exactly that.
 
@@ -45,26 +53,42 @@ A missing key or token stops the command with exit 2 and a line naming what to s
 
 \`papers/my-paper\` stands for the paper's folder.
 
-0. **Create it, once — only while the paper has no \`submission\` id.**
+0. **Topics, chosen with the author.** \`npx paperlint submission topics papers/my-paper\` reads the
+   topics the portal offers and marks each against the preset (exit 1 when they differ — then the
+   preset is stale: say so, and record the portal's list). Read the paper's abstract and
+   contribution, pick the topics that fit, and **ask with \`AskUserQuestion\`** (\`multiSelect: true\`,
+   your proposed topics first, each with one line on why it fits; the author may pick others).
+   Write only the chosen ones into \`"fields": { "topics": [...] }\`, spelled exactly as listed.
+   The same for every other field the preset records (\`ACMCorAut\`: ask which author).
+1. **Create it, once — only while the paper has no \`submission\` id.**
    \`npx paperlint submission new papers/my-paper\` is a dry run: the portal checks it and keeps
-   nothing. It prints the title, the authors and the whole abstract (read from the source's
-   \`\\begin{abstract}\`). Read them with the author; an abstract the command cannot read, or one
-   that reads wrong, is given as a plain-text file with \`--abstract <file>\`.
-1. **Ask the author** for an explicit yes, then \`npx paperlint submission new papers/my-paper --save\`,
-   and do the printed "on the site" list with the author.
-2. **Read it.** \`npx paperlint submission show papers/my-paper\` — status, the PDF the portal holds,
+   nothing. It prints the title, the authors, the whole abstract (read from the source's
+   \`\\begin{abstract}\`) and each \`field\` it sends. Read them with the author; an abstract the
+   command cannot read, or one that reads wrong, is given as a plain-text file with
+   \`--abstract <file>\`.
+2. **Ask with \`AskUserQuestion\`** before the real send, the question showing exactly what goes
+   (title, authors, the abstract's first sentence and word count, each field): yes, or no. Only on
+   yes: \`npx paperlint submission new papers/my-paper --save\`, then the printed "still to do" list
+   with the author.
+3. **Read it.** \`npx paperlint submission show papers/my-paper\` — status, the PDF the portal holds,
    and \`match\`: whether it is the local build. Rebuild first if the local PDF is stale.
-3. **Dry run the change.** \`npx paperlint submission update papers/my-paper\` (\`--abstract <file>\`,
-   \`--submit\` to mark it submitted). Exit 1 means the portal would refuse it — report why, stop.
-4. **Ask the author** for an explicit yes, then the same command with \`--save\`.
-5. **Prove it landed.** \`show\` again: \`match\` must read \`yes — the portal holds this build\`, and
+4. **Dry run the change.** \`npx paperlint submission update papers/my-paper\` (\`--abstract <file>\`,
+   \`--submit\` to mark it submitted); it sends the paper's \`"fields"\` too. Exit 1 means the portal
+   would refuse it, or did not take a topic — report why, stop.
+5. **Ask with \`AskUserQuestion\`** before every real send — each \`--save\`, and \`--submit\` above
+   all — the question showing what changes (the PDF and its sha256, the abstract, each field,
+   "submitted"). Only on yes: the same command with \`--save\`. A dry run needs no question.
+6. **Prove it landed.** \`show\` again: \`match\` must read \`yes — the portal holds this build\`, and
    the status must be what was intended. Anything else is not done — say so.
 
 🔴 \`--save\` creates or changes a real submission that reviewers will see: never without the
-author's yes in this conversation, never "to test", never because a dry run passed.
+author's yes to an \`AskUserQuestion\` in this conversation, never "to test", never because a dry run
+passed.
 
 \`\`\`bash
 npx paperlint build papers/my-paper
+npx paperlint submission topics papers/my-paper
+# … AskUserQuestion: which topics; the chosen ones into "fields" …
 # only while the paper has no submission id:
 npx paperlint submission new papers/my-paper
 # … the author reads the dry run and says yes …
@@ -81,10 +105,17 @@ npx paperlint submission show papers/my-paper
 - \`match yes\` is the only proof the reviewers get the local build; \`submitted\` alone says nothing
   about WHICH PDF.
 - \`portal says: …\` lines are the portal's own words; quote them.
+- \`portal says: pc_conflicts: You may have missed conflicts of interest with …\` — HotCRP guesses
+  these from the authors' and the PC's profiles, chiefly an affiliation string they share (two
+  "Independent Researcher"s are flagged though they are strangers). Show each name to the author with
+  that explanation and ask; **never** mark a conflict from the warning alone. A real conflict goes
+  into \`"fields": { "pc_conflicts": { "<their email>": "<type>" } }\` with the author's word.
+- \`NOT TAKEN\` — the portal kept none of that field's options: the spelling is not the portal's.
+  Run \`submission topics\` and fix the value.
 - \`SAVE WITHHELD\` or \`NOTHING CREATED\` — the portal saved nothing.
 
 ## What this skill does not do
 
-It does not decide whether the paper is ready (\`harden-paper\`), anonymize it, or set the portal's
-other fields — see \`submit-paper\`.`,
+It does not decide whether the paper is ready (\`harden-paper\`), anonymize it, or set the fields the
+venue preset does not record — see \`submit-paper\`.`,
 });

@@ -4,7 +4,7 @@
  * One file name at two levels, one schema (lib/paper-config.mjs → SETTINGS_KEYS):
  *
  *   paperlint.json                 the project (optional): papersDir, rules, defaults
- *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission, authors } —
+ *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission, authors, fields } —
  *                                  or `cycles`, from whose current attempt extends, kind and submission
  *                                  are DERIVED (src/domain/cycle.ts); the two forms do not mix
  *   a venue preset                 `paperlint:<name>` (shipped) or `./x.jsonc` (src/presets.ts)
@@ -74,6 +74,11 @@ export interface PaperSettings {
   /** The authors as the venue's portal should record them, in order; null when the paper declares none. Never the root's. */
   readonly authors: readonly Author[] | null;
   /**
+   * The paper's answers to its venue's own form fields, as written: checked against the venue
+   * preset's `submission_fields` where both are known (`paperlint submission`); null when absent.
+   */
+  readonly fields: unknown;
+  /**
    * The paper's attempts at venues and the current one, when the file declares `cycles`; null for a
    * file in the flat form. With cycles, `extends`, `kind` and `submission` above are the current
    * attempt's — derived, never written beside it. Never the root's.
@@ -137,11 +142,11 @@ export function identityField(
       );
 }
 
-/** `rules` (checked for shape only), `talk`, `submission` and `authors`, each null when absent. */
+/** `rules` (checked for shape only), `talk`, `submission` and `authors`, each null when absent; `fields` as written. */
 function rulesAndTalk(
   json: Readonly<Record<string, unknown>>,
 ): Result<
-  Pick<PaperSettings, "rules" | "talk" | "submission" | "authors">,
+  Pick<PaperSettings, "rules" | "talk" | "submission" | "authors" | "fields">,
   string
 > {
   const rules = json["rules"];
@@ -160,6 +165,7 @@ function rulesAndTalk(
         talk: talk.value,
         submission: submission.value,
         authors: authors.value,
+        fields: json["fields"] ?? null,
       })
     : authors;
 }
@@ -334,6 +340,7 @@ function merge(
     talk: null,
     submission: null,
     authors: null,
+    fields: null,
     cycles: null,
   };
   const merged: PaperSettings = {
@@ -345,6 +352,7 @@ function merge(
     talk: p.talk,
     submission: p.submission,
     authors: p.authors,
+    fields: p.fields,
     cycles: p.cycles,
   };
   return paper === null && Object.values(merged).every((v) => v === null)
