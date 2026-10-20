@@ -225,7 +225,10 @@ export const TOOL_PACKAGES = [
   "@eslint/plugin-kit",
   "@retorquere/bibtex-parser", // BibTeX
   "@unified-latex/unified-latex-types", // LaTeX
+  "@unified-latex/unified-latex-util-ligatures",
+  "@unified-latex/unified-latex-util-macros",
   "@unified-latex/unified-latex-util-parse",
+  "@unified-latex/unified-latex-util-replace",
   "@unified-latex/unified-latex-util-visit",
   "ajv", // JSON Schema
   "eslint",

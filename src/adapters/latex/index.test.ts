@@ -6,7 +6,12 @@
  */
 import type * as Ast from "@unified-latex/unified-latex-types";
 import { describe, expect, it } from "vitest";
-import { runText, spanIn, type ProsePiece } from "../../domain/tex-document.ts";
+import {
+  OPAQUE,
+  runText,
+  spanIn,
+  type ProsePiece,
+} from "../../domain/tex-document.ts";
 import {
   bodyEmphasis,
   bodyProse,
@@ -767,6 +772,31 @@ describe("latexReader.filecontents — a file name on a line of its own", () => 
     ).toEqual([
       ["refs.bib", false, "@misc{a, title={A}}\n"],
       ["two.bib", true, "@misc{b}\n"],
+    ]);
+  });
+});
+
+/** The text of each heading of a document whose `\title` is `t`. */
+const titleTexts = (t: string): readonly string[] =>
+  latexReader
+    .headings(
+      `\\documentclass{article}\\title{${t}}\\begin{document}\\end{document}`,
+    )
+    .map((h) => runText(h.title));
+
+describe("headings — the paper's \\title as text", () => {
+  it("`\\\\`, `\\newline` and `\\linebreak` are line breaks, never an opaque command", () => {
+    expect(
+      ["A\\\\ B", "A\\\\[1ex] B", "A\\newline B", "A\\linebreak[3] B"].map(
+        titleTexts,
+      ),
+    ).toEqual([["A\u2028 B"], ["A\u2028 B"], ["A\u2028 B"], ["A\u2028 B"]]);
+  });
+
+  it("plain words read as written, a run of spaces as one; a macro of the author's own stands as OPAQUE", () => {
+    expect(["Plain  Title", "\\ours{}: Lies"].map(titleTexts)).toEqual([
+      ["Plain Title"],
+      [`${OPAQUE}: Lies`],
     ]);
   });
 });

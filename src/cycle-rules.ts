@@ -41,7 +41,11 @@ import {
   type Cycle,
   type Cycles,
 } from "./domain/cycle.ts";
-import { deadlineOrderProblems, type Reading } from "./domain/deadline.ts";
+import {
+  deadlineOrderProblems,
+  readingText,
+  type Reading,
+} from "./domain/deadline.ts";
 import { resolvePreset } from "./presets.ts";
 import { fieldOf } from "./domain/record.ts";
 import { err, ok, type Result } from "./domain/result.ts";
@@ -104,8 +108,7 @@ function presetCopies(c: Cycle, preset: PresetOfCycle): readonly Finding[] {
               id: c.id,
               what: d.what,
               preset: preset.spec,
-              at: theirs.at,
-              read: theirs.read,
+              reading: readingText(theirs),
             },
           },
         ]
@@ -190,7 +193,7 @@ const META: Readonly<Record<CycleRuleName, FolderRuleModule["meta"]>> = {
     messages: {
       broken: `${CONFIG_FILE}: {{why}}`,
       order: `${CONFIG_FILE}, cycle «{{id}}»: {{why}} — a date typed wrong, or an AoE day miscounted (write a call's date as "YYYY-MM-DD AoE" and paperlint converts it)`,
-      presetCopy: `${CONFIG_FILE}, cycle «{{id}}»: the "{{what}}" deadline records a portal reading, and the preset {{preset}} carries the portal's reading of it ({{at}}, read {{read}}) — a second copy drifts when paperlint updates the preset: delete this one (the call's reading and an override stay)`,
+      presetCopy: `${CONFIG_FILE}, cycle «{{id}}»: the "{{what}}" deadline records a portal reading, and the preset {{preset}} carries it ({{reading}}) — a second copy drifts when paperlint updates the preset: delete this one (the call's reading and an override stay)`,
     },
   },
   evidence: {

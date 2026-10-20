@@ -3,6 +3,7 @@
  * parser. The one implementation is `src/adapters/latex/` (unified-latex); `src/cli.ts` wires it.
  */
 import type { Include } from "../domain/paper-source.ts";
+import type { Result } from "../domain/result.ts";
 import type {
   ClassLine,
   DocumentClass,
@@ -24,6 +25,24 @@ export interface Filecontents {
   /** What it writes: from the line after `\begin{…}{…}` to `\end`. */
   readonly body: Span;
 }
+
+/** Why a source's abstract cannot be read as plain text. */
+export type AbstractProblem =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "unreadable";
+      /** What it is, in words: `\toolname, which no \newcommand … defines`. */
+      readonly what: string;
+      /** Its offset in the source. */
+      readonly at: number;
+    }
+  | {
+      /** A macro the abstract uses that the source defines more than once: which one TeX uses is not guessed. */
+      readonly kind: "redefined";
+      readonly name: string;
+      /** Each definition's offset in the source, in order. */
+      readonly at: readonly number[];
+    };
 
 export interface LatexReader {
   /** The source's `\documentclass`, as one of its states. */
@@ -74,4 +93,10 @@ export interface LatexReader {
     src: string,
     jobname: string,
   ) => readonly Filecontents[];
+  /**
+   * The body of `src`'s `abstract` environment as one paragraph of plain text — the author's
+   * argument-less macros expanded, TeX's dashes and quotes, citations and comments dropped — or
+   * what stops it, with its offset in `src`.
+   */
+  readonly abstractText: (src: string) => Result<string, AbstractProblem>;
 }

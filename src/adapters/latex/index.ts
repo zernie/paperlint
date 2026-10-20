@@ -21,6 +21,7 @@
  * (`ParsedTex`, minted by `parseLatex` alone).
  */
 import type { LatexReader } from "../../ports/latex.ts";
+import { abstractText } from "./abstract.ts";
 import {
   documentClassOf,
   parseTemplate,
@@ -72,4 +73,5 @@ export const latexReader: LatexReader = {
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
   layoutOverrides: (src) => layoutOverridesOf(parseLatex(src)),
   filecontents: (src, jobname) => filecontentsOf(parseLatex(src), jobname),
+  abstractText,
 };

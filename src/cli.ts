@@ -100,10 +100,10 @@ import { texOutput } from "./adapters/tex-output/index.ts";
 import { BIB_RULE_LEVELS, bibRules } from "./bib-rules.ts";
 import { bibliographyReader } from "./references.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
-import { hotcrpPortal } from "./adapters/hotcrp/index.ts";
+import { hotcrpSite } from "./adapters/hotcrp/index.ts";
 import { runSubmission } from "./submission.ts";
 import type { PortalKind, SupportedPortal } from "./domain/submission.ts";
-import type { SubmissionPortal } from "./ports/submission-portal.ts";
+import type { PortalSite } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import {
   narrowToOwners,
@@ -234,6 +234,11 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
+  npx paperlint submission new [paper] [--abstract <file>] [--save]
+                                      create the paper's submission on the venue's portal: the title
+                                      and abstract from the build, the authors from paperlint.json,
+                                      the PDF. A DRY RUN unless --save; a save records the new id in
+                                      paperlint.json
   npx paperlint submission show [paper]
                                       the paper's submission on the venue's portal: status, title,
                                       type, topics, abstract length, the PDF the portal holds, and
@@ -285,13 +290,18 @@ studies:
 
 submission:
   The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
-  paper's paperlint.json its submission there — "submission": { "id": <number> }. The token comes
-  only from the environment: HOTCRP_TOKEN (HotCRP: Account settings → Developer).
+  paper's paperlint.json its submission there — "submission": { "id": <number> }, written by new
+  — and, for new, its "authors": [{ "name", "email", "affiliation"? }]. The token comes only from
+  the environment, one variable per site: HOTCRP_TOKEN_<subdomain> on *.hotcrp.com, else
+  HOTCRP_TOKEN_<host and path> — e.g. HOTCRP_TOKEN_MSR2027 for msr2027.hotcrp.com,
+  HOTCRP_TOKEN_AIDC_SUBMIT_ACSAC_ORG for aidc.submit.acsac.org (HotCRP: Account settings →
+  Developer). A plain HOTCRP_TOKEN is not read.
   [paper]             the paper's folder; default the current directory
   --pdf <file>        the PDF to compare (show) or send (update) instead of the paper's own
-  --abstract <file>   update: a plain-text file whose text replaces the abstract
+  --abstract <file>   new, update: a plain-text file whose text is sent as the abstract
   --submit            update: mark the submission submitted
-  --save              update: really change the submission. Without it, nothing is saved
+  --save              new, update: really create or change the submission. Without it, nothing
+                      is saved
 
 lint:
   npx paperlint lint [paths…] [--fix] [--config <file.json>] [--json]
@@ -1737,7 +1747,9 @@ const SIMPLE: Readonly<
         presets: PRESET_DEPS,
         cwd,
         env: (name) => process.env[name],
-        portalFor,
+        site: portalSite,
+        latex: latexReader,
+        codec: sourcesCodec,
         log,
         err,
       },
@@ -1745,13 +1757,10 @@ const SIMPLE: Readonly<
 };
 
 /** The adapter of each portal kind — one per kind, chosen here at the root. */
-const PORTALS: Readonly<
-  Record<PortalKind, (url: string, token: string) => SubmissionPortal>
-> = {
-  hotcrp: (url, token) => hotcrpPortal({ url, token }),
+const PORTALS: Readonly<Record<PortalKind, (url: string) => PortalSite>> = {
+  hotcrp: hotcrpSite,
 };
-const portalFor = (p: SupportedPortal, token: string): SubmissionPortal =>
-  PORTALS[p.kind](p.url, token);
+const portalSite = (p: SupportedPortal): PortalSite => PORTALS[p.kind](p.url);
 
 /** banal's installer, wired from this process's environment: the composition root's work. */
 function hostBanalInstaller(): ToolInstaller {

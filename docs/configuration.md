@@ -98,7 +98,7 @@ refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
 ```
 
 The same keys as the root file, minus the project-only ones (`papersDir`, `structure` and the
-skills' keys), which are refused here by name, plus `talk` and `submission`, which only a paper has. **It merges over the root file:** its `extends`,
+skills' keys), which are refused here by name, plus `talk`, `submission`, `authors` and `cycles`, which only a paper has. **It merges over the root file:** its `extends`,
 `kind` and `pdf` win; one it does not set comes from the root.
 
 | key          | what it is                                                                                                                                                                                                                                                            |
@@ -109,6 +109,7 @@ skills' keys), which are refused here by name, plus `talk` and `submission`, whi
 | `identity`   | what identifies the authors — names, handles, emails, affiliations, your own project names. A blind venue's PDF must say none of it ([`anonymity/identity`](rules/anonymity/identity.md)). Joined with the root's list                                                |
 | `talk`       | how this paper is presented, `{ "mode": "remote-video" }` plus optional `dir`, `files`, `one_slide` — the `talk/*` rules judge its finished files ([`talk.md`](talk.md)). Only here: the root file refuses it                                                         |
 | `submission` | which submission on the venue's portal is this paper's, `{ "id": 7 }` — read by [`paperlint submission`](submission.md), with the preset's `portal`. Only here: the root file refuses it                                                                              |
+| `authors`    | the authors as the venue's portal should record them, in the paper's order: `[{ "name": "…", "email": "…", "affiliation": "…" }]` (`affiliation` optional) — read by [`paperlint submission new`](submission.md), never guessed. Only here: the root file refuses it  |
 | `cycles`     | the paper's attempts at venues, one entry per attempt, oldest first — see [The paper's cycles](#the-papers-cycles) below. With it, `extends`, `kind` and `submission` are the current attempt's and may not be written beside it. Only here: the root file refuses it |
 | `rules`      | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                                                                                                        |
 | `$comment`   | a note for humans; ignored                                                                                                                                                                                                                                            |

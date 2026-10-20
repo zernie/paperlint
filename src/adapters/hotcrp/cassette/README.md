@@ -19,19 +19,19 @@ verbatim.
 | `post-ok.json`    | the same with the part and `content_file` named `paperlint_pdf`                                                                                           |  200 |
 
 To re-record: run the same four requests with `curl` against a HotCRP site where you have a
-submission and a token (`Authorization: bearer $HOTCRP_TOKEN`), always with `dry_run=1` on a `POST`,
+submission and a token (`Authorization: bearer $HOTCRP_TOKEN_<SITE>`), always with `dry_run=1` on a `POST`,
 save each body, then replace every identifying value with a fake of the same type before committing.
 These files ship in the npm package with the rest of `src/`, like the tests beside them.
 
 ## The deadlines pages
 
 `deadlines-<site>.html` are five live sites' `GET /deadlines` pages and one site that does not exist,
-recorded whole on 2026-10-05 (`curl`, no account): the page is public and carries no personal data,
+recorded whole on 2026-10-05 (`curl`, no account; `deadlines-msr2027.html` re-recorded 2026-10-19 18:27 UTC, when the portal had moved both its deadlines — #235): the page is public and carries no personal data,
 so nothing is replaced. `deadlines.test.ts` parses each through the adapter's real parser; the
 expected values were read off the pages' text by hand first. `/api/deadlines` on the same sites
 answers 401 «Missing credentials», so the HTML page is the source.
-`scripts/refresh-deadlines.test.ts` replays the MSR and AIDC pages through the scheduled refresh of
-the presets' `deadlines` (`.github/workflows/deadlines.yml`). Re-read live through the adapter at
+`scripts/refresh-deadlines/main.test.ts` replays the MSR page through `npm run refresh-deadlines`, the
+scheduled refresh of the presets' `deadlines` (`.github/workflows/deadlines.yml`). Re-read live through the adapter at
 14:38 UTC the same day, both pages differed from these files only in the script nonces and `now`.
 
 | file                      | site                  | HTTP | what it shows                                                      |

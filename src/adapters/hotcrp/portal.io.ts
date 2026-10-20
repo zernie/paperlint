@@ -9,17 +9,24 @@
  * (the documented form: `curl -F "json=<data.json" -F paper.pdf=@paper.pdf SITEURL/api/paper`).
  * Without `save` the request carries `dry_run=1`: HotCRP checks the change and keeps nothing.
  *
+ * Create: the same `POST`, with `p=new` and `"pid": "new"` in the object — «Setting `p=new` will
+ * create a new submission; the response will contain the chosen submission ID»
+ * (`devel/apidoc/submissions.md`, `post /paper`, in kohler/hotcrp). The object carries the title, the
+ * abstract, the authors and the PDF; nothing else is sent.
+ *
  * 🔴 THE TOKEN goes in the `Authorization` header and nowhere else: not into a URL, a message, or an
  * error. A failure is described by HTTP status, HotCRP's own messages, or the network error's text.
  */
 import { messageOf } from "../../domain/text.ts";
 import { err, type Result } from "../../domain/result.ts";
 import type {
+  Author,
+  NewSubmission,
   PortalFailure,
   SubmissionChange,
 } from "../../domain/submission.ts";
 import type { SubmissionPortal } from "../../ports/submission-portal.ts";
-import { parseShow, parseUpdate } from "./response.ts";
+import { parseCreate, parseShow, parseUpdate } from "./response.ts";
 
 /**
  * The form field the PDF travels in, and the name the `json` object's `content_file` refers to it
@@ -87,14 +94,38 @@ export function changeObject(
   };
 }
 
-function formOf(id: number, c: SubmissionChange): Readonly<FormData> {
+/** An author as HotCRP's submission object spells one (`Author::make_keyed` reads `name`). */
+const authorObject = (a: Author): Readonly<Record<string, string>> => ({
+  name: a.name,
+  email: a.email,
+  ...(a.affiliation === null ? {} : { affiliation: a.affiliation }),
+});
+
+/** The submission object a creation sends: title, abstract, authors and the PDF's field. */
+export function createObject(
+  p: NewSubmission,
+): Readonly<Record<string, unknown>> {
+  return {
+    object: "paper",
+    pid: "new",
+    title: p.title,
+    abstract: p.abstract,
+    authors: p.authors.map(authorObject),
+    submission: { content_file: CONTENT_FIELD },
+  };
+}
+
+function formOf(
+  object: Readonly<Record<string, unknown>>,
+  pdf: { readonly name: string; readonly bytes: Uint8Array } | null,
+): Readonly<FormData> {
   const form = new FormData();
-  form.append("json", JSON.stringify(changeObject(id, c)));
-  if (c.pdf !== null)
+  form.append("json", JSON.stringify(object));
+  if (pdf !== null)
     form.append(
       CONTENT_FIELD,
-      new Blob([new Uint8Array(c.pdf.bytes)], { type: "application/pdf" }),
-      c.pdf.name,
+      new Blob([new Uint8Array(pdf.bytes)], { type: "application/pdf" }),
+      pdf.name,
     );
   return form;
 }
@@ -103,6 +134,23 @@ const endpoint = (
   base: string,
   params: Readonly<Record<string, string>>,
 ): string => `${base}/api/paper?${new URLSearchParams(params).toString()}`;
+
+/** What one `POST /api/paper` sends: which submission, its object, the PDF, and whether to save. */
+interface Post {
+  readonly p: string;
+  readonly object: Readonly<Record<string, unknown>>;
+  readonly pdf: { readonly name: string; readonly bytes: Uint8Array } | null;
+  readonly save: boolean;
+}
+
+/** A `POST /api/paper` carrying the object and the PDF, a dry run unless saving. */
+const post = (o: HotcrpOptions, w: Post): Promise<Answer> =>
+  call(
+    endpoint(o.url, { p: w.p, ...(w.save ? {} : { dry_run: "1" }) }),
+    { method: "POST", body: formOf(w.object, w.pdf) },
+    o.token,
+    WRITE_TIMEOUT_MS,
+  );
 
 /** HotCRP at `o.url`, read and changed with `o.token`. */
 export function hotcrpPortal(o: HotcrpOptions): SubmissionPortal {
@@ -113,18 +161,14 @@ export function hotcrpPortal(o: HotcrpOptions): SubmissionPortal {
       return a.ok ? parseShow(a.value.status, a.value.body) : a;
     },
     async update(id, change, { save }) {
-      const url = endpoint(o.url, {
-        p: String(id),
-        ...(save ? {} : { dry_run: "1" }),
-      });
-      const body = formOf(id, change);
-      const a = await call(
-        url,
-        { method: "POST", body },
-        o.token,
-        WRITE_TIMEOUT_MS,
-      );
+      const object = changeObject(id, change);
+      const a = await post(o, { p: String(id), object, pdf: change.pdf, save });
       return a.ok ? parseUpdate(a.value.status, a.value.body) : a;
+    },
+    async create(paper, { save }) {
+      const object = createObject(paper);
+      const a = await post(o, { p: "new", object, pdf: paper.pdf, save });
+      return a.ok ? parseCreate(a.value.status, a.value.body) : a;
     },
   };
 }

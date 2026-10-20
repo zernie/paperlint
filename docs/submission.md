@@ -1,73 +1,72 @@
 # The submission on the venue's portal
 
-`paperlint submission` reads and updates a paper's submission on the venue's submission portal,
-through the portal's API. Only [HotCRP](https://github.com/kohler/hotcrp) is supported.
+`paperlint submission` creates, reads and updates a paper's submission on the venue's submission
+portal. Only [HotCRP](https://github.com/kohler/hotcrp) is supported; any other portal is refused
+with `portal kind "<kind>" is not supported; upload by hand`.
 
 ```sh
+npx paperlint submission new papers/my-paper              # a dry run: the portal checks it and keeps nothing
+npx paperlint submission new papers/my-paper --save       # creates the real submission
 npx paperlint submission show papers/my-paper
-npx paperlint submission update papers/my-paper                 # a dry run: nothing is saved
-npx paperlint submission update papers/my-paper --save          # changes the real submission
+npx paperlint submission update papers/my-paper           # a dry run
+npx paperlint submission update papers/my-paper --save    # changes the real submission
 ```
 
 ## What it needs
 
-Two keys, each in the file that owns the fact, and a token:
+| where                        | key                                                  | what it says                                                          |
+| ---------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------- |
+| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }` | where the venue takes submissions (`paperlint:aidc`, `paperlint:msr`) |
+| the paper's `paperlint.json` | `"authors": [{ "name", "email", "affiliation"? }]`   | for `new`: every author, in the paper's order — never guessed         |
+| the paper's `paperlint.json` | `"submission": { "id": 7 }`                          | which submission is this paper's — `new --save` writes it             |
+| the environment              | `HOTCRP_TOKEN_<SITE>`, e.g. `HOTCRP_TOKEN_MSR2027`   | your API token for that site                                          |
 
-| where                        | key                                                  | what it says                                    |
-| ---------------------------- | ---------------------------------------------------- | ----------------------------------------------- |
-| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }` | where the venue takes submissions               |
-| the paper's `paperlint.json` | `"submission": { "id": 7 }`                          | which submission on that portal is this paper's |
-| the environment              | `HOTCRP_TOKEN`                                       | an API token for your HotCRP account            |
+**The token** works on the site it was made on only, so each site has its own variable:
+`HOTCRP_TOKEN_MSR2027` for `msr2027.hotcrp.com`; for a site not on hotcrp.com, its whole host
+(with a port other than the default) and path, every other character becoming `_`, so two paths
+on one host that differ only in punctuation (`/conf-a`, `/conf/a`) share one variable. A plain
+`HOTCRP_TOKEN` is not read. When the token is missing, misnamed or refused, the command prints
+where on that site to make one, which permissions to tick, and the exact variable to set. Set it
+in your environment — never paste it into a chat; paperlint never prints it.
 
-`paperlint:aidc` and `paperlint:msr` declare their portals. For another venue, add `portal` to your own preset (see
-[`rules.md`](rules.md)) — or upload by hand: a kind paperlint has no adapter for is refused with
-`portal kind "<kind>" is not supported; upload by hand`.
+A missing key or token stops the command with exit 2 and a line naming what to set.
 
-```jsonc
-// papers/my-paper/paperlint.json
-{ "extends": "paperlint:aidc", "kind": "regular", "submission": { "id": 7 } }
-```
+## `new`
 
-**The token** is read only from `HOTCRP_TOKEN`. Create it on the HotCRP site under **Account
-settings → Developer**; `show` needs the scopes `submeta:read` and `document:read`, `update` also
-`submeta:write` and `document:write`. paperlint sends it as `Authorization: bearer <token>` and
-never prints it or writes it anywhere.
+Creates the submission and sends four things, printing them first — the abstract in full:
 
-A missing key or token stops the command with exit 2 and a line naming the file and key, or the
-variable, to set.
+- **the title** — the paper's `\title`; when it holds a command of your own, the PDF's title;
+- **the abstract** — `\begin{abstract}…\end{abstract}` as plain text: your argument-less macros
+  expanded, dashes and quotes as TeX sets them, citations and comments dropped. Anything it cannot
+  read without guessing stops the command with the macro and its line; then pass
+  `--abstract <file>`, plain text;
+- **the authors** — from `"authors"`; without it, `new` stops and names the key;
+- **the PDF** — the paper's own, or `--pdf <file>`.
+
+Without `--save` it is a dry run. With `--save` the new id is written into `paperlint.json` (the
+open cycle, with `cycles`), and the next command is `show`. Every run prints what is left to do on
+the site (conflicts, topics, the venue's own fields). `new` is refused when the paper already has a
+submission id.
 
 ## `show`
 
-Prints the submission's status (and when it was submitted), its id, title, paper type, topics, the
-abstract's length in words, and the PDF the portal holds — its hash, size and upload time — then
-whether that PDF is the local one: HotCRP stores a PDF's sha256 as `sha2-<hex>`, and paperlint
-compares it with the sha256 of the paper's `paper.pdf` (or its `pdf` setting, or `--pdf <file>`).
-`match yes` means the portal holds exactly the file you built. Exit 0 whenever the portal answered.
-
-Then one `deadline` line per deadline in force for the current attempt — the venue preset's portal
-readings with the paper's own call readings and overrides over them ([Deadlines](configuration.md#deadlines)):
-the instant that binds, what set it (a reading and the day it was read, or an override with its
-reason and evidence), and the other readings of it. Instants only; how long is left is not printed.
+Prints the submission's status, title, type, topics, abstract length and the PDF the portal holds,
+then `match`: `yes` means the portal holds exactly the PDF you built (compared by sha256). Then the
+deadlines in force for the current attempt, each with when and where it was read
+([Deadlines](configuration.md#deadlines)). Exit 0 whenever the portal answered.
 
 ## `update`
 
-Sends the PDF — the paper's own unless `--pdf <file>` names another — and, when asked, a new
-abstract (`--abstract <file>`, plain text) and the status "submitted" (`--submit`).
+Sends the PDF and, when asked, a new abstract (`--abstract <file>`) and "submitted" (`--submit`).
+Without `--save` it is a dry run. It prints the portal's verdict and its messages; exit 1 when the
+portal would not take the change. Before sending, it asks you to open that exact PDF and check it
+against the venue's call for papers.
 
-**Without `--save` it is a dry run**: HotCRP's `dry_run=1` checks the change and keeps nothing. With
-`--save` the real submission changes. Either way it prints HotCRP's verdict — `valid`, the fields the
-change touched (`change_list`), HotCRP's messages — and the local file's sha256. Exit 1 when the
-change is not valid or the HTTP status is not 2xx.
-
-Before it sends anything, dry run or not, it prints one line asking you to open that exact PDF and
-check it against the venue's call for papers — named by the preset's `url` when the preset is a
-venue: what paperlint checks is an aid, and the venue's reading of the PDF is what counts.
-
-The safe order: `show`, `update` (dry run), read what it says, `update --save`, then `show` again and
-check `match yes`.
+The safe order: `new`, `new --save` once; then `show`, `update`, `update --save`, and `show` again
+until it says `match yes`. Every `--save` comes after the author has read the dry run and said yes.
 
 ## What it does not do
 
-- It does not create a submission, edit authors, topics or other form fields, or upload
-  supplementary files.
+- It does not set conflicts, topics or the venue's other fields, change the authors after `new`, or
+  upload supplementary files.
 - It does not check the PDF against the venue; that is `paperlint lint`.

@@ -4,7 +4,7 @@
  * One file name at two levels, one schema (lib/paper-config.mjs → SETTINGS_KEYS):
  *
  *   paperlint.json                 the project (optional): papersDir, rules, defaults
- *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission } —
+ *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission, authors } —
  *                                  or `cycles`, from whose current attempt extends, kind and submission
  *                                  are DERIVED (src/domain/cycle.ts); the two forms do not mix
  *   a venue preset                 `paperlint:<name>` (shipped) or `./x.jsonc` (src/presets.ts)
@@ -35,7 +35,9 @@ import {
 import { messageOf } from "./domain/text.ts";
 import { parsePaperTalk, type PaperTalk } from "./domain/talk.ts";
 import {
+  parsePaperAuthors,
   parsePaperSubmission,
+  type Author,
   type PaperSubmission,
 } from "./domain/submission.ts";
 import {
@@ -69,6 +71,8 @@ export interface PaperSettings {
   readonly talk: PaperTalk | null;
   /** Which submission on the venue's portal is this paper's; null when it says none. Never the root's. */
   readonly submission: PaperSubmission | null;
+  /** The authors as the venue's portal should record them, in order; null when the paper declares none. Never the root's. */
+  readonly authors: readonly Author[] | null;
   /**
    * The paper's attempts at venues and the current one, when the file declares `cycles`; null for a
    * file in the flat form. With cycles, `extends`, `kind` and `submission` above are the current
@@ -133,10 +137,13 @@ export function identityField(
       );
 }
 
-/** `rules` (checked for shape only), `talk` and `submission`, each null when absent. */
+/** `rules` (checked for shape only), `talk`, `submission` and `authors`, each null when absent. */
 function rulesAndTalk(
   json: Readonly<Record<string, unknown>>,
-): Result<Pick<PaperSettings, "rules" | "talk" | "submission">, string> {
+): Result<
+  Pick<PaperSettings, "rules" | "talk" | "submission" | "authors">,
+  string
+> {
   const rules = json["rules"];
   if (rules !== undefined && !isObject(rules) && !Array.isArray(rules))
     return err(
@@ -145,13 +152,16 @@ function rulesAndTalk(
   const talk = parsePaperTalk(json["talk"]);
   if (!talk.ok) return talk;
   const submission = parsePaperSubmission(json["submission"]);
-  return submission.ok
+  if (!submission.ok) return submission;
+  const authors = parsePaperAuthors(json["authors"]);
+  return authors.ok
     ? ok({
         rules: rules ?? null,
         talk: talk.value,
         submission: submission.value,
+        authors: authors.value,
       })
-    : submission;
+    : authors;
 }
 
 /** The keys the current cycle supplies: writing one beside `cycles` is a second source for it. */
@@ -323,6 +333,7 @@ function merge(
     rules: null,
     talk: null,
     submission: null,
+    authors: null,
     cycles: null,
   };
   const merged: PaperSettings = {
@@ -333,6 +344,7 @@ function merge(
     identity: joined(r.identity, p.identity),
     talk: p.talk,
     submission: p.submission,
+    authors: p.authors,
     cycles: p.cycles,
   };
   return paper === null && Object.values(merged).every((v) => v === null)

@@ -39,6 +39,61 @@ export const CITATION_MACROS: ReadonlySet<string> = new Set([
   "footcite",
 ]);
 
+/** Commands that print nothing: line-breaking and spacing hints, and the two that only protect. */
+export const SILENT_MACROS: ReadonlySet<string> = new Set([
+  "allowbreak",
+  "nobreak",
+  "nolinebreak",
+  "xspace",
+  "noindent",
+  "relax",
+  "protect",
+]);
+
+/**
+ * Formatting that prints its argument but sets it apart — code, small caps, a box: read as its
+ * words where the text is read whole (an abstract), not judged as prose (a heading's case).
+ */
+export const SET_APART_MACROS: ReadonlySet<string> = new Set([
+  "texttt",
+  "textsc",
+  "mbox",
+  "text",
+  "underline",
+]);
+
+/** The logos that print a fixed word. */
+export const LOGO_MACROS: ReadonlyMap<string, string> = new Map([
+  ["LaTeX", "LaTeX"],
+  ["TeX", "TeX"],
+]);
+
+/** Accents: control symbols that take the next letter, across a space (`\' e` is é). */
+export const ACCENT_SYMBOLS: ReadonlySet<string> = new Set([
+  "'",
+  '"',
+  "^",
+  "~",
+  ".",
+  "=",
+  "`",
+]);
+
+/** Math symbols with one plain-text character. */
+export const MATH_CHARACTERS: ReadonlyMap<string, string> = new Map([
+  ["%", "%"],
+  [",", " "],
+  ["times", "×"],
+  ["approx", "≈"],
+  ["le", "≤"],
+  ["leq", "≤"],
+  ["ge", "≥"],
+  ["geq", "≥"],
+  ["pm", "±"],
+  ["sim", "∼"],
+  ["cdot", "·"],
+]);
+
 /** Macros whose arguments are keys, labels, files or URLs — never text a reader sees. */
 export const KEY_SIGNATURES: Readonly<
   Record<string, { readonly signature: string }>
@@ -117,9 +172,15 @@ export const DEFINITION_MACROS: ReadonlySet<string> = new Set([
   "xdef",
 ]);
 
-const DEF_SIGNATURES = Object.fromEntries(
-  signed(["def", "gdef", "edef", "xdef"], "m m"),
-);
+/** The TeX primitives that define a macro: `\\def\\x{…}` and its kin. */
+export const DEF_MACROS: ReadonlySet<string> = new Set([
+  "def",
+  "gdef",
+  "edef",
+  "xdef",
+]);
+
+const DEF_SIGNATURES = Object.fromEntries(signed([...DEF_MACROS], "m m"));
 
 // Not exported: a `ParsedTex` carries this property, and the one way to write it is `parseLatex`.
 const PARSED = Symbol("ParsedTex");

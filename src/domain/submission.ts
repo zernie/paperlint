@@ -139,3 +139,102 @@ export type PortalFailure =
 /** Words in a text, as a reader counts them: runs of non-space. Pure. */
 export const wordCount = (s: string): number =>
   s.split(/\s+/).filter((w) => w !== "").length;
+
+// ── a new submission ────────────────────────────────────────────────────────────────────
+
+/** One author as the portal records it. Never guessed: the paper's `authors` key declares it. */
+export interface Author {
+  readonly name: string;
+  readonly email: string;
+  /** Null when the paper does not declare one. */
+  readonly affiliation: string | null;
+}
+
+const AUTHOR_KEYS = ["name", "email", "affiliation"] as const;
+const AUTHORS_SHAPE = `"authors" must be a non-empty list of { "name": "<as the portal should show it>", "email": "<the address the portal knows the author by>", "affiliation"?: "<…>" }, in the paper's order`;
+
+const nonEmpty = (v: unknown): v is string =>
+  typeof v === "string" && v.trim() !== "";
+
+/** One entry of `authors` → the author, or what is wrong with it. */
+function authorOf(v: unknown, i: number): Result<Author, string> {
+  const at = `"authors"[${String(i)}]`;
+  if (!isRecord(v)) return err(AUTHORS_SHAPE);
+  const unknown = Object.keys(v).find((k) => !AUTHOR_KEYS.some((a) => a === k));
+  if (unknown !== undefined)
+    return err(
+      `${at} has an unknown key "${unknown}" — known: ${AUTHOR_KEYS.join(", ")}`,
+    );
+  const { name, email, affiliation } = v;
+  if (!nonEmpty(name)) return err(`${at}: "name" must be a non-empty string`);
+  if (!nonEmpty(email) || !/^[^\s@]+@[^\s@]+$/.test(email.trim()))
+    return err(
+      `${at}: "email" must be an email address, got ${JSON.stringify(email)}`,
+    );
+  if (affiliation !== undefined && !nonEmpty(affiliation))
+    return err(`${at}: "affiliation", when given, must be a non-empty string`);
+  return ok({
+    name: name.trim(),
+    email: email.trim(),
+    affiliation: affiliation === undefined ? null : affiliation.trim(),
+  });
+}
+
+/** A paper's `authors` key → the list, null when absent, or one line saying what is wrong. Pure. */
+export function parsePaperAuthors(
+  v: unknown,
+): Result<readonly Author[] | null, string> {
+  if (v === undefined) return ok(null);
+  if (!Array.isArray(v) || v.length === 0) return err(AUTHORS_SHAPE);
+  const list: readonly unknown[] = v;
+  const parsed = list.reduce<Result<readonly Author[], string>>((acc, x, i) => {
+    if (!acc.ok) return acc;
+    const a = authorOf(x, i);
+    return a.ok ? ok([...acc.value, a.value]) : a;
+  }, ok([]));
+  if (!parsed.ok) return parsed;
+  const authors = parsed.value;
+  const emails = authors.map((a) => a.email.toLowerCase());
+  const twice = emails.find((e, i) => emails.indexOf(e) !== i);
+  return twice === undefined
+    ? ok(authors)
+    : err(`"authors": the email ${twice} is given twice`);
+}
+
+/** What creating a submission sends. */
+export interface NewSubmission {
+  readonly title: string;
+  readonly abstract: string;
+  readonly authors: readonly Author[];
+  readonly pdf: { readonly name: string; readonly bytes: Uint8Array };
+}
+
+/** What the portal answered to a creation: an update's answer, and the id it chose when it saved. */
+export interface CreateOutcome extends UpdateOutcome {
+  /** The new submission's id; null on a dry run, or when nothing was created. */
+  readonly id: number | null;
+}
+
+/**
+ * The parsed `paperlint.json` with the new submission's id recorded where the paper's submission is
+ * read from: the last cycle (the open attempt) in the cycles form, the top level in the flat form.
+ * Pure; the caller writes the result and reads it back.
+ */
+export function withSubmissionId(
+  json: unknown,
+  id: number,
+): Result<Readonly<Record<string, unknown>>, string> {
+  if (!isRecord(json)) return err("must be a JSON object");
+  const cycles = json["cycles"];
+  if (cycles === undefined) return ok({ ...json, submission: { id } });
+  if (!Array.isArray(cycles) || cycles.length === 0)
+    return err(`"cycles" has no attempt to record the submission in`);
+  const list: readonly unknown[] = cycles;
+  const last = list.at(-1);
+  return isRecord(last)
+    ? ok({
+        ...json,
+        cycles: [...list.slice(0, -1), { ...last, submission: { id } }],
+      })
+    : err(`the last entry of "cycles" is not an object`);
+}

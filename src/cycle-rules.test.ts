@@ -155,8 +155,8 @@ describe("cycle/record", () => {
 
 describe("cycle/record — the deadlines, over the venue preset's readings", () => {
   it("MSR 2027 as a newcomer records the call: abstract → registration, paper → submission; the preset's portal readings are derived — silent", () => {
-    // The portal's submission (2026-10-20T04:00Z, from the preset) is earlier than the call's
-    // registration (the end of 2026-10-20 AoE): two sources disagreeing, not a typo.
+    // The portal's submission (2026-10-21T11:59:59Z, from the preset) is the end of the call's
+    // registration day (2026-10-20 AoE), before the call's submission: no contradiction.
     const fs = lint({
       cycles: [
         msr([
@@ -185,7 +185,7 @@ describe("cycle/record — the deadlines, over the venue preset's readings", () 
     });
     expect(fs.map((f) => f.messageId)).toEqual(["order"]);
     expect(fs[0]?.message).toBe(
-      'paperlint.json, cycle «msr-2027»: the call\'s "registration" (2026-10-26T11:59:59Z) is after its "submission" (2026-10-24T11:59:59Z) — a date typed wrong, or an AoE day miscounted (write a call\'s date as "YYYY-MM-DD AoE" and paperlint converts it)',
+      'paperlint.json, cycle «msr-2027»: the call\'s "registration" (2026-10-26T11:59:59Z, the call\'s reading on 2026-10-05 from https://2027.msrconf.org/track/msr-2027-technical-papers) is after its "submission" (2026-10-24T11:59:59Z, the call\'s reading on 2026-10-05 from https://2027.msrconf.org/track/msr-2027-technical-papers) — a date typed wrong, or an AoE day miscounted (write a call\'s date as "YYYY-MM-DD AoE" and paperlint converts it)',
     );
   });
 });
@@ -199,10 +199,10 @@ describe("cycle/record — a portal reading beside the preset's", () => {
             what: "submission",
             observed: [
               {
-                at: "2026-10-20T04:00:00Z",
+                at: "2026-10-21T11:59:59Z",
                 source: "portal",
                 url: "https://msr2027.hotcrp.com/deadlines",
-                read: "2026-10-01",
+                read: "2026-10-19",
               },
             ],
           },
@@ -210,7 +210,7 @@ describe("cycle/record — a portal reading beside the preset's", () => {
       ],
     });
     expect(fs.map((f) => f.message)).toEqual([
-      "paperlint.json, cycle «msr-2027»: the \"submission\" deadline records a portal reading, and the preset paperlint:msr carries the portal's reading of it (2026-10-20T04:00:00Z, read 2026-10-05) — a second copy drifts when paperlint updates the preset: delete this one (the call's reading and an override stay)",
+      "paperlint.json, cycle «msr-2027»: the \"submission\" deadline records a portal reading, and the preset paperlint:msr carries it (2026-10-21T11:59:59Z, the portal's reading on 2026-10-19 from https://msr2027.hotcrp.com/deadlines — venues move dates: re-check there before relying on it) — a second copy drifts when paperlint updates the preset: delete this one (the call's reading and an override stay)",
     ]);
   });
 
