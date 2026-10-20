@@ -216,6 +216,9 @@ const OptionsBody = z.object({
 
 const TOPIC = /^topic:"(.+)"$/s;
 
+/** A quoted search operand with its backslash escapes undone: the name as the form spells it. */
+const unquoted = (quoted: string): string => quoted.replace(/\\(.)/gs, "$1");
+
 /**
  * `GET /api/searchcompletion` → the topics an author can choose. A completion `topic:"<name>"` names
  * a topic; a name that only groups others (`SE Topic`, beside `SE Topic: Human aspects`) is not one
@@ -231,7 +234,8 @@ export function parseOptions(
     return err(refusal(status, body, "the answer has no `searchcompletion`"));
   const names = b.data.searchcompletion
     .map((c) => (typeof c === "string" ? TOPIC.exec(c)?.[1] : undefined))
-    .filter((n) => n !== undefined);
+    .filter((n) => n !== undefined)
+    .map(unquoted);
   const groups = new Set(
     names.filter((n) => names.some((x) => x.startsWith(`${n}: `))),
   );

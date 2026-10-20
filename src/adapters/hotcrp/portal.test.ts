@@ -610,6 +610,14 @@ test("🔴 parseOptions: the recorded msr2027 completions → its 41 topics, the
     }),
     { ok: true, value: { topics: ["Only"] } },
   );
+  // A quote or backslash inside the quoted name comes escaped; the topic is the decoded name.
+  assert.deepEqual(
+    parseOptions(200, {
+      ok: true,
+      searchcompletion: ['topic:"C++ \\"modern\\" a\\\\b"'],
+    }),
+    { ok: true, value: { topics: ['C++ "modern" a\\b'] } },
+  );
   assert.deepEqual(parseOptions(401, parsed("get-noauth")), {
     ok: false,
     error: {
