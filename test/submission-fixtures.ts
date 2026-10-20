@@ -13,6 +13,7 @@ import {
   type CreateOutcome,
   type NewSubmission,
   type PortalFailure,
+  type PortalOptions,
   type SubmissionChange,
   type SubmissionView,
   type SupportedPortal,
@@ -38,18 +39,47 @@ export const withPresets = (fs: Files): Files => ({
 });
 
 /** A venue over aidc's format with a portal of its own — so none of aidc's deadline readings. */
-export const venue = (portal: unknown): string =>
+export const venue = (portal: unknown, more: object = {}): string =>
   JSON.stringify(
-    venuePreset("venue", { extends: "paperlint:aidc", portal, deadlines: [] }),
+    venuePreset("venue", {
+      extends: "paperlint:aidc",
+      portal,
+      deadlines: [],
+      ...more,
+    }),
   );
+
+/** A venue form's own fields, as a preset records them: two topics, PC conflicts, an author's email. */
+export const SUBMISSION_FIELDS = {
+  source: "portal",
+  url: "https://example.org/api/searchcompletion",
+  read: "2026-10-20",
+  fields: {
+    topics: {
+      kind: "checkboxes",
+      required: true,
+      options: ["Group: Topic A", "Topic B"],
+    },
+    pc_conflicts: { kind: "pc_conflicts" },
+    ACMCorAut: { kind: "email", label: "ACM corresponding author" },
+  },
+};
+
 export const files = (o: {
   readonly portal?: unknown;
+  /** The venue preset's `submission_fields`; none when absent. */
+  readonly submissionFields?: unknown;
   readonly paper?: Readonly<Record<string, unknown>>;
   readonly extra?: Readonly<Record<string, string | Uint8Array>>;
 }) =>
   memoryFiles({
     "/w/package.json": "{}",
-    "/w/venue.jsonc": venue(o.portal ?? { kind: "hotcrp", url: `${SITE}/` }),
+    "/w/venue.jsonc": venue(
+      o.portal ?? { kind: "hotcrp", url: `${SITE}/` },
+      o.submissionFields === undefined
+        ? {}
+        : { submission_fields: o.submissionFields },
+    ),
     [`${PAPER}/paperlint.json`]: JSON.stringify(
       o.paper ?? { extends: "../../venue.jsonc", submission: { id: 7 } },
     ),
@@ -86,6 +116,7 @@ export const fakePortal = (answers: {
   readonly show?: Result<SubmissionView, PortalFailure>;
   readonly update?: Result<UpdateOutcome, PortalFailure>;
   readonly create?: Result<CreateOutcome, PortalFailure>;
+  readonly options?: Result<PortalOptions, PortalFailure>;
 }) => {
   const seen: Recorded[] = [];
   const portalFor = (
@@ -125,6 +156,10 @@ export const fakePortal = (answers: {
               id: o.save ? 42 : null,
             }),
         );
+      },
+      options: () => {
+        r.calls.push(["options"]);
+        return Promise.resolve(answers.options ?? ok({ topics: [] }));
       },
     };
   };

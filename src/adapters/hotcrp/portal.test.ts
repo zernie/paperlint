@@ -24,6 +24,7 @@ import {
   createObject,
   hotcrpPortal,
   parseCreate,
+  parseOptions,
   parseShow,
   parseUpdate,
   sha256OfHash,
@@ -79,7 +80,7 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
  */
 /** A recorded HotCRP answer (`cassette/README.md`), as the text it was sent as. */
 function cassette(
-  name: "get-paper" | "get-noauth" | "post-dot" | "post-ok",
+  name: "get-paper" | "get-noauth" | "post-dot" | "post-ok" | "get-searchcompletion",
 ): string {
   return readFileSync(
     new URL(`./cassette/${name}.json`, import.meta.url),
@@ -164,6 +165,17 @@ function partsOf(s: Seen): ReadonlyMap<string, Part> {
     }),
   );
 }
+
+test("options: GET /api/searchcompletion with the bearer token → the topics", async () => {
+  seen.length = 0;
+  reply = { status: 200, body: cassette("get-searchcompletion") };
+  const r = await portal().options();
+  const s = last();
+  assert.equal(s.method, "GET");
+  assert.equal(s.url.pathname, "/api/searchcompletion");
+  assert.equal(s.headers.authorization, `bearer ${TOKEN}`);
+  assert.ok(r.ok && r.value.topics.length === 41);
+});
 
 test("show: GET /api/paper?p=<id>&word_limit=hard with the bearer token, parsed whole", async () => {
   seen.length = 0;
@@ -263,6 +275,7 @@ const CHANGE: SubmissionChange = {
   pdf: { name: "paper.pdf", bytes: PDF },
   abstract: "new abstract",
   submit: true,
+  fields: {},
 };
 
 test("update: a dry run by default — dry_run=1, the json field, the PDF under its content_file name", async () => {
@@ -359,6 +372,7 @@ const NEW: NewSubmission = {
     { name: "Bob", email: "bob@example.org", affiliation: null },
   ],
   pdf: { name: "paper.pdf", bytes: PDF },
+  fields: {},
 };
 
 test("create: a dry run by default — p=new, dry_run=1, title/abstract/authors and the PDF; no id", async () => {
@@ -553,8 +567,73 @@ test("a portal that does not answer is unreachable, with the network's words", a
 
 test("changeObject: only what changes is sent", () => {
   assert.deepEqual(
-    changeObject(7, { pdf: null, abstract: null, submit: false }),
+    changeObject(7, { pdf: null, abstract: null, submit: false, fields: {} }),
     { object: "paper", pid: 7 },
+  );
+});
+
+test("changeObject and createObject: the venue's fields go in as submission-object keys", () => {
+  const fields = {
+    topics: ["SE Topic: AI for software engineering"],
+    pc_conflicts: { "pc@example.org": "collaborator" },
+    ACMCorAut: "ada@example.org",
+  };
+  assert.deepEqual(
+    changeObject(7, { pdf: null, abstract: null, submit: false, fields }),
+    { object: "paper", pid: 7, ...fields },
+  );
+  const created = createObject({ ...NEW, fields });
+  assert.deepEqual(
+    [created["topics"], created["pc_conflicts"], created["ACMCorAut"]],
+    [fields.topics, fields.pc_conflicts, fields.ACMCorAut],
+  );
+});
+
+test("🔴 parseOptions: the recorded msr2027 completions → its 41 topics, the 4 group names left out", () => {
+  const r = parseOptions(200, parsed("get-searchcompletion"));
+  assert.ok(r.ok);
+  assert.equal(r.value.topics.length, 41);
+  assert.ok(r.value.topics.includes("SE Topic: AI for software engineering"));
+  assert.ok(r.value.topics.includes("Performance analysis and testing"));
+  assert.ok(!r.value.topics.includes("SE Topic"));
+  assert.deepEqual(parseOptions(401, parsed("get-noauth")), {
+    ok: false,
+    error: {
+      kind: "refused",
+      httpStatus: 401,
+      messages: [{ message: "Missing credentials", field: null, status: 2 }],
+    },
+  });
+  assert.deepEqual(parseOptions(200, { ok: true }), {
+    ok: false,
+    error: {
+      kind: "malformed",
+      httpStatus: 200,
+      detail: "the answer has no `searchcompletion`",
+    },
+  });
+});
+
+test("🔴 an HTML message (<5>) is printed as its text, the tags dropped; a plain one (<0>) as it is", () => {
+  const r = parseUpdate(200, {
+    valid: true,
+    message_list: [
+      {
+        status: 1,
+        field: "pc_conflicts",
+        message:
+          '<5>You may have missed conflicts of interest with <a href="#pcconf:1">A B</a>.',
+      },
+      { status: 2, field: "topics", message: "<0>Use <b> sparingly" },
+    ],
+  });
+  assert.ok(r.ok);
+  assert.deepEqual(
+    r.value.messages.map((m) => m.message),
+    [
+      "You may have missed conflicts of interest with A B.",
+      "Use <b> sparingly",
+    ],
   );
 });
 
