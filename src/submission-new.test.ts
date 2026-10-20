@@ -362,8 +362,7 @@ test("new --save, but paperlint.json changed under it: the id is printed with th
     );
   };
   const runs = await Promise.all(map(cases, ([swap]) => savedWith(swap)));
-  const head =
-    "submission 42 was created, but papers/p/paperlint.json was not changed (";
+  const head = `submission 42 was created (${SITE}/paper/42), but papers/p/paperlint.json was not changed (`;
   const tail = `) — add "submission": { "id": 42 } to the current attempt by hand`;
   expect(
     map(runs, (r, i) => {
@@ -377,6 +376,27 @@ test("new --save, but paperlint.json changed under it: the id is printed with th
       ];
     }),
   ).toStrictEqual(map(cases, () => [1, 1, true, true, true]));
+});
+
+test("new --save, but paperlint.json cannot be written: the id, its page and the line to add are printed, exit 1", async () => {
+  const fs = newFiles({});
+  const r = await run(
+    { sub: "new", save: true },
+    {
+      files: {
+        ...fs,
+        writeAtomic: () => {
+          throw new Error("EROFS: read-only file system");
+        },
+      },
+    },
+  );
+  expect([r.code, r.errs]).toStrictEqual([
+    1,
+    [
+      `submission 42 was created (${SITE}/paper/42), but papers/p/paperlint.json was not changed (EROFS: read-only file system) — add "submission": { "id": 42 } to the current attempt by hand`,
+    ],
+  ]);
 });
 
 test("new: no paper.tex — the PDF's Title stands in; without one either, the fix is named", async () => {

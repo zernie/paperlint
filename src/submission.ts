@@ -586,11 +586,16 @@ function recordId(
   if (!json.ok) return json;
   const next = withSubmissionId(json.value, id);
   if (!next.ok) return next;
-  deps.files.writeAtomic(
-    absolutePath(config),
-    new TextEncoder().encode(`${JSON.stringify(next.value, null, 2)}\n`),
-  );
-  return ok(null);
+  // A write that fails (read-only, disk full) must not lose the id the portal just gave.
+  try {
+    deps.files.writeAtomic(
+      absolutePath(config),
+      new TextEncoder().encode(`${JSON.stringify(next.value, null, 2)}\n`),
+    );
+    return ok(null);
+  } catch (e) {
+    return err(messageOf(e));
+  }
 }
 
 //** Why `new` cannot run for this paper, or the authors it sends: checked before anything is read. */
@@ -665,7 +670,7 @@ function recordCreated(
   const recorded = recordId(t.config, id, deps);
   if (!recorded.ok) {
     deps.err(
-      `submission ${String(id)} was created, but ${config} was not changed (${recorded.error}) — add "submission": { "id": ${String(id)} } to the current attempt by hand`,
+      `submission ${String(id)} was created (${deps.portalSite.submissionPage(id)}), but ${config} was not changed (${recorded.error}) — add "submission": { "id": ${String(id)} } to the current attempt by hand`,
     );
     return 1;
   }
