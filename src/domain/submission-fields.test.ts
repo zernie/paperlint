@@ -39,11 +39,11 @@ const VENUE: VenueFields = {
 };
 
 test("parsePaperFields: absent → nothing to send; every kind's value passes as given", () => {
-  assert.deepEqual(parsePaperFields(undefined, VENUE, "msr.jsonc"), {
+  assert.deepEqual(parsePaperFields(null, VENUE, "msr.jsonc"), {
     ok: true,
     value: {},
   });
-  assert.deepEqual(parsePaperFields(undefined, null, "msr.jsonc"), {
+  assert.deepEqual(parsePaperFields(null, null, "msr.jsonc"), {
     ok: true,
     value: {},
   });

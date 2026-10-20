@@ -12,7 +12,15 @@
  * Create: the same `POST`, with `p=new` and `"pid": "new"` in the object — «Setting `p=new` will
  * create a new submission; the response will contain the chosen submission ID»
  * (`devel/apidoc/submissions.md`, `post /paper`, in kohler/hotcrp). The object carries the title, the
- * abstract, the authors and the PDF; nothing else is sent.
+ * abstract, the authors and the PDF, and the venue's own fields the paper answers.
+ *
+ * Fields: a change and a creation carry the paper's `fields` as submission-object keys, as checked
+ * against the venue preset's `submission_fields` (`topics`: a list of `"Group: Topic"`; measured
+ * 2026-10-20, a bare `"Topic"` is dropped without a word).
+ *
+ * Options: `GET /api/searchcompletion` — the search box's completions, which an author's token may
+ * read; they name every topic as `topic:"<name>"`. (`/api/settings`, which describes the form,
+ * answers "Permission error" to an author.)
  *
  * 🔴 THE TOKEN goes in the `Authorization` header and nowhere else: not into a URL, a message, or an
  * error. A failure is described by HTTP status, HotCRP's own messages, or the network error's text.
@@ -26,7 +34,12 @@ import type {
   SubmissionChange,
 } from "../../domain/submission.ts";
 import type { SubmissionPortal } from "../../ports/submission-portal.ts";
-import { parseCreate, parseShow, parseUpdate } from "./response.ts";
+import {
+  parseCreate,
+  parseOptions,
+  parseShow,
+  parseUpdate,
+} from "./response.ts";
 
 /**
  * The form field the PDF travels in, and the name the `json` object's `content_file` refers to it
@@ -91,6 +104,7 @@ export function changeObject(
     ...(c.pdf === null ? {} : { submission: { content_file: CONTENT_FIELD } }),
     ...(c.abstract === null ? {} : { abstract: c.abstract }),
     ...(c.submit ? { status: "submitted" } : {}),
+    ...c.fields,
   };
 }
 
@@ -112,6 +126,7 @@ export function createObject(
     abstract: p.abstract,
     authors: p.authors.map(authorObject),
     submission: { content_file: CONTENT_FIELD },
+    ...p.fields,
   };
 }
 
@@ -169,6 +184,11 @@ export function hotcrpPortal(o: HotcrpOptions): SubmissionPortal {
       const object = createObject(paper);
       const a = await post(o, { p: "new", object, pdf: paper.pdf, save });
       return a.ok ? parseCreate(a.value.status, a.value.body) : a;
+    },
+    async options() {
+      const url = `${o.url}/api/searchcompletion`;
+      const a = await call(url, { method: "GET" }, o.token, READ_TIMEOUT_MS);
+      return a.ok ? parseOptions(a.value.status, a.value.body) : a;
     },
   };
 }

@@ -12,6 +12,7 @@
 import { err, ok, type Result } from "./result.ts";
 import { isRecord } from "./record.ts";
 import type { Sha256 } from "./sha256.ts";
+import type { FieldValues } from "./submission-fields.ts";
 
 /** The portal kinds an adapter exists for. Any other kind is refused by name. */
 export type PortalKind = "hotcrp";
@@ -100,6 +101,8 @@ export interface SubmissionChange {
   readonly abstract: string | null;
   /** Mark the submission submitted (ready for review). */
   readonly submit: boolean;
+  /** The venue's own form fields the paper answers, checked against the preset; empty sends none. */
+  readonly fields: FieldValues;
 }
 
 /** One message from the portal: its text, and the field it is about when it names one. */
@@ -207,6 +210,14 @@ export interface NewSubmission {
   readonly abstract: string;
   readonly authors: readonly Author[];
   readonly pdf: { readonly name: string; readonly bytes: Uint8Array };
+  /** The venue's own form fields the paper answers, checked against the preset; empty sends none. */
+  readonly fields: FieldValues;
+}
+
+/** What the portal lets an author read of its form's choices: only what an author's token can see. */
+export interface PortalOptions {
+  /** The topics an author can choose, spelled as the portal takes them. */
+  readonly topics: readonly string[];
 }
 
 /** What the portal answered to a creation: an update's answer, and the id it chose when it saved. */

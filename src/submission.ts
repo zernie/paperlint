@@ -1,6 +1,6 @@
 /**
- * `paperlint submission show|update [paper-dir]` — read and change a paper's submission on the
- * venue's portal, through the portal's API.
+ * `paperlint submission new|show|update|topics [paper-dir]` — create, read and change a paper's
+ * submission on the venue's portal, through the portal's API.
  *
  * The command is named by the job, not by the portal: WHERE the submission lives is data. The venue
  * preset declares the portal (`"portal": { "kind": "hotcrp", "url": … }`), the paper's
@@ -11,6 +11,12 @@
  *            whether it is the local `paper.pdf`, by sha256
  *   update   send the PDF (and, if asked, an abstract, or "submitted"). A DRY RUN unless `--save`:
  *            the portal checks the change and keeps nothing
+ *   topics   the topics the portal offers, against the ones the venue preset records
+ *
+ * `new` and `update` also send the paper's `fields` — its answers to the venue's own form fields
+ * (topics, PC conflicts, …), checked against the preset's `submission_fields` before anything is
+ * sent (`src/domain/submission-fields.ts`). A checkbox field the portal did not take is said, and
+ * fails the command: HotCRP keeps an option it does not know as nothing, without an error.
  *
  * 🔴 THE TOKEN IS AN INPUT, AND ONLY AN INPUT. It comes from the environment (the root reads it), is
  * handed to the adapter, and never appears in anything printed here.
@@ -33,6 +39,12 @@ import {
   type SupportedPortal,
   type UpdateOutcome,
 } from "./domain/submission.ts";
+import {
+  droppedFields,
+  parsePaperFields,
+  type FieldValues,
+  type VenueFields,
+} from "./domain/submission-fields.ts";
 import type { Files } from "./ports/files.ts";
 import type {
   PortalSite,
@@ -111,7 +123,7 @@ export function tokenRefusedLines(
   return [why, ...tokenSteps(portal, site, variable)];
 }
 
-export const SUBCOMMANDS = ["new", "show", "update"] as const;
+export const SUBCOMMANDS = ["new", "show", "update", "topics"] as const;
 export type Subcommand = (typeof SUBCOMMANDS)[number];
 const isSubcommand = (s: string | undefined): s is Subcommand =>
   SUBCOMMANDS.some((x) => x === s);
@@ -158,6 +170,10 @@ export interface SubmissionTarget {
   readonly config: string;
   /** The authors the paper declares for the portal; null when it declares none. */
   readonly authors: readonly Author[] | null;
+  /** The paper's answers to the venue's own form fields, checked against `venueFields`. */
+  readonly fields: FieldValues;
+  /** The venue's own form fields, as its preset records them; null when it records none. */
+  readonly venueFields: VenueFields | null;
   /** The cycle attempt is accepted: a new submission belongs to a new cycle. */
   readonly accepted: boolean;
   /** The paper's built PDF, absolute. */
@@ -202,11 +218,20 @@ function targetOf(
       ? []
       : currentDeadlines(p.settings.cycles.current);
   const deadlines = deadlinesInForce(own, p.preset.deadlines);
+  const venueFields = p.preset.submissionFields;
+  const fields = parsePaperFields(
+    p.settings.fields,
+    venueFields,
+    p.preset.chain.join(", "),
+  );
+  if (!fields.ok) return err(`${configOf(paperDir)}: ${fields.error}`);
   return ok({
     portal: portal.value,
     id: p.settings.submission?.id ?? null,
     config: configOf(paperDir),
     authors: p.settings.authors,
+    fields: fields.value,
+    venueFields,
     accepted: p.settings.cycles?.current.kind === "accepted",
     pdf,
     call,
@@ -312,6 +337,28 @@ export function showLines(
 export const checkPdfLine = (shown: string, call: string | null): string =>
   `before you rely on it, open ${shown} yourself and check it against ${call === null ? "the venue's call for papers" : `the call for papers, ${call}`}: the page count and what counts toward the limit, the template and its class options, anonymity, and that every figure, table and reference renders — paperlint passing is not the venue accepting the format`;
 
+/** The fields the paper sent, one line each, as the portal will get them. Pure. */
+export const fieldLines = (fields: FieldValues): readonly string[] =>
+  Object.entries(fields).map(
+    ([key, value]) => `field         ${key}: ${JSON.stringify(value)}`,
+  );
+
+/** The checkbox fields the portal did not take, said; none when it took them all. Pure. */
+export function droppedLines(
+  fields: FieldValues,
+  venue: VenueFields | null,
+  o: UpdateOutcome,
+): readonly string[] {
+  const dropped = droppedFields(fields, venue, {
+    changes: o.changes,
+    messageFields: o.messages.map((m) => m.field),
+  });
+  return dropped.map(
+    (key) =>
+      `NOT TAKEN     ${key}: the portal kept none of ${JSON.stringify(fields[key])} — an option it does not know is dropped without an error; \`paperlint submission topics\` lists what it offers`,
+  );
+}
+
 /** `update`'s report. Pure. */
 export function updateLines(
   o: UpdateOutcome,
@@ -395,15 +442,17 @@ function abstractOf(
     : ok(new TextDecoder().decode(bytes).trim());
 }
 
-/** What `update` sends: the PDF's bytes, the abstract's text, and whether to mark it submitted. */
+/** What `update` sends: the PDF's bytes, the abstract's text, whether to mark it submitted, the fields. */
 const changeOf = (
   a: SubmissionArgs & { readonly pdfPath: string },
   bytes: Uint8Array,
   abstract: string | null,
+  fields: FieldValues,
 ) => ({
   pdf: { name: basename(a.pdfPath), bytes },
   abstract,
   submit: a.submit,
+  fields,
 });
 
 /** `update`: send the PDF (and the abstract, and "submitted" when asked); a dry run unless saving. */
@@ -423,17 +472,20 @@ async function runUpdate(
   const abstract = abstractOf(a, deps);
   if (!abstract.ok) return (deps.err(abstract.error), 2);
   deps.log(checkPdfLine(shown, t.call));
-  const r = await portal.update(t.id, changeOf(a, bytes, abstract.value), {
-    save: a.save,
+  fieldLines(t.fields).forEach((l) => {
+    deps.log(l);
   });
+  const change = changeOf(a, bytes, abstract.value, t.fields);
+  const r = await portal.update(t.id, change, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
   const local = { shown, sha256: sha256Hex(bytes) };
-  updateLines(r.value, local, a.save).forEach((l) => {
+  const dropped = droppedLines(t.fields, t.venueFields, r.value);
+  [...updateLines(r.value, local, a.save), ...dropped].forEach((l) => {
     deps.log(l);
   });
   const fine =
     r.value.valid && r.value.httpStatus >= 200 && r.value.httpStatus < 300;
-  return fine ? 0 : 1;
+  return fine && dropped.length === 0 ? 0 : 1;
 }
 
 // ── new ──────────────────────────────────────────────────────────────────────────────
@@ -541,31 +593,37 @@ const noReadableTitle = (text: string): string =>
     : `the \\title in ${MAIN} uses a command paperlint does not read («${text.replaceAll(OPAQUE, "…")}»), and the PDF names no Title — set \\hypersetup{pdftitle={<the title as plain text>}} and rebuild`;
 
 /** What `new` will send, as the author reads it before saying yes. Pure. */
-export function newLines(
-  title: string,
-  abstract: string,
-  authors: readonly Author[],
-): readonly string[] {
+export function newLines(p: NewSubmission): readonly string[] {
   return [
-    `title         ${title}`,
-    ...authors.map(
+    `title         ${p.title}`,
+    ...p.authors.map(
       (a, i) =>
         `author ${String(i + 1).padEnd(6)} ${a.name} <${a.email}>${a.affiliation === null ? "" : `, ${a.affiliation}`}`,
     ),
-    `abstract      ${String(wordCount(abstract))} words:`,
-    `  ${abstract}`,
+    `abstract      ${String(wordCount(p.abstract))} words:`,
+    `  ${p.abstract}`,
+    ...fieldLines(p.fields),
   ];
 }
 
-/** What the author does on the site after `new`: what paperlint does not send. Pure. */
+/** What is left after `new`: the venue's fields the paper did not answer, what only the site takes, the submit. Pure. */
 export function onTheSiteLines(
   site: PortalSite,
+  t: Pick<SubmissionTarget, "fields" | "venueFields">,
   id: number | null,
   paperArg: string,
 ): readonly string[] {
+  const sent = Object.keys(t.fields);
+  const unanswered = Object.keys(t.venueFields?.fields ?? {}).filter(
+    (k) => !sent.includes(k),
+  );
   return [
-    `do on the site, ${site.submissionPage(id)} — paperlint sends only the title, the abstract, the authors and the PDF:`,
-    ...site.siteOnly.map((f) => `  - ${f}`),
+    `still to do for ${site.submissionPage(id)} — paperlint sent the title, the abstract, the authors and the PDF${sent.length ? `, and ${sent.join(", ")}` : ""}:`,
+    ...unanswered.map(
+      (k) =>
+        `  - answer ${k} in the paper's paperlint.json "fields" (the venue preset records it), then: npx paperlint submission update ${paperArg} (a dry run; --save after your yes)`,
+    ),
+    ...site.siteOnly.map((f) => `  - on the site: ${f}`),
     `  - then mark it submitted: npx paperlint submission update ${paperArg} --submit (a dry run; --save after your yes)`,
   ];
 }
@@ -695,6 +753,7 @@ function newSubmissionOf(
     ...text.value,
     authors: authors.value,
     pdf: { name: basename(a.pdfPath), bytes: pdf },
+    fields: t.fields,
   };
   return ok({ paper, shown });
 }
@@ -741,17 +800,67 @@ async function runNew(
   if (!n.ok) return (deps.err(n.error), 2);
   const { paper, shown } = n.value;
   deps.log(checkPdfLine(shown, t.call));
-  logAll(newLines(paper.title, paper.abstract, paper.authors), deps);
+  logAll(newLines(paper), deps);
   const r = await portal.create(paper, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
-  logAll(createLines(r.value, a.save), deps);
+  const dropped = droppedLines(t.fields, t.venueFields, r.value);
+  logAll([...createLines(r.value, a.save), ...dropped], deps);
   const fine =
     r.value.valid && r.value.httpStatus >= 200 && r.value.httpStatus < 300;
   if (!fine || (a.save && r.value.id === null)) return 1;
   const paperArg =
     a.paperDir === deps.cwd ? "." : shownPath(deps.cwd, a.paperDir);
-  logAll(onTheSiteLines(deps.portalSite, r.value.id, paperArg), deps);
-  return r.value.id === null ? 0 : recordCreated(t, r.value.id, paperArg, deps);
+  logAll(onTheSiteLines(deps.portalSite, t, r.value.id, paperArg), deps);
+  const recorded =
+    r.value.id === null ? 0 : recordCreated(t, r.value.id, paperArg, deps);
+  return dropped.length === 0 ? recorded : 1;
+}
+
+/** The checkbox field the preset records the portal's topics under: the one named `topics`. */
+const TOPICS = "topics";
+
+/** `topics`' report: each topic the portal offers against the preset's options, and whether they agree. Pure. */
+export function topicsReport(
+  t: Pick<SubmissionTarget, "portal" | "venueFields">,
+  offered: readonly string[],
+): { readonly lines: readonly string[]; readonly agrees: boolean } {
+  const declared = t.venueFields?.fields[TOPICS];
+  const head = `topics on ${t.portal.url}: ${String(offered.length)}`;
+  if (t.venueFields === null || declared?.kind !== "checkboxes")
+    return {
+      lines: [
+        head,
+        ...offered.map((n) => `  ${n}`),
+        `the venue preset records no "submission_fields" with "topics" — record these, spelled as listed, before a paper can send any`,
+      ],
+      agrees: false,
+    };
+  const recorded = declared.options;
+  const extra = offered.filter((n) => !recorded.includes(n));
+  const missing = recorded.filter((n) => !offered.includes(n));
+  return {
+    lines: [
+      `${head}; the preset records ${String(recorded.length)} (read ${t.venueFields.read})`,
+      ...offered.map(
+        (n) => `  ${recorded.includes(n) ? "✓" : "+ not in the preset:"} ${n}`,
+      ),
+      ...missing.map((n) => `  − in the preset, not offered: ${n}`),
+    ],
+    agrees: extra.length === 0 && missing.length === 0,
+  };
+}
+
+/** `topics`: what the portal offers, and whether the preset records the same — exit 1 when not. */
+async function runTopics(
+  t: SubmissionTarget,
+  portal: SubmissionPortal,
+  deps: RunDeps,
+): Promise<number> {
+  const r = await portal.options();
+  if (!r.ok) return failed(r.error, deps);
+  const report = topicsReport(t, r.value.topics);
+  logAll(report.lines, deps);
+  return report.agrees ? 0 : 1;
 }
 
 //** The flags that change something, as given. */
@@ -769,8 +878,8 @@ export function usageProblem(a: SubmissionArgs): string | null {
   if (a.extra.length > 0)
     return `\`submission ${a.sub}\` takes one paper folder — got also \`${a.extra.join(" ")}\``;
   const writing = writingFlags(a);
-  if (a.sub === "show" && writing.length > 0)
-    return `${writing.join(", ")}: only \`submission new\` and \`submission update\` change anything; \`show\` reads`;
+  if ((a.sub === "show" || a.sub === "topics") && writing.length > 0)
+    return `${writing.join(", ")}: only \`submission new\` and \`submission update\` change anything; \`${a.sub}\` reads`;
   return a.sub === "new" && a.submit
     ? "--submit: `submission new` creates the submission; mark it submitted with `submission update --submit` once `show` says the portal holds this build"
     : null;
@@ -805,7 +914,8 @@ export async function runSubmission(
   const paperDir = resolve(deps.cwd, a.paperDir);
   const t = submissionTarget(paperDir, deps.presets);
   if (!t.ok) return (deps.err(t.error), 2);
-  const id = a.sub === "new" ? ok(null) : idOf(t.value);
+  const id =
+    a.sub === "new" || a.sub === "topics" ? ok(null) : idOf(t.value);
   if (!id.ok) return (deps.err(id.error), 2);
   const site = deps.site(t.value.portal);
   const found = lookUpToken(tokenNames(site), deps.env);
@@ -817,6 +927,7 @@ export async function runSubmission(
     portalSite: site,
     refused: (f) => tokenRefusedLines(t.value.portal, site, f),
   };
+  if (a.sub === "topics") return runTopics(t.value, portal, withToken);
   if (id.value === null)
     return runNew(t.value, portal, { ...a, pdfPath, paperDir }, withToken);
   const target = { ...t.value, id: id.value };

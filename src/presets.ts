@@ -26,7 +26,7 @@
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins; `ruleOrigins` keeps which file set each
  *   template   the child wins, with its `template_forbids`; so does `name`, and `required_sections`, `register`, `talk`,
- *              `portal` and `deadlines` (each whole)
+ *              `portal`, `deadlines` and `submission_fields` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
  *
  * ── THE ID AND THE LABEL ──────────────────────────────────────────────────────────
@@ -63,6 +63,7 @@ import { messageOf } from "./domain/text.ts";
 import type { RegisterAnchor } from "./domain/register.ts";
 import type { VenueTalk } from "./domain/talk.ts";
 import type { VenuePortal } from "./domain/submission.ts";
+import type { VenueFields } from "./domain/submission-fields.ts";
 import type { Reading } from "./domain/deadline.ts";
 
 /** The prefix of a shipped preset's spec. */
@@ -129,6 +130,8 @@ export interface Preset {
    * workflow); empty when no file of the chain names any. A paper's current cycle derives them.
    */
   readonly deadlines: readonly Reading[];
+  /** The fields the edition's submission form asks (`paperlint submission`); null when no file of the chain records any. */
+  readonly submissionFields: VenueFields | null;
 }
 
 /** Why a spec does not resolve. */
@@ -300,6 +303,7 @@ const NOTHING_MERGED: Merging = {
   talk: null,
   portal: null,
   deadlines: [],
+  submissionFields: null,
 };
 
 /** The blocks a child replaces whole: the child's when it names one, else its parents'. Pure. */
@@ -308,13 +312,19 @@ const wholeBlocks = (
   p: PresetFile,
 ): Pick<
   Merging,
-  "requiredSections" | "registerAnchors" | "talk" | "portal" | "deadlines"
+  | "requiredSections"
+  | "registerAnchors"
+  | "talk"
+  | "portal"
+  | "deadlines"
+  | "submissionFields"
 > => ({
   requiredSections: p.requiredSections ?? acc.requiredSections,
   registerAnchors: p.registerAnchors ?? acc.registerAnchors,
   talk: p.talk ?? acc.talk,
   portal: p.portal ?? acc.portal,
   deadlines: p.deadlines ?? acc.deadlines,
+  submissionFields: p.submissionFields ?? acc.submissionFields,
 });
 
 /** One file of the chain, `file`, merged over what its parents gave. Pure. */

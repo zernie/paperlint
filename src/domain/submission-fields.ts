@@ -116,7 +116,7 @@ function problemOf(issue: z.core.$ZodIssue, v: VenueFields): string {
  * A paper's `fields` key, checked against its venue's form → the values to send (empty when the
  * paper gives none), or one line saying what is wrong. Pure.
  *
- * @param raw    the paper's `fields`, undefined when absent
+ * @param raw    the paper's `fields`, null when absent
  * @param venue  the venue preset's `submission_fields`; null when it records none
  * @param where  where the venue's fields were read from, for the message (the preset chain)
  */
@@ -125,7 +125,7 @@ export function parsePaperFields(
   venue: VenueFields | null,
   where: string,
 ): Result<FieldValues, string> {
-  if (raw === undefined) return ok({});
+  if (raw === null) return ok({});
   if (venue === null)
     return err(
       `"fields" is set, but the venue preset records no "submission_fields" (read: ${where}) — record the form's fields in the venue's preset first, or drop "fields"`,
