@@ -3,9 +3,8 @@
  * fake VenueDeadlines port that answers plain domain values (how HotCRP's page is parsed is
  * src/adapters/hotcrp/deadlines.test.ts's) and presets held in memory.
  */
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import type { PortalDeadlines } from "#src/domain/deadline";
 import { err, ok, type Result } from "#src/domain/result";
@@ -21,8 +20,6 @@ import {
   type PresetFiles,
 } from "./refresh.ts";
 
-const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const PRESETS = join(ROOT, "presets");
 // The logic is tested over presets FROZEN at the portal's reading of 2026-10-19 (test/frozen-presets.ts):
 // the shipped files' dates are the refresh's own output, and a test of the refresh that read them
 // would turn red on the refresh's own pull request.
@@ -168,12 +165,12 @@ describe("refreshPreset on MSR 2027's page", () => {
 
 describe("refreshPreset — what it skips, and a portal it cannot read", () => {
   test("a preset without a portal, or with one paperlint has no adapter for, is skipped", async () => {
-    const aisec = join(PRESETS, "aisec.jsonc");
+    const aisec = join(FROZEN_DIR, "aisec.jsonc");
     const skipped = { kind: "skipped" };
     expect(
       await refreshPreset({
         file: aisec,
-        text: readFileSync(aisec, "utf8"),
+        text: frozenText("aisec.jsonc"),
         portal: answering(ok(MSR_PAGE)),
         today: "2026-10-05",
       }),
@@ -245,7 +242,7 @@ describe("runRefresh — what it prints, writes and returns", () => {
     });
     expect([code, written]).toStrictEqual([0, {}]);
     expect(lines.at(-1)).toMatch(
-      /^✓ no deadline changed: 2 preset\(s\) with a portal read, \d+ skipped$/,
+      /^✓ no deadline changed: 2 preset\(s\) with a portal read, 1 skipped$/,
     );
   });
 
