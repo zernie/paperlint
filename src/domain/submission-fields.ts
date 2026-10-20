@@ -59,7 +59,7 @@ export type FieldValues = Readonly<Record<string, unknown>>;
 const CONFLICT = z.union([z.literal(true), z.string().trim().min(1)]);
 
 /** One field's value schema, from its kind. Pure. */
-function valueSchema(d: FieldDeclaration): z.ZodType {
+function valueSchema(d: FieldDeclaration): Readonly<z.ZodType> {
   switch (d.kind) {
     case "checkboxes":
       return z
@@ -76,7 +76,10 @@ function valueSchema(d: FieldDeclaration): z.ZodType {
           error: "an option is given twice",
         });
     case "text":
-      return z.string().trim().min(d.required ? 1 : 0);
+      return z
+        .string()
+        .trim()
+        .min(d.required ? 1 : 0);
     case "email":
       return z.email();
     case "pc_conflicts":
@@ -85,7 +88,9 @@ function valueSchema(d: FieldDeclaration): z.ZodType {
 }
 
 /** The schema of a paper's `fields` for these venue fields: every key declared, the required ones present. Pure. */
-export const fieldValuesSchema = (v: VenueFields): z.ZodType<FieldValues> =>
+export const fieldValuesSchema = (
+  v: VenueFields,
+): Readonly<z.ZodType<FieldValues>> =>
   z.strictObject(
     Object.fromEntries(
       Object.entries(v.fields).map(([key, d]) => {
@@ -96,7 +101,9 @@ export const fieldValuesSchema = (v: VenueFields): z.ZodType<FieldValues> =>
   );
 
 const at = (path: readonly PropertyKey[]): string =>
-  path.map((p) => (typeof p === "number" ? `[${String(p)}]` : `.${String(p)}`)).join("");
+  path
+    .map((p) => (typeof p === "number" ? `[${String(p)}]` : `.${String(p)}`))
+    .join("");
 
 /** The first problem of a refused `fields`, naming the key, and what the form offers when it is a choice. */
 function problemOf(issue: z.core.$ZodIssue, v: VenueFields): string {

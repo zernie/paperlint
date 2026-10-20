@@ -198,44 +198,56 @@ const noPresetLine = (
     ? `${configOf(paperDir)}: no "extends" — the venue preset it names declares the portal ("portal": { "kind": …, "url": … })`
     : `${configOf(paperDir)}: the current cycle names no venue preset, and the preset is what declares the portal — set the venue in the current cycle ("venue": { "kind": "preset", "extends": "paperlint:…" }), or upload by hand`;
 
+/** The paper's `fields`, checked against its venue preset's form, or the line naming what is wrong. */
+function fieldsOf(
+  paperDir: string,
+  p: Extract<PaperPreset, { readonly kind: "resolved" }>,
+): Result<FieldValues, string> {
+  const fields = parsePaperFields(
+    p.settings.fields,
+    p.preset.submissionFields,
+    p.preset.chain.join(", "),
+  );
+  return fields.ok ? fields : err(`${configOf(paperDir)}: ${fields.error}`);
+}
+
+/** The venue preset's portal, if it declares one that paperlint can talk to; else the line to act on. */
+function portalOfPreset(
+  p: Extract<PaperPreset, { readonly kind: "resolved" }>,
+): Result<SupportedPortal, string> {
+  const declared = p.preset.portal;
+  return declared === null
+    ? err(
+        `the venue preset declares no "portal" (read: ${p.preset.chain.join(", ")}) — add "portal": { "kind": "hotcrp", "url": "<the site>" } to the venue's preset, or upload by hand`,
+      )
+    : supportedPortal(declared);
+}
+
 /** A resolved paper → its portal and submission, or the line naming the file and key to set. */
 function targetOf(
   paperDir: string,
   p: Extract<PaperPreset, { readonly kind: "resolved" }>,
 ): Result<SubmissionTarget, string> {
-  const declared = p.preset.portal;
-  if (declared === null)
-    return err(
-      `the venue preset declares no "portal" (read: ${p.preset.chain.join(", ")}) — add "portal": { "kind": "hotcrp", "url": "<the site>" } to the venue's preset, or upload by hand`,
-    );
-  const portal = supportedPortal(declared);
+  const portal = portalOfPreset(p);
   if (!portal.ok) return portal;
-  const pdf = join(paperDir, p.settings.pdf ?? "paper.pdf");
   const identity = p.preset.identity;
-  const call = identity.type === "venue" ? identity.url : null;
   const own =
     p.settings.cycles === null
       ? []
       : currentDeadlines(p.settings.cycles.current);
-  const deadlines = deadlinesInForce(own, p.preset.deadlines);
-  const venueFields = p.preset.submissionFields;
-  const fields = parsePaperFields(
-    p.settings.fields,
-    venueFields,
-    p.preset.chain.join(", "),
-  );
-  if (!fields.ok) return err(`${configOf(paperDir)}: ${fields.error}`);
+  const fields = fieldsOf(paperDir, p);
+  if (!fields.ok) return fields;
   return ok({
     portal: portal.value,
     id: p.settings.submission?.id ?? null,
     config: configOf(paperDir),
     authors: p.settings.authors,
     fields: fields.value,
-    venueFields,
+    venueFields: p.preset.submissionFields,
     accepted: p.settings.cycles?.current.kind === "accepted",
-    pdf,
-    call,
-    deadlines,
+    pdf: join(paperDir, p.settings.pdf ?? "paper.pdf"),
+    call: identity.type === "venue" ? identity.url : null,
+    deadlines: deadlinesInForce(own, p.preset.deadlines),
   });
 }
 
@@ -393,6 +405,12 @@ type RunDeps = SubmissionDeps & {
   readonly refused: (f: PortalFailure) => readonly string[];
 };
 
+const logAll = (lines: readonly string[], deps: RunDeps): void => {
+  lines.forEach((l) => {
+    deps.log(l);
+  });
+};
+
 /** A failure printed — the portal's words, then what to do about the token if it was the token — exit 1. */
 function failed(f: PortalFailure, deps: RunDeps): number {
   [failureText(f), ...deps.refused(f)].forEach((l) => {
@@ -471,18 +489,13 @@ async function runUpdate(
     );
   const abstract = abstractOf(a, deps);
   if (!abstract.ok) return (deps.err(abstract.error), 2);
-  deps.log(checkPdfLine(shown, t.call));
-  fieldLines(t.fields).forEach((l) => {
-    deps.log(l);
-  });
+  logAll([checkPdfLine(shown, t.call), ...fieldLines(t.fields)], deps);
   const change = changeOf(a, bytes, abstract.value, t.fields);
   const r = await portal.update(t.id, change, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
   const local = { shown, sha256: sha256Hex(bytes) };
   const dropped = droppedLines(t.fields, t.venueFields, r.value);
-  [...updateLines(r.value, local, a.save), ...dropped].forEach((l) => {
-    deps.log(l);
-  });
+  logAll([...updateLines(r.value, local, a.save), ...dropped], deps);
   const fine =
     r.value.valid && r.value.httpStatus >= 200 && r.value.httpStatus < 300;
   return fine && dropped.length === 0 ? 0 : 1;
@@ -780,11 +793,18 @@ function recordCreated(
   return 0;
 }
 
-const logAll = (lines: readonly string[], deps: RunDeps): void => {
-  lines.forEach((l) => {
-    deps.log(l);
-  });
-};
+/** After a creation the portal took: what is still to do, and the id recorded when it saved one. */
+function afterCreated(
+  t: SubmissionTarget,
+  id: number | null,
+  a: SubmissionArgs & { readonly paperDir: string },
+  deps: RunDeps,
+): number {
+  const paperArg =
+    a.paperDir === deps.cwd ? "." : shownPath(deps.cwd, a.paperDir);
+  logAll(onTheSiteLines(deps.portalSite, t, id, paperArg), deps);
+  return id === null ? 0 : recordCreated(t, id, paperArg, deps);
+}
 
 /**
  * `new`: create the paper's submission — title and abstract from the build, the authors the paper
@@ -808,13 +828,12 @@ async function runNew(
   const fine =
     r.value.valid && r.value.httpStatus >= 200 && r.value.httpStatus < 300;
   if (!fine || (a.save && r.value.id === null)) return 1;
-  const paperArg =
-    a.paperDir === deps.cwd ? "." : shownPath(deps.cwd, a.paperDir);
-  logAll(onTheSiteLines(deps.portalSite, t, r.value.id, paperArg), deps);
-  const recorded =
-    r.value.id === null ? 0 : recordCreated(t, r.value.id, paperArg, deps);
+  const recorded = afterCreated(t, r.value.id, a, deps);
   return dropped.length === 0 ? recorded : 1;
 }
+
+/** The subcommands that run before the paper has a submission id: `new` creates it, `topics` needs none. */
+const NEEDS_NO_ID: readonly Subcommand[] = ["new", "topics"];
 
 /** The checkbox field the preset records the portal's topics under: the one named `topics`. */
 const TOPICS = "topics";
@@ -914,8 +933,7 @@ export async function runSubmission(
   const paperDir = resolve(deps.cwd, a.paperDir);
   const t = submissionTarget(paperDir, deps.presets);
   if (!t.ok) return (deps.err(t.error), 2);
-  const id =
-    a.sub === "new" || a.sub === "topics" ? ok(null) : idOf(t.value);
+  const id = NEEDS_NO_ID.some((s) => s === a.sub) ? ok(null) : idOf(t.value);
   if (!id.ok) return (deps.err(id.error), 2);
   const site = deps.site(t.value.portal);
   const found = lookUpToken(tokenNames(site), deps.env);

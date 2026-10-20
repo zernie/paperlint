@@ -80,7 +80,12 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
  */
 /** A recorded HotCRP answer (`cassette/README.md`), as the text it was sent as. */
 function cassette(
-  name: "get-paper" | "get-noauth" | "post-dot" | "post-ok" | "get-searchcompletion",
+  name:
+    | "get-paper"
+    | "get-noauth"
+    | "post-dot"
+    | "post-ok"
+    | "get-searchcompletion",
 ): string {
   return readFileSync(
     new URL(`./cassette/${name}.json`, import.meta.url),

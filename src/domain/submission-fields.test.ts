@@ -49,7 +49,10 @@ test("parsePaperFields: absent → nothing to send; every kind's value passes as
   });
   const fields = {
     topics: ["SE Topic: AI for software engineering"],
-    pc_conflicts: { "pc@example.org": "collaborator", "chair@example.org": true },
+    pc_conflicts: {
+      "pc@example.org": "collaborator",
+      "chair@example.org": true,
+    },
     ACMCorAut: "author@example.org",
     note: "free text",
   };

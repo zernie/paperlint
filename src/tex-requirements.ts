@@ -469,6 +469,16 @@ function deadlinesOf(
   }));
 }
 
+/** A preset's blocks about its portal: where, the deadlines read there, the form's own fields. */
+const portalBlocks = (
+  j: PresetJson,
+  file: string,
+): Pick<PresetFile, "portal" | "deadlines" | "submissionFields"> => ({
+  portal: portalOf(j.portal),
+  deadlines: deadlinesOf(j.deadlines, file),
+  submissionFields: submissionFieldsOf(j.submission_fields),
+});
+
 /**
  * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
  * of a preset: the toolchain reads its `tex`, the venue rules its `format`, the config its `rules`.
@@ -503,9 +513,7 @@ export function parsePreset(
     rules: j.rules ?? {},
     registerAnchors: anchorsOf(j.register),
     talk: j.talk === undefined ? null : venueTalkOf(j.talk),
-    portal: portalOf(j.portal),
-    deadlines: deadlinesOf(j.deadlines, file),
-    submissionFields: submissionFieldsOf(j.submission_fields),
+    ...portalBlocks(j, file),
   };
 }
 
