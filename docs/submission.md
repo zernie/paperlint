@@ -110,8 +110,9 @@ Everything else, including over the limit, is the person's call.
 
 **The `submission-confirm` hook** (installed by `paperlint init`) makes Claude Code ask the person
 before any `submission new|update` with `--save` or `--submit`, and before a request sent straight
-to a HotCRP site. The question names the paper, the PDF and its sha256, and the body pages of the
-last build. No flag turns it off; it asks even in auto mode.
+to a portal (a HotCRP site, or a host a venue preset declares). The question names the paper, the
+PDF and its sha256, and the body pages of the last build. No flag turns it off; it asks even in auto
+mode. A cycle still porting skips the venue rules, not the refusal.
 
 ## What it does not do
 
