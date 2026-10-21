@@ -88,10 +88,10 @@ against the venue's call for papers.
 The safe order: `new`, `new --save` once; then `show`, `update`, `update --save`, and `show` again
 until it says `match yes`. Every `--save` comes after the author has read the dry run and said yes.
 
-## The preflight
+## The check before sending
 
-Before the portal is asked, `new` and `update` judge the exact PDF they are about to send, dry run
-or not, and print one block:
+A person confirms every send. To help them decide, `new` and `update` first check the exact PDF
+they are about to send and print the result at the top, in the dry run too:
 
 ```
 PREFLIGHT: OVER LIMIT — body pages (up to the references on page 12): 11 > 10, for ExampleConf/full
@@ -100,32 +100,26 @@ PREFLIGHT: OVER LIMIT — body pages (up to the references on page 12): 11 > 10,
   sent        papers/my-paper/paper.pdf sha2-…
 ```
 
-The judges are the ones `paperlint lint` reports with, at their default options, on the build's
-facts (`_build/paper.facts.json`): `format/page-limit` against the limits of the paper's `kind`, and
-the other error-level venue rules — `pdf/profile`, `pdf/fonts`, `pdf/geometry`, `pdf/body-size`,
-`anonymity/identity`. The headline is one of:
+The check uses the venue rules of `paperlint lint`: page limit, fonts, page size, body text size,
+anonymity. The first line says:
 
-| headline                 | means                                                                                                             | `--save`                          |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `PREFLIGHT: OK`          | no error-level venue rule finds anything                                                                          | sends                             |
-| `PREFLIGHT: OVER LIMIT`  | a page count is over the kind's limit; the block names the count, the limit and the preset files it was read from | sends — the author decides        |
-| `PREFLIGHT: FAILS`       | another error-level venue rule finds something; each finding is listed with its rule                              | sends — the author decides        |
-| `PREFLIGHT: NOT CHECKED` | the current cycle is `porting`, so the venue's limits do not apply yet                                            | sends                             |
-| `PREFLIGHT: STALE FACTS` | there are no facts, or they describe other bytes than the PDF being sent                                          | **refused, exit 2**, nothing sent |
+| first line               | means                                                                     |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `PREFLIGHT: OK`          | nothing found                                                             |
+| `PREFLIGHT: OVER LIMIT`  | the body is over the venue's page limit                                   |
+| `PREFLIGHT: FAILS`       | another venue rule found something; each finding is listed                |
+| `PREFLIGHT: NOT CHECKED` | the paper is still being ported to this venue, so its limits do not apply |
+| `PREFLIGHT: STALE FACTS` | the last build is not of this PDF                                         |
 
-Facts about other bytes are a state of the build, not a decision: rebuild (`paperlint build`), then
-run the dry run again. Everything else is the author's to decide: the dry run prints the same block,
-and that block is what the author reads before saying yes to a `--save` (the `submission-portal`
-skill puts it, verbatim, in the question). Sending over the limit stays possible on purpose — a
-placeholder before an update deadline is a real choice — but never without the block in front of
-the person who makes it.
+The person reads this block in the dry run and says yes or no; only then does `--save` run. An agent
+asks with a question card that shows the block word for word (the `submission-portal` skill).
+
+The command refuses one thing by itself: `STALE FACTS` with `--save` exits 2 and sends nothing.
+Rebuild (`paperlint build`) and run the dry run again. Everything else, including over the limit,
+is the person's call: a placeholder before an update deadline can be the right one.
 
 ## What it does not do
 
 - It does not set a field the venue preset does not record, change the authors after `new`, or
   upload supplementary files.
-- It does not run the rest of `paperlint lint`: the preflight runs the error-level venue rules on
-  the PDF, not the rules on the source, and it reads none of the paper's or the root's `rules`
-  overrides.
-- It does not refuse to send over the limit. A human confirmation gate for `--save` is designed in
-  [`docs/design/confirmation-gate.md`](design/confirmation-gate.md) and waits on the hook runtime.
+- It does not run the rest of `paperlint lint`: only the venue rules, on the PDF.
