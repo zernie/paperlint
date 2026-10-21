@@ -188,6 +188,7 @@ import {
   submissionConfirm,
   UNREADABLE_INPUT,
 } from "./submission-confirm-hook.ts";
+import { leafCommandsNormalized } from "vigiles/hook";
 import {
   REPRO_LAYOUT_RULE_LEVELS,
   reproLayoutRules,
@@ -1250,7 +1251,11 @@ const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
   "submission-confirm": ({ stdin, out }) => {
     const said = ((): ReturnType<typeof submissionConfirm> => {
       try {
-        return submissionConfirm(stdin(), { ...PRESET_DEPS, portalHosts });
+        return submissionConfirm(stdin(), {
+          ...PRESET_DEPS,
+          portalHosts,
+          shellLeaves: leafCommandsNormalized,
+        });
       } catch {
         return UNREADABLE_INPUT;
       }

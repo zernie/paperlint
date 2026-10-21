@@ -15,9 +15,12 @@
  * never allows (that would skip the person).
  *
  * ── DELIBERATELY BROAD ───────────────────────────────────────────────────────────
- * The words are looked for anywhere in the command, so `npx paperlint …`, `node …/paperlint.mjs …`,
- * `pnpm exec …`, an environment prefix, an `&&` chain and quotes all match. A false ask costs one
- * click; a missed send cannot be taken back.
+ * A send is found two ways, and either is enough: the command parsed as a shell parses it (each
+ * simple command across `&&`, `;`, `|`, its program by basename, its words unquoted — the
+ * `shellLeaves`), and the words anywhere in its text, which also catches a command inside a
+ * string (`bash -c "…"`). A false ask costs one click; a missed send cannot be taken back. The
+ * reason is built from the parse only, one block per send; a send the parse cannot resolve is
+ * still asked about, and says so.
  *
  * ── IT FAILS TOWARD THE QUESTION ─────────────────────────────────────────────────
  * The reason is built from files (the PDF, the build's facts); whatever goes wrong there, the ask
@@ -39,10 +42,22 @@ import type { Files } from "./ports/files.ts";
 import { paperPreset, type PresetDeps } from "./presets.ts";
 import { paperPdf } from "./submission.ts";
 
+/** One simple command of a command line, as a shell parser reads it (vigiles' `leafCommandsNormalized`). */
+interface ShellLeaf {
+  /** The program's basename: `/usr/bin/curl` → `curl`. */
+  readonly head: string;
+  /** The words after the program, quotes removed. */
+  readonly args: readonly string[];
+  /** Whether any of the flags `names` is on it (`--save`, `--save=x`). */
+  hasFlag(...names: readonly string[]): boolean;
+}
+
 /** What the hook reads: files, the shipped presets, and the portal hosts the project's venues declare. */
 export type ConfirmDeps = PresetDeps & {
   /** The hosts of every venue portal paperlint knows of from `cwd`: shipped and the project's own. */
   readonly portalHosts: (cwd: string) => readonly string[];
+  /** Every simple command of a command line, across `&&`, `;`, `|`; none when it does not parse. */
+  readonly shellLeaves: (command: string) => readonly ShellLeaf[];
 };
 
 /** What Claude Code reads from a PreToolUse hook's stdout to ask the person first, with the reason. */
@@ -64,64 +79,82 @@ const ask = (reason: string): AskOutput => ({
 
 const LAST = "Allow only if you have read the dry run's venue check.";
 
-/** A shell word that runs an HTTP request, as a command of its own. */
-const HTTP_CLIENT = /(?:^|[\s;&|(`$])(?:curl|wget|https?|xh)(?:\s|$)/u;
+/** A program that makes an HTTP request, by basename. */
+const CLIENTS: ReadonlySet<string> = new Set([
+  "curl",
+  "wget",
+  "http",
+  "https",
+  "xh",
+]);
+
+/** The same programs, as a word in the command's text (inside a string too). */
+const HTTP_CLIENT = /(?:^|[\s;&|(`$/])(?:curl|wget|https?|xh)(?:\s|$)/u;
+
+/** One `paperlint submission new|update` send: the paper folder and `--pdf` it names; null for the default. */
+interface Send {
+  readonly paper: string | null;
+  readonly pdf: string | null;
+}
+
+/** Every send among the simple commands of a command line. */
+function sendsIn(leaves: readonly ShellLeaf[]): readonly Send[] {
+  return leaves.flatMap((l) => {
+    const at = l.args.findIndex(
+      (x, i) =>
+        x === "submission" && /^(?:new|update)$/u.test(l.args[i + 1] ?? ""),
+    );
+    return at >= 0 && l.hasFlag("save", "submit")
+      ? [named(l.args.slice(at + 2))]
+      : [];
+  });
+}
+
+/** A send's words after `submission new|update`: the first operand, and `--pdf <file>` or `--pdf=<file>`. */
+function named(args: readonly string[]): Send {
+  const i = args.findIndex((a) => a === "--pdf" || a.startsWith("--pdf="));
+  const flag = args[i];
+  const takesValue = (k: number): boolean =>
+    args[k - 1] === "--pdf" || args[k - 1] === "--abstract";
+  return {
+    paper: args.find((a, k) => !a.startsWith("-") && !takesValue(k)) ?? null,
+    pdf:
+      flag === undefined
+        ? null
+        : flag === "--pdf"
+          ? (args[i + 1] ?? null)
+          : flag.slice("--pdf=".length),
+  };
+}
+
+/** Whether the command makes an HTTP request: a client program run, or named in its text. */
+const makesRequest = (command: string, leaves: readonly ShellLeaf[]): boolean =>
+  leaves.some((l) => CLIENTS.has(l.head)) ||
+  HTTP_CLIENT.test(command) ||
+  /\bfetch\s*\(/u.test(command) ||
+  /\bpython[\d.]*\b[\s\S]*\b(?:requests|urllib)\b/u.test(command);
 
 /**
  * What the command sends: a submission through paperlint, a request straight at a venue's portal —
  * a HotCRP site, or a host a venue preset declares (`hosts`, read only for a command that makes a
- * request) — or nothing. Words anywhere in the command, on purpose (the header says why).
+ * request) — or nothing. Found in the parse or in the text (the header says why).
  */
 export function sendKind(
   command: string,
+  leaves: readonly ShellLeaf[],
   hosts: () => readonly string[],
 ): "paperlint" | "direct" | null {
-  if (
+  const inText =
     /\bsubmission\b/u.test(command) &&
     /\b(?:new|update)\b/u.test(command) &&
-    /--(?:save|submit)\b/u.test(command)
-  )
-    return "paperlint";
-  const client =
-    HTTP_CLIENT.test(command) ||
-    /\bfetch\s*\(/u.test(command) ||
-    /\bpython[\d.]*\b[\s\S]*\b(?:requests|urllib)\b/u.test(command);
-  if (!client) return null;
+    /--(?:save|submit)\b/u.test(command);
+  if (inText) return "paperlint";
+  if (!makesRequest(command, leaves)) return null;
   const text = command.toLowerCase();
   return text.includes("hotcrp") ||
     hosts().some((h) => h !== "" && text.includes(h.toLowerCase()))
     ? "direct"
     : null;
-}
-
-/** The command's words, quotes dropped. */
-const words = (command: string): readonly string[] =>
-  Array.from(command.matchAll(/"[^"]*"|'[^']*'|[^\s;&|]+/gu), ([w]) =>
-    w.replace(/^["']|["']$/gu, ""),
-  );
-
-/** The paper folder and `--pdf` the `submission new|update` in the command names; null for a default. */
-function named(command: string): {
-  readonly paper: string | null;
-  readonly pdf: string | null;
-} {
-  const w = words(command);
-  const at = w.findIndex(
-    (x, i) => x === "submission" && /^(?:new|update)$/u.test(w[i + 1] ?? ""),
-  );
-  const args = at < 0 ? [] : w.slice(at + 2);
-  const valueOf = (flag: string): string | null => {
-    const i = args.findIndex((a) => a === flag || a.startsWith(`${flag}=`));
-    const a = args[i];
-    if (a === undefined) return null;
-    return a === flag ? (args[i + 1] ?? null) : a.slice(flag.length + 1);
-  };
-  const takesValue = (i: number): boolean =>
-    args[i - 1] === "--pdf" || args[i - 1] === "--abstract";
-  return {
-    paper: args.find((a, i) => !a.startsWith("-") && !takesValue(i)) ?? null,
-    pdf: valueOf("--pdf"),
-  };
 }
 
 /** The body pages the build counted: up to the references or appendix, or banal's count. */
@@ -162,29 +195,54 @@ function factsLines(
   return [...stale, bodyPages(f.value)];
 }
 
-/** Why the person is asked, for a `paperlint submission` send: the paper, the PDF, what the build saw. */
-export function paperlintReason(
-  command: string,
+/** One send, described: the paper, the PDF as the command resolves it, what the build saw. */
+function sendLines(
+  send: Send,
   cwd: string,
   deps: PresetDeps,
-): string {
-  const n = named(command);
-  const paperDir = resolve(cwd, n.paper ?? ".");
+): readonly string[] {
+  const paperDir = resolve(cwd, send.paper ?? ".");
   const p = paperPreset(paperDir, deps);
   const own = paperPdf(
     paperDir,
     p.kind === "settings-problem" ? null : p.settings,
   );
-  const pdf = n.pdf === null ? own : resolve(cwd, n.pdf);
+  const pdf = send.pdf === null ? own : resolve(cwd, send.pdf);
   const bytes = deps.files.readBytes(callerPath(pdf));
   const sha = bytes === null ? null : sha256Hex(bytes);
   return [
-    SENDS,
-    `paper folder: ${n.paper ?? `${basename(paperDir)} (the current folder)`}`,
-    `PDF: ${n.pdf ?? join(n.paper ?? ".", relative(paperDir, own))}${sha === null ? " — NOT FOUND" : `, sha256 ${sha.slice(0, 12)}`}`,
+    `paper folder: ${send.paper ?? `${basename(paperDir)} (the current folder)`}`,
+    `PDF: ${send.pdf ?? join(send.paper ?? ".", relative(paperDir, own))}${sha === null ? " — NOT FOUND" : `, sha256 ${sha.slice(0, 12)}`}`,
     ...factsLines(paperDir, sha, deps.files),
-    LAST,
-  ].join("\n");
+  ];
+}
+
+/** A send found in the text that the parse cannot resolve to its words. */
+const UNRESOLVED =
+  "could not resolve the PDF for this send: the command does not read word by word (a shell expansion, or a command inside a string) — check the paper and the PDF in the command itself";
+
+/**
+ * Why the person is asked, for `paperlint submission` sends: each send's paper, PDF and build — every
+ * send in the command, one block each. Words the shell would expand (`$…`, backticks) are not
+ * guessed at: such a command is described as unresolved.
+ */
+export function paperlintReason(
+  command: string,
+  leaves: readonly ShellLeaf[],
+  cwd: string,
+  deps: PresetDeps,
+): string {
+  const sends = /[`$]/u.test(command) ? [] : sendsIn(leaves);
+  const blocks =
+    sends.length === 0
+      ? [UNRESOLVED]
+      : sends.length === 1
+        ? sends.flatMap((x) => sendLines(x, cwd, deps))
+        : sends.flatMap((x, n) => [
+            `send ${String(n + 1)} of ${String(sends.length)}:`,
+            ...sendLines(x, cwd, deps),
+          ]);
+  return [SENDS, ...blocks, LAST].join("\n");
 }
 
 /** The ask when the hook's input cannot be read at all: it cannot tell, so the person decides. */
@@ -222,10 +280,11 @@ export function submissionConfirm(
   const cwd =
     typeof given === "string" && isAbsolute(given) ? given : resolve(".");
   try {
-    const kind = sendKind(command, () => deps.portalHosts(cwd));
+    const leaves = deps.shellLeaves(command);
+    const kind = sendKind(command, leaves, () => deps.portalHosts(cwd));
     if (kind === null) return null;
     return ask(
-      kind === "direct" ? DIRECT : paperlintReason(command, cwd, deps),
+      kind === "direct" ? DIRECT : paperlintReason(command, leaves, cwd, deps),
     );
   } catch (e) {
     return ask(failedReason(command, messageOf(e)));
@@ -234,6 +293,6 @@ export function submissionConfirm(
 
 /** Why the person is asked when reading what the command sends failed: the ask still goes out. */
 const failedReason = (command: string, why: string): string =>
-  sendKind(command, () => []) === "paperlint"
+  sendKind(command, [], () => []) === "paperlint"
     ? `${SENDS} paperlint could not say what will be sent: ${why}. ${LAST}`
     : `paperlint could not read the venue portals this project declares (${why}), so it cannot tell whether this request sends to one. ${LAST}`;

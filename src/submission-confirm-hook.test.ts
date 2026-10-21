@@ -5,7 +5,9 @@
 import { expect, test } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
+import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
+import { leafCommandsNormalized as shellLeaves } from "vigiles/hook";
 import { presetsDir } from "./package-dirs.ts";
 import {
   sendKind,
@@ -13,6 +15,10 @@ import {
   type ConfirmDeps,
 } from "./submission-confirm-hook.ts";
 import { HEX, PDF, facts, withPresets } from "../test/submission-fixtures.ts";
+
+/** What the command sends, read through the real shell parser. */
+const kind = (command: string, hosts: () => readonly string[]) =>
+  sendKind(command, shellLeaves(command), hosts);
 
 /** The portal hosts the project declares, in these tests: one venue on its own domain. */
 const HOSTS = ["submit.example-venue.org"];
@@ -27,6 +33,7 @@ const submissionConfirm = (
     files: withPresets(fs),
     venuesDir: presetsDir(),
     portalHosts: () => HOSTS,
+    shellLeaves,
     ...more,
   });
 
@@ -46,7 +53,7 @@ test.each([
   "npx paperlint --save submission update papers/p",
   "npx paperlint new --save submission",
 ])("asked: %s", (command) => {
-  expect(sendKind(command, () => [])).toBe("paperlint");
+  expect(kind(command, () => [])).toBe("paperlint");
 });
 
 test.each([
@@ -57,7 +64,7 @@ test.each([
   `python3 -c "import requests; requests.post('https://venue.hotcrp.com/api/paper')"`,
   "curl -F file=@paper.pdf https://SUBMIT.example-venue.org/api/upload",
 ])("asked, straight at HotCRP: %s", (command) => {
-  expect(sendKind(command, () => HOSTS)).toBe("direct");
+  expect(kind(command, () => HOSTS)).toBe("direct");
 });
 
 test.each([
@@ -73,19 +80,17 @@ test.each([
   "",
   "curl https://example.org/api/paper",
 ])("silent: %s", (command) => {
-  expect(sendKind(command, () => HOSTS)).toBe(null);
+  expect(kind(command, () => HOSTS)).toBe(null);
 });
 
 test("the hosts are read only for a command that makes a request: anything else pays nothing", () => {
   const never = () => {
     throw new Error("read the hosts for a command with no request in it");
   };
-  expect(sendKind("ls -la", never)).toBe(null);
+  expect(kind("ls -la", never)).toBe(null);
   // An empty host would be in every command: it matches nothing.
-  expect(sendKind("curl https://example.org/x", () => [""])).toBe(null);
-  expect(sendKind("npx paperlint submission new --save", never)).toBe(
-    "paperlint",
-  );
+  expect(kind("curl https://example.org/x", () => [""])).toBe(null);
+  expect(kind("npx paperlint submission new --save", never)).toBe("paperlint");
 });
 
 test("hosts that cannot be read: a request still asks, rather than passing unseen", () => {
@@ -227,7 +232,7 @@ test("a paperlint.json that does not parse: the PDF is the default paper.pdf, an
   );
 });
 
-test("a flag at the end with no value, and `submission` as the last word, read as defaults", () => {
+test("a --pdf at the end with no value reads as the default; `submission` as the last word is no send the parse can resolve", () => {
   expect(
     reasonOf(
       "npx paperlint submission update papers/p --save --pdf",
@@ -240,10 +245,70 @@ test("a flag at the end with no value, and `submission` as the last word, read a
     `PDF: papers/p/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
   ]);
   expect(
-    reasonOf("npx paperlint new --save submission", paper(null), "/w/papers/p")
-      .split("\n")
-      .slice(1, 2),
-  ).toStrictEqual(["paper folder: p (the current folder)"]);
+    reasonOf("npx paperlint new --save submission", paper(null), "/w/papers/p"),
+  ).toBe([HEAD, UNRESOLVED, LAST].join("\n"));
+});
+
+/** What the reason says for a send the parse cannot resolve. */
+const UNRESOLVED =
+  "could not resolve the PDF for this send: the command does not read word by word (a shell expansion, or a command inside a string) — check the paper and the PDF in the command itself";
+
+test("a quoted --pdf=<file> with a space is one word: the PDF is that file", () => {
+  const fs = memoryFiles({ "/w/final copies/paper.pdf": PDF });
+  expect(
+    reasonOf(
+      `npx paperlint submission update papers/p --pdf="final copies/paper.pdf" --save`,
+      fs,
+    ).split("\n")[2],
+  ).toBe(`PDF: final copies/paper.pdf, sha256 ${HEX.slice(0, 12)}`);
+});
+
+/** A second paper's PDF, other bytes. */
+const B = new TextEncoder().encode("%PDF b");
+
+test("every send in a chain is described, one block each", () => {
+  const fs = memoryFiles({
+    "/w/papers/a/paper.pdf": PDF,
+    "/w/papers/b/paper.pdf": B,
+  });
+  const reason = reasonOf(
+    "npx paperlint submission update papers/a --save && npx paperlint submission new papers/b --save",
+    fs,
+  ).split("\n");
+  expect(
+    reason.filter((l) => /^(?:send|paper folder|PDF)/u.test(l)),
+  ).toStrictEqual([
+    "send 1 of 2:",
+    "paper folder: papers/a",
+    `PDF: papers/a/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
+    "send 2 of 2:",
+    "paper folder: papers/b",
+    `PDF: papers/b/paper.pdf, sha256 ${sha256Hex(B).slice(0, 12)}`,
+  ]);
+});
+
+test("a send whose words the shell would expand, or one inside a string, is asked about as unresolved", () => {
+  expect(
+    reasonOf('npx paperlint submission update "$P" --save', paper(null)),
+  ).toBe([HEAD, UNRESOLVED, LAST].join("\n"));
+  expect(
+    reasonOf(
+      `bash -c "npx paperlint submission update papers/p --save"`,
+      paper(null),
+    ),
+  ).toBe([HEAD, UNRESOLVED, LAST].join("\n"));
+});
+
+test("a client run by its path or quoted is a request: the program is read by its basename", () => {
+  expect(
+    kind("/usr/bin/curl -X POST https://venue.hotcrp.com/api/paper", () => []),
+  ).toBe("direct");
+  expect(
+    kind(
+      `"/usr/bin/curl" -F f=@p.pdf https://submit.example-venue.org/api`,
+      () => HOSTS,
+    ),
+  ).toBe("direct");
 });
 
 test("straight at HotCRP: asked, naming that paperlint's check is skipped", () => {
