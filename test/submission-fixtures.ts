@@ -24,6 +24,7 @@ import { type Files } from "../src/ports/files.ts";
 import { type LatexReader } from "../src/ports/latex.ts";
 import { type SubmissionPortal } from "../src/ports/submission-portal.ts";
 import { runSubmission, type SubmissionArgs } from "../src/submission.ts";
+import { lintText } from "../src/cli.ts";
 import { venuePreset } from "./support.ts";
 
 export const PAPER = "/w/papers/p";
@@ -38,11 +39,14 @@ export const withPresets = (fs: Files): Files => ({
   readBytes: (p) => fs.readBytes(p) ?? nodeFiles.readBytes(p),
 });
 
-/** A venue over aidc's format with a portal of its own — so none of aidc's deadline readings. */
+/**
+ * A venue over the IEEE conference family with a portal of its own: its format (letter, two columns,
+ * the Times clone) and no kinds, so no page limit unless a test extends a venue that has one.
+ */
 export const venue = (portal: unknown, more: object = {}): string =>
   JSON.stringify(
     venuePreset("venue", {
-      extends: "paperlint:aidc",
+      extends: "paperlint:ieee-conference",
       portal,
       deadlines: [],
       ...more,
@@ -69,23 +73,31 @@ export const files = (o: {
   readonly portal?: unknown;
   /** The venue preset's `submission_fields`; none when absent. */
   readonly submissionFields?: unknown;
+  /** More keys of the venue preset (`extends` a venue with page limits, …). */
+  readonly venue?: object;
   readonly paper?: Readonly<Record<string, unknown>>;
+  /** The build's facts; `facts()` (a fresh build within every limit) when absent, none when null. */
+  readonly facts?: string | null;
   readonly extra?: Readonly<Record<string, string | Uint8Array>>;
 }) =>
   memoryFiles({
     "/w/package.json": "{}",
-    "/w/venue.jsonc": venue(
-      o.portal ?? { kind: "hotcrp", url: `${SITE}/` },
-      o.submissionFields === undefined
+    "/w/venue.jsonc": venue(o.portal ?? { kind: "hotcrp", url: `${SITE}/` }, {
+      ...(o.submissionFields === undefined
         ? {}
-        : { submission_fields: o.submissionFields },
-    ),
+        : { submission_fields: o.submissionFields }),
+      ...o.venue,
+    }),
     [`${PAPER}/paperlint.json`]: JSON.stringify(
       o.paper ?? { extends: "../../venue.jsonc", submission: { id: 7 } },
     ),
     [`${PAPER}/paper.pdf`]: PDF,
+    ...(o.facts === null ? {} : { [FACTS]: o.facts ?? facts() }),
     ...o.extra,
   });
+
+/** Where the made-up paper's build facts live. */
+export const FACTS = `${PAPER}/_build/paper.facts.json`;
 
 export const VIEW: SubmissionView = {
   id: 7,
@@ -166,6 +178,9 @@ export const fakePortal = (answers: {
   return { seen, portalFor };
 };
 
+/** What `new` and `update` print when the venue rules find nothing in the PDF they send. */
+export const NO_ERRORS = "venue rules at their default options: no errors";
+
 /** The line `update` prints before it sends `pdf`, naming `call`. */
 export const CHECK = (pdf: string, call: string): string =>
   `before you rely on it, open ${pdf} yourself and check it against ${call}: the page count and what counts toward the limit, the template and its class options, anonymity, and that every figure, table and reference renders — paperlint passing is not the venue accepting the format`;
@@ -207,6 +222,7 @@ export async function run(
       }),
       latex: o.latex ?? latexReader,
       codec: sourcesCodec,
+      lintText,
       log: (l) => out.push(l),
       err: (l) => errs.push(l),
     },
@@ -226,16 +242,64 @@ export const AUTHORS = [
   { name: "Bob Bobson", email: "bob@example.org" },
 ];
 
+/**
+ * The text of a paper whose body takes `body` pages: a page of body text each (no two alike, so none
+ * reads as a running header), then the references heading at the top of the next page.
+ */
+export const pagesText = (body: number): readonly string[] => [
+  ...Array.from(
+    { length: body },
+    (_, i) => `Body text of section ${String.fromCharCode(97 + i)}.`,
+  ),
+  "References\n[1] A. Author. A work. 2026.",
+];
+
+/** The IEEE family's text font, embedded: what `pdf/fonts` wants to see. */
+export const TIMES = {
+  name: "NimbusRomNo9L-Regu",
+  type: "Type 1",
+  embedded: true,
+  program: "Type1",
+};
+
+/** The page geometry banal measures on an IEEE conference paper of `body` body pages. */
+const ieeeGeometry = (body: number) => ({
+  geometry_source: "banal",
+  page_w_in: 8.5,
+  page_h_in: 11,
+  columns: 2,
+  body_pt: 10.3,
+  ref_pt: 8.3,
+  body_pages: body,
+  ref_pages: 1,
+  appendix_pages: 0,
+  pages_by_type: { body, refs: 1 },
+});
+
+/**
+ * A fresh build's facts about `PDF`: `body` body pages (4 by default), the family's font, the
+ * geometry measured — or none, with `measured: false`.
+ */
 export const facts = (
-  o: { readonly sha?: string; readonly title?: string } = {},
+  o: {
+    readonly sha?: string;
+    /** The PDF the facts name, relative to the paper. */
+    readonly pdf?: string;
+    readonly title?: string;
+    readonly body?: number;
+    readonly fonts?: readonly object[];
+    readonly measured?: boolean;
+  } = {},
 ) =>
   JSON.stringify({
     schema: 3,
-    pdf: "paper.pdf",
+    pdf: o.pdf ?? "paper.pdf",
     pdf_sha256: o.sha ?? HEX,
-    fonts: [],
-    geometry_source: null,
-    pages_text: [],
+    fonts: o.fonts ?? [TIMES],
+    ...(o.measured === false
+      ? { geometry_source: null }
+      : ieeeGeometry(o.body ?? 4)),
+    pages_text: pagesText(o.body ?? 4),
     metadata: o.title === undefined ? {} : { Title: o.title },
     links: [],
     bib_anchor_page: null,
@@ -256,14 +320,9 @@ export const newFiles = (o: {
 }) =>
   files({
     paper: o.paper ?? { extends: "../../venue.jsonc", authors: AUTHORS },
-    extra: {
-      ...(o.tex === null
-        ? {}
-        : { [`${PAPER}/paper.tex`]: o.tex ?? DEFAULT_TEX }),
-      ...(o.facts === null
-        ? {}
-        : { [`${PAPER}/_build/paper.facts.json`]: o.facts ?? facts() }),
-    },
+    ...(o.facts === undefined ? {} : { facts: o.facts }),
+    extra:
+      o.tex === null ? {} : { [`${PAPER}/paper.tex`]: o.tex ?? DEFAULT_TEX },
   });
 
 export const WANT: NewSubmission = {

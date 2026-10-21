@@ -65,9 +65,9 @@ check(
 // ── the one source: plugin/hooks/hooks.json ─────────────────────────────────────────────
 const wiring = shippedWiring();
 check(
-  "the hook names are DERIVED from hooks.json — four, in its order",
+  "the hook names are DERIVED from hooks.json — five, in its order",
   wiring.names.join() ===
-    "paper-edit-guard,paper-folder-layout,paper-skills-nudge,paper-status-gates",
+    "paper-edit-guard,submission-confirm,paper-folder-layout,paper-skills-nudge,paper-status-gates",
 );
 // ── settings written by hand: shapes Claude Code would ignore are skipped, not crashed on ──
 check(
@@ -284,7 +284,7 @@ try {
       "and names the hooks that are not wired in ANY form",
       r.status === "foreign" &&
         r.missing.join() ===
-          "paper-folder-layout,paper-skills-nudge,paper-status-gates",
+          "submission-confirm,paper-folder-layout,paper-skills-nudge,paper-status-gates",
     );
     // The control: without the check, vigiles' merge WOULD add a second copy. This is the
     // reason the check exists, measured rather than asserted.
@@ -320,13 +320,13 @@ try {
   const wiredOnce = merge({}, wiring.compiled, MANAGED_BY);
   check(
     "wired once each → ✓ wired, with the fresh-clone consequence",
-    /✓ wired — paper-edit-guard, paper-folder-layout, paper-skills-nudge, paper-status-gates, once each/.test(
+    /✓ wired — paper-edit-guard, submission-confirm, paper-folder-layout, paper-skills-nudge, paper-status-gates, once each/.test(
       doc(wiredOnce),
     ) && /cannot run until `npm install`/.test(doc(wiredOnce)),
   );
   check(
     "nothing wired → ⚠ not wired, with the remedy",
-    /⚠ not wired — none of the 4 hooks/.test(doc({})),
+    /⚠ not wired — none of the 5 hooks/.test(doc({})),
   );
   const twice = PreToolUseSettings.parse(structuredClone(wiredOnce));
   twice.hooks.PreToolUse[0]?.hooks.push({
@@ -354,7 +354,7 @@ try {
   });
   check(
     "🔴 partly wired BY HAND → the remedy is NOT `npx paperlint init`, which would refuse to write",
-    /partly wired — missing: paper-folder-layout, paper-skills-nudge, paper-status-gates/.test(
+    /partly wired — missing: submission-confirm, paper-folder-layout, paper-skills-nudge, paper-status-gates/.test(
       handPartial,
     ) && /writes nothing then/.test(handPartial),
   );

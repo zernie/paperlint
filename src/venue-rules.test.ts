@@ -16,6 +16,7 @@ import { presetsDir } from "./package-dirs.ts";
 import {
   ANONYMITY_RULE_LEVELS,
   anonymityRules,
+  findingText,
   judgeBodyEnd,
   PAGE_LIMIT_RULE_LEVELS,
   pageLimitRules,
@@ -1273,5 +1274,19 @@ describe("the cycle decides what applies", () => {
       "anonymity/identity:leak",
     );
     expect(lint({ venue: onCycle({ outcome: accepted }), facts })).toEqual([]);
+  });
+});
+
+describe("findingText — a finding outside ESLint, as ESLint prints it", () => {
+  it("fills each placeholder from the data, leaves one the data lacks as written, and prints an unknown id as itself", () => {
+    expect(
+      findingText("page-limit", {
+        messageId: "pages",
+        data: { what: "body pages", got: 3, max: 2, venue: "v" },
+      }),
+    ).toBe(
+      "body pages: 3, over the limit 2 for v/{{kind}} — a desk reject; cut the text",
+    );
+    expect(findingText("fonts", { messageId: "nope", data: {} })).toBe("nope");
   });
 });

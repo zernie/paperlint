@@ -51,7 +51,13 @@ import {
   type ReadFacts,
 } from "./facts-file.ts";
 import type { KindLimits, VenueFormat } from "./tex-requirements.ts";
-import { paperPreset, presetProblemText, type Preset } from "./presets.ts";
+import { entries } from "remeda";
+import {
+  paperPreset,
+  presetProblemText,
+  type PaperPreset,
+  type Preset,
+} from "./presets.ts";
 import type { PaperSettings } from "./paper-settings.ts";
 import type { FlatGeometry } from "./domain/geometry.ts";
 import { callerPath } from "./caller-path.ts";
@@ -171,26 +177,31 @@ const reviewOf = (
   identity: settings.identity,
 });
 
+const isFinding = (v: object): v is Finding => "messageId" in v;
+
+/** The facts, read, or the `pdf/fresh` finding that says why they cannot be. */
+function readFacts(body: string): ReadFacts | Finding {
+  const parsed = parseFactsText(body);
+  if (parsed.ok) return parsed.value;
+  return parsed.error.kind === "schema"
+    ? finding("schema", { got: parsed.error.got, want: FACTS_SCHEMA })
+    : finding("factsBroken", { why: parsed.error.why });
+}
+
 /** The facts about the PDF on disk, or the `pdf/fresh` finding that says why they are not. */
 function freshFacts(
   files: Files,
   paperDir: string,
   body: string,
 ): ReadFacts | Finding {
-  const parsed = parseFactsText(body);
-  if (!parsed.ok)
-    return parsed.error.kind === "schema"
-      ? finding("schema", { got: parsed.error.got, want: FACTS_SCHEMA })
-      : finding("factsBroken", { why: parsed.error.why });
-  const f = parsed.value;
+  const f = readFacts(body);
+  if (isFinding(f)) return f;
   const pdf = files.readBytes(
     callerPath(isAbsolute(f.pdf) ? f.pdf : join(paperDir, f.pdf)),
   );
   if (pdf === null) return finding("pdfMissing", { pdf: f.pdf });
   return sha256Hex(pdf) === f.sha ? f : finding("stale", { pdf: f.pdf });
 }
-
-const isFinding = (v: object): v is Finding => "messageId" in v;
 
 /** The paper's declared venue and kind, resolved: what the judges compare the facts against. */
 const resolvedOf = (preset: Preset, settings: PaperSettings): Resolved => ({
@@ -221,15 +232,47 @@ export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
       kind: "unresolved",
       finding: finding("preset", { why: presetProblemText(p.problem) }),
     };
+  return assessBuild(paperDir, p, deps, (body) =>
+    freshFacts(deps.files, paperDir, body),
+  );
+}
+
+/** A paper whose preset resolved, against its build: `fresh` reads the facts and says whether they hold. */
+function assessBuild(
+  paperDir: string,
+  p: Extract<PaperPreset, { readonly kind: "resolved" }>,
+  deps: VenueRuleDeps,
+  fresh: (factsText: string) => ReadFacts | Finding,
+): Assessment {
   if (p.settings.cycles !== null && isPorting(p.settings.cycles.current))
     return { kind: "porting" };
   const venue = resolvedOf(p.preset, p.settings);
   const factsText = text(deps.files, factsPath(paperDir));
   if (factsText === null) return { kind: "unbuilt", venue };
-  const facts = freshFacts(deps.files, paperDir, factsText);
+  const facts = fresh(factsText);
   return isFinding(facts)
     ? { kind: "stale", finding: facts }
     : { kind: "ready", venue, facts };
+}
+
+/**
+ * A paper whose preset resolved, assessed on `pdf` — the bytes `paperlint submission` is about to
+ * send. The facts hold when their SHA-256 is that of `pdf`; where the PDF they name is on disk, and
+ * whether it is still there, does not matter. Reads through `deps.files` only.
+ */
+export function assessSent(
+  paperDir: string,
+  p: Extract<PaperPreset, { readonly kind: "resolved" }>,
+  pdf: Uint8Array,
+  deps: VenueRuleDeps,
+): Assessment {
+  const sha = sha256Hex(pdf);
+  return assessBuild(paperDir, p, deps, (body) => {
+    const f = readFacts(body);
+    return isFinding(f) || f.sha === sha
+      ? f
+      : finding("notSent", { pdf: f.pdf });
+  });
 }
 
 // ── the judges: typed facts + typed format → findings. Pure. ─────────────────────────
@@ -658,6 +701,8 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
         "_build/paper.facts.json describes {{pdf}}, which is not on disk (a failed build removes it) — rebuild the paper",
       stale:
         "_build/paper.facts.json describes a DIFFERENT {{pdf}} than the one on disk (its SHA-256 differs), so the venue checks would judge an earlier build — rebuild the paper",
+      notSent:
+        "_build/paper.facts.json describes a {{pdf}} with another SHA-256 than the PDF being sent, so the venue checks would judge other bytes — rebuild the paper (`paperlint build`) from the source of the PDF you send",
     },
   },
   profile: {
@@ -873,4 +918,75 @@ export function pageLimitRules(
   deps: VenueRuleDeps,
 ): Readonly<Record<"page-limit", VenueRuleModule>> {
   return { "page-limit": rule("page-limit", deps) };
+}
+
+// ── the same findings, outside ESLint ──────────────────────────────────────────────────
+
+/** Each venue rule by the id lint reports it under. */
+const LINT_IDS = {
+  fresh: "pdf/fresh",
+  profile: "pdf/profile",
+  measured: "pdf/measured",
+  "page-limit": "format/page-limit",
+  fonts: "pdf/fonts",
+  geometry: "pdf/geometry",
+  "body-size": "pdf/body-size",
+  anonymity: "anonymity/identity",
+} as const satisfies Record<VenueRuleName, string>;
+
+const LEVELS = {
+  ...VENUE_RULE_LEVELS,
+  ...PAGE_LIMIT_RULE_LEVELS,
+  ...ANONYMITY_RULE_LEVELS,
+};
+
+/**
+ * A finding's message as ESLint prints it: the rule's message with `{{name}}` filled from its data,
+ * a placeholder the data lacks left as written, and an unknown message id as itself. Pure.
+ */
+export function findingText(rule: VenueRuleName, f: Finding): string {
+  const message = META[rule].messages[f.messageId] ?? f.messageId;
+  return message.replace(/\{\{([^{}]+?)\}\}/gu, (whole, name: string) => {
+    const value = f.data[name.trim()];
+    return value === undefined ? whole : String(value);
+  });
+}
+
+/** One finding as a lint message: the fields ESLint's formatters read from a `Linter.LintMessage`. */
+export interface VenueMessage {
+  readonly ruleId: string;
+  readonly severity: 1 | 2;
+  readonly message: string;
+  readonly messageId: string;
+  readonly line: number;
+  readonly column: number;
+  readonly endLine: number;
+  readonly endColumn: number;
+}
+
+/**
+ * Every venue rule's findings on an assessed paper, as the lint messages `paperlint lint` would
+ * report on its `paper.tex` (`source`; line 1 without one): the same judges, at paperlint's default
+ * levels and options. `paperlint submission` prints them with lint's formatter before a send. Paths
+ * are shown as they are: the one message that shows a path (`pdf/measured` on a paper without a
+ * preset) is never reached once a preset resolved. Pure.
+ */
+export function venueMessages(
+  a: Assessment,
+  source: string | null,
+): readonly VenueMessage[] {
+  const line = source === null ? 1 : reportLine(source);
+  return entries(LINT_IDS).flatMap(([name, ruleId]) =>
+    JUDGES[name](a, { options: [], shown: String }).map((f) => ({
+      ruleId,
+      severity: LEVELS[ruleId] === "error" ? 2 : 1,
+      message: findingText(name, f),
+      messageId: f.messageId,
+      // ESLint's columns count from 1: the rule reports column 1 counted from 0.
+      line,
+      column: 2,
+      endLine: line,
+      endColumn: 3,
+    })),
+  );
 }

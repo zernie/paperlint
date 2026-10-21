@@ -18,6 +18,11 @@
  * sent (`src/domain/submission-fields.ts`). A checkbox field the portal did not take is said, and
  * fails the command: HotCRP keeps an option it does not know as nothing, without an error.
  *
+ * Before the portal is asked, `new` and `update` print what the venue rules find in the exact PDF
+ * they send, as `paperlint lint` prints it — or "venue rules: no errors" (paperlint#264). The verdict
+ * is the author's to act on; the one thing the command refuses is a `--save` whose build facts are
+ * missing or about other bytes, because then nothing was checked (exit 2).
+ *
  * 🔴 THE TOKEN IS AN INPUT, AND ONLY AN INPUT. It comes from the environment (the root reads it), is
  * handed to the adapter, and never appears in anything printed here.
  */
@@ -71,11 +76,12 @@ import {
 } from "./domain/portal-token.ts";
 import { LINE_BREAK, OPAQUE, runText } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
-import { factsPath, parseFactsText } from "./facts-file.ts";
+import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
 import { lineColumn, readPaper } from "./tex-paper.ts";
 import { originOf, type PaperSource } from "./domain/paper-source.ts";
 import type { SourcesCodec } from "./ports/sources-codec.ts";
 import { MAIN } from "./build.ts";
+import { assessSent, venueMessages, type VenueMessage } from "./venue-rules.ts";
 
 /** How to make and set the site's token: the page, the scopes, the variable. Pure. */
 export function tokenSteps(
@@ -157,12 +163,21 @@ export interface SubmissionDeps {
   readonly latex: LatexReader;
   /** Reads the build's record of the files TeX read, for the includes (`new`). */
   readonly codec: SourcesCodec;
+  /** Findings on one file, printed as `paperlint lint` prints them (the root passes ESLint's `stylish`). */
+  readonly lintText: (
+    file: string,
+    messages: readonly VenueMessage[],
+  ) => Promise<string>;
   readonly log: (line: string) => void;
   readonly err: (line: string) => void;
 }
 
 /** A paper's portal, its submission there, and the PDF the paper builds. */
 export interface SubmissionTarget {
+  /** The paper's folder, absolute. */
+  readonly paperDir: string;
+  /** The paper's settings and venue preset, resolved: what the venue rules judge the PDF against. */
+  readonly resolved: Extract<PaperPreset, { readonly kind: "resolved" }>;
   readonly portal: SupportedPortal;
   /** The paper's submission on the portal; null before `new` created one. */
   readonly id: number | null;
@@ -193,6 +208,12 @@ export interface SubmissionTarget {
 }
 
 const configOf = (dir: string): string => join(dir, CONFIG_FILE);
+
+/** The PDF a paper sends when no `--pdf` is named: its `pdf` setting, else `paper.pdf`. Pure. */
+export const paperPdf = (
+  paperDir: string,
+  settings: Pick<PaperSettings, "pdf"> | null,
+): string => join(paperDir, settings?.pdf ?? "paper.pdf");
 
 /** Why a paper without a venue preset has no portal: the key to set, or — with cycles — where. */
 const noPresetLine = (
@@ -241,6 +262,8 @@ function targetOf(
       ? []
       : currentDeadlines(p.settings.cycles.current);
   return ok({
+    paperDir,
+    resolved: p,
     portal: portal.value,
     id: p.settings.submission?.id ?? null,
     config: configOf(paperDir),
@@ -249,7 +272,7 @@ function targetOf(
     fields: {},
     venueFields: p.preset.submissionFields,
     accepted: p.settings.cycles?.current.kind === "accepted",
-    pdf: join(paperDir, p.settings.pdf ?? "paper.pdf"),
+    pdf: paperPdf(paperDir, p.settings),
     call: identity.type === "venue" ? identity.url : null,
     deadlines: deadlinesInForce(own, p.preset.deadlines),
   });
@@ -477,6 +500,53 @@ const changeOf = (
   fields,
 });
 
+/**
+ * The venue rules on the bytes about to be sent, printed as `paperlint lint` prints them (ESLint's
+ * `stylish`), or one line when they find nothing. Returns whether a `--save` stops, said: the
+ * build's facts are missing, unreadable or about other bytes, so the rules did not see this PDF.
+ */
+async function venueCheck(
+  t: SubmissionTarget,
+  bytes: Uint8Array,
+  save: boolean,
+  deps: RunDeps,
+): Promise<boolean> {
+  const a = assessSent(t.paperDir, t.resolved, bytes, deps.presets);
+  const tex = join(t.paperDir, MAIN);
+  const source = bytesAt(deps.files, tex);
+  const messages = venueMessages(
+    a,
+    source === null ? null : new TextDecoder().decode(source),
+  );
+  const printed = (await deps.lintText(tex, messages)).trim();
+  logAll(
+    printed === ""
+      ? [nothingFound(a.kind)]
+      : [`${VENUE_RULES}:`, ...printed.split("\n")],
+    deps,
+  );
+  // Checked on its own: a cycle still porting skips the venue rules, not this.
+  const refused = save && factsOfSent(t.paperDir, bytes, deps) === null;
+  if (refused) deps.err(REBUILD_REFUSAL);
+  return refused;
+}
+
+/** The line for a check that found nothing — which, while a cycle is porting, is that nothing ran. */
+const nothingFound = (kind: string): string =>
+  kind === "porting"
+    ? "venue rules: none run — the current cycle's phase is \"porting\", so the venue's format does not apply yet"
+    : `${VENUE_RULES}: no errors`;
+
+/**
+ * What the check is, said where it prints: the venue rules at paperlint's default levels and
+ * options. A paper's or the project's `rules` overrides are not read here; `paperlint lint` reads them.
+ */
+const VENUE_RULES = "venue rules at their default options";
+
+/** What `--save` says when the build's facts do not describe the PDF: nothing was sent. */
+const REBUILD_REFUSAL =
+  "refused: no build facts describe this PDF (none, unreadable, or of other bytes), so the venue rules did not see it — rebuild (`paperlint build`), run the dry run again, and read its venue check; nothing was sent";
+
 /** `update`: send the PDF (and the abstract, and "submitted" when asked); a dry run unless saving. */
 async function runUpdate(
   t: SubmissionTarget & { readonly id: number },
@@ -493,7 +563,10 @@ async function runUpdate(
     );
   const abstract = abstractOf(a, deps);
   if (!abstract.ok) return (deps.err(abstract.error), 2);
-  logAll([checkPdfLine(shown, t.call), ...fieldLines(t.fields)], deps);
+  deps.log(checkPdfLine(shown, t.call));
+  const refused = await venueCheck(t, bytes, a.save, deps);
+  logAll(fieldLines(t.fields), deps);
+  if (refused) return 2;
   const change = changeOf(a, bytes, abstract.value, t.fields);
   const r = await portal.update(t.id, change, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
@@ -508,19 +581,19 @@ async function runUpdate(
 // ── new ──────────────────────────────────────────────────────────────────────────────
 
 /**
- * The metadata of the PDF that is sent, from the build's facts — the title's fallback; null when
- * there are no facts, or they describe another PDF.
+ * The build's facts about the PDF that is sent — what the title falls back on, and what a `--save`
+ * needs to exist; null when there are none, they do not read, or they describe other bytes.
  */
-function pdfMetadata(
+function factsOfSent(
   paperDir: string,
   pdf: Uint8Array,
-  deps: SubmissionDeps,
-): Readonly<Record<string, string>> | null {
+  deps: Pick<SubmissionDeps, "files">,
+): ReadFacts | null {
   const bytes = bytesAt(deps.files, factsPath(paperDir));
   const facts =
     bytes === null ? null : parseFactsText(new TextDecoder().decode(bytes));
   return facts?.ok === true && facts.value.sha === sha256Hex(pdf)
-    ? facts.value.text.metadata
+    ? facts.value
     : null;
 }
 
@@ -734,7 +807,7 @@ function titleAndAbstract(
   const own = abstractOf(a, deps);
   if (!own.ok) return own;
   const paper = assembledPaper(a.paperDir, deps);
-  const metadata = pdfMetadata(a.paperDir, pdf, deps);
+  const metadata = factsOfSent(a.paperDir, pdf, deps)?.text.metadata ?? null;
   const title = titleOf(
     paper === null
       ? null
@@ -824,7 +897,9 @@ async function runNew(
   if (!n.ok) return (deps.err(n.error), 2);
   const { paper, shown } = n.value;
   deps.log(checkPdfLine(shown, t.call));
+  const refused = await venueCheck(t, paper.pdf.bytes, a.save, deps);
   logAll(newLines(paper), deps);
+  if (refused) return 2;
   const r = await portal.create(paper, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
   const dropped = droppedLines(t.fields, t.venueFields, r.value);

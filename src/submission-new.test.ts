@@ -22,6 +22,7 @@ import {
   newFiles,
   WANT,
   ON_THE_SITE,
+  NO_ERRORS,
 } from "../test/submission-fixtures.ts";
 
 test("new: a dry run by default — title from \\title, abstract from \\begin{abstract} with the author's macro expanded, the declared authors, the PDF", async () => {
@@ -32,6 +33,7 @@ test("new: a dry run by default — title from \\title, abstract from \\begin{ab
   expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: false }]]);
   expect(r.out).toStrictEqual([
     CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
+    NO_ERRORS,
     "title         Agents That Lie",
     "author 1      Ada Lovelace <ada@example.org>, Analytical",
     "author 2      Bob Bobson <bob@example.org>",
@@ -61,7 +63,7 @@ test("new --save: the id the portal chose is written into paperlint.json, and `s
   const r = await run({ sub: "new", save: true }, { files: fs });
   expect(r.code, r.errs.join("\n")).toBe(0);
   expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: true }]]);
-  expect(r.out.slice(6, 7)).toStrictEqual(["created submission 42"]);
+  expect(r.out.slice(7, 8)).toStrictEqual(["created submission 42"]);
   expect(r.out.slice(-2)).toStrictEqual([
     `recorded      "submission": { "id": 42 } in papers/p/paperlint.json`,
     `next          npx paperlint submission show papers/p — it should say "match yes"`,
@@ -499,7 +501,7 @@ test("new: no paper.tex — the PDF's Title stands in; without one either, the f
     },
   );
   expect(titled.code, titled.errs.join("\n")).toBe(0);
-  expect(titled.out[1]).toBe("title         From The PDF");
+  expect(titled.out[2]).toBe("title         From The PDF");
   const noAbstract = await run(
     { sub: "new" },
     { files: newFiles({ tex: null, facts: facts({ title: "From The PDF" }) }) },
@@ -566,4 +568,29 @@ test("a refusal at a place no file of the paper holds is named at paper.tex", as
   expect(r.errs).toStrictEqual([
     "the abstract, paper.tex: \\x — paperlint sends no text it would have to guess; give the abstract with --abstract <file>, a plain-text file",
   ]);
+});
+
+test("new prints the venue rules' findings on the PDF it creates the submission with; --save refuses facts that do not describe it, and creates nothing", async () => {
+  const dry = await run({ sub: "new" }, { files: newFiles({}) });
+  expect(dry.out[1]).toBe(NO_ERRORS);
+  const stale = newFiles({ facts: facts({ sha: "b".repeat(64) }) });
+  const saved = await run({ sub: "new", save: true }, { files: stale });
+  expect([saved.code, saved.seen[0]?.calls]).toStrictEqual([2, []]);
+  expect(saved.errs).toStrictEqual([
+    "refused: no build facts describe this PDF (none, unreadable, or of other bytes), so the venue rules did not see it — rebuild (`paperlint build`), run the dry run again, and read its venue check; nothing was sent",
+  ]);
+  // Where lint reports it: the paper.tex line of \documentclass.
+  expect(saved.out.slice(1, 4)).toStrictEqual([
+    "venue rules at their default options:",
+    `${PAPER}/paper.tex`,
+    "  1:2  error  _build/paper.facts.json describes a paper.pdf with another SHA-256 than the PDF being sent, so the venue checks would judge other bytes — rebuild the paper (`paperlint build`) from the source of the PDF you send  pdf/fresh",
+  ]);
+  expect(
+    JSON.parse(
+      new TextDecoder().decode(
+        stale.readBytes(absolutePath(`${PAPER}/paperlint.json`)) ??
+          new Uint8Array(),
+      ),
+    ),
+  ).toStrictEqual({ extends: "../../venue.jsonc", authors: AUTHORS });
 });

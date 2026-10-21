@@ -66,24 +66,25 @@ A missing key or token stops the command with exit 2 and a line naming what to s
    \`\\begin{abstract}\`) and each \`field\` it sends. Read them with the author; an abstract the
    command cannot read, or one that reads wrong, is given as a plain-text file with
    \`--abstract <file>\`.
-2. **Ask with \`AskUserQuestion\`** before the real send, the question showing exactly what goes
-   (title, authors, the abstract's first sentence and word count, each field): yes, or no. Only on
-   yes: \`npx paperlint submission new papers/my-paper --save\`, then the printed "still to do" list
-   with the author.
+2. **Send it.** Show the author the dry run's venue check (its lint findings, or "venue rules: no
+   errors") and what goes (title, authors, abstract, each field), then run
+   \`npx paperlint submission new papers/my-paper --save\` — the \`submission-confirm\` hook makes
+   Claude Code ask the author before it runs. Then the printed "still to do" list with the author.
 3. **Read it.** \`npx paperlint submission show papers/my-paper\` — status, the PDF the portal holds,
    and \`match\`: whether it is the local build. Rebuild first if the local PDF is stale.
 4. **Dry run the change.** \`npx paperlint submission update papers/my-paper\` (\`--abstract <file>\`,
    \`--submit\` to mark it submitted); it sends the paper's \`"fields"\` too. Exit 1 means the portal
    would refuse it, or did not take a topic — report why, stop.
-5. **Ask with \`AskUserQuestion\`** before every real send — each \`--save\`, and \`--submit\` above
-   all — the question showing what changes (the PDF and its sha256, the abstract, each field,
-   "submitted"). Only on yes: the same command with \`--save\`. A dry run needs no question.
+5. **Send it.** Show the author the dry run's venue check and what changes, then run the same
+   command with \`--save\`; the \`submission-confirm\` hook makes Claude Code ask the author before
+   any send. A refusal (exit 2) means the last build is not of this PDF: rebuild, dry run again.
 6. **Prove it landed.** \`show\` again: \`match\` must read \`yes — the portal holds this build\`, and
    the status must be what was intended. Anything else is not done — say so.
 
 🔴 \`--save\` creates or changes a real submission that reviewers will see: never without the
-author's yes to an \`AskUserQuestion\` in this conversation, never "to test", never because a dry run
-passed.
+author's own yes, never "to test", never because a dry run passed. Before every \`--save\`, ask the
+author with \`AskUserQuestion\`, showing the dry run's venue check; where the \`submission-confirm\`
+hook is installed, Claude Code also asks before the command runs.
 
 \`\`\`bash
 npx paperlint build papers/my-paper

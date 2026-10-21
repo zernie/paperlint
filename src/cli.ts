@@ -70,6 +70,7 @@ import {
   pageLimitRules,
   VENUE_RULE_LEVELS,
   venueRules,
+  type VenueMessage,
 } from "./venue-rules.ts";
 import {
   FORMAT_RULE_LEVELS,
@@ -116,11 +117,13 @@ import {
   settingsProblemLine,
   presetProblemText,
   resolvePreset,
+  resolveShipped,
   shippedPresets,
   shippedSpec,
   shippedVenueNames,
   SHIPPED_PREFIX,
   type PaperPreset,
+  type Preset,
   type PresetTemplate,
 } from "./presets.ts";
 import type { ToolInstaller } from "./ports/tool-installer.ts";
@@ -182,6 +185,11 @@ import {
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
 import {
+  submissionConfirm,
+  UNREADABLE_INPUT,
+} from "./submission-confirm-hook.ts";
+import { leafCommandsNormalized } from "vigiles/hook";
+import {
   REPRO_LAYOUT_RULE_LEVELS,
   reproLayoutRules,
 } from "./repro-layout-rule.ts";
@@ -238,7 +246,7 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       create the paper's submission on the venue's portal: the title
                                       and abstract from the build, the authors from paperlint.json,
                                       the PDF. A DRY RUN unless --save; a save records the new id in
-                                      paperlint.json
+                                      paperlint.json. Prints the venue check first, as update does
   npx paperlint submission show [paper]
                                       the paper's submission on the venue's portal: status, title,
                                       type, topics, abstract length, the PDF the portal holds, and
@@ -246,7 +254,9 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint submission update [paper] [--pdf <file>] [--abstract <file>] [--submit] [--save]
                                       send the PDF (default: the paper's own), an abstract, or
                                       "submitted". A DRY RUN unless --save: the portal checks the
-                                      change and keeps nothing
+                                      change and keeps nothing. First prints what the venue rules find
+                                      in that exact PDF, as lint does; --save refuses a PDF the last
+                                      build did not measure (exit 2)
   npx paperlint submission topics [paper]
                                       the topics the venue's portal offers, against the ones its
                                       preset records; exit 1 when they differ
@@ -1237,7 +1247,41 @@ const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
     }
     return 0;
   },
+  // Never advisory-silent: an input it cannot read is asked about, not let through.
+  "submission-confirm": ({ stdin, out }) => {
+    const said = ((): ReturnType<typeof submissionConfirm> => {
+      try {
+        return submissionConfirm(stdin(), {
+          ...PRESET_DEPS,
+          portalHosts,
+          shellLeaves: leafCommandsNormalized,
+          readSend: submissionSend,
+        });
+      } catch {
+        return UNREADABLE_INPUT;
+      }
+    })();
+    if (said !== null) out(`${JSON.stringify(said)}\n`);
+    return 0;
+  },
 };
+
+/**
+ * The words after `submission` read by this CLI's own parser, as the command reads them: the paper
+ * and `--pdf` a send names, null for their defaults — or null when the words would not run cleanly
+ * (a flag missing its value, an unknown flag, a stray operand), so `submission-confirm` says it
+ * cannot tell rather than guess.
+ */
+export function submissionSend(
+  words: readonly string[],
+): { readonly paper: string | null; readonly pdf: string | null } | null {
+  const a = parseArgs(["submission", ...words]);
+  const clean =
+    a.missingValue === undefined &&
+    a.unknownFlag === undefined &&
+    a.paths.length <= 2;
+  return clean ? { paper: a.paths[1] ?? null, pdf: a.pdf } : null;
+}
 
 /**
  * `paperlint hook <name>` — run an editor hook. It exists for ONE thing: so that the wiring does not
@@ -1653,17 +1697,40 @@ function paperRequirements(dir: string): TexRequirements {
  * package, so the shipped union alone would not see it.
  */
 export function toolchainTex(cwd: string): TexRequirements {
+  const chains = projectPresets(cwd).map((p) => p.tex);
+  return declaredUnion(undefined, chains).tex;
+}
+
+/** The resolved venue preset of every paper under the project's papers directories, seen from `cwd`. */
+function projectPresets(cwd: string): readonly Preset[] {
   const cfg = readConfig(parseArgs(["toolchain"]), {
     log: () => {},
     err: () => {},
     cwd,
   });
   const roots = cfg.code === undefined ? papersRoots(cfg) : [];
-  const chains = roots
+  return roots
     .flatMap((r) => papersIn(r))
     .map((dir) => paperPreset(dir, PRESET_DEPS))
-    .flatMap((p) => (p.kind === "resolved" ? [p.preset.tex] : []));
-  return declaredUnion(undefined, chains).tex;
+    .flatMap((p) => (p.kind === "resolved" ? [p.preset] : []));
+}
+
+/**
+ * The host of every venue portal paperlint knows of from `cwd` — the shipped presets', and those the
+ * project's papers extend: what `submission-confirm` asks about when a request goes straight there.
+ */
+export function portalHosts(cwd: string): readonly string[] {
+  return [...resolveShipped(PRESET_DEPS), ...projectPresets(cwd)].flatMap(
+    (p) =>
+      p.portal === null
+        ? []
+        : [
+            p.portal.url
+              .replace(/^[a-z][a-z0-9+.-]*:\/\//iu, "")
+              .split("/", 1)
+              .join(""),
+          ],
+  );
 }
 
 /**
@@ -1755,6 +1822,7 @@ const SIMPLE: Readonly<
         site: portalSite,
         latex: latexReader,
         codec: sourcesCodec,
+        lintText,
         log,
         err,
       },
@@ -2083,6 +2151,32 @@ const isEmptySet = (e: unknown): boolean => {
 };
 
 /**
+ * Findings on one file, printed by the formatter `paperlint lint` prints with — what `paperlint
+ * submission` shows of the venue rules before a send, so the two read the same.
+ */
+export async function lintText(
+  file: string,
+  messages: readonly VenueMessage[],
+): Promise<string> {
+  const errorCount = messages.filter((m) => m.severity === 2).length;
+  const result: Readonly<ESLint.LintResult> = {
+    filePath: file,
+    messages: [...messages],
+    suppressedMessages: [],
+    errorCount,
+    fatalErrorCount: 0,
+    warningCount: messages.length - errorCount,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+    usedDeprecatedRules: [],
+  };
+  return (await new ESLint().loadFormatter(LINT_FORMAT)).format([result]);
+}
+
+/** The formatter `paperlint lint` prints with. */
+const LINT_FORMAT = "stylish";
+
+/**
  * The end of `paperlint lint`: refuse an optional rule that reached no paper, print the findings, and
  * decide the exit code. Pulled out of `run` so each question has its own function.
  */
@@ -2125,7 +2219,7 @@ async function reportLint(
     // Missing things are printed FIRST: they explain why the report below may be suspiciously
     // short. The reverse order would read as "all clean — oh, and also this".
     if (structure.length > 0) log(formatStructure(structure));
-    const out = await (await eslint.loadFormatter("stylish")).format(results);
+    const out = await (await eslint.loadFormatter(LINT_FORMAT)).format(results);
     log(
       out.trim() ||
         (structure.length > 0

@@ -25,6 +25,7 @@ import {
   parseSettings,
   run,
   runHook,
+  portalHosts,
   silentOptionalRules,
   toolchainTex,
 } from "./cli.ts";
@@ -241,6 +242,40 @@ test("runHook paper-folder-layout: in-process, on the real disk — a refusal on
   );
 });
 
+test("runHook submission-confirm: in-process — an ask on stdout for a send, nothing for anything else, and an ask when its input cannot be read", () => {
+  const hook = (stdin: () => string) => {
+    const out: string[] = [];
+    const code = runHook("submission-confirm", {
+      stdin,
+      out: (t) => out.push(t),
+      run: () => {
+        throw new Error("an in-process hook spawns nothing");
+      },
+    });
+    return { code, out };
+  };
+  const command = (c: string) => () =>
+    JSON.stringify({ tool_input: { command: c }, cwd: root });
+  const send = hook(command("npx paperlint submission update nope --save"));
+  assert.equal(send.code, 0);
+  assert.match(
+    send.out.join(""),
+    /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"This sends the paper to the venue's portal/,
+  );
+  assert.deepEqual(hook(command("npx paperlint submission show nope")), {
+    code: 0,
+    out: [],
+  });
+  const unreadable = hook(() => {
+    throw new Error("EAGAIN");
+  });
+  assert.equal(unreadable.code, 0);
+  assert.match(
+    unreadable.out.join(""),
+    /"permissionDecision":"ask","permissionDecisionReason":"paperlint could not read this command/,
+  );
+});
+
 test("runHook paper-folder-layout: by default its output goes to stdout, where Claude Code reads it", () => {
   const dir = join(root, "layout-hook-stdout");
   writeTree(dir, { "papers/p/PIPELINE-STATUS.md": "# status\n" });
@@ -448,6 +483,27 @@ test("build and toolchain over a broken or empty declaration", async () => {
   );
   // A config that does not parse contributes no paper to the toolchain: the shipped presets only.
   assert.deepEqual(toolchainTex(broken), toolchainTex(empty));
+});
+
+test("portalHosts: the hosts of the shipped presets' portals, and of the venues the project's papers extend", () => {
+  const dir = writeTree(join(root, "portal-hosts"), {
+    "package.json": "{}",
+    "venue.jsonc": JSON.stringify({
+      type: "venue",
+      name: "Own Venue",
+      url: "https://own.example.org/cfp",
+      deadlines: [],
+      extends: "paperlint:ieee-conference",
+      portal: { kind: "hotcrp", url: "https://submit.own-venue.example.org" },
+    }),
+    "papers/p/PIPELINE-STATUS.md": "# status\n",
+    "papers/p/paper.tex": "x",
+    "papers/p/paperlint.json": JSON.stringify({ extends: "../../venue.jsonc" }),
+  });
+  const hosts = portalHosts(dir);
+  assert.ok(hosts.includes("aidc.submit.acsac.org"), hosts.join());
+  assert.ok(hosts.includes("msr2027.hotcrp.com"), hosts.join());
+  assert.ok(hosts.includes("submit.own-venue.example.org"), hosts.join());
 });
 
 test("build --dry-run on a paper with a venue plans for the preset's packages", async () => {
