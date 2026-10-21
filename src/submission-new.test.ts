@@ -580,7 +580,8 @@ test("new prints the venue rules' findings on the PDF it creates the submission 
     "refused: no build facts describe this PDF (none, unreadable, or of other bytes), so the venue rules did not see it — rebuild (`paperlint build`), run the dry run again, and read its venue check; nothing was sent",
   ]);
   // Where lint reports it: the paper.tex line of \documentclass.
-  expect(saved.out.slice(1, 3)).toStrictEqual([
+  expect(saved.out.slice(1, 4)).toStrictEqual([
+    "venue rules at their default options:",
     `${PAPER}/paper.tex`,
     "  1:2  error  _build/paper.facts.json describes a paper.pdf with another SHA-256 than the PDF being sent, so the venue checks would judge other bytes — rebuild the paper (`paperlint build`) from the source of the PDF you send  pdf/fresh",
   ]);

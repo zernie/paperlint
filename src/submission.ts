@@ -519,7 +519,12 @@ async function venueCheck(
     source === null ? null : new TextDecoder().decode(source),
   );
   const printed = (await deps.lintText(tex, messages)).trim();
-  logAll(printed === "" ? [nothingFound(a.kind)] : printed.split("\n"), deps);
+  logAll(
+    printed === ""
+      ? [nothingFound(a.kind)]
+      : [`${VENUE_RULES}:`, ...printed.split("\n")],
+    deps,
+  );
   // Checked on its own: a cycle still porting skips the venue rules, not this.
   const refused = save && factsOfSent(t.paperDir, bytes, deps) === null;
   if (refused) deps.err(REBUILD_REFUSAL);
@@ -530,7 +535,13 @@ async function venueCheck(
 const nothingFound = (kind: string): string =>
   kind === "porting"
     ? "venue rules: none run — the current cycle's phase is \"porting\", so the venue's format does not apply yet"
-    : "venue rules: no errors";
+    : `${VENUE_RULES}: no errors`;
+
+/**
+ * What the check is, said where it prints: the venue rules at paperlint's default levels and
+ * options. A paper's or the project's `rules` overrides are not read here; `paperlint lint` reads them.
+ */
+const VENUE_RULES = "venue rules at their default options";
 
 /** What `--save` says when the build's facts do not describe the PDF: nothing was sent. */
 const REBUILD_REFUSAL =

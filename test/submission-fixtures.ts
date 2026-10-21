@@ -179,7 +179,7 @@ export const fakePortal = (answers: {
 };
 
 /** What `new` and `update` print when the venue rules find nothing in the PDF they send. */
-export const NO_ERRORS = "venue rules: no errors";
+export const NO_ERRORS = "venue rules at their default options: no errors";
 
 /** The line `update` prints before it sends `pdf`, naming `call`. */
 export const CHECK = (pdf: string, call: string): string =>

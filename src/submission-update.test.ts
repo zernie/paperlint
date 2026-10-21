@@ -182,8 +182,12 @@ const OVER = files({
 const REFUSAL =
   "refused: no build facts describe this PDF (none, unreadable, or of other bytes), so the venue rules did not see it — rebuild (`paperlint build`), run the dry run again, and read its venue check; nothing was sent";
 
-/** The block lint prints for one finding on the made-up paper (no paper.tex, so line 1). */
+/**
+ * The block printed for one finding on the made-up paper (no paper.tex, so line 1): what the check
+ * is — the venue rules at their default options, not the project's overrides — then lint's report.
+ */
 const LINT_BLOCK = (level: "error" | "warning", text: string): string[] => [
+  "venue rules at their default options:",
   `${PAPER}/paper.tex`,
   `  1:2  ${level}  ${text}`,
   "",
@@ -193,7 +197,7 @@ const LINT_BLOCK = (level: "error" | "warning", text: string): string[] => [
 test("update over the page limit: the venue rules' findings on that PDF, as lint prints them, before the portal is asked; a dry run still runs", async () => {
   const r = await run({ sub: "update" }, { files: OVER });
   expect(r.code).toBe(0);
-  expect(r.out.slice(1, 6)).toStrictEqual([
+  expect(r.out.slice(1, 7)).toStrictEqual([
     ...LINT_BLOCK(
       "error",
       "body pages (up to the references on page 9): 8, over the limit 6 for venue/short — a desk reject; cut the text  format/page-limit",
@@ -205,7 +209,7 @@ test("update over the page limit: the venue rules' findings on that PDF, as lint
 
 test("update --save over the limit: the same findings, and the send goes ahead — the person decides on them, not the command", async () => {
   const r = await run({ sub: "update", save: true }, { files: OVER });
-  expect([r.code, r.errs, r.out[1], r.out[5]]).toStrictEqual([
+  expect([r.code, r.errs, r.out[2], r.out[6]]).toStrictEqual([
     0,
     [],
     `${PAPER}/paper.tex`,
@@ -218,7 +222,7 @@ test("no geometry measured: pdf/measured says the page checks did not run, so th
     { sub: "update" },
     { files: files({ facts: facts({ measured: false }) }) },
   );
-  expect(r.out.slice(1, 5)).toStrictEqual(
+  expect(r.out.slice(1, 6)).toStrictEqual(
     LINT_BLOCK(
       "warning",
       "the build measured no page geometry (banal was not found or failed), so page size, columns, page limits and font sizes were NOT checked — run `paperlint toolchain`, then `paperlint build`  pdf/measured",
@@ -242,7 +246,7 @@ test("update --save with facts about other bytes, or none: refused with exit 2 a
     [],
     1,
   ]);
-  expect(dry.out.slice(1, 5)).toStrictEqual(
+  expect(dry.out.slice(1, 6)).toStrictEqual(
     LINT_BLOCK(
       "error",
       "_build/paper.facts.json describes a paper.pdf with another SHA-256 than the PDF being sent, so the venue checks would judge other bytes — rebuild the paper (`paperlint build`) from the source of the PDF you send  pdf/fresh",

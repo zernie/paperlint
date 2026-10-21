@@ -96,23 +96,27 @@ measured at all) on the exact PDF they are about to send, and print the findings
 them, in the dry run too:
 
 ```
+venue rules at their default options:
 /home/me/papers/my-paper/paper.tex
   1:2  error  body pages (up to the references on page 12): 11, over the limit 10 for ExampleConf/full — a desk reject; cut the text  format/page-limit
 
 ✖ 1 problem (1 error, 0 warnings)
 ```
 
-With no findings it prints one line, `venue rules: no errors`.
+With no findings it prints one line, `venue rules at their default options: no errors`. The rules
+run at paperlint's default levels and options: a `rules` override in your `paperlint.json` or
+preset is applied by `paperlint lint`, not here.
 
 The command refuses one thing by itself: `--save` when no build facts describe this PDF (none, or
 of other bytes) exits 2 and sends nothing. Rebuild (`paperlint build`) and run the dry run again.
 Everything else, including over the limit, is the person's call.
 
 **The `submission-confirm` hook** (installed by `paperlint init`) makes Claude Code ask the person
-before any `submission new|update` with `--save` or `--submit`, and before a request sent straight
-to a portal (a HotCRP site, or a host a venue preset declares). The question names, for each send in the
-command, the paper, the PDF and its sha256, and the body pages of the last build. No flag turns it off; it asks even in auto
-mode. A cycle still porting skips the venue rules, not the refusal.
+before any `submission new|update` with `--save` or `--submit`, and before any command that names a
+portal's host (a HotCRP-hosted site, or a host a venue preset declares), whatever program it runs.
+The question names, for each send in the command, the paper, the PDF and its sha256, and the body
+pages of the last build. No flag turns it off; it asks even in auto mode. It does not see an upload
+from a script file that names the host only inside the file.
 
 ## What it does not do
 
