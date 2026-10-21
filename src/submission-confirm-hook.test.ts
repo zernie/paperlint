@@ -217,6 +217,16 @@ test("the paper's own `pdf` setting is the PDF hashed when the command names no 
   );
 });
 
+test("a paperlint.json that does not parse: the PDF is the default paper.pdf, and the ask still goes out", () => {
+  const fs = memoryFiles({
+    "/w/papers/p/paperlint.json": "{ nope",
+    "/w/papers/p/paper.pdf": PDF,
+  });
+  expect(reasonOf(SEND, fs).split("\n")[2]).toBe(
+    `PDF: papers/p/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
+  );
+});
+
 test("a flag at the end with no value, and `submission` as the last word, read as defaults", () => {
   expect(
     reasonOf(
