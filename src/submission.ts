@@ -18,6 +18,11 @@
  * sent (`src/domain/submission-fields.ts`). A checkbox field the portal did not take is said, and
  * fails the command: HotCRP keeps an option it does not know as nothing, without an error.
  *
+ * Before the portal is asked, `new` and `update` print the PREFLIGHT block of the exact PDF they send
+ * (`src/submission-preflight.ts`): the error-level venue rules, `format/page-limit` first, on the
+ * build's facts. Facts about other bytes stop a `--save` (exit 2); every other verdict is printed
+ * for the author, who decides on it (paperlint#264).
+ *
  * 🔴 THE TOKEN IS AN INPUT, AND ONLY AN INPUT. It comes from the environment (the root reads it), is
  * handed to the adapter, and never appears in anything printed here.
  */
@@ -358,9 +363,9 @@ export function showLines(
 }
 
 /**
- * What `update` says before it sends a PDF, dry run or not: the author opens that file and checks it
- * against the venue's call. paperlint's checks are an aid; the venue's reading of the PDF is what
- * counts. Pure.
+ * What `new` and `update` say before they send a PDF, dry run or not, above the PREFLIGHT block: the
+ * author opens that file and checks it against the venue's call. paperlint's checks are an aid; the
+ * venue's reading of the PDF is what counts. Pure.
  */
 export const checkPdfLine = (shown: string, call: string | null): string =>
   `before you rely on it, open ${shown} yourself and check it against ${call === null ? "the venue's call for papers" : `the call for papers, ${call}`}: the page count and what counts toward the limit, the template and its class options, anonymity, and that every figure, table and reference renders — paperlint passing is not the venue accepting the format`;
