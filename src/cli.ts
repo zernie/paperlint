@@ -70,6 +70,7 @@ import {
   pageLimitRules,
   VENUE_RULE_LEVELS,
   venueRules,
+  type VenueMessage,
 } from "./venue-rules.ts";
 import {
   FORMAT_RULE_LEVELS,
@@ -1757,6 +1758,7 @@ const SIMPLE: Readonly<
         site: portalSite,
         latex: latexReader,
         codec: sourcesCodec,
+        lintText,
         log,
         err,
       },
@@ -2085,6 +2087,32 @@ const isEmptySet = (e: unknown): boolean => {
 };
 
 /**
+ * Findings on one file, printed by the formatter `paperlint lint` prints with — what `paperlint
+ * submission` shows of the venue rules before a send, so the two read the same.
+ */
+export async function lintText(
+  file: string,
+  messages: readonly VenueMessage[],
+): Promise<string> {
+  const errorCount = messages.filter((m) => m.severity === 2).length;
+  const result: Readonly<ESLint.LintResult> = {
+    filePath: file,
+    messages: [...messages],
+    suppressedMessages: [],
+    errorCount,
+    fatalErrorCount: 0,
+    warningCount: messages.length - errorCount,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+    usedDeprecatedRules: [],
+  };
+  return (await new ESLint().loadFormatter(LINT_FORMAT)).format([result]);
+}
+
+/** The formatter `paperlint lint` prints with. */
+const LINT_FORMAT = "stylish";
+
+/**
  * The end of `paperlint lint`: refuse an optional rule that reached no paper, print the findings, and
  * decide the exit code. Pulled out of `run` so each question has its own function.
  */
@@ -2127,7 +2155,7 @@ async function reportLint(
     // Missing things are printed FIRST: they explain why the report below may be suspiciously
     // short. The reverse order would read as "all clean — oh, and also this".
     if (structure.length > 0) log(formatStructure(structure));
-    const out = await (await eslint.loadFormatter("stylish")).format(results);
+    const out = await (await eslint.loadFormatter(LINT_FORMAT)).format(results);
     log(
       out.trim() ||
         (structure.length > 0

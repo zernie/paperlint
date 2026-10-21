@@ -81,8 +81,11 @@ import { lineColumn, readPaper } from "./tex-paper.ts";
 import { originOf, type PaperSource } from "./domain/paper-source.ts";
 import type { SourcesCodec } from "./ports/sources-codec.ts";
 import { MAIN } from "./build.ts";
-import { ESLint } from "eslint";
-import { assessSent, venueMessages } from "./venue-rules.ts";
+import {
+  assessSent,
+  venueMessages,
+  type VenueMessage,
+} from "./venue-rules.ts";
 
 /** How to make and set the site's token: the page, the scopes, the variable. Pure. */
 export function tokenSteps(
@@ -164,6 +167,11 @@ export interface SubmissionDeps {
   readonly latex: LatexReader;
   /** Reads the build's record of the files TeX read, for the includes (`new`). */
   readonly codec: SourcesCodec;
+  /** Findings on one file, printed as `paperlint lint` prints them (the root passes ESLint's `stylish`). */
+  readonly lintText: (
+    file: string,
+    messages: readonly VenueMessage[],
+  ) => Promise<string>;
   readonly log: (line: string) => void;
   readonly err: (line: string) => void;
 }
@@ -492,12 +500,13 @@ const changeOf = (
 
 /**
  * The venue rules on the bytes about to be sent, printed as `paperlint lint` prints them (ESLint's
- * `stylish`), or one line when they find nothing. Returns whether `--save` must stop: the build's
- * facts are missing, unreadable or about other bytes, so the rules did not see this PDF.
+ * `stylish`), or one line when they find nothing. Returns whether a `--save` stops, said: the
+ * build's facts are missing, unreadable or about other bytes, so the rules did not see this PDF.
  */
 async function venueCheck(
   t: SubmissionTarget,
   bytes: Uint8Array,
+  save: boolean,
   deps: RunDeps,
 ): Promise<boolean> {
   const a = assessSent(t.paperDir, t.resolved, bytes, deps.presets);
@@ -507,32 +516,18 @@ async function venueCheck(
     a,
     source === null ? null : new TextDecoder().decode(source),
   );
-  const errorCount = messages.filter((m) => m.severity === 2).length;
-  const result: ESLint.LintResult = {
-    filePath: tex,
-    messages,
-    suppressedMessages: [],
-    errorCount,
-    fatalErrorCount: 0,
-    warningCount: messages.length - errorCount,
-    fixableErrorCount: 0,
-    fixableWarningCount: 0,
-    usedDeprecatedRules: [],
-  };
-  const stylish = await new ESLint().loadFormatter("stylish");
-  const printed = (await stylish.format([result])).trim();
-  logAll(
-    printed === ""
-      ? [
-          a.kind === "porting"
-            ? 'venue rules: none run — the current cycle\'s phase is "porting", so the venue\'s format does not apply yet'
-            : "venue rules: no errors",
-        ]
-      : printed.split("\n"),
-    deps,
-  );
-  return a.kind === "unbuilt" || a.kind === "stale";
+  const printed = (await deps.lintText(tex, messages)).trim();
+  logAll(printed === "" ? [nothingFound(a.kind)] : printed.split("\n"), deps);
+  const refused = save && (a.kind === "unbuilt" || a.kind === "stale");
+  if (refused) deps.err(REBUILD_REFUSAL);
+  return refused;
 }
+
+/** The line for a check that found nothing — which, while a cycle is porting, is that nothing ran. */
+const nothingFound = (kind: string): string =>
+  kind === "porting"
+    ? 'venue rules: none run — the current cycle\'s phase is "porting", so the venue\'s format does not apply yet'
+    : "venue rules: no errors";
 
 /** What `--save` says when the build's facts do not describe the PDF: nothing was sent. */
 const REBUILD_REFUSAL =
@@ -555,9 +550,9 @@ async function runUpdate(
   const abstract = abstractOf(a, deps);
   if (!abstract.ok) return (deps.err(abstract.error), 2);
   deps.log(checkPdfLine(shown, t.call));
-  const unseen = await venueCheck(t, bytes, deps);
+  const refused = await venueCheck(t, bytes, a.save, deps);
   logAll(fieldLines(t.fields), deps);
-  if (a.save && unseen) return (deps.err(REBUILD_REFUSAL), 2);
+  if (refused) return 2;
   const change = changeOf(a, bytes, abstract.value, t.fields);
   const r = await portal.update(t.id, change, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
@@ -888,9 +883,9 @@ async function runNew(
   if (!n.ok) return (deps.err(n.error), 2);
   const { paper, shown } = n.value;
   deps.log(checkPdfLine(shown, t.call));
-  const unseen = await venueCheck(t, paper.pdf.bytes, deps);
+  const refused = await venueCheck(t, paper.pdf.bytes, a.save, deps);
   logAll(newLines(paper), deps);
-  if (a.save && unseen) return (deps.err(REBUILD_REFUSAL), 2);
+  if (refused) return 2;
   const r = await portal.create(paper, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
   const dropped = droppedLines(t.fields, t.venueFields, r.value);

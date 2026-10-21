@@ -24,6 +24,7 @@ import { type Files } from "../src/ports/files.ts";
 import { type LatexReader } from "../src/ports/latex.ts";
 import { type SubmissionPortal } from "../src/ports/submission-portal.ts";
 import { runSubmission, type SubmissionArgs } from "../src/submission.ts";
+import { lintText } from "../src/cli.ts";
 import { venuePreset } from "./support.ts";
 
 export const PAPER = "/w/papers/p";
@@ -221,6 +222,7 @@ export async function run(
       }),
       latex: o.latex ?? latexReader,
       codec: sourcesCodec,
+      lintText,
       log: (l) => out.push(l),
       err: (l) => errs.push(l),
     },

@@ -51,7 +51,6 @@ import {
   type ReadFacts,
 } from "./facts-file.ts";
 import type { KindLimits, VenueFormat } from "./tex-requirements.ts";
-import type { Linter } from "eslint";
 import { entries } from "remeda";
 import {
   paperPreset,
@@ -948,6 +947,18 @@ const filled = (message: string, data: Finding["data"]): string =>
     return value === undefined ? whole : String(value);
   });
 
+/** One finding as a lint message: the fields ESLint's formatters read from a `Linter.LintMessage`. */
+export interface VenueMessage {
+  readonly ruleId: string;
+  readonly severity: 1 | 2;
+  readonly message: string;
+  readonly messageId: string;
+  readonly line: number;
+  readonly column: number;
+  readonly endLine: number;
+  readonly endColumn: number;
+}
+
 /**
  * Every venue rule's findings on an assessed paper, as the lint messages `paperlint lint` would
  * report on its `paper.tex` (`source`; line 1 without one): the same judges, at paperlint's default
@@ -958,7 +969,7 @@ const filled = (message: string, data: Finding["data"]): string =>
 export function venueMessages(
   a: Assessment,
   source: string | null,
-): Linter.LintMessage[] {
+): readonly VenueMessage[] {
   const line = source === null ? 1 : reportLine(source);
   return entries(LINT_IDS).flatMap(([name, ruleId]) =>
     JUDGES[name](a, { options: [], shown: String }).map((f) => ({
