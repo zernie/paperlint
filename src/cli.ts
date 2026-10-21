@@ -238,7 +238,7 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       create the paper's submission on the venue's portal: the title
                                       and abstract from the build, the authors from paperlint.json,
                                       the PDF. A DRY RUN unless --save; a save records the new id in
-                                      paperlint.json. Prints the PREFLIGHT block first (as update)
+                                      paperlint.json. Prints the venue check first, as update does
   npx paperlint submission show [paper]
                                       the paper's submission on the venue's portal: status, title,
                                       type, topics, abstract length, the PDF the portal holds, and
@@ -246,9 +246,9 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint submission update [paper] [--pdf <file>] [--abstract <file>] [--submit] [--save]
                                       send the PDF (default: the paper's own), an abstract, or
                                       "submitted". A DRY RUN unless --save: the portal checks the
-                                      change and keeps nothing. First prints the PREFLIGHT block: the
-                                      error-level venue rules (format/page-limit, pdf/fonts, …) on
-                                      that exact PDF; --save refuses facts about other bytes (exit 2)
+                                      change and keeps nothing. First prints what the venue rules find
+                                      in that exact PDF, as lint does; --save refuses a PDF the last
+                                      build did not measure (exit 2)
   npx paperlint submission topics [paper]
                                       the topics the venue's portal offers, against the ones its
                                       preset records; exit 1 when they differ

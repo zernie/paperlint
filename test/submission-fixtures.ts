@@ -177,11 +177,8 @@ export const fakePortal = (answers: {
   return { seen, portalFor };
 };
 
-/** The preflight block of a fresh build within every limit of the default venue, sending `pdf`. */
-export const PREFLIGHT_OK = (pdf = "papers/p/paper.pdf"): readonly string[] => [
-  "PREFLIGHT: OK — no error-level PDF check fails against venue",
-  `  sent        ${pdf} sha2-${HEX}`,
-];
+/** What `new` and `update` print when the venue rules find nothing in the PDF they send. */
+export const NO_ERRORS = "venue rules: no errors";
 
 /** The line `update` prints before it sends `pdf`, naming `call`. */
 export const CHECK = (pdf: string, call: string): string =>
@@ -263,22 +260,44 @@ export const TIMES = {
   program: "Type1",
 };
 
-/** A fresh build's facts about `PDF`: four body pages, the family's font, no geometry measured. */
+/** The page geometry banal measures on an IEEE conference paper of `body` body pages. */
+const ieeeGeometry = (body: number) => ({
+  geometry_source: "banal",
+  page_w_in: 8.5,
+  page_h_in: 11,
+  columns: 2,
+  body_pt: 10.3,
+  ref_pt: 8.3,
+  body_pages: body,
+  ref_pages: 1,
+  appendix_pages: 0,
+  pages_by_type: { body, refs: 1 },
+});
+
+/**
+ * A fresh build's facts about `PDF`: `body` body pages (4 by default), the family's font, the
+ * geometry measured — or none, with `measured: false`.
+ */
 export const facts = (
   o: {
     readonly sha?: string;
+    /** The PDF the facts name, relative to the paper. */
+    readonly pdf?: string;
     readonly title?: string;
-    readonly pages?: readonly string[];
+    readonly body?: number;
     readonly fonts?: readonly object[];
+    readonly measured?: boolean;
   } = {},
 ) =>
   JSON.stringify({
     schema: 3,
-    pdf: "paper.pdf",
+    pdf: o.pdf ?? "paper.pdf",
     pdf_sha256: o.sha ?? HEX,
     fonts: o.fonts ?? [TIMES],
-    geometry_source: null,
-    pages_text: o.pages ?? pagesText(4),
+    ...(o.measured === false
+      ? { geometry_source: null }
+      : ieeeGeometry(o.body ?? 4)),
+    pages_text: pagesText(o.body ?? 4),
     metadata: o.title === undefined ? {} : { Title: o.title },
     links: [],
     bib_anchor_page: null,

@@ -18,10 +18,10 @@
  * sent (`src/domain/submission-fields.ts`). A checkbox field the portal did not take is said, and
  * fails the command: HotCRP keeps an option it does not know as nothing, without an error.
  *
- * Before the portal is asked, `new` and `update` print the PREFLIGHT block of the exact PDF they send
- * (`src/submission-preflight.ts`): the error-level venue rules, `format/page-limit` first, on the
- * build's facts. Facts about other bytes stop a `--save` (exit 2); every other verdict is printed
- * for the author, who decides on it (paperlint#264).
+ * Before the portal is asked, `new` and `update` print what the venue rules find in the exact PDF
+ * they send, as `paperlint lint` prints it — or "venue rules: no errors" (paperlint#264). The verdict
+ * is the author's to act on; the one thing the command refuses is a `--save` whose build facts are
+ * missing or about other bytes, because then nothing was checked (exit 2).
  *
  * 🔴 THE TOKEN IS AN INPUT, AND ONLY AN INPUT. It comes from the environment (the root reads it), is
  * handed to the adapter, and never appears in anything printed here.
@@ -81,12 +81,8 @@ import { lineColumn, readPaper } from "./tex-paper.ts";
 import { originOf, type PaperSource } from "./domain/paper-source.ts";
 import type { SourcesCodec } from "./ports/sources-codec.ts";
 import { MAIN } from "./build.ts";
-import {
-  preflight,
-  preflightLines,
-  staleRefusal,
-  type Preflight,
-} from "./submission-preflight.ts";
+import { ESLint } from "eslint";
+import { assessSent, venueMessages } from "./venue-rules.ts";
 
 /** How to make and set the site's token: the page, the scopes, the variable. Pure. */
 export function tokenSteps(
@@ -176,7 +172,7 @@ export interface SubmissionDeps {
 export interface SubmissionTarget {
   /** The paper's folder, absolute. */
   readonly paperDir: string;
-  /** The paper's settings and its venue preset, resolved: what the preflight judges the PDF against. */
+  /** The paper's settings and venue preset, resolved: what the venue rules judge the PDF against. */
   readonly resolved: Extract<PaperPreset, { readonly kind: "resolved" }>;
   readonly portal: SupportedPortal;
   /** The paper's submission on the portal; null before `new` created one. */
@@ -363,9 +359,9 @@ export function showLines(
 }
 
 /**
- * What `new` and `update` say before they send a PDF, dry run or not, above the PREFLIGHT block: the
- * author opens that file and checks it against the venue's call. paperlint's checks are an aid; the
- * venue's reading of the PDF is what counts. Pure.
+ * What `update` says before it sends a PDF, dry run or not: the author opens that file and checks it
+ * against the venue's call. paperlint's checks are an aid; the venue's reading of the PDF is what
+ * counts. Pure.
  */
 export const checkPdfLine = (shown: string, call: string | null): string =>
   `before you rely on it, open ${shown} yourself and check it against ${call === null ? "the venue's call for papers" : `the call for papers, ${call}`}: the page count and what counts toward the limit, the template and its class options, anonymity, and that every figure, table and reference renders — paperlint passing is not the venue accepting the format`;
@@ -495,39 +491,52 @@ const changeOf = (
 });
 
 /**
- * The line to check the PDF by hand, then the preflight block (`src/submission-preflight.ts`) of the
- * bytes about to be sent, printed; the verdict returned.
+ * The venue rules on the bytes about to be sent, printed as `paperlint lint` prints them (ESLint's
+ * `stylish`), or one line when they find nothing. Returns whether `--save` must stop: the build's
+ * facts are missing, unreadable or about other bytes, so the rules did not see this PDF.
  */
-function preflightOf(
+async function venueCheck(
   t: SubmissionTarget,
   bytes: Uint8Array,
-  shown: string,
   deps: RunDeps,
-): Preflight {
-  const verdict = preflight(t.paperDir, t.resolved, bytes, deps.presets);
+): Promise<boolean> {
+  const a = assessSent(t.paperDir, t.resolved, bytes, deps.presets);
+  const tex = join(t.paperDir, MAIN);
+  const source = bytesAt(deps.files, tex);
+  const messages = venueMessages(
+    a,
+    source === null ? null : new TextDecoder().decode(source),
+  );
+  const errorCount = messages.filter((m) => m.severity === 2).length;
+  const result: ESLint.LintResult = {
+    filePath: tex,
+    messages,
+    suppressedMessages: [],
+    errorCount,
+    fatalErrorCount: 0,
+    warningCount: messages.length - errorCount,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+    usedDeprecatedRules: [],
+  };
+  const stylish = await new ESLint().loadFormatter("stylish");
+  const printed = (await stylish.format([result])).trim();
   logAll(
-    [
-      checkPdfLine(shown, t.call),
-      ...preflightLines(verdict, { shown, sha256: sha256Hex(bytes) }),
-    ],
+    printed === ""
+      ? [
+          a.kind === "porting"
+            ? 'venue rules: none run — the current cycle\'s phase is "porting", so the venue\'s format does not apply yet'
+            : "venue rules: no errors",
+        ]
+      : printed.split("\n"),
     deps,
   );
-  return verdict;
+  return a.kind === "unbuilt" || a.kind === "stale";
 }
 
-/**
- * Whether `--save` stops here: the facts do not describe the bytes, so nothing about them was checked.
- * Said, when so. A dry run goes on — its block already says it.
- */
-function refusesStale(
-  a: Pick<SubmissionArgs, "save">,
-  verdict: Preflight,
-  deps: RunDeps,
-): boolean {
-  const refuses = a.save && verdict.kind === "stale";
-  if (refuses) deps.err(staleRefusal);
-  return refuses;
-}
+/** What `--save` says when the build's facts do not describe the PDF: nothing was sent. */
+const REBUILD_REFUSAL =
+  "refused: no build facts describe this PDF (none, unreadable, or of other bytes), so the venue rules did not see it — rebuild (`paperlint build`), run the dry run again, and read its venue check; nothing was sent";
 
 /** `update`: send the PDF (and the abstract, and "submitted" when asked); a dry run unless saving. */
 async function runUpdate(
@@ -545,9 +554,10 @@ async function runUpdate(
     );
   const abstract = abstractOf(a, deps);
   if (!abstract.ok) return (deps.err(abstract.error), 2);
-  const verdict = preflightOf(t, bytes, shown, deps);
+  deps.log(checkPdfLine(shown, t.call));
+  const unseen = await venueCheck(t, bytes, deps);
   logAll(fieldLines(t.fields), deps);
-  if (refusesStale(a, verdict, deps)) return 2;
+  if (a.save && unseen) return (deps.err(REBUILD_REFUSAL), 2);
   const change = changeOf(a, bytes, abstract.value, t.fields);
   const r = await portal.update(t.id, change, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
@@ -877,9 +887,10 @@ async function runNew(
   const n = newSubmissionOf(t, a, deps);
   if (!n.ok) return (deps.err(n.error), 2);
   const { paper, shown } = n.value;
-  const verdict = preflightOf(t, paper.pdf.bytes, shown, deps);
+  deps.log(checkPdfLine(shown, t.call));
+  const unseen = await venueCheck(t, paper.pdf.bytes, deps);
   logAll(newLines(paper), deps);
-  if (refusesStale(a, verdict, deps)) return 2;
+  if (a.save && unseen) return (deps.err(REBUILD_REFUSAL), 2);
   const r = await portal.create(paper, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
   const dropped = droppedLines(t.fields, t.venueFields, r.value);

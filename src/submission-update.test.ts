@@ -12,9 +12,8 @@ import {
   fakePortal,
   CHECK,
   run,
-  PREFLIGHT_OK,
+  NO_ERRORS,
   facts,
-  pagesText,
 } from "../test/submission-fixtures.ts";
 
 test("update: a dry run by default — the paper's PDF sent, nothing saved, exit 0", async () => {
@@ -35,7 +34,7 @@ test("update: a dry run by default — the paper's PDF sent, nothing saved, exit
   ]);
   expect(r.out).toStrictEqual([
     CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
-    ...PREFLIGHT_OK(),
+    NO_ERRORS,
     "dry run — the portal checked the change and kept nothing; --save sends it for real",
     "HTTP          200",
     "valid         yes",
@@ -73,9 +72,9 @@ test("update --save --submit --abstract --pdf: all of it sent, and said to be sa
     ],
   ]);
   // Guards: the PDF that is sent is the one named, and --save is told to check it too.
-  expect(r.out.slice(0, 4)).toStrictEqual([
+  expect(r.out.slice(0, 3)).toStrictEqual([
     CHECK("other.pdf", "the call for papers, https://example.org/cfp"),
-    ...PREFLIGHT_OK("other.pdf"),
+    NO_ERRORS,
     "saved",
   ]);
 });
@@ -114,7 +113,7 @@ test("update: valid:false, or a non-2xx status, exits 1 with the portal's messag
     { portal: fakePortal({ update: invalid }) },
   );
   expect(r1.code).toBe(1);
-  expect(r1.out.slice(5)).toStrictEqual([
+  expect(r1.out.slice(4)).toStrictEqual([
     "valid         NO",
     "changes       —",
     `local PDF     papers/p/paper.pdf sha2-${HEX}`,
@@ -155,7 +154,7 @@ test("update --save that the portal withheld says so", async () => {
     { sub: "update", save: true },
     { portal: fakePortal({ update: withheld }) },
   );
-  expect(r.out[3]).toBe("SAVE WITHHELD by the portal — nothing changed");
+  expect(r.out[2]).toBe("SAVE WITHHELD by the portal — nothing changed");
 });
 
 test("update: no PDF to send, or no abstract file, is refused before the portal is asked", async () => {
@@ -170,62 +169,130 @@ test("update: no PDF to send, or no abstract file, is refused before the portal 
   expect(r2.errs).toStrictEqual(["--abstract: no file at nope.txt"]);
 });
 
-// ── the preflight (paperlint#264) ─────────────────────────────────────────────────────
+// ── the venue check before a send (paperlint#264) ─────────────────────────────────────
 
 /** A paper of kind `short` (6 body pages) at a venue over AIDC, not blind, built 8 body pages long. */
 const OVER = files({
   venue: { extends: "paperlint:aidc", blind: false },
   paper: { extends: "../../venue.jsonc", kind: "short", submission: { id: 7 } },
-  facts: facts({ pages: pagesText(8) }),
+  facts: facts({ body: 8 }),
 });
-const OVER_HEADLINE =
-  "PREFLIGHT: OVER LIMIT — body pages (up to the references on page 9): 8 > 6, for venue/short";
 
-test("update over the limit, dry run: the PREFLIGHT block says OVER LIMIT before the portal is asked, and the dry run still runs, exit 0", async () => {
+/** What `new` and `update` refuse a `--save` with when no build facts describe the PDF. */
+const REFUSAL =
+  "refused: no build facts describe this PDF (none, unreadable, or of other bytes), so the venue rules did not see it — rebuild (`paperlint build`), run the dry run again, and read its venue check; nothing was sent";
+
+/** The block lint prints for one finding on the made-up paper (no paper.tex, so line 1). */
+const LINT_BLOCK = (level: "error" | "warning", text: string): string[] => [
+  `${PAPER}/paper.tex`,
+  `  1:2  ${level}  ${text}`,
+  "",
+  `✖ 1 problem (${level === "error" ? "1 error, 0 warnings" : "0 errors, 1 warning"})`,
+];
+
+test("update over the page limit: the venue rules' findings on that PDF, as lint prints them, before the portal is asked; a dry run still runs", async () => {
   const r = await run({ sub: "update" }, { files: OVER });
   expect(r.code).toBe(0);
-  expect(r.out.slice(1, 3)).toStrictEqual([
-    OVER_HEADLINE,
-    "  format/page-limit: body pages (up to the references on page 9): 8, over the limit 6 for venue/short — a desk reject; cut the text",
-  ]);
-  expect(r.out[3]).toMatch(/^ {2}limit {7}venue\/short: body_pages_max 6 — /u);
-  expect(r.out.slice(4, 6)).toStrictEqual([
-    `  sent        papers/p/paper.pdf sha2-${HEX}`,
+  expect(r.out.slice(1, 6)).toStrictEqual([
+    ...LINT_BLOCK(
+      "error",
+      "body pages (up to the references on page 9): 8, over the limit 6 for venue/short — a desk reject; cut the text  format/page-limit",
+    ),
     "dry run — the portal checked the change and kept nothing; --save sends it for real",
   ]);
   expect(r.seen[0]?.calls).toHaveLength(1);
 });
 
-test("update --save over the limit: the same block, and the send goes ahead — sending over the limit is the author's decision, not the command's", async () => {
+test("update --save over the limit: the same findings, and the send goes ahead — the person decides on them, not the command", async () => {
   const r = await run({ sub: "update", save: true }, { files: OVER });
-  expect(r.code).toBe(0);
-  expect(r.out[1]).toBe(OVER_HEADLINE);
-  expect(r.out).toContain("saved");
-  expect(r.errs).toStrictEqual([]);
+  expect([r.code, r.errs, r.out[1], r.out[5]]).toStrictEqual([
+    0,
+    [],
+    `${PAPER}/paper.tex`,
+    "saved",
+  ]);
 });
 
-test("update --save with facts about other bytes, or none: refused with exit 2, nothing sent; the dry run reports it and goes on", async () => {
-  const other = new TextEncoder().encode("%PDF a later build");
-  const later = files({ extra: { [`${PAPER}/paper.pdf`]: other } });
+test("no geometry measured: pdf/measured says the page checks did not run, so the check never reads as no errors", async () => {
+  const r = await run(
+    { sub: "update" },
+    { files: files({ facts: facts({ measured: false }) }) },
+  );
+  expect(r.out.slice(1, 5)).toStrictEqual(
+    LINT_BLOCK(
+      "warning",
+      "the build measured no page geometry (banal was not found or failed), so page size, columns, page limits and font sizes were NOT checked — run `paperlint toolchain`, then `paperlint build`  pdf/measured",
+    ),
+  );
+});
+
+test("update --save with facts about other bytes, or none: refused with exit 2 and nothing sent; the dry run prints the finding and goes on", async () => {
+  const later = files({
+    extra: { [`${PAPER}/paper.pdf`]: new TextEncoder().encode("%PDF later") },
+  });
   const saved = await run({ sub: "update", save: true }, { files: later });
-  expect(saved.code).toBe(2);
-  expect(saved.seen[0]?.calls).toStrictEqual([]);
-  expect(saved.out[1]).toBe(
-    "PREFLIGHT: STALE FACTS — _build/paper.facts.json describes a DIFFERENT paper.pdf than the one on disk (its SHA-256 differs), so the venue checks would judge an earlier build — rebuild the paper",
-  );
-  expect(saved.errs).toStrictEqual([
-    "refused: the facts do not describe the PDF being sent, so it was not checked against the venue — nothing was sent. Rebuild, then run the dry run again and read its PREFLIGHT block",
+  expect([saved.code, saved.errs, saved.seen[0]?.calls]).toStrictEqual([
+    2,
+    [REFUSAL],
+    [],
   ]);
-  const unbuilt = await run(
-    { sub: "update", save: true, submit: true },
-    { files: files({ facts: null }) },
-  );
-  expect([unbuilt.code, unbuilt.seen[0]?.calls]).toStrictEqual([2, []]);
   const dry = await run({ sub: "update" }, { files: later });
   expect([dry.code, dry.errs, dry.seen[0]?.calls.length]).toStrictEqual([
     0,
     [],
     1,
   ]);
-  expect(dry.out[1]).toMatch(/^PREFLIGHT: STALE FACTS — /u);
+  expect(dry.out.slice(1, 5)).toStrictEqual(
+    LINT_BLOCK(
+      "error",
+      "_build/paper.facts.json describes a paper.pdf with another SHA-256 than the PDF being sent, so the venue checks would judge other bytes — rebuild the paper (`paperlint build`) from the source of the PDF you send  pdf/fresh",
+    ),
+  );
+  const unbuilt = await run(
+    { sub: "update", save: true, submit: true },
+    { files: files({ facts: null }) },
+  );
+  expect([unbuilt.code, unbuilt.errs, unbuilt.seen[0]?.calls]).toStrictEqual([
+    2,
+    [REFUSAL],
+    [],
+  ]);
+  const broken = await run(
+    { sub: "update", save: true },
+    { files: files({ facts: "{" }) },
+  );
+  expect([broken.code, broken.errs]).toStrictEqual([2, [REFUSAL]]);
+});
+
+test("facts whose SHA-256 is the sent bytes' hold, wherever the PDF they name is — even gone from disk", async () => {
+  const gone = files({ facts: facts({ pdf: "gone.pdf" }) });
+  const r = await run(
+    { sub: "update", save: true },
+    { files: gone },
+  );
+  expect([r.code, r.errs, r.out[1]]).toStrictEqual([0, [], NO_ERRORS]);
+});
+
+test("a cycle still porting to the venue's template: no venue rule runs, and the check says so rather than no errors", async () => {
+  const r = await run(
+    { sub: "update" },
+    {
+      files: files({
+        paper: {
+          cycles: [
+            {
+              id: "venue-2027",
+              venue: { kind: "preset", extends: "../../venue.jsonc" },
+              opened: "2026-09-09",
+              phase: "porting",
+              submission: { id: 7 },
+            },
+          ],
+        },
+      }),
+    },
+  );
+  expect(r.out[1]).toBe(
+    'venue rules: none run — the current cycle\'s phase is "porting", so the venue\'s format does not apply yet',
+  );
 });
