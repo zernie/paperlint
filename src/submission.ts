@@ -81,11 +81,7 @@ import { lineColumn, readPaper } from "./tex-paper.ts";
 import { originOf, type PaperSource } from "./domain/paper-source.ts";
 import type { SourcesCodec } from "./ports/sources-codec.ts";
 import { MAIN } from "./build.ts";
-import {
-  assessSent,
-  venueMessages,
-  type VenueMessage,
-} from "./venue-rules.ts";
+import { assessSent, venueMessages, type VenueMessage } from "./venue-rules.ts";
 
 /** How to make and set the site's token: the page, the scopes, the variable. Pure. */
 export function tokenSteps(
@@ -213,6 +209,12 @@ export interface SubmissionTarget {
 
 const configOf = (dir: string): string => join(dir, CONFIG_FILE);
 
+/** The PDF a paper sends when no `--pdf` is named: its `pdf` setting, else `paper.pdf`. Pure. */
+export const paperPdf = (
+  paperDir: string,
+  settings: Pick<PaperSettings, "pdf"> | null,
+): string => join(paperDir, settings?.pdf ?? "paper.pdf");
+
 /** Why a paper without a venue preset has no portal: the key to set, or — with cycles — where. */
 const noPresetLine = (
   paperDir: string,
@@ -270,7 +272,7 @@ function targetOf(
     fields: {},
     venueFields: p.preset.submissionFields,
     accepted: p.settings.cycles?.current.kind === "accepted",
-    pdf: join(paperDir, p.settings.pdf ?? "paper.pdf"),
+    pdf: paperPdf(paperDir, p.settings),
     call: identity.type === "venue" ? identity.url : null,
     deadlines: deadlinesInForce(own, p.preset.deadlines),
   });
@@ -527,7 +529,7 @@ async function venueCheck(
 /** The line for a check that found nothing — which, while a cycle is porting, is that nothing ran. */
 const nothingFound = (kind: string): string =>
   kind === "porting"
-    ? 'venue rules: none run — the current cycle\'s phase is "porting", so the venue\'s format does not apply yet'
+    ? "venue rules: none run — the current cycle's phase is \"porting\", so the venue's format does not apply yet"
     : "venue rules: no errors";
 
 /** What `--save` says when the build's facts do not describe the PDF: nothing was sent. */

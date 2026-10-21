@@ -6,8 +6,29 @@ import { expect, test } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import type { Files } from "./ports/files.ts";
-import { sendKind, submissionConfirm } from "./submission-confirm-hook.ts";
-import { HEX, PDF, facts } from "../test/submission-fixtures.ts";
+import { presetsDir } from "./package-dirs.ts";
+import {
+  sendKind,
+  submissionConfirm as confirmWith,
+  type ConfirmDeps,
+} from "./submission-confirm-hook.ts";
+import { HEX, PDF, facts, withPresets } from "../test/submission-fixtures.ts";
+
+/** The portal hosts the project declares, in these tests: one venue on its own domain. */
+const HOSTS = ["submit.example-venue.org"];
+
+/** The hook over `fs` (the shipped presets readable beside it), the project declaring `HOSTS`. */
+const submissionConfirm = (
+  stdin: string,
+  fs: Files,
+  more: Partial<ConfirmDeps> = {},
+) =>
+  confirmWith(stdin, {
+    files: withPresets(fs),
+    venuesDir: presetsDir(),
+    portalHosts: () => HOSTS,
+    ...more,
+  });
 
 const payload = (command: string, cwd = "/w"): string =>
   JSON.stringify({ tool_name: "Bash", tool_input: { command }, cwd });
@@ -23,8 +44,9 @@ test.each([
   "npm run build && npx paperlint submission update papers/p --save",
   `npx paperlint "submission" 'update' papers/p "--save"`,
   "npx paperlint --save submission update papers/p",
+  "npx paperlint new --save submission",
 ])("asked: %s", (command) => {
-  expect(sendKind(command)).toBe("paperlint");
+  expect(sendKind(command, () => [])).toBe("paperlint");
 });
 
 test.each([
@@ -33,8 +55,9 @@ test.each([
   "http POST https://venue.hotcrp.com/api/paper",
   `node -e "fetch('https://venue.hotcrp.com/api/paper', { method: 'POST' })"`,
   `python3 -c "import requests; requests.post('https://venue.hotcrp.com/api/paper')"`,
+  "curl -F file=@paper.pdf https://SUBMIT.example-venue.org/api/upload",
 ])("asked, straight at HotCRP: %s", (command) => {
-  expect(sendKind(command)).toBe("direct");
+  expect(sendKind(command, () => HOSTS)).toBe("direct");
 });
 
 test.each([
@@ -48,8 +71,38 @@ test.each([
   "curl https://example.org/new --save-dir x",
   "echo https://venue.hotcrp.com",
   "",
+  "curl https://example.org/api/paper",
 ])("silent: %s", (command) => {
-  expect(sendKind(command)).toBe(null);
+  expect(sendKind(command, () => HOSTS)).toBe(null);
+});
+
+test("the hosts are read only for a command that makes a request: anything else pays nothing", () => {
+  const never = () => {
+    throw new Error("read the hosts for a command with no request in it");
+  };
+  expect(sendKind("ls -la", never)).toBe(null);
+  // An empty host would be in every command: it matches nothing.
+  expect(sendKind("curl https://example.org/x", () => [""])).toBe(null);
+  expect(sendKind("npx paperlint submission new --save", never)).toBe(
+    "paperlint",
+  );
+});
+
+test("hosts that cannot be read: a request still asks, rather than passing unseen", () => {
+  expect(
+    submissionConfirm(payload("curl https://example.org/x"), memoryFiles({}), {
+      portalHosts: () => {
+        throw new Error("broken preset");
+      },
+    }),
+  ).toStrictEqual({
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "ask",
+      permissionDecisionReason:
+        "paperlint could not read the venue portals this project declares (broken preset), so it cannot tell whether this request sends to one. Allow only if you have read the dry run's venue check.",
+    },
+  });
 });
 
 /** The made-up paper: its PDF, and its facts when given. */
@@ -154,6 +207,35 @@ test("the paper and the PDF as the command names them: the current folder by def
   ]);
 });
 
+test("the paper's own `pdf` setting is the PDF hashed when the command names no --pdf, as the command sends it", () => {
+  const fs = memoryFiles({
+    "/w/papers/p/paperlint.json": JSON.stringify({ pdf: "out/main.pdf" }),
+    "/w/papers/p/out/main.pdf": PDF,
+  });
+  expect(reasonOf(SEND, fs).split("\n")[2]).toBe(
+    `PDF: papers/p/out/main.pdf, sha256 ${HEX.slice(0, 12)}`,
+  );
+});
+
+test("a flag at the end with no value, and `submission` as the last word, read as defaults", () => {
+  expect(
+    reasonOf(
+      "npx paperlint submission update papers/p --save --pdf",
+      paper(facts()),
+    )
+      .split("\n")
+      .slice(1, 3),
+  ).toStrictEqual([
+    "paper folder: papers/p",
+    `PDF: papers/p/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
+  ]);
+  expect(
+    reasonOf("npx paperlint new --save submission", paper(null), "/w/papers/p")
+      .split("\n")
+      .slice(1, 2),
+  ).toStrictEqual(["paper folder: p (the current folder)"]);
+});
+
 test("straight at HotCRP: asked, naming that paperlint's check is skipped", () => {
   expect(
     reasonOf(
@@ -167,11 +249,14 @@ test("straight at HotCRP: asked, naming that paperlint's check is skipped", () =
 
 test("a command that sends nothing: no output at all — neither allow nor deny", () => {
   expect(
-    submissionConfirm(payload("npx paperlint submission update papers/p"), paper(null)),
+    submissionConfirm(
+      payload("npx paperlint submission update papers/p"),
+      paper(null),
+    ),
   ).toBe(null);
-  expect(submissionConfirm(JSON.stringify({ tool_input: {} }), paper(null))).toBe(
-    null,
-  );
+  expect(
+    submissionConfirm(JSON.stringify({ tool_input: {} }), paper(null)),
+  ).toBe(null);
 });
 
 test("a crash while describing the send still asks; a payload that is not JSON is matched as text", () => {
@@ -183,7 +268,7 @@ test("a crash while describing the send still asks; a payload that is not JSON i
     writeAtomic: () => undefined,
   };
   expect(reasonOf(SEND, broken)).toBe(
-    `${HEAD} paperlint could not say what will be sent: disk on fire at /w/papers/p/paper.pdf. ${LAST}`,
+    `${HEAD} paperlint could not say what will be sent: disk on fire at /w/papers/p/paperlint.json. ${LAST}`,
   );
   expect(
     submissionConfirm(`{"tool_input": {"command": "${SEND}"`, paper(null))
@@ -191,7 +276,7 @@ test("a crash while describing the send still asks; a payload that is not JSON i
   ).toBe("ask");
   // A relative or missing cwd: the hook's own working directory.
   expect(
-    submissionConfirm(payload(SEND, "relative"), paper(null))?.hookSpecificOutput
-      .permissionDecision,
+    submissionConfirm(payload(SEND, "relative"), paper(null))
+      ?.hookSpecificOutput.permissionDecision,
   ).toBe("ask");
 });

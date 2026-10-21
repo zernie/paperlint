@@ -28,7 +28,7 @@
  * hook may import nothing but `vigiles/hook` (`src/folder-layout-hook.ts` says the rest). So
  * `paperlint hook submission-confirm` runs it in-process (`runHook`, src/cli.ts).
  */
-import { basename, isAbsolute, join, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { bodyEnd } from "./domain/body-pages.ts";
 import { fieldOf } from "./domain/record.ts";
@@ -36,6 +36,14 @@ import { sha256Hex } from "./domain/sha256.ts";
 import { messageOf } from "./domain/text.ts";
 import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
 import type { Files } from "./ports/files.ts";
+import { paperPreset, type PresetDeps } from "./presets.ts";
+import { paperPdf } from "./submission.ts";
+
+/** What the hook reads: files, the shipped presets, and the portal hosts the project's venues declare. */
+export type ConfirmDeps = PresetDeps & {
+  /** The hosts of every venue portal paperlint knows of from `cwd`: shipped and the project's own. */
+  readonly portalHosts: (cwd: string) => readonly string[];
+};
 
 /** What Claude Code reads from a PreToolUse hook's stdout to ask the person first, with the reason. */
 export interface AskOutput {
@@ -60,10 +68,14 @@ const LAST = "Allow only if you have read the dry run's venue check.";
 const HTTP_CLIENT = /(?:^|[\s;&|(`$])(?:curl|wget|https?|xh)(?:\s|$)/u;
 
 /**
- * What the command sends: a submission through paperlint, a request straight at a HotCRP site, or
- * nothing. Words anywhere in the command, on purpose (the header says why). Pure.
+ * What the command sends: a submission through paperlint, a request straight at a venue's portal —
+ * a HotCRP site, or a host a venue preset declares (`hosts`, read only for a command that makes a
+ * request) — or nothing. Words anywhere in the command, on purpose (the header says why).
  */
-export function sendKind(command: string): "paperlint" | "direct" | null {
+export function sendKind(
+  command: string,
+  hosts: () => readonly string[],
+): "paperlint" | "direct" | null {
   if (
     /\bsubmission\b/u.test(command) &&
     /\b(?:new|update)\b/u.test(command) &&
@@ -74,12 +86,17 @@ export function sendKind(command: string): "paperlint" | "direct" | null {
     HTTP_CLIENT.test(command) ||
     /\bfetch\s*\(/u.test(command) ||
     /\bpython[\d.]*\b[\s\S]*\b(?:requests|urllib)\b/u.test(command);
-  return client && /hotcrp/iu.test(command) ? "direct" : null;
+  if (!client) return null;
+  const text = command.toLowerCase();
+  return text.includes("hotcrp") ||
+    hosts().some((h) => h !== "" && text.includes(h.toLowerCase()))
+    ? "direct"
+    : null;
 }
 
 /** The command's words, quotes dropped. */
 const words = (command: string): readonly string[] =>
-  (command.match(/"[^"]*"|'[^']*'|[^\s;&|]+/gu) ?? []).map((w) =>
+  Array.from(command.matchAll(/"[^"]*"|'[^']*'|[^\s;&|]+/gu), ([w]) =>
     w.replace(/^["']|["']$/gu, ""),
   );
 
@@ -149,18 +166,23 @@ function factsLines(
 export function paperlintReason(
   command: string,
   cwd: string,
-  files: Files,
+  deps: PresetDeps,
 ): string {
   const n = named(command);
   const paperDir = resolve(cwd, n.paper ?? ".");
-  const pdf = n.pdf === null ? join(paperDir, "paper.pdf") : resolve(cwd, n.pdf);
-  const bytes = files.readBytes(callerPath(pdf));
+  const p = paperPreset(paperDir, deps);
+  const own = paperPdf(
+    paperDir,
+    p.kind === "settings-problem" ? null : p.settings,
+  );
+  const pdf = n.pdf === null ? own : resolve(cwd, n.pdf);
+  const bytes = deps.files.readBytes(callerPath(pdf));
   const sha = bytes === null ? null : sha256Hex(bytes);
   return [
-    "This sends the paper to the venue's portal (paperlint submission with --save or --submit).",
+    SENDS,
     `paper folder: ${n.paper ?? `${basename(paperDir)} (the current folder)`}`,
-    `PDF: ${n.pdf ?? join(n.paper ?? ".", "paper.pdf")}${sha === null ? " — NOT FOUND" : `, sha256 ${sha.slice(0, 12)}`}`,
-    ...factsLines(paperDir, sha, files),
+    `PDF: ${n.pdf ?? join(n.paper ?? ".", relative(paperDir, own))}${sha === null ? " — NOT FOUND" : `, sha256 ${sha.slice(0, 12)}`}`,
+    ...factsLines(paperDir, sha, deps.files),
     LAST,
   ].join("\n");
 }
@@ -169,6 +191,9 @@ export function paperlintReason(
 export const UNREADABLE_INPUT: AskOutput = ask(
   `paperlint could not read this command, so it cannot tell whether it sends a paper to a venue's portal. ${LAST}`,
 );
+
+const SENDS =
+  "This sends the paper to the venue's portal (paperlint submission with --save or --submit).";
 
 const DIRECT = `This sends a request straight to a HotCRP site, outside paperlint and its venue check. ${LAST}`;
 
@@ -187,27 +212,28 @@ function parsed(stdin: string): unknown {
  */
 export function submissionConfirm(
   stdin: string,
-  files: Files,
+  deps: ConfirmDeps,
 ): AskOutput | null {
   const payload = parsed(stdin);
   const raw = fieldOf(fieldOf(payload, "tool_input"), "command");
   // A payload that is not JSON is matched as it came: the ask must not depend on parsing it.
   const command = typeof raw === "string" ? raw : payload === null ? stdin : "";
-  const kind = sendKind(command);
-  if (kind === null) return null;
-  if (kind === "direct") return ask(DIRECT);
-  const cwd = fieldOf(payload, "cwd");
+  const given = fieldOf(payload, "cwd");
+  const cwd =
+    typeof given === "string" && isAbsolute(given) ? given : resolve(".");
   try {
+    const kind = sendKind(command, () => deps.portalHosts(cwd));
+    if (kind === null) return null;
     return ask(
-      paperlintReason(
-        command,
-        typeof cwd === "string" && isAbsolute(cwd) ? cwd : resolve("."),
-        files,
-      ),
+      kind === "direct" ? DIRECT : paperlintReason(command, cwd, deps),
     );
   } catch (e) {
-    return ask(
-      `This sends the paper to the venue's portal (paperlint submission with --save or --submit). paperlint could not say what will be sent: ${messageOf(e)}. ${LAST}`,
-    );
+    return ask(failedReason(command, messageOf(e)));
   }
 }
+
+/** Why the person is asked when reading what the command sends failed: the ask still goes out. */
+const failedReason = (command: string, why: string): string =>
+  sendKind(command, () => []) === "paperlint"
+    ? `${SENDS} paperlint could not say what will be sent: ${why}. ${LAST}`
+    : `paperlint could not read the venue portals this project declares (${why}), so it cannot tell whether this request sends to one. ${LAST}`;

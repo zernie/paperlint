@@ -117,11 +117,13 @@ import {
   settingsProblemLine,
   presetProblemText,
   resolvePreset,
+  resolveShipped,
   shippedPresets,
   shippedSpec,
   shippedVenueNames,
   SHIPPED_PREFIX,
   type PaperPreset,
+  type Preset,
   type PresetTemplate,
 } from "./presets.ts";
 import type { ToolInstaller } from "./ports/tool-installer.ts";
@@ -1248,7 +1250,7 @@ const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
   "submission-confirm": ({ stdin, out }) => {
     const said = ((): ReturnType<typeof submissionConfirm> => {
       try {
-        return submissionConfirm(stdin(), nodeFiles);
+        return submissionConfirm(stdin(), { ...PRESET_DEPS, portalHosts });
       } catch {
         return UNREADABLE_INPUT;
       }
@@ -1672,17 +1674,40 @@ function paperRequirements(dir: string): TexRequirements {
  * package, so the shipped union alone would not see it.
  */
 export function toolchainTex(cwd: string): TexRequirements {
+  const chains = projectPresets(cwd).map((p) => p.tex);
+  return declaredUnion(undefined, chains).tex;
+}
+
+/** The resolved venue preset of every paper under the project's papers directories, seen from `cwd`. */
+function projectPresets(cwd: string): readonly Preset[] {
   const cfg = readConfig(parseArgs(["toolchain"]), {
     log: () => {},
     err: () => {},
     cwd,
   });
   const roots = cfg.code === undefined ? papersRoots(cfg) : [];
-  const chains = roots
+  return roots
     .flatMap((r) => papersIn(r))
     .map((dir) => paperPreset(dir, PRESET_DEPS))
-    .flatMap((p) => (p.kind === "resolved" ? [p.preset.tex] : []));
-  return declaredUnion(undefined, chains).tex;
+    .flatMap((p) => (p.kind === "resolved" ? [p.preset] : []));
+}
+
+/**
+ * The host of every venue portal paperlint knows of from `cwd` — the shipped presets', and those the
+ * project's papers extend: what `submission-confirm` asks about when a request goes straight there.
+ */
+export function portalHosts(cwd: string): readonly string[] {
+  return [...resolveShipped(PRESET_DEPS), ...projectPresets(cwd)].flatMap(
+    (p) =>
+      p.portal === null
+        ? []
+        : [
+            p.portal.url
+              .replace(/^[a-z][a-z0-9+.-]*:\/\//iu, "")
+              .split("/", 1)
+              .join(""),
+          ],
+  );
 }
 
 /**
