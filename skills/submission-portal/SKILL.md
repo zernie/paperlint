@@ -4,7 +4,7 @@ description: "Create, read or change a paper's submission on the venue's HotCRP 
 allowed-tools: [Read, Grep, Glob, Bash, Edit, AskUserQuestion]
 ---
 
-<!-- vigiles:sha256:bde70ec863dbe515 compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3fa4bf1d06de4d7a compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — create, read and update the submission on the portal, then prove it landed
 
@@ -78,7 +78,9 @@ A missing key or token stops the command with exit 2 and a line naming what to s
    the status must be what was intended. Anything else is not done — say so.
 
 🔴 `--save` creates or changes a real submission that reviewers will see: never without the
-author's own yes to the permission prompt, never "to test", never because a dry run passed.
+author's own yes, never "to test", never because a dry run passed. Before every `--save`, ask the
+author with `AskUserQuestion`, showing the dry run's venue check; where the `submission-confirm`
+hook is installed, Claude Code also asks before the command runs.
 
 ```bash
 npx paperlint build papers/my-paper

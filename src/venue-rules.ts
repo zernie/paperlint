@@ -940,12 +940,17 @@ const LEVELS = {
   ...ANONYMITY_RULE_LEVELS,
 };
 
-/** A message filled from its data as ESLint fills it: a placeholder the data lacks stays as written. */
-const filled = (message: string, data: Finding["data"]): string =>
-  message.replace(/\{\{([^{}]+?)\}\}/gu, (whole, name: string) => {
-    const value = data[name.trim()];
+/**
+ * A finding's message as ESLint prints it: the rule's message with `{{name}}` filled from its data,
+ * a placeholder the data lacks left as written, and an unknown message id as itself. Pure.
+ */
+export function findingText(rule: VenueRuleName, f: Finding): string {
+  const message = META[rule].messages[f.messageId] ?? f.messageId;
+  return message.replace(/\{\{([^{}]+?)\}\}/gu, (whole, name: string) => {
+    const value = f.data[name.trim()];
     return value === undefined ? whole : String(value);
   });
+}
 
 /** One finding as a lint message: the fields ESLint's formatters read from a `Linter.LintMessage`. */
 export interface VenueMessage {
@@ -975,7 +980,7 @@ export function venueMessages(
     JUDGES[name](a, { options: [], shown: String }).map((f) => ({
       ruleId,
       severity: LEVELS[ruleId] === "error" ? 2 : 1,
-      message: filled(META[name].messages[f.messageId] ?? f.messageId, f.data),
+      message: findingText(name, f),
       messageId: f.messageId,
       // ESLint's columns count from 1: the rule reports column 1 counted from 0.
       line,

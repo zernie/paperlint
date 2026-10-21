@@ -82,7 +82,9 @@ A missing key or token stops the command with exit 2 and a line naming what to s
    the status must be what was intended. Anything else is not done — say so.
 
 🔴 \`--save\` creates or changes a real submission that reviewers will see: never without the
-author's own yes to the permission prompt, never "to test", never because a dry run passed.
+author's own yes, never "to test", never because a dry run passed. Before every \`--save\`, ask the
+author with \`AskUserQuestion\`, showing the dry run's venue check; where the \`submission-confirm\`
+hook is installed, Claude Code also asks before the command runs.
 
 \`\`\`bash
 npx paperlint build papers/my-paper
