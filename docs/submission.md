@@ -105,13 +105,13 @@ facts (`_build/paper.facts.json`): `format/page-limit` against the limits of the
 the other error-level venue rules — `pdf/profile`, `pdf/fonts`, `pdf/geometry`, `pdf/body-size`,
 `anonymity/identity`. The headline is one of:
 
-| headline | means | `--save` |
-| --- | --- | --- |
-| `PREFLIGHT: OK` | no error-level venue rule finds anything | sends |
-| `PREFLIGHT: OVER LIMIT` | a page count is over the kind's limit; the block names the count, the limit and the preset files it was read from | sends — the author decides |
-| `PREFLIGHT: FAILS` | another error-level venue rule finds something; each finding is listed with its rule | sends — the author decides |
-| `PREFLIGHT: NOT CHECKED` | the current cycle is `porting`, so the venue's limits do not apply yet | sends |
-| `PREFLIGHT: STALE FACTS` | there are no facts, or they describe other bytes than the PDF being sent | **refused, exit 2**, nothing sent |
+| headline                 | means                                                                                                             | `--save`                          |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `PREFLIGHT: OK`          | no error-level venue rule finds anything                                                                          | sends                             |
+| `PREFLIGHT: OVER LIMIT`  | a page count is over the kind's limit; the block names the count, the limit and the preset files it was read from | sends — the author decides        |
+| `PREFLIGHT: FAILS`       | another error-level venue rule finds something; each finding is listed with its rule                              | sends — the author decides        |
+| `PREFLIGHT: NOT CHECKED` | the current cycle is `porting`, so the venue's limits do not apply yet                                            | sends                             |
+| `PREFLIGHT: STALE FACTS` | there are no facts, or they describe other bytes than the PDF being sent                                          | **refused, exit 2**, nothing sent |
 
 Facts about other bytes are a state of the build, not a decision: rebuild (`paperlint build`), then
 run the dry run again. Everything else is the author's to decide: the dry run prints the same block,

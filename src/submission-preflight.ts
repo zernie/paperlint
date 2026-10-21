@@ -28,6 +28,7 @@ import {
   assessResolved,
   findingText,
   sendFindings,
+  type BuiltAssessment,
   type Resolved,
   type SendFinding,
   type VenueRuleDeps,
@@ -52,10 +53,7 @@ const FACTS = `${FACTS_DIR}/${FACTS_FILE}`;
 const REBUILD = "rebuild the paper (`paperlint build`)";
 
 /** The kind's limits, and the preset files they were read from. Null without a kind. Pure. */
-function limitLine(
-  venue: Resolved,
-  chain: readonly string[],
-): string | null {
+function limitLine(venue: Resolved, chain: readonly string[]): string | null {
   const kind = venue.kind;
   if (kind === null) return null;
   const limits = [
@@ -93,23 +91,29 @@ export function preflight(
       };
     case "stale":
       return { kind: "stale", why: findingText("fresh", a.finding) };
-    case "ready": {
-      const sent = sha256Hex(pdf);
-      return a.facts.sha === sent
-        ? {
-            kind: "checked",
-            against: a.venue.kind
-              ? `${a.venue.venue}/${a.venue.kind.name}`
-              : a.venue.venue,
-            limit: limitLine(a.venue, p.preset.chain),
-            findings: sendFindings(a),
-          }
-        : {
-            kind: "stale",
-            why: `${FACTS} describes the PDF with sha2-${a.facts.sha}, not the one being sent (sha2-${sent}) — ${REBUILD} from the source of the PDF you mean to send`,
-          };
-    }
+    case "ready":
+      return judged(a, p.preset.chain, sha256Hex(pdf));
   }
+}
+
+/** A build with fresh facts, judged — or stale, when the facts are about other bytes than `sent`. */
+function judged(
+  a: Extract<BuiltAssessment, { readonly kind: "ready" }>,
+  chain: readonly string[],
+  sent: Sha256,
+): Preflight {
+  if (a.facts.sha !== sent)
+    return {
+      kind: "stale",
+      why: `${FACTS} describes the PDF with sha2-${a.facts.sha}, not the one being sent (sha2-${sent}) — ${REBUILD} from the source of the PDF you mean to send`,
+    };
+  const kind = a.venue.kind;
+  return {
+    kind: "checked",
+    against: kind ? `${a.venue.venue}/${kind.name}` : a.venue.venue,
+    limit: limitLine(a.venue, chain),
+    findings: sendFindings(a),
+  };
 }
 
 /** The headline of a judged build: OK, over the limit, or how many error-level checks fail. Pure. */

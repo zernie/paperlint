@@ -951,10 +951,7 @@ export interface SendFinding {
 }
 
 /** A `pages` finding's count and limit, as the judges filled them in. */
-function overOf(
-  rule: VenueRuleName,
-  f: Finding,
-): SendFinding["over"] {
+function overOf(rule: VenueRuleName, f: Finding): SendFinding["over"] {
   const { what, got, max } = f.data;
   return rule === "page-limit" &&
     f.messageId === "pages" &&
@@ -966,13 +963,19 @@ function overOf(
 }
 
 /**
+ * The judges' context outside ESLint: the rules' default options, and paths shown as they are. Only
+ * `pdf/measured` shows a path, and it is not a send rule, so `String` (the identity on a path) is
+ * never called with one.
+ */
+const SEND_CONTEXT: JudgeContext = { options: [], shown: String };
+
+/**
  * What the error-level venue rules find in an assessed build — the very judges `paperlint lint`
  * reports with, at their default options. Empty for anything but a build that was judged. Pure.
  */
 export function sendFindings(a: Assessment): readonly SendFinding[] {
-  const ctx: JudgeContext = { options: [], shown: (p) => p };
   return SEND_RULES.flatMap((name) =>
-    JUDGES[name](a, ctx).map((f) => ({
+    JUDGES[name](a, SEND_CONTEXT).map((f) => ({
       rule: VENUE_RULE_IDS[name],
       text: findingText(name, f),
       over: overOf(name, f),

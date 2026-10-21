@@ -30,14 +30,14 @@ first-class, composable form there, not a script in one consumer.
 
 Read from the installed package's declarations (`node_modules/vigiles/dist/…`, version 38.2.0).
 
-| # | needed | what the types allow | evidence |
-| --- | --- | --- | --- |
-| 1 | a PreToolUse gate on `AskUserQuestion` that reads `tool_input.answers` | a gate sees a Bash `command` (`BashToolEvent`), a file `path` (`FileToolEvent`), or a `prompt` (`PromptEvent`) — never another tool's input. `decideFileGate` reads `tool_input.file_path` only | `core/hook-program.d.ts:324-338`, `:657-674`, `:696-702`; `RawHookEvent.tool_input` is `{ command?, file_path? }` at `:945-950` |
-| 2 | a PostToolUse react that reads which option the person chose | `ReactEvent` has `tool`, `path`, `response`, `ctx` — no `tool_input`; `runReact` reads `tool_input.file_path` only. `response.raw` is the tool's response as text, so the answer may be readable from it (see the note below) | `core/hook-program.d.ts:855-862`, `:936-943`, `ResponseView` at `:842-852` |
-| 3 | state that carries a value (the sha256) | **available**: `record(name, value?)` stores a string value; `state(name)` reads it with its age | `core/hook-state.d.ts:260-277`, `StateFact` at `:227` |
-| 4 | a gate that consumes the state it allowed on | a gate returns a `Decision` (`allow` / `deny` / `ask`) with no records, and the runtime writes state only for an injection or a reaction | `core/hook-program.d.ts:100-109`; `core/hook-program.js:1427-1433` (`outcomeWrites`) |
-| 5 | a Bash gate that compares the state with the PDF the command will send | the gate can read the command's text and declared `needs`; a provider is a fixed shell command gathered before `decide`, without the event, so it cannot hash the file the command names | `core/hook-providers.d.ts:25-47`, `gatherContext` at `:153` |
-| 6 | keys per paper | a state key is `[A-Za-z0-9][A-Za-z0-9._-]{0,63}` — a path or a hash cannot be the key, only the value | `core/hook-state.d.ts`, `isValidStateKey` |
+| #   | needed                                                                 | what the types allow                                                                                                                                                                                                          | evidence                                                                                                                        |
+| --- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | a PreToolUse gate on `AskUserQuestion` that reads `tool_input.answers` | a gate sees a Bash `command` (`BashToolEvent`), a file `path` (`FileToolEvent`), or a `prompt` (`PromptEvent`) — never another tool's input. `decideFileGate` reads `tool_input.file_path` only                               | `core/hook-program.d.ts:324-338`, `:657-674`, `:696-702`; `RawHookEvent.tool_input` is `{ command?, file_path? }` at `:945-950` |
+| 2   | a PostToolUse react that reads which option the person chose           | `ReactEvent` has `tool`, `path`, `response`, `ctx` — no `tool_input`; `runReact` reads `tool_input.file_path` only. `response.raw` is the tool's response as text, so the answer may be readable from it (see the note below) | `core/hook-program.d.ts:855-862`, `:936-943`, `ResponseView` at `:842-852`                                                      |
+| 3   | state that carries a value (the sha256)                                | **available**: `record(name, value?)` stores a string value; `state(name)` reads it with its age                                                                                                                              | `core/hook-state.d.ts:260-277`, `StateFact` at `:227`                                                                           |
+| 4   | a gate that consumes the state it allowed on                           | a gate returns a `Decision` (`allow` / `deny` / `ask`) with no records, and the runtime writes state only for an injection or a reaction                                                                                      | `core/hook-program.d.ts:100-109`; `core/hook-program.js:1427-1433` (`outcomeWrites`)                                            |
+| 5   | a Bash gate that compares the state with the PDF the command will send | the gate can read the command's text and declared `needs`; a provider is a fixed shell command gathered before `decide`, without the event, so it cannot hash the file the command names                                      | `core/hook-providers.d.ts:25-47`, `gatherContext` at `:153`                                                                     |
+| 6   | keys per paper                                                         | a state key is `[A-Za-z0-9][A-Za-z0-9._-]{0,63}` — a path or a hash cannot be the key, only the value                                                                                                                         | `core/hook-state.d.ts`, `isValidStateKey`                                                                                       |
 
 The nearest existing piece, `action-gate` (`dist/action-gate.d.ts`), runs a configured check command
 on a tool's serialized input; it keeps no state and has no notion of a person's answer.
@@ -59,8 +59,8 @@ So today: (3) is there; (2) is half there through `response.raw`; (1), (4) and (
 export default experimental_defineConfirmation({
   // the card that counts as a confirmation, and what it binds
   card: {
-    marker: "paperlint-submission",        // a line the question must carry
-    yes: "Upload",                          // the affirmative option's label
+    marker: "paperlint-submission", // a line the question must carry
+    yes: "Upload", // the affirmative option's label
     binds: (q) => q.match(/sha2-([0-9a-f]{64})/)?.[1] ?? null,
   },
   // the command it allows, and the value that command must carry
@@ -83,7 +83,7 @@ key, no store, no expiry arithmetic. A consumer that wants "ask before `git push
 
 - `tool_input` on react events for every tool, as a typed view (`e.input.field("answers")`), and a
   gate role for any tool's input (`experimental_defineToolGate({ match: tools("AskUserQuestion"),
-  decide: (e) => … })`);
+decide: (e) => … })`);
 - records on gate decisions — `allow(record("x", v))` — so a gate can consume what it allowed on, the
   same trailing-argument rule `notice`, `nothing` and `inject` already follow;
 - an event-aware value read for a gate: either `state()` keyed by a value the gate computes

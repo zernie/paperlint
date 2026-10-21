@@ -150,7 +150,7 @@ test("a cycle still porting to the venue's template: NOT CHECKED, as lint is sil
     },
   });
   expect(preflightLines(check(fs), SENT)).toStrictEqual([
-    'PREFLIGHT: NOT CHECKED — the current cycle\'s phase is "porting": the PDF is still in the previous venue\'s template, so this venue\'s limits do not apply to it yet',
+    "PREFLIGHT: NOT CHECKED — the current cycle's phase is \"porting\": the PDF is still in the previous venue's template, so this venue's limits do not apply to it yet",
     PDF_LINE,
   ]);
 });
