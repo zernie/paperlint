@@ -1,36 +1,44 @@
 /**
- * The `submission-confirm` hook — no send to a venue's portal without the person's own yes.
+ * The `submission-confirm` hook — no send to a venue's portal without the person's own yes to it.
  * PreToolUse on `Bash` (`plugin/hooks/hooks.json`): a command that sends a submission — `paperlint
- * submission new|update` with `--save` or `--submit`, or a request straight at a HotCRP site — gets
- * `"permissionDecision": "ask"`, and Claude Code puts the question to the person, with the reason
- * below, in its permission prompt. Anything else: no output.
+ * submission new|update` with `--save` or `--submit` — runs only when the person has said yes, in an
+ * `AskUserQuestion` asked since the last send, to a question naming the sha256 of the PDF it sends.
+ * Without that yes the command is refused (`"permissionDecision": "deny"`), and the reason tells the
+ * agent exactly what to ask. Anything else: no output.
  *
- * ── WHY "ask", AND WHY NOTHING TURNS IT OFF ──────────────────────────────────────
- * The hooks reference (code.claude.com/docs/en/hooks): "`ask` prompts the user to confirm"; "A
- * hook's `ask` also forces a permission prompt in auto mode"; the reason is "shown to the user in
- * the permission prompt"; and decisions combine deny > defer > ask > allow, so an `allow` rule in
- * the settings does not outvote it. An agent cannot answer the prompt, and no flag or variable of
- * this package skips it — that is the point: the send is the person's decision, taken on the dry
- * run's venue check (paperlint#264). The hook never denies (the person may send over a limit) and
- * never allows (that would skip the person).
+ * ── WHY A QUESTION, NOT CLAUDE CODE'S PERMISSION PROMPT ──────────────────────────
+ * It used to answer `ask` (paperlint#283). The Claude mobile app's permission card shows only the
+ * command line, not the hook's reason, so the person approved a shell line without seeing which
+ * paper or PDF it sends (paperlint#291). `AskUserQuestion` shows the whole question on every
+ * client, and a yes to a question that names the sha256 is a yes to those bytes: a stale build or a
+ * wrong PDF has another sha, so its yes does not count.
+ *
+ * ── WHERE THE YES IS READ ─────────────────────────────────────────────────────────
+ * The session's transcript (`transcript_path` in the hook's input, one JSON entry per line). A
+ * question is the assistant's `tool_use` named `AskUserQuestion`; its answer is the user entry that
+ * carries the matching `tool_result`, whose `toolUseResult.answers` maps each question's text to the
+ * option chosen. An answer is a yes when its first word is "yes". Every earlier `Bash` call that is a
+ * send — refused or not, but not this one (`tool_use_id`) — uses up the questions before it, so one
+ * yes lets one send through. When several questions name the same sha, the latest decides.
  *
  * ── WHAT IT SEES, AND WHAT IT IS NOT ──────────────────────────────────────────────
  * A send is judged on the command as the shell reads it (`shellLeaves`: each simple command across
  * `&&`, `;`, `|`, words unquoted, the commands inside a `bash -c "…"` string too), never on the raw
- * text: `submission`, `new|update` and `--save|--submit` in one command's words, or a portal's host
- * in any word (a HotCRP-hosted site, or a host a venue preset declares), whatever program it runs.
- * A false ask costs one click; a missed send cannot be taken back. NOT SEEN: an upload from a script
- * file that names the host only inside the file, or words built at run time (`$(…)`).
+ * text: `submission`, `new|update` and `--save|--submit` in one command's words. A command that
+ * names a portal's host in any word (a HotCRP-hosted site, or a host a venue preset declares),
+ * whatever program it runs, is refused outright: it would send around paperlint's venue check, and
+ * there is no PDF to name. NOT SEEN: an upload from a script file that names the host only inside
+ * the file, or words built at run time (`$(…)`).
  *
- * The hook catches an agent that runs a send without asking; it is not a security boundary against
- * an agent that deliberately disguises a send.
+ * The agent writes the question, so a deliberately misleading question still passes. The hook
+ * catches an agent that sends without asking, or asks about other bytes; it is not a security
+ * boundary against an agent that deliberately disguises a send.
  *
- * The reason is built from the same parse and the CLI's own argument parser (`readSend`), one block
- * per send; a send whose PDF cannot be told for certain is still asked about, and says so.
- *
- * ── IT FAILS TOWARD THE QUESTION ─────────────────────────────────────────────────
- * The reason is built from files (the PDF, the build's facts); whatever goes wrong there, the ask
- * still goes out, saying what could not be read. A payload that is not JSON is asked about.
+ * ── IT FAILS CLOSED ───────────────────────────────────────────────────────────────
+ * A send whose PDF cannot be told for certain, a PDF that is not there, no transcript, a transcript
+ * line that should hold a question, an answer or a send but does not parse, a payload that is not
+ * JSON, a crash: refused, with what went wrong. Lines that cannot hold one are not parsed at all —
+ * real transcripts carry the odd broken line (two entries run together).
  *
  * ── WHY IN-PROCESS, NOT A VIGILES PROGRAM ────────────────────────────────────────
  * It reads the build's facts with this package's own parser and hashes the PDF; a shipped vigiles
@@ -40,7 +48,7 @@
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { bodyEnd } from "./domain/body-pages.ts";
-import { fieldOf } from "./domain/record.ts";
+import { fieldOf, isRecord } from "./domain/record.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { messageOf } from "./domain/text.ts";
 import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
@@ -73,24 +81,22 @@ export type ConfirmDeps = PresetDeps & {
   readonly readSend: (words: readonly string[]) => Send | null;
 };
 
-/** What Claude Code reads from a PreToolUse hook's stdout to ask the person first, with the reason. */
-export interface AskOutput {
+/** What Claude Code reads from a PreToolUse hook's stdout to refuse the command; the agent sees the reason. */
+export interface DenyOutput {
   readonly hookSpecificOutput: {
     readonly hookEventName: "PreToolUse";
-    readonly permissionDecision: "ask";
+    readonly permissionDecision: "deny";
     readonly permissionDecisionReason: string;
   };
 }
 
-const ask = (reason: string): AskOutput => ({
+const deny = (reason: string): DenyOutput => ({
   hookSpecificOutput: {
     hookEventName: "PreToolUse",
-    permissionDecision: "ask",
+    permissionDecision: "deny",
     permissionDecisionReason: reason,
   },
 });
-
-const LAST = "Allow only if you have read the dry run's venue check.";
 
 /** The domain of HotCRP's hosted sites; a self-hosted portal is known by the host its preset declares. */
 const HOTCRP_HOSTED = "hotcrp.com";
@@ -213,12 +219,14 @@ function factsLines(
   return [...stale, bodyPages(f.value)];
 }
 
+/** One send, described: the sha256 of the PDF it uploads (null when not found), and the lines for the person. */
+interface Described {
+  readonly sha: string | null;
+  readonly lines: readonly string[];
+}
+
 /** One send, described: the paper, the PDF as the command resolves it, what the build saw. */
-function sendLines(
-  send: Send,
-  cwd: string,
-  deps: PresetDeps,
-): readonly string[] {
+function describe(send: Send, cwd: string, deps: PresetDeps): Described {
   const paperDir = resolve(cwd, send.paper ?? ".");
   const p = paperPreset(paperDir, deps);
   const own = paperPdf(
@@ -228,52 +236,213 @@ function sendLines(
   const pdf = send.pdf === null ? own : resolve(cwd, send.pdf);
   const bytes = deps.files.readBytes(callerPath(pdf));
   const sha = bytes === null ? null : sha256Hex(bytes);
-  return [
-    `paper folder: ${send.paper ?? `${basename(paperDir)} (the current folder)`}`,
-    `PDF: ${send.pdf ?? join(send.paper ?? ".", relative(paperDir, own))}${sha === null ? " — NOT FOUND" : `, sha256 ${sha.slice(0, 12)}`}`,
-    ...factsLines(paperDir, sha, deps.files),
-  ];
+  return {
+    sha: sha === null ? null : sha.slice(0, SHA_SHOWN),
+    lines: [
+      `paper folder: ${send.paper ?? `${basename(paperDir)} (the current folder)`}`,
+      `PDF: ${send.pdf ?? join(send.paper ?? ".", relative(paperDir, own))}${sha === null ? " — NOT FOUND" : `, sha256 ${sha.slice(0, SHA_SHOWN)}`}`,
+      ...factsLines(paperDir, sha, deps.files),
+    ],
+  };
 }
+
+/** How much of the sha256 the reason shows, and the question must contain. */
+const SHA_SHOWN = 12;
 
 /** A send whose PDF cannot be told for certain. */
 const UNRESOLVED =
   "could not resolve which PDF this send uploads — check the dry run";
 
-/**
- * Why the person is asked, for `paperlint submission` sends: each send's paper, PDF and build — every
- * send in the command, one block each. Words the shell would expand (`$…`, backticks) are not
- * guessed at: such a command is described as unresolved.
- */
-export function paperlintReason(
-  command: string,
-  leaves: readonly ShellLeaf[],
-  cwd: string,
-  deps: ConfirmDeps,
-): string {
-  const sends = /[`$]/u.test(command) ? [] : sendsIn(leaves, deps.readSend);
-  const one = (x: Send | null): readonly string[] =>
-    x === null ? [UNRESOLVED] : sendLines(x, cwd, deps);
-  const blocks =
-    sends.length === 0
-      ? [UNRESOLVED]
-      : sends.length === 1
-        ? sends.flatMap(one)
-        : sends.flatMap((x, n) => [
-            `send ${String(n + 1)} of ${String(sends.length)}:`,
-            ...one(x),
-          ]);
-  return [SENDS, ...blocks, LAST].join("\n");
+const NOT_SENT = "Not run: this sends the paper to the venue's portal";
+
+/** What to ask, once every send's PDF is known. */
+const HOW_TO_ASK = [
+  "Ask the person with AskUserQuestion first, then run this command again. In the question, give:",
+  "- the paper folder, the PDF and its sha256 as written above (the sha256 must be in the question text),",
+  "- the body pages above, and any line starting with !!,",
+  "- the dry run's venue check, quoted word for word (its `venue rules at their default options` line and every error under it).",
+  'Options: "Yes, send it" and "No". One yes lets one send through.',
+].join("\n");
+
+/** Each send's block: alone, or numbered when the command has several. */
+function blocks(described: readonly Described[]): readonly string[] {
+  return described.length === 1
+    ? described.flatMap((d) => d.lines)
+    : described.flatMap((d, n) => [
+        `send ${String(n + 1)} of ${String(described.length)}:`,
+        ...d.lines,
+      ]);
 }
 
-/** The ask when the hook's input cannot be read at all: it cannot tell, so the person decides. */
-export const UNREADABLE_INPUT: AskOutput = ask(
-  `paperlint could not read this command, so it cannot tell whether it sends a paper to a venue's portal. ${LAST}`,
+/** One question the person answered: its text, and the option they chose. */
+interface Answer {
+  readonly question: string;
+  readonly answer: string;
+}
+
+/** The questions asked and answered since the last send, while reading the transcript. */
+interface Since {
+  readonly asked: ReadonlySet<string>;
+  readonly answers: readonly Answer[];
+}
+
+/** A transcript line that may hold a question, an answer or a send; no other line is parsed. */
+const MAY_MATTER = /"tool_use"|"toolUseResult"/u;
+
+/** What tells an earlier send in the transcript: not this call's own `tool_use_id`, and a send by its words. */
+interface EarlierSend {
+  readonly current: string | null;
+  readonly sends: (command: string) => boolean;
+}
+
+/**
+ * The person's answers to `AskUserQuestion` since the last send in the transcript, oldest first.
+ * Throws on a line that may matter and does not parse.
+ */
+export function answersSinceLastSend(
+  transcript: string,
+  earlier: EarlierSend,
+): readonly Answer[] {
+  const start: Since = { asked: new Set(), answers: [] };
+  return transcript.split("\n").reduce((since: Since, line, n): Since => {
+    if (!MAY_MATTER.test(line)) return since;
+    const entry = parsedLine(line, n);
+    const content = fieldOf(fieldOf(entry, "message"), "content");
+    return (Array.isArray(content) ? content : []).reduce(
+      (s: Since, block: unknown): Since =>
+        fieldOf(block, "type") === "tool_result"
+          ? toolResult(s, block, entry)
+          : toolUse(s, block, earlier),
+      since,
+    );
+  }, start).answers;
+}
+
+/** One transcript line, parsed; a line that does not parse throws, naming its number. */
+function parsedLine(line: string, n: number): unknown {
+  try {
+    return JSON.parse(line);
+  } catch {
+    throw new Error(`line ${String(n + 1)} of the transcript does not parse`);
+  }
+}
+
+/** A block the assistant wrote: a question is noted; an earlier send clears what was asked before it. */
+function toolUse(s: Since, block: unknown, earlier: EarlierSend): Since {
+  const id = fieldOf(block, "id");
+  if (fieldOf(block, "type") !== "tool_use" || typeof id !== "string") return s;
+  const name = fieldOf(block, "name");
+  if (name === "AskUserQuestion")
+    return { ...s, asked: new Set([...s.asked, id]) };
+  const command = fieldOf(fieldOf(block, "input"), "command");
+  const send =
+    name === "Bash" &&
+    id !== earlier.current &&
+    typeof command === "string" &&
+    earlier.sends(command);
+  return send ? { asked: new Set(), answers: [] } : s;
+}
+
+/** The person's reply to a question asked since the last send: its answers, kept in order. */
+function toolResult(s: Since, block: unknown, entry: unknown): Since {
+  const id = fieldOf(block, "tool_use_id");
+  if (typeof id !== "string" || !s.asked.has(id)) return s;
+  const answers = fieldOf(fieldOf(entry, "toolUseResult"), "answers");
+  const given = Object.entries(isRecord(answers) ? answers : {}).flatMap(
+    ([question, answer]): readonly Answer[] =>
+      typeof answer === "string" ? [{ question, answer }] : [],
+  );
+  return { ...s, answers: [...s.answers, ...given] };
+}
+
+/** Whether the latest question naming `sha` was answered yes. */
+const saidYes = (answers: readonly Answer[], sha: string): boolean =>
+  /^yes\b/iu.test(
+    answers.findLast((a) => a.question.includes(sha))?.answer.trim() ?? "",
+  );
+
+/** Every send in the command, described; an unresolved one has no sha. */
+function describedSends(
+  command: string,
+  cwd: string,
+  deps: ConfirmDeps,
+): readonly Described[] {
+  const sends = /[`$]/u.test(command)
+    ? []
+    : sendsIn(deps.shellLeaves(command), deps.readSend);
+  return (sends.length === 0 ? [null] : sends).map((x): Described =>
+    x === null ? { sha: null, lines: [UNRESOLVED] } : describe(x, cwd, deps),
+  );
+}
+
+/** The refusal of a send whose PDF is not known or not there: there is no sha256 to ask about. */
+const noPdf = (described: readonly Described[]): string =>
+  [
+    `${NOT_SENT}, and paperlint cannot find the PDF it uploads, so there is no sha256 to ask the person about.`,
+    ...blocks(described),
+    "Name the paper folder and the PDF plainly (no cd, no $…), build the PDF, run the dry run, and ask then.",
+  ].join("\n");
+
+/**
+ * A `paperlint submission` send: let through (null) when every send in the command has its yes in
+ * the transcript, else refused with what to ask. Words the shell would expand (`$…`, backticks) are
+ * not guessed at: such a send is unresolved, and refused.
+ */
+function paperlintSend(
+  command: string,
+  cwd: string,
+  payload: unknown,
+  deps: ConfirmDeps,
+): DenyOutput | null {
+  const described = describedSends(command, cwd, deps);
+  const shas = described.flatMap((d) => (d.sha === null ? [] : [d.sha]));
+  if (shas.length < described.length) return deny(noPdf(described));
+  const read = transcriptOf(payload, deps.files);
+  if (typeof read !== "string")
+    return deny(
+      `${NOT_SENT}, and ${read.failed}, so paperlint cannot see the person's yes.`,
+    );
+  const answers = answersSinceLastSend(read, {
+    current: stringField(payload, "tool_use_id"),
+    sends: (c) => allLeaves(c, deps.shellLeaves).some(isSend),
+  });
+  if (shas.every((sha) => saidYes(answers, sha))) return null;
+  return deny(
+    [
+      `${NOT_SENT}, and the person has not said yes to it since the last send.`,
+      ...blocks(described),
+      HOW_TO_ASK,
+    ].join("\n"),
+  );
+}
+
+/** A string field of the payload; null for none. */
+function stringField(payload: unknown, key: string): string | null {
+  const v = fieldOf(payload, key);
+  return typeof v === "string" ? v : null;
+}
+
+/** The session's transcript as text, or why it could not be read. */
+function transcriptOf(
+  payload: unknown,
+  files: Files,
+): string | { readonly failed: string } {
+  const path = stringField(payload, "transcript_path");
+  if (path === null || !isAbsolute(path))
+    return { failed: "the hook was given no transcript_path" };
+  const bytes = files.readBytes(callerPath(path));
+  return bytes === null
+    ? { failed: `the transcript ${path} could not be read` }
+    : new TextDecoder().decode(bytes);
+}
+
+/** The refusal when the hook's input cannot be read at all: it cannot tell, so it does not let it run. */
+export const UNREADABLE_INPUT: DenyOutput = deny(
+  "Not run: paperlint could not read this command, so it cannot tell whether it sends a paper to a venue's portal.",
 );
 
-const SENDS =
-  "This sends the paper to the venue's portal (paperlint submission with --save or --submit).";
-
-const DIRECT = `This command names a venue's submission portal, so it may send to it outside paperlint and its venue check. ${LAST}`;
+const DIRECT =
+  "Not run: this command names a venue's submission portal, so it may send to it around paperlint's venue check and without the person's yes to a named PDF. Send with `paperlint submission new|update --save`, after asking the person; or the person runs this command themselves, in their own terminal.";
 
 /** The payload, parsed; null when it is not JSON. */
 function parsed(stdin: string): unknown {
@@ -285,13 +454,14 @@ function parsed(stdin: string): unknown {
 }
 
 /**
- * The hook on one payload, as Claude Code sends it on stdin: the ask, or null for a command that
- * sends nothing. Never throws: what it cannot read, it asks about.
+ * The hook on one payload, as Claude Code sends it on stdin: a refusal, or null to let the command
+ * run (it sends nothing, or every send in it has the person's yes). Never throws: what it cannot
+ * read, it refuses.
  */
 export function submissionConfirm(
   stdin: string,
   deps: ConfirmDeps,
-): AskOutput | null {
+): DenyOutput | null {
   const payload = parsed(stdin);
   if (payload === null) return UNREADABLE_INPUT;
   const raw = fieldOf(fieldOf(payload, "tool_input"), "command");
@@ -301,18 +471,18 @@ export function submissionConfirm(
     typeof given === "string" && isAbsolute(given) ? given : resolve(".");
   const kind = kindOf(command, cwd, deps);
   if (kind === null) return null;
-  if (kind !== "paperlint" && kind !== "direct") return ask(kind.failed);
-  if (kind === "direct") return ask(DIRECT);
+  if (kind !== "paperlint" && kind !== "direct") return deny(kind.failed);
+  if (kind === "direct") return deny(DIRECT);
   try {
-    return ask(paperlintReason(command, deps.shellLeaves(command), cwd, deps));
+    return paperlintSend(command, cwd, payload, deps);
   } catch (e) {
-    return ask(
-      `${SENDS} paperlint could not say what will be sent: ${messageOf(e)}. ${LAST}`,
+    return deny(
+      `${NOT_SENT}, and paperlint could not check it: ${messageOf(e)}.`,
     );
   }
 }
 
-/** What the command sends, or — when reading it failed — the reason to ask anyway. */
+/** What the command sends, or — when reading it failed — the reason to refuse it. */
 function kindOf(
   command: string,
   cwd: string,
@@ -324,7 +494,7 @@ function kindOf(
     );
   } catch (e) {
     return {
-      failed: `paperlint could not tell what this command sends (${messageOf(e)}). ${LAST}`,
+      failed: `Not run: paperlint could not tell what this command sends (${messageOf(e)}).`,
     };
   }
 }

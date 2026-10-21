@@ -1247,7 +1247,7 @@ const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
     }
     return 0;
   },
-  // Never advisory-silent: an input it cannot read is asked about, not let through.
+  // Never advisory-silent: an input it cannot read is refused, not let through.
   "submission-confirm": ({ stdin, out }) => {
     const said = ((): ReturnType<typeof submissionConfirm> => {
       try {
@@ -1717,7 +1717,7 @@ function projectPresets(cwd: string): readonly Preset[] {
 
 /**
  * The host of every venue portal paperlint knows of from `cwd` — the shipped presets', and those the
- * project's papers extend: what `submission-confirm` asks about when a request goes straight there.
+ * project's papers extend: what `submission-confirm` refuses when a request goes straight there.
  */
 export function portalHosts(cwd: string): readonly string[] {
   return [...resolveShipped(PRESET_DEPS), ...projectPresets(cwd)].flatMap(
