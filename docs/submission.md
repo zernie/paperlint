@@ -112,18 +112,20 @@ of other bytes) exits 2 and sends nothing. Rebuild (`paperlint build`) and run t
 Everything else, including over the limit, is the person's call.
 
 **The `submission-confirm` hook** (installed by `paperlint init`) stops any `submission new|update`
-with `--save` or `--submit` until the person has said yes to that exact PDF. The flow:
+with `--save` or `--submit` until the person has said yes to that exact PDF in that exact folder. The flow:
 
 1. Run the dry run (the same command without `--save`) and read its venue check.
 2. Ask the person with Claude Code's question tool (`AskUserQuestion`), with the options "Yes, send
-   it" and "No". The question names the paper folder, the PDF and the first 12 characters of its
-   sha256, the body pages, and quotes the dry run's venue check.
+   it" and "No". The question names the paper folder (its full path, as the hook prints it), the PDF and the
+   first 12 characters of its sha256, the body pages, and quotes the dry run's venue check.
 3. On a yes, run the send.
 
-Without a yes, the hook stops the send and tells the agent what to ask, with the sha256 filled in.
-It reads the answer from the session's transcript. The question must contain the PDF's sha256, so a
-yes to an older build or another PDF does not count. One yes lets one send through; the next send
-needs a new question. A send whose PDF cannot be found or told for certain is stopped, and so is
+Without a yes, the hook stops the send and tells the agent what to ask, with the folder and the sha256 filled in.
+It reads the answer from the session's transcript. The question must contain the folder's full path
+and the PDF's sha256, so a yes to an older build, another PDF, or the same bytes in another folder
+(the same manuscript for another venue) does not count. One yes lets one send through; the next send
+needs a new question. That holds inside one command too: each send in a chain (`… --save && … --save`)
+takes a yes of its own, so one yes naming two shas, or two sends of the same PDF, covers only one. A send whose PDF cannot be found or told for certain is stopped, and so is
 any send when the transcript cannot be read.
 
 A command that names a portal's host (a HotCRP-hosted site, or a host a venue preset declares),

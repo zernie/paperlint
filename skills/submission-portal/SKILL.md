@@ -4,7 +4,7 @@ description: "Create, read or change a paper's submission on the venue's HotCRP 
 allowed-tools: [Read, Grep, Glob, Bash, Edit, AskUserQuestion]
 ---
 
-<!-- vigiles:sha256:141606d04f15f07c compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:8b1352dd55af2d2b compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — create, read and update the submission on the portal, then prove it landed
 
@@ -63,7 +63,8 @@ A missing key or token stops the command with exit 2 and a line naming what to s
    command cannot read, or one that reads wrong, is given as a plain-text file with
    `--abstract <file>`.
 2. **Ask, then send.** Ask the author with `AskUserQuestion` — options "Yes, send it" and "No" —
-   naming the paper folder, the PDF and its sha256, the body pages, and quoting the dry run's venue
+   naming the paper folder (its full path, as the hook prints it), the PDF and its sha256, the body
+   pages, and quoting the dry run's venue
    check (its lint findings, or "venue rules at their default options: no errors"), plus what goes
    (title, authors, abstract, each field). On a yes, run
    `npx paperlint submission new papers/my-paper --save`. Then the printed "still to do" list
@@ -74,17 +75,17 @@ A missing key or token stops the command with exit 2 and a line naming what to s
    `--submit` to mark it submitted); it sends the paper's `"fields"` too. Exit 1 means the portal
    would refuse it, or did not take a topic — report why, stop.
 5. **Ask, then send.** Ask the author with `AskUserQuestion` as in step 2: the question names the
-   PDF's sha256 and quotes the dry run's venue check, and says what changes. On a yes, run the same
+   paper folder (full path), the PDF's sha256 and quotes the dry run's venue check, and says what changes. On a yes, run the same
    command with `--save`. Where the `submission-confirm` hook is installed, a send without that
-   yes is stopped, and the hook says what to ask, with the sha256 filled in; ask exactly that. One
-   yes covers one send: to send again, ask again. A refusal by the command itself (exit 2) means
+   yes is stopped, and the hook says what to ask, with the folder and the sha256 filled in; ask exactly that. One
+   yes covers one send: to send again, or to send a second paper in the same command, ask again. A refusal by the command itself (exit 2) means
    the last build is not of this PDF: rebuild, dry run again.
 6. **Prove it landed.** `show` again: `match` must read `yes — the portal holds this build`, and
    the status must be what was intended. Anything else is not done — say so.
 
 🔴 `--save` creates or changes a real submission that reviewers will see: never without the
 author's own yes, never "to test", never because a dry run passed. Before every `--save`, ask the
-author with `AskUserQuestion`, naming the PDF's sha256 and quoting the dry run's venue check; where
+author with `AskUserQuestion`, naming the paper folder, the PDF's sha256 and quoting the dry run's venue check; where
 the `submission-confirm` hook is installed, it stops any send without that yes.
 
 ```bash
@@ -93,11 +94,11 @@ npx paperlint submission topics papers/my-paper
 # … AskUserQuestion: which topics; the chosen ones into "fields" …
 # only while the paper has no submission id:
 npx paperlint submission new papers/my-paper
-# … AskUserQuestion naming the PDF's sha256 and the venue check; the author says yes …
+# … AskUserQuestion naming the folder, the PDF's sha256 and the venue check; the author says yes …
 npx paperlint submission new papers/my-paper --save
 npx paperlint submission show papers/my-paper
 npx paperlint submission update papers/my-paper --submit
-# … AskUserQuestion naming the PDF's sha256 and the venue check; the author says yes …
+# … AskUserQuestion naming the folder, the PDF's sha256 and the venue check; the author says yes …
 npx paperlint submission update papers/my-paper --submit --save
 npx paperlint submission show papers/my-paper
 ```

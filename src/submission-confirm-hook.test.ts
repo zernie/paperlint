@@ -1,6 +1,6 @@
 /**
  * The `submission-confirm` hook: which commands send a submission, which do not (silent); a send runs
- * only after the person's AskUserQuestion yes naming its PDF's sha256, once; what the agent is told to
+ * only after the person's AskUserQuestion yes naming its paper folder and its PDF's sha256, once per send; what the agent is told to
  * ask — including when what it reads is missing, stale or broken.
  */
 import { expect, test } from "vitest";
@@ -156,10 +156,10 @@ const HEAD = `${NOT_SENT}, and the person has not said yes to it since the last 
 /** What the agent is told to ask: the last lines of that refusal. */
 const LAST = [
   "Ask the person with AskUserQuestion first, then run this command again. In the question, give:",
-  "- the paper folder, the PDF and its sha256 as written above (the sha256 must be in the question text),",
+  "- the paper folder (the full path, as written above), the PDF and its sha256 as written above (the folder path and the sha256 must both be in the question text),",
   "- what the lines above say about the build (the body pages, or that it is stale or missing),",
   "- the dry run's venue check, quoted word for word (its `venue rules at their default options` line and every error under it).",
-  'Options: "Yes, send it" and "No". One yes lets one send through.',
+  'Options: "Yes, send it" and "No". One yes lets one send through: ask one question per send, each naming its own folder and sha256.',
 ].join("\n");
 
 test("no yes: refused, telling the agent what to ask — the paper folder, the PDF and its sha256, the body pages, the venue check, yes or no", () => {
@@ -169,7 +169,7 @@ test("no yes: refused, telling the agent what to ask — the paper folder, the P
       permissionDecision: "deny",
       permissionDecisionReason: [
         HEAD,
-        "paper folder: papers/p",
+        "paper folder: /w/papers/p",
         `PDF: papers/p/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
         "body pages: 4 (up to the references on page 5)",
         LAST,
@@ -182,7 +182,7 @@ test("a stale build is said loudly; no facts and broken facts are said too", () 
   expect(reasonOf(SEND, paper(facts({ sha: "b".repeat(64) })))).toBe(
     [
       HEAD,
-      "paper folder: papers/p",
+      "paper folder: /w/papers/p",
       `PDF: papers/p/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
       "!! THE LAST BUILD IS NOT OF THIS PDF — the check did not see it. Rebuild (`paperlint build`) and run the dry run again.",
       "body pages: 4 (up to the references on page 5)",
@@ -216,7 +216,7 @@ test("a PDF that is not there: refused, whatever the transcript says — there i
     ),
   ).toBe(
     NO_PDF(
-      "paper folder: papers/p",
+      "paper folder: /w/papers/p",
       "PDF: gone.pdf — NOT FOUND",
       "!! THE LAST BUILD IS NOT OF THIS PDF — the check did not see it. Rebuild (`paperlint build`) and run the dry run again.",
       "body pages: 4 (up to the references on page 5)",
@@ -249,7 +249,7 @@ test("the paper and the PDF as the command names them: the current folder by def
       .split("\n")
       .slice(1, 3),
   ).toStrictEqual([
-    "paper folder: p (the current folder)",
+    "paper folder: /w/papers/p",
     `PDF: paper.pdf, sha256 ${HEX.slice(0, 12)}`,
   ]);
   expect(
@@ -260,7 +260,7 @@ test("the paper and the PDF as the command names them: the current folder by def
       .split("\n")
       .slice(1, 3),
   ).toStrictEqual([
-    "paper folder: papers/p",
+    "paper folder: /w/papers/p",
     `PDF: papers/p/out.pdf, sha256 ${HEX.slice(0, 12)}`,
   ]);
 });
@@ -302,7 +302,7 @@ test("a command that only mentions `submission` beside a send is no second send"
       "npx paperlint submission update papers/p --save; echo submission",
       paper(facts()),
     ).split("\n")[1],
-  ).toBe("paper folder: papers/p");
+  ).toBe("paper folder: /w/papers/p");
 });
 
 /** What the reason says for a send the parse cannot resolve. */
@@ -315,7 +315,7 @@ test("the send's words are read by the command's own parser: a value flag before
       "npx paperlint submission update --max-warnings 0 --config paperlint.json papers/p --save",
       paper(facts()),
     ).split("\n")[1],
-  ).toBe("paper folder: papers/p");
+  ).toBe("paper folder: /w/papers/p");
   expect(
     reasonOf(
       "npx paperlint submission update papers/p --nope --save",
@@ -360,10 +360,10 @@ test("every send in a chain is described, one block each", () => {
     reason.filter((l) => /^(?:send|paper folder|PDF)/u.test(l)),
   ).toStrictEqual([
     "send 1 of 2:",
-    "paper folder: papers/a",
+    "paper folder: /w/papers/a",
     `PDF: papers/a/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
     "send 2 of 2:",
-    "paper folder: papers/b",
+    "paper folder: /w/papers/b",
     `PDF: papers/b/paper.pdf, sha256 ${sha256Hex(B).slice(0, 12)}`,
   ]);
 });
@@ -515,8 +515,11 @@ const bash = (id: string, command: unknown): string[] => [
   }),
 ];
 
-const asks = (sha: string) =>
-  `Send papers/p/paper.pdf (sha256 ${sha}) to the portal? Venue check: venue rules at their default options: no errors`;
+/** A question about the send of `sha` from `folder`, as the hook asks the agent to write it. */
+const asksAbout = (folder: string, sha: string) =>
+  `Send ${folder}/paper.pdf (paper folder ${folder}, sha256 ${sha}) to the portal? Venue check: venue rules at their default options: no errors`;
+
+const asks = (sha: string) => asksAbout("/w/papers/p", sha);
 
 /** The hook's answer to SEND, over the paper with this transcript. */
 const withTranscript = (lines: readonly string[], command = SEND) =>
@@ -620,30 +623,99 @@ test("a stale sha: a yes to another PDF's bytes does not let this one through", 
   ).toBe(HEAD);
 });
 
-test("two sends in one command: each needs a yes naming its own sha256", () => {
-  const command =
-    "npx paperlint submission update papers/a --save && npx paperlint submission new papers/b --save";
+/** Two sends in one command, and the hook's answer over a transcript. */
+const chained = (command: string, lines: readonly string[]) =>
+  submissionConfirm(
+    payload(command),
+    memoryFiles({
+      [T]: lines.join("\n"),
+      "/w/papers/a/paper.pdf": PDF,
+      "/w/papers/b/paper.pdf": B,
+      "/w/papers/c/paper.pdf": PDF,
+    }),
+  )?.hookSpecificOutput.permissionDecision ?? "runs";
+
+const AB =
+  "npx paperlint submission update papers/a --save && npx paperlint submission new papers/b --save";
+
+test("two sends in one command: each needs a yes of its own, naming its own folder and sha256", () => {
   const shaB = sha256Hex(B).slice(0, 12);
-  const decide = (lines: readonly string[]) =>
-    submissionConfirm(
-      payload(command),
-      memoryFiles({
-        [T]: lines.join("\n"),
-        "/w/papers/a/paper.pdf": PDF,
-        "/w/papers/b/paper.pdf": B,
-      }),
-    );
+  const yesA = question("q1", asksAbout("/w/papers/a", SHA), "Yes");
+  const yesB = question("q2", asksAbout("/w/papers/b", shaB), "Yes");
+  expect(chained(AB, yesA)).toBe("deny");
+  expect(chained(AB, [...yesA, ...yesB])).toBe("runs");
+  // The order of the answers does not matter.
+  expect(chained(AB, [...yesB, ...yesA])).toBe("runs");
+  // A No to the second send refuses the command.
   expect(
-    decide(question("q1", asks(SHA), "Yes"))?.hookSpecificOutput
-      .permissionDecision,
+    chained(AB, [
+      ...yesA,
+      ...question("q2", asksAbout("/w/papers/b", shaB), "No"),
+    ]),
+  ).toBe("deny");
+});
+
+test("one yes whose question names two shas covers one send, not two", () => {
+  const shaB = sha256Hex(B).slice(0, 12);
+  const both = question(
+    "q1",
+    `${asksAbout("/w/papers/a", SHA)} and ${asksAbout("/w/papers/b", shaB)}`,
+    "Yes",
+  );
+  expect(chained(AB, both)).toBe("deny");
+  // Asked again for the second send, the command runs.
+  expect(
+    chained(AB, [
+      ...both,
+      ...question("q2", asksAbout("/w/papers/b", shaB), "Yes"),
+    ]),
+  ).toBe("runs");
+});
+
+test("two sends of the same PDF: one yes denies, two yeses run", () => {
+  const twice =
+    "npx paperlint submission update papers/a --save && npx paperlint submission update papers/a --submit --save";
+  const yes = question("q1", asksAbout("/w/papers/a", SHA), "Yes");
+  expect(chained(twice, yes)).toBe("deny");
+  expect(
+    chained(twice, [
+      ...yes,
+      ...question("q2", asksAbout("/w/papers/a", SHA), "Yes"),
+    ]),
+  ).toBe("runs");
+});
+
+test("a yes naming the right sha but another folder does not count: identical bytes in two folders share no yes", () => {
+  const sendC = "npx paperlint submission update papers/c --save";
+  // papers/a and papers/c hold the same bytes.
+  expect(
+    chained(sendC, question("q1", asksAbout("/w/papers/a", SHA), "Yes")),
   ).toBe("deny");
   expect(
-    decide([
-      ...question("q1", asks(SHA), "Yes"),
-      ...question("q2", asks(shaB), "Yes"),
-    ]),
-  ).toBe(null);
-  expect(decide(question("q1", `${asks(SHA)} and ${shaB}`, "Yes"))).toBe(null);
+    chained(sendC, question("q1", asksAbout("/w/papers/c", SHA), "Yes")),
+  ).toBe("runs");
+  // Neither a longer folder that starts with this one, nor one this one ends.
+  for (const other of ["/w/papers/c2", "/w/papers/c.old", "/x/w/papers/c"])
+    expect(chained(sendC, question("q1", asksAbout(other, SHA), "Yes"))).toBe(
+      "deny",
+    );
+  // The folder path is case-sensitive; the sha is not.
+  expect(
+    chained(sendC, question("q1", asksAbout("/W/papers/c", SHA), "Yes")),
+  ).toBe("deny");
+  expect(
+    chained(
+      sendC,
+      question("q1", asksAbout("/w/papers/c", SHA.toUpperCase()), "Yes"),
+    ),
+  ).toBe("runs");
+  // The folder as part of a longer path to the PDF is named.
+  expect(
+    chained(
+      sendC,
+      question("q1", `Send /w/papers/c/paper.pdf, sha256 ${SHA}?`, "Yes"),
+    ),
+  ).toBe("runs");
 });
 
 test("a transcript that cannot be read, or no transcript: refused", () => {

@@ -2,7 +2,8 @@
  * The `submission-confirm` hook — no send to a venue's portal without the person's own yes to it.
  * PreToolUse on `Bash` (`plugin/hooks/hooks.json`): a command that sends a submission — `paperlint
  * submission new|update` with `--save` or `--submit` — runs only when the person has said yes, in an
- * `AskUserQuestion` asked since the last send, to a question naming the sha256 of the PDF it sends.
+ * `AskUserQuestion` asked since the last send, to a question naming the paper folder (its full path)
+ * and the sha256 of the PDF it sends.
  * A command that names a portal's host runs only after a yes to a question naming that host and the
  * command's first 60 characters. Without the yes the command is refused (`"permissionDecision":
  * "deny"`), and the reason tells the agent exactly what to ask. Anything else: no output.
@@ -11,8 +12,9 @@
  * It used to answer `ask` (paperlint#283). The Claude mobile app's permission card shows only the
  * command line, not the hook's reason, so the person approved a shell line without seeing which
  * paper or PDF it sends (paperlint#291). `AskUserQuestion` shows the whole question on every
- * client, and a yes to a question that names the sha256 is a yes to those bytes: a stale build or a
- * wrong PDF has another sha, so its yes does not count.
+ * client, and a yes to a question that names the folder and the sha256 is a yes to those bytes in that
+ * folder: a stale build or a wrong PDF has another sha, and identical bytes in another folder (the
+ * same manuscript for another venue) have another path, so their yes does not count.
  *
  * ── WHERE THE YES IS READ ─────────────────────────────────────────────────────────
  * The session's transcript (`transcript_path` in the hook's input, one JSON entry per line). A
@@ -20,8 +22,9 @@
  * carries the matching `tool_result`, whose `toolUseResult.answers` maps each question's text to the
  * option chosen. An answer is a yes when its first word is "yes". Every earlier `Bash` call that
  * sends or names a portal — refused or not, but not this one (`tool_use_id`) — uses up the questions
- * before it, so one yes lets one command through. When several questions name the same thing, the
- * latest decides.
+ * before it, so one yes lets one command through. Within one command each send takes an answer of
+ * its own: a yes that names two shas, or the same PDF sent twice, covers one send. When several
+ * questions name the same thing, the latest decides.
  *
  * ── WHAT IT SEES, AND WHAT IT IS NOT ──────────────────────────────────────────────
  * A send is judged on the command as the shell reads it (`shellLeaves`: each simple command across
@@ -53,7 +56,7 @@
  * hook may import nothing but `vigiles/hook` (`src/folder-layout-hook.ts` says the rest). So
  * `paperlint hook submission-confirm` runs it in-process (`runHook`, src/cli.ts).
  */
-import { basename, isAbsolute, join, relative, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { bodyEnd } from "./domain/body-pages.ts";
 import { fieldOf, isRecord } from "./domain/record.ts";
@@ -231,9 +234,15 @@ function factsLines(
   return [...stale, bodyPages(f.value)];
 }
 
-/** One send, described: the sha256 of the PDF it uploads (null when not found), and the lines for the person. */
+/** What a yes to one send must name: the paper folder as the hook resolves it, and the PDF's sha256 prefix. */
+interface Named {
+  readonly folder: string;
+  readonly sha: string;
+}
+
+/** One send, described: what a yes must name (null when the PDF is not found), and the lines for the person. */
 interface Described {
-  readonly sha: string | null;
+  readonly named: Named | null;
   readonly lines: readonly string[];
 }
 
@@ -249,9 +258,10 @@ function describe(send: Send, cwd: string, deps: PresetDeps): Described {
   const bytes = deps.files.readBytes(callerPath(pdf));
   const sha = bytes === null ? null : sha256Hex(bytes);
   return {
-    sha: sha === null ? null : sha.slice(0, SHA_SHOWN),
+    named:
+      sha === null ? null : { folder: paperDir, sha: sha.slice(0, SHA_SHOWN) },
     lines: [
-      `paper folder: ${send.paper ?? `${basename(paperDir)} (the current folder)`}`,
+      `paper folder: ${paperDir}`,
       `PDF: ${send.pdf ?? join(send.paper ?? ".", relative(paperDir, own))}${sha === null ? " — NOT FOUND" : `, sha256 ${sha.slice(0, SHA_SHOWN)}`}`,
       ...factsLines(paperDir, sha, deps.files),
     ],
@@ -271,10 +281,10 @@ const NAMES_PORTAL = "Not run: this command names a venue's submission portal";
 /** What to ask, once every send's PDF is known. */
 const HOW_TO_ASK = [
   "Ask the person with AskUserQuestion first, then run this command again. In the question, give:",
-  "- the paper folder, the PDF and its sha256 as written above (the sha256 must be in the question text),",
+  "- the paper folder (the full path, as written above), the PDF and its sha256 as written above (the folder path and the sha256 must both be in the question text),",
   "- what the lines above say about the build (the body pages, or that it is stale or missing),",
   "- the dry run's venue check, quoted word for word (its `venue rules at their default options` line and every error under it).",
-  'Options: "Yes, send it" and "No". One yes lets one send through.',
+  'Options: "Yes, send it" and "No". One yes lets one send through: ask one question per send, each naming its own folder and sha256.',
 ].join("\n");
 
 /** How much of a command naming a portal the question must quote. */
@@ -390,18 +400,57 @@ function toolResult(s: Since, block: unknown, entry: unknown): Since {
   return { ...s, answers: [...s.answers, ...given] };
 }
 
+/** Whether an answer is a yes: its first word, in any case. */
+const isYes = (a: Answer): boolean => /^yes\b/iu.test(a.answer.trim());
+
+/** Whether `text` contains every one of `keys`, in any case. */
+const hasAll = (text: string, keys: readonly string[]): boolean =>
+  keys.every((k) => text.toLowerCase().includes(k.toLowerCase()));
+
+/** `text` as a literal inside a regular expression. */
+const literal = (text: string): string =>
+  text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+
+/**
+ * Whether a question names the folder `folder` and not a longer path that starts with it
+ * (`/w/paper` is not `/w/paper2` or `/w/paper.old`), nor one it ends: the whole path, case-sensitive.
+ */
+const namesFolder = (question: string, folder: string): boolean =>
+  new RegExp(`(?<![\\w.-])${literal(folder)}(?![\\w.-])`, "u").test(question);
+
 /** Whether the latest question containing every one of `keys` (any case) was answered yes. */
 const saidYes = (
   answers: readonly Answer[],
   keys: readonly string[],
-): boolean =>
-  /^yes\b/iu.test(
-    answers
-      .findLast((a) =>
-        keys.every((k) => a.question.toLowerCase().includes(k.toLowerCase())),
-      )
-      ?.answer.trim() ?? "",
-  );
+): boolean => {
+  const latest = answers.findLast((a) => hasAll(a.question, keys));
+  return latest !== undefined && isYes(latest);
+};
+
+/**
+ * Whether every send has a yes of its own. A send takes the latest answer not yet taken whose
+ * question names its folder and its sha256; that answer must be a yes and is then used up, so one
+ * yes lets one send through — a question naming two shas, or the same PDF sent twice, covers one.
+ * (A yes that two sends could share is given to the first; the second is refused and the person
+ * is asked again: it fails closed.)
+ */
+function eachSendHasItsYes(
+  answers: readonly Answer[],
+  sends: readonly Named[],
+): boolean {
+  const used = sends.reduce((taken: ReadonlySet<number> | null, s) => {
+    if (taken === null) return null;
+    const at = answers.findLastIndex(
+      (a, n) =>
+        !taken.has(n) &&
+        hasAll(a.question, [s.sha]) &&
+        namesFolder(a.question, s.folder),
+    );
+    const found = answers[at];
+    return found !== undefined && isYes(found) ? new Set([...taken, at]) : null;
+  }, new Set<number>());
+  return used !== null;
+}
 
 /** Every send in the command, described; an unresolved one has no sha. */
 function describedSends(
@@ -413,7 +462,7 @@ function describedSends(
     ? []
     : sendsIn(deps.shellLeaves(command), deps.readSend);
   return (sends.length === 0 ? [null] : sends).map((x): Described =>
-    x === null ? { sha: null, lines: [UNRESOLVED] } : describe(x, cwd, deps),
+    x === null ? { named: null, lines: [UNRESOLVED] } : describe(x, cwd, deps),
   );
 }
 
@@ -458,7 +507,8 @@ const fallbackLines = (h: Hosts): readonly string[] =>
 
 /**
  * A command that sends: let through (null) when the person said yes to it since the last send —
- * each paperlint send's PDF by its sha256, a portal named by its host and the command's start —
+ * each paperlint send by its paper folder and its PDF's sha256, a yes of its own for each, a portal
+ * named by its host and the command's start —
  * else the lines of the refusal, with what to ask.
  */
 function decide(
@@ -467,8 +517,8 @@ function decide(
   deps: ConfirmDeps,
 ): readonly string[] | null {
   const described = c.paperlint ? describedSends(c.text, c.cwd, deps) : [];
-  const shas = described.flatMap((d) => (d.sha === null ? [] : [d.sha]));
-  if (shas.length < described.length) return noPdf(described);
+  const named = described.flatMap((d) => (d.named === null ? [] : [d.named]));
+  if (named.length < described.length) return noPdf(described);
   const base = c.paperlint ? NOT_SENT : NAMES_PORTAL;
   const read = transcriptOf(payload, deps.files);
   if (typeof read !== "string")
@@ -476,12 +526,12 @@ function decide(
       `${base}, and ${read.failed}, so paperlint cannot see the person's yes.`,
     ];
   const start = c.text.trim().slice(0, COMMAND_SHOWN);
-  const needs = [
-    ...shas.map((sha) => [sha]),
-    ...(c.host === null ? [] : [[c.host, start]]),
-  ];
   const answers = answersSinceLastSend(read, earlierSend(c, payload, deps));
-  if (needs.every((keys) => saidYes(answers, keys))) return null;
+  if (
+    eachSendHasItsYes(answers, named) &&
+    (c.host === null || saidYes(answers, [c.host, start]))
+  )
+    return null;
   return [
     `${base}, and the person has not said yes to it since the last send.`,
     ...blocks(described),
