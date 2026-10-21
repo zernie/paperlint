@@ -418,39 +418,57 @@ const literal = (text: string): string =>
 const namesFolder = (question: string, folder: string): boolean =>
   new RegExp(`(?<![\\w.-])${literal(folder)}(?![\\w.-])`, "u").test(question);
 
-/** Whether the latest question containing every one of `keys` (any case) was answered yes. */
-const saidYes = (
-  answers: readonly Answer[],
-  keys: readonly string[],
-): boolean => {
-  const latest = answers.findLast((a) => hasAll(a.question, keys));
-  return latest !== undefined && isYes(latest);
-};
+/** A question a yes must have been given to: what a send or a portal command needs it to name. */
+type Needs = (question: string) => boolean;
+
+/** The answers already used up by an earlier need of the same command, by index; null once one lacked its yes. */
+type Taken = ReadonlySet<number> | null;
 
 /**
- * Whether every send has a yes of its own. A send takes the latest answer not yet taken whose
- * question names its folder and its sha256; that answer must be a yes and is then used up, so one
- * yes lets one send through — a question naming two shas, or the same PDF sent twice, covers one.
- * (A yes that two sends could share is given to the first; the second is refused and the person
- * is asked again: it fails closed.)
+ * The answers used up after one more need: it takes the latest answer not yet taken whose question
+ * `names` it, and that answer must be a yes; null when there is none, or it is not.
  */
-function eachSendHasItsYes(
+function takeYes(
+  answers: readonly Answer[],
+  taken: Taken,
+  names: Needs,
+): Taken {
+  if (taken === null) return null;
+  const at = answers.findLastIndex(
+    (a, n) => !taken.has(n) && names(a.question),
+  );
+  const found = answers[at];
+  return found !== undefined && isYes(found) ? new Set([...taken, at]) : null;
+}
+
+/** What a yes to one send must name: its sha256 (any case) and its folder (the whole path, as written). */
+const namesSend =
+  (s: Named): Needs =>
+  (question) =>
+    hasAll(question, [s.sha]) && namesFolder(question, s.folder);
+
+/** What a yes to a command that names a portal must name: the host (any case) and the command's start, literally. */
+const namesPortal =
+  (host: string, start: string): Needs =>
+  (question) =>
+    hasAll(question, [host]) && question.includes(start);
+
+/**
+ * Whether every send and the portal command (null for none) has a yes of its own. Each takes the
+ * latest answer not yet taken, in turn, from one shared set: a yes used up by a send cannot also
+ * approve the portal, one that names two shas covers one send, and the same PDF sent twice needs
+ * two. (A yes that two needs could share is given to the first; the second is refused and the
+ * person is asked again: it fails closed.)
+ */
+const everyNeedHasItsYes = (
   answers: readonly Answer[],
   sends: readonly Named[],
-): boolean {
-  const used = sends.reduce((taken: ReadonlySet<number> | null, s) => {
-    if (taken === null) return null;
-    const at = answers.findLastIndex(
-      (a, n) =>
-        !taken.has(n) &&
-        hasAll(a.question, [s.sha]) &&
-        namesFolder(a.question, s.folder),
-    );
-    const found = answers[at];
-    return found !== undefined && isYes(found) ? new Set([...taken, at]) : null;
-  }, new Set<number>());
-  return used !== null;
-}
+  portal: Needs | null,
+): boolean =>
+  [...sends.map(namesSend), ...(portal === null ? [] : [portal])].reduce(
+    (taken: Taken, names) => takeYes(answers, taken, names),
+    new Set<number>(),
+  ) !== null;
 
 /** Every send in the command, described; an unresolved one has no sha. */
 function describedSends(
@@ -527,11 +545,8 @@ function decide(
     ];
   const start = c.text.trim().slice(0, COMMAND_SHOWN);
   const answers = answersSinceLastSend(read, earlierSend(c, payload, deps));
-  if (
-    eachSendHasItsYes(answers, named) &&
-    (c.host === null || saidYes(answers, [c.host, start]))
-  )
-    return null;
+  const portal = c.host === null ? null : namesPortal(c.host, start);
+  if (everyNeedHasItsYes(answers, named, portal)) return null;
   return [
     `${base}, and the person has not said yes to it since the last send.`,
     ...blocks(described),

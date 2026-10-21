@@ -131,7 +131,7 @@ any send when the transcript cannot be read.
 A command that names a portal's host (a HotCRP-hosted site, or a host a venue preset declares),
 whatever program it runs, may send around the venue check. It runs only after a yes to a question
 that contains that host and the command's first 60 characters; the hook prints both when it stops
-the command. One yes lets one such command through. If the venue presets cannot be read, only
+the command, the start compared as written (the host in any case). One yes lets one such command through, and a command that also sends a paper needs a separate yes for each. If the venue presets cannot be read, only
 HotCRP-hosted sites and paperlint sends are recognised, and the hook says so when it stops one;
 other commands run as usual. The hook does not see an upload from a script file that names the
 host only inside the file.

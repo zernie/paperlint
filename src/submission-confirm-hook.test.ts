@@ -805,3 +805,28 @@ test("a paperlint send that also names a portal needs both yeses: the PDF's sha2
   ]);
   expect(decide(host).split("\n")[0]).toBe(HEAD);
 });
+
+test("a paperlint send that also names a portal: one yes naming everything covers one of them, not both", () => {
+  const command = `${SEND} && curl https://venue.hotcrp.com/api/paper/1`;
+  const start = command.slice(0, 60);
+  const decide = (lines: readonly string[]) =>
+    withTranscript(lines, command)?.hookSpecificOutput.permissionDecision ??
+    "runs";
+  const all = question("q1", `${asks(SHA)} Also ${start} on hotcrp.com`, "Yes");
+  expect(decide(all)).toBe("deny");
+  // A second yes naming only the host and the start, before or after it, covers the other.
+  const host = question("q2", `${start} on hotcrp.com`, "Yes");
+  expect(decide([...all, ...host])).toBe("runs");
+  expect(decide([...host, ...all])).toBe("runs");
+});
+
+test("the approved command start is compared as written; the host in any case", () => {
+  const command = "curl -F f=@paper.pdf https://venue.hotcrp.com/api/paper/1";
+  const decide = (text: string) =>
+    withTranscript(question("q1", text, "Yes"), command)?.hookSpecificOutput
+      .permissionDecision ?? "runs";
+  expect(decide(`Run ${command} on VENUE.HOTCRP.COM?`)).toBe("runs");
+  expect(
+    decide(`Run ${command.replace("paper.pdf", "PAPER.PDF")} on hotcrp.com?`),
+  ).toBe("deny");
+});
