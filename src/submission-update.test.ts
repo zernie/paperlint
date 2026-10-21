@@ -266,10 +266,7 @@ test("update --save with facts about other bytes, or none: refused with exit 2 a
 
 test("facts whose SHA-256 is the sent bytes' hold, wherever the PDF they name is — even gone from disk", async () => {
   const gone = files({ facts: facts({ pdf: "gone.pdf" }) });
-  const r = await run(
-    { sub: "update", save: true },
-    { files: gone },
-  );
+  const r = await run({ sub: "update", save: true }, { files: gone });
   expect([r.code, r.errs, r.out[1]]).toStrictEqual([0, [], NO_ERRORS]);
 });
 
@@ -293,7 +290,7 @@ const porting = (factsText?: string | null) =>
 test("a cycle still porting to the venue's template: no venue rule runs, and the check says so rather than no errors", async () => {
   const r = await run({ sub: "update" }, { files: porting() });
   expect(r.out[1]).toBe(
-    'venue rules: none run — the current cycle\'s phase is "porting", so the venue\'s format does not apply yet',
+    "venue rules: none run — the current cycle's phase is \"porting\", so the venue's format does not apply yet",
   );
 });
 
