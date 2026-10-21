@@ -50,6 +50,8 @@ interface ShellLeaf {
   readonly args: readonly string[];
   /** Whether any of the flags `names` is on it (`--save`, `--save=x`). */
   hasFlag(...names: readonly string[]): boolean;
+  /** The directory a wrapper (`env -C`, `sudo -D`) runs it in; null for none. */
+  readonly chdir: string | null;
 }
 
 /** What the hook reads: files, the shipped presets, and the portal hosts the project's venues declare. */
@@ -58,6 +60,11 @@ export type ConfirmDeps = PresetDeps & {
   readonly portalHosts: (cwd: string) => readonly string[];
   /** Every simple command of a command line, across `&&`, `;`, `|`; none when it does not parse. */
   readonly shellLeaves: (command: string) => readonly ShellLeaf[];
+  /**
+   * The words after `submission`, read by the command's own argument parser: the paper and the
+   * `--pdf` the send names (null for the defaults), or null when they do not parse cleanly.
+   */
+  readonly readSend: (words: readonly string[]) => Send | null;
 };
 
 /** What Claude Code reads from a PreToolUse hook's stdout to ask the person first, with the reason. */
@@ -92,39 +99,34 @@ const CLIENTS: ReadonlySet<string> = new Set([
 const HTTP_CLIENT = /(?:^|[\s;&|(`$/])(?:curl|wget|https?|xh)(?:\s|$)/u;
 
 /** One `paperlint submission new|update` send: the paper folder and `--pdf` it names; null for the default. */
-interface Send {
+export interface Send {
   readonly paper: string | null;
   readonly pdf: string | null;
 }
 
-/** Every send among the simple commands of a command line. */
-function sendsIn(leaves: readonly ShellLeaf[]): readonly Send[] {
-  return leaves.flatMap((l) => {
+/** Programs that change the directory the rest of the command line runs in. */
+const MOVES: ReadonlySet<string> = new Set(["cd", "pushd", "popd"]);
+
+/**
+ * Every send among the simple commands of a command line: its paper and PDF as the command's own
+ * argument parser reads them, or null where they cannot be told for certain — the words do not
+ * parse, or something before it may have changed the directory.
+ */
+function sendsIn(
+  leaves: readonly ShellLeaf[],
+  readSend: ConfirmDeps["readSend"],
+): readonly (Send | null)[] {
+  return leaves.flatMap((l, n) => {
     const at = l.args.findIndex(
       (x, i) =>
         x === "submission" && /^(?:new|update)$/u.test(l.args[i + 1] ?? ""),
     );
-    return at >= 0 && l.hasFlag("save", "submit")
-      ? [named(l.args.slice(at + 2))]
-      : [];
+    if (at < 0 || !l.hasFlag("save", "submit")) return [];
+    const moved = leaves
+      .slice(0, n + 1)
+      .some((x) => MOVES.has(x.head) || x.chdir !== null);
+    return [moved ? null : readSend(l.args.slice(at + 1))];
   });
-}
-
-/** A send's words after `submission new|update`: the first operand, and `--pdf <file>` or `--pdf=<file>`. */
-function named(args: readonly string[]): Send {
-  const i = args.findIndex((a) => a === "--pdf" || a.startsWith("--pdf="));
-  const flag = args[i];
-  const takesValue = (k: number): boolean =>
-    args[k - 1] === "--pdf" || args[k - 1] === "--abstract";
-  return {
-    paper: args.find((a, k) => !a.startsWith("-") && !takesValue(k)) ?? null,
-    pdf:
-      flag === undefined
-        ? null
-        : flag === "--pdf"
-          ? (args[i + 1] ?? null)
-          : flag.slice("--pdf=".length),
-  };
 }
 
 /** Whether the command makes an HTTP request: a client program run, or named in its text. */
@@ -219,7 +221,7 @@ function sendLines(
 
 /** A send found in the text that the parse cannot resolve to its words. */
 const UNRESOLVED =
-  "could not resolve the PDF for this send: the command does not read word by word (a shell expansion, or a command inside a string) — check the paper and the PDF in the command itself";
+  "could not resolve which PDF this send uploads — check the dry run";
 
 /**
  * Why the person is asked, for `paperlint submission` sends: each send's paper, PDF and build — every
@@ -230,17 +232,19 @@ export function paperlintReason(
   command: string,
   leaves: readonly ShellLeaf[],
   cwd: string,
-  deps: PresetDeps,
+  deps: ConfirmDeps,
 ): string {
-  const sends = /[`$]/u.test(command) ? [] : sendsIn(leaves);
+  const sends = /[`$]/u.test(command) ? [] : sendsIn(leaves, deps.readSend);
+  const one = (x: Send | null): readonly string[] =>
+    x === null ? [UNRESOLVED] : sendLines(x, cwd, deps);
   const blocks =
     sends.length === 0
       ? [UNRESOLVED]
       : sends.length === 1
-        ? sends.flatMap((x) => sendLines(x, cwd, deps))
+        ? sends.flatMap(one)
         : sends.flatMap((x, n) => [
             `send ${String(n + 1)} of ${String(sends.length)}:`,
-            ...sendLines(x, cwd, deps),
+            ...one(x),
           ]);
   return [SENDS, ...blocks, LAST].join("\n");
 }

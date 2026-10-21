@@ -1255,6 +1255,7 @@ const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
           ...PRESET_DEPS,
           portalHosts,
           shellLeaves: leafCommandsNormalized,
+          readSend: submissionSend,
         });
       } catch {
         return UNREADABLE_INPUT;
@@ -1264,6 +1265,23 @@ const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
     return 0;
   },
 };
+
+/**
+ * The words after `submission` read by this CLI's own parser, as the command reads them: the paper
+ * and `--pdf` a send names, null for their defaults — or null when the words would not run cleanly
+ * (a flag missing its value, an unknown flag, a stray operand), so `submission-confirm` says it
+ * cannot tell rather than guess.
+ */
+export function submissionSend(
+  words: readonly string[],
+): { readonly paper: string | null; readonly pdf: string | null } | null {
+  const a = parseArgs(["submission", ...words]);
+  const clean =
+    a.missingValue === undefined &&
+    a.unknownFlag === undefined &&
+    a.paths.length <= 2;
+  return clean ? { paper: a.paths[1] ?? null, pdf: a.pdf } : null;
+}
 
 /**
  * `paperlint hook <name>` — run an editor hook. It exists for ONE thing: so that the wiring does not

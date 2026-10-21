@@ -8,6 +8,7 @@ import type { AbsolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
 import { leafCommandsNormalized as shellLeaves } from "vigiles/hook";
+import { submissionSend } from "./cli.ts";
 import { presetsDir } from "./package-dirs.ts";
 import {
   sendKind,
@@ -34,6 +35,7 @@ const submissionConfirm = (
     venuesDir: presetsDir(),
     portalHosts: () => HOSTS,
     shellLeaves,
+    readSend: submissionSend,
     ...more,
   });
 
@@ -232,18 +234,13 @@ test("a paperlint.json that does not parse: the PDF is the default paper.pdf, an
   );
 });
 
-test("a --pdf at the end with no value reads as the default; `submission` as the last word is no send the parse can resolve", () => {
+test("a --pdf at the end with no value, which the command refuses, and `submission` as the last word: unresolved", () => {
   expect(
     reasonOf(
       "npx paperlint submission update papers/p --save --pdf",
       paper(facts()),
-    )
-      .split("\n")
-      .slice(1, 3),
-  ).toStrictEqual([
-    "paper folder: papers/p",
-    `PDF: papers/p/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
-  ]);
+    ),
+  ).toBe([HEAD, UNRESOLVED, LAST].join("\n"));
   expect(
     reasonOf("npx paperlint new --save submission", paper(null), "/w/papers/p"),
   ).toBe([HEAD, UNRESOLVED, LAST].join("\n"));
@@ -251,7 +248,33 @@ test("a --pdf at the end with no value reads as the default; `submission` as the
 
 /** What the reason says for a send the parse cannot resolve. */
 const UNRESOLVED =
-  "could not resolve the PDF for this send: the command does not read word by word (a shell expansion, or a command inside a string) — check the paper and the PDF in the command itself";
+  "could not resolve which PDF this send uploads — check the dry run";
+
+test("the send's words are read by the command's own parser: a value flag before the paper does not shift it; words it would refuse are unresolved", () => {
+  expect(
+    reasonOf(
+      "npx paperlint submission update --max-warnings 0 --config paperlint.json papers/p --save",
+      paper(facts()),
+    ).split("\n")[1],
+  ).toBe("paper folder: papers/p");
+  expect(
+    reasonOf(
+      "npx paperlint submission update papers/p --nope --save",
+      paper(null),
+    ),
+  ).toBe([HEAD, UNRESOLVED, LAST].join("\n"));
+});
+
+test("anything that may change the directory before the send makes its PDF unresolved, not guessed", () => {
+  for (const command of [
+    "cd papers/p && npx paperlint submission update --save",
+    "pushd papers/p; npx paperlint submission update --save",
+    "env -C papers/p npx paperlint submission update --save",
+  ])
+    expect(reasonOf(command, paper(facts())), command).toBe(
+      [HEAD, UNRESOLVED, LAST].join("\n"),
+    );
+});
 
 test("a quoted --pdf=<file> with a space is one word: the PDF is that file", () => {
   const fs = memoryFiles({ "/w/final copies/paper.pdf": PDF });
