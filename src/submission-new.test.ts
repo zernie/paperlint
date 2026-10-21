@@ -22,6 +22,7 @@ import {
   newFiles,
   WANT,
   ON_THE_SITE,
+  PREFLIGHT_OK,
 } from "../test/submission-fixtures.ts";
 
 test("new: a dry run by default — title from \\title, abstract from \\begin{abstract} with the author's macro expanded, the declared authors, the PDF", async () => {
@@ -32,6 +33,7 @@ test("new: a dry run by default — title from \\title, abstract from \\begin{ab
   expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: false }]]);
   expect(r.out).toStrictEqual([
     CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
+    ...PREFLIGHT_OK(),
     "title         Agents That Lie",
     "author 1      Ada Lovelace <ada@example.org>, Analytical",
     "author 2      Bob Bobson <bob@example.org>",
@@ -61,7 +63,7 @@ test("new --save: the id the portal chose is written into paperlint.json, and `s
   const r = await run({ sub: "new", save: true }, { files: fs });
   expect(r.code, r.errs.join("\n")).toBe(0);
   expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: true }]]);
-  expect(r.out.slice(6, 7)).toStrictEqual(["created submission 42"]);
+  expect(r.out.slice(8, 9)).toStrictEqual(["created submission 42"]);
   expect(r.out.slice(-2)).toStrictEqual([
     `recorded      "submission": { "id": 42 } in papers/p/paperlint.json`,
     `next          npx paperlint submission show papers/p — it should say "match yes"`,
@@ -499,7 +501,7 @@ test("new: no paper.tex — the PDF's Title stands in; without one either, the f
     },
   );
   expect(titled.code, titled.errs.join("\n")).toBe(0);
-  expect(titled.out[1]).toBe("title         From The PDF");
+  expect(titled.out[3]).toBe("title         From The PDF");
   const noAbstract = await run(
     { sub: "new" },
     { files: newFiles({ tex: null, facts: facts({ title: "From The PDF" }) }) },
@@ -566,4 +568,23 @@ test("a refusal at a place no file of the paper holds is named at paper.tex", as
   expect(r.errs).toStrictEqual([
     "the abstract, paper.tex: \\x — paperlint sends no text it would have to guess; give the abstract with --abstract <file>, a plain-text file",
   ]);
+});
+
+test("new prints the PREFLIGHT block of the PDF it creates the submission with; --save refuses facts that do not describe it", async () => {
+  const dry = await run({ sub: "new" }, { files: newFiles({}) });
+  expect(dry.out.slice(1, 3)).toStrictEqual(PREFLIGHT_OK());
+  const stale = newFiles({ facts: facts({ sha: "b".repeat(64) }) });
+  const saved = await run({ sub: "new", save: true }, { files: stale });
+  expect(saved.code).toBe(2);
+  expect(saved.seen[0]?.calls).toStrictEqual([]);
+  expect(saved.out[1]).toMatch(/^PREFLIGHT: STALE FACTS — /u);
+  // Nothing created, so nothing recorded.
+  expect(
+    JSON.parse(
+      new TextDecoder().decode(
+        stale.readBytes(absolutePath(`${PAPER}/paperlint.json`)) ??
+          new Uint8Array(),
+      ),
+    ),
+  ).toStrictEqual({ extends: "../../venue.jsonc", authors: AUTHORS });
 });

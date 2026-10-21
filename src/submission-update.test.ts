@@ -12,6 +12,9 @@ import {
   fakePortal,
   CHECK,
   run,
+  PREFLIGHT_OK,
+  facts,
+  pagesText,
 } from "../test/submission-fixtures.ts";
 
 test("update: a dry run by default — the paper's PDF sent, nothing saved, exit 0", async () => {
@@ -32,6 +35,7 @@ test("update: a dry run by default — the paper's PDF sent, nothing saved, exit
   ]);
   expect(r.out).toStrictEqual([
     CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
+    ...PREFLIGHT_OK(),
     "dry run — the portal checked the change and kept nothing; --save sends it for real",
     "HTTP          200",
     "valid         yes",
@@ -69,8 +73,9 @@ test("update --save --submit --abstract --pdf: all of it sent, and said to be sa
     ],
   ]);
   // Guards: the PDF that is sent is the one named, and --save is told to check it too.
-  expect(r.out.slice(0, 2)).toStrictEqual([
+  expect(r.out.slice(0, 4)).toStrictEqual([
     CHECK("other.pdf", "the call for papers, https://example.org/cfp"),
+    ...PREFLIGHT_OK("other.pdf"),
     "saved",
   ]);
 });
@@ -109,7 +114,7 @@ test("update: valid:false, or a non-2xx status, exits 1 with the portal's messag
     { portal: fakePortal({ update: invalid }) },
   );
   expect(r1.code).toBe(1);
-  expect(r1.out.slice(3)).toStrictEqual([
+  expect(r1.out.slice(5)).toStrictEqual([
     "valid         NO",
     "changes       —",
     `local PDF     papers/p/paper.pdf sha2-${HEX}`,
@@ -150,7 +155,7 @@ test("update --save that the portal withheld says so", async () => {
     { sub: "update", save: true },
     { portal: fakePortal({ update: withheld }) },
   );
-  expect(r.out[1]).toBe("SAVE WITHHELD by the portal — nothing changed");
+  expect(r.out[3]).toBe("SAVE WITHHELD by the portal — nothing changed");
 });
 
 test("update: no PDF to send, or no abstract file, is refused before the portal is asked", async () => {
@@ -163,4 +168,64 @@ test("update: no PDF to send, or no abstract file, is refused before the portal 
   const r2 = await run({ sub: "update", abstract: "nope.txt" });
   expect(r2.code).toBe(2);
   expect(r2.errs).toStrictEqual(["--abstract: no file at nope.txt"]);
+});
+
+// ── the preflight (paperlint#264) ─────────────────────────────────────────────────────
+
+/** A paper of kind `short` (6 body pages) at a venue over AIDC, not blind, built 8 body pages long. */
+const OVER = files({
+  venue: { extends: "paperlint:aidc", blind: false },
+  paper: { extends: "../../venue.jsonc", kind: "short", submission: { id: 7 } },
+  facts: facts({ pages: pagesText(8) }),
+});
+const OVER_HEADLINE =
+  "PREFLIGHT: OVER LIMIT — body pages (up to the references on page 9): 8 > 6, for venue/short";
+
+test("update over the limit, dry run: the PREFLIGHT block says OVER LIMIT before the portal is asked, and the dry run still runs, exit 0", async () => {
+  const r = await run({ sub: "update" }, { files: OVER });
+  expect(r.code).toBe(0);
+  expect(r.out.slice(1, 3)).toStrictEqual([
+    OVER_HEADLINE,
+    "  format/page-limit: body pages (up to the references on page 9): 8, over the limit 6 for venue/short — a desk reject; cut the text",
+  ]);
+  expect(r.out[3]).toMatch(/^ {2}limit {7}venue\/short: body_pages_max 6 — /u);
+  expect(r.out.slice(4, 6)).toStrictEqual([
+    `  sent        papers/p/paper.pdf sha2-${HEX}`,
+    "dry run — the portal checked the change and kept nothing; --save sends it for real",
+  ]);
+  expect(r.seen[0]?.calls).toHaveLength(1);
+});
+
+test("update --save over the limit: the same block, and the send goes ahead — sending over the limit is the author's decision, not the command's", async () => {
+  const r = await run({ sub: "update", save: true }, { files: OVER });
+  expect(r.code).toBe(0);
+  expect(r.out[1]).toBe(OVER_HEADLINE);
+  expect(r.out).toContain("saved");
+  expect(r.errs).toStrictEqual([]);
+});
+
+test("update --save with facts about other bytes, or none: refused with exit 2, nothing sent; the dry run reports it and goes on", async () => {
+  const other = new TextEncoder().encode("%PDF a later build");
+  const later = files({ extra: { [`${PAPER}/paper.pdf`]: other } });
+  const saved = await run({ sub: "update", save: true }, { files: later });
+  expect(saved.code).toBe(2);
+  expect(saved.seen[0]?.calls).toStrictEqual([]);
+  expect(saved.out[1]).toBe(
+    "PREFLIGHT: STALE FACTS — _build/paper.facts.json describes a DIFFERENT paper.pdf than the one on disk (its SHA-256 differs), so the venue checks would judge an earlier build — rebuild the paper",
+  );
+  expect(saved.errs).toStrictEqual([
+    "refused: the facts do not describe the PDF being sent, so it was not checked against the venue — nothing was sent. Rebuild, then run the dry run again and read its PREFLIGHT block",
+  ]);
+  const unbuilt = await run(
+    { sub: "update", save: true, submit: true },
+    { files: files({ facts: null }) },
+  );
+  expect([unbuilt.code, unbuilt.seen[0]?.calls]).toStrictEqual([2, []]);
+  const dry = await run({ sub: "update" }, { files: later });
+  expect([dry.code, dry.errs, dry.seen[0]?.calls.length]).toStrictEqual([
+    0,
+    [],
+    1,
+  ]);
+  expect(dry.out[1]).toMatch(/^PREFLIGHT: STALE FACTS — /u);
 });

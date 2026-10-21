@@ -76,6 +76,12 @@ import { lineColumn, readPaper } from "./tex-paper.ts";
 import { originOf, type PaperSource } from "./domain/paper-source.ts";
 import type { SourcesCodec } from "./ports/sources-codec.ts";
 import { MAIN } from "./build.ts";
+import {
+  preflight,
+  preflightLines,
+  staleRefusal,
+  type Preflight,
+} from "./submission-preflight.ts";
 
 /** How to make and set the site's token: the page, the scopes, the variable. Pure. */
 export function tokenSteps(
@@ -163,6 +169,10 @@ export interface SubmissionDeps {
 
 /** A paper's portal, its submission there, and the PDF the paper builds. */
 export interface SubmissionTarget {
+  /** The paper's folder, absolute. */
+  readonly paperDir: string;
+  /** The paper's settings and its venue preset, resolved: what the preflight judges the PDF against. */
+  readonly resolved: Extract<PaperPreset, { readonly kind: "resolved" }>;
   readonly portal: SupportedPortal;
   /** The paper's submission on the portal; null before `new` created one. */
   readonly id: number | null;
@@ -241,6 +251,8 @@ function targetOf(
       ? []
       : currentDeadlines(p.settings.cycles.current);
   return ok({
+    paperDir,
+    resolved: p,
     portal: portal.value,
     id: p.settings.submission?.id ?? null,
     config: configOf(paperDir),
@@ -477,6 +489,41 @@ const changeOf = (
   fields,
 });
 
+/**
+ * The line to check the PDF by hand, then the preflight block (`src/submission-preflight.ts`) of the
+ * bytes about to be sent, printed; the verdict returned.
+ */
+function preflightOf(
+  t: SubmissionTarget,
+  bytes: Uint8Array,
+  shown: string,
+  deps: RunDeps,
+): Preflight {
+  const verdict = preflight(t.paperDir, t.resolved, bytes, deps.presets);
+  logAll(
+    [
+      checkPdfLine(shown, t.call),
+      ...preflightLines(verdict, { shown, sha256: sha256Hex(bytes) }),
+    ],
+    deps,
+  );
+  return verdict;
+}
+
+/**
+ * Whether `--save` stops here: the facts do not describe the bytes, so nothing about them was checked.
+ * Said, when so. A dry run goes on — its block already says it.
+ */
+function refusesStale(
+  a: Pick<SubmissionArgs, "save">,
+  verdict: Preflight,
+  deps: RunDeps,
+): boolean {
+  const refuses = a.save && verdict.kind === "stale";
+  if (refuses) deps.err(staleRefusal);
+  return refuses;
+}
+
 /** `update`: send the PDF (and the abstract, and "submitted" when asked); a dry run unless saving. */
 async function runUpdate(
   t: SubmissionTarget & { readonly id: number },
@@ -493,7 +540,9 @@ async function runUpdate(
     );
   const abstract = abstractOf(a, deps);
   if (!abstract.ok) return (deps.err(abstract.error), 2);
-  logAll([checkPdfLine(shown, t.call), ...fieldLines(t.fields)], deps);
+  const verdict = preflightOf(t, bytes, shown, deps);
+  logAll(fieldLines(t.fields), deps);
+  if (refusesStale(a, verdict, deps)) return 2;
   const change = changeOf(a, bytes, abstract.value, t.fields);
   const r = await portal.update(t.id, change, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
@@ -823,8 +872,9 @@ async function runNew(
   const n = newSubmissionOf(t, a, deps);
   if (!n.ok) return (deps.err(n.error), 2);
   const { paper, shown } = n.value;
-  deps.log(checkPdfLine(shown, t.call));
+  const verdict = preflightOf(t, paper.pdf.bytes, shown, deps);
   logAll(newLines(paper), deps);
+  if (refusesStale(a, verdict, deps)) return 2;
   const r = await portal.create(paper, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
   const dropped = droppedLines(t.fields, t.venueFields, r.value);

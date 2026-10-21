@@ -51,7 +51,12 @@ import {
   type ReadFacts,
 } from "./facts-file.ts";
 import type { KindLimits, VenueFormat } from "./tex-requirements.ts";
-import { paperPreset, presetProblemText, type Preset } from "./presets.ts";
+import {
+  paperPreset,
+  presetProblemText,
+  type PaperPreset,
+  type Preset,
+} from "./presets.ts";
 import type { PaperSettings } from "./paper-settings.ts";
 import type { FlatGeometry } from "./domain/geometry.ts";
 import { callerPath } from "./caller-path.ts";
@@ -221,6 +226,24 @@ export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
       kind: "unresolved",
       finding: finding("preset", { why: presetProblemText(p.problem) }),
     };
+  return assessResolved(paperDir, p, deps);
+}
+
+/** What the assessment says once the paper's preset resolved: the build, judged or why not. */
+export type BuiltAssessment = Extract<
+  Assessment,
+  { readonly kind: "porting" | "unbuilt" | "stale" | "ready" }
+>;
+
+/**
+ * A paper whose preset resolved, assessed against its build — `assessPaper` past the preset, for a
+ * caller that resolved it already (`paperlint submission`). Reads through `deps.files` only.
+ */
+export function assessResolved(
+  paperDir: string,
+  p: Extract<PaperPreset, { readonly kind: "resolved" }>,
+  deps: VenueRuleDeps,
+): BuiltAssessment {
   if (p.settings.cycles !== null && isPorting(p.settings.cycles.current))
     return { kind: "porting" };
   const venue = resolvedOf(p.preset, p.settings);
@@ -873,4 +896,86 @@ export function pageLimitRules(
   deps: VenueRuleDeps,
 ): Readonly<Record<"page-limit", VenueRuleModule>> {
   return { "page-limit": rule("page-limit", deps) };
+}
+
+// ── the same verdicts, before a send ────────────────────────────────────────────────
+
+/** Each venue rule's id, as a lint report and a preset's `rules` name it. */
+export const VENUE_RULE_IDS: Readonly<Record<VenueRuleName, string>> = {
+  fresh: "pdf/fresh",
+  profile: "pdf/profile",
+  measured: "pdf/measured",
+  fonts: "pdf/fonts",
+  geometry: "pdf/geometry",
+  "page-limit": "format/page-limit",
+  "body-size": "pdf/body-size",
+  anonymity: "anonymity/identity",
+};
+
+/**
+ * A finding's message as ESLint prints it: the rule's message with `{{name}}` filled from its data,
+ * and a placeholder the data does not name left as written (ESLint's own interpolation). Pure.
+ */
+export function findingText(rule: VenueRuleName, f: Finding): string {
+  const message = META[rule].messages[f.messageId] ?? f.messageId;
+  return message.replace(/\{\{([^{}]+?)\}\}/gu, (whole, name: string) => {
+    const value = f.data[name.trim()];
+    return value === undefined ? whole : String(value);
+  });
+}
+
+/**
+ * The error-level venue rules a PDF is checked against before it is sent to the venue: all of them
+ * but `pdf/fresh`, which the sender decides itself against the very bytes it sends, and
+ * `pdf/measured`, a warning.
+ */
+const SEND_RULES = [
+  "profile",
+  "page-limit",
+  "fonts",
+  "geometry",
+  "body-size",
+  "anonymity",
+] as const satisfies readonly VenueRuleName[];
+
+/** One error-level finding about the PDF to be sent: the rule, its message, and the page count it is over. */
+export interface SendFinding {
+  readonly rule: string;
+  readonly text: string;
+  /** For a page limit exceeded: what was counted, how many, and the limit; null for anything else. */
+  readonly over: {
+    readonly what: string;
+    readonly got: number;
+    readonly max: number;
+  } | null;
+}
+
+/** A `pages` finding's count and limit, as the judges filled them in. */
+function overOf(
+  rule: VenueRuleName,
+  f: Finding,
+): SendFinding["over"] {
+  const { what, got, max } = f.data;
+  return rule === "page-limit" &&
+    f.messageId === "pages" &&
+    typeof what === "string" &&
+    typeof got === "number" &&
+    typeof max === "number"
+    ? { what, got, max }
+    : null;
+}
+
+/**
+ * What the error-level venue rules find in an assessed build — the very judges `paperlint lint`
+ * reports with, at their default options. Empty for anything but a build that was judged. Pure.
+ */
+export function sendFindings(a: Assessment): readonly SendFinding[] {
+  const ctx: JudgeContext = { options: [], shown: (p) => p };
+  return SEND_RULES.flatMap((name) =>
+    JUDGES[name](a, ctx).map((f) => ({
+      rule: VENUE_RULE_IDS[name],
+      text: findingText(name, f),
+      over: overOf(name, f),
+    })),
+  );
 }
