@@ -116,23 +116,25 @@ test("the hosts are read only for a command that makes a request: anything else 
   expect(kind("npx paperlint submission new --save", never)).toBe("paperlint");
 });
 
-test("hosts that cannot be read: a request is refused, rather than passing unseen", () => {
-  expect(
-    submissionConfirm(payload("curl https://example.org/x"), memoryFiles({}), {
-      portalHosts: () => {
-        throw new Error("broken preset");
-      },
-    }),
-  ).toStrictEqual({
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason:
-        "Not run: paperlint could not tell what this command sends (broken preset).",
+test("presets that cannot be read: only HotCRP-hosted sites and paperlint sends are recognised, and a refusal says why", () => {
+  const broken = {
+    portalHosts: () => {
+      throw new Error("broken preset");
     },
-  });
+  };
+  const reason = (command: string) =>
+    submissionConfirm(payload(command), paper(facts()), broken)
+      ?.hookSpecificOutput.permissionDecisionReason ?? null;
+  const FALLBACK =
+    "The venue presets could not be read (broken preset), so only HotCRP-hosted sites and paperlint sends are recognised until they are fixed.";
+  // A command that names no HotCRP site runs: one bad preset does not stop the shell.
+  expect(reason("curl https://submit.example-venue.org/x")).toBe(null);
+  expect(reason("cat notes.txt")).toBe(null);
+  expect(
+    reason("curl https://venue.hotcrp.com/api/paper")?.split("\n").at(-1),
+  ).toBe(FALLBACK);
+  expect(reason(SEND)?.split("\n").at(-1)).toBe(FALLBACK);
 });
-
 /** The made-up paper: its PDF, its facts when given, and an empty transcript. */
 const paper = (factsText: string | null): Files =>
   memoryFiles({
@@ -390,17 +392,27 @@ test("a client run by its path or quoted is a request: the program is read by it
   ).toBe("direct");
 });
 
-test("straight at HotCRP: refused, naming that paperlint's check and the person's yes are skipped, and the way to send", () => {
+/** What the agent is told to ask before a command that names a portal. */
+const ASK_PORTAL = [
+  "It may send to the portal around paperlint's venue check. Ask the person with AskUserQuestion first, then run this command again: the question must contain the portal host and the command start above, exactly as written, and say what the command does.",
+  'Options: "Yes, run it" and "No". One yes lets one command through. To send a paper, use `paperlint submission new|update --save` instead.',
+].join("\n");
+
+test("straight at a portal, with no yes: refused, naming the host and the command's first 60 characters to ask about", () => {
   expect(
     reasonOf(
-      "curl -F file=@paper.pdf https://venue.hotcrp.com/api/upload",
+      "  curl -F file=@paper.pdf https://Venue.HotCRP.com/api/upload?p=1&token=secret",
       paper(null),
     ),
   ).toBe(
-    "Not run: this command names a venue's submission portal, so it may send to it around paperlint's venue check and without the person's yes to a named PDF. Send with `paperlint submission new|update --save`, after asking the person; or the person runs this command themselves, in their own terminal.",
+    [
+      "Not run: this command names a venue's submission portal, and the person has not said yes to it since the last send.",
+      "portal host: hotcrp.com",
+      "command start: curl -F file=@paper.pdf https://Venue.HotCRP.com/api/upload?",
+      ASK_PORTAL,
+    ].join("\n"),
   );
 });
-
 test("a command that sends nothing: no output at all — neither allow nor deny", () => {
   expect(
     submissionConfirm(
@@ -422,7 +434,7 @@ test("a crash while describing the send is refused; a payload that is not JSON i
     writeAtomic: () => undefined,
   };
   expect(reasonOf(SEND, broken)).toBe(
-    `${NOT_SENT}, and paperlint could not check it: disk on fire at /w/papers/p/paperlint.json.`,
+    "Not run: paperlint could not check whether this command sends a paper: disk on fire at /w/papers/p/paperlint.json.",
   );
   expect(
     submissionConfirm(`{"tool_input": {"command": "${SEND}"`, paper(null))
@@ -672,4 +684,52 @@ test("a broken transcript line: one that may hold a send uses the yes before it 
       ...yes,
     ]),
   ).toBe("runs");
+});
+
+test("a command naming a portal runs after a yes to a question with its host and its start, once", () => {
+  const command = "curl -X POST https://venue.hotcrp.com/api/paper/1/comment";
+  const start = command.slice(0, 60);
+  const decide = (lines: readonly string[]) =>
+    withTranscript(lines, command)?.hookSpecificOutput.permissionDecision ??
+    "runs";
+  const yes = question("q1", `Run ${start} against HOTCRP.COM?`, "Yes, run it");
+  expect(decide(yes)).toBe("runs");
+  // Used up by the run, or by any earlier command that names a portal.
+  expect(decide([...yes, ...bash("b1", command)])).toBe("deny");
+  expect(decide([...yes, ...bash("b1", "grep -rn hotcrp.com src/")])).toBe(
+    "deny",
+  );
+  // The host alone, or the start alone, is not enough; nor is a No.
+  expect(decide(question("q1", "Run it against hotcrp.com?", "Yes"))).toBe(
+    "deny",
+  );
+  expect(
+    decide(question("q1", `Run ${start.slice(0, 30)} on hotcrp.com?`, "Yes")),
+  ).toBe("deny");
+  expect(decide(question("q1", `Run ${start} on hotcrp.com?`, "No"))).toBe(
+    "deny",
+  );
+  // A broken transcript line that names a portal counts as a run of one.
+  expect(
+    decide([...yes, `{"type":"tool_use"${bash("b1", command)[0] ?? ""}`]),
+  ).toBe("deny");
+});
+
+test("a paperlint send that also names a portal needs both yeses: the PDF's sha256, and the host with the start", () => {
+  const command = `${SEND} && curl https://venue.hotcrp.com/api/paper/1`;
+  const start = command.slice(0, 60);
+  const decide = (lines: readonly string[]) =>
+    withTranscript(lines, command)?.hookSpecificOutput
+      .permissionDecisionReason ?? "runs";
+  const sha = question("q1", asks(SHA), "Yes");
+  const host = question("q2", `${start} on hotcrp.com`, "Yes");
+  expect(decide([...sha, ...host])).toBe("runs");
+  const reason = decide(sha).split("\n");
+  expect(reason[0]).toBe(HEAD);
+  expect(reason.slice(-4)).toStrictEqual([
+    "portal host: hotcrp.com",
+    `command start: ${start}`,
+    ...ASK_PORTAL.split("\n"),
+  ]);
+  expect(decide(host).split("\n")[0]).toBe(HEAD);
 });

@@ -3,8 +3,9 @@
  * PreToolUse on `Bash` (`plugin/hooks/hooks.json`): a command that sends a submission — `paperlint
  * submission new|update` with `--save` or `--submit` — runs only when the person has said yes, in an
  * `AskUserQuestion` asked since the last send, to a question naming the sha256 of the PDF it sends.
- * Without that yes the command is refused (`"permissionDecision": "deny"`), and the reason tells the
- * agent exactly what to ask. Anything else: no output.
+ * A command that names a portal's host runs only after a yes to a question naming that host and the
+ * command's first 60 characters. Without the yes the command is refused (`"permissionDecision":
+ * "deny"`), and the reason tells the agent exactly what to ask. Anything else: no output.
  *
  * ── WHY A QUESTION, NOT CLAUDE CODE'S PERMISSION PROMPT ──────────────────────────
  * It used to answer `ask` (paperlint#283). The Claude mobile app's permission card shows only the
@@ -17,18 +18,21 @@
  * The session's transcript (`transcript_path` in the hook's input, one JSON entry per line). A
  * question is the assistant's `tool_use` named `AskUserQuestion`; its answer is the user entry that
  * carries the matching `tool_result`, whose `toolUseResult.answers` maps each question's text to the
- * option chosen. An answer is a yes when its first word is "yes". Every earlier `Bash` call that is a
- * send — refused or not, but not this one (`tool_use_id`) — uses up the questions before it, so one
- * yes lets one send through. When several questions name the same sha, the latest decides.
+ * option chosen. An answer is a yes when its first word is "yes". Every earlier `Bash` call that
+ * sends or names a portal — refused or not, but not this one (`tool_use_id`) — uses up the questions
+ * before it, so one yes lets one command through. When several questions name the same thing, the
+ * latest decides.
  *
  * ── WHAT IT SEES, AND WHAT IT IS NOT ──────────────────────────────────────────────
  * A send is judged on the command as the shell reads it (`shellLeaves`: each simple command across
  * `&&`, `;`, `|`, words unquoted, the commands inside a `bash -c "…"` string too), never on the raw
- * text: `submission`, `new|update` and `--save|--submit` in one command's words. A command that
- * names a portal's host in any word (a HotCRP-hosted site, or a host a venue preset declares),
- * whatever program it runs, is refused outright: it would send around paperlint's venue check, and
- * there is no PDF to name. NOT SEEN: an upload from a script file that names the host only inside
- * the file, or words built at run time (`$(…)`).
+ * text: `submission`, `new|update` and `--save|--submit` in one command's words; or a portal's host
+ * in any word (a HotCRP-hosted site, or a host a venue preset declares), whatever program it runs —
+ * such a command may send around paperlint's venue check, and has no PDF to name, so the question
+ * names the host and the command instead. When the presets cannot be read, only HotCRP-hosted sites
+ * and paperlint sends are recognised, and a refusal says so: one bad preset does not stop the shell.
+ * NOT SEEN: an upload from a script file that names the host only inside the file, or words built
+ * at run time (`$(…)`).
  *
  * The agent writes the question, so a deliberately misleading question still passes. The hook
  * catches an agent that sends without asking, or asks about other bytes; it is not a security
@@ -40,7 +44,8 @@
  * not a reason to refuse every send for the rest of the session — real transcripts have them (an
  * entry cut short and run into the next, measured in a live one) — so it counts as a send when its
  * text may hold one, and a yes before it no longer counts. Only lines that may hold a question, an
- * answer or a send are parsed, and the shell parser runs only on commands that say `submission`:
+ * answer or a send are parsed, and the shell parser runs only on commands that say `submission` or
+ * a portal's host:
  * a transcript of hundreds of megabytes is read in seconds.
  *
  * ── WHY IN-PROCESS, NOT A VIGILES PROGRAM ────────────────────────────────────────
@@ -162,26 +167,30 @@ function sendsIn(
   });
 }
 
-/**
- * What the commands send: a submission through paperlint, anything that names a venue's portal — a
- * HotCRP-hosted site, or a host a venue preset declares (`hosts`, read only when a word has a dot),
- * whatever program it runs, as a plain case-insensitive substring of a word — or nothing. Judged on
- * the shell's words only, never on the raw text.
- */
-export function sendKind(
-  leaves: readonly ShellLeaf[],
-  hosts: () => readonly string[],
-): "paperlint" | "direct" | null {
-  if (leaves.some(isSend)) return "paperlint";
-  const words = leaves
+/** The words of the commands that may name a host: those with a dot, lowercased. */
+const dottedWords = (leaves: readonly ShellLeaf[]): readonly string[] =>
+  leaves
     .flatMap((l) => [l.head, ...l.args])
     .map((w) => w.toLowerCase())
     .filter((w) => w.includes("."));
-  if (words.length === 0) return null;
-  const known = [HOTCRP_HOSTED, ...hosts()]
-    .map((h) => h.toLowerCase())
-    .filter((h) => h !== "");
-  return words.some((w) => known.some((h) => w.includes(h))) ? "direct" : null;
+
+/** The portal hosts known: HotCRP's hosted sites always, then those `hosts` names; lowercased. */
+const knownHosts = (hosts: readonly string[]): readonly string[] =>
+  [HOTCRP_HOSTED, ...hosts].map((h) => h.toLowerCase()).filter((h) => h !== "");
+
+/**
+ * The portal host a command names — a HotCRP-hosted site, or a host a venue preset declares
+ * (`hosts`), whatever program it runs, as a plain case-insensitive substring of a word — or null.
+ * Judged on the shell's words only, never on the raw text.
+ */
+function portalHost(
+  leaves: readonly ShellLeaf[],
+  hosts: readonly string[],
+): string | null {
+  const words = dottedWords(leaves);
+  return (
+    knownHosts(hosts).find((h) => words.some((w) => w.includes(h))) ?? null
+  );
 }
 
 /** The body pages the build counted: up to the references or appendix, or banal's count. */
@@ -257,6 +266,7 @@ const UNRESOLVED =
   "could not resolve which PDF this send uploads — check the dry run";
 
 const NOT_SENT = "Not run: this sends the paper to the venue's portal";
+const NAMES_PORTAL = "Not run: this command names a venue's submission portal";
 
 /** What to ask, once every send's PDF is known. */
 const HOW_TO_ASK = [
@@ -265,6 +275,15 @@ const HOW_TO_ASK = [
   "- what the lines above say about the build (the body pages, or that it is stale or missing),",
   "- the dry run's venue check, quoted word for word (its `venue rules at their default options` line and every error under it).",
   'Options: "Yes, send it" and "No". One yes lets one send through.',
+].join("\n");
+
+/** How much of a command naming a portal the question must quote. */
+const COMMAND_SHOWN = 60;
+
+/** What to ask before a command that names a portal. */
+const HOW_TO_ASK_PORTAL = [
+  "It may send to the portal around paperlint's venue check. Ask the person with AskUserQuestion first, then run this command again: the question must contain the portal host and the command start above, exactly as written, and say what the command does.",
+  'Options: "Yes, run it" and "No". One yes lets one command through. To send a paper, use `paperlint submission new|update --save` instead.',
 ].join("\n");
 
 /** Each send's block: alone, or numbered when the command has several. */
@@ -292,9 +311,13 @@ interface Since {
 /** A transcript line that may hold a question, an answer or a send; no other line is parsed. */
 const MAY_MATTER = /"tool_use"|"toolUseResult"/u;
 
-/** What tells an earlier send in the transcript: not this call's own `tool_use_id`, and a send by its words. */
+/** What tells an earlier send in the transcript. */
 interface EarlierSend {
+  /** This call's own `tool_use_id`: no earlier send. */
   readonly current: string | null;
+  /** Whether text may hold a send — cheap, so the shell parser runs only where it may matter. */
+  readonly mayHold: (text: string) => boolean;
+  /** Whether a command sends: a paperlint send, or a portal named. */
   readonly sends: (command: string) => boolean;
 }
 
@@ -303,13 +326,6 @@ const CLEARED: Since = { asked: new Set(), answers: [] };
 
 /** A transcript line that is not JSON. */
 const BROKEN = Symbol("broken");
-
-/**
- * Whether text may hold a send: the word `submission` once quotes and backslashes are gone — the
- * shell's (\`submis"sion"\`) or JSON's. Cheap, so the shell parser runs only where it may matter.
- */
-const mayHoldSend = (text: string): boolean =>
-  text.replace(/["'\\]/gu, "").includes("submission");
 
 /**
  * The person's answers to `AskUserQuestion` since the last send in the transcript, oldest first.
@@ -324,7 +340,7 @@ export function answersSinceLastSend(
   return transcript.split("\n").reduce((since: Since, line): Since => {
     if (!MAY_MATTER.test(line)) return since;
     const entry = parsedLine(line);
-    if (entry === BROKEN) return mayHoldSend(line) ? CLEARED : since;
+    if (entry === BROKEN) return earlier.mayHold(line) ? CLEARED : since;
     const content = fieldOf(fieldOf(entry, "message"), "content");
     return (Array.isArray(content) ? content : []).reduce(
       (s: Since, block: unknown): Since =>
@@ -357,7 +373,7 @@ function toolUse(s: Since, block: unknown, earlier: EarlierSend): Since {
     name === "Bash" &&
     id !== earlier.current &&
     typeof command === "string" &&
-    mayHoldSend(command) &&
+    earlier.mayHold(command) &&
     earlier.sends(command);
   return send ? CLEARED : s;
 }
@@ -374,10 +390,17 @@ function toolResult(s: Since, block: unknown, entry: unknown): Since {
   return { ...s, answers: [...s.answers, ...given] };
 }
 
-/** Whether the latest question naming `sha` was answered yes. */
-const saidYes = (answers: readonly Answer[], sha: string): boolean =>
+/** Whether the latest question containing every one of `keys` (any case) was answered yes. */
+const saidYes = (
+  answers: readonly Answer[],
+  keys: readonly string[],
+): boolean =>
   /^yes\b/iu.test(
-    answers.findLast((a) => a.question.includes(sha))?.answer.trim() ?? "",
+    answers
+      .findLast((a) =>
+        keys.every((k) => a.question.toLowerCase().includes(k.toLowerCase())),
+      )
+      ?.answer.trim() ?? "",
   );
 
 /** Every send in the command, described; an unresolved one has no sha. */
@@ -395,44 +418,104 @@ function describedSends(
 }
 
 /** The refusal of a send whose PDF is not known or not there: there is no sha256 to ask about. */
-const noPdf = (described: readonly Described[]): string =>
-  [
-    `${NOT_SENT}, and paperlint cannot find the PDF it uploads, so there is no sha256 to ask the person about.`,
-    ...blocks(described),
-    "Name the paper folder and the PDF plainly (no cd, no $…), build the PDF, run the dry run, and ask then.",
-  ].join("\n");
+const noPdf = (described: readonly Described[]): readonly string[] => [
+  `${NOT_SENT}, and paperlint cannot find the PDF it uploads, so there is no sha256 to ask the person about.`,
+  ...blocks(described),
+  "Name the paper folder and the PDF plainly (no cd, no $…), build the PDF, run the dry run, and ask then.",
+];
+
+/** The portal hosts the venue presets declare, or — when they cannot be read — none, and why. */
+interface Hosts {
+  readonly hosts: readonly string[];
+  readonly failed: string | null;
+}
+
+/** The presets' hosts; when they cannot be read, none, and why. */
+function readHosts(cwd: string, deps: ConfirmDeps): Hosts {
+  try {
+    return { hosts: deps.portalHosts(cwd), failed: null };
+  } catch (e) {
+    return { hosts: [], failed: messageOf(e) };
+  }
+}
+
+/** What one command is: whether it sends through paperlint, the portal host it names, the hosts known. */
+interface Command {
+  readonly text: string;
+  readonly cwd: string;
+  readonly paperlint: boolean;
+  readonly host: string | null;
+  readonly hosts: Hosts;
+}
+
+/** The line a refusal ends with when the presets could not be read; none when they could. */
+const fallbackLines = (h: Hosts): readonly string[] =>
+  h.failed === null
+    ? []
+    : [
+        `The venue presets could not be read (${h.failed}), so only HotCRP-hosted sites and paperlint sends are recognised until they are fixed.`,
+      ];
 
 /**
- * A `paperlint submission` send: let through (null) when every send in the command has its yes in
- * the transcript, else refused with what to ask. Words the shell would expand (`$…`, backticks) are
- * not guessed at: such a send is unresolved, and refused.
+ * A command that sends: let through (null) when the person said yes to it since the last send —
+ * each paperlint send's PDF by its sha256, a portal named by its host and the command's start —
+ * else the lines of the refusal, with what to ask.
  */
-function paperlintSend(
-  command: string,
-  cwd: string,
+function decide(
+  c: Command,
   payload: unknown,
   deps: ConfirmDeps,
-): DenyOutput | null {
-  const described = describedSends(command, cwd, deps);
+): readonly string[] | null {
+  const described = c.paperlint ? describedSends(c.text, c.cwd, deps) : [];
   const shas = described.flatMap((d) => (d.sha === null ? [] : [d.sha]));
-  if (shas.length < described.length) return deny(noPdf(described));
+  if (shas.length < described.length) return noPdf(described);
+  const base = c.paperlint ? NOT_SENT : NAMES_PORTAL;
   const read = transcriptOf(payload, deps.files);
   if (typeof read !== "string")
-    return deny(
-      `${NOT_SENT}, and ${read.failed}, so paperlint cannot see the person's yes.`,
-    );
-  const answers = answersSinceLastSend(read, {
+    return [
+      `${base}, and ${read.failed}, so paperlint cannot see the person's yes.`,
+    ];
+  const start = c.text.trim().slice(0, COMMAND_SHOWN);
+  const needs = [
+    ...shas.map((sha) => [sha]),
+    ...(c.host === null ? [] : [[c.host, start]]),
+  ];
+  const answers = answersSinceLastSend(read, earlierSend(c, payload, deps));
+  if (needs.every((keys) => saidYes(answers, keys))) return null;
+  return [
+    `${base}, and the person has not said yes to it since the last send.`,
+    ...blocks(described),
+    ...(c.paperlint ? [HOW_TO_ASK] : []),
+    ...portalLines(c.host, start),
+  ];
+}
+
+/** What a refusal says about a portal the command names: the host, the start, what to ask; none for none. */
+const portalLines = (host: string | null, start: string): readonly string[] =>
+  host === null
+    ? []
+    : [`portal host: ${host}`, `command start: ${start}`, HOW_TO_ASK_PORTAL];
+
+/** How an earlier send is told in the transcript: by the same matching as this command. */
+function earlierSend(
+  c: Command,
+  payload: unknown,
+  deps: ConfirmDeps,
+): EarlierSend {
+  const known = knownHosts(c.hosts.hosts);
+  return {
     current: stringField(payload, "tool_use_id"),
-    sends: (c) => allLeaves(c, deps.shellLeaves).some(isSend),
-  });
-  if (shas.every((sha) => saidYes(answers, sha))) return null;
-  return deny(
-    [
-      `${NOT_SENT}, and the person has not said yes to it since the last send.`,
-      ...blocks(described),
-      HOW_TO_ASK,
-    ].join("\n"),
-  );
+    mayHold: (text) => {
+      const plain = text.replace(/["'\\]/gu, "").toLowerCase();
+      return (
+        plain.includes("submission") || known.some((h) => plain.includes(h))
+      );
+    },
+    sends: (command) => {
+      const leaves = allLeaves(command, deps.shellLeaves);
+      return leaves.some(isSend) || portalHost(leaves, known) !== null;
+    },
+  };
 }
 
 /** A string field of the payload; null for none. */
@@ -460,9 +543,6 @@ export const UNREADABLE_INPUT: DenyOutput = deny(
   "Not run: paperlint could not read this command, so it cannot tell whether it sends a paper to a venue's portal.",
 );
 
-const DIRECT =
-  "Not run: this command names a venue's submission portal, so it may send to it around paperlint's venue check and without the person's yes to a named PDF. Send with `paperlint submission new|update --save`, after asking the person; or the person runs this command themselves, in their own terminal.";
-
 /** The payload, parsed; null when it is not JSON. */
 function parsed(stdin: string): unknown {
   try {
@@ -472,10 +552,29 @@ function parsed(stdin: string): unknown {
   }
 }
 
+/** One command, judged: null to let it run, or the refusal. */
+function judge(
+  text: string,
+  cwd: string,
+  payload: unknown,
+  deps: ConfirmDeps,
+): DenyOutput | null {
+  const leaves = allLeaves(text, deps.shellLeaves);
+  const paperlint = leaves.some(isSend);
+  // The presets are read only for a command that may send: anything else pays nothing.
+  if (!paperlint && dottedWords(leaves).length === 0) return null;
+  const hosts = readHosts(cwd, deps);
+  const host = portalHost(leaves, hosts.hosts);
+  if (!paperlint && host === null) return null;
+  const lines = decide({ text, cwd, paperlint, host, hosts }, payload, deps);
+  return lines === null
+    ? null
+    : deny([...lines, ...fallbackLines(hosts)].join("\n"));
+}
+
 /**
  * The hook on one payload, as Claude Code sends it on stdin: a refusal, or null to let the command
- * run (it sends nothing, or every send in it has the person's yes). Never throws: what it cannot
- * read, it refuses.
+ * run (it sends nothing, or every send in it has the person's yes). Never throws: a crash refuses.
  */
 export function submissionConfirm(
   stdin: string,
@@ -484,36 +583,15 @@ export function submissionConfirm(
   const payload = parsed(stdin);
   if (payload === null) return UNREADABLE_INPUT;
   const raw = fieldOf(fieldOf(payload, "tool_input"), "command");
-  const command = typeof raw === "string" ? raw : "";
+  const text = typeof raw === "string" ? raw : "";
   const given = fieldOf(payload, "cwd");
   const cwd =
     typeof given === "string" && isAbsolute(given) ? given : resolve(".");
-  const kind = kindOf(command, cwd, deps);
-  if (kind === null) return null;
-  if (kind !== "paperlint" && kind !== "direct") return deny(kind.failed);
-  if (kind === "direct") return deny(DIRECT);
   try {
-    return paperlintSend(command, cwd, payload, deps);
+    return judge(text, cwd, payload, deps);
   } catch (e) {
     return deny(
-      `${NOT_SENT}, and paperlint could not check it: ${messageOf(e)}.`,
+      `Not run: paperlint could not check whether this command sends a paper: ${messageOf(e)}.`,
     );
-  }
-}
-
-/** What the command sends, or — when reading it failed — the reason to refuse it. */
-function kindOf(
-  command: string,
-  cwd: string,
-  deps: ConfirmDeps,
-): ReturnType<typeof sendKind> | { readonly failed: string } {
-  try {
-    return sendKind(allLeaves(command, deps.shellLeaves), () =>
-      deps.portalHosts(cwd),
-    );
-  } catch (e) {
-    return {
-      failed: `Not run: paperlint could not tell what this command sends (${messageOf(e)}).`,
-    };
   }
 }
