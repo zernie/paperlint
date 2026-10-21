@@ -241,6 +241,40 @@ test("runHook paper-folder-layout: in-process, on the real disk — a refusal on
   );
 });
 
+test("runHook submission-confirm: in-process — an ask on stdout for a send, nothing for anything else, and an ask when its input cannot be read", () => {
+  const hook = (stdin: () => string) => {
+    const out: string[] = [];
+    const code = runHook("submission-confirm", {
+      stdin,
+      out: (t) => out.push(t),
+      run: () => {
+        throw new Error("an in-process hook spawns nothing");
+      },
+    });
+    return { code, out };
+  };
+  const command = (c: string) => () =>
+    JSON.stringify({ tool_input: { command: c }, cwd: root });
+  const send = hook(command("npx paperlint submission update nope --save"));
+  assert.equal(send.code, 0);
+  assert.match(
+    send.out.join(""),
+    /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"This sends the paper to the venue's portal/,
+  );
+  assert.deepEqual(hook(command("npx paperlint submission show nope")), {
+    code: 0,
+    out: [],
+  });
+  const unreadable = hook(() => {
+    throw new Error("EAGAIN");
+  });
+  assert.equal(unreadable.code, 0);
+  assert.match(
+    unreadable.out.join(""),
+    /"permissionDecision":"ask","permissionDecisionReason":"paperlint could not read this command/,
+  );
+});
+
 test("runHook paper-folder-layout: by default its output goes to stdout, where Claude Code reads it", () => {
   const dir = join(root, "layout-hook-stdout");
   writeTree(dir, { "papers/p/PIPELINE-STATUS.md": "# status\n" });

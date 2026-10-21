@@ -183,6 +183,10 @@ import {
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
 import {
+  submissionConfirm,
+  UNREADABLE_INPUT,
+} from "./submission-confirm-hook.ts";
+import {
   REPRO_LAYOUT_RULE_LEVELS,
   reproLayoutRules,
 } from "./repro-layout-rule.ts";
@@ -1238,6 +1242,18 @@ const IN_PROCESS_HOOKS: Readonly<Record<string, (io: HookIo) => number>> = {
         `paperlint: the paper-folder-layout hook did not run: ${messageOf(e)}`,
       );
     }
+    return 0;
+  },
+  // Never advisory-silent: an input it cannot read is asked about, not let through.
+  "submission-confirm": ({ stdin, out }) => {
+    const said = ((): ReturnType<typeof submissionConfirm> => {
+      try {
+        return submissionConfirm(stdin(), nodeFiles);
+      } catch {
+        return UNREADABLE_INPUT;
+      }
+    })();
+    if (said !== null) out(`${JSON.stringify(said)}\n`);
     return 0;
   },
 };

@@ -165,6 +165,11 @@ export function paperlintReason(
   ].join("\n");
 }
 
+/** The ask when the hook's input cannot be read at all: it cannot tell, so the person decides. */
+export const UNREADABLE_INPUT: AskOutput = ask(
+  `paperlint could not read this command, so it cannot tell whether it sends a paper to a venue's portal. ${LAST}`,
+);
+
 const DIRECT = `This sends a request straight to a HotCRP site, outside paperlint and its venue check. ${LAST}`;
 
 /** The payload, parsed; null when it is not JSON. */
