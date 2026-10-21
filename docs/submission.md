@@ -111,14 +111,33 @@ The command refuses one thing by itself: `--save` when no build facts describe t
 of other bytes) exits 2 and sends nothing. Rebuild (`paperlint build`) and run the dry run again.
 Everything else, including over the limit, is the person's call.
 
-**The `submission-confirm` hook** (installed by `paperlint init`) makes Claude Code ask the person
-before any `submission new|update` with `--save` or `--submit`, and before any command that names a
-portal's host (a HotCRP-hosted site, or a host a venue preset declares), whatever program it runs.
-The question names, for each send in the command, the paper, the PDF and its sha256, and the body
-pages of the last build. No flag turns it off; it asks even in auto mode. It does not see an upload
-from a script file that names the host only inside the file. The hook catches an agent that runs a
-send without asking; it is not a security boundary against an agent that deliberately disguises a
-send.
+**The `submission-confirm` hook** (installed by `paperlint init`) stops any `submission new|update`
+with `--save` or `--submit` until the person has said yes to that exact PDF. The flow:
+
+1. Run the dry run (the same command without `--save`) and read its venue check.
+2. Ask the person with Claude Code's question tool (`AskUserQuestion`), with the options "Yes, send
+   it" and "No". The question names the paper folder, the PDF and the first 12 characters of its
+   sha256, the body pages, and quotes the dry run's venue check.
+3. On a yes, run the send.
+
+Without a yes, the hook stops the send and tells the agent what to ask, with the sha256 filled in.
+It reads the answer from the session's transcript. The question must contain the PDF's sha256, so a
+yes to an older build or another PDF does not count. One yes lets one send through; the next send
+needs a new question. A send whose PDF cannot be found or told for certain is stopped, and so is
+any send when the transcript cannot be read.
+
+A command that names a portal's host (a HotCRP-hosted site, or a host a venue preset declares),
+whatever program it runs, is stopped outright: it would go around the venue check. Send through
+`paperlint submission`, or run that command yourself. The hook does not see an upload from a script
+file that names the host only inside the file.
+
+The agent writes the question, so a deliberately misleading question still passes. The hook
+catches an agent that sends without asking, or asks about the wrong PDF; it is not a security
+boundary against an agent that deliberately disguises a send.
+
+Why a question and not Claude Code's own permission prompt: in the Claude mobile app that prompt
+shows only the command line, not which paper or PDF it sends. The question shows everything, on
+every client.
 
 ## What it does not do
 
