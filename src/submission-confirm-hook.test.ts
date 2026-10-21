@@ -155,7 +155,7 @@ const HEAD = `${NOT_SENT}, and the person has not said yes to it since the last 
 const LAST = [
   "Ask the person with AskUserQuestion first, then run this command again. In the question, give:",
   "- the paper folder, the PDF and its sha256 as written above (the sha256 must be in the question text),",
-  "- the body pages above, and any line starting with !!,",
+  "- what the lines above say about the build (the body pages, or that it is stale or missing),",
   "- the dry run's venue check, quoted word for word (its `venue rules at their default options` line and every error under it).",
   'Options: "Yes, send it" and "No". One yes lets one send through.',
 ].join("\n");
@@ -634,7 +634,7 @@ test("two sends in one command: each needs a yes naming its own sha256", () => {
   expect(decide(question("q1", `${asks(SHA)} and ${shaB}`, "Yes"))).toBe(null);
 });
 
-test("a transcript that cannot be read, or a line of it that should hold a question, an answer or a send and does not parse: refused", () => {
+test("a transcript that cannot be read, or no transcript: refused", () => {
   const reason = (fs: Files, more?: object) =>
     submissionConfirm(payload(SEND, "/w", more), fs)?.hookSpecificOutput
       .permissionDecisionReason;
@@ -652,24 +652,24 @@ test("a transcript that cannot be read, or a line of it that should hold a quest
   expect(reason(files(""), { transcript_path: "session.jsonl" })).toBe(
     `${NOT_SENT}, and the hook was given no transcript_path, so paperlint cannot see the person's yes.`,
   );
+});
+
+test("a broken transcript line: one that may hold a send uses the yes before it up; any other is skipped", () => {
   const yes = question("q1", asks(SHA), "Yes");
-  expect(reason(files([...yes, '{"type":"tool_use"'].join("\n")))).toBe(
-    `${NOT_SENT}, and paperlint could not check it: line 3 of the transcript does not parse.`,
-  );
-  // A broken line that cannot hold one (real transcripts have them: two entries run together) is
-  // skipped, and so is an entry with no content list.
+  const decide = (lines: readonly string[]) =>
+    withTranscript(lines)?.hookSpecificOutput.permissionDecision ?? "runs";
+  // An entry cut short and run into the next, as real transcripts have them.
+  const cut = (entry: string) => `${entry.slice(0, 80)}${entry}`;
+  const send = bash("b1", SEND)[0] ?? "";
+  const other = bash("b1", "ls -la")[0] ?? "";
+  expect(decide([...yes, cut(send)])).toBe("deny");
+  expect(decide([...yes, cut(other)])).toBe("runs");
+  // A yes asked after it counts again; a line with no content list is skipped.
   expect(
-    reason(
-      files(
-        [
-          '{"type":"queue-operation","content":"x"{"type":"queue-operation"}',
-          JSON.stringify({
-            type: "user",
-            message: { content: "toolUseResult" },
-          }),
-          ...yes,
-        ].join("\n"),
-      ),
-    ),
-  ).toBe(undefined);
+    decide([
+      cut(send),
+      JSON.stringify({ type: "user", message: { content: "toolUseResult" } }),
+      ...yes,
+    ]),
+  ).toBe("runs");
 });

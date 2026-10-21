@@ -35,10 +35,13 @@
  * boundary against an agent that deliberately disguises a send.
  *
  * ── IT FAILS CLOSED ───────────────────────────────────────────────────────────────
- * A send whose PDF cannot be told for certain, a PDF that is not there, no transcript, a transcript
- * line that should hold a question, an answer or a send but does not parse, a payload that is not
- * JSON, a crash: refused, with what went wrong. Lines that cannot hold one are not parsed at all —
- * real transcripts carry the odd broken line (two entries run together).
+ * A send whose PDF cannot be told for certain, a PDF that is not there, no transcript, a payload
+ * that is not JSON, a crash: refused, with what went wrong. A transcript line that is not JSON is
+ * not a reason to refuse every send for the rest of the session — real transcripts have them (an
+ * entry cut short and run into the next, measured in a live one) — so it counts as a send when its
+ * text may hold one, and a yes before it no longer counts. Only lines that may hold a question, an
+ * answer or a send are parsed, and the shell parser runs only on commands that say `submission`:
+ * a transcript of hundreds of megabytes is read in seconds.
  *
  * ── WHY IN-PROCESS, NOT A VIGILES PROGRAM ────────────────────────────────────────
  * It reads the build's facts with this package's own parser and hashes the PDF; a shipped vigiles
@@ -259,7 +262,7 @@ const NOT_SENT = "Not run: this sends the paper to the venue's portal";
 const HOW_TO_ASK = [
   "Ask the person with AskUserQuestion first, then run this command again. In the question, give:",
   "- the paper folder, the PDF and its sha256 as written above (the sha256 must be in the question text),",
-  "- the body pages above, and any line starting with !!,",
+  "- what the lines above say about the build (the body pages, or that it is stale or missing),",
   "- the dry run's venue check, quoted word for word (its `venue rules at their default options` line and every error under it).",
   'Options: "Yes, send it" and "No". One yes lets one send through.',
 ].join("\n");
@@ -295,18 +298,33 @@ interface EarlierSend {
   readonly sends: (command: string) => boolean;
 }
 
+/** Nothing asked or answered: the start, and the state right after a send. */
+const CLEARED: Since = { asked: new Set(), answers: [] };
+
+/** A transcript line that is not JSON. */
+const BROKEN = Symbol("broken");
+
+/**
+ * Whether text may hold a send: the word `submission` once quotes and backslashes are gone — the
+ * shell's (\`submis"sion"\`) or JSON's. Cheap, so the shell parser runs only where it may matter.
+ */
+const mayHoldSend = (text: string): boolean =>
+  text.replace(/["'\\]/gu, "").includes("submission");
+
 /**
  * The person's answers to `AskUserQuestion` since the last send in the transcript, oldest first.
- * Throws on a line that may matter and does not parse.
+ * A line that may matter and is not JSON (real transcripts have them: an entry cut short, run into
+ * the next) counts as a send when it may hold one, so a yes before it is used up — never wrongly
+ * kept; otherwise it is skipped, and a yes lost in it only means asking again.
  */
 export function answersSinceLastSend(
   transcript: string,
   earlier: EarlierSend,
 ): readonly Answer[] {
-  const start: Since = { asked: new Set(), answers: [] };
-  return transcript.split("\n").reduce((since: Since, line, n): Since => {
+  return transcript.split("\n").reduce((since: Since, line): Since => {
     if (!MAY_MATTER.test(line)) return since;
-    const entry = parsedLine(line, n);
+    const entry = parsedLine(line);
+    if (entry === BROKEN) return mayHoldSend(line) ? CLEARED : since;
     const content = fieldOf(fieldOf(entry, "message"), "content");
     return (Array.isArray(content) ? content : []).reduce(
       (s: Since, block: unknown): Since =>
@@ -315,15 +333,15 @@ export function answersSinceLastSend(
           : toolUse(s, block, earlier),
       since,
     );
-  }, start).answers;
+  }, CLEARED).answers;
 }
 
-/** One transcript line, parsed; a line that does not parse throws, naming its number. */
-function parsedLine(line: string, n: number): unknown {
+/** One transcript line, parsed; BROKEN when it is not JSON. */
+function parsedLine(line: string): unknown {
   try {
     return JSON.parse(line);
   } catch {
-    throw new Error(`line ${String(n + 1)} of the transcript does not parse`);
+    return BROKEN;
   }
 }
 
@@ -339,8 +357,9 @@ function toolUse(s: Since, block: unknown, earlier: EarlierSend): Since {
     name === "Bash" &&
     id !== earlier.current &&
     typeof command === "string" &&
+    mayHoldSend(command) &&
     earlier.sends(command);
-  return send ? { asked: new Set(), answers: [] } : s;
+  return send ? CLEARED : s;
 }
 
 /** The person's reply to a question asked since the last send: its answers, kept in order. */
