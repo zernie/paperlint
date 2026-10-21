@@ -90,33 +90,28 @@ until it says `match yes`. Every `--save` comes after the author has read the dr
 
 ## The check before sending
 
-A person confirms every send. To help them decide, `new` and `update` first check the exact PDF
-they are about to send and print the result at the top, in the dry run too:
+A person confirms every send. To help them decide, `new` and `update` first run the venue rules of
+`paperlint lint` (page limit, fonts, page size, body text size, anonymity, and whether the PDF was
+measured at all) on the exact PDF they are about to send, and print the findings as `lint` prints
+them, in the dry run too:
 
 ```
-PREFLIGHT: OVER LIMIT — body pages (up to the references on page 12): 11 > 10, for ExampleConf/full
-  format/page-limit: body pages (up to the references on page 12): 11, over the limit 10 for ExampleConf/full — a desk reject; cut the text
-  limit       ExampleConf/full: body_pages_max 10 — "format": { "kinds": { "full": … } } of the venue preset (read: …/example-conf.jsonc)
-  sent        papers/my-paper/paper.pdf sha2-…
+/home/me/papers/my-paper/paper.tex
+  1:2  error  body pages (up to the references on page 12): 11, over the limit 10 for ExampleConf/full — a desk reject; cut the text  format/page-limit
+
+✖ 1 problem (1 error, 0 warnings)
 ```
 
-The check uses the venue rules of `paperlint lint`: page limit, fonts, page size, body text size,
-anonymity. The first line says:
+With no findings it prints one line, `venue rules: no errors`.
 
-| first line               | means                                                                     |
-| ------------------------ | ------------------------------------------------------------------------- |
-| `PREFLIGHT: OK`          | nothing found                                                             |
-| `PREFLIGHT: OVER LIMIT`  | the body is over the venue's page limit                                   |
-| `PREFLIGHT: FAILS`       | another venue rule found something; each finding is listed                |
-| `PREFLIGHT: NOT CHECKED` | the paper is still being ported to this venue, so its limits do not apply |
-| `PREFLIGHT: STALE FACTS` | the last build is not of this PDF                                         |
+The command refuses one thing by itself: `--save` when no build facts describe this PDF (none, or
+of other bytes) exits 2 and sends nothing. Rebuild (`paperlint build`) and run the dry run again.
+Everything else, including over the limit, is the person's call.
 
-The person reads this block in the dry run and says yes or no; only then does `--save` run. An agent
-asks with a question card that shows the block word for word (the `submission-portal` skill).
-
-The command refuses one thing by itself: `STALE FACTS` with `--save` exits 2 and sends nothing.
-Rebuild (`paperlint build`) and run the dry run again. Everything else, including over the limit,
-is the person's call: a placeholder before an update deadline can be the right one.
+**The `submission-confirm` hook** (installed by `paperlint init`) makes Claude Code ask the person
+before any `submission new|update` with `--save` or `--submit`, and before a request sent straight
+to a HotCRP site. The question names the paper, the PDF and its sha256, and the body pages of the
+last build. No flag turns it off; it asks even in auto mode.
 
 ## What it does not do
 

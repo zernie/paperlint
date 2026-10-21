@@ -50,7 +50,7 @@ question (Ctrl+D) also takes the default.
 | what                                                                 | where                   | when                                                                                                                                                                              |
 | -------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `{ "papersDir": … }` naming your papers directory                    | `paperlint.json`        | only when it is not the default `papers`                                                                                                                                          |
-| the four hook commands, merged in beside your own entries            | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
+| the five hook commands, merged in beside your own entries            | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
 | a GitHub Actions workflow: `npm ci`, then `./node_modules/paperlint` | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                 |
 | a first paper, via `paperlint new`, with its layout's folders        | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
 | one relative symlink per shipped skill, into the installed package   | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
@@ -63,8 +63,8 @@ gets the hooks; the hook commands run files inside `node_modules`, so a fresh cl
 
 **One file, at the project root.** A vigiles hook cannot import code or walk up a tree looking for
 a config; it can only read a path it can spell, and `$CLAUDE_PROJECT_DIR/paperlint.json` is one.
-(`paper-folder-layout` is not a vigiles hook: it runs inside the CLI, because it must call the
-function its rule reports with.) The same file is read by the CLI, the three vigiles hooks,
+(`paper-folder-layout` and `submission-confirm` are not vigiles hooks: they run inside the CLI,
+because they call the package's own code.) The same file is read by the CLI, the three vigiles hooks,
 `eslint-rules/papers.mjs`,
 `lib/skill-trigger-cases.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`. It is optional:
 absent, every reader takes the same defaults.
@@ -149,7 +149,7 @@ are probably smaller now; re-measure before quoting them.
 | of which `typescript` (via `vigiles`)  |      23 MB |
 | of which `vigiles` itself              |       6 MB |
 
-Neither `paperlint lint` nor any of the four hooks loads `@ast-grep` or `typescript` (traced;
+Neither `paperlint lint` nor any of the five hooks loads `@ast-grep` or `typescript` (traced;
 `paper-folder-layout` on 2026-10-12: 223 CommonJS modules, none from either); `vigiles` itself is
 loaded.
 
