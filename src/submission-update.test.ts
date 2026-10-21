@@ -273,26 +273,43 @@ test("facts whose SHA-256 is the sent bytes' hold, wherever the PDF they name is
   expect([r.code, r.errs, r.out[1]]).toStrictEqual([0, [], NO_ERRORS]);
 });
 
-test("a cycle still porting to the venue's template: no venue rule runs, and the check says so rather than no errors", async () => {
-  const r = await run(
-    { sub: "update" },
-    {
-      files: files({
-        paper: {
-          cycles: [
-            {
-              id: "venue-2027",
-              venue: { kind: "preset", extends: "../../venue.jsonc" },
-              opened: "2026-09-09",
-              phase: "porting",
-              submission: { id: 7 },
-            },
-          ],
+/** A paper whose current cycle is still porting to the venue's template, with the facts given. */
+const porting = (factsText?: string | null) =>
+  files({
+    paper: {
+      cycles: [
+        {
+          id: "venue-2027",
+          venue: { kind: "preset", extends: "../../venue.jsonc" },
+          opened: "2026-09-09",
+          phase: "porting",
+          submission: { id: 7 },
         },
-      }),
+      ],
     },
-  );
+    ...(factsText === undefined ? {} : { facts: factsText }),
+  });
+
+test("a cycle still porting to the venue's template: no venue rule runs, and the check says so rather than no errors", async () => {
+  const r = await run({ sub: "update" }, { files: porting() });
   expect(r.out[1]).toBe(
     'venue rules: none run — the current cycle\'s phase is "porting", so the venue\'s format does not apply yet',
   );
+});
+
+test("porting skips the venue rules, not the freshness: --save with facts about other bytes, or none, is still refused", async () => {
+  const stale = await run(
+    { sub: "update", save: true },
+    { files: porting(facts({ sha: "b".repeat(64) })) },
+  );
+  expect([stale.code, stale.errs, stale.seen[0]?.calls]).toStrictEqual([
+    2,
+    [REFUSAL],
+    [],
+  ]);
+  const unbuilt = await run(
+    { sub: "update", save: true },
+    { files: porting(null) },
+  );
+  expect([unbuilt.code, unbuilt.errs]).toStrictEqual([2, [REFUSAL]]);
 });

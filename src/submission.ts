@@ -76,7 +76,7 @@ import {
 } from "./domain/portal-token.ts";
 import { LINE_BREAK, OPAQUE, runText } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
-import { factsPath, parseFactsText } from "./facts-file.ts";
+import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
 import { lineColumn, readPaper } from "./tex-paper.ts";
 import { originOf, type PaperSource } from "./domain/paper-source.ts";
 import type { SourcesCodec } from "./ports/sources-codec.ts";
@@ -518,7 +518,8 @@ async function venueCheck(
   );
   const printed = (await deps.lintText(tex, messages)).trim();
   logAll(printed === "" ? [nothingFound(a.kind)] : printed.split("\n"), deps);
-  const refused = save && (a.kind === "unbuilt" || a.kind === "stale");
+  // Checked on its own: a cycle still porting skips the venue rules, not this.
+  const refused = save && factsOfSent(t.paperDir, bytes, deps) === null;
   if (refused) deps.err(REBUILD_REFUSAL);
   return refused;
 }
@@ -567,19 +568,19 @@ async function runUpdate(
 // ── new ──────────────────────────────────────────────────────────────────────────────
 
 /**
- * The metadata of the PDF that is sent, from the build's facts — the title's fallback; null when
- * there are no facts, or they describe another PDF.
+ * The build's facts about the PDF that is sent — what the title falls back on, and what a `--save`
+ * needs to exist; null when there are none, they do not read, or they describe other bytes.
  */
-function pdfMetadata(
+function factsOfSent(
   paperDir: string,
   pdf: Uint8Array,
-  deps: SubmissionDeps,
-): Readonly<Record<string, string>> | null {
+  deps: Pick<SubmissionDeps, "files">,
+): ReadFacts | null {
   const bytes = bytesAt(deps.files, factsPath(paperDir));
   const facts =
     bytes === null ? null : parseFactsText(new TextDecoder().decode(bytes));
   return facts?.ok === true && facts.value.sha === sha256Hex(pdf)
-    ? facts.value.text.metadata
+    ? facts.value
     : null;
 }
 
@@ -793,7 +794,7 @@ function titleAndAbstract(
   const own = abstractOf(a, deps);
   if (!own.ok) return own;
   const paper = assembledPaper(a.paperDir, deps);
-  const metadata = pdfMetadata(a.paperDir, pdf, deps);
+  const metadata = factsOfSent(a.paperDir, pdf, deps)?.text.metadata ?? null;
   const title = titleOf(
     paper === null
       ? null
