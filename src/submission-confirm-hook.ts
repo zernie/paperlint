@@ -14,20 +14,23 @@
  * run's venue check (paperlint#264). The hook never denies (the person may send over a limit) and
  * never allows (that would skip the person).
  *
- * ── DELIBERATELY BROAD ───────────────────────────────────────────────────────────
- * A send is found in the command's text, whatever program runs it: the words `submission`,
- * `new|update` and `--save|--submit` anywhere, or a portal's host anywhere (a HotCRP-hosted site, or
- * a host a venue preset declares) — `curl`, `node -e`, a script's arguments, a string inside
- * `bash -c` alike. A false ask costs one click; a missed send cannot be taken back. NOT SEEN: an
- * upload from a script file that names the host only inside the file.
+ * ── WHAT IT SEES, AND WHAT IT IS NOT ──────────────────────────────────────────────
+ * A send is judged on the command as the shell reads it (`shellLeaves`: each simple command across
+ * `&&`, `;`, `|`, words unquoted, the commands inside a `bash -c "…"` string too), never on the raw
+ * text: `submission`, `new|update` and `--save|--submit` in one command's words, or a portal's host
+ * in any word (a HotCRP-hosted site, or a host a venue preset declares), whatever program it runs.
+ * A false ask costs one click; a missed send cannot be taken back. NOT SEEN: an upload from a script
+ * file that names the host only inside the file, or words built at run time (`$(…)`).
  *
- * The reason is built from the shell parse (`shellLeaves`: each simple command across `&&`, `;`,
- * `|`, words unquoted) and the CLI's own argument parser (`readSend`), one block per send; a send
- * whose PDF cannot be told for certain is still asked about, and says so.
+ * The hook catches an agent that runs a send without asking; it is not a security boundary against
+ * an agent that deliberately disguises a send.
+ *
+ * The reason is built from the same parse and the CLI's own argument parser (`readSend`), one block
+ * per send; a send whose PDF cannot be told for certain is still asked about, and says so.
  *
  * ── IT FAILS TOWARD THE QUESTION ─────────────────────────────────────────────────
  * The reason is built from files (the PDF, the build's facts); whatever goes wrong there, the ask
- * still goes out, saying what could not be read. A payload that is not JSON is matched as raw text.
+ * still goes out, saying what could not be read. A payload that is not JSON is asked about.
  *
  * ── WHY IN-PROCESS, NOT A VIGILES PROGRAM ────────────────────────────────────────
  * It reads the build's facts with this package's own parser and hashes the PDF; a shipped vigiles
@@ -89,18 +92,35 @@ const ask = (reason: string): AskOutput => ({
 
 const LAST = "Allow only if you have read the dry run's venue check.";
 
-/**
- * A HotCRP-hosted site's name (`<venue>.hotcrp.com`); a self-hosted portal is known by the host its
- * preset declares.
- */
-const HOTCRP_HOST = /hotcrp\.(?:com|net|org)\b/iu;
+/** The domain of HotCRP's hosted sites; a self-hosted portal is known by the host its preset declares. */
+const HOTCRP_HOSTED = "hotcrp.com";
 
 /**
- * Text that may name a host: a URL, or a name of three labels or more (`a.b.org`). The declared
- * hosts are read only then — reading them resolves every preset, which a plain command should not
- * pay for.
+ * Every simple command the shell would run: the command line's own, and those inside a string
+ * argument (`bash -c "…"`), parsed the same way.
  */
-const HOSTLIKE = /:\/\/|[a-z0-9-]+\.[a-z0-9-]+\.[a-z]{2,}/iu;
+function allLeaves(
+  command: string,
+  parse: ConfirmDeps["shellLeaves"],
+): readonly ShellLeaf[] {
+  const top = parse(command);
+  return [
+    ...top,
+    ...top.flatMap((l) =>
+      l.args.filter((a) => /\s/u.test(a)).flatMap((a) => allLeaves(a, parse)),
+    ),
+  ];
+}
+
+/** A `paperlint submission new|update` with `--save` or `--submit`, in the words of one command. */
+function isSend(l: ShellLeaf): boolean {
+  const at = l.args.indexOf("submission");
+  return (
+    at >= 0 &&
+    l.args.slice(at + 1).some((w) => w === "new" || w === "update") &&
+    l.hasFlag("save", "submit")
+  );
+}
 
 /** One `paperlint submission new|update` send: the paper folder and `--pdf` it names; null for the default. */
 export interface Send {
@@ -134,25 +154,25 @@ function sendsIn(
 }
 
 /**
- * What the command sends: a submission through paperlint, anything that names a venue's portal — a
- * HotCRP-hosted site, or a host a venue preset declares (`hosts`), whatever program it runs — or
- * nothing. Found in the command's text, on purpose (the header says why).
+ * What the commands send: a submission through paperlint, anything that names a venue's portal — a
+ * HotCRP-hosted site, or a host a venue preset declares (`hosts`, read only when a word has a dot),
+ * whatever program it runs, as a plain case-insensitive substring of a word — or nothing. Judged on
+ * the shell's words only, never on the raw text.
  */
 export function sendKind(
-  command: string,
+  leaves: readonly ShellLeaf[],
   hosts: () => readonly string[],
 ): "paperlint" | "direct" | null {
-  const inText =
-    /\bsubmission\b/u.test(command) &&
-    /\b(?:new|update)\b/u.test(command) &&
-    /--(?:save|submit)\b/u.test(command);
-  if (inText) return "paperlint";
-  if (HOTCRP_HOST.test(command)) return "direct";
-  if (!HOSTLIKE.test(command)) return null;
-  const text = command.toLowerCase();
-  return hosts().some((h) => h !== "" && text.includes(h.toLowerCase()))
-    ? "direct"
-    : null;
+  if (leaves.some(isSend)) return "paperlint";
+  const words = leaves
+    .flatMap((l) => [l.head, ...l.args])
+    .map((w) => w.toLowerCase())
+    .filter((w) => w.includes("."));
+  if (words.length === 0) return null;
+  const known = [HOTCRP_HOSTED, ...hosts()]
+    .map((h) => h.toLowerCase())
+    .filter((h) => h !== "");
+  return words.some((w) => known.some((h) => w.includes(h))) ? "direct" : null;
 }
 
 /** The body pages the build counted: up to the references or appendix, or banal's count. */
@@ -215,7 +235,7 @@ function sendLines(
   ];
 }
 
-/** A send found in the text that the parse cannot resolve to its words. */
+/** A send whose PDF cannot be told for certain. */
 const UNRESOLVED =
   "could not resolve which PDF this send uploads — check the dry run";
 
@@ -266,33 +286,45 @@ function parsed(stdin: string): unknown {
 
 /**
  * The hook on one payload, as Claude Code sends it on stdin: the ask, or null for a command that
- * sends nothing. Never throws.
+ * sends nothing. Never throws: what it cannot read, it asks about.
  */
 export function submissionConfirm(
   stdin: string,
   deps: ConfirmDeps,
 ): AskOutput | null {
   const payload = parsed(stdin);
+  if (payload === null) return UNREADABLE_INPUT;
   const raw = fieldOf(fieldOf(payload, "tool_input"), "command");
-  // A payload that is not JSON is matched as it came: the ask must not depend on parsing it.
-  const command = typeof raw === "string" ? raw : payload === null ? stdin : "";
+  const command = typeof raw === "string" ? raw : "";
   const given = fieldOf(payload, "cwd");
   const cwd =
     typeof given === "string" && isAbsolute(given) ? given : resolve(".");
+  const kind = kindOf(command, cwd, deps);
+  if (kind === null) return null;
+  if (kind !== "paperlint" && kind !== "direct") return ask(kind.failed);
+  if (kind === "direct") return ask(DIRECT);
   try {
-    const leaves = deps.shellLeaves(command);
-    const kind = sendKind(command, () => deps.portalHosts(cwd));
-    if (kind === null) return null;
-    return ask(
-      kind === "direct" ? DIRECT : paperlintReason(command, leaves, cwd, deps),
-    );
+    return ask(paperlintReason(command, deps.shellLeaves(command), cwd, deps));
   } catch (e) {
-    return ask(failedReason(command, messageOf(e)));
+    return ask(
+      `${SENDS} paperlint could not say what will be sent: ${messageOf(e)}. ${LAST}`,
+    );
   }
 }
 
-/** Why the person is asked when reading what the command sends failed: the ask still goes out. */
-const failedReason = (command: string, why: string): string =>
-  sendKind(command, () => []) === "paperlint"
-    ? `${SENDS} paperlint could not say what will be sent: ${why}. ${LAST}`
-    : `paperlint could not read the venue portals this project declares (${why}), so it cannot tell whether this request sends to one. ${LAST}`;
+/** What the command sends, or — when reading it failed — the reason to ask anyway. */
+function kindOf(
+  command: string,
+  cwd: string,
+  deps: ConfirmDeps,
+): ReturnType<typeof sendKind> | { readonly failed: string } {
+  try {
+    return sendKind(allLeaves(command, deps.shellLeaves), () =>
+      deps.portalHosts(cwd),
+    );
+  } catch (e) {
+    return {
+      failed: `paperlint could not tell what this command sends (${messageOf(e)}). ${LAST}`,
+    };
+  }
+}

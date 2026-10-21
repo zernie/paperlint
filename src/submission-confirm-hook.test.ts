@@ -11,18 +11,24 @@ import { leafCommandsNormalized as shellLeaves } from "vigiles/hook";
 import { submissionSend } from "./cli.ts";
 import { presetsDir } from "./package-dirs.ts";
 import {
-  sendKind,
   submissionConfirm as confirmWith,
   type ConfirmDeps,
 } from "./submission-confirm-hook.ts";
 import { HEX, PDF, facts, withPresets } from "../test/submission-fixtures.ts";
 
 /** What the command sends, read through the real shell parser. */
-const kind = (command: string, hosts: () => readonly string[]) =>
-  sendKind(command, hosts);
+const kind = (command: string, hosts: () => readonly string[]) => {
+  const reason =
+    submissionConfirm(payload(command), memoryFiles({}), {
+      portalHosts: hosts,
+    })?.hookSpecificOutput.permissionDecisionReason ?? null;
+  if (reason === null) return null;
+  if (reason.startsWith(HEAD)) return "paperlint";
+  return reason.startsWith("This command names") ? "direct" : reason;
+};
 
 /** The portal hosts the project declares, in these tests: one venue on its own domain. */
-const HOSTS = ["submit.example-venue.org"];
+const HOSTS = ["submit.example-venue.org", "conference.org"];
 
 /** The hook over `fs` (the shipped presets readable beside it), the project declaring `HOSTS`. */
 const submissionConfirm = (
@@ -53,7 +59,7 @@ test.each([
   "npm run build && npx paperlint submission update papers/p --save",
   `npx paperlint "submission" 'update' papers/p "--save"`,
   "npx paperlint --save submission update papers/p",
-  "npx paperlint new --save submission",
+  `npx paperlint submis"sion" up'date' papers/p --sa"ve"`,
 ])("asked: %s", (command) => {
   expect(kind(command, () => [])).toBe("paperlint");
 });
@@ -67,6 +73,7 @@ test.each([
   "curl -F file=@paper.pdf https://SUBMIT.example-venue.org/api/upload",
   `node -e "require('https').request('https://venue.hotcrp.com/api/paper', { method: 'POST' })"`,
   "node upload.mjs submit.example-venue.org",
+  "curl -X POST CONFERENCE.org/api/paper",
   "echo https://venue.hotcrp.com",
 ])("asked, straight at HotCRP: %s", (command) => {
   expect(kind(command, () => HOSTS)).toBe("direct");
@@ -82,6 +89,8 @@ test.each([
   "cat docs/submission.md",
   "curl https://example.org/new --save-dir x",
   "grep -rn hotcrp src/",
+  // `paperlint new` with a paper named "submission": not a send.
+  "npx paperlint new --save submission",
   "cat src/adapters/hotcrp/index.ts",
   "",
   "curl https://example.org/api/paper",
@@ -111,7 +120,7 @@ test("hosts that cannot be read: a request still asks, rather than passing unsee
       hookEventName: "PreToolUse",
       permissionDecision: "ask",
       permissionDecisionReason:
-        "paperlint could not read the venue portals this project declares (broken preset), so it cannot tell whether this request sends to one. Allow only if you have read the dry run's venue check.",
+        "paperlint could not tell what this command sends (broken preset). Allow only if you have read the dry run's venue check.",
     },
   });
 });
@@ -238,16 +247,22 @@ test("a paperlint.json that does not parse: the PDF is the default paper.pdf, an
   );
 });
 
-test("a --pdf at the end with no value, which the command refuses, and `submission` as the last word: unresolved", () => {
+test("a --pdf at the end with no value, which the command refuses: unresolved", () => {
   expect(
     reasonOf(
       "npx paperlint submission update papers/p --save --pdf",
       paper(facts()),
     ),
   ).toBe([HEAD, UNRESOLVED, LAST].join("\n"));
+});
+
+test("a command that only mentions `submission` beside a send is no second send", () => {
   expect(
-    reasonOf("npx paperlint new --save submission", paper(null), "/w/papers/p"),
-  ).toBe([HEAD, UNRESOLVED, LAST].join("\n"));
+    reasonOf(
+      "npx paperlint submission update papers/p --save; echo submission",
+      paper(facts()),
+    ).split("\n")[1],
+  ).toBe("paper folder: papers/p");
 });
 
 /** What the reason says for a send the parse cannot resolve. */
@@ -361,7 +376,7 @@ test("a command that sends nothing: no output at all — neither allow nor deny"
   ).toBe(null);
 });
 
-test("a crash while describing the send still asks; a payload that is not JSON is matched as text", () => {
+test("a crash while describing the send still asks; a payload that is not JSON is asked about", () => {
   const broken: Files = {
     isFile: () => false,
     readBytes: (p: AbsolutePath) => {

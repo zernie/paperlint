@@ -116,7 +116,9 @@ before any `submission new|update` with `--save` or `--submit`, and before any c
 portal's host (a HotCRP-hosted site, or a host a venue preset declares), whatever program it runs.
 The question names, for each send in the command, the paper, the PDF and its sha256, and the body
 pages of the last build. No flag turns it off; it asks even in auto mode. It does not see an upload
-from a script file that names the host only inside the file.
+from a script file that names the host only inside the file. The hook catches an agent that runs a
+send without asking; it is not a security boundary against an agent that deliberately disguises a
+send.
 
 ## What it does not do
 
