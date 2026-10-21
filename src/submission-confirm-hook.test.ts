@@ -19,7 +19,7 @@ import { HEX, PDF, facts, withPresets } from "../test/submission-fixtures.ts";
 
 /** What the command sends, read through the real shell parser. */
 const kind = (command: string, hosts: () => readonly string[]) =>
-  sendKind(command, shellLeaves(command), hosts);
+  sendKind(command, hosts);
 
 /** The portal hosts the project declares, in these tests: one venue on its own domain. */
 const HOSTS = ["submit.example-venue.org"];
@@ -65,6 +65,9 @@ test.each([
   `node -e "fetch('https://venue.hotcrp.com/api/paper', { method: 'POST' })"`,
   `python3 -c "import requests; requests.post('https://venue.hotcrp.com/api/paper')"`,
   "curl -F file=@paper.pdf https://SUBMIT.example-venue.org/api/upload",
+  `node -e "require('https').request('https://venue.hotcrp.com/api/paper', { method: 'POST' })"`,
+  "node upload.mjs submit.example-venue.org",
+  "echo https://venue.hotcrp.com",
 ])("asked, straight at HotCRP: %s", (command) => {
   expect(kind(command, () => HOSTS)).toBe("direct");
 });
@@ -78,7 +81,8 @@ test.each([
   "git log --grep submission",
   "cat docs/submission.md",
   "curl https://example.org/new --save-dir x",
-  "echo https://venue.hotcrp.com",
+  "grep -rn hotcrp src/",
+  "cat src/adapters/hotcrp/index.ts",
   "",
   "curl https://example.org/api/paper",
 ])("silent: %s", (command) => {
@@ -341,7 +345,7 @@ test("straight at HotCRP: asked, naming that paperlint's check is skipped", () =
       paper(null),
     ),
   ).toBe(
-    "This sends a request straight to a HotCRP site, outside paperlint and its venue check. Allow only if you have read the dry run's venue check.",
+    "This command names a venue's submission portal, so it may send to it outside paperlint and its venue check. Allow only if you have read the dry run's venue check.",
   );
 });
 

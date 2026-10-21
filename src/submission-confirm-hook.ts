@@ -15,12 +15,15 @@
  * never allows (that would skip the person).
  *
  * ── DELIBERATELY BROAD ───────────────────────────────────────────────────────────
- * A send is found two ways, and either is enough: the command parsed as a shell parses it (each
- * simple command across `&&`, `;`, `|`, its program by basename, its words unquoted — the
- * `shellLeaves`), and the words anywhere in its text, which also catches a command inside a
- * string (`bash -c "…"`). A false ask costs one click; a missed send cannot be taken back. The
- * reason is built from the parse only, one block per send; a send the parse cannot resolve is
- * still asked about, and says so.
+ * A send is found in the command's text, whatever program runs it: the words `submission`,
+ * `new|update` and `--save|--submit` anywhere, or a portal's host anywhere (a HotCRP-hosted site, or
+ * a host a venue preset declares) — `curl`, `node -e`, a script's arguments, a string inside
+ * `bash -c` alike. A false ask costs one click; a missed send cannot be taken back. NOT SEEN: an
+ * upload from a script file that names the host only inside the file.
+ *
+ * The reason is built from the shell parse (`shellLeaves`: each simple command across `&&`, `;`,
+ * `|`, words unquoted) and the CLI's own argument parser (`readSend`), one block per send; a send
+ * whose PDF cannot be told for certain is still asked about, and says so.
  *
  * ── IT FAILS TOWARD THE QUESTION ─────────────────────────────────────────────────
  * The reason is built from files (the PDF, the build's facts); whatever goes wrong there, the ask
@@ -86,17 +89,18 @@ const ask = (reason: string): AskOutput => ({
 
 const LAST = "Allow only if you have read the dry run's venue check.";
 
-/** A program that makes an HTTP request, by basename. */
-const CLIENTS: ReadonlySet<string> = new Set([
-  "curl",
-  "wget",
-  "http",
-  "https",
-  "xh",
-]);
+/**
+ * A HotCRP-hosted site's name (`<venue>.hotcrp.com`); a self-hosted portal is known by the host its
+ * preset declares.
+ */
+const HOTCRP_HOST = /hotcrp\.(?:com|net|org)\b/iu;
 
-/** The same programs, as a word in the command's text (inside a string too). */
-const HTTP_CLIENT = /(?:^|[\s;&|(`$/])(?:curl|wget|https?|xh)(?:\s|$)/u;
+/**
+ * Text that may name a host: a URL, or a name of three labels or more (`a.b.org`). The declared
+ * hosts are read only then — reading them resolves every preset, which a plain command should not
+ * pay for.
+ */
+const HOSTLIKE = /:\/\/|[a-z0-9-]+\.[a-z0-9-]+\.[a-z]{2,}/iu;
 
 /** One `paperlint submission new|update` send: the paper folder and `--pdf` it names; null for the default. */
 export interface Send {
@@ -129,21 +133,13 @@ function sendsIn(
   });
 }
 
-/** Whether the command makes an HTTP request: a client program run, or named in its text. */
-const makesRequest = (command: string, leaves: readonly ShellLeaf[]): boolean =>
-  leaves.some((l) => CLIENTS.has(l.head)) ||
-  HTTP_CLIENT.test(command) ||
-  /\bfetch\s*\(/u.test(command) ||
-  /\bpython[\d.]*\b[\s\S]*\b(?:requests|urllib)\b/u.test(command);
-
 /**
- * What the command sends: a submission through paperlint, a request straight at a venue's portal —
- * a HotCRP site, or a host a venue preset declares (`hosts`, read only for a command that makes a
- * request) — or nothing. Found in the parse or in the text (the header says why).
+ * What the command sends: a submission through paperlint, anything that names a venue's portal — a
+ * HotCRP-hosted site, or a host a venue preset declares (`hosts`), whatever program it runs — or
+ * nothing. Found in the command's text, on purpose (the header says why).
  */
 export function sendKind(
   command: string,
-  leaves: readonly ShellLeaf[],
   hosts: () => readonly string[],
 ): "paperlint" | "direct" | null {
   const inText =
@@ -151,10 +147,10 @@ export function sendKind(
     /\b(?:new|update)\b/u.test(command) &&
     /--(?:save|submit)\b/u.test(command);
   if (inText) return "paperlint";
-  if (!makesRequest(command, leaves)) return null;
+  if (HOTCRP_HOST.test(command)) return "direct";
+  if (!HOSTLIKE.test(command)) return null;
   const text = command.toLowerCase();
-  return text.includes("hotcrp") ||
-    hosts().some((h) => h !== "" && text.includes(h.toLowerCase()))
+  return hosts().some((h) => h !== "" && text.includes(h.toLowerCase()))
     ? "direct"
     : null;
 }
@@ -257,7 +253,7 @@ export const UNREADABLE_INPUT: AskOutput = ask(
 const SENDS =
   "This sends the paper to the venue's portal (paperlint submission with --save or --submit).";
 
-const DIRECT = `This sends a request straight to a HotCRP site, outside paperlint and its venue check. ${LAST}`;
+const DIRECT = `This command names a venue's submission portal, so it may send to it outside paperlint and its venue check. ${LAST}`;
 
 /** The payload, parsed; null when it is not JSON. */
 function parsed(stdin: string): unknown {
@@ -285,7 +281,7 @@ export function submissionConfirm(
     typeof given === "string" && isAbsolute(given) ? given : resolve(".");
   try {
     const leaves = deps.shellLeaves(command);
-    const kind = sendKind(command, leaves, () => deps.portalHosts(cwd));
+    const kind = sendKind(command, () => deps.portalHosts(cwd));
     if (kind === null) return null;
     return ask(
       kind === "direct" ? DIRECT : paperlintReason(command, leaves, cwd, deps),
@@ -297,6 +293,6 @@ export function submissionConfirm(
 
 /** Why the person is asked when reading what the command sends failed: the ask still goes out. */
 const failedReason = (command: string, why: string): string =>
-  sendKind(command, [], () => []) === "paperlint"
+  sendKind(command, () => []) === "paperlint"
     ? `${SENDS} paperlint could not say what will be sent: ${why}. ${LAST}`
     : `paperlint could not read the venue portals this project declares (${why}), so it cannot tell whether this request sends to one. ${LAST}`;
