@@ -242,7 +242,7 @@ test("runHook paper-folder-layout: in-process, on the real disk — a refusal on
   );
 });
 
-test("runHook submission-confirm: in-process — an ask on stdout for a send, nothing for anything else, and an ask when its input cannot be read", () => {
+test("runHook submission-confirm: in-process — a refusal on stdout for a send with no yes, nothing for anything else, and a refusal when its input cannot be read", () => {
   const hook = (stdin: () => string) => {
     const out: string[] = [];
     const code = runHook("submission-confirm", {
@@ -260,7 +260,7 @@ test("runHook submission-confirm: in-process — an ask on stdout for a send, no
   assert.equal(send.code, 0);
   assert.match(
     send.out.join(""),
-    /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"This sends the paper to the venue's portal/,
+    /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Not run: this sends the paper to the venue's portal/,
   );
   assert.deepEqual(hook(command("npx paperlint submission show nope")), {
     code: 0,
@@ -272,7 +272,7 @@ test("runHook submission-confirm: in-process — an ask on stdout for a send, no
   assert.equal(unreadable.code, 0);
   assert.match(
     unreadable.out.join(""),
-    /"permissionDecision":"ask","permissionDecisionReason":"paperlint could not read this command/,
+    /"permissionDecision":"deny","permissionDecisionReason":"Not run: paperlint could not read this command/,
   );
 });
 
