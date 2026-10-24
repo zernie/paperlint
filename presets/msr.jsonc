@@ -45,18 +45,25 @@
   // on the abstract and paper days themselves; the portal moved both later on or before 2026-10-19.
   "deadlines": [
     {
-      "what": "submission",
+      "what": "registration",
       "at": "2026-10-21T11:59:59Z",
       "source": "portal",
       "url": "https://msr2027.hotcrp.com/deadlines",
-      "read": "2026-10-19",
+      "read": "2026-10-24",
     },
     {
-      "what": "resubmission",
+      "what": "submission",
       "at": "2026-10-24T11:59:59Z",
       "source": "portal",
       "url": "https://msr2027.hotcrp.com/deadlines",
-      "read": "2026-10-19",
+      "read": "2026-10-24",
+    },
+    {
+      "what": "resubmission",
+      "at": "2026-10-26T11:59:59Z",
+      "source": "portal",
+      "url": "https://msr2027.hotcrp.com/deadlines",
+      "read": "2026-10-24",
     },
   ],
 
