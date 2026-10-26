@@ -13,7 +13,9 @@
  *
  * A second test builds three papers through `paperlint build` itself and compares the record the command
  * wrote with the snapshot: the wiring (the flags, the passes handed to the recorder) is the one that
- * produced the truth.
+ * produced the truth. `p1` is not one of them: it cites a key bibtex never read (its inline
+ * `filecontents*` entry is not the `refs.bib` on disk), so its final log says "There were undefined
+ * references" and `paperlint build` fails it — a failed build records nothing.
  *
  *   npm run test:e2e:tex
  */
@@ -150,7 +152,7 @@ function consumerOf(paper: string): string {
 describe.skipIf(missing("pdflatex and bibtex", hasTex))(
   "`paperlint build` writes the record the snapshot holds",
   () => {
-    it.each(["v3-declared", "v8-jobname", "p1"])(
+    it.each(["v3-declared", "v8-jobname", "v25-string-differs"])(
       "%s: _build/sources.json is tex-truth.json",
       async (paper) => {
         const work = consumerOf(paper);
@@ -170,5 +172,22 @@ describe.skipIf(missing("pdflatex and bibtex", hasTex))(
         ).toBe(readFileSync(join(FIXTURES, paper, TRUTH), "utf8"));
       },
     );
+    it("p1: a citation bibtex never read fails the build on the final log's summary, and nothing is recorded", async () => {
+      const work = consumerOf("p1");
+      const built = await buildIn(work, ["papers/p1"], {
+        asked: [],
+        checkReferences: referencesChecker({ today: () => "2026-09-27" }),
+      });
+      expect(built.status, built.out).toBe(1);
+      expect(built.out).toContain(
+        "✗ compile: pdflatex exited 0, but its final log carries a warning that fails the build",
+      );
+      expect(built.out).toContain(
+        "        LaTeX Warning: There were undefined references.",
+      );
+      expect(
+        existsSync(join(work, "papers", "p1", "_build", "sources.json")),
+      ).toBe(false);
+    });
   },
 );

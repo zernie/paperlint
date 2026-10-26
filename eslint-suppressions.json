@@ -899,7 +899,7 @@
   },
   "src/latex-log.ts": {
     "functional/immutable-data": {
-      "count": 16
+      "count": 14
     },
     "functional/no-let": {
       "count": 1

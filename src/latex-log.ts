@@ -19,25 +19,19 @@
  * must therefore read the log as `latin1`, so one character is one byte and `length` counts what
  * TeX counted.
  */
+import { filter, map, pipe, range, unique } from "remeda";
 
 /** TeX Live's `max_print_line`. A physical log line of exactly this many bytes was broken by TeX. */
 export const MAX_PRINT_LINE = 79;
 
 /**
- * Log lines that ask for another pass, or report on references. Each is a documented message,
- * not a guess about wording:
+ * Log lines that ask for another pass. Each is a documented message, not a guess about wording:
  *   - `rerun-requested`   — any "Rerun to get …" (LaTeX core, natbib, hyperref's outlines, …)
  *   - `labels-changed`    — "LaTeX Warning: Label(s) may have changed."
  *   - `rerunfilecheck`    — "Package rerunfilecheck Warning: File `…' has changed."
- *   - `undefined-references` / `undefined-citations` — the end-of-run summaries. These do NOT
- *     request a rerun by themselves: on a converged document they mean a genuinely undefined key.
+ * The end-of-run summaries about references are not markers: they fail the build (`FAILING_WARNINGS`).
  */
-export type LogMarker =
-  | "rerun-requested"
-  | "labels-changed"
-  | "rerunfilecheck"
-  | "undefined-references"
-  | "undefined-citations";
+export type LogMarker = "rerun-requested" | "labels-changed" | "rerunfilecheck";
 
 /**
  * Rejoin the lines TeX broke at column 79. A line of exactly 79 bytes continues on the next one.
@@ -71,20 +65,115 @@ export function logMarkers(lines: readonly string[]): LogMarker[] {
       found.add("labels-changed");
     if (line.startsWith("Package rerunfilecheck Warning:"))
       found.add("rerunfilecheck");
-    if (line.includes("There were undefined references"))
-      found.add("undefined-references");
-    if (line.includes("There were undefined citations"))
-      found.add("undefined-citations");
   }
   const order: LogMarker[] = [
     "rerun-requested",
     "labels-changed",
     "rerunfilecheck",
-    "undefined-references",
-    "undefined-citations",
   ];
   return order.filter((m) => found.has(m));
 }
+
+/** A log warning that fails the build: what it is called, why it fails, and the lines that carry it. */
+export interface FailingWarning {
+  readonly id: string;
+  /** One line a human reads before the quoted log lines. */
+  readonly reason: string;
+  /** Whether this logical line (after `unwrapLog`) carries it. */
+  readonly matches: (line: string) => boolean;
+}
+
+/**
+ * Does `prefix` start one of the PHYSICAL lines this logical line was joined from? `unwrapLog` joins
+ * only lines of exactly 79 bytes, so every physical line starts at a multiple of 79. That keeps a
+ * marker found after unwrapLog's false join (a 79-byte line by itself, then the marker) and still
+ * ignores the same words in the middle of a line — an overfull box quoting the text it set.
+ */
+const startsPhysicalLine = (line: string, prefix: string): boolean =>
+  range(0, Math.floor(line.length / MAX_PRINT_LINE) + 1).some((k) =>
+    line.startsWith(prefix, k * MAX_PRINT_LINE),
+  );
+
+/**
+ * 🔴 THE WARNINGS THAT FAIL THE BUILD — like an ESLint rule at "error". pdflatex exits 0 on each of
+ * them and writes a PDF that is wrong: a character missing, `??` or `[?]` in the text, a reference
+ * that may point at the wrong place. Only the log of the FINAL pass is judged (`latex-loop.ts`):
+ * before the rerun every reference is undefined by construction.
+ *
+ * WHY THESE FOUR. Each makes the PDF wrong for a reader, and turning all four on was measured on four
+ * real papers (their final logs of 2026-10-26): 0 hits each, so no correct paper turns red. Left out: overfull boxes (cosmetic,
+ * nearly every paper has some, and the pdf/* rules check the margins), font shape substitution
+ * (usually harmless), "Rerun to get" (the loop already reruns). Those never fail a build.
+ *
+ * Adding one is one entry here, plus its row of cases in `latex-log.harness.ts` (the harness does
+ * not type-check without it).
+ *
+ * `lost-character`: TeX prints "Missing character: There is no X in font F!" when
+ * `\tracinglostchars` > 0; LaTeX's format sets it to 2 (TeX Live 2026, `latex.ltx`), and pdflatex
+ * still exits 0. A paper that sets it to 0 silences the line, and this check with it. At 3 or more
+ * TeX makes it an error, and the build fails on the exit code instead.
+ */
+export const FAILING_WARNINGS = [
+  {
+    id: "lost-character",
+    reason:
+      "the font has no glyph for this character, so pdflatex left it out of the PDF",
+    matches: (l: string) =>
+      startsPhysicalLine(l, "Missing character: There is no "),
+  },
+  {
+    id: "undefined-references",
+    reason:
+      "a \\ref — or, without natbib, a \\cite — names what no pass defined, so the PDF prints ?? or [?] in its place",
+    matches: (l: string) => l.includes("There were undefined references"),
+  },
+  {
+    id: "undefined-citations",
+    reason:
+      "a \\cite names a key the bibliography does not hold, so the PDF prints [?] in its place (natbib's summary)",
+    matches: (l: string) => l.includes("There were undefined citations"),
+  },
+  {
+    id: "multiply-defined-labels",
+    reason: "two \\label share a name, so a \\ref may point at the wrong one",
+    matches: (l: string) => l.includes("There were multiply-defined labels"),
+  },
+] as const satisfies readonly FailingWarning[];
+
+export type FailingWarningId = (typeof FAILING_WARNINGS)[number]["id"];
+
+/** One distinct log line, quoted as TeX wrote it, and how many times the log carries it. */
+export interface Quote {
+  readonly text: string;
+  readonly times: number;
+}
+
+/** A failing warning the log carries, with the lines that carry it. */
+export interface FailingHit {
+  readonly id: FailingWarningId;
+  readonly reason: string;
+  readonly quotes: readonly Quote[];
+}
+
+const quotesOf = (matched: readonly string[]): readonly Quote[] =>
+  map(unique(matched), (text) => ({
+    text,
+    times: matched.filter((l) => l === text).length,
+  }));
+
+/** Which of `FAILING_WARNINGS` the log carries, in table order, each line quoted once with a count. */
+export const failingWarnings = (
+  lines: readonly string[],
+): readonly FailingHit[] =>
+  pipe(
+    FAILING_WARNINGS,
+    map((w) => ({
+      id: w.id,
+      reason: w.reason,
+      quotes: quotesOf(lines.filter((l) => w.matches(l))),
+    })),
+    filter((h) => h.quotes.length > 0),
+  );
 
 /**
  * Is this the line a TeX error starts on? Two spellings exist and `-file-line-error` produces

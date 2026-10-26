@@ -6,7 +6,7 @@
  * marker that TeX broke at column 79.
  */
 import { createChecker } from "../lib/check.ts";
-import type { LogMarker } from "./latex-log.ts";
+import type { FailingWarningId, LogMarker } from "./latex-log.ts";
 
 const {
   unwrapLog,
@@ -16,6 +16,8 @@ const {
   bibtexExcerpt,
   auxBib,
   MAX_PRINT_LINE,
+  FAILING_WARNINGS,
+  failingWarnings,
 } = await import("./latex-log.ts");
 
 const check = createChecker();
@@ -75,16 +77,14 @@ const firstPass = [
 ];
 const m = logMarkers(firstPass);
 check(
-  "every documented marker is recognised",
-  (
-    [
+  "every documented marker is recognised, and the end-of-run summaries are not markers (they fail the build: FAILING_WARNINGS)",
+  JSON.stringify(m) ===
+    JSON.stringify([
       "rerun-requested",
       "labels-changed",
       "rerunfilecheck",
-      "undefined-references",
-      "undefined-citations",
-    ] satisfies LogMarker[]
-  ).every((k) => m.includes(k)),
+    ] satisfies LogMarker[]),
+  m,
 );
 check(
   "a clean log carries no markers",
@@ -92,11 +92,6 @@ check(
     "This is pdfTeX",
     "Output written on paper.pdf (1 page, 1234 bytes).",
   ]).length === 0,
-);
-// Guards: matching the documented summary line rather than the word 'undefined'.
-check(
-  "a single reference warning is not the end-of-run summary",
-  !logMarkers(firstPass.slice(0, 1)).includes("undefined-references"),
 );
 
 // ── error excerpt ───────────────────────────────────────────────────────────────────────
@@ -246,6 +241,142 @@ check(
   );
 }
 
+// ── warnings that fail the build ────────────────────────────────────────────────────────
+// Every entry of FAILING_WARNINGS has its two halves here — log lines it must find, and lines it
+// must not — and `satisfies Record<FailingWarningId, …>` makes a table entry without a row here a
+// type error; the first check below makes it a red run as well.
+// The lost-character line is copied from a real TeX Live 2026 run (2026-10-26): `\char"FF` in
+// cmr10 under `\documentclass{article}`, which sets `\tracinglostchars=2`; pdflatex exited 0.
+// The log is read as latin1, so the byte 0xFF is the one character "\xff".
+const LOST = "Missing character: There is no \xff in font cmr10!";
+const FAILING_CASES = {
+  "lost-character": {
+    fires: [
+      LOST,
+      "Missing character: There is no \xe2 in font LinLibertineT-tlf-ot1!",
+    ],
+    quiet: [
+      "Overfull \\hbox (1.2pt too wide) in paragraph at lines 4--5",
+      "LaTeX Font Warning: Font shape `OT1/cmr/bx/sc' undefined",
+      "LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.",
+      "LaTeX Warning: There were undefined references.",
+      // The words inside an unrelated longer line — an overfull box quoting the text it set.
+      "[]\\OT1/cmr/m/n/10 Missing character: There is no x in font cmr10!",
+    ],
+  },
+  // The three end-of-run summaries, worded as latex.ltx and natbib.sty print them (TeX Live 2026);
+  // LaTeX core has no "undefined citations" summary — an undefined \cite counts as a reference. Guards: matching the
+  // summary, not the word "undefined" — one reference warning per \ref is printed on EVERY pass
+  // before the rerun, and is not the summary.
+  "undefined-references": {
+    fires: ["LaTeX Warning: There were undefined references."],
+    quiet: [
+      "LaTeX Warning: Reference `sec:intro' on page 1 undefined on input line 4.",
+      "Package natbib Warning: There were undefined citations.",
+      "LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.",
+    ],
+  },
+  "undefined-citations": {
+    fires: ["Package natbib Warning: There were undefined citations."],
+    quiet: [
+      "LaTeX Warning: Citation `knuth84' on page 1 undefined on input line 7.",
+      "Package natbib Warning: Citation `knuth84' on page 1 undefined on input line 7.",
+      "LaTeX Warning: There were undefined references.",
+    ],
+  },
+  "multiply-defined-labels": {
+    fires: ["LaTeX Warning: There were multiply-defined labels."],
+    quiet: [
+      "LaTeX Warning: Label `sec:intro' multiply defined.",
+      "LaTeX Warning: There were undefined references.",
+    ],
+  },
+} satisfies Record<
+  FailingWarningId,
+  { readonly fires: readonly string[]; readonly quiet: readonly string[] }
+>;
+check(
+  "every failing warning in the table has a row of cases, and every row is in the table",
+  JSON.stringify(FAILING_WARNINGS.map((w) => w.id).sort()) ===
+    JSON.stringify(Object.keys(FAILING_CASES).sort()),
+);
+for (const [id, c] of Object.entries(FAILING_CASES)) {
+  for (const line of c.fires)
+    check(
+      `${id}: fires on ${JSON.stringify(line)}`,
+      failingWarnings(["(./paper.aux)", line, ""]).some((h) => h.id === id),
+      () => failingWarnings(["(./paper.aux)", line, ""]),
+    );
+  for (const line of c.quiet)
+    check(
+      `${id}: quiet on ${JSON.stringify(line)}`,
+      !failingWarnings(["(./paper.aux)", line, ""]).some((h) => h.id === id),
+      () => failingWarnings(["(./paper.aux)", line, ""]),
+    );
+}
+check(
+  "a clean log carries no failing warning",
+  failingWarnings([
+    "This is pdfTeX",
+    "Output written on paper.pdf (1 page, 1234 bytes).",
+  ]).length === 0,
+);
+{
+  const log = [
+    LOST,
+    "(./paper.aux)",
+    LOST,
+    "Missing character: There is no \xfe in font cmtt10!",
+    LOST,
+  ];
+  const hits = failingWarnings(log);
+  check(
+    "a lost character quotes each distinct line once, in order, with how many times TeX printed it",
+    JSON.stringify(hits) ===
+      JSON.stringify([
+        {
+          id: "lost-character",
+          reason: FAILING_WARNINGS[0].reason,
+          quotes: [
+            { text: LOST, times: 3 },
+            {
+              text: "Missing character: There is no \xfe in font cmtt10!",
+              times: 1,
+            },
+          ],
+        },
+      ]),
+    hits,
+  );
+}
+{
+  // A long font name pushes the line past column 79: TeX breaks it, and unwrapLog rejoins it.
+  const long =
+    "Missing character: There is no \xff in font LinLibertineT-tlf-ts1-scaled-1000-extended!";
+  const split = [long.slice(0, MAX_PRINT_LINE), long.slice(MAX_PRINT_LINE)];
+  check(
+    "a lost-character line TeX split at column 79 is rejoined and found, quoted whole",
+    split[0]?.length === 79 &&
+      JSON.stringify(
+        failingWarnings(unwrapLog(split.join("\n")))[0]?.quotes,
+      ) === JSON.stringify([{ text: long, times: 1 }]),
+  );
+}
+{
+  // A line of exactly 79 bytes by itself is joined to the next one (unwrapLog's documented false
+  // join): the marker then starts at byte 79 of the joined line, where the physical line began.
+  const before = "x".repeat(MAX_PRINT_LINE);
+  const joined = unwrapLog([before, LOST, ""].join("\n"));
+  check(
+    "a lost-character line glued by a false join to a 79-byte line before it is still found",
+    joined[0] === before + LOST && failingWarnings(joined).length === 1,
+  );
+  check(
+    "the marker words NOT at a physical line start (byte 78) are not read as one",
+    failingWarnings(["y".repeat(MAX_PRINT_LINE - 1) + LOST]).length === 0,
+  );
+}
+
 console.log(
-  `✓ ${String(check.count)} assertions passed — latex-log: markers across the 79-column wrap, both error spellings, aux`,
+  `✓ ${String(check.count)} assertions passed — latex-log: markers across the 79-column wrap, both error spellings, aux, warnings that fail the build`,
 );

@@ -265,12 +265,55 @@ test("compile: a document whose .aux never settles did not converge", async () =
   assert.match(line, /^ {2}✗ compile: pdflatex did not converge\n/);
 });
 
-test("compile: warnings the final log still reports are named in the note", async () => {
-  const { r } = await build(paper(), {
+test("🔴 compile: pdflatex exits 0 but its log says a character was dropped — the build fails, quoting the line, and the PDF goes", async () => {
+  const dir = paper();
+  // The log as pdflatex writes it: raw UTF-8 bytes, which the build reads as latin1 and shows as UTF-8.
+  const { r, line } = await build(dir, {
+    log: [
+      "(./paper.aux)",
+      "Missing character: There is no ⁻ in font cmr10!",
+      "Overfull \\hbox (1.2pt too wide) in paragraph at lines 4--5",
+      "Missing character: There is no ⁻ in font cmr10!",
+      "",
+    ].join("\n"),
+  });
+  assert.equal(r.status, "failed");
+  assert.equal(
+    line,
+    [
+      "  ✗ compile: pdflatex exited 0, but its final log carries a warning that fails the build",
+      "      lost-character — the font has no glyph for this character, so pdflatex left it out of the PDF:",
+      "        Missing character: There is no ⁻ in font cmr10! (2 times)",
+      `      full log: ${join(dir, "paper.log").replace(root, "<root>")}`,
+      "      paper.pdf removed — a stale PDF must not pass for this build",
+    ].join("\n"),
+  );
+  assert.equal(existsSync(join(dir, "paper.pdf")), false);
+});
+
+test("compile: undefined references in the final log fail the build — no longer a note on a green one", async () => {
+  const { r, line } = await build(paper(), {
     log: "LaTeX Warning: There were undefined references.\n",
   });
+  assert.equal(r.status, "failed");
+  assert.match(
+    line,
+    /\n {6}undefined-references — .*:\n {8}LaTeX Warning: There were undefined references\.\n/,
+  );
+});
+
+test("compile: warnings off the failing list — overfull boxes, a font substitution, one undefined reference — leave the build green", async () => {
+  const { r } = await build(paper(), {
+    log: [
+      "Overfull \\hbox (1.2pt too wide) in paragraph at lines 4--5",
+      "LaTeX Font Warning: Font shape `OT1/cmr/bx/sc' undefined",
+      "(Font)              using `OT1/cmr/bx/n' instead on input line 3.",
+      "LaTeX Warning: Reference `sec:x' on page 1 undefined on input line 4.",
+      "",
+    ].join("\n"),
+  });
   assert.equal(r.status, "built");
-  assert.match(r.notes?.[0] ?? "", /— ⚠️ the final log still reports /);
+  assert.doesNotMatch(r.notes?.[0] ?? "", /⚠️/);
 });
 
 test("references: without a reader the step says it was not wired; with one and no checker, the record says not checked", async () => {

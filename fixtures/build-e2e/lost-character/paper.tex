@@ -1,0 +1,8 @@
+% A paper whose font has no glyph for one character. pdflatex prints "Missing character: There is no
+% ... in font cmr10!" to the log (LaTeX sets \tracinglostchars=2), exits 0 and writes a PDF without
+% it -- the way an abstract once printed 7 x 10^13 for 7 x 10^-13. `paperlint build` must fail, quote
+% the log line, and leave no paper.pdf.
+\documentclass{article}
+\begin{document}
+A rate of $7\times 10^{13}$ and a character cmr10 cannot draw: \char"FF.
+\end{document}

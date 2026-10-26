@@ -83,6 +83,7 @@ import {
   auxBib,
   bibtexExcerpt,
   errorExcerpt,
+  failingWarnings,
   logMarkers,
   unwrapLog,
 } from "./latex-log.ts";
@@ -90,6 +91,7 @@ import {
   nextStep,
   summarize,
   type BibInput,
+  type FailCause,
   type Hashes,
   type Observation,
   type Step,
@@ -401,6 +403,10 @@ function latexPass(
     markers: logMarkers(log),
     bib: bibInput(ctx.paperDir),
     fls: readOr(join(ctx.paperDir, `${JOB}.fls`), "utf8"),
+    failing: failingWarnings(log).map((h) => ({
+      ...h,
+      quotes: h.quotes.map((q) => ({ ...q, text: fromLatin1(q.text) })),
+    })),
     errorLines:
       exitCode === 0
         ? []
@@ -494,6 +500,18 @@ export function compile(ctx: BuildContext): {
 
 const NO_PDF = `pdflatex exited 0 but wrote no ${JOB}.pdf — does the document have any pages?`;
 
+/** The head of a failed compile: which program, and how it ended. */
+function whereFailed(bin: string, cause: FailCause): string {
+  switch (cause.kind) {
+    case "exit":
+      return `${bin} exited with ${String(cause.code)}`;
+    case "no-convergence":
+      return `${bin} did not converge`;
+    case "log-warnings":
+      return `${bin} exited 0, but its final log carries a warning that fails the build`;
+  }
+}
+
 const plural = (n: number, one: string, many: string): string =>
   `${String(n)} ${n === 1 ? one : many}`;
 
@@ -517,10 +535,7 @@ export const compileStep: BuildStep = {
     const { end, latex, bibtex, run } = compile(ctx);
     if (end.kind === "fail") {
       const bin = end.step === "latex" ? "pdflatex" : "bibtex";
-      const where =
-        end.cause.kind === "exit"
-          ? `${bin} exited with ${String(end.cause.code)}`
-          : `${bin} did not converge`;
+      const where = whereFailed(bin, end.cause);
       const log = join(
         ctx.paperDir,
         `${JOB}.${end.step === "latex" ? "log" : "blg"}`,
@@ -545,12 +560,9 @@ export const compileStep: BuildStep = {
         ok: false,
         lines: [NO_PDF, `full log: ${join(ctx.paperDir, `${JOB}.log`)}`],
       };
-    const warn = end.warnings.length
-      ? ` — ⚠️ the final log still reports ${end.warnings.join(", ")}`
-      : "";
     return {
       ok: true,
-      note: `${plural(latex, "pdflatex pass", "pdflatex passes")}, ${plural(bibtex, "bibtex run", "bibtex runs")}${warn}; ${recordingNote(ctx.recordSources(ctx.paperDir, run))}`,
+      note: `${plural(latex, "pdflatex pass", "pdflatex passes")}, ${plural(bibtex, "bibtex run", "bibtex runs")}; ${recordingNote(ctx.recordSources(ctx.paperDir, run))}`,
     };
   },
 };

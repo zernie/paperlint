@@ -6,7 +6,9 @@
  * Both halves are table tests (`latex-loop.harness.ts`), not scenarios that need TeX.
  *
  * ── THE LOOP: `summarize` reduces the history to a `State`, and `nextStep` asks four questions ──
- *   1. did the last program fail?                          → fail, with its error lines
+ *   1. did the last program fail — a non-zero exit, or a
+ *      final log carrying a warning on latex-log's list of
+ *      failing ones (`FAILING_WARNINGS`)?                  → fail, with its lines
  *   2. did the citations, a .bib or the style change since
  *      bibtex last ran?                                    → bibtex
  *   3. did the last pass change a tracked file, or did the
@@ -43,12 +45,17 @@ export const TRACKED: readonly Tracked[] = ["aux", "toc", "out", "bbl"];
 export type Hashes = { readonly [K in Tracked]: string | null };
 
 /** Log markers, as `latex-log.ts` reads them. Re-declared as a type so this module has no imports. */
-export type LogMarker =
-  | "rerun-requested"
-  | "labels-changed"
-  | "rerunfilecheck"
-  | "undefined-references"
-  | "undefined-citations";
+export type LogMarker = "rerun-requested" | "labels-changed" | "rerunfilecheck";
+
+/**
+ * A warning on `latex-log.ts`'s list of those that fail the build, as the log of one pass carries it:
+ * its id, why it fails, and each distinct line quoted once with how many times it appeared.
+ */
+export interface LogFailure {
+  readonly id: string;
+  readonly reason: string;
+  readonly quotes: readonly { readonly text: string; readonly times: number }[];
+}
 
 const RERUN: readonly LogMarker[] = [
   "rerun-requested",
@@ -88,6 +95,8 @@ export type Observation =
       readonly errorLines: readonly string[];
       /** What `-recorder` wrote after this pass (`paper.fls`), or null when pdflatex wrote none. */
       readonly fls: string | null;
+      /** The failing warnings this pass's log carries. Only the final pass's are judged. */
+      readonly failing: readonly LogFailure[];
     }
   | {
       readonly step: "bibtex";
@@ -101,16 +110,13 @@ export type Observation =
 
 export type FailCause =
   | { readonly kind: "exit"; readonly code: number }
-  | { readonly kind: "no-convergence"; readonly unsettled: readonly string[] };
+  | { readonly kind: "no-convergence"; readonly unsettled: readonly string[] }
+  | { readonly kind: "log-warnings"; readonly ids: readonly string[] };
 
 export type Step =
   | { readonly kind: "latex"; readonly final: boolean }
   | { readonly kind: "bibtex" }
-  | {
-      readonly kind: "done";
-      /** Undefined-reference summaries still in the final log — a converged doc with a bad key. */
-      readonly warnings: readonly LogMarker[];
-    }
+  | { readonly kind: "done" }
   | {
       readonly kind: "fail";
       readonly step: "latex" | "bibtex";
@@ -136,13 +142,11 @@ export type State = {
   /** Non-final pdflatex passes so far. */
   readonly latexPasses: number;
   readonly finalDone: boolean;
-  /** Undefined-reference summaries in the log of the final pass. */
-  readonly warnings: readonly LogMarker[];
 };
 
 export function nextStep(s: State): Step {
   if (s.failed) return { kind: "fail", ...s.failed };
-  if (s.finalDone) return { kind: "done", warnings: s.warnings };
+  if (s.finalDone) return { kind: "done" };
   if (s.bibOutdated) return { kind: "bibtex" };
   if (s.unsettled.length === 0) return { kind: "latex", final: true };
   if (s.latexPasses < MAX_PASSES) return { kind: "latex", final: false };
@@ -183,31 +187,48 @@ function unsettledBy(history: readonly Observation[]): string[] {
   return [];
 }
 
+/** A failing warning as the human reads it: the id and reason, then each quoted line. */
+const failureLines = (f: LogFailure): readonly string[] => [
+  `${f.id} — ${f.reason}:`,
+  ...f.quotes.map(
+    (q) => `  ${q.text}${q.times > 1 ? ` (${String(q.times)} times)` : ""}`,
+  ),
+];
+
+/**
+ * Did the last run fail? A non-zero exit, whichever program; or a FINAL pass whose log carries a
+ * failing warning. An earlier pass's log is not judged: before the rerun every reference is
+ * undefined by construction.
+ */
+function failureOf(last: Observation | undefined): State["failed"] {
+  if (last === undefined) return null;
+  if (last.exitCode !== 0)
+    return {
+      step: last.step,
+      cause: { kind: "exit", code: last.exitCode },
+      lines: last.errorLines,
+    };
+  if (last.step !== "latex" || !last.final || last.failing.length === 0)
+    return null;
+  return {
+    step: "latex",
+    cause: { kind: "log-warnings", ids: last.failing.map((f) => f.id) },
+    lines: last.failing.flatMap(failureLines),
+  };
+}
+
 export function summarize(history: readonly Observation[]): State {
   const last = history.at(-1);
   const latexRuns = history.filter((o) => o.step === "latex");
   const lastLatex = latexRuns.at(-1);
   const lastBibtex = history.filter((o) => o.step === "bibtex").at(-1);
   return {
-    failed:
-      last && last.exitCode !== 0
-        ? {
-            step: last.step,
-            cause: { kind: "exit", code: last.exitCode },
-            lines: last.errorLines,
-          }
-        : null,
+    failed: failureOf(last),
     bibOutdated:
       lastLatex?.bib.kind === "needed" &&
       !(lastBibtex && sameBib(lastBibtex.bib, lastLatex.bib)),
     unsettled: unsettledBy(history),
     latexPasses: latexRuns.filter((o) => !o.final).length,
     finalDone: last?.step === "latex" && last.final,
-    warnings:
-      last?.step === "latex"
-        ? last.markers.filter(
-            (m) => m === "undefined-references" || m === "undefined-citations",
-          )
-        : [],
   };
 }
