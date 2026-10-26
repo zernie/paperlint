@@ -1,0 +1,72 @@
+// AGENTVERIFY 2027 (the International Workshop on Infrastructure for Trustworthy Software Agents, an
+// ICSE 2027 workshop) — a VENUE preset over the IEEE conference family. Everything the IEEEtran
+// template decides comes from ieee-conference.jsonc; this file adds what AGENTVERIFY's call sets.
+// Its card, in prose: `agentverify.md` beside this file.
+//
+// Verbatim from https://agentverify2027.github.io/cfp.html (fetched 2026-10-26):
+//   «Full Papers: Maximum of 8 pages, including references.»
+//   «Short & Demonstration Papers: Maximum of 4 pages, including references.»
+//   «Extended Abstracts: Maximum of 2 pages, including references.»
+//   «Papers will be submitted via HotCRP and reviewed double-blind. Submissions should follow the
+//    IEEE format in line with ICSE 2027 and present an original contribution.»
+//   «Papers are due November 13th, 2026 (AoE).»
+// and from https://agentverify2027.github.io/ (same day): «Paper submission deadline November 13,
+// 2026 / Final notification December 11, 2026 / Camera-ready deadline January 29, 2027 / All
+// deadlines are Anywhere on Earth (AoE).»
+{
+  "type": "venue",
+  "name": "AGENTVERIFY",
+  // The call quoted above.
+  "url": "https://agentverify2027.github.io/cfp.html",
+  "extends": "paperlint:ieee-conference",
+
+  // «reviewed double-blind» (the call above), and `"blind":true` in the portal's status data
+  // (https://icse2027-agentverify.hotcrp.com/deadlines, read 2026-10-26). anonymity/identity then
+  // requires the paper's `identity`.
+  "blind": true,
+
+  // «Submit Your Paper →» on the workshop's site: HotCRP.
+  "portal": {
+    "kind": "hotcrp",
+    "url": "https://icse2027-agentverify.hotcrp.com",
+  },
+
+  // The portal's reading: `"sub":1794657599` = 2026-11-14T11:59:59Z = the end of 13 Nov AoE. It
+  // agrees with the call and with the ICSE workshops page; the organizers' email of 2026-10-23
+  // (agentverify.md) says the same and that there is no separate abstract deadline, so there is no
+  // `registration`. Notification and camera-ready are the site's, at the end of the AoE day.
+  "deadlines": [
+    {
+      "what": "submission",
+      "at": "2026-11-14T11:59:59Z",
+      "source": "portal",
+      "url": "https://icse2027-agentverify.hotcrp.com/deadlines",
+      "read": "2026-10-26",
+    },
+    {
+      "what": "notification",
+      "at": "2026-12-12T11:59:59Z",
+      "source": "call",
+      "url": "https://agentverify2027.github.io/",
+      "read": "2026-10-26",
+    },
+    {
+      "what": "camera-ready",
+      "at": "2027-01-30T11:59:59Z",
+      "source": "call",
+      "url": "https://agentverify2027.github.io/",
+      "read": "2026-10-26",
+    },
+  ],
+
+  "format": {
+    // 🔴 THE LIMITS INCLUDE THE REFERENCES, and no key gates a total: `body_pages_max` is banal's
+    // body count, never more than the total, so a paper over it is over the limit; references alone
+    // on a page after a full body pass this gate and are still over (agentverify.md).
+    "kinds": {
+      "full": { "body_pages_max": 8 },
+      "short": { "body_pages_max": 4 },
+      "abstract": { "body_pages_max": 2 },
+    },
+  },
+}

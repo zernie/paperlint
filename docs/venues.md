@@ -91,4 +91,6 @@ something the venue **requires**: it goes in the preset and the card, with the q
 not in the corpus. [`rules.md`](rules.md#writing-your-own-venue-preset) shows how to write a preset of
 your own.
 
+To add a venue paperlint does not ship, use the skill [`add-venue`](../skills/add-venue/SKILL.md).
+
 See also: [the map of every place, and what checks it](layout.md).

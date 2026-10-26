@@ -87,11 +87,14 @@ describe("the shipped cards", () => {
     // Guards: a glob that matched nothing lints nothing and reports clean.
     expect(results.map((r) => r.filePath.slice(P.length + 1)).sort()).toEqual([
       "acm-sigconf.md",
+      "agent.md",
       "agenticdev.md",
+      "agentverify.md",
       "aidc.md",
       "aisec.md",
       "ieee-conference.md",
       "msr.md",
+      "nlbse.md",
       "realm.md",
       "tex-base.md",
     ]);

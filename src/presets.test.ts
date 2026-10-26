@@ -174,6 +174,53 @@ const FAMILIES = PARSED.filter((p) =>
   PARSED.some((q) => q.preset.extends === `${SHIPPED_PREFIX}${p.name}`),
 );
 
+// What each shipped preset declares itself to be; a new preset adds its row here.
+const DECLARED = {
+  "acm-sigconf.jsonc": { type: "family" },
+  "agenticdev.jsonc": {
+    type: "venue",
+    name: "AgenticDev",
+    url: "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
+  },
+  "agent.jsonc": {
+    type: "venue",
+    name: "AGENT 2027",
+    url: "https://conf.researchr.org/home/icse-2027/agent-2027",
+  },
+  "agentverify.jsonc": {
+    type: "venue",
+    name: "AGENTVERIFY",
+    url: "https://agentverify2027.github.io/cfp.html",
+  },
+  "aidc.jsonc": {
+    type: "venue",
+    name: "AIDC",
+    url: "https://aidcworkshop.github.io/",
+  },
+  "aisec.jsonc": {
+    type: "venue",
+    name: "AISec",
+    url: "https://aisec.cc/",
+  },
+  "ieee-conference.jsonc": { type: "family" },
+  "msr.jsonc": {
+    type: "venue",
+    name: "MSR",
+    url: "https://2027.msrconf.org/track/msr-2027-technical-papers",
+  },
+  "nlbse.jsonc": {
+    type: "venue",
+    name: "NLBSE",
+    url: "https://conf.researchr.org/home/icse-2027/nlbse-2027",
+  },
+  "realm.jsonc": {
+    type: "venue",
+    name: "REALM",
+    url: "https://realm-workshop.github.io/call_for_papers",
+  },
+  "tex-base.jsonc": { type: "base" },
+};
+
 describe("what each shipped preset declares itself to be", () => {
   it("every shipped preset loads and declares what it is; a venue links its call", () => {
     const declared = Object.fromEntries(
@@ -185,36 +232,7 @@ describe("what each shipped preset declares itself to be", () => {
             .identity,
         ]),
     );
-    expect(declared).toEqual({
-      "acm-sigconf.jsonc": { type: "family" },
-      "agenticdev.jsonc": {
-        type: "venue",
-        name: "AgenticDev",
-        url: "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
-      },
-      "aidc.jsonc": {
-        type: "venue",
-        name: "AIDC",
-        url: "https://aidcworkshop.github.io/",
-      },
-      "aisec.jsonc": {
-        type: "venue",
-        name: "AISec",
-        url: "https://aisec.cc/",
-      },
-      "ieee-conference.jsonc": { type: "family" },
-      "msr.jsonc": {
-        type: "venue",
-        name: "MSR",
-        url: "https://2027.msrconf.org/track/msr-2027-technical-papers",
-      },
-      "realm.jsonc": {
-        type: "venue",
-        name: "REALM",
-        url: "https://realm-workshop.github.io/call_for_papers",
-      },
-      "tex-base.jsonc": { type: "base" },
-    });
+    expect(declared).toEqual(DECLARED);
   });
 
   it("the families another preset extends are exactly the ones that declare `family`", () => {
@@ -457,7 +475,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-sigconf, agenticdev, aidc, aisec, ieee-conference, msr, realm/,
+      /acm-sigconf, agent, agenticdev, agentverify, aidc, aisec, ieee-conference, msr, nlbse, realm/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -625,11 +643,14 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     // A venue is labelled by its `name`, a family by its file name.
     expect(names.map((n) => n.label)).toEqual([
       "acm-sigconf",
+      "AGENT 2027",
       "AgenticDev",
+      "AGENTVERIFY",
       "AIDC",
       "AISec",
       "ieee-conference",
       "MSR",
+      "NLBSE",
       "REALM",
     ]);
     expect(names.find((n) => n.label === "AISec")?.aliases).toEqual(
@@ -647,11 +668,14 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       shippedVenueNames({ files, venuesDir: VENUES }).map((n) => n.label),
     ).toEqual([
       "acm-sigconf",
+      "AGENT 2027",
       "AgenticDev",
+      "AGENTVERIFY",
       "AIDC",
       "AISec",
       "ieee-conference",
       "MSR",
+      "NLBSE",
     ]);
   });
 });

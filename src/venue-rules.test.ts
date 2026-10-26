@@ -270,13 +270,13 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       "an unknown venue (a typo would silently disable every check)",
       { extends: "paperlint:agentic-dev", kind: "short" },
       "preset",
-      /agenticdev, aidc, aisec, ieee-conference, msr, realm/,
+      /agent, agenticdev, agentverify, aidc, aisec, ieee-conference, msr, nlbse, realm/,
     ],
     [
       "the base TeX set is not a venue",
       { extends: "paperlint:tex-base" },
       "preset",
-      /agenticdev, aidc, aisec, ieee-conference, msr, realm/,
+      /agent, agenticdev, agentverify, aidc, aisec, ieee-conference, msr, nlbse, realm/,
     ],
     [
       "paperlint.json that is not JSON",

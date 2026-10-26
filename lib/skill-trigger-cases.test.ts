@@ -165,7 +165,7 @@ test("a planted new row, and a frozen name that left the table, both fail", () =
 
 test("no skill that declares its own trigger cases is also in the shared table", () => {
   const mine = colocated(join(ROOT, "skills"));
-  assert.deepEqual(mine, ["label-agent-runs", "run-agent-grid"]);
+  assert.deepEqual(mine, ["add-venue", "label-agent-runs", "run-agent-grid"]);
   assert.deepEqual(
     mine.filter((s) => SHARED.some((r) => r.skill === s)),
     [],

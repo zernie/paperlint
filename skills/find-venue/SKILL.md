@@ -4,7 +4,7 @@ description: "Discover and rank real venues for a given paper, scored by authors
 allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:42d8e283fb7045f1 compiled from skills/find-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:abf6ad00a49ce436 compiled from skills/find-venue/SKILL.md.spec.ts -->
 
 # find-venue — rank real venues by what earns the credit, then keep or switch
 
@@ -84,7 +84,7 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
 - the venue cards, `presets/<venue>.md` in the paperlint package beside each venue preset (e.g.
   `agenticdev.md`, `aisec.md`) — the winner gets a card with its HotCRP quirks beside its preset;
   for a venue with no shipped preset, the project's own `./venues/<name>.md` beside its
-  `./venues/<name>.jsonc`. Plain data, not a new skill. That `./venues/` is not the venue's corpus
+  `./venues/<name>.jsonc`. Plain data, not a new skill. To write a preset and card for a venue paperlint does not ship, use `add-venue`. That `./venues/` is not the venue's corpus
   of accepted papers, `<papers-root>/venues/<venue>/` (`study-accepted-papers`): the three places are
   told apart in `docs/venues.md` in the paperlint package.
 - `extend-paper` — the prestige-upgrade target this skill names but defers.
