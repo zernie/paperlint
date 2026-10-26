@@ -12,6 +12,7 @@ import { createChecker } from "../lib/check.ts";
 import type {
   BibInput,
   Hashes,
+  LogFailure,
   Observation,
   State,
   Step,
@@ -52,6 +53,7 @@ const latex = (o: Partial<LatexPass> = {}): LatexPass => ({
   bib: NO_BIB,
   errorLines: [],
   fls: null,
+  failing: [],
   ...o,
 });
 const bibtex = (o: Partial<BibtexPass> = {}): BibtexPass => ({
@@ -63,6 +65,14 @@ const bibtex = (o: Partial<BibtexPass> = {}): BibtexPass => ({
   errorLines: [],
   ...o,
 });
+/** What latex-log reports for the end-of-run "There were undefined references." */
+const undefRefs: LogFailure = {
+  id: "undefined-references",
+  reason: "a \\ref names a label no pass defined",
+  quotes: [
+    { text: "LaTeX Warning: There were undefined references.", times: 1 },
+  ],
+};
 const kind = (s: Step) =>
   s.kind === "latex" ? `latex${s.final ? "-final" : ""}` : s.kind;
 
@@ -73,7 +83,6 @@ const S = (o: Partial<State> = {}): State => ({
   unsettled: [],
   latexPasses: 1,
   finalDone: false,
-  warnings: [],
   ...o,
 });
 const exitFail: NonNullable<State["failed"]> = {
@@ -144,15 +153,6 @@ check(
     q3cap.cause.kind === "no-convergence" &&
     (q3cap.lines[0] ?? "").includes("paper.aux, labels-changed"),
 );
-check(
-  "done carries the state's warnings",
-  (() => {
-    const done = nextStep(
-      S({ finalDone: true, warnings: ["undefined-citations"] }),
-    );
-    return done.kind === "done" && done.warnings[0] === "undefined-citations";
-  })(),
-);
 
 // ── 2. summarize over histories ─────────────────────────────────────────────────────────
 const sum = summarize;
@@ -165,7 +165,6 @@ check(
       unsettled: ["paper.aux"],
       latexPasses: 0,
       finalDone: false,
-      warnings: [],
     }),
 );
 // Guards: failing on a failed pass — -halt-on-error stops pdflatex at the first error, and a loop
@@ -222,7 +221,7 @@ check(
 // never resolves, so rerunning for it burns the cap and reports no-convergence for a typo.
 check(
   "summarize: undefined references ALONE leave nothing unsettled — on stable files they are a real bad key",
-  sum([latex({ markers: ["undefined-references"] })]).unsettled.length === 0,
+  sum([latex({ failing: [undefRefs] })]).unsettled.length === 0,
 );
 check(
   "summarize: bibtex that rewrote the .bbl leaves paper.bbl unsettled",
@@ -241,20 +240,8 @@ check(
   sum([latex(), bibtex(), latex(), latex({ final: true })]).latexPasses === 2,
 );
 check(
-  "summarize: finalDone and the undefined-reference warnings of the final log, nothing else",
-  (() => {
-    const s = sum([
-      latex(),
-      latex({
-        final: true,
-        markers: ["undefined-citations", "rerun-requested"],
-      }),
-    ]);
-    return (
-      s.finalDone &&
-      JSON.stringify(s.warnings) === JSON.stringify(["undefined-citations"])
-    );
-  })(),
+  "summarize: finalDone after a clean final pass",
+  sum([latex(), latex({ final: true })]).finalDone,
 );
 
 // ── 3. composed: nextStep(summarize(history)) ───────────────────────────────────────────
@@ -301,7 +288,7 @@ const TABLE: [string, Observation[], string][] = [
   ],
   [
     "undefined references ALONE do not request a rerun — on stable files they are a real bad key",
-    [latex({ markers: ["undefined-references"] })],
+    [latex({ failing: [undefRefs] })],
     "latex-final",
   ],
   [
@@ -445,16 +432,65 @@ check(
   kind(step(convergedAtCap)) === "latex-final",
 );
 
-// ── done carries the undefined-reference summaries ─────────────────────────────────────
-const doneWarn = step([
+// ── a warning on the list of failing ones (latex-log's FAILING_WARNINGS) fails the build ──
+const lost: LogFailure = {
+  id: "lost-character",
+  reason: "pdflatex dropped a character its font has no glyph for",
+  quotes: [
+    { text: "Missing character: There is no \u207b in font cmr10!", times: 1 },
+    { text: "Missing character: There is no \ufffd in font cmtt10!", times: 3 },
+  ],
+};
+const lostFinal = step([latex(), latex({ final: true, failing: [lost] })]);
+check(
+  "🔴 a failing warning in the FINAL log is a fail: latex, the ids, the reason and every quoted line",
+  lostFinal.kind === "fail" &&
+    lostFinal.step === "latex" &&
+    JSON.stringify(lostFinal.cause) ===
+      JSON.stringify({ kind: "log-warnings", ids: ["lost-character"] }) &&
+    JSON.stringify(lostFinal.lines) ===
+      JSON.stringify([
+        "lost-character — pdflatex dropped a character its font has no glyph for:",
+        "  Missing character: There is no \u207b in font cmr10!",
+        "  Missing character: There is no \ufffd in font cmtt10! (3 times)",
+      ]),
+  lostFinal,
+);
+check(
+  "a failing warning in a NON-final log decides nothing: the loop goes on to the final pass",
+  kind(step([latex({ failing: [lost] })])) === "latex-final",
+);
+const lostAndExit = step([
   latex(),
-  latex({ final: true, markers: ["undefined-citations", "rerun-requested"] }),
+  latex({
+    final: true,
+    exitCode: 1,
+    errorLines: ["! Emergency stop."],
+    failing: [lost],
+  }),
 ]);
 check(
-  "done reports undefined citations still in the final log, and nothing else",
-  doneWarn.kind === "done" &&
-    doneWarn.warnings.length === 1 &&
-    doneWarn.warnings[0] === "undefined-citations",
+  "a final pass that also exited non-zero fails on its exit code, quoting the error",
+  lostAndExit.kind === "fail" &&
+    lostAndExit.cause.kind === "exit" &&
+    lostAndExit.lines[0] === "! Emergency stop.",
+);
+check(
+  "an undefined-references summary in the final log fails too — the same path, its own id",
+  (() => {
+    const s = step([latex(), latex({ final: true, failing: [undefRefs] })]);
+    return (
+      s.kind === "fail" &&
+      JSON.stringify(s.cause) ===
+        JSON.stringify({ kind: "log-warnings", ids: ["undefined-references"] })
+    );
+  })(),
+);
+check(
+  "a final log whose only marker is off the list (a rerun request) is done",
+  kind(
+    step([latex(), latex({ final: true, markers: ["rerun-requested"] })]),
+  ) === "done",
 );
 
 // ── helpers ─────────────────────────────────────────────────────────────────────────────

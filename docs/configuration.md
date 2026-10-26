@@ -399,7 +399,8 @@ papers/my-paper
   keys or a `.bib` file changed. After that, one **final** pass defines `\finalpass`, which arms
   the reference guards in `paper-guards.tex`: an undefined `\ref` or `\cite` fails the build
   there instead of printing `??`. A document that still changes after five passes fails, naming
-  the file that kept changing. After a green compile the step also writes
+  the file that kept changing. The final pass's log is then read for the warnings that fail the
+  build (below). After a green compile the step also writes
   `_build/sources.json`, the record of what TeX read: every file of the paper directory its passes
   opened (from the `.fls` that `-recorder` makes), whether each came before or after
   `\begin{document}`, the `.bib` files TeX itself wrote, the databases and keys bibtex read, and a
@@ -451,6 +452,34 @@ without a new one:
       full log: papers/my-paper/paper.log
       paper.pdf removed — a stale PDF must not pass for this build
 ```
+
+**Some warnings fail the build although pdflatex exits 0**, because the PDF it wrote is wrong. They
+are one list, `FAILING_WARNINGS` in [`src/latex-log.ts`](../src/latex-log.ts), and only the log of
+the **final** pass is read — before the rerun every reference is undefined by construction:
+
+| id                        | the log line                                              | why it fails                                                                      |
+| ------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `lost-character`          | `Missing character: There is no <char> in font <font>!`   | the font has no glyph for the character, so the PDF lacks it (`10^-13` → `10^13`) |
+| `undefined-references`    | `LaTeX Warning: There were undefined references.`         | the PDF prints `??` for a `\ref`, or `[?]` for a `\cite` without natbib           |
+| `undefined-citations`     | `Package natbib Warning: There were undefined citations.` | the PDF prints `[?]` for a `\cite` (natbib)                                       |
+| `multiply-defined-labels` | `LaTeX Warning: There were multiply-defined labels.`      | a `\ref` may point at the wrong one of two labels                                 |
+
+Every other warning — overfull and underfull boxes, font substitutions, "Rerun to get …" — leaves
+the build as it was. The failure quotes each distinct line once, with how many times the log has it
+(here `\char"FF` in `cmr10`, measured on TeX Live 2026; TeX writes the character as one raw byte,
+which is no UTF-8 character, so it shows as `�`):
+
+```
+  ✗ compile: pdflatex exited 0, but its final log carries a warning that fails the build
+      lost-character — the font has no glyph for this character, so pdflatex left it out of the PDF:
+        Missing character: There is no � in font cmr10! (2 times)
+      full log: papers/my-paper/paper.log
+      paper.pdf removed — a stale PDF must not pass for this build
+```
+
+⚠️ TeX writes the `Missing character` line only while `\tracinglostchars` is above 0. LaTeX sets it
+to 2 (TeX Live 2026); a paper that sets it to 0 hides the line, and this check sees nothing. At 3
+and above TeX makes it an error, and the build fails on pdflatex's exit code instead.
 
 **A paper with no `paper.tex` is a FAILURE, not a skip.** "Nothing to build" and "built" must never
 look alike: the corpus this came from once let a paper reach its venue without a single paper job

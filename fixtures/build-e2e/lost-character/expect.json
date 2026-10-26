@@ -1,0 +1,15 @@
+{
+  "$comment": "pdflatex exits 0 and writes a PDF without a character the font has no glyph for; the build fails on the log line (FAILING_WARNINGS in src/latex-log.ts).",
+  "build": {
+    "outcome": "failed"
+  },
+  "says": [
+    "✗ compile: pdflatex exited 0, but its final log carries a warning that fails the build",
+    "lost-character — the font has no glyph for this character, so pdflatex left it out of the PDF:",
+    "Missing character: There is no",
+    "in font cmr10!"
+  ],
+  "saysNot": [
+    "✓"
+  ]
+}
