@@ -112,7 +112,7 @@ describe("planMigration", () => {
 });
 
 describe("planMigration, beside what is there", () => {
-  it("keeps the lock already there, moves a withdrawn (STALE) file to extra/, leaves a file already in place", () => {
+  it("keeps the lock already there, moves a withdrawn (STALE) file and any other loose file to extra/, leaves a file already in place and a dot-file", () => {
     const r = planMigration(
       input({
         stages: [
@@ -126,7 +126,8 @@ describe("planMigration, beside what is there", () => {
         root: [
           file("2026-07-20-submitted-STALE.pdf"),
           file("lock.json"),
-          file("notes.md"),
+          file("README.md"),
+          file(".gitkeep"),
         ],
         factsOf: () => ({ bytes: 1, sha256: SHA }),
         lock: { "alpha-2026/arxiv.tex": { kind: "lost", frozen: null } },
@@ -139,6 +140,8 @@ describe("planMigration, beside what is there", () => {
             from: "versions/2026-07-20-submitted-STALE.pdf",
             to: "extra/versions/2026-07-20-submitted-STALE.pdf",
           },
+          // versions/layout allows nothing loose beside lock.json: a note of the old layout goes too.
+          { from: "versions/README.md", to: "extra/versions/README.md" },
         ],
         lock: {
           "alpha-2026/arxiv.tex": { kind: "lost", frozen: null },

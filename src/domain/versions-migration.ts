@@ -189,7 +189,11 @@ const named = (stages: readonly unknown[]): readonly string[] =>
       : [],
   );
 
-/** Files of the old layout no entry names, at the top of versions/: a withdrawn one goes to extra/, any other stops it. */
+/**
+ * Files no entry names, at the top of versions/: a dated one of the old layout stops it — it may be a
+ * stage nobody declared — and any other (a withdrawn `STALE` copy, a note on the old convention) goes to
+ * extra/versions/, since versions/layout allows nothing loose beside lock.json.
+ */
 function leftovers(input: MigrationInput, moved: readonly string[]): Part {
   const left = input.root.filter(
     (e) =>
@@ -199,23 +203,21 @@ function leftovers(input: MigrationInput, moved: readonly string[]): Part {
       !moved.includes(`${VERSIONS_DIR}/${e.name}`),
   );
   return merge(
-    left.map((e): Part => {
-      if (e.name.includes("STALE"))
-        return {
-          ...NONE,
-          moves: [
-            {
-              from: `${VERSIONS_DIR}/${e.name}`,
-              to: `extra/versions/${e.name}`,
-            },
-          ],
-        };
-      return DATED_NAME.test(e.name)
+    left.map((e): Part =>
+      DATED_NAME.test(e.name)
         ? problem(
             `versions/${e.name}: no stage in \`stages:\` names it — declare it with its cycle, or move it to extra/, then migrate`,
           )
-        : NONE;
-    }),
+        : {
+            ...NONE,
+            moves: [
+              {
+                from: `${VERSIONS_DIR}/${e.name}`,
+                to: `extra/versions/${e.name}`,
+              },
+            ],
+          },
+    ),
   );
 }
 

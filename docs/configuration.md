@@ -303,8 +303,13 @@ removed       the stages: list from PIPELINE-STATUS.md — the folders and the l
 Each entry's `cycle:` names its folder, its `bytes:` and `sourceBytes:` are checked against the
 files once more, its `date:` becomes the day the lock records, and `sourceLost: true` becomes a lock
 entry that records the loss. An entry without a `cycle:`, a file that is no longer the one declared,
-or a dated file no entry names stops the whole migration before anything moves, with what to do. A
-paper without `cycles` keeps its `stages:` list: `paper/stages` and `paper/source` still read it.
+or a dated file no entry names stops the whole migration before anything moves, with what to do.
+Any other loose file at the top of `versions/` (a withdrawn `STALE` copy, a note on the old
+convention) moves to `extra/versions/`, since [`versions/layout`](rules/versions/layout.md) allows
+nothing there beside `lock.json`. The YAML comments inside the list leave with it: read them first,
+since a provenance note kept there (which commit a source came from, whether a PDF is the portal's
+bytes or a rebuild) belongs in the cycle's evidence or the scorecard's prose. A paper without
+`cycles` keeps its `stages:` list: `paper/stages` and `paper/source` still read it.
 
 ### Deadlines
 
