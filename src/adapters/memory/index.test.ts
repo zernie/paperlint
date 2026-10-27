@@ -6,8 +6,19 @@ import {
   fixedDownload,
   memoryFiles,
   memoryListEntries,
+  memoryMoveFile,
   memoryWorkspace,
 } from "./index.ts";
+
+test("memoryMoveFile: the bytes move to the new path; a path holding nothing throws", () => {
+  const files = memoryFiles({ "/p/a.pdf": "x" });
+  const move = memoryMoveFile(files);
+  move(absolutePath("/p/a.pdf"), absolutePath("/p/v/b.pdf"));
+  assert.deepEqual([...files.map.keys()], ["/p/v/b.pdf"]);
+  assert.throws(() => {
+    move(absolutePath("/p/a.pdf"), absolutePath("/p/c.pdf"));
+  }, /ENOENT/);
+});
 
 test("memoryWorkspace: a `within` that throws is recorded as `threw`, and the error goes on", () => {
   const ws = memoryWorkspace();
