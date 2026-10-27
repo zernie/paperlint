@@ -110,6 +110,34 @@ it("a squash on the first parent does not hide the order its merged-in branch re
   });
 });
 
+it("a decision squashed into main, then its branch merged back: outputs on main stay after it", () => {
+  const repo = join(root, "decision-squashed");
+  initRepo(repo);
+  commit(repo, { "README.md": "r\n" }, T1);
+  git(repo, ["checkout", "-q", "-b", "decide"], T1);
+  const original = commit(repo, { "p/repro/S/decision.md": "d\n" }, T2);
+  git(repo, ["checkout", "-q", "main"], T2);
+  commit(repo, { "p/repro/S/decision.md": "d\n" }, T3, "squash");
+  const ran = commit(repo, { "p/repro/S/out.csv": "1\n" }, T4);
+  git(repo, ["merge", "-q", "--no-ff", "-m", "merge", "decide"], T5);
+  // Guards: the earliest decision commit is on the merged-back branch and is no ancestor of the run,
+  // but the squash that carried the same decision is; any commit holding the decision before counts.
+  expect(
+    ports.order(
+      absolutePath(join(repo, "p/repro/S")),
+      absolutePath(join(repo, "p/repro/S/decision.md")),
+    ),
+  ).toEqual({
+    kind: "read",
+    decision: { commit: original, date: T2 },
+    decisionDeleted: false,
+    files: [
+      { path: "decision.md", commit: original, date: T2, order: "same" },
+      { path: "out.csv", commit: ran, date: T4, order: "after" },
+    ],
+  });
+});
+
 it("a shallow clone is named, not judged", () => {
   const repo = join(root, "deep");
   initRepo(repo);
