@@ -1847,6 +1847,7 @@ const SIMPLE: Readonly<
         latex: latexReader,
         codec: sourcesCodec,
         lintText,
+        now: () => new Date().toISOString(),
         log,
         err,
       },

@@ -82,6 +82,12 @@ import { originOf, type PaperSource } from "./domain/paper-source.ts";
 import type { SourcesCodec } from "./ports/sources-codec.ts";
 import { MAIN } from "./build.ts";
 import { assessSent, venueMessages, type VenueMessage } from "./venue-rules.ts";
+import {
+  freezePlan,
+  freezeSent,
+  NOT_FROZEN,
+  type FreezePlan,
+} from "./versions.ts";
 
 /** How to make and set the site's token: the page, the scopes, the variable. Pure. */
 export function tokenSteps(
@@ -168,6 +174,8 @@ export interface SubmissionDeps {
     file: string,
     messages: readonly VenueMessage[],
   ) => Promise<string>;
+  /** The instant a frozen version's lock entry records (`versions/lock.json`), ISO 8601. */
+  readonly now: () => string;
   readonly log: (line: string) => void;
   readonly err: (line: string) => void;
 }
@@ -567,15 +575,71 @@ async function runUpdate(
   const refused = await venueCheck(t, bytes, a.save, deps);
   logAll(fieldLines(t.fields), deps);
   if (refused) return 2;
+  const plan = planFor(t, a.save, deps);
+  if (!plan.ok) return (deps.err(plan.error), 2);
   const change = changeOf(a, bytes, abstract.value, t.fields);
   const r = await portal.update(t.id, change, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
-  const local = { shown, sha256: sha256Hex(bytes) };
-  const dropped = droppedLines(t.fields, t.venueFields, r.value);
-  logAll([...updateLines(r.value, local, a.save), ...dropped], deps);
-  const fine =
-    r.value.valid && r.value.httpStatus >= 200 && r.value.httpStatus < 300;
-  return fine && dropped.length === 0 ? 0 : 1;
+  const sent = { shown, bytes, save: a.save, plan: plan.value };
+  return afterUpdate(t, r.value, sent, deps);
+}
+
+/** The portal's answer to `update` printed, and what it kept frozen: the exit code. */
+function afterUpdate(
+  t: SubmissionTarget,
+  o: UpdateOutcome,
+  sent: {
+    readonly shown: string;
+    readonly bytes: Uint8Array;
+    readonly save: boolean;
+    readonly plan: FreezePlan | null;
+  },
+  deps: RunDeps,
+): number {
+  const local = { shown: sent.shown, sha256: sha256Hex(sent.bytes) };
+  const dropped = droppedLines(t.fields, t.venueFields, o);
+  logAll([...updateLines(o, local, sent.save), ...dropped], deps);
+  const fine = took(o);
+  const kept = fine && !o.dryRun ? sent.plan : null;
+  const frozen = freezeKept(t, kept, sent.bytes, deps);
+  return fine && dropped.length === 0 ? frozen : 1;
+}
+
+/** The portal answered valid, with a 2xx. */
+const took = (o: {
+  readonly valid: boolean;
+  readonly httpStatus: number;
+}): boolean => o.valid && o.httpStatus >= 200 && o.httpStatus < 300;
+
+/** What a `--save` will freeze, decided before anything is sent; null for a dry run. */
+const planFor = (
+  t: SubmissionTarget,
+  save: boolean,
+  deps: SubmissionDeps,
+): Result<FreezePlan | null, string> =>
+  save ? freezePlan(t.paperDir, t.resolved.settings.cycles, deps) : ok(null);
+
+/** The PDF a save sent, frozen with its source when there is a plan: 0, or 1 when the lock did not take it. */
+function freezeKept(
+  t: SubmissionTarget,
+  plan: FreezePlan | null,
+  pdf: Uint8Array,
+  deps: RunDeps,
+): number {
+  if (plan === null) return 0;
+  if (plan.kind === "flat") return (deps.log(NOT_FROZEN), 0);
+  const r = freezeSent(
+    {
+      paperDir: t.paperDir,
+      plan,
+      pdf,
+      shownPaper: shownPath(deps.cwd, t.paperDir),
+    },
+    deps,
+  );
+  if (!r.ok) return (deps.err(r.error), 1);
+  deps.log(r.value);
+  return 0;
 }
 
 // ── new ──────────────────────────────────────────────────────────────────────────────
@@ -900,15 +964,16 @@ async function runNew(
   const refused = await venueCheck(t, paper.pdf.bytes, a.save, deps);
   logAll(newLines(paper), deps);
   if (refused) return 2;
+  const plan = planFor(t, a.save, deps);
+  if (!plan.ok) return (deps.err(plan.error), 2);
   const r = await portal.create(paper, { save: a.save });
   if (!r.ok) return failed(r.error, deps);
   const dropped = droppedLines(t.fields, t.venueFields, r.value);
   logAll([...createLines(r.value, a.save), ...dropped], deps);
-  const fine =
-    r.value.valid && r.value.httpStatus >= 200 && r.value.httpStatus < 300;
-  if (!fine || (a.save && r.value.id === null)) return 1;
+  if (!took(r.value) || (a.save && r.value.id === null)) return 1;
+  const frozen = freezeKept(t, plan.value, paper.pdf.bytes, deps);
   const recorded = afterCreated(t, r.value.id, a, deps);
-  return dropped.length === 0 ? recorded : 1;
+  return dropped.length === 0 ? Math.max(recorded, frozen) : 1;
 }
 
 /** The subcommands that run before the paper has a submission id: `new` creates it, `topics` needs none. */
