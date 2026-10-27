@@ -1,10 +1,12 @@
 /** The migration from `stages:` to folders per attempt, planned before anything moves. */
 import { describe, expect, it } from "vitest";
 import { cycleId } from "./cycle.ts";
+import { asPaperPath } from "./paths.ts";
 import { err, ok } from "./result.ts";
 import {
   frontmatterOf,
   planMigration,
+  rehearse,
   withoutStages,
   type MigrationInput,
 } from "./versions-migration.ts";
@@ -297,5 +299,112 @@ describe("planMigration, what could stop it half-way", () => {
       { from: "versions/a.pdf", to: "versions/beta-2027/arxiv.pdf" },
       { from: "versions/s.tex", to: "versions/beta-2027/arxiv.tex" },
     ]);
+  });
+});
+
+describe("planMigration, a path as the list spells it", () => {
+  it("a declared path is read in one spelling: `./` and `//` name the file the listing names", () => {
+    const r = planMigration(
+      input({
+        stages: [
+          {
+            stage: "submitted",
+            cycle: "beta-2027",
+            date: "2026-10-23",
+            pdf: "./versions//s.pdf",
+            source: "./versions/s.tex",
+          },
+        ],
+        root: [file("s.pdf"), file("s.tex")],
+        factsOf: () => ({ bytes: 1, sha256: SHA }),
+      }),
+    );
+    expect(r.ok && r.value.moves).toStrictEqual([
+      { from: "versions/s.pdf", to: "versions/beta-2027/submitted.pdf" },
+      { from: "versions/s.tex", to: "versions/beta-2027/submitted.tex" },
+    ]);
+  });
+
+  it("a path out of the paper, as the PDF or the source, and a listed name no path can hold: reasons", () => {
+    const r = planMigration(
+      input({
+        stages: [
+          {
+            stage: "submitted",
+            cycle: "beta-2027",
+            date: "2026-10-23",
+            pdf: "../s.pdf",
+            source: "/abs/s.tex",
+          },
+        ],
+        root: [file("a\\b.md")],
+      }),
+    );
+    expect(!r.ok && r.error).toStrictEqual([
+      "stages[0]: `../s.pdf` is not a path inside the paper folder — a stage names a file of this paper, relative to it",
+      "stages[0]: `/abs/s.tex` is not a path inside the paper folder — a stage names a file of this paper, relative to it",
+      "versions/a\\b.md: not a file name migrate can move — rename it, then migrate",
+    ]);
+  });
+});
+
+describe("rehearse", () => {
+  const p = asPaperPath;
+  const at =
+    (...there: readonly string[]) =>
+    (q: string) =>
+      there.includes(q);
+
+  it("a plan that runs to the end, each file the lock vouches for there: accepted", () => {
+    expect(
+      rehearse(
+        {
+          copies: [
+            { from: p("versions/s.tex"), to: p("versions/c/submitted.tex") },
+          ],
+          moves: [{ from: p("versions/s.tex"), to: p("versions/c/arxiv.tex") }],
+          lock: {
+            "c/submitted.tex": {
+              kind: "file",
+              bytes: 1,
+              sha256: SHA,
+              frozen: "2026-10-23",
+            },
+            "c/arxiv.pdf": { kind: "lost", frozen: null },
+          },
+        },
+        at("versions/s.tex"),
+      ),
+    ).toStrictEqual(ok(null));
+  });
+
+  it("a step without its source, a step onto a file, a lock that vouches for a file not there: each refused", () => {
+    expect(
+      rehearse(
+        {
+          copies: [
+            { from: p("versions/a.tex"), to: p("versions/c/submitted.tex") },
+          ],
+          moves: [
+            { from: p("versions/s.pdf"), to: p("versions/c/submitted.pdf") },
+          ],
+          lock: {
+            "c/arxiv.pdf": {
+              kind: "file",
+              bytes: 1,
+              sha256: SHA,
+              frozen: "2026-10-23",
+            },
+          },
+        },
+        at("versions/s.pdf", "versions/c/submitted.pdf"),
+      ),
+    ).toStrictEqual(
+      err([
+        "copy versions/a.tex → versions/c/submitted.tex: versions/a.tex is not there at that step",
+        "move versions/s.pdf → versions/c/submitted.pdf: versions/c/submitted.pdf is already there at that step",
+        "versions/lock.json would vouch for versions/c/arxiv.pdf, which would not be there after the migration",
+      ]),
+    );
   });
 });

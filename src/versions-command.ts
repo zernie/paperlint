@@ -24,6 +24,7 @@ import { sha256Hex } from "./domain/sha256.ts";
 import {
   frontmatterOf,
   planMigration,
+  rehearse,
   withoutStages,
   type MigrationPlan,
 } from "./domain/versions-migration.ts";
@@ -157,7 +158,7 @@ function runLock(
 // ── migrate ─────────────────────────────────────────────────────────────────────────────
 
 /** What the scorecard holds for the migration: its `stages:` list, and its text without it (null: none to take out). */
-interface Scorecard {
+export interface Scorecard {
   readonly stages: readonly unknown[];
   readonly without: string | null;
 }
@@ -253,6 +254,24 @@ function migrate(
   return 0;
 }
 
+/**
+ * A plan carried out only once its rehearsal on the paths it touches went through (src/domain/
+ * versions-migration.ts, `rehearse`): a plan that could stop half-way is a refusal, nothing written.
+ */
+export function carryOut(
+  paperDir: string,
+  plan: MigrationPlan,
+  card: Scorecard,
+  deps: VersionsCommandDeps,
+): number {
+  const ran = rehearse(plan, (p) =>
+    deps.files.isFile(callerPath(resolve(paperDir, p))),
+  );
+  return ran.ok
+    ? migrate(paperDir, plan, card, deps)
+    : refused([...ran.error, "nothing was moved"], deps);
+}
+
 /** The lock already there, or the line saying it must be written first. */
 function lockBefore(
   paperDir: string,
@@ -292,7 +311,7 @@ function runMigrate(
       ),
       0
     );
-  return migrate(paperDir, plan.value, card.value, deps);
+  return carryOut(paperDir, plan.value, card.value, deps);
 }
 
 const refused = (

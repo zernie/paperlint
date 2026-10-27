@@ -13,6 +13,7 @@
  */
 import * as R from "remeda";
 import type { CycleId } from "./cycle.ts";
+import { asPaperPath, paperPath, type PaperPath } from "./paths.ts";
 import { isRecord } from "./record.ts";
 import { err, ok, type Result } from "./result.ts";
 import {
@@ -29,10 +30,10 @@ import {
   type VersionStage,
 } from "./versions.ts";
 
-/** A file moved, both paths relative to the paper folder. */
+/** A file moved (or copied), both paths parsed: one spelling per file, inside the paper folder. */
 export interface Move {
-  readonly from: string;
-  readonly to: string;
+  readonly from: PaperPath;
+  readonly to: PaperPath;
 }
 
 export interface MigrationPlan {
@@ -53,11 +54,11 @@ export interface MigrationInput {
   /** The entries directly in `versions/`. */
   readonly root: readonly Entry[];
   /** The size and digest of a file of the paper, by its path relative to the paper; null when absent. */
-  readonly factsOf: (rel: string) => FileFacts | null;
+  readonly factsOf: (rel: PaperPath) => FileFacts | null;
   /** The lock already there (versions frozen on send since), or none. */
   readonly lock: Lock;
   /** Whether a file of the paper is there, by its path relative to the paper: a destination taken. */
-  readonly exists: (rel: string) => boolean;
+  readonly exists: (rel: PaperPath) => boolean;
 }
 
 /** One entry's part of the plan: moves and lock entries, or what stops it. */
@@ -92,11 +93,42 @@ interface Target {
   readonly date: string;
 }
 
+/**
+ * A path a stage declares, parsed once where the plan reads the list: absent (not a string), or the
+ * file it names in one spelling, or why it names no file of the paper.
+ */
+type DeclaredPath = Result<PaperPath, string> | null;
+
+/** One `stages:` entry as the plan reads it: the record, and its two paths parsed. */
+interface Declaration {
+  readonly rec: Readonly<Record<string, unknown>>;
+  readonly pdf: DeclaredPath;
+  readonly source: DeclaredPath;
+}
+
+const declaredPath = (v: unknown): DeclaredPath =>
+  typeof v === "string" ? paperPath(v) : null;
+
+const declaration = (e: unknown): Declaration => {
+  const rec = isRecord(e) ? e : {};
+  return {
+    rec,
+    pdf: declaredPath(rec["pdf"]),
+    source: declaredPath(rec["source"]),
+  };
+};
+
+/** A declared path that names no file of the paper: what stops the entry. */
+const outside = (t: Target, error: string): Part =>
+  problem(
+    `${t.at}: ${error} — a stage names a file of this paper, relative to it`,
+  );
+
 /** One declared file → its move and lock entry, or why it cannot move. */
 function filePart(
   t: Target,
   f: {
-    readonly path: string;
+    readonly path: PaperPath;
     readonly declared: unknown;
     readonly ext: VersionExt;
   },
@@ -112,7 +144,7 @@ function filePart(
   const key = frozenKey(t.cycle, t.stage, ext);
   const entry: LockEntry = { kind: "file", ...facts, frozen: t.date };
   return {
-    moves: [{ from: path, to: `${VERSIONS_DIR}/${key}` }],
+    moves: [{ from: path, to: asPaperPath(`${VERSIONS_DIR}/${key}`) }],
     lock: { [key]: entry },
     problems: [],
   };
@@ -127,24 +159,24 @@ const merge = (parts: readonly Part[]): Part => ({
 /** The source of an entry: lost, a file, or none (versions/layout then says the PDF has none). */
 function sourcePart(
   t: Target,
-  rec: Readonly<Record<string, unknown>>,
+  d: Declaration,
   factsOf: MigrationInput["factsOf"],
 ): Part {
-  if (rec["sourceLost"] === true)
+  if (d.rec["sourceLost"] === true)
     return {
       ...NONE,
       lock: {
         [frozenKey(t.cycle, t.stage, "tex")]: { kind: "lost", frozen: t.date },
       },
     };
-  const source = rec["source"];
-  return typeof source === "string"
+  if (d.source === null) return NONE;
+  return d.source.ok
     ? filePart(
         t,
-        { path: source, declared: rec["sourceBytes"], ext: "tex" },
+        { path: d.source.value, declared: d.rec["sourceBytes"], ext: "tex" },
         factsOf,
       )
-    : NONE;
+    : outside(t, d.source.error);
 }
 
 /** Where one `stages:` entry goes, or why it has no place. */
@@ -171,60 +203,65 @@ function targetOf(
 }
 
 /** One `stages:` entry → its moves and lock entries. */
-function entryPart(e: unknown, i: number, input: MigrationInput): Part {
-  const rec = isRecord(e) ? e : {};
-  const t = targetOf(rec, i, input.cycleIds);
+function entryPart(d: Declaration, i: number, input: MigrationInput): Part {
+  const t = targetOf(d.rec, i, input.cycleIds);
   if (!t.ok) return problem(t.error);
-  const pdf = rec["pdf"];
   return merge([
-    typeof pdf === "string"
-      ? filePart(
-          t.value,
-          { path: pdf, declared: rec["bytes"], ext: "pdf" },
-          input.factsOf,
-        )
-      : problem(`${t.value.at} («${t.value.stage}»): no "pdf"`),
-    sourcePart(t.value, rec, input.factsOf),
+    pdfPart(t.value, d, input.factsOf),
+    sourcePart(t.value, d, input.factsOf),
   ]);
 }
 
-/** Every path a `stages:` entry names, moved or not. */
-const named = (stages: readonly unknown[]): readonly string[] =>
-  stages.flatMap((e) =>
-    isRecord(e)
-      ? [e["pdf"], e["source"]].filter((p) => typeof p === "string")
-      : [],
-  );
+/** The PDF of an entry: a move, or why there is none. */
+function pdfPart(
+  t: Target,
+  d: Declaration,
+  factsOf: MigrationInput["factsOf"],
+): Part {
+  if (d.pdf === null) return problem(`${t.at} («${t.stage}»): no "pdf"`);
+  return d.pdf.ok
+    ? filePart(
+        t,
+        { path: d.pdf.value, declared: d.rec["bytes"], ext: "pdf" },
+        factsOf,
+      )
+    : outside(t, d.pdf.error);
+}
+
+/** Every file the entries name, moved or not, in its one spelling. */
+const named = (decls: readonly Declaration[]): readonly PaperPath[] =>
+  decls
+    .flatMap((d) => [d.pdf, d.source])
+    .flatMap((p) => (p?.ok === true ? [p.value] : []));
 
 /**
  * Files no entry names, at the top of versions/: a dated one of the old layout stops it — it may be a
  * stage nobody declared — and any other (a withdrawn `STALE` copy, a note on the old convention) goes to
  * extra/versions/, since versions/layout allows nothing loose beside lock.json.
  */
-function leftovers(input: MigrationInput, moved: readonly string[]): Part {
+function leftovers(input: MigrationInput, moved: readonly PaperPath[]): Part {
   const left = input.root.filter(
-    (e) =>
-      e.kind === "file" &&
-      !e.name.startsWith(".") &&
-      e.name !== LOCK_FILE &&
-      !moved.includes(`${VERSIONS_DIR}/${e.name}`),
+    (e) => e.kind === "file" && !e.name.startsWith(".") && e.name !== LOCK_FILE,
   );
   return merge(
-    left.map((e): Part =>
-      DATED_NAME.test(e.name)
+    left.map((e): Part => {
+      const from = paperPath(`${VERSIONS_DIR}/${e.name}`);
+      if (!from.ok)
+        return problem(
+          `versions/${e.name}: not a file name migrate can move — rename it, then migrate`,
+        );
+      if (moved.includes(from.value)) return NONE;
+      return DATED_NAME.test(e.name)
         ? problem(
             `versions/${e.name}: no stage in \`stages:\` names it — declare it with its cycle, or move it to extra/, then migrate`,
           )
         : {
             ...NONE,
             moves: [
-              {
-                from: `${VERSIONS_DIR}/${e.name}`,
-                to: `extra/versions/${e.name}`,
-              },
+              { from: from.value, to: asPaperPath(`extra/versions/${e.name}`) },
             ],
-          },
-    ),
+          };
+    }),
   );
 }
 
@@ -270,8 +307,10 @@ const taken = (
 export function planMigration(
   input: MigrationInput,
 ): Result<MigrationPlan, readonly string[]> {
-  const entries = merge(input.stages.map((e, i) => entryPart(e, i, input)));
-  const rest = leftovers(input, named(input.stages));
+  // Every declared path parsed once, here: everything below compares one spelling per file.
+  const decls = input.stages.map(declaration);
+  const entries = merge(decls.map((d, i) => entryPart(d, i, input)));
+  const rest = leftovers(input, named(decls));
   const all = [...entries.moves, ...rest.moves].filter((m) => m.from !== m.to);
   const problems = [
     ...entries.problems,
@@ -282,6 +321,80 @@ export function planMigration(
   return problems.length > 0
     ? err(problems)
     : ok({ ...shared(all), lock: { ...input.lock, ...entries.lock } });
+}
+
+// ── the rehearsal ────────────────────────────────────────────────────────────────────────
+
+/** One step of a plan, as the rehearsal replays it. */
+interface Step {
+  readonly verb: "copy" | "move";
+  readonly from: PaperPath;
+  readonly to: PaperPath;
+}
+
+/** The files there after one step, and what stopped it. */
+interface Stage {
+  readonly there: readonly PaperPath[];
+  readonly problems: readonly string[];
+}
+
+/** One step on the files there: it needs its source and a free destination. */
+function replay(state: Stage, s: Step): Stage {
+  const at = `${s.verb} ${s.from} → ${s.to}`;
+  if (!state.there.includes(s.from))
+    return {
+      ...state,
+      problems: [
+        ...state.problems,
+        `${at}: ${s.from} is not there at that step`,
+      ],
+    };
+  if (state.there.includes(s.to))
+    return {
+      ...state,
+      problems: [
+        ...state.problems,
+        `${at}: ${s.to} is already there at that step`,
+      ],
+    };
+  const kept =
+    s.verb === "move" ? state.there.filter((p) => p !== s.from) : state.there;
+  return { ...state, there: [...kept, s.to] };
+}
+
+/**
+ * The plan replayed on the paths it touches, before the disk is: each copy and each move needs its
+ * source and a free destination at its step, and every file the new lock vouches for is there at the
+ * end. The planner's own checks give the reasons a person can act on; this is the backstop that turns
+ * any plan they let through by mistake into a refusal, never a paper moved half-way. Pure.
+ */
+export function rehearse(
+  plan: MigrationPlan,
+  exists: (p: PaperPath) => boolean,
+): Result<null, readonly string[]> {
+  const steps: readonly Step[] = [
+    ...plan.copies.map((m) => ({ verb: "copy" as const, ...m })),
+    ...plan.moves.map((m) => ({ verb: "move" as const, ...m })),
+  ];
+  const vouched = Object.entries(plan.lock)
+    .filter(([, e]) => e.kind === "file")
+    .map(([key]) => asPaperPath(`${VERSIONS_DIR}/${key}`));
+  const touched = R.unique([
+    ...steps.flatMap((s) => [s.from, s.to]),
+    ...vouched,
+  ]);
+  const end = steps.reduce(replay, {
+    there: touched.filter(exists),
+    problems: [],
+  });
+  const missing = vouched
+    .filter((p) => !end.there.includes(p))
+    .map(
+      (p) =>
+        `versions/lock.json would vouch for ${p}, which would not be there after the migration`,
+    );
+  const problems = [...end.problems, ...missing];
+  return problems.length > 0 ? err(problems) : ok(null);
 }
 
 // ── the scorecard's frontmatter ──────────────────────────────────────────────────────────

@@ -16,7 +16,12 @@ import { parseYaml } from "./adapters/yaml/index.ts";
 import { absolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { lockText, parseLock, type Lock } from "./domain/versions.ts";
-import { runVersions } from "./versions-command.ts";
+import {
+  carryOut,
+  runVersions,
+  type VersionsCommandDeps,
+} from "./versions-command.ts";
+import { paperPath } from "./domain/paths.ts";
 import { factsOfFrozen } from "./versions.ts";
 
 const PAPER = "/w/papers/p";
@@ -91,22 +96,30 @@ function paper(o: { readonly cycles?: readonly object[] | null } = {}) {
   });
 }
 
+/** What the command runs with, over in-memory files. */
+const deps = (
+  files: MemoryFiles,
+  out: string[],
+  errs: string[],
+  cwd = "/w",
+): VersionsCommandDeps => ({
+  files,
+  listDir: memoryListDir(files),
+  move: memoryMoveFile(files),
+  copy: memoryCopyFile(files),
+  yaml: parseYaml,
+  latex: latexReader,
+  codec: sourcesCodec,
+  now: () => "2026-10-27T12:00:00.000Z",
+  cwd,
+  log: (l) => out.push(l),
+  err: (l) => errs.push(l),
+});
+
 function run(words: readonly string[], files: MemoryFiles, cwd = "/w") {
   const out: string[] = [];
   const errs: string[] = [];
-  const code = runVersions(words, {
-    files,
-    listDir: memoryListDir(files),
-    move: memoryMoveFile(files),
-    copy: memoryCopyFile(files),
-    yaml: parseYaml,
-    latex: latexReader,
-    codec: sourcesCodec,
-    now: () => "2026-10-27T12:00:00.000Z",
-    cwd,
-    log: (l) => out.push(l),
-    err: (l) => errs.push(l),
-  });
+  const code = runVersions(words, deps(files, out, errs, cwd));
   return { code, out, errs };
 }
 
@@ -485,5 +498,97 @@ describe("paperlint versions migrate, one source for two stages", () => {
         frozen: "2026-10-25",
       },
     );
+  });
+});
+
+describe("paperlint versions migrate, a path as the scorecard spells it", () => {
+  it("`./versions/source.tex`, not dated: moved once into its cycle's folder, nothing left for extra/", () => {
+    const fs = oldLayout(
+      STAGES.replace(
+        "source: versions/2026-10-23-submitted.tex",
+        "source: ./versions/source.tex",
+      ),
+    );
+    fs.map.delete(`${PAPER}/versions/2026-10-23-submitted.tex`);
+    fs.writeAtomic(absolutePath(`${PAPER}/versions/source.tex`), enc(SENT));
+    const r = run(["migrate", "papers/p"], fs);
+    expect(r.errs).toStrictEqual([]);
+    expect(r.code).toBe(0);
+    expect(read(fs, `${PAPER}/versions/journal-2027/submitted.tex`)).toBe(SENT);
+    expect(fs.isFile(absolutePath(`${PAPER}/extra/versions/source.tex`))).toBe(
+      false,
+    );
+    expect(r.out).toContain(
+      "moved         versions/source.tex → versions/journal-2027/submitted.tex",
+    );
+  });
+
+  it("a `./`-prefixed dated name migrates like the plain one", () => {
+    const fs = oldLayout(
+      STAGES.replace(
+        "pdf: versions/2026-10-23-submitted.pdf",
+        "pdf: ./versions/2026-10-23-submitted.pdf",
+      ),
+    );
+    const r = run(["migrate", "papers/p"], fs);
+    expect(r.errs).toStrictEqual([]);
+    expect(r.code).toBe(0);
+    expect(read(fs, `${PAPER}/versions/journal-2027/submitted.pdf`)).toBe(PDF);
+  });
+
+  it("a path out of the paper folder: refused when it is read, the tree byte-identical", () => {
+    const fs = oldLayout(
+      STAGES.replace(
+        "source: versions/2026-10-23-submitted.tex",
+        "source: ../x.tex",
+      ),
+    );
+    const before = disk(fs);
+    const r = run(["migrate", "papers/p"], fs);
+    expect(r.code).toBe(2);
+    expect(r.errs).toContain(
+      "stages[1]: `../x.tex` is not a path inside the paper folder — a stage names a file of this paper, relative to it",
+    );
+    expect(disk(fs)).toStrictEqual(before);
+  });
+});
+
+describe("paperlint versions migrate, a plan that could not run to the end", () => {
+  it("is rehearsed first: a plan that moves one file twice is refused, the tree byte-identical", () => {
+    const fs = oldLayout(STAGES);
+    const before = disk(fs);
+    const p = (s: string) => {
+      const r = paperPath(s);
+      if (!r.ok) throw new Error(r.error);
+      return r.value;
+    };
+    const out: string[] = [];
+    const errs: string[] = [];
+    const code = carryOut(
+      PAPER,
+      {
+        copies: [],
+        moves: [
+          {
+            from: p("versions/2026-10-23-submitted.pdf"),
+            to: p("versions/journal-2027/submitted.pdf"),
+          },
+          {
+            from: p("versions/2026-10-23-submitted.pdf"),
+            to: p("versions/journal-2027/arxiv.pdf"),
+          },
+        ],
+        lock: {},
+      },
+      { without: null, stages: [] },
+      deps(fs, out, errs),
+    );
+    expect(code).toBe(2);
+    expect(errs).toStrictEqual([
+      "move versions/2026-10-23-submitted.pdf → versions/journal-2027/arxiv.pdf: versions/2026-10-23-submitted.pdf is not there at that step",
+      "nothing was moved",
+    ]);
+    expect(out).toStrictEqual([]);
+    expect(disk(fs)).toStrictEqual(before);
   });
 });

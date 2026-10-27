@@ -306,7 +306,9 @@ entry that records the loss. An entry without a `cycle:`, a file that is no long
 or a dated file no entry names stops the whole migration before anything moves, with what to do;
 so does a destination that is already there, such as a version `submission update --save` froze
 while the list was still in place. A source two stages were built from (a `submitted` and an `arxiv`
-sharing one `.tex`) is copied to each.
+sharing one `.tex`) is copied to each. Paths in the list are read in one spelling (`./versions/a.tex` is `versions/a.tex`), and one
+outside the paper folder (`../a.tex`) is refused. Before anything moves, the whole plan is replayed on
+the paths it touches: a plan that could stop half-way is refused with nothing moved.
 Any other loose file at the top of `versions/` (a withdrawn `STALE` copy, a note on the old
 convention) moves to `extra/versions/`, since [`versions/layout`](rules/versions/layout.md) allows
 nothing there beside `lock.json`. The YAML comments inside the list leave with it: read them first,
