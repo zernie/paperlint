@@ -17,6 +17,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
+import { lockText, type LockEntry } from "./domain/versions.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
 import {
   planTemplate,
@@ -545,6 +546,58 @@ const BLIND_PORTING = {
   // What `blind()` declares flat; with cycles it moves into the record's siblings, not the cycle.
 };
 
+/** One open cycle with a submission on the portal: what it sent is owed to `versions/`. */
+const SUBMITTED_CYCLE = JSON.stringify({
+  cycles: [
+    {
+      id: "open-2027",
+      venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+      opened: "2026-09-09",
+      submission: { id: 7 },
+    },
+  ],
+});
+/** One accepted cycle, its decision on disk. */
+const ACCEPTED_CYCLE = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    cycles: [
+      {
+        id: "open-2027",
+        venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+        opened: "2026-09-09",
+        outcome: {
+          kind: "accepted",
+          date: "2026-12-01",
+          evidence: "reviews/decision.md",
+        },
+      },
+    ],
+  }),
+  [`${P}/reviews/decision.md`]: "# accepted\n",
+};
+/** The lock entry of a file holding `text`, as paperlint writes it on a send. */
+const lockedAs = (text: string): LockEntry => {
+  const bytes = new TextEncoder().encode(text);
+  return {
+    kind: "file",
+    bytes: bytes.length,
+    sha256: sha256Hex(bytes),
+    frozen: "2026-10-23T16:58:01.000Z",
+  };
+};
+/** `open-2027`'s submitted PDF and its source `source`, frozen, and the lock that records both. */
+const frozenSent = (source: string): Record<string, string> => {
+  const pdf = "%PDF frozen";
+  return {
+    [`${P}/versions/open-2027/submitted.pdf`]: pdf,
+    [`${P}/versions/open-2027/submitted.tex`]: source,
+    [`${P}/versions/lock.json`]: lockText({
+      "open-2027/submitted.pdf": lockedAs(pdf),
+      "open-2027/submitted.tex": lockedAs(source),
+    }),
+  };
+};
+
 const CASES: Readonly<Record<string, RuleCases>> = {
   "paper/stages": {
     reports: {
@@ -599,6 +652,63 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       [`${P}/paperlint.json`]: OPEN_CYCLE,
       [`${P}/versions/a.pdf`]: "x",
     },
+  },
+  // ── the frozen versions: versions/<cycle>/<stage>.{pdf,tex} and versions/lock.json ──────────────
+  "versions/layout": {
+    reports: {
+      tree: {
+        ...paper(tex("x")),
+        [`${P}/paperlint.json`]: OPEN_CYCLE,
+        [`${P}/versions/2026-07-22-submitted.pdf`]: "x",
+      },
+      file: STATUS_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: {
+      ...paper(tex("x")),
+      [`${P}/paperlint.json`]: OPEN_CYCLE,
+      ...frozenSent(tex("x")),
+    },
+  },
+  "cycle/submitted-frozen": {
+    reports: {
+      tree: { ...paper(tex("x")), [`${P}/paperlint.json`]: SUBMITTED_CYCLE },
+      file: STATUS_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: {
+      ...paper(tex("x")),
+      [`${P}/paperlint.json`]: SUBMITTED_CYCLE,
+      ...frozenSent(tex("x")),
+    },
+  },
+  "cycle/draft-drift": {
+    reports: {
+      tree: {
+        ...paper(tex("y")),
+        [`${P}/paperlint.json`]: OPEN_CYCLE,
+        ...frozenSent(tex("x")),
+      },
+      file: TEX_FILE,
+      severity: 1,
+      line: 1,
+    },
+    silent: {
+      ...paper(tex("x")),
+      [`${P}/paperlint.json`]: OPEN_CYCLE,
+      ...frozenSent(tex("x")),
+    },
+  },
+  "cycle/camera-ready-source": {
+    reports: {
+      tree: { ...paper(tex("y")), ...ACCEPTED_CYCLE, ...frozenSent(tex("x")) },
+      file: TEX_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: { ...paper(tex("x")), ...ACCEPTED_CYCLE, ...frozenSent(tex("x")) },
   },
   "cycle/port-done": {
     reports: {

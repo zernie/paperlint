@@ -90,11 +90,11 @@ describe("names", () => {
   });
 });
 
-describe("the lock", () => {
-  const json = (files: object) => ({ lockfileVersion: 1, files });
-  /** An entry as the file holds it. */
-  const written = { bytes: 10, sha256: SHA, frozen: "2026-07-22" };
+const json = (files: object) => ({ lockfileVersion: 1, files });
+/** An entry as the file holds it. */
+const written = { bytes: 10, sha256: SHA, frozen: "2026-07-22" };
 
+describe("the lock", () => {
   it("parses what paperlint writes, and writes it back the same, keys sorted", () => {
     const lock: Lock = {
       "beta-2027/submitted.pdf": entry(5, SHA, "2026-10-23T16:58:01.000Z"),
@@ -118,7 +118,9 @@ describe("the lock", () => {
     });
     expect(text.endsWith("}\n")).toBe(true);
   });
+});
 
+describe("the lock, refused", () => {
   it("refuses what it does not write, naming the entry and the key", () => {
     expect(parseLock({ files: {} })).toStrictEqual(
       err('not a lock this paperlint writes ("lockfileVersion": 1)'),
@@ -131,9 +133,15 @@ describe("the lock", () => {
     );
     const at = '"files"["b/submitted.pdf"]';
     const cases: readonly (readonly [object, string])[] = [
-      [{ "b/x.pdf": {} }, '"files"["b/x.pdf"]: a key is <cycle>/<stage>.pdf or .tex'],
+      [
+        { "b/x.pdf": {} },
+        '"files"["b/x.pdf"]: a key is <cycle>/<stage>.pdf or .tex',
+      ],
       [{ "b/submitted.pdf": 1 }, `${at} must be an object`],
-      [{ "b/submitted.pdf": { ...written, size: 1 } }, `${at}: unknown key "size"`],
+      [
+        { "b/submitted.pdf": { ...written, size: 1 } },
+        `${at}: unknown key "size"`,
+      ],
       [
         { "b/submitted.pdf": { sourceLost: true } },
         `${at}: only a source (.tex) can be recorded as lost`,
@@ -165,7 +173,9 @@ describe("the lock", () => {
     // The first problem stops the read.
     expect(
       parseLock(json({ "b/x.pdf": {}, "b/submitted.pdf": 1 })),
-    ).toStrictEqual(err('"files"["b/x.pdf"]: a key is <cycle>/<stage>.pdf or .tex'));
+    ).toStrictEqual(
+      err('"files"["b/x.pdf"]: a key is <cycle>/<stage>.pdf or .tex'),
+    );
   });
 });
 
@@ -190,7 +200,9 @@ describe("versions/layout", () => {
       judgeVersions(layout({ root: [], lock: null, inFolder: () => [] })),
     ).toStrictEqual([]);
   });
+});
 
+describe("versions/layout, entries outside it", () => {
   it("an entry outside the convention: a dated file says how to migrate it, the rest where things go", () => {
     const found = judgeVersions(
       layout({
@@ -202,7 +214,12 @@ describe("versions/layout", () => {
         ],
         inFolder: (name) =>
           name === "beta-2027"
-            ? [file("submitted.pdf"), file("submitted.tex"), file("final.pdf"), dir("figs")]
+            ? [
+                file("submitted.pdf"),
+                file("submitted.tex"),
+                file("final.pdf"),
+                dir("figs"),
+              ]
             : [file("submitted.pdf"), file("submitted.tex")],
       }),
     );
@@ -235,7 +252,9 @@ describe("versions/layout", () => {
       { folder: "beta-2027", known: "(none)" },
     ]);
   });
+});
 
+describe("versions/layout, the files in a folder", () => {
   it("a PDF without its source, unless the lock records the source lost", () => {
     const onlyPdf = () => [file("submitted.pdf")];
     const lock: Lock = {
@@ -262,7 +281,12 @@ describe("versions/layout", () => {
       layout({
         cycles: porting,
         root: [dir("beta-2027"), file("lock.json")],
-        inFolder: () => [file("submitted.pdf"), file("submitted.tex"), file("arxiv.pdf"), file("arxiv.tex")],
+        inFolder: () => [
+          file("submitted.pdf"),
+          file("submitted.tex"),
+          file("arxiv.pdf"),
+          file("arxiv.tex"),
+        ],
         lock: ok({
           "beta-2027/submitted.pdf": entry(),
           "beta-2027/submitted.tex": entry(),
@@ -278,7 +302,9 @@ describe("versions/layout", () => {
       },
     ]);
   });
+});
 
+describe("versions/layout, the lock", () => {
   it("frozen files and no lock, or a lock that does not parse: one finding each", () => {
     expect(judgeVersions(layout({ lock: null }))).toStrictEqual([
       { messageId: "noLock", data: {} },
@@ -386,7 +412,9 @@ describe("each version's state", () => {
     expect(stateOf(beta, "submitted")).toBe(
       "CURRENT (under review at Beta 2027)",
     );
-    expect(stateOf(beta, "camera-ready")).toBe("camera-ready, cycle still open");
+    expect(stateOf(beta, "camera-ready")).toBe(
+      "camera-ready, cycle still open",
+    );
     expect(stateOf(alpha, "submitted")).toBe("historical (rejected)");
     expect(stateOf(accepted, "submitted")).toBe("camera-ready base");
     expect(stateOf(accepted, "camera-ready")).toBe("final");
@@ -394,11 +422,18 @@ describe("each version's state", () => {
   });
 
   it("the table: each cycle newest first, then the draft — what is missing said, nothing frozen said", () => {
-    const withGamma = cycles(ALPHA, { ...BETA, outcome: { kind: "withdrawn", date: "2026-09-20", evidence: "w.md" } }, {
-      id: "gamma-2027",
-      venue: { kind: "preset", extends: "paperlint:msr" },
-      opened: "2026-10-01",
-    });
+    const withGamma = cycles(
+      ALPHA,
+      {
+        ...BETA,
+        outcome: { kind: "withdrawn", date: "2026-09-20", evidence: "w.md" },
+      },
+      {
+        id: "gamma-2027",
+        venue: { kind: "preset", extends: "paperlint:msr" },
+        opened: "2026-10-01",
+      },
+    );
     const lock: Lock = {
       "alpha-2026/submitted.pdf": entry(305412, SHA, "2026-07-22"),
       "alpha-2026/submitted.tex": { kind: "lost", frozen: "2026-07-22" },
@@ -416,7 +451,9 @@ describe("each version's state", () => {
       "  paper.tex   draft      target not chosen                           no attempt to compare with",
     ]);
   });
+});
 
+describe("each version's state, the draft row", () => {
   it("the draft row: the same as its base, drifted, or no base frozen", () => {
     const draft = (d: Parameters<typeof versionRows>[0]["draft"]) =>
       versionRows({ cycles: [], has: () => false, lock: {}, draft: d }).at(-1)
@@ -425,7 +462,11 @@ describe("each version's state", () => {
       "same as b/submitted.tex",
     );
     expect(
-      draft({ kind: "drift", key: "b/submitted.tex", drift: { added: 1, removed: 18 } }),
+      draft({
+        kind: "drift",
+        key: "b/submitted.tex",
+        drift: { added: 1, removed: 18 },
+      }),
     ).toBe("differs from b/submitted.tex: 1 line added, 18 removed");
     expect(draft({ kind: "no-base", key: "b/submitted.tex" })).toBe(
       "nothing frozen at b/submitted.tex to compare with",

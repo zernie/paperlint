@@ -114,32 +114,33 @@ export function keyParts(
 ): { readonly cycle: string; readonly name: FrozenName } | null {
   const m = KEY.exec(key);
   const name = frozenName(m?.[2] ?? "");
-  return m?.[1] === undefined || name === null
-    ? null
-    : { cycle: m[1], name };
+  return m?.[1] === undefined || name === null ? null : { cycle: m[1], name };
 }
 
 const FILE_KEYS: readonly string[] = ["bytes", "sha256", "frozen"];
 const LOST_KEYS: readonly string[] = ["sourceLost", "frozen"];
 
-function parseEntry(key: string, v: unknown): Result<LockEntry, string> {
-  const at = `"files"["${key}"]`;
-  const parts = keyParts(key);
-  if (parts === null)
-    return err(`${at}: a key is <cycle>/<stage>.pdf or .tex`);
-  if (!isRecord(v)) return err(`${at} must be an object`);
-  const lost = v["sourceLost"] === true;
-  const known = lost ? LOST_KEYS : FILE_KEYS;
-  const unknown = Object.keys(v).find((k) => !known.includes(k));
-  if (unknown !== undefined) return err(`${at}: unknown key "${unknown}"`);
-  if (lost) {
-    const frozen = v["frozen"] ?? null;
-    if (parts.name.ext !== "tex")
-      return err(`${at}: only a source (.tex) can be recorded as lost`);
-    return frozen === null || isWhen(frozen)
-      ? ok({ kind: "lost", frozen })
-      : err(`${at}: "frozen" must be a date or an instant`);
-  }
+const whenProblem = (at: string): string =>
+  `${at}: "frozen" must be a date or an instant`;
+
+/** An entry recording a lost source: `{ "sourceLost": true, "frozen"? }`. */
+function parseLost(
+  at: string,
+  ext: VersionExt,
+  frozen: unknown,
+): Result<LockEntry, string> {
+  if (ext !== "tex")
+    return err(`${at}: only a source (.tex) can be recorded as lost`);
+  return frozen === undefined || isWhen(frozen)
+    ? ok({ kind: "lost", frozen: frozen ?? null })
+    : err(whenProblem(at));
+}
+
+/** An entry recording a frozen file: `{ "bytes", "sha256", "frozen" }`. */
+function parseFile(
+  at: string,
+  v: Readonly<Record<string, unknown>>,
+): Result<LockEntry, string> {
   const { bytes, sha256, frozen } = v;
   if (typeof bytes !== "number" || !Number.isInteger(bytes) || bytes < 0)
     return err(`${at}: "bytes" must be a whole number`);
@@ -147,7 +148,20 @@ function parseEntry(key: string, v: unknown): Result<LockEntry, string> {
     return err(`${at}: "sha256" must be 64 lowercase hex digits`);
   return isWhen(frozen)
     ? ok({ kind: "file", bytes, sha256, frozen })
-    : err(`${at}: "frozen" must be a date or an instant`);
+    : err(whenProblem(at));
+}
+
+function parseEntry(key: string, v: unknown): Result<LockEntry, string> {
+  const at = `"files"["${key}"]`;
+  const parts = keyParts(key);
+  if (parts === null) return err(`${at}: a key is <cycle>/<stage>.pdf or .tex`);
+  if (!isRecord(v)) return err(`${at} must be an object`);
+  const lost = v["sourceLost"] === true;
+  const unknown = Object.keys(v).find(
+    (k) => !(lost ? LOST_KEYS : FILE_KEYS).includes(k),
+  );
+  if (unknown !== undefined) return err(`${at}: unknown key "${unknown}"`);
+  return lost ? parseLost(at, parts.name.ext, v["frozen"]) : parseFile(at, v);
 }
 
 /** `lock.json`, parsed → the lock, or one line naming what is wrong. Pure. */
@@ -158,14 +172,11 @@ export function parseLock(json: unknown): Result<Lock, string> {
     );
   const files = json["files"];
   if (!isRecord(files)) return err(`"files" must be an object`);
-  return Object.entries(files).reduce<Result<Lock, string>>(
-    (acc, [key, v]) => {
-      if (!acc.ok) return acc;
-      const e = parseEntry(key, v);
-      return e.ok ? ok({ ...acc.value, [key]: e.value }) : e;
-    },
-    ok({}),
-  );
+  return Object.entries(files).reduce<Result<Lock, string>>((acc, [key, v]) => {
+    if (!acc.ok) return acc;
+    const e = parseEntry(key, v);
+    return e.ok ? ok({ ...acc.value, [key]: e.value }) : e;
+  }, ok({}));
 }
 
 const entryJson = (e: LockEntry): object =>
@@ -288,8 +299,7 @@ function folderContents(input: LayoutInput): {
   };
 }
 
-const isLost = (lock: Lock, key: string): boolean =>
-  lock[key]?.kind === "lost";
+const isLost = (lock: Lock, key: string): boolean => lock[key]?.kind === "lost";
 
 /** Each frozen PDF without its source beside it, unless the lock records the source as lost. */
 function missingSources(
@@ -392,8 +402,7 @@ export const unfrozenSubmissions = (
 ): readonly VersionFinding[] =>
   cycles
     .filter(
-      (c) =>
-        c.submission !== null && !has(frozenKey(c.id, "submitted", "pdf")),
+      (c) => c.submission !== null && !has(frozenKey(c.id, "submitted", "pdf")),
     )
     .map((c) => ({
       messageId: "unfrozen",
@@ -415,11 +424,9 @@ export interface Drift {
 /** The lines `draft` adds to `frozen` and removes from it (a line diff, as `git diff --numstat`). Pure. */
 export function lineDrift(frozen: string, draft: string): Drift {
   const parts = diffLines(frozen, draft);
-  const sum = (pick: (p: (typeof parts)[number]) => boolean): number =>
-    R.sumBy(parts.filter(pick), (p) => p.count);
   return {
-    added: sum((p) => p.added),
-    removed: sum((p) => p.removed),
+    added: R.sumBy(parts, (p) => (p.added ? p.count : 0)),
+    removed: R.sumBy(parts, (p) => (p.removed ? p.count : 0)),
   };
 }
 
@@ -499,18 +506,37 @@ const entryDetail = (e: LockEntry | undefined): string =>
       ? "source lost"
       : `${String(e.bytes)} B  frozen ${whenText(e.frozen)}`;
 
+/** The stages a cycle has frozen: a PDF, a source, or a source the lock records as lost. */
+const frozenStages = (
+  c: Cycle,
+  has: (key: string) => boolean,
+  lock: Lock,
+): readonly VersionStage[] =>
+  VERSION_STAGES.filter(
+    (s) =>
+      has(frozenKey(c.id, s, "pdf")) ||
+      has(frozenKey(c.id, s, "tex")) ||
+      isLost(lock, frozenKey(c.id, s, "tex")),
+  );
+
+/** The row of a cycle that froze nothing: what it is, from its outcome. */
+const emptyRow = (c: Cycle): VersionRow => ({
+  version: c.id,
+  stage: "—",
+  state:
+    c.outcome.kind === "open"
+      ? "open, nothing sent yet"
+      : `${c.outcome.kind}, nothing frozen`,
+  detail: "",
+});
+
 /** A cycle's rows: one per stage frozen in its folder, or one saying what is missing or that nothing is. */
 function cycleRows(
   c: Cycle,
   has: (key: string) => boolean,
   lock: Lock,
 ): readonly VersionRow[] {
-  const stages = VERSION_STAGES.filter(
-    (s) =>
-      has(frozenKey(c.id, s, "pdf")) ||
-      has(frozenKey(c.id, s, "tex")) ||
-      isLost(lock, frozenKey(c.id, s, "tex")),
-  );
+  const stages = frozenStages(c, has, lock);
   const unfrozen =
     c.submission !== null && !stages.includes("submitted")
       ? [
@@ -531,19 +557,8 @@ function cycleRows(
       ...(isLost(lock, frozenKey(c.id, s, "tex")) ? ["source lost"] : []),
     ].join(", "),
   }));
-  return [...unfrozen, ...frozen].length > 0
-    ? [...unfrozen, ...frozen]
-    : [
-        {
-          version: c.id,
-          stage: "—",
-          state:
-            c.outcome.kind === "open"
-              ? "open, nothing sent yet"
-              : `${c.outcome.kind}, nothing frozen`,
-          detail: "",
-        },
-      ];
+  const rows = [...unfrozen, ...frozen];
+  return rows.length > 0 ? rows : [emptyRow(c)];
 }
 
 /** What the draft row says about its drift from the base. */

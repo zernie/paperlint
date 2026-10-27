@@ -62,7 +62,10 @@ const STATUS_FILE = "PIPELINE-STATUS.md";
 export type CycleRuleName = "record" | "evidence";
 
 /** The `cycles` value of the paper's settings file; undefined when there is no file, no JSON, or no key. */
-function cyclesValue(dir: string, deps: VenueRuleDeps): unknown {
+function cyclesValue(
+  dir: string,
+  deps: Pick<VenueRuleDeps, "files">,
+): unknown {
   const bytes = deps.files.readBytes(callerPath(join(dir, CONFIG_FILE)));
   if (bytes === null) return undefined;
   try {
@@ -75,7 +78,7 @@ function cyclesValue(dir: string, deps: VenueRuleDeps): unknown {
 /** The paper's cycles, parsed and consistent, or the one line that says what is wrong. */
 export function readCycles(
   dir: string,
-  deps: VenueRuleDeps,
+  deps: Pick<VenueRuleDeps, "files">,
 ): Result<Cycles | null, string> {
   const list = parseCycles(cyclesValue(dir, deps));
   if (!list.ok) return list;

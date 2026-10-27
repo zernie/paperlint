@@ -176,6 +176,13 @@ import preregCoverage from "#eslint-rules/prereg-coverage";
 import cycleStage from "#eslint-rules/cycle-stage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import {
+  DRAFT_RULE_LEVELS,
+  draftRules,
+  submittedFrozenRules,
+  VERSION_STATUS_RULE_LEVELS,
+  versionLayoutRules,
+} from "./version-rules.ts";
+import {
   FOLDER_VENUE_RULE_LEVELS,
   folderVenueRules,
 } from "./folder-venue-rule.ts";
@@ -414,6 +421,22 @@ const MARKDOWN_WITH_FRONTMATTER = {
 const CYCLE_STATUS_RULES = {
   ...cycleRules({ files: nodeFiles, venuesDir: presetsDir() }),
   ...cycleStage.rules,
+  ...submittedFrozenRules({ files: nodeFiles, listDir: nodeListDir }),
+};
+
+/** The `cycle` plugin's rules on `paper.tex`: the port declared done, the draft against its frozen source. */
+const CYCLE_PAPER_RULES = {
+  ...cyclePortRules(TEX_RULE_DEPS),
+  ...draftRules(TEX_RULE_DEPS),
+};
+const CYCLE_PAPER_RULE_LEVELS = {
+  ...CYCLE_PORT_RULE_LEVELS,
+  ...DRAFT_RULE_LEVELS,
+};
+/** The levels of the `cycle` and `versions` rules on `PIPELINE-STATUS.md`. */
+const STATUS_CYCLE_RULE_LEVELS = {
+  ...CYCLE_RULE_LEVELS,
+  ...VERSION_STATUS_RULE_LEVELS,
 };
 
 /** The rules of the files `paper.tex` includes, each read on its own as a fragment (#144). */
@@ -539,6 +562,7 @@ export function buildConfig(
         // Registered, on for no paper: `"study/declare-sample": "error"` in paperlint.json turns it on.
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
+        versions: { rules: versionLayoutRules(LAYOUT_RULE_DEPS) },
       },
       ...md,
       rules: {
@@ -547,7 +571,7 @@ export function buildConfig(
         ...FOLDER_VENUE_RULE_LEVELS,
         ...FOLDER_LAYOUT_RULE_LEVELS,
         ...REPRO_RULE_LEVELS,
-        ...CYCLE_RULE_LEVELS,
+        ...STATUS_CYCLE_RULE_LEVELS,
       },
     },
     {
@@ -594,7 +618,7 @@ export function buildConfig(
             ...pageLimitRules({ files: nodeFiles, venuesDir: presetsDir() }),
           },
         },
-        cycle: { rules: cyclePortRules(TEX_RULE_DEPS) },
+        cycle: { rules: CYCLE_PAPER_RULES },
       },
       language: "tex/latex",
       rules: {
@@ -618,7 +642,7 @@ export function buildConfig(
         ...TEX_VENUE_RULE_LEVELS,
         ...FORMAT_RULE_LEVELS,
         ...PAGE_LIMIT_RULE_LEVELS,
-        ...CYCLE_PORT_RULE_LEVELS,
+        ...CYCLE_PAPER_RULE_LEVELS,
         // Silent for a paper that declares no `talk` (src/talk-rules.ts), but talk/undeclared.
         ...TALK_RULE_LEVELS,
       },
