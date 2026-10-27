@@ -15,6 +15,7 @@ const STUDY = absolutePath("/repo/papers/p/repro/S");
 const D = "d".repeat(40);
 const A = "a".repeat(40);
 const B = "b".repeat(40);
+const C = "c".repeat(40);
 const DATE = "2026-10-16T15:23:00+05:00";
 
 /** HEAD's tree holds the decision, unless a test says otherwise. */
@@ -146,8 +147,15 @@ it("order: a shallow clone is said, not judged", () => {
 });
 
 it("order: each file's first commit against the decision's — after, the same, not after", () => {
-  const log = `\x01${D}\t${DATE}\nx.csv\n\x01${A}\t${DATE}\na.csv\nx.csv\n\x01${B}\t${DATE}\nb.csv\n`;
-  // Guards: the decision's own commit is `same`; the others are ordered by ancestry.
+  const log = `\x01${D}\t${DATE}\nx.csv\n\x01${A}\t${DATE}\na.csv\nx.csv\n\x01${B}\t${DATE}\nb.csv\n\x01${C}\t${DATE}\nc.csv\n`;
+  // The commits that touched the decision and are reachable from each one, as `rev-list` names them.
+  const touching: Readonly<Record<string, string>> = {
+    [A]: `${D}\n`,
+    [B]: "",
+    [C]: `${C}\n`,
+  };
+  // Guards: the decision's own commit is `same`, and so is another that first carries it (a squash);
+  // a commit with a decision commit among its strict ancestors is `after`; the rest are `not-after`.
   const result = gitHistory(
     scriptedProcess((c) => {
       const sub = String(c.args[2]);
@@ -155,7 +163,7 @@ it("order: each file's first commit against the decision's — after, the same, 
       if (sub === "ls-tree") return IN_HEAD;
       if (sub === "log" && c.args.includes("--reverse")) return exitedWith(log);
       if (sub === "log") return exitedWith(`${A}\t${DATE}\n${D}\t${DATE}\n`);
-      return exitedWith("", String(c.args[5]) === A ? 0 : 1);
+      return exitedWith(touching[String(c.args[4])] ?? "");
     }),
     {},
   ).order(STUDY, FILE);
@@ -167,13 +175,14 @@ it("order: each file's first commit against the decision's — after, the same, 
       { path: "x.csv", commit: D, date: DATE, order: "same" },
       { path: "a.csv", commit: A, date: DATE, order: "after" },
       { path: "b.csv", commit: B, date: DATE, order: "not-after" },
+      { path: "c.csv", commit: C, date: DATE, order: "same" },
     ],
   });
 });
 
 it("order: no decision commit makes every file not-after; a failed ancestry question is a reason", () => {
   const log = `\x01${A}\t${DATE}\na.csv\n`;
-  const answer = (mergeBase: ProcessExit, decisionLog: string) =>
+  const answer = (revList: ProcessExit, decisionLog: string) =>
     gitHistory(
       scriptedProcess((c) => {
         const sub = String(c.args[2]);
@@ -182,7 +191,7 @@ it("order: no decision commit makes every file not-after; a failed ancestry ques
         if (sub === "log" && c.args.includes("--reverse"))
           return exitedWith(log);
         if (sub === "log") return exitedWith(decisionLog);
-        return mergeBase;
+        return revList;
       }),
       {},
     ).order(STUDY, FILE);

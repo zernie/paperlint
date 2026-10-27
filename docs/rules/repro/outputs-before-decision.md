@@ -60,7 +60,10 @@ the same check and get the same answer. The design is
 **It asks git for an order, never pins a sha**, which is why it can live as a lint rule (rules in
 `eslint-rules/` may not run git: a pinned sha is deleted by a squash or a gc). A squash merge keeps
 the order when the decision was merged before the run — the decide-first workflow — and a shallow
-checkout is named, not read as a violation.
+checkout is named, not read as a violation. A squash of a branch that held both the decision and the
+run puts them in one commit, and that order is gone from the squashed history; merge such a branch
+with a merge commit instead. History is read whole (`--full-history`): a merge whose first parent is
+already identical to it (a squash of the branch it merges back) does not hide that branch's commits.
 
 ## Examples
 

@@ -6,7 +6,7 @@
  *               (`git status --porcelain`)
  *   order       whether the clone is shallow; the decision file's first commit; every file's first
  *               commit under the study's folder (`git log --reverse --name-only`); and for each, whether
- *               the decision's first commit is its strict ancestor (`git merge-base --is-ancestor`)
+ *               any commit that touched the decision is its strict ancestor (`git rev-list -- <decision>`)
  */
 import type { AbsolutePath } from "../../domain/paths.ts";
 import type {
@@ -125,6 +125,25 @@ const inHead = (
   return "why" in t ? t : { present: t.out.trim() !== "" };
 };
 
+/**
+ * Every ancestor, not git's simplified history: a merge whose first parent already holds the same tree
+ * (a squash of the branch it merges) would otherwise hide that branch, and with it the commits that
+ * show the decision came first.
+ */
+const WHOLE_HISTORY = ["--full-history"] as const;
+
+/** Every path ever under the study's folder, oldest commit first, each commit's paths after its sha and date. */
+const FIRST_COMMITS = [
+  "log",
+  "--reverse",
+  ...WHOLE_HISTORY,
+  "--format=%x01%H%x09%cI",
+  "--name-only",
+  "--relative",
+  "--",
+  ".",
+] as const;
+
 /** The decision's first commit (null: never committed), and whether HEAD's tree still holds it. */
 const decisionIn = (
   git: Git,
@@ -133,7 +152,13 @@ const decisionIn = (
 ):
   | { readonly at: CommitAt | null; readonly deleted: boolean }
   | { readonly why: string } => {
-  const d = git(studyDir, ["log", "--format=%H%x09%cI", "--", decision]);
+  const d = git(studyDir, [
+    "log",
+    ...WHOLE_HISTORY,
+    "--format=%H%x09%cI",
+    "--",
+    decision,
+  ]);
   if ("why" in d) return d;
   const lines = d.out.trim().split("\n");
   const first = commitAt(nth(lines, lines.length - 1));
@@ -153,17 +178,14 @@ function orderIn(
   if (shallow.out.trim() === "true") return { kind: "shallow" };
   const d = decisionIn(git, studyDir, decision);
   if ("why" in d) return { kind: "unknown", why: d.why };
-  const files = git(studyDir, [
-    "log",
-    "--reverse",
-    "--format=%x01%H%x09%cI",
-    "--name-only",
-    "--relative",
-    "--",
-    ".",
-  ]);
+  const files = git(studyDir, FIRST_COMMITS);
   if ("why" in files) return { kind: "unknown", why: files.why };
-  const ordered = ordersOf(git, studyDir, d.at, firstCommitsOf(files.out));
+  const ordered = ordersOf(
+    git,
+    studyDir,
+    { at: d.at, path: decision },
+    firstCommitsOf(files.out),
+  );
   return "why" in ordered
     ? { kind: "unknown", why: ordered.why }
     : {
@@ -185,29 +207,37 @@ const isOrdered = (
   a: Answer,
 ): a is { readonly commit: string; readonly order: Order } => "order" in a;
 
-/** The order of `commit` against `decision`'s first commit. */
+/**
+ * The order of `commit` against the decision: after when any commit that touched the decision is its
+ * strict ancestor — not only the decision's first commit, which a squash can copy onto another line
+ * of history — the same when `commit` itself first carries it, not after otherwise.
+ */
 const answerFor = (
   git: Git,
   cwd: AbsolutePath,
-  decision: CommitAt | null,
+  decision: { readonly at: CommitAt | null; readonly path: AbsolutePath },
   commit: string,
 ): Answer => {
-  if (decision === null) return { commit, order: "not-after" };
-  if (commit === decision.commit) return { commit, order: "same" };
-  const a = git(
-    cwd,
-    ["merge-base", "--is-ancestor", decision.commit, commit],
-    [0, 1],
-  );
-  if ("why" in a) return { commit, why: a.why };
-  return { commit, order: a.status === 0 ? "after" : "not-after" };
+  if (decision.at === null) return { commit, order: "not-after" };
+  if (commit === decision.at.commit) return { commit, order: "same" };
+  const r = git(cwd, [
+    "rev-list",
+    ...WHOLE_HISTORY,
+    commit,
+    "--",
+    decision.path,
+  ]);
+  if ("why" in r) return { commit, why: r.why };
+  const touched = r.out.split("\n").filter((sha) => sha !== "");
+  if (touched.some((sha) => sha !== commit)) return { commit, order: "after" };
+  return { commit, order: touched.length > 0 ? "same" : "not-after" };
 };
 
 /** Each file's first commit with its order against `decision`'s; git asked once per distinct commit. */
 function ordersOf(
   git: Git,
   cwd: AbsolutePath,
-  decision: CommitAt | null,
+  decision: { readonly at: CommitAt | null; readonly path: AbsolutePath },
   firsts: ReadonlyMap<string, CommitAt>,
 ): { readonly files: readonly FirstCommit[] } | { readonly why: string } {
   const answers = [...new Set([...firsts.values()].map((c) => c.commit))].map(
