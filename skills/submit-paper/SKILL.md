@@ -4,7 +4,7 @@ description: End-to-end playbook for submitting a peer-reviewed paper to a doubl
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:2705e5167bfb5ab2 compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:81d5777962c2864a compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -34,7 +34,7 @@ memory.
 instructions, write the numbers into a preset with their quotes and the rest into a card beside it.
 A venue with no shipped preset extends a family — `paperlint:acm-sigconf` for an ACM venue — in a
 preset of the project's own, `./venues/<name>.jsonc`, with its card `./venues/<name>.md` next to
-it (paperlint's `docs/rules.md`, "Writing your own venue preset"); the skill `add-venue` writes one from a call for papers. A venue preset declares
+it (paperlint's `docs/rules.md`, "Writing your own venue preset"). A venue preset declares
 `"type": "venue"`, the venue's `name` and the `url` of its call for papers. The *mechanics*
 stay here; the card is only the facts.
 

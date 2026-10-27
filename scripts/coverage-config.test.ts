@@ -403,6 +403,9 @@ test("the exclude list is exactly the justified set", () => {
     // skill and CLAUDE.md sources vigiles compiles; a glob's `**` skips a dot directory
     "**/*.spec.ts",
     ".github/*.spec.ts",
+    // the same two kinds in a maintainer skill, which does not ship (`.claude/skills/<name>/`)
+    ".claude/skills/*/*.spec.ts",
+    ".claude/skills/*/*.eval.*",
     // type declarations
     "**/*.d.ts",
     "**/*.d.mts",

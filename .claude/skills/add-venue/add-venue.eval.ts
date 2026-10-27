@@ -8,7 +8,7 @@
  * ⚠️ NEVER RUN. Written with the skill; its rates are UNKNOWN, not assumed good.
  *
  * Costs money; not CI.
- *   npx vigiles eval skills/add-venue/add-venue.eval.ts
+ *   npx vigiles eval .claude/skills/add-venue/add-venue.eval.ts
  */
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";

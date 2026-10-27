@@ -4,7 +4,7 @@ description: "Add a venue paperlint does not ship: turn a conference or workshop
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebFetch]
 ---
 
-<!-- vigiles:sha256:f68c1af8faa4380a compiled from skills/add-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:f68c1af8faa4380a compiled from .claude/skills/add-venue/SKILL.md.spec.ts -->
 
 # add-venue — a call for papers becomes a preset and a card, with the proof beside every number
 

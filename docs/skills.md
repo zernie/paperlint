@@ -30,12 +30,11 @@ Where each stage writes, and the check that guards each place: [`layout.md`](lay
 
 ## 2 · Venue
 
-| you get                                                                           | skill                   |
-| --------------------------------------------------------------------------------- | ----------------------- |
-| a ranked list of venues that fit: deadline, page limit, indexing, remote talks    | `find-venue`            |
-| a preset and a card for a venue paperlint does not ship, from its call for papers | `add-venue`             |
-| what papers accepted at that venue do well, and what would make yours stronger    | `study-accepted-papers` |
-| the deadlines worked backwards, as events in your calendar                        | `plan-paper-timeline`   |
+| you get                                                                        | skill                   |
+| ------------------------------------------------------------------------------ | ----------------------- |
+| a ranked list of venues that fit: deadline, page limit, indexing, remote talks | `find-venue`            |
+| what papers accepted at that venue do well, and what would make yours stronger | `study-accepted-papers` |
+| the deadlines worked backwards, as events in your calendar                     | `plan-paper-timeline`   |
 
 ## 3 · Study
 

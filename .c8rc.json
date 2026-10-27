@@ -37,6 +37,8 @@
     "**/*.eval.*",
     "**/*.spec.ts",
     ".github/*.spec.ts",
+    ".claude/skills/*/*.spec.ts",
+    ".claude/skills/*/*.eval.*",
     "**/*.d.ts",
     "**/*.d.mts",
     "**/fixtures/**",
