@@ -65,8 +65,8 @@ reads, and compares the way that rule does.
   are the format rules' to judge, and they judge again the moment the phase is dropped.
 - A cycle declared `porting` whose class line is still the old one: that is the state the phase
   describes.
-- A `porting` cycle that has already sent a PDF — [`cycle/stage`](stage.md) reports that on the
-  scorecard.
+- A `porting` cycle that has already sent a PDF — [`versions/layout`](../versions/layout.md) reports
+  a `submitted` or `camera-ready` PDF frozen in its folder.
 
 ## How to fix
 

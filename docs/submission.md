@@ -88,6 +88,22 @@ against the venue's call for papers.
 The safe order: `new`, `new --save` once; then `show`, `update`, `update --save`, and `show` again
 until it says `match yes`. Every `--save` comes after the author has read the dry run and said yes.
 
+## What a save freezes
+
+In a paper that keeps `cycles`, a `new --save` or `update --save` the portal took freezes what it
+sent: the exact PDF, and the source the build read (a paper split into several files, assembled), as
+`versions/<cycle>/submitted.{pdf,tex}` — `camera-ready.{pdf,tex}` once the cycle is accepted — and
+records both in `versions/lock.json`. It prints one line:
+
+```
+frozen        versions/beta-2027/submitted.pdf (186504 bytes) and submitted.tex (57210 bytes), recorded in versions/lock.json
+```
+
+A later save in the same cycle replaces them: the last upload is the one under review. `show` ends
+with the table of the paper's versions and their states, as `paperlint versions` prints it. A paper
+without `cycles` is sent as before, and the save says `not frozen`. The layout and the states:
+[configuration](configuration.md#the-frozen-versions-one-folder-per-attempt).
+
 ## The check before sending
 
 A person confirms every send. To help them decide, `new` and `update` first run the venue rules of
@@ -107,9 +123,11 @@ With no findings it prints one line, `venue rules at their default options: no e
 run at paperlint's default levels and options: a `rules` override in your `paperlint.json` or
 preset is applied by `paperlint lint`, not here.
 
-The command refuses one thing by itself: `--save` when no build facts describe this PDF (none, or
-of other bytes) exits 2 and sends nothing. Rebuild (`paperlint build`) and run the dry run again.
-Everything else, including over the limit, is the person's call.
+The command refuses two things by itself, each with exit 2 and nothing sent: `--save` when no build
+facts describe this PDF (none, or of other bytes), and — in a paper that keeps `cycles` — `--save`
+when the sources changed since the build, because the PDF and the source on disk would no longer be a
+pair to freeze. Rebuild (`paperlint build`) and run the dry run again. Everything else, including over
+the limit, is the person's call.
 
 **The `submission-confirm` hook** (installed by `paperlint init`) stops any `submission new|update`
 with `--save` or `--submit` until the person has said yes to that exact PDF in that exact folder. The flow:

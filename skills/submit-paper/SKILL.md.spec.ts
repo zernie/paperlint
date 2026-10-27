@@ -153,20 +153,28 @@ Many workshop HotCRPs have **no supplementary-upload field** — check first; if
 
 ## 7. Freeze the version you actually uploaded
 
-🔴 **The moment the portal accepts the file, download it back and commit it.** The rendered PDF is the
-only artifact git cannot reconstruct — it was built outside the repo and lived on the portal.
+🔴 **What the reviewers read is the one version git cannot rebuild for you later** — it was built
+outside the repo and lives on the portal. Freeze it at the send.
+
+In a paper that keeps \`cycles\` in \`paperlint.json\`, the send freezes it:
+\`paperlint submission update <paper> --save\` (and \`new --save\`) writes the exact PDF it sent and the
+source the build read into
 
 \`\`\`
-<paper-dir>/versions/<ISO-date>-submitted.pdf
+<paper-dir>/versions/<cycle id>/submitted.pdf
+<paper-dir>/versions/<cycle id>/submitted.tex
 \`\`\`
 
-and in \`PIPELINE-STATUS.md\`, on the Submit row, the source that produced it: the literal word
-**\`commit <hash>\`**. Stages are \`submitted\` / \`camera-ready\` / \`arxiv\`; each one you *declare* in
-PIPELINE-STATUS needs its own frozen file.
+and records their bytes and sha256 in \`versions/lock.json\` (generated; never edit it). After an
+acceptance the same command freezes \`camera-ready.{pdf,tex}\`. An upload made on the portal by hand:
+put that PDF and its source there under those names and run \`npx paperlint versions lock <paper>\`.
+\`npx paperlint versions\` prints which version is under review and how far \`paper.tex\` has moved.
 
-**This is enforced, not advised** — \`checkFrozenVersions()\` in \`.claude/hooks/paper-lint.mjs\` reads the
-declared stages and reports a paper that declared one without freezing it. The convention itself is
-documented per-paper in \`versions/README.md\`.
+**This is enforced, not advised** — \`cycle/submitted-frozen\` fails a cycle that has a submission and
+no frozen \`submitted.pdf\`, and \`versions/layout\` fails a frozen file that no longer matches the lock.
+A paper without \`cycles\` records each stage in \`PIPELINE-STATUS.md\`'s \`stages:\` list instead,
+checked by \`paper/stages\` and \`paper/source\`; \`npx paperlint versions migrate\` moves it to the
+folders once it keeps \`cycles\`.
 
 **Why it is a step and not hygiene:** \`agenticdev-2026\` kept a folder for exactly this for a month and
 the file inside was the wrong build (340 952 B vs the real 352 357 B). It surfaced only when a reviewer

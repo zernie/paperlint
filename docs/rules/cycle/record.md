@@ -144,7 +144,8 @@ scheduled workflow in paperlint's repository; your own preset may carry readings
 - Whether a deadline has passed, or how long is left.
 - A disagreement between sources — that is what the record holds; the earlier reading binds.
 - Whether an override's evidence exists — that is [`cycle/evidence`](evidence.md).
-- Whether the scorecard's stages name these cycles — that is [`cycle/stage`](stage.md).
+- Whether `versions/` holds a folder per cycle and nothing else — that is
+  [`versions/layout`](../versions/layout.md).
 
 ## How to fix
 
