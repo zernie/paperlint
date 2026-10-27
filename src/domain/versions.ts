@@ -614,3 +614,61 @@ export function versionTable(rows: readonly VersionRow[]): readonly string[] {
     `  ${r.version.padEnd(w[0])}  ${r.stage.padEnd(w[1])}  ${r.state.padEnd(w[2])}  ${r.detail}`.trimEnd(),
   );
 }
+
+// ── recording what is on disk ─────────────────────────────────────────────────────────
+
+/** A frozen file found on disk: its key and what it holds. */
+export interface OnDisk {
+  readonly key: string;
+  readonly facts: FileFacts;
+}
+
+/** What one found file does to the lock: kept as recorded, recorded anew, or recorded for the first time. */
+function relocked(
+  f: OnDisk,
+  old: LockEntry | undefined,
+  now: string,
+): { readonly entry: LockEntry; readonly line: string | null } {
+  const fresh: LockEntry = { kind: "file", ...f.facts, frozen: now };
+  if (old?.kind !== "file")
+    return {
+      entry: fresh,
+      line: `locked        versions/${f.key} (${String(f.facts.bytes)} bytes)`,
+    };
+  return old.sha256 === f.facts.sha256 && old.bytes === f.facts.bytes
+    ? { entry: old, line: null }
+    : {
+        entry: fresh,
+        line: `re-locked     versions/${f.key}: ${String(old.bytes)} → ${String(f.facts.bytes)} bytes — it changed after ${old.frozen}`,
+      };
+}
+
+/**
+ * `paperlint versions lock`: the lock for the files on disk — each kept as recorded, recorded when it
+ * is new or changed, an entry whose file is gone dropped, a lost source kept while no file replaces
+ * it — and a line per change. Pure.
+ */
+export function relock(
+  found: readonly OnDisk[],
+  old: Lock,
+  now: string,
+): { readonly lock: Lock; readonly lines: readonly string[] } {
+  const keys = found.map((f) => f.key);
+  const each = found.map((f) => ({
+    key: f.key,
+    ...relocked(f, old[f.key], now),
+  }));
+  const gone = Object.entries(old).filter(([k]) => !keys.includes(k));
+  return {
+    lock: {
+      ...Object.fromEntries(gone.filter(([, e]) => e.kind === "lost")),
+      ...Object.fromEntries(each.map((e) => [e.key, e.entry])),
+    },
+    lines: [
+      ...each.flatMap((e) => (e.line === null ? [] : [e.line])),
+      ...gone
+        .filter(([, e]) => e.kind === "file")
+        .map(([k]) => `dropped       versions/${k}: the file is gone`),
+    ],
+  };
+}

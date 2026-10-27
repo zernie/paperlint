@@ -912,3 +912,40 @@ test("submission show: through the HotCRP adapter to a local portal, the token i
     });
   }
 });
+
+test("versions: migrate moves an old-layout paper on disk into folders per attempt; show then prints its state", async () => {
+  const dir = join(root, "versions-migrate");
+  writeTree(dir, {
+    "package.json": "{}",
+    "papers/p/paperlint.json": JSON.stringify({
+      cycles: [
+        {
+          id: "open-2027",
+          venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+          opened: "2026-09-09",
+          submission: { id: 7 },
+        },
+      ],
+    }),
+    "papers/p/paper.tex": "A.\nB.\n",
+    "papers/p/PIPELINE-STATUS.md":
+      "---\nstages:\n  - stage: submitted\n    cycle: open-2027\n    date: 2026-10-23\n    pdf: versions/2026-10-23-submitted.pdf\n    bytes: 4\n    source: versions/2026-10-23-submitted.tex\n---\n# Status\n",
+    "papers/p/versions/2026-10-23-submitted.pdf": "%PDF",
+    "papers/p/versions/2026-10-23-submitted.tex": "A.\n",
+  });
+  const m = await cli(["versions", "migrate", "papers/p"], dir);
+  assert.equal(m.code, 0, m.err);
+  assert.ok(existsSync(join(dir, "papers/p/versions/open-2027/submitted.pdf")));
+  assert.ok(
+    !existsSync(join(dir, "papers/p/versions/2026-10-23-submitted.pdf")),
+  );
+  const s = await cli(["versions", "papers/p"], dir);
+  assert.equal(s.code, 0, s.err);
+  assert.equal(
+    s.out,
+    [
+      "  open-2027  submitted  CURRENT (under review at paperlint:acm-sigconf)  4 B  frozen 2026-10-23",
+      "  paper.tex  draft      target not chosen                                differs from open-2027/submitted.tex: 1 line added, 0 removed",
+    ].join("\n"),
+  );
+});

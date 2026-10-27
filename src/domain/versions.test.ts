@@ -10,6 +10,7 @@ import {
   lineDrift,
   lockText,
   parseLock,
+  relock,
   stateOf,
   unfrozenSubmissions,
   versionRows,
@@ -493,6 +494,56 @@ describe("each version's state, the draft row", () => {
         state: "rejected, nothing frozen",
         detail: "",
       },
+    ]);
+  });
+});
+
+describe("relock", () => {
+  const facts = (bytes: number, sha256 = SHA) => ({ bytes, sha256 });
+  it("keeps what matches, records what is new or changed, drops what is gone, keeps a lost source", () => {
+    const old: Lock = {
+      "a/submitted.pdf": entry(10),
+      "a/submitted.tex": entry(5, OTHER, "2026-07-22"),
+      "a/arxiv.tex": { kind: "lost", frozen: null },
+      "b/submitted.pdf": entry(),
+    };
+    const r = relock(
+      [
+        { key: "a/submitted.pdf", facts: facts(10) },
+        { key: "a/submitted.tex", facts: facts(6) },
+        { key: "c/submitted.pdf", facts: facts(3) },
+      ],
+      old,
+      "2026-10-27T12:00:00.000Z",
+    );
+    expect(r.lock).toStrictEqual({
+      "a/arxiv.tex": { kind: "lost", frozen: null },
+      "a/submitted.pdf": entry(10),
+      "a/submitted.tex": entry(6, SHA, "2026-10-27T12:00:00.000Z"),
+      "c/submitted.pdf": entry(3, SHA, "2026-10-27T12:00:00.000Z"),
+    });
+    expect(r.lines).toStrictEqual([
+      "re-locked     versions/a/submitted.tex: 5 → 6 bytes — it changed after 2026-07-22",
+      "locked        versions/c/submitted.pdf (3 bytes)",
+      "dropped       versions/b/submitted.pdf: the file is gone",
+    ]);
+  });
+
+  it("a file where the lock recorded a lost source: recorded; same bytes, other digest: recorded anew", () => {
+    const r = relock(
+      [
+        { key: "a/submitted.tex", facts: facts(5) },
+        { key: "a/submitted.pdf", facts: facts(10, OTHER) },
+      ],
+      {
+        "a/submitted.tex": { kind: "lost", frozen: null },
+        "a/submitted.pdf": entry(10),
+      },
+      "2026-10-27T12:00:00.000Z",
+    );
+    expect(r.lines).toStrictEqual([
+      "locked        versions/a/submitted.tex (5 bytes)",
+      "re-locked     versions/a/submitted.pdf: 10 → 10 bytes — it changed after 2026-10-23T16:58:01.000Z",
     ]);
   });
 });

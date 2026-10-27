@@ -58,6 +58,7 @@ import {
   nodeAdapters,
   nodeFiles,
   nodeListDir,
+  nodeMoveFile,
 } from "./adapters/node/index.ts";
 import { probeVideo } from "./adapters/mp4box/index.ts";
 import { imageSize } from "./adapters/png/index.ts";
@@ -175,6 +176,8 @@ import paperStages from "#eslint-rules/paper-stages";
 import preregCoverage from "#eslint-rules/prereg-coverage";
 import cycleStage from "#eslint-rules/cycle-stage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
+import { runVersions } from "./versions-command.ts";
+import { parseYaml } from "./adapters/yaml/index.ts";
 import {
   DRAFT_RULE_LEVELS,
   draftRules,
@@ -267,6 +270,14 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint submission topics [paper]
                                       the topics the venue's portal offers, against the ones its
                                       preset records; exit 1 when they differ
+  npx paperlint versions [show|lock|migrate] [paper]
+                                      the paper's frozen versions, one folder per attempt:
+                                      versions/<cycle>/<stage>.{pdf,tex}. show (the default): each
+                                      version and its state — under review, historical, camera-ready
+                                      base, final — and how far paper.tex has moved. lock: record the
+                                      files in versions/lock.json (submission --save does it for what
+                                      it sends). migrate: move the stages: list's dated files into
+                                      their cycles' folders, write the lock, drop the list
   npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]
                                       register a study: the next id in repro/studies.json, the folder
                                       repro/<id>-<slug>/ with its README.md and plan.json (a template),
@@ -1827,6 +1838,19 @@ const SIMPLE: Readonly<
         err,
       },
     ),
+  versions: (a, { log, err, cwd }) =>
+    runVersions(a.paths, {
+      files: nodeFiles,
+      listDir: nodeListDir,
+      move: nodeMoveFile,
+      yaml: parseYaml,
+      latex: latexReader,
+      codec: sourcesCodec,
+      now: () => new Date().toISOString(),
+      cwd,
+      log,
+      err,
+    }),
   submission: (a, { log, err, cwd }) =>
     runSubmission(
       {

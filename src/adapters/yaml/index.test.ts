@@ -9,5 +9,8 @@ test("parses a mapping, a date without quotes as a Date; refuses what is not YAM
   });
   const bad = parseYaml("a: [");
   expect(bad.ok).toBe(false);
-  expect(!bad.ok && bad.error).toMatch(/unexpected end of the stream/);
+  expect(bad).toStrictEqual({
+    ok: false,
+    error: "unexpected end of the stream within a flow collection (2:1)",
+  });
 });
