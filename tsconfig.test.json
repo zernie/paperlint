@@ -9,7 +9,12 @@
     "customConditions": ["paperlint-source"]
   },
   "include": ["**/*.ts", "**/*.mts"],
-  "files": [".github/CLAUDE.md.spec.ts", "plugin/CLAUDE.md.spec.ts"],
+  "files": [
+    ".github/CLAUDE.md.spec.ts",
+    "plugin/CLAUDE.md.spec.ts",
+    ".claude/skills/add-venue/SKILL.md.spec.ts",
+    ".claude/skills/add-venue/add-venue.eval.ts"
+  ],
   "exclude": [
     "node_modules",
     "dist",

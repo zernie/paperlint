@@ -1,0 +1,76 @@
+// NLBSE 2027 (the 6th Natural Language-based Software Engineering Workshop, an ICSE 2027 workshop)
+// — a VENUE preset over the IEEE conference family. Everything the IEEEtran template decides comes
+// from ieee-conference.jsonc; this file adds what NLBSE's call sets. Its card, in prose:
+// `nlbse.md` beside this file.
+//
+// Verbatim from https://conf.researchr.org/home/icse-2027/nlbse-2027 (fetched 2026-10-26):
+//   «Full papers (maximum of 8 pages, including references).» · «Education tools and materials
+//    (maximum of 8 pages, including references).» · «Replication Studies and Negative results
+//    (maximum of 8 pages, including references).» · «Short and demonstration papers (maximum of 4
+//    pages, including references).» · «Position papers (maximum of 2 pages, including
+//    references).» · «Tool Competition entries (maximum of 4 pages, including references).»
+//   «All submissions must conform to the ICSE’27 formatting and submission instructions. All
+//    submissions must be anonymized, in PDF format and should be performed electronically through
+//    HotCRP: https://icse2027-nlbse.hotcrp.com/.»
+//   Dates: «Fri 13 Nov 2026 (updated) Paper submission / Fri 27 Nov 2026 (new) Tool
+//    competition/Research challenge paper submission / Fri 11 Dec 2026 Author notification / Fri
+//    29 Jan 2027 Camera ready», «All dates are Anywhere on Earth (AoE).»
+{
+  "type": "venue",
+  "name": "NLBSE",
+  // The call quoted above.
+  "url": "https://conf.researchr.org/home/icse-2027/nlbse-2027",
+  "extends": "paperlint:ieee-conference",
+
+  // «All submissions must be anonymized» (the call above), and `"blind":true` in the portal's
+  // status data (https://icse2027-nlbse.hotcrp.com/deadlines, read 2026-10-26). The call never
+  // says «double-blind»; anonymity/identity then requires the paper's `identity`.
+  "blind": true,
+
+  // «should be performed electronically through HotCRP» (the call above).
+  "portal": { "kind": "hotcrp", "url": "https://icse2027-nlbse.hotcrp.com" },
+
+  // 🔴 THE PORTAL HOLDS NO DEADLINE YET: on 2026-10-26 its status data read `"sub":{"open":false}`
+  // with no date, while the call lists 13 Nov. So these are the call's readings, in UTC at the end
+  // of the AoE day; the refresh adds the portal's the day it publishes one (the earlier binds).
+  // The competition papers' 27 Nov is in the card only: one reading per kind and source.
+  "deadlines": [
+    {
+      "what": "submission",
+      "at": "2026-11-14T11:59:59Z",
+      "source": "call",
+      "url": "https://conf.researchr.org/home/icse-2027/nlbse-2027",
+      "read": "2026-10-26",
+    },
+    {
+      "what": "notification",
+      "at": "2026-12-12T11:59:59Z",
+      "source": "call",
+      "url": "https://conf.researchr.org/home/icse-2027/nlbse-2027",
+      "read": "2026-10-26",
+    },
+    {
+      "what": "camera-ready",
+      "at": "2027-01-30T11:59:59Z",
+      "source": "call",
+      "url": "https://conf.researchr.org/home/icse-2027/nlbse-2027",
+      "read": "2026-10-26",
+    },
+  ],
+
+  "format": {
+    // 🔴 EVERY LIMIT INCLUDES THE REFERENCES, and no key gates a total: `body_pages_max` is banal's
+    // body count, never more than the total, so a paper over it is over the limit; references alone
+    // on a page after a full body pass this gate and are still over (nlbse.md). The competition
+    // papers' «2-4 pages» (Multitask Code Classification) does not say whether references count, so
+    // only the call's «Tool Competition entries» line is a kind; the research challenge has no limit.
+    "kinds": {
+      "full": { "body_pages_max": 8 },
+      "education": { "body_pages_max": 8 },
+      "replication": { "body_pages_max": 8 },
+      "short": { "body_pages_max": 4 },
+      "position": { "body_pages_max": 2 },
+      "tool-competition": { "body_pages_max": 4 },
+    },
+  },
+}

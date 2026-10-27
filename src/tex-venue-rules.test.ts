@@ -998,9 +998,12 @@ describe("otherVenues", () => {
     if (!aidc.ok) return;
     expect(otherVenues(aidc.value, deps).map((o) => o.label)).toEqual([
       "acm-sigconf",
+      "AGENT 2027",
       "AgenticDev",
+      "AGENTVERIFY",
       "AISec",
       "MSR",
+      "NLBSE",
     ]);
   });
 });

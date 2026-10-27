@@ -1,0 +1,75 @@
+// AGENT'27 (the Second International Workshop on Agentic Engineering, an ICSE 2027 workshop) — a
+// VENUE preset over the IEEE conference family. Everything the IEEEtran template decides (page
+// size, columns, fonts, body size, TeX packages) comes from ieee-conference.jsonc; this file adds
+// what AGENT's call for papers sets. Its card, in prose: `agent.md` beside this file.
+//
+// Verbatim from https://conf.researchr.org/home/icse-2027/agent-2027 (fetched 2026-10-26):
+//   «Full papers (research or experience): up to 8 pages, including references.»
+//   «Short papers (position, emerging research, tool, benchmark, or experience): up to 5 pages,
+//    including references.»
+//   «All submissions must be original, written in English, and formatted according to the IEEE
+//    conference proceedings template. Submissions will be reviewed single-anonymously. Accepted
+//    workshop papers will be published by IEEE. It is not possible to pay for extra pages.»
+//   «Workshop paper submission deadline: November 13, 2026 / Notification of acceptance: December
+//    11, 2026 / Camera-ready deadline: January 29, 2027 / All dates are Anywhere on Earth (AoE).»
+{
+  "type": "venue",
+  "name": "AGENT 2027",
+  // The call quoted above.
+  "url": "https://conf.researchr.org/home/icse-2027/agent-2027",
+  "extends": "paperlint:ieee-conference",
+
+  // «AGENT» alone is an ordinary word: as a name it would flag every paper folder called
+  // `agent-…` (paper/folder-venue-leftover compares folder names by words, and `mentions` reaches
+  // only the text rules). So the venue is «AGENT 2027» and «AGENT'27» (the call's own spelling,
+  // with either apostrophe). ICSE is left out: papers cite ICSE papers by name.
+  "aliases": ["AGENT'27", "AGENT\u201927"],
+
+  // No `template` and no `blind`, on purpose. The call names «the IEEE conference proceedings
+  // template» and no class line, so the family's `[conference]` stands (the ICSE workshops page
+  // gives `[10pt,conference]{IEEEtran}` for workshop PROPOSALS only). The review is
+  // single-anonymous (above), so `blind` — which turns on anonymity/identity — stays unset; the
+  // portal agrees: its status data carries no `"blind":true` (read 2026-10-26).
+
+  // «Submission link» on the call's page: HotCRP.
+  "portal": { "kind": "hotcrp", "url": "https://icse2027-agent.hotcrp.com" },
+
+  // The portal's reading: `"sub":1794657599` on https://icse2027-agent.hotcrp.com/deadlines, shown
+  // as «Saturday Nov 14, 2026, 6:59:59 AM EST» = 2026-11-14T11:59:59Z = the end of 13 Nov AoE. The
+  // scheduled refresh rewrites it. The call's two other dates are not on the portal; they are the
+  // call's, in UTC at the end of the AoE day.
+  "deadlines": [
+    {
+      "what": "submission",
+      "at": "2026-11-14T11:59:59Z",
+      "source": "portal",
+      "url": "https://icse2027-agent.hotcrp.com/deadlines",
+      "read": "2026-10-26",
+    },
+    {
+      "what": "notification",
+      "at": "2026-12-12T11:59:59Z",
+      "source": "call",
+      "url": "https://conf.researchr.org/home/icse-2027/agent-2027",
+      "read": "2026-10-26",
+    },
+    {
+      "what": "camera-ready",
+      "at": "2027-01-30T11:59:59Z",
+      "source": "call",
+      "url": "https://conf.researchr.org/home/icse-2027/agent-2027",
+      "read": "2026-10-26",
+    },
+  ],
+
+  "format": {
+    // 🔴 THE LIMITS INCLUDE THE REFERENCES («up to 8 pages, including references»), and no key
+    // gates a total. `body_pages_max` is banal's body count, which is never more than the total, so
+    // a paper over it is over the limit; a paper whose references sit alone on a page after a full
+    // body passes this gate and is still over. The card says so.
+    "kinds": {
+      "full": { "body_pages_max": 8 },
+      "short": { "body_pages_max": 5 },
+    },
+  },
+}

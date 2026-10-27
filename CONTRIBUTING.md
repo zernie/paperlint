@@ -179,7 +179,8 @@ change to `.c8rc.json`'s exclude list that was not made there on purpose.
 ## Adding a venue
 
 A venue is a **preset**, a JSONC file in `presets/`, validated by
-`venue-profile.schema.json` beside it. Adding one is three files and no code:
+`venue-profile.schema.json` beside it. Adding one is three files and no code (the maintainer skill
+`.claude/skills/add-venue/` walks an agent through it, from the call for papers):
 
 1. **The preset, thin.** `presets/<name>.jsonc` extends the template family it is built on
    (`"extends": "paperlint:acm-sigconf"` for an ACM venue) and adds only what the call for papers
