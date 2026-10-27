@@ -35,6 +35,11 @@ export interface Move {
 }
 
 export interface MigrationPlan {
+  /**
+   * A source two stages were built from, copied to every destination but its last, which the move
+   * takes: done before the moves, so each copy reads the file before it leaves.
+   */
+  readonly copies: readonly Move[];
   readonly moves: readonly Move[];
   /** The lock after the migration: what was there, and an entry per file moved or source lost. */
   readonly lock: Lock;
@@ -50,6 +55,8 @@ export interface MigrationInput {
   readonly factsOf: (rel: string) => FileFacts | null;
   /** The lock already there (versions frozen on send since), or none. */
   readonly lock: Lock;
+  /** Whether a file of the paper is there, by its path relative to the paper: a destination taken. */
+  readonly exists: (rel: string) => boolean;
 }
 
 /** One entry's part of the plan: moves and lock entries, or what stops it. */
@@ -229,23 +236,51 @@ const collisions = (moves: readonly Move[]): readonly string[] =>
         `${to}: ${ms.map((m) => `\`${m.from}\``).join(" and ")} would both go there — an attempt keeps its last upload per stage: move the older to extra/, drop its entry from \`stages:\`, then migrate`,
     );
 
-/** The whole migration, or every reason it cannot run. Pure. */
+/**
+ * One source named by several stages (the old layout let a `submitted` and an `arxiv` share the
+ * source they were built from): copied to each destination but the last, and moved to that one.
+ * Renaming it twice would fail on the second rename, after the first files had moved.
+ */
+function shared(moves: readonly Move[]): {
+  readonly copies: readonly Move[];
+  readonly moves: readonly Move[];
+} {
+  const last = (m: Move, i: number) =>
+    !moves.slice(i + 1).some((n) => n.from === m.from);
+  return {
+    copies: moves.filter((m, i) => !last(m, i)),
+    moves: moves.filter(last),
+  };
+}
+
+/** Destinations a file is already at — a version frozen on send since, or an earlier copy in extra/. */
+const taken = (
+  moves: readonly Move[],
+  exists: MigrationInput["exists"],
+): readonly string[] =>
+  moves
+    .filter((m) => exists(m.to))
+    .map(
+      (m) =>
+        `${m.to} is already there, and \`${m.from}\` would replace it — compare the two, keep one, move the other out of versions/, then migrate`,
+    );
+
+/** The whole migration, or every reason it cannot run: nothing is planned that could stop half-way. Pure. */
 export function planMigration(
   input: MigrationInput,
 ): Result<MigrationPlan, readonly string[]> {
   const entries = merge(input.stages.map((e, i) => entryPart(e, i, input)));
   const rest = leftovers(input, named(input.stages));
-  const moves = [...entries.moves, ...rest.moves].filter(
-    (m) => m.from !== m.to,
-  );
+  const all = [...entries.moves, ...rest.moves].filter((m) => m.from !== m.to);
   const problems = [
     ...entries.problems,
     ...rest.problems,
-    ...collisions(moves),
+    ...collisions(all),
+    ...taken(all, input.exists),
   ];
   return problems.length > 0
     ? err(problems)
-    : ok({ moves, lock: { ...input.lock, ...entries.lock } });
+    : ok({ ...shared(all), lock: { ...input.lock, ...entries.lock } });
 }
 
 // ── the scorecard's frontmatter ──────────────────────────────────────────────────────────

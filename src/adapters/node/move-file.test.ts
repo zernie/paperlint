@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { absolutePath } from "../../domain/paths.ts";
 import { useTempDir } from "../../../test/support.ts";
-import { nodeMoveFile } from "./move-file.io.ts";
+import { nodeCopyFile, nodeMoveFile } from "./move-file.io.ts";
 
 const root = useTempDir("paperlint-move-file-");
 
@@ -24,6 +24,27 @@ describe("nodeMoveFile", () => {
       nodeMoveFile(
         absolutePath(join(root, "none")),
         absolutePath(join(root, "z")),
+      );
+    }).toThrow();
+  });
+});
+
+describe("nodeCopyFile", () => {
+  it("copies a file into a folder that does not exist yet, and leaves it where it was", () => {
+    writeFileSync(join(root, "s.tex"), "source");
+    nodeCopyFile(
+      absolutePath(join(root, "s.tex")),
+      absolutePath(join(root, "c", "d", "s.tex")),
+    );
+    expect(readFileSync(join(root, "s.tex"), "utf8")).toBe("source");
+    expect(readFileSync(join(root, "c", "d", "s.tex"), "utf8")).toBe("source");
+  });
+
+  it("throws when there is nothing to copy", () => {
+    expect(() => {
+      nodeCopyFile(
+        absolutePath(join(root, "none")),
+        absolutePath(join(root, "w")),
       );
     }).toThrow();
   });

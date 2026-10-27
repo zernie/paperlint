@@ -7,7 +7,7 @@ import type { Download } from "../../ports/download.ts";
 import type { Files } from "../../ports/files.ts";
 import type { ListDir } from "../../ports/talk-media.ts";
 import type { ListEntries } from "../../ports/list-entries.ts";
-import type { MoveFile } from "../../ports/move-file.ts";
+import type { CopyFile, MoveFile } from "../../ports/move-file.ts";
 import type { Command, ProcessExit, RunProcess } from "../../ports/process.ts";
 import type { NotAPromise, Scratch, Workspace } from "../../ports/workspace.ts";
 import { err, ok } from "../../domain/result.ts";
@@ -75,6 +75,15 @@ export const memoryListDir =
   ];
 
 /** `MoveFile` over `memoryFiles`: the bytes under the new path, none under the old; nothing there throws. */
+/** `CopyFile` over `memoryFiles`: the bytes under the new path too; nothing there throws. */
+export const memoryCopyFile =
+  (files: MemoryFiles): CopyFile =>
+  (from, to) => {
+    const b = files.map.get(from);
+    if (b === undefined) throw new Error(`ENOENT: no file to copy at ${from}`);
+    files.writeAtomic(to, b);
+  };
+
 export const memoryMoveFile =
   (files: MemoryFiles): MoveFile =>
   (from, to) => {

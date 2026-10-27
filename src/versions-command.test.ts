@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
 import {
   memoryFiles,
+  memoryCopyFile,
   memoryListDir,
   memoryMoveFile,
   type MemoryFiles,
@@ -97,6 +98,7 @@ function run(words: readonly string[], files: MemoryFiles, cwd = "/w") {
     files,
     listDir: memoryListDir(files),
     move: memoryMoveFile(files),
+    copy: memoryCopyFile(files),
     yaml: parseYaml,
     latex: latexReader,
     codec: sourcesCodec,
@@ -400,5 +402,88 @@ describe("paperlint versions migrate, edge cases", () => {
       "nothing was moved",
     ]);
     expect(r.code).toBe(2);
+  });
+});
+
+/** Every file and its bytes: what a refused migration must leave exactly as it was. */
+const disk = (fs: MemoryFiles) =>
+  [...fs.map.entries()].map(([p, b]) => [p, sha256Hex(b)]);
+
+describe("paperlint versions migrate, where a destination is taken", () => {
+  it("a cycle already frozen on send keeps its files: refused before anything moves, the tree byte-identical", () => {
+    const fs = oldLayout(STAGES);
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/versions/journal-2027/submitted.pdf`),
+      enc("%PDF newer, sent with --save"),
+    );
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/versions/journal-2027/submitted.tex`),
+      enc("newer source"),
+    );
+    const before = disk(fs);
+    const r = run(["migrate", "papers/p"], fs);
+    expect(r.code).toBe(2);
+    expect(r.errs).toStrictEqual([
+      "versions/journal-2027/submitted.pdf is already there, and `versions/2026-10-23-submitted.pdf` would replace it — compare the two, keep one, move the other out of versions/, then migrate",
+      "versions/journal-2027/submitted.tex is already there, and `versions/2026-10-23-submitted.tex` would replace it — compare the two, keep one, move the other out of versions/, then migrate",
+      "nothing was moved",
+    ]);
+    expect(disk(fs)).toStrictEqual(before);
+  });
+
+  it("a loose file whose place in extra/versions/ is taken: refused too", () => {
+    const fs = oldLayout(STAGES);
+    fs.writeAtomic(absolutePath(`${PAPER}/versions/README.md`), enc("old"));
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/extra/versions/README.md`),
+      enc("older"),
+    );
+    const before = disk(fs);
+    const r = run(["migrate", "papers/p"], fs);
+    expect(r.errs[0]).toBe(
+      "extra/versions/README.md is already there, and `versions/README.md` would replace it — compare the two, keep one, move the other out of versions/, then migrate",
+    );
+    expect(disk(fs)).toStrictEqual(before);
+  });
+});
+
+describe("paperlint versions migrate, one source for two stages", () => {
+  it("a source two stages were built from is copied to each, then removed: both frozen, both locked", () => {
+    const fs = oldLayout(
+      `${STAGES}  - stage: arxiv
+    cycle: journal-2027
+    date: 2026-10-25
+    pdf: versions/2026-10-25-arxiv.pdf
+    bytes: 9
+    source: versions/2026-10-23-submitted.tex
+`,
+    );
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/versions/2026-10-25-arxiv.pdf`),
+      enc(PDF),
+    );
+    const r = run(["migrate", "papers/p"], fs);
+    expect(r.errs).toStrictEqual([]);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain(
+      "copied        versions/2026-10-23-submitted.tex → versions/journal-2027/submitted.tex",
+    );
+    expect(r.out).toContain(
+      "moved         versions/2026-10-23-submitted.tex → versions/journal-2027/arxiv.tex",
+    );
+    expect(read(fs, `${PAPER}/versions/journal-2027/submitted.tex`)).toBe(SENT);
+    expect(read(fs, `${PAPER}/versions/journal-2027/arxiv.tex`)).toBe(SENT);
+    expect(
+      fs.isFile(absolutePath(`${PAPER}/versions/2026-10-23-submitted.tex`)),
+    ).toBe(false);
+    const lock = parseLock(
+      JSON.parse(read(fs, `${PAPER}/versions/lock.json`) ?? ""),
+    );
+    expect(lock.ok && lock.value["journal-2027/arxiv.tex"]).toStrictEqual(
+      lock.ok && {
+        ...lock.value["journal-2027/submitted.tex"],
+        frozen: "2026-10-25",
+      },
+    );
   });
 });

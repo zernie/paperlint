@@ -54,6 +54,7 @@ const input = (o: Partial<MigrationInput> = {}): MigrationInput => ({
   ],
   factsOf: (rel) => DISK[rel] ?? null,
   lock: {},
+  exists: () => false,
   ...o,
 });
 
@@ -61,6 +62,7 @@ describe("planMigration", () => {
   it("each entry's files into its cycle's folder, the lock from the declared day, a lost source recorded", () => {
     expect(planMigration(input())).toStrictEqual(
       ok({
+        copies: [],
         moves: [
           {
             from: "versions/2026-07-22-submitted.pdf",
@@ -135,6 +137,7 @@ describe("planMigration, beside what is there", () => {
     );
     expect(r).toStrictEqual(
       ok({
+        copies: [],
         moves: [
           {
             from: "versions/2026-07-20-submitted-STALE.pdf",
@@ -243,5 +246,55 @@ describe("the scorecard's stages: list, taken out", () => {
     expect(withoutStages("---\ntitle: x\n---\n")).toBeNull();
     expect(frontmatterOf("# S\n")).toBeNull();
     expect(frontmatterOf("---\n---\n")).toBe("");
+  });
+});
+
+describe("planMigration, what could stop it half-way", () => {
+  it("a destination already taken is a reason, for a stage's file and for a loose one bound for extra/", () => {
+    const r = planMigration(
+      input({
+        root: [file("2026-07-22-submitted.pdf"), file("notes.md")],
+        exists: (rel) =>
+          rel === "versions/alpha-2026/submitted.pdf" ||
+          rel === "extra/versions/notes.md",
+      }),
+    );
+    expect(!r.ok && r.error).toStrictEqual([
+      "versions/alpha-2026/submitted.pdf is already there, and `versions/2026-07-22-submitted.pdf` would replace it — compare the two, keep one, move the other out of versions/, then migrate",
+      "extra/versions/notes.md is already there, and `versions/notes.md` would replace it — compare the two, keep one, move the other out of versions/, then migrate",
+    ]);
+  });
+
+  it("one source named by two stages: copied to the first destination, moved to the last", () => {
+    const r = planMigration(
+      input({
+        stages: [
+          {
+            stage: "submitted",
+            cycle: "beta-2027",
+            date: "2026-10-23",
+            pdf: "versions/s.pdf",
+            source: "versions/s.tex",
+          },
+          {
+            stage: "arxiv",
+            cycle: "beta-2027",
+            date: "2026-10-25",
+            pdf: "versions/a.pdf",
+            source: "versions/s.tex",
+          },
+        ],
+        root: [],
+        factsOf: () => ({ bytes: 1, sha256: SHA }),
+      }),
+    );
+    expect(r.ok && r.value.copies).toStrictEqual([
+      { from: "versions/s.tex", to: "versions/beta-2027/submitted.tex" },
+    ]);
+    expect(r.ok && r.value.moves).toStrictEqual([
+      { from: "versions/s.pdf", to: "versions/beta-2027/submitted.pdf" },
+      { from: "versions/a.pdf", to: "versions/beta-2027/arxiv.pdf" },
+      { from: "versions/s.tex", to: "versions/beta-2027/arxiv.tex" },
+    ]);
   });
 });

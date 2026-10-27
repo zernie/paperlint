@@ -58,6 +58,7 @@ import {
   nodeAdapters,
   nodeFiles,
   nodeListDir,
+  nodeCopyFile,
   nodeMoveFile,
 } from "./adapters/node/index.ts";
 import { probeVideo } from "./adapters/mp4box/index.ts";
@@ -1844,6 +1845,7 @@ const SIMPLE: Readonly<
       files: nodeFiles,
       listDir: nodeListDir,
       move: nodeMoveFile,
+      copy: nodeCopyFile,
       yaml: parseYaml,
       latex: latexReader,
       codec: sourcesCodec,

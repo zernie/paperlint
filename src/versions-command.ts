@@ -36,7 +36,7 @@ import {
   type Lock,
   type OnDisk,
 } from "./domain/versions.ts";
-import type { MoveFile } from "./ports/move-file.ts";
+import type { CopyFile, MoveFile } from "./ports/move-file.ts";
 import type { ParseYaml } from "./ports/yaml.ts";
 import type { ProseDeps } from "./tex-paper.ts";
 import {
@@ -57,6 +57,7 @@ const STATUS_FILE = "PIPELINE-STATUS.md";
 
 export interface VersionsCommandDeps extends ProseDeps, VersionsDeps {
   readonly move: MoveFile;
+  readonly copy: CopyFile;
   readonly yaml: ParseYaml;
   /** The instant a lock entry records, ISO 8601. */
   readonly now: () => string;
@@ -210,20 +211,31 @@ const paperFacts =
     return b === null ? null : { bytes: b.length, sha256: sha256Hex(b) };
   };
 
-/** The plan carried out: each move, the lock, the scorecard without its list. */
+/** Each copy, then each move: a shared source is copied before the move takes it away. */
+function carry(
+  paperDir: string,
+  plan: MigrationPlan,
+  deps: VersionsCommandDeps,
+): void {
+  const at = (rel: string) => callerPath(resolve(paperDir, rel));
+  plan.copies.forEach((m) => {
+    deps.copy(at(m.from), at(m.to));
+    deps.log(`copied        ${m.from} → ${m.to}`);
+  });
+  plan.moves.forEach((m) => {
+    deps.move(at(m.from), at(m.to));
+    deps.log(`moved         ${m.from} → ${m.to}`);
+  });
+}
+
+/** The plan carried out: the files, the lock, the scorecard without its list. */
 function migrate(
   paperDir: string,
   plan: MigrationPlan,
   card: Scorecard,
   deps: VersionsCommandDeps,
 ): number {
-  plan.moves.forEach((m) => {
-    deps.move(
-      callerPath(resolve(paperDir, m.from)),
-      callerPath(resolve(paperDir, m.to)),
-    );
-    deps.log(`moved         ${m.from} → ${m.to}`);
-  });
+  carry(paperDir, plan, deps);
   const entries = Object.keys(plan.lock).length;
   if (entries > 0) {
     writeLock(paperDir, plan.lock, deps);
@@ -269,8 +281,10 @@ function runMigrate(
     root: entriesIn(versionsDir(paperDir), deps),
     factsOf: paperFacts(paperDir, deps),
     lock: lock.value,
+    exists: (rel) => deps.files.isFile(callerPath(resolve(paperDir, rel))),
   });
   if (!plan.ok) return refused([...plan.error, "nothing was moved"], deps);
+  // A copy always has its move: the last destination of a shared source is moved, not copied.
   if (plan.value.moves.length === 0 && card.value.without === null)
     return (
       deps.log(

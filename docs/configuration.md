@@ -303,7 +303,10 @@ removed       the stages: list from PIPELINE-STATUS.md — the folders and the l
 Each entry's `cycle:` names its folder, its `bytes:` and `sourceBytes:` are checked against the
 files once more, its `date:` becomes the day the lock records, and `sourceLost: true` becomes a lock
 entry that records the loss. An entry without a `cycle:`, a file that is no longer the one declared,
-or a dated file no entry names stops the whole migration before anything moves, with what to do.
+or a dated file no entry names stops the whole migration before anything moves, with what to do;
+so does a destination that is already there, such as a version `submission update --save` froze
+while the list was still in place. A source two stages were built from (a `submitted` and an `arxiv`
+sharing one `.tex`) is copied to each.
 Any other loose file at the top of `versions/` (a withdrawn `STALE` copy, a note on the old
 convention) moves to `extra/versions/`, since [`versions/layout`](rules/versions/layout.md) allows
 nothing there beside `lock.json`. The YAML comments inside the list leave with it: read them first,
