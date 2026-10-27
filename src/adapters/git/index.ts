@@ -125,6 +125,25 @@ const inHead = (
   return "why" in t ? t : { present: t.out.trim() !== "" };
 };
 
+/**
+ * Every ancestor, not git's simplified history: a merge whose first parent already holds the same tree
+ * (a squash of the branch it merges) would otherwise hide that branch, and with it the commits that
+ * show the decision came first.
+ */
+const WHOLE_HISTORY = ["--full-history"] as const;
+
+/** Every path ever under the study's folder, oldest commit first, each commit's paths after its sha and date. */
+const FIRST_COMMITS = [
+  "log",
+  "--reverse",
+  ...WHOLE_HISTORY,
+  "--format=%x01%H%x09%cI",
+  "--name-only",
+  "--relative",
+  "--",
+  ".",
+] as const;
+
 /** The decision's first commit (null: never committed), and whether HEAD's tree still holds it. */
 const decisionIn = (
   git: Git,
@@ -133,7 +152,13 @@ const decisionIn = (
 ):
   | { readonly at: CommitAt | null; readonly deleted: boolean }
   | { readonly why: string } => {
-  const d = git(studyDir, ["log", "--format=%H%x09%cI", "--", decision]);
+  const d = git(studyDir, [
+    "log",
+    ...WHOLE_HISTORY,
+    "--format=%H%x09%cI",
+    "--",
+    decision,
+  ]);
   if ("why" in d) return d;
   const lines = d.out.trim().split("\n");
   const first = commitAt(nth(lines, lines.length - 1));
@@ -153,15 +178,7 @@ function orderIn(
   if (shallow.out.trim() === "true") return { kind: "shallow" };
   const d = decisionIn(git, studyDir, decision);
   if ("why" in d) return { kind: "unknown", why: d.why };
-  const files = git(studyDir, [
-    "log",
-    "--reverse",
-    "--format=%x01%H%x09%cI",
-    "--name-only",
-    "--relative",
-    "--",
-    ".",
-  ]);
+  const files = git(studyDir, FIRST_COMMITS);
   if ("why" in files) return { kind: "unknown", why: files.why };
   const ordered = ordersOf(git, studyDir, d.at, firstCommitsOf(files.out));
   return "why" in ordered

@@ -17,6 +17,8 @@ const ports = gitHistory(spawnProcess(), { PATH: String(process.env.PATH) });
 const T1 = "2026-10-16T10:00:00+05:00";
 const T2 = "2026-10-16T11:00:00+05:00";
 const T3 = "2026-10-16T12:00:00+05:00";
+const T4 = "2026-10-16T13:00:00+05:00";
+const T5 = "2026-10-16T14:00:00+05:00";
 
 it("a decision committed, then changed, then never committed: three states", () => {
   const repo = join(root, "committed");
@@ -71,6 +73,39 @@ it("outputs after the decision, in its commit, before it, and deleted since: eac
       { path: "decision.md", commit: decided, date: T2, order: "same" },
       { path: "same.csv", commit: decided, date: T2, order: "same" },
       { path: "later.csv", commit: later, date: T3, order: "after" },
+    ],
+  });
+});
+
+it("a squash on the first parent does not hide the order its merged-in branch recorded", () => {
+  const repo = join(root, "squashed");
+  initRepo(repo);
+  commit(repo, { "README.md": "r\n" }, T1);
+  git(repo, ["checkout", "-q", "-b", "study"], T1);
+  const decided = commit(repo, { "p/repro/S/decision.md": "d\n" }, T2);
+  const ran = commit(repo, { "p/repro/S/out.csv": "1\n" }, T3);
+  git(repo, ["checkout", "-q", "main"], T3);
+  commit(
+    repo,
+    { "p/repro/S/decision.md": "d\n", "p/repro/S/out.csv": "1\n" },
+    T4,
+    "squash",
+  );
+  git(repo, ["merge", "-q", "--no-ff", "-m", "merge", "study"], T5);
+  // Guards: the merge is TREESAME to the squash, its first parent, so git's default history
+  // simplification walks only the squash and reads decision and output as born in one commit.
+  expect(
+    ports.order(
+      absolutePath(join(repo, "p/repro/S")),
+      absolutePath(join(repo, "p/repro/S/decision.md")),
+    ),
+  ).toEqual({
+    kind: "read",
+    decision: { commit: decided, date: T2 },
+    decisionDeleted: false,
+    files: [
+      { path: "decision.md", commit: decided, date: T2, order: "same" },
+      { path: "out.csv", commit: ran, date: T3, order: "after" },
     ],
   });
 });
