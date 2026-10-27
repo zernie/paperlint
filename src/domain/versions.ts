@@ -434,8 +434,14 @@ export const driftText = (d: Drift): string =>
   `${String(d.added)} line${d.added === 1 ? "" : "s"} added, ${String(d.removed)} removed`;
 
 /** The venue of a cycle, as a person names it: the preset's spec, or the named venue. */
+/** A cycle's venue as a person names it: a named venue's name, a preset's name without its package or path. */
 export const venueName = (c: Cycle): string =>
-  c.venue.kind === "preset" ? c.venue.extends : c.venue.name;
+  c.venue.kind === "preset"
+    ? c.venue.extends
+        .replace(/^paperlint:/, "")
+        .replace(/^.*\//, "")
+        .replace(/\.jsonc?$/, "")
+    : c.venue.name;
 
 /**
  * The frozen source the draft is measured against: the open cycle's `submitted.tex`, or — once the

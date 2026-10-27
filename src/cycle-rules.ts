@@ -62,10 +62,7 @@ const STATUS_FILE = "PIPELINE-STATUS.md";
 export type CycleRuleName = "record" | "evidence";
 
 /** The `cycles` value of the paper's settings file; undefined when there is no file, no JSON, or no key. */
-function cyclesValue(
-  dir: string,
-  deps: Pick<VenueRuleDeps, "files">,
-): unknown {
+function cyclesValue(dir: string, deps: Pick<VenueRuleDeps, "files">): unknown {
   const bytes = deps.files.readBytes(callerPath(join(dir, CONFIG_FILE)));
   if (bytes === null) return undefined;
   try {
@@ -269,11 +266,10 @@ export function cycleRules(
   return { record: rule("record", deps), evidence: rule("evidence", deps) };
 }
 
-/** The level each `cycle/*` rule on PIPELINE-STATUS.md is on at in paperlint's own config — `stage` too (eslint-rules/cycle-stage.ts). */
+/** The level each `cycle/*` rule of this file is on at in paperlint's own config. */
 export const CYCLE_RULE_LEVELS: Readonly<
-  Record<`cycle/${CycleRuleName | "stage"}`, "error">
+  Record<`cycle/${CycleRuleName}`, "error">
 > = {
   "cycle/record": "error",
   "cycle/evidence": "error",
-  "cycle/stage": "error",
 };

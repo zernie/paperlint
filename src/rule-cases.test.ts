@@ -631,28 +631,6 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       [`${P}/reviews/decision.md`]: "# decision\n",
     },
   },
-  "cycle/stage": {
-    reports: {
-      tree: {
-        ...paper(tex("x")),
-        [STATUS_FILE]: SHIPPED_STATUS,
-        [`${P}/paperlint.json`]: OPEN_CYCLE,
-        [`${P}/versions/a.pdf`]: "x",
-      },
-      file: STATUS_FILE,
-      severity: 2,
-      line: 1,
-    },
-    silent: {
-      ...paper(tex("x")),
-      [STATUS_FILE]: SHIPPED_STATUS.replace(
-        "date: 2026-07-22",
-        "cycle: open-2027\n    date: 2026-07-22",
-      ),
-      [`${P}/paperlint.json`]: OPEN_CYCLE,
-      [`${P}/versions/a.pdf`]: "x",
-    },
-  },
   // ── the frozen versions: versions/<cycle>/<stage>.{pdf,tex} and versions/lock.json ──────────────
   "versions/layout": {
     reports: {

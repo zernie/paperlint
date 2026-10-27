@@ -174,7 +174,6 @@ export { nextSteps } from "./init.ts";
 
 import paperStages from "#eslint-rules/paper-stages";
 import preregCoverage from "#eslint-rules/prereg-coverage";
-import cycleStage from "#eslint-rules/cycle-stage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import { runVersions } from "./versions-command.ts";
 import { parseYaml } from "./adapters/yaml/index.ts";
@@ -420,7 +419,7 @@ const REGISTER_AND_CASE_RULES = {
 
 /**
  * The paper's attempts (`cycles` in paperlint.json), judged on `PIPELINE-STATUS.md`: the record itself
- * and its evidence (src/cycle-rules.ts), and the stages that name a cycle (eslint-rules/cycle-stage.ts).
+ * and its evidence (src/cycle-rules.ts), and that each version sent was frozen (src/version-rules.ts).
  * The `cycle` plugin's other rule, `port-done`, reads `paper.tex` (src/tex-venue-rules.ts).
  */
 /** The markdown language with YAML frontmatter: what every markdown block of the config lints as. */
@@ -431,7 +430,6 @@ const MARKDOWN_WITH_FRONTMATTER = {
 
 const CYCLE_STATUS_RULES = {
   ...cycleRules({ files: nodeFiles, venuesDir: presetsDir() }),
-  ...cycleStage.rules,
   ...submittedFrozenRules({ files: nodeFiles, listDir: nodeListDir }),
 };
 

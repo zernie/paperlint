@@ -9,11 +9,6 @@
       "count": 1
     }
   },
-  "eslint-rules/cycle-stage.test.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "eslint-rules/install-path-literals.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1

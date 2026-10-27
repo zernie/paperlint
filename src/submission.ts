@@ -86,6 +86,7 @@ import {
   freezePlan,
   freezeSent,
   NOT_FROZEN,
+  versionLines,
   type FreezePlan,
 } from "./versions.ts";
 
@@ -476,7 +477,12 @@ async function runShow(
     shown: shownPath(deps.cwd, pdfPath),
     sha256: bytes === null ? null : sha256Hex(bytes),
   };
-  showLines(t, view.value, local).forEach((l) => {
+  // With `cycles`, the frozen versions beside the portal's copy: which is under review, which is history.
+  const versions = versionLines(t.paperDir, deps);
+  [
+    ...showLines(t, view.value, local),
+    ...(versions.ok ? ["", "versions", ...versions.value] : []),
+  ].forEach((l) => {
     deps.log(l);
   });
   return 0;

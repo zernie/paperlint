@@ -245,3 +245,18 @@ test("a build whose record does not list paper.tex, and no paper.tex: refused â€
     "refused: no paper.tex to freeze beside the PDF, and the two could not be frozen together in versions/venue-2026/ â€” rebuild (`paperlint build`), run the dry run again, then --save; nothing was sent",
   ]);
 });
+
+test("show in the cycles form: the frozen versions follow the portal's copy, the draft measured against them", async () => {
+  const fs = built({ cycles: [SENT] });
+  await run({ sub: "update", save: true }, { files: fs });
+  const r = await run({}, { files: fs });
+  expect(r.code, r.errs.join("\n")).toBe(0);
+  const at = r.out.indexOf("versions");
+  expect(at).toBeGreaterThan(0);
+  expect(r.out.slice(at - 1)).toStrictEqual([
+    "",
+    "versions",
+    "  venue-2026  submitted  CURRENT (under review at venue)  9 B  frozen 2026-10-23 16:58 UTC",
+    "  paper.tex   draft      target not chosen                same as venue-2026/submitted.tex",
+  ]);
+});

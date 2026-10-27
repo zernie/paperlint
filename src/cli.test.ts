@@ -944,8 +944,8 @@ test("versions: migrate moves an old-layout paper on disk into folders per attem
   assert.equal(
     s.out,
     [
-      "  open-2027  submitted  CURRENT (under review at paperlint:acm-sigconf)  4 B  frozen 2026-10-23",
-      "  paper.tex  draft      target not chosen                                differs from open-2027/submitted.tex: 1 line added, 0 removed",
+      "  open-2027  submitted  CURRENT (under review at acm-sigconf)  4 B  frozen 2026-10-23",
+      "  paper.tex  draft      target not chosen                      differs from open-2027/submitted.tex: 1 line added, 0 removed",
     ].join("\n"),
   );
 });

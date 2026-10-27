@@ -14,7 +14,7 @@
  *   - what `paperlint new` scaffolds: `PIPELINE-STATUS.md`, `paper.tex`, `paperlint.json`;
  *   - what the build writes: `paper.pdf` and `_build/`, and TeX's own byproducts beside `paper.tex`
  *     (pdflatex runs in the paper folder without `-output-directory`), which are never reported;
- *   - what the rules read: `versions/` (`paper/stages`), `reviews/` (`review/frontmatter`),
+ *   - what the rules read: `versions/` (`versions/layout`, `paper/stages`), `reviews/` (`review/frontmatter`),
  *     `siblings/` (`sibling/frontmatter`), `talk/` (the `talk/` rules' default folder);
  *   - what the skills read or write at the root: `README.md`, `CLAUDE.md`, `CLAIMS.md`, `NOTES.md`,
  *     `SUBMIT-CHECKLIST.md`, `research/`, `repro/`, `figures/`, `submission/`;
@@ -93,7 +93,10 @@ export const ROOT_FILES: readonly string[] = ROOT_FILE_NOTES.map((f) => f.name);
 /** The folders the root may hold, by exact name, each with what it holds. */
 export const ROOT_DIR_NOTES: readonly Noted[] = [
   { name: "_build", note: "the facts `paperlint build` writes" },
-  { name: "versions", note: "each stage's frozen PDF and source" },
+  {
+    name: "versions",
+    note: "each stage's frozen PDF and source — per attempt, versions/<cycle>/, with lock.json",
+  },
   { name: "reviews", note: "dated reviews and pass reports" },
   { name: "siblings", note: "the cards of competing papers" },
   { name: "research", note: "dated research and decision records" },

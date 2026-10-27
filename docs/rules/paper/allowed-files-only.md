@@ -29,7 +29,7 @@ it: [the map](../../layout.md).
 ├── paper.pdf                      ← the built PDF
 ├── *.tex *.bib *.cls *.sty *.bst  ← what TeX and bibtex look up beside paper.tex
 ├── _build/                        ← the facts `paperlint build` writes
-├── versions/                      ← each stage's frozen PDF and source
+├── versions/                      ← each stage's frozen PDF and source — per attempt, versions/<cycle>/, with lock.json
 ├── reviews/                       ← dated reviews and pass reports
 ├── siblings/                      ← the cards of competing papers
 ├── research/                      ← dated research and decision records
