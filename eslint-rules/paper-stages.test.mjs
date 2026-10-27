@@ -192,4 +192,12 @@ test("under `cycles`: a frontmatter node without a value reads as empty YAML", (
   };
   stages.rules.stages.create(context).yaml({ type: "yaml" });
   assert.deepEqual(reports, []);
+  // Linted from the paper itself, the command names it as `.`.
+  stages.rules.stages
+    .create(context)
+    .yaml({ type: "yaml", value: "stages:\n  - stage: submitted" });
+  assert.deepEqual(
+    reports.map((r) => r.data),
+    [{ paper: "." }],
+  );
 });

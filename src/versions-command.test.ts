@@ -16,6 +16,7 @@ import { absolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { lockText, parseLock, type Lock } from "./domain/versions.ts";
 import { runVersions } from "./versions-command.ts";
+import { factsOfFrozen } from "./versions.ts";
 
 const PAPER = "/w/papers/p";
 const enc = (t: string) => new TextEncoder().encode(t);
@@ -146,6 +147,47 @@ describe("paperlint versions — the table", () => {
   });
 });
 
+describe("paperlint versions — the table, when there is less to show", () => {
+  it("no attempt open, no lock, no paper.tex: the attempts as they ended, and nothing to measure a draft against", () => {
+    const fs = memoryFiles({
+      [`${PAPER}/paperlint.json`]: JSON.stringify({
+        cycles: CYCLES.slice(0, 2),
+      }),
+      [`${PAPER}/versions/conf-2026/submitted.pdf`]: PDF,
+    });
+    expect(run(["papers/p"], fs).out).toStrictEqual([
+      "  conf-2026      submitted  historical (rejected)                       not locked",
+      "  workshop-2026  submitted  NOT FROZEN — submission 3 is on the portal",
+      "  paper.tex      draft      target not chosen                           no attempt to compare with",
+    ]);
+    // With a draft on disk and no attempt open, there is still nothing to measure it against.
+    fs.writeAtomic(absolutePath(`${PAPER}/paper.tex`), enc(DRAFT));
+    expect(run(["papers/p"], fs).out.at(-1)).toBe(
+      "  paper.tex      draft      target not chosen                           no attempt to compare with",
+    );
+  });
+
+  it("an attempt record that does not read: no table, and the reason is lint's", () => {
+    const fs = memoryFiles({
+      [`${PAPER}/paperlint.json`]: JSON.stringify({ cycles: [{ id: "x" }] }),
+    });
+    const r = run(["papers/p"], fs);
+    expect(r.code).toBe(2);
+    expect(r.errs[0]).toMatch(
+      /^the paper keeps no "cycles" in paperlint\.json \(or they do not read/,
+    );
+  });
+
+  it("a frozen file's facts: zero bytes of nothing once it is gone", () => {
+    expect(
+      factsOfFrozen(PAPER, memoryFiles({}))("x/submitted.pdf"),
+    ).toStrictEqual({
+      bytes: 0,
+      sha256: sha256Hex(new Uint8Array()),
+    });
+  });
+});
+
 describe("paperlint versions lock", () => {
   it("records a file put there by hand, drops one that is gone, says when nothing changed", () => {
     const fs = paper();
@@ -154,6 +196,15 @@ describe("paperlint versions lock", () => {
       enc("%PDF arxiv"),
     );
     fs.map.delete(`${PAPER}/versions/workshop-2026/camera-ready.tex`);
+    // Not a frozen version: a note and a folder inside an attempt's folder (versions/layout names them).
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/versions/journal-2027/notes.md`),
+      enc("x"),
+    );
+    fs.writeAtomic(
+      absolutePath(`${PAPER}/versions/journal-2027/old/submitted.pdf`),
+      enc("x"),
+    );
     const r = run(["lock", "papers/p"], fs);
     expect(r.code).toBe(0);
     expect(r.out).toStrictEqual([
@@ -285,6 +336,10 @@ describe("paperlint versions migrate, refused", () => {
     expect(run(["migrate", "papers/p"], lock).errs).toStrictEqual([
       'versions/lock.json: not a lock this paperlint writes ("lockfileVersion": 1) — `npx paperlint versions lock papers/p` writes it anew; then migrate',
     ]);
+    // Run from the paper itself, the command it names is the paper as `.`.
+    expect(run(["migrate"], lock, PAPER).errs).toStrictEqual([
+      'versions/lock.json: not a lock this paperlint writes ("lockfileVersion": 1) — `npx paperlint versions lock .` writes it anew; then migrate',
+    ]);
   });
 
   it("a list the text edit would not take out cleanly: refused, nothing moved", () => {
@@ -319,5 +374,31 @@ describe("paperlint versions migrate, refused", () => {
       ],
       errs: [],
     });
+  });
+});
+
+describe("paperlint versions migrate, edge cases", () => {
+  it("a scorecard whose frontmatter is a bare value has no list to take out: nothing to migrate", () => {
+    const fs = memoryFiles({
+      [`${PAPER}/paperlint.json`]: JSON.stringify({ cycles: CYCLES }),
+      [`${PAPER}/PIPELINE-STATUS.md`]: "---\njust a line\n---\n# Status\n",
+    });
+    expect(run(["migrate", "papers/p"], fs).out).toStrictEqual([
+      "nothing to migrate: PIPELINE-STATUS.md has no stages: list, and no file of the old layout is left in versions/",
+    ]);
+  });
+
+  it("a declared file that is not on disk: refused, nothing moved", () => {
+    const fs = oldLayout(
+      STAGES.replace("2026-07-22-submitted.pdf", "gone.pdf"),
+    );
+    const r = run(["migrate", "papers/p"], fs);
+    expect(r.errs).toStrictEqual([
+      "stages[0]: `versions/gone.pdf` is not on disk",
+      // The file it should have named is then named by nobody.
+      "versions/2026-07-22-submitted.pdf: no stage in `stages:` names it — declare it with its cycle, or move it to extra/, then migrate",
+      "nothing was moved",
+    ]);
+    expect(r.code).toBe(2);
   });
 });

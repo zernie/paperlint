@@ -505,12 +505,11 @@ const whenText = (frozen: string): string =>
     ? frozen
     : `${frozen.slice(0, 10)} ${frozen.slice(11, 16)} UTC`;
 
+/** A PDF's lock entry as the table shows it (only a source can be recorded lost). */
 const entryDetail = (e: LockEntry | undefined): string =>
-  e === undefined
+  e === undefined || e.kind === "lost"
     ? "not locked"
-    : e.kind === "lost"
-      ? "source lost"
-      : `${String(e.bytes)} B  frozen ${whenText(e.frozen)}`;
+    : `${String(e.bytes)} B  frozen ${whenText(e.frozen)}`;
 
 /** The stages a cycle has frozen: a PDF, a source, or a source the lock records as lost. */
 const frozenStages = (

@@ -189,6 +189,7 @@ describe("planMigration, refused", () => {
             date: "2026-10-23",
             pdf: "versions/2026-09-01-arxiv.pdf",
           },
+          { stage: ["submitted"] },
         ],
       }),
     );
@@ -202,6 +203,7 @@ describe("planMigration, refused", () => {
         'stages[5] («arxiv»): no "pdf"',
         "stages[6]: `versions/2026-07-22-submitted.pdf` has 305412 bytes, the stage declares 1 — it is not the file that was frozen: restore it from git first",
         "stages[6]: `versions/none.tex` is not on disk",
+        'stages[9]: the stage «["submitted"]» has no place in versions/<cycle>/ — the stages are submitted, camera-ready, arxiv',
         "versions/2026-07-22-submitted.tex: no stage in `stages:` names it — declare it with its cycle, or move it to extra/, then migrate",
         "versions/alpha-2026/submitted.pdf: `versions/2026-10-23-submitted.pdf` and `versions/2026-09-01-arxiv.pdf` would both go there — an attempt keeps its last upload per stage: move the older to extra/, drop its entry from `stages:`, then migrate",
       ]),

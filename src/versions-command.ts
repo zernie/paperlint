@@ -14,7 +14,7 @@
  * `versions` prints it without a token or a network call. `lock` is the `npm install` slot — make the
  * generated file match the disk — and `migrate` runs once per paper.
  */
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import * as R from "remeda";
 import { callerPath } from "./caller-path.ts";
 import type { Cycles } from "./domain/cycle.ts";
@@ -81,8 +81,8 @@ export function versionsArgs(words: readonly string[]): {
   };
 }
 
-const shown = (cwd: string, p: string): string =>
-  p.startsWith(`${cwd}/`) ? p.slice(cwd.length + 1) : p;
+/** The paper as a command line names it, from where the command runs. */
+const shown = (cwd: string, p: string): string => relative(cwd, p) || ".";
 
 const logAll = (lines: readonly string[], deps: VersionsCommandDeps): void => {
   lines.forEach((l) => {
@@ -103,8 +103,14 @@ function onDisk(
   return cycles.list.flatMap((c) =>
     entriesIn(join(root, c.id), deps).flatMap((e) => {
       const n = e.kind === "file" ? frozenName(e.name) : null;
-      const key = n === null ? null : frozenKey(c.id, n.stage, n.ext);
-      return key === null ? [] : [{ key, facts: facts(key) }];
+      return n === null
+        ? []
+        : [
+            {
+              key: frozenKey(c.id, n.stage, n.ext),
+              facts: facts(frozenKey(c.id, n.stage, n.ext)),
+            },
+          ];
     }),
   );
 }
@@ -164,13 +170,14 @@ const statusText = (paperDir: string, deps: VersionsCommandDeps): string =>
 
 /** Whether the scorecard without its list says everything else it said: parsed, both, and compared. */
 function keepsTheRest(
-  before: unknown,
+  before: Readonly<Record<string, unknown>>,
   without: string,
   yaml: ParseYaml,
 ): boolean {
   const after = yaml(frontmatterOf(without) ?? "");
-  const rest = isRecord(before) ? R.omit(before, ["stages"]) : {};
-  return after.ok && R.isDeepEqual(rest, after.value ?? {});
+  return (
+    after.ok && R.isDeepEqual(R.omit(before, ["stages"]), after.value ?? {})
+  );
 }
 
 /** The scorecard read and its list taken out — checked by parsing both, so a cut that misreads is refused. */
@@ -184,10 +191,12 @@ function scorecard(
     return err(
       `${STATUS_FILE}: the frontmatter does not parse (${before.error}) — fix it, then migrate`,
     );
-  const list = fieldOf(before.value, "stages");
+  // A frontmatter that is no mapping (none, or a bare value) has no `stages:` key to take out.
+  const fields = isRecord(before.value) ? before.value : {};
+  const list = fieldOf(fields, "stages");
   const stages: readonly unknown[] = Array.isArray(list) ? list : [];
   const without = withoutStages(text);
-  return without === null || keepsTheRest(before.value, without, deps.yaml)
+  return without === null || keepsTheRest(fields, without, deps.yaml)
     ? ok({ stages, without })
     : err(
         `${STATUS_FILE}: taking the stages: list out would change the rest of its frontmatter — take it out by hand, then migrate`,

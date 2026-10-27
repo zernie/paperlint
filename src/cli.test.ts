@@ -948,4 +948,10 @@ test("versions: migrate moves an old-layout paper on disk into folders per attem
       "  paper.tex  draft      target not chosen                      differs from open-2027/submitted.tex: 1 line added, 0 removed",
     ].join("\n"),
   );
+  const l = await cli(["versions", "lock", "papers/p"], dir);
+  assert.equal(l.code, 0, l.err);
+  assert.equal(
+    l.out,
+    "versions/lock.json records every frozen file as it stands",
+  );
 });

@@ -141,12 +141,11 @@ function sourcePart(
 
 /** Where one `stages:` entry goes, or why it has no place. */
 function targetOf(
-  e: unknown,
+  rec: Readonly<Record<string, unknown>>,
   i: number,
   ids: readonly string[],
 ): Result<Target, string> {
   const at = `stages[${String(i)}]`;
-  const rec = isRecord(e) ? e : {};
   const stage = rec["stage"];
   if (!isStage(stage))
     return err(
@@ -165,9 +164,9 @@ function targetOf(
 
 /** One `stages:` entry → its moves and lock entries. */
 function entryPart(e: unknown, i: number, input: MigrationInput): Part {
-  const t = targetOf(e, i, input.cycleIds);
-  if (!t.ok) return problem(t.error);
   const rec = isRecord(e) ? e : {};
+  const t = targetOf(rec, i, input.cycleIds);
+  if (!t.ok) return problem(t.error);
   const pdf = rec["pdf"];
   return merge([
     typeof pdf === "string"

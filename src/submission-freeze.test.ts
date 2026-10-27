@@ -232,6 +232,20 @@ test("new --save in the cycles form: the PDF it created the submission with is f
   );
 });
 
+test("new --save refuses the same way, before the portal is asked to create anything", async () => {
+  const fs = built({ authors: AUTHORS, cycles: [cycle("venue-2026")] });
+  fs.writeAtomic(
+    absolutePath(`${PAPER}/sections/intro.tex`),
+    enc("Rewritten after the build.\n"),
+  );
+  const r = await run({ sub: "new", save: true }, { files: fs });
+  expect(r.code).toBe(2);
+  expect(r.seen[0]?.calls ?? []).toStrictEqual([]);
+  expect(r.errs.at(-1)).toMatch(
+    /^refused: sections\/intro\.tex changed since the build/,
+  );
+});
+
 test("a build whose record does not list paper.tex, and no paper.tex: refused — there is no source to freeze beside the PDF", async () => {
   const fs = files({
     paper: { cycles: [SENT] },

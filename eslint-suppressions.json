@@ -61,7 +61,7 @@
       "count": 5
     },
     "functional/no-loop-statements": {
-      "count": 5
+      "count": 4
     },
     "functional/prefer-immutable-types": {
       "count": 4

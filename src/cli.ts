@@ -428,6 +428,9 @@ const MARKDOWN_WITH_FRONTMATTER = {
   languageOptions: { frontmatter: "yaml" },
 };
 
+/** The instant a freeze or a lock records, ISO 8601 (versions/lock.json). */
+const isoNow = (): string => new Date().toISOString();
+
 const CYCLE_STATUS_RULES = {
   ...cycleRules({ files: nodeFiles, venuesDir: presetsDir() }),
   ...submittedFrozenRules({ files: nodeFiles, listDir: nodeListDir }),
@@ -1844,7 +1847,7 @@ const SIMPLE: Readonly<
       yaml: parseYaml,
       latex: latexReader,
       codec: sourcesCodec,
-      now: () => new Date().toISOString(),
+      now: isoNow,
       cwd,
       log,
       err,
@@ -1869,7 +1872,7 @@ const SIMPLE: Readonly<
         latex: latexReader,
         codec: sourcesCodec,
         lintText,
-        now: () => new Date().toISOString(),
+        now: isoNow,
         log,
         err,
       },
