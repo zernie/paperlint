@@ -4,6 +4,15 @@
  * record both in `versions/lock.json` — the manual step behind #308, gone.
  */
 import { expect, test } from "vitest";
+import { latexReader } from "./adapters/latex/index.ts";
+import {
+  memoryCopyFile,
+  memoryListDir,
+  memoryMoveFile,
+} from "./adapters/memory/index.ts";
+import { sourcesCodec } from "./adapters/sources-record/index.ts";
+import { parseYaml } from "./adapters/yaml/index.ts";
+import { runVersions } from "./versions-command.ts";
 import { builtPaper } from "../test/recorded-fixture.ts";
 import { absolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
@@ -272,5 +281,40 @@ test("show in the cycles form: the frozen versions follow the portal's copy, the
     "versions",
     "  venue-2026  submitted  CURRENT (under review at venue)  9 B  frozen 2026-10-23 16:58 UTC",
     "  paper.tex   draft      target not chosen                same as venue-2026/submitted.tex",
+  ]);
+});
+
+test("a cycle id that is not one folder name: refused at parse, nothing sent and nothing written", async () => {
+  for (const id of ["conf/2026", ".."]) {
+    const fs = built({ cycles: [cycle(id, { submission: { id: 7 } })] });
+    const before = [...fs.map.keys()];
+    const r = await run({ sub: "update", save: true }, { files: fs });
+    expect(r.code, id).toBe(2);
+    expect(r.seen[0]?.calls ?? [], id).toStrictEqual([]);
+    expect(r.errs.join("\n"), id).toMatch(/is not one folder name/);
+    expect([...fs.map.keys()], id).toStrictEqual(before);
+  }
+});
+
+test("a valid id round-trips: frozen by --save, then `versions lock` reads the lock it wrote as it stands", async () => {
+  const fs = built({ cycles: [SENT] });
+  await run({ sub: "update", save: true }, { files: fs });
+  const out: string[] = [];
+  const code = runVersions(["lock", PAPER], {
+    files: fs,
+    listDir: memoryListDir(fs),
+    move: memoryMoveFile(fs),
+    copy: memoryCopyFile(fs),
+    yaml: parseYaml,
+    latex: latexReader,
+    codec: sourcesCodec,
+    now: () => NOW,
+    cwd: "/",
+    log: (l) => out.push(l),
+    err: (l) => out.push(l),
+  });
+  expect(code).toBe(0);
+  expect(out).toStrictEqual([
+    "versions/lock.json records every frozen file as it stands",
   ]);
 });

@@ -1,5 +1,6 @@
 /** The migration from `stages:` to folders per attempt, planned before anything moves. */
 import { describe, expect, it } from "vitest";
+import { cycleId } from "./cycle.ts";
 import { err, ok } from "./result.ts";
 import {
   frontmatterOf,
@@ -19,7 +20,7 @@ const DISK: Readonly<Record<string, FileFacts>> = {
 const file = (name: string) => ({ name, kind: "file" as const });
 
 const input = (o: Partial<MigrationInput> = {}): MigrationInput => ({
-  cycleIds: ["alpha-2026", "beta-2027"],
+  cycleIds: [cycleId("alpha-2026"), cycleId("beta-2027")],
   stages: [
     {
       stage: "submitted",
@@ -164,7 +165,7 @@ describe("planMigration, refused", () => {
   it("refuses the whole migration with every reason: no place, no cycle, no date, no pdf, a file gone or replaced, one left over, two in one place", () => {
     const r = planMigration(
       input({
-        cycleIds: ["alpha-2026"],
+        cycleIds: [cycleId("alpha-2026")],
         stages: [
           { stage: "accepted" },
           "not a mapping",

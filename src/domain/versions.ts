@@ -32,7 +32,12 @@
  */
 import { diffLines } from "diff";
 import * as R from "remeda";
-import type { Current, Cycle } from "./cycle.ts";
+import {
+  CYCLE_ID_PATTERN,
+  type Current,
+  type Cycle,
+  type CycleId,
+} from "./cycle.ts";
 import { isRecord } from "./record.ts";
 import { err, ok, type Result } from "./result.ts";
 
@@ -65,7 +70,7 @@ export function frozenName(name: string): FrozenName | null {
 
 /** `<cycle>/<stage>.<ext>`: a frozen file's path under `versions/`, and its key in the lock. */
 export const frozenKey = (
-  cycle: string,
+  cycle: CycleId,
   stage: VersionStage,
   ext: VersionExt,
 ): string => `${cycle}/${stage}.${ext}`;
@@ -103,7 +108,8 @@ export const LOCK_NOTE =
 
 const SHA256 = /^[0-9a-f]{64}$/;
 const WHEN = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?Z)?$/;
-const KEY = /^([^/]+)\/([a-z-]+\.(?:pdf|tex))$/;
+/** `<cycle>/<stage>.<ext>`, the cycle part by the same rule `parseCycles` holds an id to. */
+const KEY = new RegExp(`^(${CYCLE_ID_PATTERN})/([a-z-]+\\.(?:pdf|tex))$`);
 
 const isWhen = (v: unknown): v is string =>
   typeof v === "string" && WHEN.test(v);
@@ -237,7 +243,7 @@ export interface LayoutInput {
 /** A frozen file found on disk: its key, cycle, stage and extension. */
 interface Found extends FrozenName {
   readonly key: string;
-  readonly cycle: string;
+  readonly cycle: CycleId;
 }
 
 const STAGES_TEXT = VERSION_STAGES.join(", ");
@@ -275,12 +281,12 @@ function folderContents(input: LayoutInput): {
   readonly found: readonly Found[];
   readonly strays: readonly VersionFinding[];
 } {
-  const ids = input.cycles.map((c) => c.id);
-  const folders = input.root.filter(
-    (e) => e.kind === "dir" && ids.includes(e.name),
-  );
-  const listed = folders.flatMap((f) =>
-    input.inFolder(f.name).map((e) => ({ cycle: f.name, e })),
+  // Each cycle's folder by the cycle's own id, so every key below is built from a parsed one.
+  const folders = input.cycles
+    .map((c) => c.id)
+    .filter((id) => input.root.some((e) => e.kind === "dir" && e.name === id));
+  const listed = folders.flatMap((id) =>
+    input.inFolder(id).map((e) => ({ cycle: id, e })),
   );
   const named = listed.map(({ cycle, e }) => ({
     cycle,

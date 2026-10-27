@@ -90,6 +90,10 @@ describe("names", () => {
     });
     expect(keyParts("beta-2027/notes.md")).toBeNull();
     expect(keyParts("submitted.pdf")).toBeNull();
+    // The cycle part by the rule parseCycles holds an id to: one folder name, nothing else.
+    expect(keyParts("conf/2026/submitted.pdf")).toBeNull();
+    expect(keyParts("../submitted.pdf")).toBeNull();
+    expect(keyParts("Conf-2026/submitted.pdf")).toBeNull();
   });
 });
 

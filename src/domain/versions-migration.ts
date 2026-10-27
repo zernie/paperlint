@@ -12,6 +12,7 @@
  * Pure: the caller reads the disk and hands in what it found.
  */
 import * as R from "remeda";
+import type { CycleId } from "./cycle.ts";
 import { isRecord } from "./record.ts";
 import { err, ok, type Result } from "./result.ts";
 import {
@@ -46,7 +47,7 @@ export interface MigrationPlan {
 }
 
 export interface MigrationInput {
-  readonly cycleIds: readonly string[];
+  readonly cycleIds: readonly CycleId[];
   /** The scorecard's `stages:` list, as its YAML parsed. */
   readonly stages: readonly unknown[];
   /** The entries directly in `versions/`. */
@@ -86,7 +87,7 @@ function isoDate(v: unknown): string {
 /** Where an entry's file goes, checked against what the entry declares of it. */
 interface Target {
   readonly at: string;
-  readonly cycle: string;
+  readonly cycle: CycleId;
   readonly stage: VersionStage;
   readonly date: string;
 }
@@ -150,7 +151,7 @@ function sourcePart(
 function targetOf(
   rec: Readonly<Record<string, unknown>>,
   i: number,
-  ids: readonly string[],
+  ids: readonly CycleId[],
 ): Result<Target, string> {
   const at = `stages[${String(i)}]`;
   const stage = rec["stage"];
@@ -158,8 +159,8 @@ function targetOf(
     return err(
       `${at}: the stage «${text(stage)}» has no place in versions/<cycle>/ — the stages are ${VERSION_STAGES.join(", ")}`,
     );
-  const cycle = rec["cycle"];
-  if (typeof cycle !== "string" || !ids.includes(cycle))
+  const cycle = ids.find((id) => id === rec["cycle"]);
+  if (cycle === undefined)
     return err(
       `${at} («${stage}»): names no cycle of paperlint.json — add \`cycle: <id>\` (${ids.join(" · ") || "none declared"}), the attempt the PDF was sent in, then migrate`,
     );

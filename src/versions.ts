@@ -11,7 +11,7 @@
  */
 import { join } from "node:path";
 import { callerPath } from "./caller-path.ts";
-import { venueCycleOf, type Cycles } from "./domain/cycle.ts";
+import { venueCycleOf, type CycleId, type Cycles } from "./domain/cycle.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { messageOf } from "./domain/text.ts";
 import { err, ok, type Result } from "./domain/result.ts";
@@ -164,7 +164,7 @@ export type FreezePlan =
   | { readonly kind: "flat" }
   | {
       readonly kind: "freeze";
-      readonly cycle: string;
+      readonly cycle: CycleId;
       readonly stage: "submitted" | "camera-ready";
       /** paper.tex as the build read it, includes spliced in: the source the PDF was built from. */
       readonly source: string;
