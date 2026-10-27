@@ -164,7 +164,7 @@ is refused as a second source for one fact.
   "pdf": "build/paper.pdf",
   "cycles": [
     {
-      "id": "alpha-2026", // what a stage's `cycle:` names
+      "id": "alpha-2026", // the name of its folder in versions/
       "venue": { "kind": "preset", "extends": "paperlint:acm-sigconf" },
       "kind": "short",
       "opened": "2026-07-01", // the day this attempt was decided
@@ -225,7 +225,7 @@ is refused as a second source for one fact.
 
 | field        | what it is                                                                                                                                                                                                                                                                                                                       |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`         | unique in the list; a scorecard stage names it as `cycle: <id>` ([`cycle/stage`](rules/cycle/stage.md))                                                                                                                                                                                                                          |
+| `id`         | unique in the list; the name of the attempt's folder in `versions/` ([`versions/layout`](rules/versions/layout.md)), so one folder name: lowercase letters, digits and hyphens, starting with a letter or a digit (`msr-2027`). Anything else (`conf/2026`, `..`, `Conf-2026`) is refused when the record is read                |
 | `venue`      | `{ "kind": "preset", "extends": "paperlint:<name>" \| "./path" }` — resolved as `extends` is; or `{ "kind": "named", "name", "url" }` for a venue with no preset yet. A named venue has no format rules                                                                                                                          |
 | `kind`       | a key of the preset's `format.kinds`; omit when the venue has one kind                                                                                                                                                                                                                                                           |
 | `opened`     | `YYYY-MM-DD`, the day this attempt was decided — the boundary a consumer judges the scorecard's rows against                                                                                                                                                                                                                     |
@@ -241,6 +241,80 @@ to null and the venue rules say nothing. An accepted last cycle keeps the paper 
 camera-ready and talk are judged against it, and the venue's blindness no longer applies.
 
 Papers without `cycles` read exactly as before.
+
+### The frozen versions: one folder per attempt
+
+A paper that keeps `cycles` freezes each version it sends in `versions/<cycle id>/`, one file per
+stage. No date is typed into a name: when a file was frozen is in `versions/lock.json`, which
+paperlint writes.
+
+```text
+versions/
+├── alpha-2026/                ← rejected: historical
+│   ├── submitted.pdf
+│   └── submitted.tex
+├── beta-2027/                 ← open: CURRENT, under review
+│   ├── submitted.pdf
+│   └── submitted.tex
+└── lock.json                  ← generated: bytes, sha256 and when each file was frozen
+```
+
+Each version's state follows from its cycle's `outcome`, never typed: a `submitted` version of the
+open cycle is under review; anything in a rejected or withdrawn cycle's folder is historical; an
+accepted cycle's `submitted` is the camera-ready's base, and its `camera-ready` is final. When a
+decision arrives you change one value, the cycle's `outcome`, and every state follows.
+`npx paperlint versions` prints the table, and `paperlint submission show` prints it after the
+portal's copy:
+
+```text
+  beta-2027   submitted  CURRENT (under review at paperlint:ieee-conference)  186504 B  frozen 2026-10-23 16:58 UTC
+  alpha-2026  submitted  historical (rejected)                                305412 B  frozen 2026-07-22
+  paper.tex   draft      target not chosen                                    differs from beta-2027/submitted.tex: 18 lines added, 18 removed
+```
+
+`paperlint submission new --save` and `submission update --save` freeze what they send: the exact
+PDF, and the source the build read — a paper split into `sections/` is frozen whole, its includes
+spliced in — as `versions/<cycle>/submitted.{pdf,tex}`, or `camera-ready.{pdf,tex}` once the cycle is
+accepted, and record both in the lock. A later save in the same cycle replaces them: the last upload
+is the one under review. A save whose sources changed since the build is refused before anything is
+sent, because the PDF and the source on disk would no longer be a pair. A file you put there yourself
+(an arXiv copy, an upload made on the portal by hand) is recorded with `npx paperlint versions lock`.
+
+**Between venues.** Freeze at the send — `--save` does it. Keep editing `paper.tex`: it is always the
+draft, the only file you edit, and [`cycle/draft-drift`](rules/cycle/draft-drift.md) says how far it
+has moved from what the reviewers read, so a reply to them quotes the frozen file. Open the next
+cycle only once the current one has an outcome (one open cycle at most). If the venue accepts, the
+camera-ready starts from the frozen `submitted.tex`, not from the drifted draft; once the camera-ready
+is sent and frozen, [`cycle/camera-ready-source`](rules/cycle/camera-ready-source.md) checks that it
+kept at least half of the accepted source's lines. A cycle that has a submission and nothing frozen is
+[`cycle/submitted-frozen`](rules/cycle/submitted-frozen.md).
+
+**From the `stages:` list.** A paper that recorded its frozen versions as a `stages:` list in
+`PIPELINE-STATUS.md`, with dated files in `versions/`, moves to the folders with one command:
+
+```console
+$ npx paperlint versions migrate papers/my-paper
+moved         versions/2026-07-22-submitted.pdf → versions/alpha-2026/submitted.pdf
+moved         versions/2026-07-22-submitted.tex → versions/alpha-2026/submitted.tex
+recorded      versions/lock.json, 2 entries
+removed       the stages: list from PIPELINE-STATUS.md — the folders and the lock are the record now
+```
+
+Each entry's `cycle:` names its folder, its `bytes:` and `sourceBytes:` are checked against the
+files once more, its `date:` becomes the day the lock records, and `sourceLost: true` becomes a lock
+entry that records the loss. An entry without a `cycle:`, a file that is no longer the one declared,
+or a dated file no entry names stops the whole migration before anything moves, with what to do;
+so does a destination that is already there, such as a version `submission update --save` froze
+while the list was still in place. A source two stages were built from (a `submitted` and an `arxiv`
+sharing one `.tex`) is copied to each. Paths in the list are read in one spelling (`./versions/a.tex` is `versions/a.tex`), and one
+outside the paper folder (`../a.tex`) is refused. Before anything moves, the whole plan is replayed on
+the paths it touches: a plan that could stop half-way is refused with nothing moved.
+Any other loose file at the top of `versions/` (a withdrawn `STALE` copy, a note on the old
+convention) moves to `extra/versions/`, since [`versions/layout`](rules/versions/layout.md) allows
+nothing there beside `lock.json`. The YAML comments inside the list leave with it: read them first,
+since a provenance note kept there (which commit a source came from, whether a PDF is the portal's
+bytes or a rebuild) belongs in the cycle's evidence or the scorecard's prose. A paper without
+`cycles` keeps its `stages:` list: `paper/stages` and `paper/source` still read it.
 
 ### Deadlines
 

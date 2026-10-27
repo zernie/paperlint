@@ -37,6 +37,7 @@
  *
  * Parsed by hand: the domain imports no schema library (see `src/CLAUDE.md`).
  */
+import type { Opaque } from "ts-essentials";
 import { err, ok, type Result } from "./result.ts";
 import { fieldOf, isRecord } from "./record.ts";
 import {
@@ -81,9 +82,30 @@ export const OUTCOME_KINDS: readonly Outcome["kind"][] = [
 
 export type Phase = "porting" | "prepared";
 
+/**
+ * A cycle's id: the name of the attempt's folder, `versions/<id>/`, and the first part of its keys in
+ * `versions/lock.json`. Minted only by `isCycleId`, so every freeze, migration, lock and layout check
+ * holds an id that is one path segment: no `/` or `\`, never `.` or `..`, never empty. The charset is
+ * kept small on purpose — lowercase letters, digits and hyphens, starting with a letter or a digit —
+ * so the name means the same folder on every filesystem, case-insensitive ones included.
+ */
+export type CycleId = Opaque<string, "CycleId">;
+
+/** The id's one owner: `parseLock` builds its key pattern from this too. */
+export const CYCLE_ID_PATTERN = "[a-z0-9][a-z0-9-]*";
+const CYCLE_ID = new RegExp(`^${CYCLE_ID_PATTERN}$`);
+
+export const isCycleId = (s: string): s is CycleId => CYCLE_ID.test(s);
+
+/** An id the caller holds as text (a test, a literal), checked where it becomes one; a bad one throws. */
+export function cycleId(s: string): CycleId {
+  if (!isCycleId(s)) throw new Error(`not a cycle id: ${s}`);
+  return s;
+}
+
 export interface Cycle {
-  /** What a stage refers to (`stages[].cycle`): unique in the list. */
-  readonly id: string;
+  /** What a stage refers to (`stages[].cycle`), and the attempt's folder: unique in the list. */
+  readonly id: CycleId;
   readonly venue: CycleVenue;
   /** A key of the preset's `format.kinds`; null when the venue has one kind or none is chosen. */
   readonly kind: string | null;
@@ -262,13 +284,23 @@ const kindOf = (v: unknown): Result<string | null, string> =>
       ? ok(v)
       : err('"kind" must be a string or null');
 
+/** A cycle's id, checked as the folder name it becomes. */
+function parseId(id: unknown, at: string): Result<CycleId, string> {
+  if (typeof id !== "string" || id === "")
+    return err(`${at}: "id" must be a non-empty string (what stages refer to)`);
+  return isCycleId(id)
+    ? ok(id)
+    : err(
+        `${at}: "id" «${id}» is not one folder name — an id is lowercase letters, digits and hyphens, starting with a letter or a digit (conf-2026): it names the attempt's folder, versions/<id>/`,
+      );
+}
+
 function parseHead(
   v: Readonly<Record<string, unknown>>,
   at: string,
 ): Result<Head, string> {
-  const id = v["id"];
-  if (typeof id !== "string" || id === "")
-    return err(`${at}: "id" must be a non-empty string (what stages refer to)`);
+  const id = parseId(v["id"], at);
+  if (!id.ok) return id;
   const venue = parseVenue(v["venue"], at);
   if (!venue.ok) return venue;
   const kind = kindOf(v["kind"]);
@@ -282,7 +314,7 @@ function parseHead(
   if (!isPhase(phase))
     return err(`${at}: "phase" must be "porting" or "prepared"`);
   return ok({
-    id,
+    id: id.value,
     venue: venue.value,
     kind: kind.value,
     opened,

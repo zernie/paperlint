@@ -16,7 +16,7 @@
  * Git keeps files, not folders: an empty folder is not in the first commit, which is the point of
  * scaffolding. A folder that holds nothing else gets a `.gitkeep`; a folder that holds a real file
  * (`repro/` with its README.md) gets none. `.gitkeep` is the convention, not a paperlint file, and no
- * rule reads it: `paper/stages` looks for `*.pdf` in `versions/`, the review and sibling rules lint
+ * rule reads it: `versions/layout` and `paper/stages` look for `*.pdf` in `versions/`, the review and sibling rules lint
  * `*.md`, `repro/allowed-files-only` judges the top of `repro/` only, and neither `tools/` nor `data/` is
  * listed by any rule.
  *

@@ -46,8 +46,8 @@
  * keyed by stage name holds one. The `versions/<date>-<stage>.pdf` convention already holds
  * many, and the field must not be weaker than the filenames it describes.
  */
-import { existsSync, statSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { existsSync, readFileSync, statSync, readdirSync } from "node:fs";
+import { join, dirname, relative } from "node:path";
 import assert from "node:assert/strict";
 import { load } from "js-yaml";
 import { z } from "zod";
@@ -68,6 +68,58 @@ const StageRecord = z
     sourceLost: z.unknown().optional(),
   })
   .catch({});
+/** What these rules read of the paper's settings: whether it keeps `cycles` at all. */
+const Settings = z
+  .looseObject({ cycles: z.array(z.unknown()).optional() })
+  .catch({});
+
+/**
+ * Whether the paper keeps `cycles` in its paperlint.json. Its frozen versions are then
+ * `versions/<cycle>/<stage>.{pdf,tex}` recorded in `versions/lock.json`, judged by `versions/layout`,
+ * and the `stages:` list is retired: `paperlint versions migrate` turns it into folders.
+ */
+function keepsCycles(dir: string): boolean {
+  try {
+    const raw: unknown = JSON.parse(
+      readFileSync(join(dir, "paperlint.json"), "utf8"),
+    );
+    return Settings.parse(raw).cycles !== undefined;
+  } catch {
+    return false;
+  }
+}
+
+/** Under `cycles`: a non-empty `stages:` list is one finding, naming the command that retires it. */
+function retired(context: RuleContext, dir: string) {
+  return {
+    yaml(node: { readonly value?: string }) {
+      const parsed = (() => {
+        try {
+          return { ok: true as const, data: load(node.value ?? "") };
+        } catch (e) {
+          assert.ok(e instanceof Error);
+          return { ok: false as const, reason: e.message };
+        }
+      })();
+      if (!parsed.ok) {
+        context.report({
+          node,
+          messageId: "badYaml",
+          data: { reason: parsed.reason },
+        });
+        return;
+      }
+      const raw = Frontmatter.parse(parsed.data).stages;
+      if (raw === undefined || (Array.isArray(raw) && raw.length === 0)) return;
+      context.report({
+        node,
+        messageId: "retired",
+        data: { paper: relative(context.cwd, dir) || "." },
+      });
+    },
+  };
+}
+
 const REQUIRED = ["date", "pdf", "bytes"] satisfies readonly (
   "date" | "pdf" | "bytes"
 )[];
@@ -126,6 +178,12 @@ function frozenPdfs(
   return out;
 }
 
+/** The frozen PDFs in `versions/` that no declared stage of the same day names. */
+const undeclared = (dir: string, records: readonly Declared[]) =>
+  frozenPdfs(join(dir, "versions")).filter(
+    (f) => !records.some((r) => r.stage === f.stage && r.date === f.date),
+  );
+
 export default {
   rules: {
     stages: {
@@ -150,12 +208,14 @@ export default {
             "«{{stage}}» ({{date}}): {{want}} bytes declared, {{got}} on disk — this is NOT that file",
           fileNotDeclared:
             "`versions/{{file}}` is frozen, but no «{{stage}}» stage on {{date}} is declared in `stages` — the artefact ran ahead of the declaration",
+          retired:
+            "`stages` is retired for a paper that keeps `cycles` in paperlint.json: its frozen versions are versions/<cycle>/<stage>.{pdf,tex}, recorded in versions/lock.json — `npx paperlint versions migrate {{paper}}` moves the files there and takes the list out",
         },
       },
       create(context: RuleContext) {
         const dir = dirname(context.filename);
+        if (keepsCycles(dir)) return retired(context, dir);
         let declared: Declared[] | null = null; // null = there was no frontmatter at all
-
         return {
           yaml(node: { readonly value?: string }) {
             let data: unknown;
@@ -252,16 +312,13 @@ export default {
           // 🔴 On `root:exit` rather than inside `yaml`, because the case worth catching is
           // precisely the one with NO frontmatter at all — where the `yaml` visitor never runs.
           "root:exit"(node: object) {
-            const records = declared ?? [];
-            for (const f of frozenPdfs(join(dir, "versions"))) {
-              if (records.some((r) => r.stage === f.stage && r.date === f.date))
-                continue;
+            undeclared(dir, declared ?? []).forEach((f) => {
               context.report({
                 node,
                 messageId: "fileNotDeclared",
                 data: { file: f.name, stage: f.stage, date: f.date },
               });
-            }
+            });
           },
         };
       },
@@ -319,6 +376,8 @@ export default {
       },
       create(context: RuleContext) {
         const dir = dirname(context.filename);
+        // Under `cycles` the lock records each frozen source, and `versions/layout` checks it.
+        if (keepsCycles(dir)) return {};
         return {
           yaml(node: { readonly value?: string }) {
             let data: unknown;

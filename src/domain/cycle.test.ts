@@ -7,6 +7,7 @@ import { present } from "../../test/support.ts";
 import {
   currentCycle,
   currentDeadlines,
+  cycleId,
   cycleProblemText,
   effectiveBlind,
   parseCycles,
@@ -322,11 +323,37 @@ describe("parseCycles refuses a value of the wrong shape, naming the entry and t
       /"kind" must be a string or null/,
     ],
     [
+      "an id with a slash: it names a folder under versions/, one path segment",
+      [{ ...OPEN, id: "conf/2026" }],
+      /^cycles\[0\]: "id" «conf\/2026» is not one folder name — an id is lowercase letters, digits and hyphens, starting with a letter or a digit \(conf-2026\): it names the attempt's folder, versions\/<id>\/$/,
+    ],
+    [
+      "an id that climbs out of versions/",
+      [{ ...OPEN, id: ".." }],
+      /^cycles\[0\]: "id" «\.\.» is not one folder name/,
+    ],
+    [
+      "an id with a capital, a backslash or a dot",
+      [
+        { ...OPEN, id: "Conf-2026" },
+        { ...OPEN, id: "a\\b" },
+        { ...OPEN, id: "." },
+      ],
+      /^cycles\[0\]: "id" «Conf-2026» is not one folder name/,
+    ],
+    [
       "two broken cycles: the first is named, the second never read",
       [{}, {}],
       /^cycles\[0\]: "id" must be a non-empty string/,
     ],
   ])("refuses %s", refuses);
+});
+
+describe("cycleId", () => {
+  it("mints an id that is one folder name, and throws on one that is not", () => {
+    expect(cycleId("msr-2027")).toBe("msr-2027");
+    expect(() => cycleId("conf/2026")).toThrow("not a cycle id: conf/2026");
+  });
 });
 
 describe("currentCycle", () => {

@@ -139,3 +139,65 @@ test("a frontmatter node without a value (another markdown language) reads as em
     stages.rules[rule].create(context).yaml({ type: "yaml" });
   assert.deepEqual(reports, []);
 });
+
+const CYCLES = { "paperlint.json": JSON.stringify({ cycles: [] }) };
+const RETIRED = (paper) =>
+  `\`stages\` is retired for a paper that keeps \`cycles\` in paperlint.json: its frozen versions are versions/<cycle>/<stage>.{pdf,tex}, recorded in versions/lock.json — \`npx paperlint versions migrate ${paper}\` moves the files there and takes the list out`;
+
+test("under `cycles`: a `stages` list is one finding naming the migration, and dated files owe it nothing", () => {
+  const files = {
+    ...CYCLES,
+    "versions/2026-08-02-submitted.pdf": "x",
+  };
+  assert.deepEqual(
+    lint(
+      "retired",
+      "stages:\n  - stage: submitted\n    date: 2026-08-02\n    pdf: versions/2026-08-02-submitted.pdf\n    bytes: 9",
+      { files },
+    ),
+    [RETIRED("retired")],
+  );
+  assert.deepEqual(
+    lint("retired-src", "stages:\n  - stage: submitted\n    date: 2026-08-02", {
+      rule: "source",
+      files,
+    }),
+    [],
+  );
+});
+
+test("under `cycles`: no list, an empty one, or no frontmatter is silent; YAML that does not parse is still named", () => {
+  assert.deepEqual(lint("retired-none", "title: x", { files: CYCLES }), []);
+  assert.deepEqual(lint("retired-empty", "stages: []", { files: CYCLES }), []);
+  const [msg] = lint("retired-yaml", "stages: [", { files: CYCLES });
+  assert.match(msg, /^the frontmatter does not parse as YAML: /);
+  // A paperlint.json that does not parse keeps the flat form's checks: `paperlint lint` refuses it before any rule runs.
+  assert.deepEqual(
+    lint("retired-broken", "stages:", {
+      files: { "paperlint.json": "{" },
+    }),
+    [
+      "`stages` must be a LIST of entries, not empty — a paper can reach the same stage twice",
+    ],
+  );
+});
+
+test("under `cycles`: a frontmatter node without a value reads as empty YAML", () => {
+  const dir = writeTree(join(root, "retired-valueless"), CYCLES);
+  const reports = [];
+  const context = {
+    filename: join(dir, "PIPELINE-STATUS.md"),
+    cwd: dir,
+    report: (r) => reports.push(r),
+  };
+  stages.rules.stages.create(context).yaml({ type: "yaml" });
+  assert.deepEqual(reports, []);
+  // Linted from the paper itself, the command names it as `.`.
+  stages.rules.stages
+    .create(context)
+    .yaml({ type: "yaml", value: "stages:\n  - stage: submitted" });
+  assert.deepEqual(
+    reports.map((r) => r.data),
+    [{ paper: "." }],
+  );
+});

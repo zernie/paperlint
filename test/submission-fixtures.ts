@@ -223,6 +223,7 @@ export async function run(
       latex: o.latex ?? latexReader,
       codec: sourcesCodec,
       lintText,
+      now: () => "2026-10-23T16:58:01.000Z",
       log: (l) => out.push(l),
       err: (l) => errs.push(l),
     },

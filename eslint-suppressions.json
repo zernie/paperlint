@@ -9,11 +9,6 @@
       "count": 1
     }
   },
-  "eslint-rules/cycle-stage.test.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "eslint-rules/install-path-literals.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -66,7 +61,7 @@
       "count": 5
     },
     "functional/no-loop-statements": {
-      "count": 5
+      "count": 4
     },
     "functional/prefer-immutable-types": {
       "count": 4

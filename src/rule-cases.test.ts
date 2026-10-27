@@ -17,6 +17,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
+import { lockText, type LockEntry } from "./domain/versions.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
 import {
   planTemplate,
@@ -545,6 +546,83 @@ const BLIND_PORTING = {
   // What `blind()` declares flat; with cycles it moves into the record's siblings, not the cycle.
 };
 
+/** One open cycle with a submission on the portal: what it sent is owed to `versions/`. */
+const SUBMITTED_CYCLE = JSON.stringify({
+  cycles: [
+    {
+      id: "open-2027",
+      venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+      opened: "2026-09-09",
+      submission: { id: 7 },
+    },
+  ],
+});
+/** One accepted cycle, its decision on disk. */
+const ACCEPTED_CYCLE = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    cycles: [
+      {
+        id: "open-2027",
+        venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+        opened: "2026-09-09",
+        outcome: {
+          kind: "accepted",
+          date: "2026-12-01",
+          evidence: "reviews/decision.md",
+        },
+      },
+    ],
+  }),
+  [`${P}/reviews/decision.md`]: "# accepted\n",
+};
+/** The lock entry of a file holding `text`, as paperlint writes it on a send. */
+const lockedAs = (text: string): LockEntry => {
+  const bytes = new TextEncoder().encode(text);
+  return {
+    kind: "file",
+    bytes: bytes.length,
+    sha256: sha256Hex(bytes),
+    frozen: "2026-10-23T16:58:01.000Z",
+  };
+};
+/** `open-2027`'s submitted PDF and its source `source`, frozen, and the lock that records both. */
+const frozenSent = (source: string): Record<string, string> => {
+  const pdf = "%PDF frozen";
+  return {
+    [`${P}/versions/open-2027/submitted.pdf`]: pdf,
+    [`${P}/versions/open-2027/submitted.tex`]: source,
+    [`${P}/versions/lock.json`]: lockText({
+      "open-2027/submitted.pdf": lockedAs(pdf),
+      "open-2027/submitted.tex": lockedAs(source),
+    }),
+  };
+};
+
+/** Ten lines of an accepted paper's body. */
+const ACCEPTED_BODY = Array.from(
+  { length: 10 },
+  (_, i) => `Accepted sentence ${String(i + 1)}.`,
+).join("\n");
+/** `open-2027`'s camera-ready PDF and its source `source`, frozen beside the submitted pair, and the lock. */
+const frozenCameraReady = (
+  submitted: string,
+  source: string,
+): Record<string, string> => {
+  const pdf = "%PDF camera-ready";
+  const sent = frozenSent(submitted);
+  return {
+    ...sent,
+    [`${P}/versions/open-2027/camera-ready.pdf`]: pdf,
+    [`${P}/versions/open-2027/camera-ready.tex`]: source,
+    [`${P}/versions/lock.json`]: lockText({
+      "open-2027/submitted.pdf": lockedAs("%PDF frozen"),
+      "open-2027/submitted.tex": lockedAs(submitted),
+      "open-2027/camera-ready.pdf": lockedAs(pdf),
+      "open-2027/camera-ready.tex": lockedAs(source),
+    }),
+  };
+};
+
 const CASES: Readonly<Record<string, RuleCases>> = {
   "paper/stages": {
     reports: {
@@ -578,13 +656,13 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       [`${P}/reviews/decision.md`]: "# decision\n",
     },
   },
-  "cycle/stage": {
+  // ── the frozen versions: versions/<cycle>/<stage>.{pdf,tex} and versions/lock.json ──────────────
+  "versions/layout": {
     reports: {
       tree: {
         ...paper(tex("x")),
-        [STATUS_FILE]: SHIPPED_STATUS,
         [`${P}/paperlint.json`]: OPEN_CYCLE,
-        [`${P}/versions/a.pdf`]: "x",
+        [`${P}/versions/2026-07-22-submitted.pdf`]: "x",
       },
       file: STATUS_FILE,
       severity: 2,
@@ -592,12 +670,64 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: {
       ...paper(tex("x")),
-      [STATUS_FILE]: SHIPPED_STATUS.replace(
-        "date: 2026-07-22",
-        "cycle: open-2027\n    date: 2026-07-22",
-      ),
       [`${P}/paperlint.json`]: OPEN_CYCLE,
-      [`${P}/versions/a.pdf`]: "x",
+      ...frozenSent(tex("x")),
+    },
+  },
+  "cycle/submitted-frozen": {
+    reports: {
+      tree: { ...paper(tex("x")), [`${P}/paperlint.json`]: SUBMITTED_CYCLE },
+      file: STATUS_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: {
+      ...paper(tex("x")),
+      [`${P}/paperlint.json`]: SUBMITTED_CYCLE,
+      ...frozenSent(tex("x")),
+    },
+  },
+  "cycle/draft-drift": {
+    reports: {
+      tree: {
+        ...paper(tex("y")),
+        [`${P}/paperlint.json`]: OPEN_CYCLE,
+        ...frozenSent(tex("x")),
+      },
+      file: TEX_FILE,
+      severity: 1,
+      line: 1,
+    },
+    silent: {
+      ...paper(tex("x")),
+      [`${P}/paperlint.json`]: OPEN_CYCLE,
+      ...frozenSent(tex("x")),
+    },
+  },
+  // Judged once the camera-ready is frozen: did it start from what was accepted?
+  "cycle/camera-ready-source": {
+    reports: {
+      // A camera-ready built from a draft that moved on: none of the accepted body is left.
+      tree: {
+        ...paper(tex("y")),
+        ...ACCEPTED_CYCLE,
+        ...frozenCameraReady(
+          tex(ACCEPTED_BODY),
+          tex(ACCEPTED_BODY.replaceAll("Accepted", "Rewritten")),
+        ),
+      },
+      file: TEX_FILE,
+      severity: 2,
+      line: 1,
+    },
+    // The accepted source plus a requested change, frozen; the draft moving on after that is free.
+    silent: {
+      ...paper(tex("Next venue's draft.")),
+      ...ACCEPTED_CYCLE,
+      ...frozenCameraReady(
+        tex(ACCEPTED_BODY),
+        tex(ACCEPTED_BODY.replace("sentence 3.", "sentence 3, as asked.")),
+      ),
     },
   },
   "cycle/port-done": {
@@ -1190,6 +1320,25 @@ describe("study/declare-sample is off by default", () => {
  * words and more) takes seconds under coverage, on a machine running every suite at once.
  */
 const CASE_TIMEOUT_MS = 30_000;
+
+describe("cycle/camera-ready-source, before the camera-ready is frozen", () => {
+  it(
+    "stays silent on an accepted cycle with nothing frozen past submitted, however far the draft moved",
+    { timeout: CASE_TIMEOUT_MS },
+    async () => {
+      const tree = {
+        ...paper(tex("y")),
+        ...ACCEPTED_CYCLE,
+        ...frozenSent(tex("x")),
+      };
+      expect(
+        (await lintTree(tree)).filter(
+          (m) => m.ruleId === "cycle/camera-ready-source",
+        ),
+      ).toEqual([]);
+    },
+  );
+});
 
 describe.each(Object.entries(CASES))("%s, through real ESLint", (id, c) => {
   it(

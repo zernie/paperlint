@@ -58,6 +58,8 @@ import {
   nodeAdapters,
   nodeFiles,
   nodeListDir,
+  nodeCopyFile,
+  nodeMoveFile,
 } from "./adapters/node/index.ts";
 import { probeVideo } from "./adapters/mp4box/index.ts";
 import { imageSize } from "./adapters/png/index.ts";
@@ -173,8 +175,16 @@ export { nextSteps } from "./init.ts";
 
 import paperStages from "#eslint-rules/paper-stages";
 import preregCoverage from "#eslint-rules/prereg-coverage";
-import cycleStage from "#eslint-rules/cycle-stage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
+import { runVersions } from "./versions-command.ts";
+import { parseYaml } from "./adapters/yaml/index.ts";
+import {
+  DRAFT_RULE_LEVELS,
+  draftRules,
+  submittedFrozenRules,
+  VERSION_STATUS_RULE_LEVELS,
+  versionLayoutRules,
+} from "./version-rules.ts";
 import {
   FOLDER_VENUE_RULE_LEVELS,
   folderVenueRules,
@@ -260,6 +270,14 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint submission topics [paper]
                                       the topics the venue's portal offers, against the ones its
                                       preset records; exit 1 when they differ
+  npx paperlint versions [show|lock|migrate] [paper]
+                                      the paper's frozen versions, one folder per attempt:
+                                      versions/<cycle>/<stage>.{pdf,tex}. show (the default): each
+                                      version and its state — under review, historical, camera-ready
+                                      base, final — and how far paper.tex has moved. lock: record the
+                                      files in versions/lock.json (submission --save does it for what
+                                      it sends). migrate: move the stages: list's dated files into
+                                      their cycles' folders, write the lock, drop the list
   npx paperlint studies new <paper-dir> "<title>" [--kind <kind>]
                                       register a study: the next id in repro/studies.json, the folder
                                       repro/<id>-<slug>/ with its README.md and plan.json (a template),
@@ -402,7 +420,7 @@ const REGISTER_AND_CASE_RULES = {
 
 /**
  * The paper's attempts (`cycles` in paperlint.json), judged on `PIPELINE-STATUS.md`: the record itself
- * and its evidence (src/cycle-rules.ts), and the stages that name a cycle (eslint-rules/cycle-stage.ts).
+ * and its evidence (src/cycle-rules.ts), and that each version sent was frozen (src/version-rules.ts).
  * The `cycle` plugin's other rule, `port-done`, reads `paper.tex` (src/tex-venue-rules.ts).
  */
 /** The markdown language with YAML frontmatter: what every markdown block of the config lints as. */
@@ -411,9 +429,27 @@ const MARKDOWN_WITH_FRONTMATTER = {
   languageOptions: { frontmatter: "yaml" },
 };
 
+/** The instant a freeze or a lock records, ISO 8601 (versions/lock.json). */
+const isoNow = (): string => new Date().toISOString();
+
 const CYCLE_STATUS_RULES = {
   ...cycleRules({ files: nodeFiles, venuesDir: presetsDir() }),
-  ...cycleStage.rules,
+  ...submittedFrozenRules({ files: nodeFiles, listDir: nodeListDir }),
+};
+
+/** The `cycle` plugin's rules on `paper.tex`: the port declared done, the draft against its frozen source. */
+const CYCLE_PAPER_RULES = {
+  ...cyclePortRules(TEX_RULE_DEPS),
+  ...draftRules(TEX_RULE_DEPS),
+};
+const CYCLE_PAPER_RULE_LEVELS = {
+  ...CYCLE_PORT_RULE_LEVELS,
+  ...DRAFT_RULE_LEVELS,
+};
+/** The levels of the `cycle` and `versions` rules on `PIPELINE-STATUS.md`. */
+const STATUS_CYCLE_RULE_LEVELS = {
+  ...CYCLE_RULE_LEVELS,
+  ...VERSION_STATUS_RULE_LEVELS,
 };
 
 /** The rules of the files `paper.tex` includes, each read on its own as a fragment (#144). */
@@ -539,6 +575,7 @@ export function buildConfig(
         // Registered, on for no paper: `"study/declare-sample": "error"` in paperlint.json turns it on.
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
+        versions: { rules: versionLayoutRules(LAYOUT_RULE_DEPS) },
       },
       ...md,
       rules: {
@@ -547,7 +584,7 @@ export function buildConfig(
         ...FOLDER_VENUE_RULE_LEVELS,
         ...FOLDER_LAYOUT_RULE_LEVELS,
         ...REPRO_RULE_LEVELS,
-        ...CYCLE_RULE_LEVELS,
+        ...STATUS_CYCLE_RULE_LEVELS,
       },
     },
     {
@@ -594,7 +631,7 @@ export function buildConfig(
             ...pageLimitRules({ files: nodeFiles, venuesDir: presetsDir() }),
           },
         },
-        cycle: { rules: cyclePortRules(TEX_RULE_DEPS) },
+        cycle: { rules: CYCLE_PAPER_RULES },
       },
       language: "tex/latex",
       rules: {
@@ -618,7 +655,7 @@ export function buildConfig(
         ...TEX_VENUE_RULE_LEVELS,
         ...FORMAT_RULE_LEVELS,
         ...PAGE_LIMIT_RULE_LEVELS,
-        ...CYCLE_PORT_RULE_LEVELS,
+        ...CYCLE_PAPER_RULE_LEVELS,
         // Silent for a paper that declares no `talk` (src/talk-rules.ts), but talk/undeclared.
         ...TALK_RULE_LEVELS,
       },
@@ -1803,6 +1840,20 @@ const SIMPLE: Readonly<
         err,
       },
     ),
+  versions: (a, { log, err, cwd }) =>
+    runVersions(a.paths, {
+      files: nodeFiles,
+      listDir: nodeListDir,
+      move: nodeMoveFile,
+      copy: nodeCopyFile,
+      yaml: parseYaml,
+      latex: latexReader,
+      codec: sourcesCodec,
+      now: isoNow,
+      cwd,
+      log,
+      err,
+    }),
   submission: (a, { log, err, cwd }) =>
     runSubmission(
       {
@@ -1823,6 +1874,7 @@ const SIMPLE: Readonly<
         latex: latexReader,
         codec: sourcesCodec,
         lintText,
+        now: isoNow,
         log,
         err,
       },

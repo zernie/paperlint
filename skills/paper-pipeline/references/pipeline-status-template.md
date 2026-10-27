@@ -11,7 +11,10 @@ the verdict line's wording and the `☐`/`☑` marks as they are, or the hook go
 
 ## The front matter
 
-Above the sections, the file carries YAML. The rules read its `stages` field:
+Above the sections, the file carries YAML. In a paper WITHOUT `cycles` in its `paperlint.json`, the
+rules read its `stages` field (a paper with `cycles` keeps no such list: its frozen versions are the
+folders `versions/<cycle>/` and the generated `versions/lock.json`, and `paperlint versions migrate`
+moves an old list there):
 
 ```yaml
 ---

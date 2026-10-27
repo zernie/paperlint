@@ -1,7 +1,7 @@
 /** `paperlint submission new`: what it reads and sends, the dry run, the save that records the id, the refusals. */
 import { map } from "remeda";
 import { expect, test } from "vitest";
-import { builtPaper } from "../test/recorded-fixture.ts";
+import { builtPaper, recordText } from "../test/recorded-fixture.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import { absolutePath } from "./domain/paths.ts";
 import { err, ok } from "./domain/result.ts";
@@ -104,6 +104,16 @@ test("new --save in the cycles form: the id goes into the open attempt, the last
   const fs = newFiles({
     paper: { authors: AUTHORS, cycles: [closed, cycle("second", null)] },
   });
+  // Built: a save in the cycles form freezes the PDF with the source the build read.
+  fs.writeAtomic(
+    absolutePath(`${PAPER}/_build/sources.json`),
+    new TextEncoder().encode(
+      recordText(
+        { "paper.tex": DEFAULT_TEX },
+        { inputs: [["paper.tex", "body"]] },
+      ),
+    ),
+  );
   const r = await run({ sub: "new", save: true }, { files: fs });
   expect(r.code, r.errs.join("\n")).toBe(0);
   const written: unknown = JSON.parse(

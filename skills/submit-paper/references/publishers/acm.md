@@ -81,9 +81,11 @@ need to wait for them or make them up.
 
 ## The frozen version
 
-Camera-ready is a separate **stage** in the sense of `versions/` (see `checkFrozenVersions()` in
-`paper-lint.mjs`): the uploaded PDF is stored as `versions/<date>-camera-ready.pdf`, and the commit
-of its source is recorded in `PIPELINE-STATUS.md` as `commit <hash>`.
+Camera-ready is a separate **stage** in `versions/`: once the cycle's `outcome` is `accepted`,
+`paperlint submission update <paper> --save` freezes the PDF it sends and its source as
+`versions/<cycle>/camera-ready.{pdf,tex}` and records them in `versions/lock.json`. A camera-ready
+uploaded through the publisher's own system (not the review portal) goes there by hand, followed by
+`npx paperlint versions lock <paper>`.
 
 **Why this isn't a formality:** the arXiv posting and the extension paper get diffed against
 camera-ready later, and reviewer references to line numbers only resolve against the exact render

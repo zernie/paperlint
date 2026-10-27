@@ -55,6 +55,8 @@ export interface RuleReport {
 
 export interface RuleContext {
   readonly filename: string;
+  /** The directory ESLint runs from: what a command a message names is relative to. */
+  readonly cwd: string;
   readonly options: readonly unknown[];
   readonly settings: Readonly<Record<string, unknown>>;
   readonly sourceCode: RuleSourceCode;

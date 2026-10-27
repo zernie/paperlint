@@ -399,6 +399,7 @@ describe("the rule, on the status file of a paper", () => {
     rule
       .create({
         filename: join(dir, file),
+        cwd: dir,
         options: [],
         settings: {},
         sourceCode: {
