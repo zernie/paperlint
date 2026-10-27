@@ -7,6 +7,8 @@ import {
   frozenName,
   judgeVersions,
   keyParts,
+  derivesFrom,
+  lineage,
   lineDrift,
   lockText,
   parseLock,
@@ -375,6 +377,15 @@ describe("the draft against a frozen source", () => {
       removed: 1,
     });
     expect(lineDrift("a\n", "a\n")).toStrictEqual({ added: 0, removed: 0 });
+  });
+
+  it("a later version's lineage: the accepted lines it keeps; half kept still derives, less does not", () => {
+    expect(lineage("a\nb\nc\nd\n", "a\nB\nc\nd\ne\n")).toStrictEqual({
+      kept: 3,
+      total: 4,
+    });
+    expect(derivesFrom(lineage("a\nb\nc\nd\n", "a\nb\nX\nY\n"))).toBe(true);
+    expect(derivesFrom(lineage("a\nb\nc\nd\n", "a\nX\nY\nZ\n"))).toBe(false);
   });
 
   it("the base: the open cycle's submitted source; once accepted, the newest of its sources; none between venues", () => {

@@ -284,9 +284,9 @@ sent, because the PDF and the source on disk would no longer be a pair. A file y
 draft, the only file you edit, and [`cycle/draft-drift`](rules/cycle/draft-drift.md) says how far it
 has moved from what the reviewers read, so a reply to them quotes the frozen file. Open the next
 cycle only once the current one has an outcome (one open cycle at most). If the venue accepts, the
-camera-ready starts from the frozen `submitted.tex`, not from the drifted draft
-([`cycle/camera-ready-source`](rules/cycle/camera-ready-source.md) holds that until a camera-ready is
-frozen). A cycle that has a submission and nothing frozen is
+camera-ready starts from the frozen `submitted.tex`, not from the drifted draft; once the camera-ready
+is sent and frozen, [`cycle/camera-ready-source`](rules/cycle/camera-ready-source.md) checks that it
+kept at least half of the accepted source's lines. A cycle that has a submission and nothing frozen is
 [`cycle/submitted-frozen`](rules/cycle/submitted-frozen.md).
 
 **From the `stages:` list.** A paper that recorded its frozen versions as a `stages:` list in

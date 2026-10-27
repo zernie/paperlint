@@ -430,6 +430,27 @@ export function lineDrift(frozen: string, draft: string): Drift {
   };
 }
 
+/** How much of an accepted source a later version keeps: its lines left unchanged, of all it had. */
+export interface Lineage {
+  readonly kept: number;
+  readonly total: number;
+}
+
+/** The lines of `accepted` that `later` keeps unchanged, counted with the same line diff as the drift. Pure. */
+export function lineage(accepted: string, later: string): Lineage {
+  const parts = diffLines(accepted, later);
+  const kept = R.sumBy(parts, (p) => (p.added || p.removed ? 0 : p.count));
+  const removed = R.sumBy(parts, (p) => (p.removed ? p.count : 0));
+  return { kept, total: kept + removed };
+}
+
+/**
+ * Whether a camera-ready started from the accepted source: it keeps at least half of its lines. A
+ * camera-ready is what was accepted plus the changes the reviewers asked for, so it differs — any
+ * difference cannot be the test. One that keeps less than half was built from something else.
+ */
+export const derivesFrom = (l: Lineage): boolean => l.kept * 2 >= l.total;
+
 export const driftText = (d: Drift): string =>
   `${String(d.added)} line${d.added === 1 ? "" : "s"} added, ${String(d.removed)} removed`;
 

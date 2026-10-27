@@ -10,8 +10,9 @@
  *                                       has `versions/<id>/submitted.pdf` (#308)
  *   cycle/draft-drift            warn   on paper.tex: the draft has moved on from the open cycle's
  *                                       frozen source, by so many lines
- *   cycle/camera-ready-source    error  on paper.tex: the last cycle is accepted, paper.tex has moved on
- *                                       from what was accepted, and no camera-ready is frozen yet
+ *   cycle/camera-ready-source    error  on paper.tex: the last cycle is accepted and its camera-ready is
+ *                                       frozen, and that camera-ready keeps less than half of the
+ *                                       accepted source's lines — silent until the camera-ready is frozen
  *
  * ── WHY THE FOLDER IS LISTED AND NOT LINTED ─────────────────────────────────────────────────
  * A frozen PDF is never handed to ESLint, and a frozen `.tex` is kept out of the linted set on purpose
@@ -28,13 +29,23 @@
  * so an author answering a reviewer knows the line numbers point into the frozen file. Once the venue
  * accepts, the camera-ready has to be what was accepted plus the changes asked for — building it from
  * a draft that moved on sends the venue a paper its reviewers never read.
+ *
+ * ── WHY THE CAMERA-READY IS JUDGED ONLY ONCE IT IS FROZEN ───────────────────────────────────
+ * While the camera-ready is being edited, paper.tex differs from what was accepted BY DESIGN: the
+ * reviewers' changes go in. A check on the draft in those weeks fires on correct work, so the rule waits
+ * for `submission update --save` to freeze `camera-ready.{pdf,tex}`, then judges the frozen source:
+ * it must keep at least half of the accepted source's lines (`derivesFrom`, src/domain/versions.ts).
+ * After the freeze the draft is not judged at all — what the venue holds is fixed, and the draft is
+ * free to head for the next paper.
  */
 import { basename, dirname } from "node:path";
-import type { Current, Cycle } from "./domain/cycle.ts";
+import type { Files } from "./ports/files.ts";
 import {
+  derivesFrom,
   driftText,
   frozenKey,
   judgeVersions,
+  lineage,
   unfrozenSubmissions,
   venueName,
   type VersionFinding,
@@ -51,6 +62,7 @@ import {
   draftDrift,
   entriesIn,
   factsOfFrozen,
+  frozenText,
   hasFrozen,
   readLock,
   versionsDir,
@@ -173,58 +185,57 @@ const CAMERA_META: TexRuleModule["meta"] = {
   type: "problem",
   docs: {
     description:
-      "once the last cycle is accepted, the camera-ready starts from the frozen source that was accepted, not from a draft that moved on",
+      "once the last cycle is accepted and its camera-ready frozen, the camera-ready started from the source that was accepted",
     url: rulePageUrl("cycle/camera-ready-source"),
   },
   schema: [],
   messages: {
-    base: "cycle «{{id}}» is accepted, and paper.tex has moved on from what was accepted, `versions/{{key}}`: {{drift}}. The camera-ready starts from that frozen source — copy it over paper.tex and carry over only the changes the reviewers asked for. Sending the camera-ready with `npx paperlint submission update <paper> --save` freezes it as versions/{{id}}/camera-ready.pdf, which ends this check",
+    base: "cycle «{{id}}» is accepted, and its frozen camera-ready, `versions/{{id}}/camera-ready.tex`, keeps {{kept}} of the {{total}} lines of what was accepted, `versions/{{id}}/submitted.tex` — under half, so it was not built from the accepted source. The camera-ready is what was accepted plus the changes the reviewers asked for: copy submitted.tex over paper.tex, carry over those changes, build, and send it again with `npx paperlint submission update <paper> --save`, which replaces the frozen one",
   },
 };
 
-/** The cycle a draft rule judges: the open one for the drift, the accepted one still without a camera-ready. */
-function judgedCycle(
-  name: "draft-drift" | "camera-ready-source",
-  current: Current,
-  has: (key: string) => boolean,
-): Cycle | null {
-  if (name === "draft-drift")
-    return current.kind === "cycle" ? current.cycle : null;
-  if (current.kind !== "accepted") return null;
-  const id = current.cycle.id;
-  const cameraReady =
-    has(frozenKey(id, "camera-ready", "pdf")) ||
-    has(frozenKey(id, "camera-ready", "tex"));
-  return cameraReady ? null : current.cycle;
-}
-
-/** The finding of one draft rule, or none. */
-function draftFinding(
-  name: "draft-drift" | "camera-ready-source",
+/** The draft against the open cycle's frozen source, or none. */
+function driftFinding(
   dir: string,
   draft: string,
   deps: ProseDeps,
 ): VersionFinding | null {
   const cycles = cyclesIn(dir, deps.files);
-  if (cycles === null) return null;
-  const c = judgedCycle(name, cycles.current, hasFrozen(dir, deps.files));
-  if (c === null) return null;
+  if (cycles === null || cycles.current.kind !== "cycle") return null;
+  const c = cycles.current.cycle;
   const d = draftDrift(dir, cycles, draft, deps.files);
-  if (d.kind !== "drift") return null;
-  return {
-    messageId: name === "draft-drift" ? "drift" : "base",
-    data: {
-      id: c.id,
-      key: d.key,
-      venue: venueName(c),
-      drift: driftText(d.drift),
-    },
-  };
+  return d.kind === "drift"
+    ? {
+        messageId: "drift",
+        data: { key: d.key, venue: venueName(c), drift: driftText(d.drift) },
+      }
+    : null;
 }
 
-const draftRule = (
+/**
+ * The accepted cycle's frozen camera-ready against its frozen `submitted.tex`, or none: nothing to judge
+ * before the camera-ready is frozen (or without either source), and nothing wrong when it derives.
+ */
+function cameraFinding(dir: string, files: Files): VersionFinding | null {
+  const cycles = cyclesIn(dir, files);
+  if (cycles === null || cycles.current.kind !== "accepted") return null;
+  const id = cycles.current.cycle.id;
+  const camera = frozenText(dir, frozenKey(id, "camera-ready", "tex"), files);
+  const accepted = frozenText(dir, frozenKey(id, "submitted", "tex"), files);
+  if (camera === null || accepted === null) return null;
+  const l = lineage(accepted, camera);
+  return derivesFrom(l)
+    ? null
+    : {
+        messageId: "base",
+        data: { id, kept: String(l.kept), total: String(l.total) },
+      };
+}
+
+/** A rule on paper.tex: its one finding, reported on the first line. */
+const paperRule = (
   meta: TexRuleModule["meta"],
-  name: "draft-drift" | "camera-ready-source",
+  finding: (dir: string, draft: () => string) => VersionFinding | null,
   deps: ProseDeps,
 ): TexRuleModule => ({
   meta,
@@ -233,8 +244,10 @@ const draftRule = (
     return {
       root() {
         const sc = context.sourceCode;
-        const draft = readPaper(context.filename, sc.raw ?? sc.text, deps).text;
-        const f = draftFinding(name, dirname(context.filename), draft, deps);
+        const f = finding(
+          dirname(context.filename),
+          () => readPaper(context.filename, sc.raw ?? sc.text, deps).text,
+        );
         if (f === null) return;
         const at = sc.getLocFromIndex(0);
         context.report({ loc: { start: at, end: at }, ...f });
@@ -247,8 +260,16 @@ const draftRule = (
 export const draftRules = (
   deps: ProseDeps,
 ): Readonly<Record<"draft-drift" | "camera-ready-source", TexRuleModule>> => ({
-  "draft-drift": draftRule(DRIFT_META, "draft-drift", deps),
-  "camera-ready-source": draftRule(CAMERA_META, "camera-ready-source", deps),
+  "draft-drift": paperRule(
+    DRIFT_META,
+    (dir, draft) => driftFinding(dir, draft(), deps),
+    deps,
+  ),
+  "camera-ready-source": paperRule(
+    CAMERA_META,
+    (dir) => cameraFinding(dir, deps.files),
+    deps,
+  ),
 });
 
 /** The levels they are on at in paperlint's own config. */

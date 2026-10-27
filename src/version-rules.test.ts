@@ -154,39 +154,12 @@ describe("cycle/draft-drift and cycle/camera-ready-source", () => {
       {
         messageId: "drift",
         data: {
-          id: "beta-2027",
           key: "beta-2027/submitted.tex",
           venue: "Beta 2027",
           drift: "2 lines added, 1 removed",
         },
       },
     ]);
-  });
-
-  it("an accepted cycle and a drifted draft: the frozen file to start from — until a camera-ready is frozen", () => {
-    expect(draft(tree({ cycles: [ACCEPTED], draft: DRIFTED }))).toStrictEqual([
-      {
-        messageId: "base",
-        data: {
-          id: "beta-2027",
-          key: "beta-2027/submitted.tex",
-          venue: "Beta 2027",
-          drift: "2 lines added, 1 removed",
-        },
-      },
-    ]);
-    const camera = {
-      [`${DIR}/versions/beta-2027/camera-ready.pdf`]: "%PDF final",
-    };
-    expect(
-      draft(tree({ cycles: [ACCEPTED], draft: DRIFTED, extra: camera })),
-    ).toStrictEqual([]);
-    const cameraTex = {
-      [`${DIR}/versions/beta-2027/camera-ready.tex`]: DRIFTED,
-    };
-    expect(
-      draft(tree({ cycles: [ACCEPTED], draft: DRIFTED, extra: cameraTex })),
-    ).toStrictEqual([]);
   });
 
   it("no cycles, a cycle parked between venues, or no frozen source: nothing to measure", () => {
@@ -204,5 +177,46 @@ describe("cycle/draft-drift and cycle/camera-ready-source", () => {
       ),
     );
     expect(draft(t)).toStrictEqual([]);
+  });
+});
+
+describe("cycle/camera-ready-source", () => {
+  it("an accepted cycle: silent while the camera-ready is edited, however far the draft moved", () => {
+    expect(draft(tree({ cycles: [ACCEPTED], draft: DRIFTED }))).toStrictEqual(
+      [],
+    );
+    // A PDF frozen without its source: nothing to compare (versions/layout names the missing source).
+    const pdfOnly = {
+      [`${DIR}/versions/beta-2027/camera-ready.pdf`]: "%PDF final",
+    };
+    expect(
+      draft(tree({ cycles: [ACCEPTED], draft: DRIFTED, extra: pdfOnly })),
+    ).toStrictEqual([]);
+  });
+
+  it("an accepted cycle with its camera-ready frozen: judged against what was accepted, the draft no more", () => {
+    const camera = (source: string) => ({
+      [`${DIR}/versions/beta-2027/camera-ready.pdf`]: "%PDF final",
+      [`${DIR}/versions/beta-2027/camera-ready.tex`]: source,
+    });
+    // The accepted source plus a change: it derives, and the draft moving on after it is free.
+    expect(
+      draft(
+        tree({ cycles: [ACCEPTED], draft: "Next.", extra: camera(DRIFTED) }),
+      ),
+    ).toStrictEqual([]);
+    expect(
+      draft(
+        tree({
+          cycles: [ACCEPTED],
+          extra: camera("\\documentclass{book}\nAnother paper.\n"),
+        }),
+      ),
+    ).toStrictEqual([
+      {
+        messageId: "base",
+        data: { id: "beta-2027", kept: "0", total: "4" },
+      },
+    ]);
   });
 });

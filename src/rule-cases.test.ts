@@ -598,6 +598,31 @@ const frozenSent = (source: string): Record<string, string> => {
   };
 };
 
+/** Ten lines of an accepted paper's body. */
+const ACCEPTED_BODY = Array.from(
+  { length: 10 },
+  (_, i) => `Accepted sentence ${String(i + 1)}.`,
+).join("\n");
+/** `open-2027`'s camera-ready PDF and its source `source`, frozen beside the submitted pair, and the lock. */
+const frozenCameraReady = (
+  submitted: string,
+  source: string,
+): Record<string, string> => {
+  const pdf = "%PDF camera-ready";
+  const sent = frozenSent(submitted);
+  return {
+    ...sent,
+    [`${P}/versions/open-2027/camera-ready.pdf`]: pdf,
+    [`${P}/versions/open-2027/camera-ready.tex`]: source,
+    [`${P}/versions/lock.json`]: lockText({
+      "open-2027/submitted.pdf": lockedAs("%PDF frozen"),
+      "open-2027/submitted.tex": lockedAs(submitted),
+      "open-2027/camera-ready.pdf": lockedAs(pdf),
+      "open-2027/camera-ready.tex": lockedAs(source),
+    }),
+  };
+};
+
 const CASES: Readonly<Record<string, RuleCases>> = {
   "paper/stages": {
     reports: {
@@ -679,14 +704,31 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       ...frozenSent(tex("x")),
     },
   },
+  // Judged once the camera-ready is frozen: did it start from what was accepted?
   "cycle/camera-ready-source": {
     reports: {
-      tree: { ...paper(tex("y")), ...ACCEPTED_CYCLE, ...frozenSent(tex("x")) },
+      // A camera-ready built from a draft that moved on: none of the accepted body is left.
+      tree: {
+        ...paper(tex("y")),
+        ...ACCEPTED_CYCLE,
+        ...frozenCameraReady(
+          tex(ACCEPTED_BODY),
+          tex(ACCEPTED_BODY.replaceAll("Accepted", "Rewritten")),
+        ),
+      },
       file: TEX_FILE,
       severity: 2,
       line: 1,
     },
-    silent: { ...paper(tex("x")), ...ACCEPTED_CYCLE, ...frozenSent(tex("x")) },
+    // The accepted source plus a requested change, frozen; the draft moving on after that is free.
+    silent: {
+      ...paper(tex("Next venue's draft.")),
+      ...ACCEPTED_CYCLE,
+      ...frozenCameraReady(
+        tex(ACCEPTED_BODY),
+        tex(ACCEPTED_BODY.replace("sentence 3.", "sentence 3, as asked.")),
+      ),
+    },
   },
   "cycle/port-done": {
     reports: {
@@ -1278,6 +1320,25 @@ describe("study/declare-sample is off by default", () => {
  * words and more) takes seconds under coverage, on a machine running every suite at once.
  */
 const CASE_TIMEOUT_MS = 30_000;
+
+describe("cycle/camera-ready-source, before the camera-ready is frozen", () => {
+  it(
+    "stays silent on an accepted cycle with nothing frozen past submitted, however far the draft moved",
+    { timeout: CASE_TIMEOUT_MS },
+    async () => {
+      const tree = {
+        ...paper(tex("y")),
+        ...ACCEPTED_CYCLE,
+        ...frozenSent(tex("x")),
+      };
+      expect(
+        (await lintTree(tree)).filter(
+          (m) => m.ruleId === "cycle/camera-ready-source",
+        ),
+      ).toEqual([]);
+    },
+  );
+});
 
 describe.each(Object.entries(CASES))("%s, through real ESLint", (id, c) => {
   it(

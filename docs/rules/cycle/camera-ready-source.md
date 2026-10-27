@@ -1,32 +1,46 @@
 # cycle/camera-ready-source
 
-**Level:** error · **Reads:** `paper.tex` (with the files the last build spliced in), `paperlint.json`
-(`cycles`), `versions/<accepted cycle>/` · **Reported on:** the first line of `paper.tex`
+**Level:** error · **Reads:** `paperlint.json` (`cycles`), `versions/<accepted cycle>/submitted.tex` and
+`camera-ready.tex` · **Reported on:** the first line of `paper.tex`
 
 ## What it catches
 
-The last cycle is `accepted`, no `camera-ready.pdf` or `camera-ready.tex` is frozen in its folder yet,
-and `paper.tex` differs from its frozen `submitted.tex`. The message names that file.
+The last cycle is `accepted`, its camera-ready is frozen (`versions/<cycle>/camera-ready.tex`, written
+by `npx paperlint submission update <paper> --save`), and that frozen source keeps less than half of the
+lines of what was accepted, the cycle's frozen `submitted.tex`. The message names both files and the
+count.
+
+Until the camera-ready is frozen the rule is silent: while it is being edited, `paper.tex` differs from
+what was accepted by design, since the reviewers' changes go in.
 
 ## Why
 
-The camera-ready is what the venue accepted plus the changes its reviewers asked for. `paperlint build`
-builds `paper.tex`, and between the upload and the decision `paper.tex` usually moved on (see
-[`cycle/draft-drift`](draft-drift.md)). Built from the drifted draft, the camera-ready would send the
-venue a paper its reviewers never read. The frozen source is the one to start from.
+The camera-ready is what the venue accepted plus the changes its reviewers asked for. Between the upload
+and the decision `paper.tex` usually moved on (see [`cycle/draft-drift`](draft-drift.md)). Built from
+that drifted draft, the camera-ready would send the venue a paper its reviewers never read.
+
+A camera-ready differs from what was accepted, so any difference cannot be the test. The rule counts
+the accepted source's lines the camera-ready keeps unchanged, with the same line diff as
+`cycle/draft-drift`: one that keeps at least half started from the accepted source; one that keeps less
+was built from something else.
 
 ## Examples
 
-Failing — cycle `open-2027` is accepted, and `paper.tex` changed after `submitted.tex` was frozen:
+Failing: cycle `open-2027` is accepted, and its frozen camera-ready was built from a draft that moved
+on:
 
 ```text
 papers/my-paper/paper.tex
-  1:1  error  cycle «open-2027» is accepted, and paper.tex has moved on from what was accepted,
-              `versions/open-2027/submitted.tex`: 18 lines added, 18 removed. The camera-ready starts
-              from that frozen source — …  cycle/camera-ready-source
+  1:1  error  cycle «open-2027» is accepted, and its frozen camera-ready,
+              `versions/open-2027/camera-ready.tex`, keeps 3 of the 13 lines of what was accepted,
+              `versions/open-2027/submitted.tex` — under half, so it was not built from the accepted
+              source. …  cycle/camera-ready-source
 ```
 
-Passing: `paper.tex` as frozen; or a camera-ready already frozen in the cycle's folder.
+Passing:
+
+- an accepted cycle whose camera-ready is not frozen yet, however far `paper.tex` has moved;
+- a frozen camera-ready that is the accepted source plus the requested changes.
 
 ## Options / preset fields
 
@@ -34,14 +48,15 @@ No rule options.
 
 ## What it does not check
 
-- Whether the changes since the freeze are the ones the reviewers asked for: once `paper.tex` starts
-  from the frozen source and takes the requested changes, it differs again, and the rule keeps
-  speaking until the camera-ready is sent and frozen. A paper in that state turns it off in its
-  `paperlint.json` for those weeks — `"rules": { "cycle/camera-ready-source": "off" }` — and back on
-  once the camera-ready is frozen.
+- Whether the changes are the ones the reviewers asked for. Half of the lines kept says the
+  camera-ready started from the accepted source, not that every change in it was requested.
+- `paper.tex` after the camera-ready is frozen. What the venue holds is fixed; the draft is free to head
+  for the next paper.
+- A camera-ready PDF frozen without its source: there is nothing to compare, and
+  [`versions/layout`](../versions/layout.md) names the missing source.
 
 ## How to fix
 
 Copy `versions/<cycle>/submitted.tex` over `paper.tex`, make the changes the reviewers asked for, build,
-and send with `npx paperlint submission update <paper> --save`, which freezes the camera-ready as
-`versions/<cycle>/camera-ready.{pdf,tex}`.
+and send again with `npx paperlint submission update <paper> --save`. That replaces the frozen
+`camera-ready.{pdf,tex}`.
