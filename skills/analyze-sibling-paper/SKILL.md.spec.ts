@@ -41,13 +41,17 @@ far below the cost of a "novelty concern" reject.
 
 ## How to run it
 
-1. **Deep-read the ACTUAL paper, not the abstract.** \`WebFetch\` the arXiv/ar5iv/DOI page and read
-   abstract → intro → method → claims (as much as is accessible). An abstract hides exactly the overlap
-   that matters. Try the fetch routes in order — \`arxiv.org/abs/<id>\` for metadata, \`arxiv.org/html/<id>v1\`,
-   \`ar5iv.labs.arxiv.org/html/<id>\`, then the PDF — and **a 403/404 on one route is not "inaccessible"**;
-   switch channel before concluding. **Record what you actually read** in the card's frontmatter as
-   \`read: full | abstract | none\`, and name in a \`**Read:**\` line the sections you covered and the
-   ones you could not — an abstract-only verdict is PROVISIONAL and must say so.
+1. **Deep-read the ACTUAL paper, not the abstract.** \`WebFetch\` returns a model's summary of a page, not
+   its text: use it only to find the link (\`arxiv.org/abs/<id>\` for metadata and version), never as the
+   read, and never take absence from its output as proof. Save the full text to a file and read the file with
+   \`Read\`, abstract → intro → method → claims: the PDF (\`arxiv.org/pdf/<id>\`) fetched with \`curl\` into an
+   empty directory and extracted with plain \`pdftotext <pdf> <txt>\` (never \`-layout\`: it glues the two
+   page columns into one line and a quote is no longer contiguous), or the HTML (\`arxiv.org/html/<id>v1\`,
+   \`ar5iv.labs.arxiv.org/html/<id>\`) saved with \`curl\`. **A 403/404 on one route is not "inaccessible"**;
+   switch channel before concluding. An abstract hides exactly the overlap that matters. **Record what you
+   actually read** in the card's frontmatter as \`read: full | abstract | none\`: \`full\` only after the
+   saved file was read, and name in a \`**Read:**\` line the sections you covered and the ones you could not
+   — an abstract-only verdict is PROVISIONAL and must say so.
    🔴 **Verify the abstract's numbers against the body.** They disagree more often than you would expect,
    and a disagreement is itself a finding worth recording.
 
