@@ -2,10 +2,11 @@
 name: analyze-sibling-paper
 description: "Deep-analyze a specific related / competing / concurrent paper — reading the ACTUAL paper, not its abstract — to decide the \"isn't this just X?\" question before a reviewer asks it: what it really does, whether it's prior or concurrent work, the strongest scoop a reviewer could claim, whether your delta is REAL or merely cosmetic, and the exact cite + positioning clause (or a scoop escalation) to apply. Saves the analysis to the paper's research folder and surfaces action points. Use whenever a paper close enough to yours surfaces — via verify-citations' nearest-neighbor, a reviewer's \"this was already done\", your own lit search, or an arXiv alert. Distinct from verify-citations (confirms a cite is real + one-line delta) and study-accepted-papers (mines a venue's accepted corpus for levers); this one does the deep per-competitor overlap/scoop analysis. Compose with verify-citations (feeds it neighbors), harden-paper (its nearest-neighbor-scoop axis calls this), and extend-paper (a scooped angle can become the extension's pivot)."
 context: fork
+model: sonnet
 allowed-tools: [WebSearch, WebFetch, Read, Write, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:834f128ace92288a compiled from skills/analyze-sibling-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:17c3e0a4c03c6a33 compiled from skills/analyze-sibling-paper/SKILL.md.spec.ts -->
 
 # analyze-sibling-paper — settle "isn't this just X?" before a reviewer does
 
@@ -26,13 +27,17 @@ far below the cost of a "novelty concern" reject.
 
 ## How to run it
 
-1. **Deep-read the ACTUAL paper, not the abstract.** `WebFetch` the arXiv/ar5iv/DOI page and read
-   abstract → intro → method → claims (as much as is accessible). An abstract hides exactly the overlap
-   that matters. Try the fetch routes in order — `arxiv.org/abs/<id>` for metadata, `arxiv.org/html/<id>v1`,
-   `ar5iv.labs.arxiv.org/html/<id>`, then the PDF — and **a 403/404 on one route is not "inaccessible"**;
-   switch channel before concluding. **Record what you actually read** in the card's frontmatter as
-   `read: full | abstract | none`, and name in a `**Read:**` line the sections you covered and the
-   ones you could not — an abstract-only verdict is PROVISIONAL and must say so.
+1. **Deep-read the ACTUAL paper, not the abstract.** `WebFetch` returns a model's summary of a page, not
+   its text: use it only to find the link (`arxiv.org/abs/<id>` for metadata and version), never as the
+   read, and never take absence from its output as proof. Save the full text to a file and read the file with
+   `Read`, abstract → intro → method → claims: the PDF (`arxiv.org/pdf/<id>`) fetched with `curl` into an
+   empty directory and extracted with plain `pdftotext <pdf> <txt>` (never `-layout`: it glues the two
+   page columns into one line and a quote is no longer contiguous), or the HTML (`arxiv.org/html/<id>v1`,
+   `ar5iv.labs.arxiv.org/html/<id>`) saved with `curl`. **A 403/404 on one route is not "inaccessible"**;
+   switch channel before concluding. An abstract hides exactly the overlap that matters. **Record what you
+   actually read** in the card's frontmatter as `read: full | abstract | none`: `full` only after the
+   saved file was read, and name in a `**Read:**` line the sections you covered and the ones you could not
+   — an abstract-only verdict is PROVISIONAL and must say so.
    🔴 **Verify the abstract's numbers against the body.** They disagree more often than you would expect,
    and a disagreement is itself a finding worth recording.
 
