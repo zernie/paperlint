@@ -1,0 +1,37 @@
+# Repository-frame presence check: one job, triggered only by a push to ci/repo-frame-presence.
+# NAMES picks the list (frame/names-spike.txt first; the full list after the spike). The result is
+# committed back to this branch (a push made with GITHUB_TOKEN does not trigger another run).
+name: repo frame presence
+on:
+  push:
+    branches: [ci/repo-frame-presence]
+permissions:
+  contents: write
+jobs:
+  presence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      NAMES: frame/names-spike.txt
+      OUT: frame/data/presence-spike.tsv
+    steps:
+      - uses: actions/checkout@v4
+      - name: rules-file presence at HEAD, 100 repositories per GraphQL query (resumable)
+        timeout-minutes: 330
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p frame/data
+          case "$NAMES" in *.gz) gunzip -kf "$NAMES"; N="${NAMES%.gz}";; *) N="$NAMES";; esac
+          date -u +%FT%TZ > frame/data/started.txt
+          python3 -I frame/presence.py check --names "$N" --out "$OUT" | tee -a frame/data/progress.log
+          date -u +%FT%TZ > frame/data/finished.txt
+      - name: commit the result back to this branch
+        if: always()
+        run: |
+          git config user.name "repo-frame"
+          git config user.email "actions@users.noreply.github.com"
+          git add frame/data
+          git commit -m "frame: presence (run ${{ github.run_id }})" || echo "nothing to commit"
+          git push origin "HEAD:${{ github.ref_name }}"
