@@ -16,7 +16,9 @@ jobs:
     timeout-minutes: 350
     env:
       NAMES: frame/names-spike.txt
-      OUT: frame/data/presence-spike.tsv
+      OUT: frame/data/presence-spike-v3.tsv
+      PRESENCE_COMMITS: "0"
+      PRESENCE_BATCH: "100"
     steps:
       - uses: actions/checkout@v4
       - name: rules-file presence at HEAD, 100 repositories per GraphQL query (resumable)
@@ -28,7 +30,7 @@ jobs:
           mkdir -p frame/data
           case "$NAMES" in *.gz) gunzip -kf "$NAMES"; N="${NAMES%.gz}";; *) N="$NAMES";; esac
           date -u +%FT%TZ > frame/data/started.txt
-          python3 -I frame/presence.py check --names "$N" --out "$OUT" | tee -a frame/data/progress.log
+          python3 -I frame/presence.py check --names "$N" --out "$OUT" | tee -a frame/data/progress-v3.txt
           date -u +%FT%TZ > frame/data/finished.txt
       - name: commit the result back to this branch
         if: always()

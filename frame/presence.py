@@ -21,6 +21,10 @@ ROOT_FILES = ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md", "AGENTS.override.md",
               ".cursorrules", ".windsurfrules", ".github/copilot-instructions.md")
 RULE_DIRS = (".claude/rules", ".cursor/rules", ".windsurf/rules", ".clinerules", ".github/instructions")
 BATCH = int(os.environ.get("PRESENCE_BATCH", "100"))
+# The default-branch commit count is the slow part of the query (GitHub counts it on the fly; spike 31.10: 100
+# and 50 repositories per query were cut off with 502, 25 took ~8 s). PRESENCE_COMMITS=0 leaves it out.
+COMMITS = ("target { ... on Commit { history(first: 0) { totalCount } } }"
+           if os.environ.get("PRESENCE_COMMITS", "1") != "0" else "")
 COLS = ("repo", "status", "commits", "fork", "archived", "stars", "created_at", "default_branch",
         "root_files", "dir_entries", "clinerules_kind")
 
@@ -39,7 +43,7 @@ def query_for(names):
         parts.append(
             f'{alias(i)}: repository(owner: {json.dumps(owner)}, name: {json.dumps(name)}) {{ '
             f'isFork isArchived stargazerCount createdAt '
-            f'defaultBranchRef {{ name target {{ ... on Commit {{ history(first: 0) {{ totalCount }} }} }} }} '
+            f'defaultBranchRef {{ name {COMMITS} }} '
             f'{files} {dirs} }}')
     return "query { rateLimit { cost remaining resetAt } " + " ".join(parts) + " }"
 
