@@ -115,7 +115,7 @@ export const skillLines = (raw) =>
   String(raw ?? "")
     .split("\n")
     .map((l) => l.split("\t"))
-    .filter(([name]) => /^[a-z0-9-]+$/.test(name ?? ""))
+    .filter(([name]) => /^[a-z0-9-]+$/.test(name))
     .map(([name, desc = ""]) => {
       const clause = desc
         .replace(/^["']|["']$/g, "")

@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { test } from "vitest";
 import { hookConsumer, onEdit, runShippedHook } from "../test/hook-consumer.ts";
 import { useTempDir } from "../test/support.ts";
+import { message, paperOf, skillLines } from "./paper-skills-nudge.hook.mjs";
 
 const root = useTempDir("paper-skills-nudge-");
 
@@ -52,4 +53,42 @@ test("any file of a paper, not only its source: the checklist", () => {
   );
   assert.equal(r.exitCode, 0);
   assert.match(r.stdout, /Working on paper \\"alpha\\"/);
+});
+
+// ── the pure helpers, on the inputs the shipped run never sends ─────────────────────────────
+
+test("skillLines: a missing provider result is no skills, not a crash", () => {
+  assert.deepEqual(skillLines(undefined), []);
+});
+
+test("skillLines: a line that is not a skill name is dropped; a name without a description stays", () => {
+  assert.deepEqual(skillLines("Not A Name\tx\nbare-name"), [
+    "  • bare-name — ",
+  ]);
+});
+
+test("skillLines: a quoted description is unquoted and cut at its first clause, at most 110 characters", () => {
+  const long = "a".repeat(200);
+  assert.deepEqual(
+    skillLines(`quoted\t"Say \\"hi\\" — then more"\nlong\t${long}`),
+    ['  • quoted — Say "hi"', `  • long — ${"a".repeat(107)}...`],
+  );
+});
+
+test("paperOf: only a file inside a paper folder belongs to a paper", () => {
+  assert.deepEqual(
+    [
+      paperOf(undefined, "papers"),
+      paperOf("elsewhere/alpha/x.tex", "papers"),
+      paperOf("papers/README.md", "papers"),
+      paperOf("papers/alpha/x.tex", "papers/"),
+    ],
+    [null, null, null, "alpha"],
+  );
+});
+
+test("message: with no skills found, the list is left out and the rest stays", () => {
+  const m = message("alpha", []);
+  assert.equal(m.includes("shipped with this package"), false);
+  assert.match(m, /RULES earned the hard way/);
 });
