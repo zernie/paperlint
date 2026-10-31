@@ -25,6 +25,7 @@
 import { runHook, type HookInput, type HookRunResult } from "vigiles";
 import { checkHookImports } from "vigiles/hook";
 import {
+  existsSync,
   mkdtempSync,
   mkdirSync,
   readdirSync,
@@ -102,6 +103,12 @@ const onBash = (command: string): HookInput => ({
 const onEdit = (file_path: string): HookInput => ({
   hook_event_name: "PostToolUse",
   tool_name: "Edit",
+  tool_input: { file_path },
+  tool_response: {},
+});
+const onRead = (file_path: string): HookInput => ({
+  hook_event_name: "PostToolUse",
+  tool_name: "Read",
   tool_input: { file_path },
   tool_response: {},
 });
@@ -459,33 +466,64 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
-    const lands = (label: string, p: string) => {
-      const r = at(dir, "paper-skills-nudge", onEdit(p));
+    const shipped = readdirSync(join(ROOT, "skills")).filter((d) =>
+      existsSync(join(ROOT, "skills", d, "SKILL.md")),
+    );
+    const lands = (label: string, input: HookInput) => {
+      const r = at(dir, "paper-skills-nudge", input);
       const ctx = injected(r);
       check(
         `nudge LANDS on ${label} (${String(r.stdout.length)}b stdout)`,
         ctx.length > 0,
       );
-      check(
-        `nudge's text on ${label} is the checklist`,
-        /Pre-submit checklist/.test(ctx),
-      );
       check(`nudge on ${label} exits 0`, r.exitCode === 0);
+      return ctx;
     };
-    const silent = (label: string, p: string) => {
-      const r = at(dir, "paper-skills-nudge", onEdit(p));
+    const silent = (label: string, input: HookInput) => {
+      const r = at(dir, "paper-skills-nudge", input);
       check(
         `nudge SILENT on ${label} (${String(r.stdout.length)}b stdout, ${String(r.stderr.length)}b stderr)`,
         r.stdout.length === 0 && r.stderr.length === 0 && r.exitCode === 0,
       );
     };
-    lands("a relative paper.tex", "docs/papers/alpha/paper.tex");
-    lands("a .tex", "docs/papers/alpha/paper.tex");
+    const first = lands(
+      "a relative paper.tex",
+      onEdit("docs/papers/alpha/paper.tex"),
+    );
+    // The list is read from the package's skills folder, not typed into the hook: every shipped
+    // skill appears, one bullet each, so a new skill reaches the nudge without an edit here.
+    check(
+      `nudge lists every shipped skill (${String(shipped.length)} on disk)`,
+      shipped.every((name) => first.includes(`  • ${name} — `)) &&
+        (first.match(/^  • /gm) ?? []).length >= shipped.length,
+    );
+    check("nudge names the paper it fired for", first.includes('"alpha"'));
+    // Once per paper: the same paper again, in its ABSOLUTE spelling, stays quiet.
+    silent(
+      "the same paper again (absolute path)",
+      onEdit(join(dir, "docs/papers/alpha/notes.md")),
+    );
     // 🔴 THE ABSOLUTE SPELLING. The live harness sends absolute paths; a helper that only builds
     // relative ones let an anchored predecessor pass every test while being dead in production.
-    lands("an ABSOLUTE paper.tex", join(dir, "docs/papers/alpha/paper.tex"));
-    silent("a README under the papers root", "docs/papers/README.md");
-    silent("a file outside the papers root", "README.md");
+    lands(
+      "an ABSOLUTE path in another paper",
+      onEdit(join(dir, "docs/papers/beta/paper.tex")),
+    );
+    // Any file of a paper, not only its source: siblings, claims, data are where decisions start.
+    lands(
+      "a non-.tex file of a paper",
+      onEdit("docs/papers/gamma/siblings/novelty.json"),
+    );
+    // A Read is enough: the skills are worth knowing when the paper is opened, before anything is decided.
+    lands(
+      "a Read of a paper file",
+      onRead(join(dir, "docs/papers/delta/CLAIMS.md")),
+    );
+    silent(
+      "a README directly under the papers root",
+      onEdit("docs/papers/README.md"),
+    );
+    silent("a file outside the papers root", onEdit("README.md"));
     // The advisory's own asymmetry: it goes quiet where the gate refuses.
     {
       const broken = fixture(

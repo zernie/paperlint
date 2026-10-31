@@ -26,12 +26,17 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
+        "matcher": "Read|Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/paperlint.mjs\" hook paper-skills-nudge"
-          },
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/paperlint.mjs\" hook paper-status-gates"

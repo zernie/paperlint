@@ -687,7 +687,7 @@ export default [
    * not itself.
    *
    * Measurement on the first run: 15 files with dead imports (`resolve`, `pathToFileURL`) and
-   * orphaned constants — remnants of a move from `mine`, where those names were needed. All
+   * orphaned constants — remnants of a move from the downstream repository this package was extracted from, where those names were needed. All
    * cleaned to zero in the same commit, so the rule opens as a GATE on a clean corpus,
    * not as debt to be silenced.
    *
