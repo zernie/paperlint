@@ -1,6 +1,7 @@
-# Repository-frame presence check: one job, triggered only by a push to ci/repo-frame-presence.
-# NAMES picks the list (frame/names-spike.txt first; the full list after the spike). The result is
-# committed back to this branch (a push made with GITHUB_TOKEN does not trigger another run).
+# Repository-frame presence check, triggered only by a push to ci/repo-frame-presence. Six shards of the full
+# name list run in parallel (time, not GraphQL points, is the limit: ~13 s per 50 repositories), plus a
+# 200-repository commit recount. Each shard uploads its rows; the collect job commits them all at once, so the
+# shards never race on a push. Resumable: a shard skips repositories already answered in its committed file.
 name: repo frame presence
 on:
   push:
@@ -13,30 +14,61 @@ permissions:
 jobs:
   presence:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
-    env:
-      NAMES: frame/names-spike.txt
-      OUT: frame/data/presence-spike-v3.tsv
-      PRESENCE_COMMITS: "0"
-      PRESENCE_BATCH: "100"
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { part: shard-0, names: frame/names-shard-0.txt.gz, commits: "0", batch: "50" }
+          - { part: shard-1, names: frame/names-shard-1.txt.gz, commits: "0", batch: "50" }
+          - { part: shard-2, names: frame/names-shard-2.txt.gz, commits: "0", batch: "50" }
+          - { part: shard-3, names: frame/names-shard-3.txt.gz, commits: "0", batch: "50" }
+          - { part: shard-4, names: frame/names-shard-4.txt.gz, commits: "0", batch: "50" }
+          - { part: shard-5, names: frame/names-shard-5.txt.gz, commits: "0", batch: "50" }
+          - { part: recount, names: frame/names-recount.txt, commits: "1", batch: "25" }
     steps:
       - uses: actions/checkout@v4
-      - name: rules-file presence at HEAD, 100 repositories per GraphQL query (resumable)
+      - name: rules-file presence at HEAD (resumable)
         timeout-minutes: 330
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          PRESENCE_COMMITS: ${{ matrix.commits }}
+          PRESENCE_BATCH: ${{ matrix.batch }}
+          NAMES: ${{ matrix.names }}
+          OUT: frame/data/presence-${{ matrix.part }}.tsv
+          LOG: frame/data/progress-${{ matrix.part }}.txt
         run: |
           mkdir -p frame/data
           case "$NAMES" in *.gz) gunzip -kf "$NAMES"; N="${NAMES%.gz}";; *) N="$NAMES";; esac
-          date -u +%FT%TZ > frame/data/started.txt
-          python3 -I frame/presence.py check --names "$N" --out "$OUT" | tee -a frame/data/progress-v3.txt
-          date -u +%FT%TZ > frame/data/finished.txt
-      - name: commit the result back to this branch
+          echo "started $(date -u +%FT%TZ)" >> "$LOG"
+          python3 -I frame/presence.py check --names "$N" --out "$OUT" | tee -a "$LOG"
+          echo "finished $(date -u +%FT%TZ)" >> "$LOG"
+      - uses: actions/upload-artifact@v4
         if: always()
+        with:
+          name: presence-${{ matrix.part }}
+          path: |
+            frame/data/presence-${{ matrix.part }}.tsv
+            frame/data/progress-${{ matrix.part }}.txt
+  collect:
+    needs: presence
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: incoming
+          pattern: presence-*
+          merge-multiple: true
+      - name: commit every shard back to this branch
         run: |
+          mkdir -p frame/data
+          cp incoming/* frame/data/ 2>/dev/null || echo "no artifacts"
           git config user.name "repo-frame"
           git config user.email "actions@users.noreply.github.com"
           git add frame/data
-          git commit -m "frame: presence (run ${{ github.run_id }})" || echo "nothing to commit"
+          git commit -m "frame: presence shards (run ${{ github.run_id }})" || echo "nothing to commit"
           git push origin "HEAD:${{ github.ref_name }}"
