@@ -1,0 +1,20 @@
+{
+ "query_template": "created:2025-07-01 stars:>=10 fork:false pushed:>=2025-10-30",
+ "estimate": {
+  "pinned_date": "2026-10-30",
+  "active_since": "2025-10-30",
+  "days": 487,
+  "days_answered": 487,
+  "days_failed": 0,
+  "days_incomplete": 0,
+  "candidates": 309561,
+  "days_over_1000": 29,
+  "enumeration_requests": 4035,
+  "enumeration_minutes_at_30_per_min": 169,
+  "stop_rule": {
+   "candidates_over": 200000,
+   "minutes_over": 300,
+   "hit": true
+  }
+ }
+}
