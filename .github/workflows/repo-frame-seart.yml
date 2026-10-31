@@ -18,8 +18,20 @@ jobs:
           set -o pipefail
           mkdir -p seart
           B=https://seart-ghs.si.usi.ch/api/r
-          curl -sS --fail --retry 3 -m 60 "$B/stats" -o seart/stats.json
-          get() { curl -sS --fail --retry 3 -m 1800 "$B/download/csv?$2" -o "seart/$1.csv.gz"; echo "$1 $(gzip -dc seart/$1.csv.gz | wc -l) lines"; }
+          # The server sends its leaf certificate without the intermediate (curl error 60). Verification stays
+          # on: fetch the intermediate named in the leaf's own "CA Issuers" field (AIA) and add it to the system
+          # trust bundle, so curl still verifies the whole chain up to a root it already trusts.
+          H=seart-ghs.si.usi.ch
+          echo | openssl s_client -connect $H:443 -servername $H 2>/dev/null | openssl x509 > leaf.pem
+          AIA=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | sed -n 's/.*CA Issuers - URI:\(.*\)/\1/p' | head -1)
+          echo "intermediate from: $AIA"
+          curl -sS --fail -m 60 "$AIA" -o int.raw
+          openssl x509 -inform DER -in int.raw -out int.pem 2>/dev/null || openssl x509 -in int.raw -out int.pem
+          openssl x509 -in int.pem -noout -subject -issuer
+          cat /etc/ssl/certs/ca-certificates.crt int.pem > bundle.pem
+          C="--cacert bundle.pem"
+          curl -sS --fail --retry 3 -m 60 $C "$B/stats" -o seart/stats.json
+          get() { curl -sS --fail --retry 3 -m 1800 $C "$B/download/csv?$2" -o "seart/$1.csv.gz"; echo "$1 $(gzip -dc seart/$1.csv.gz | wc -l) lines"; }
           # new cohort, the author's floor, active within a year of 2026-10-30
           get b-100 "createdMin=2025-07-01&commitsMin=100&excludeForks=true&committedMin=2025-10-30"
           # new cohort at the older stratum's floor
