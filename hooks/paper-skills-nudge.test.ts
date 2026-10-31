@@ -78,10 +78,10 @@ test("skillLines: a quoted description is unquoted and cut at its first clause, 
 test("paperOf: only a file inside a paper folder belongs to a paper", () => {
   assert.deepEqual(
     [
-      paperOf(undefined, "papers"),
-      paperOf("elsewhere/alpha/x.tex", "papers"),
-      paperOf("papers/README.md", "papers"),
-      paperOf("papers/alpha/x.tex", "papers/"),
+      paperOf([undefined], "papers"),
+      paperOf(["elsewhere/alpha/x.tex"], "papers"),
+      paperOf(["papers/README.md"], "papers"),
+      paperOf(["papers/alpha/x.tex"], "papers/"),
     ],
     [null, null, null, "alpha"],
   );
@@ -91,4 +91,32 @@ test("message: with no skills found, the list is left out and the rest stays", (
   const m = message("alpha", []);
   assert.equal(m.includes("shipped with this package"), false);
   assert.match(m, /RULES earned the hard way/);
+});
+
+test("paperOf: the root in any spelling the path check accepts — ./, doubled slashes, absolute", () => {
+  assert.deepEqual(
+    [
+      paperOf(["papers/alpha/x.tex"], "./papers"),
+      paperOf(["papers/alpha/x.tex"], ".//papers//"),
+      paperOf(
+        ["papers/alpha/x.tex", "/repo/papers/alpha/x.tex"],
+        "/repo/papers",
+      ),
+      paperOf(["papers/README.md", "/repo/papers/README.md"], "/repo/papers"),
+    ],
+    ["alpha", "alpha", "alpha", null],
+  );
+});
+
+test("a ./-spelled papersDir: the checklist still lands", () => {
+  const dir = hookConsumer(join(root, "dot-slash"), {
+    "paperlint.json": JSON.stringify({ papersDir: "./papers" }),
+  });
+  const r = runShippedHook(
+    "paper-skills-nudge",
+    onEdit("papers/alpha/paper.tex"),
+    dir,
+  );
+  assert.equal(r.exitCode, 0);
+  assert.match(r.stdout, /Working on paper/);
 });

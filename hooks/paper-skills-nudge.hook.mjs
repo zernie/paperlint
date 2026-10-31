@@ -124,16 +124,28 @@ export const skillLines = (raw) =>
       return `  • ${name} — ${clause.length > 110 ? `${clause.slice(0, 107)}...` : clause}`;
     });
 
+/** A path or root in one spelling: no leading "./", no doubled or trailing separators. */
+const tidy = (p) =>
+  p
+    .replace(/^(\.\/+)+/, "")
+    .replace(/\/{2,}/g, "/")
+    .replace(/\/+$/, "");
+
 /**
  * The paper a path belongs to: the first folder under the papers root, when the file sits inside one.
- * A file directly in the root (its README) belongs to no paper and stays silent.
+ * A file directly in the root (its README) belongs to no paper and stays silent. The path comes in
+ * every spelling the event has (repo-relative and as sent), and the root in any spelling the config
+ * allows (with a leading dot-slash, doubled slashes, absolute); the first spelling under the root wins.
  */
-export const paperOf = (rel, root) => {
-  if (typeof rel !== "string") return null;
-  const prefix = `${root.replace(/\/+$/, "")}/`;
-  if (!rel.startsWith(prefix)) return null;
-  const parts = rel.slice(prefix.length).split("/");
-  return parts.length >= 2 && parts[0] !== "" ? parts[0] : null;
+export const paperOf = (paths, root) => {
+  const prefix = `${tidy(root)}/`;
+  const names = paths
+    .filter((p) => typeof p === "string")
+    .map(tidy)
+    .filter((p) => p.startsWith(prefix))
+    .map((p) => p.slice(prefix.length).split("/"))
+    .map((parts) => (parts.length >= 2 ? parts[0] : null));
+  return names.length ? names[0] : null;
 };
 
 /** How long one paper stays nudged. Touching a different paper speaks again at once. */
@@ -173,8 +185,8 @@ export default experimental_defineReact({
   ],
   react: (e) => {
     const root = papersRoot(e.ctx.config);
-    if (root === null || !e.path.under([root])) return nothing();
-    const paper = paperOf(e.path.rel, root);
+    if (root === null || !e.path.under([tidy(root)])) return nothing();
+    const paper = paperOf([e.path.rel, e.path.raw], root);
     if (paper === null) return nothing();
     const shown = e.ctx["paper-skills.shown"];
     // Once per paper: the same paper again within QUIET_FOR stays silent; another paper speaks.
