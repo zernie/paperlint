@@ -1,0 +1,30 @@
+HTTP 502 attempt 0
+split 100 -> 50 + 50
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 39.0s
+100/500	cost 1	remaining 4762
+HTTP 502 attempt 0
+split 100 -> 50 + 50
+batch took 25.1s
+200/500	cost 1	remaining 4750
+HTTP 502 attempt 0
+split 100 -> 50 + 50
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 40.6s
+300/500	cost 1	remaining 4725
+HTTP 502 attempt 0
+split 100 -> 50 + 50
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 50.4s
+400/500	cost 1	remaining 4699
+HTTP 502 attempt 0
+split 100 -> 50 + 50
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 37.3s
+500/500	cost 1	remaining 4664
