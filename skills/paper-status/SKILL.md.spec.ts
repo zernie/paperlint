@@ -3,7 +3,7 @@
 // Adopted 2026-08-17 as part of the second batch. The body is the previous SKILL.md
 // VERBATIM, so the compiled diff shows only what the compiler adds. No `disallowedTools`
 // fence yet: the field exists on `SkillSpec` as of the branch `claude/skill-disallowed-tools`
-// but is not in a release `mine` installs, so adding it here would not compile.
+// but is not in a release the consumer installs, so adding it here would not compile.
 import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({

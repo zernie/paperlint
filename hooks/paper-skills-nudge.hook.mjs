@@ -36,6 +36,8 @@ import {
   provide,
   notice,
   nothing,
+  record,
+  state,
 } from "vigiles/hook";
 
 /** The tool's name — the package this hook resolves its scripts through. */
@@ -96,28 +98,66 @@ const papersRoot = (rawConfig) => {
   return root;
 };
 
-/** A paper SOURCE — a `.tex`. Not every note or README. */
-const isPaperSource = (p) => p.endsWith(".tex");
+/**
+ * The shipped skills, one per line as name, a tab, and the description, read from the package's own
+ * skills folder (the consumer's node_modules copy; in this repository, its own folder). The list used
+ * to be typed into this file and drifted: a skill added to the package never reached the nudge.
+ * An empty result (no folder, no skills) leaves the list out and keeps the rest of the message.
+ */
+const READ_SKILLS =
+  `d="\${CLAUDE_PROJECT_DIR:-.}/node_modules/paperlint/skills"; [ -d "$d" ] || d="\${CLAUDE_PROJECT_DIR:-.}/skills"; ` +
+  `for f in "$d"/*/SKILL.md; do [ -f "$f" ] || continue; ` +
+  `awk 'NR==1 && $0!="---" {exit} NR>1 && $0=="---" {exit} ` +
+  `/^name: / {n=substr($0, 7)} /^description: / {d=substr($0, 14)} END {if (n!="") print n "\t" d}' "$f"; done`;
 
-const CHECKLIST = `📄 Editing a paper — drive it with the \`paper-pipeline\` skill, don't wing the review.
-  → Update <paper-dir>/PIPELINE-STATUS.md: mark the row for any stage you (re)ran, and read its
-    verdict line to see what's still ☐/◐/⚠ before submit.
-Pre-submit checklist (skills):
-  • verify-citations — every \\cite real; nearest-neighbor delta explicit
-  • study-accepted-papers — the venue's Accept→Strong levers
-  • analyze-sibling-paper — deep-read each close competitor; SAVE colocated in <paper-dir>/siblings/
-  • grade-paper-writing — BLIND ≥3-grader panel (absolute scale) + cold-read stall pass
-  • pc-panel-review / paper-adversarial-review — multi-axis scorecard + the "reads-like-slop" halo
-  • harden-paper — threat-model · ethics · page-fit · de-anon · ACTUALLY RUN the artifact clean
-RULES earned the hard way:
-  • After every aggressive rewrite/thinning pass → claim-preservation DIFF vs the pre-pass baseline
-  • Numbers overwhelming the reader? secondary numbers live in the artifact, not the paper
-  • bib inside \\begin{filecontents*}{refs.bib}? edit it THERE — refs.bib is overwritten on build
-  • Done + claim-clean + page-legal ships. Further churn breaks about as much as it fixes.`;
+/** One line per skill: its name and the description's first clause, at most 110 characters. */
+export const skillLines = (raw) =>
+  String(raw ?? "")
+    .split("\n")
+    .map((l) => l.split("\t"))
+    .filter(([name]) => /^[a-z0-9-]+$/.test(name ?? ""))
+    .map(([name, desc = ""]) => {
+      const clause = desc
+        .replace(/^["']|["']$/g, "")
+        .replace(/\\"/g, '"')
+        .split(/ — |\. /)[0];
+      return `  • ${name} — ${clause.length > 110 ? `${clause.slice(0, 107)}...` : clause}`;
+    });
+
+/**
+ * The paper a path belongs to: the first folder under the papers root, when the file sits inside one.
+ * A file directly in the root (its README) belongs to no paper and stays silent.
+ */
+export const paperOf = (rel, root) => {
+  if (typeof rel !== "string") return null;
+  const prefix = `${root.replace(/\/+$/, "")}/`;
+  if (!rel.startsWith(prefix)) return null;
+  const parts = rel.slice(prefix.length).split("/");
+  return parts.length >= 2 && parts[0] !== "" ? parts[0] : null;
+};
+
+/** How long one paper stays nudged. Touching a different paper speaks again at once. */
+const QUIET_FOR = "3h";
+
+export const message = (paper, lines) =>
+  `📄 Working on paper "${paper}". Before deciding a step yourself, check whether a skill owns it ` +
+  "(Skill tool) — a hand-written brief or a winged review is how pipeline stages get skipped.\n" +
+  "  → Update <paper-dir>/PIPELINE-STATUS.md: mark the row for any stage you (re)ran, and read its\n" +
+  "    verdict line to see what's still ☐/◐/⚠ before submit.\n" +
+  (lines.length
+    ? `The paper skills shipped with this package:\n${lines.join("\n")}\n`
+    : "") +
+  "RULES earned the hard way:\n" +
+  "  • After every aggressive rewrite/thinning pass → claim-preservation DIFF vs the pre-pass baseline\n" +
+  "  • Numbers overwhelming the reader? secondary numbers live in the artifact, not the paper\n" +
+  "  • bib inside \\begin{filecontents*}{refs.bib}? edit it THERE — refs.bib is overwritten on build\n" +
+  "  • Done + claim-clean + page-legal ships. Further churn breaks about as much as it fixes.";
 
 export default experimental_defineReact({
   on: "PostToolUse",
-  match: tools("Edit", "Write", "MultiEdit"),
+  // Read too: the moment a paper is opened is when its skills are worth knowing, before anything is
+  // decided — an edit-only trigger fires after the decision.
+  match: tools("Read", "Edit", "Write", "MultiEdit"),
   // The provider is anchored to the project root (`READ_CONFIG`, above).
   //
   // ⚠️ THE FAILURE HERE IS SILENT, which makes it more dangerous than its neighbor's.
@@ -126,12 +166,22 @@ export default experimental_defineReact({
   // the `cat` fails → empty string → `JSON.parse("")` throws → `papersRoot` returns null
   // → silence. And silence is exactly what a nudge's success state looks like, so a dead hook
   // is indistinguishable from a working one.
-  needs: [provide("config", READ_CONFIG)],
+  needs: [
+    provide("config", READ_CONFIG),
+    provide("skills", READ_SKILLS),
+    state("paper-skills.shown"),
+  ],
   react: (e) => {
     const root = papersRoot(e.ctx.config);
-    if (root === null) return nothing();
-    return e.path.under([root]) && isPaperSource(e.path.raw)
-      ? notice(CHECKLIST)
-      : nothing();
+    if (root === null || !e.path.under([root])) return nothing();
+    const paper = paperOf(e.path.rel, root);
+    if (paper === null) return nothing();
+    const shown = e.ctx["paper-skills.shown"];
+    // Once per paper: the same paper again within QUIET_FOR stays silent; another paper speaks.
+    if (shown.value === paper && shown.fresherThan(QUIET_FOR)) return nothing();
+    return notice(
+      message(paper, skillLines(e.ctx.skills)),
+      record("paper-skills.shown", paper),
+    );
   },
 });

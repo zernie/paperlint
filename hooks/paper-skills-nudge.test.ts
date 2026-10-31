@@ -1,5 +1,5 @@
 /**
- * paper-skills-nudge on the two declarations the hooks harness does not carry: none at all (the
+ * paper-skills-nudge on the declarations the hooks harness does not carry: none at all (the
  * default `papers/` root applies) and one that does not parse (silence — a nudge never blocks).
  */
 import assert from "node:assert/strict";
@@ -33,12 +33,23 @@ test("a paperlint.json that does not parse: silent, exit 0", () => {
   assert.deepEqual([r.exitCode, r.stdout, r.stderr], [0, "", ""]);
 });
 
-test("an edit to a file of the paper other than its source: silent", () => {
-  const dir = hookConsumer(join(root, "not-a-source"));
+test("a file directly under the papers root belongs to no paper: silent", () => {
+  const dir = hookConsumer(join(root, "root-file"));
+  const r = runShippedHook(
+    "paper-skills-nudge",
+    onEdit("papers/README.md"),
+    dir,
+  );
+  assert.deepEqual([r.exitCode, r.stdout, r.stderr], [0, "", ""]);
+});
+
+test("any file of a paper, not only its source: the checklist", () => {
+  const dir = hookConsumer(join(root, "any-file"));
   const r = runShippedHook(
     "paper-skills-nudge",
     onEdit("papers/alpha/notes.txt"),
     dir,
   );
-  assert.deepEqual([r.exitCode, r.stdout, r.stderr], [0, "", ""]);
+  assert.equal(r.exitCode, 0);
+  assert.match(r.stdout, /Working on paper \\"alpha\\"/);
 });
