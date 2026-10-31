@@ -7,20 +7,21 @@ on:
 permissions:
   contents: write
 jobs:
-  size-b:
+  enumerate-b:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
-      - name: size the frame by creation day
+      - name: list every candidate, window by window (resumable)
+        timeout-minutes: 225
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python3 -I frame/stratum_b.py size --pinned frame/pinned-date.txt --out frame/data
+        run: python3 -I frame/stratum_b.py enumerate --pinned frame/pinned-date.txt --out frame/data
       - name: commit the result back to this branch
         if: always()
         run: |
           git config user.name "repo-frame"
           git config user.email "actions@users.noreply.github.com"
           git add frame/data
-          git commit -m "frame: size by creation day (run ${{ github.run_id }})" || echo "nothing to commit"
+          git commit -m "frame: list candidates (run ${{ github.run_id }})" || echo "nothing to commit"
           git push origin "HEAD:${{ github.ref_name }}"
