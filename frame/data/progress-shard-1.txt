@@ -1,0 +1,3342 @@
+started 2026-10-31T15:24:59Z
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.7s
+50/43191	cost 1	remaining 4838
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.7s
+100/43191	cost 1	remaining 4503
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+150/43191	cost 1	remaining 4799
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.7s
+200/43191	cost 1	remaining 4409
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+250/43191	cost 1	remaining 4345
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+300/43191	cost 1	remaining 4269
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.6s
+350/43191	cost 1	remaining 4218
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.6s
+400/43191	cost 1	remaining 4164
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.2s
+450/43191	cost 1	remaining 4102
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+500/43191	cost 1	remaining 4061
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.4s
+550/43191	cost 1	remaining 3988
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+600/43191	cost 1	remaining 3936
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+650/43191	cost 1	remaining 3873
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+700/43191	cost 1	remaining 3810
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.6s
+750/43191	cost 1	remaining 3761
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+800/43191	cost 1	remaining 3704
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.5s
+850/43191	cost 1	remaining 3650
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.4s
+900/43191	cost 1	remaining 3580
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+950/43191	cost 1	remaining 3550
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+1000/43191	cost 1	remaining 3462
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+1050/43191	cost 1	remaining 4464
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.3s
+1100/43191	cost 1	remaining 3336
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.2s
+1150/43191	cost 1	remaining 3283
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.6s
+1200/43191	cost 1	remaining 3220
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+1250/43191	cost 1	remaining 3165
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.2s
+1300/43191	cost 1	remaining 4340
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.0s
+1350/43191	cost 1	remaining 4325
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+1400/43191	cost 1	remaining 4299
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.6s
+1450/43191	cost 1	remaining 2947
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+1500/43191	cost 1	remaining 4266
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.0s
+1550/43191	cost 1	remaining 4253
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.5s
+1600/43191	cost 1	remaining 4248
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+1650/43191	cost 1	remaining 2683
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.1s
+1700/43191	cost 1	remaining 2630
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.6s
+1750/43191	cost 1	remaining 4186
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.4s
+1800/43191	cost 1	remaining 4159
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.0s
+1850/43191	cost 1	remaining 2462
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.1s
+1900/43191	cost 1	remaining 2419
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+1950/43191	cost 1	remaining 2377
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+2000/43191	cost 1	remaining 2335
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+2050/43191	cost 1	remaining 2274
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+2100/43191	cost 1	remaining 2220
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+2150/43191	cost 1	remaining 4020
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.2s
+2200/43191	cost 1	remaining 2092
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+2250/43191	cost 1	remaining 3991
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+2300/43191	cost 1	remaining 1973
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.9s
+2350/43191	cost 1	remaining 1898
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+2400/43191	cost 1	remaining 1844
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.4s
+2450/43191	cost 1	remaining 1791
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+2500/43191	cost 1	remaining 1729
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.6s
+2550/43191	cost 1	remaining 1657
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.3s
+2600/43191	cost 1	remaining 1616
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+2650/43191	cost 1	remaining 1561
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+2700/43191	cost 1	remaining 1509
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+2750/43191	cost 1	remaining 3809
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.7s
+2800/43191	cost 1	remaining 3793
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.7s
+2850/43191	cost 1	remaining 1305
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.8s
+2900/43191	cost 1	remaining 1220
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+2950/43191	cost 1	remaining 1157
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+3000/43191	cost 1	remaining 1103
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+3050/43191	cost 1	remaining 1069
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+3100/43191	cost 1	remaining 4999
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+3150/43191	cost 1	remaining 3659
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.7s
+3200/43191	cost 1	remaining 4884
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.9s
+3250/43191	cost 1	remaining 4834
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+3300/43191	cost 1	remaining 4762
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+3350/43191	cost 1	remaining 4719
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.7s
+3400/43191	cost 1	remaining 4956
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.9s
+3450/43191	cost 1	remaining 4572
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+3500/43191	cost 1	remaining 4506
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.1s
+3550/43191	cost 1	remaining 4431
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.3s
+3600/43191	cost 1	remaining 4369
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.7s
+3650/43191	cost 1	remaining 4295
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+3700/43191	cost 1	remaining 4233
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.3s
+3750/43191	cost 1	remaining 4181
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.1s
+3800/43191	cost 1	remaining 4896
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+3850/43191	cost 1	remaining 4063
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.1s
+3900/43191	cost 1	remaining 4001
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+3950/43191	cost 1	remaining 3959
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+4000/43191	cost 1	remaining 3920
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+4050/43191	cost 1	remaining 4763
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.8s
+4100/43191	cost 1	remaining 3814
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+4150/43191	cost 1	remaining 3736
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+4200/43191	cost 1	remaining 3703
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.1s
+4250/43191	cost 1	remaining 3663
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.6s
+4300/43191	cost 1	remaining 3611
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.0s
+4350/43191	cost 1	remaining 3547
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.0s
+4400/43191	cost 1	remaining 3495
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+4450/43191	cost 1	remaining 3435
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.1s
+4500/43191	cost 1	remaining 3359
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+4550/43191	cost 1	remaining 4602
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.8s
+4600/43191	cost 1	remaining 3222
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.9s
+4650/43191	cost 1	remaining 3156
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+4700/43191	cost 1	remaining 3111
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+4750/43191	cost 1	remaining 4535
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.5s
+4800/43191	cost 1	remaining 2978
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.3s
+4850/43191	cost 1	remaining 2936
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+4900/43191	cost 1	remaining 2875
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.2s
+4950/43191	cost 1	remaining 2833
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.7s
+5000/43191	cost 1	remaining 4446
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.1s
+5050/43191	cost 1	remaining 2682
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+5100/43191	cost 1	remaining 2597
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+5150/43191	cost 1	remaining 2530
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.0s
+5200/43191	cost 1	remaining 2479
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.9s
+5250/43191	cost 1	remaining 4367
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.7s
+5300/43191	cost 1	remaining 2358
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.7s
+5350/43191	cost 1	remaining 2311
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.9s
+5400/43191	cost 1	remaining 2284
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+5450/43191	cost 1	remaining 4323
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+5500/43191	cost 1	remaining 4308
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.7s
+5550/43191	cost 1	remaining 2157
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.5s
+5600/43191	cost 1	remaining 2116
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.8s
+5650/43191	cost 1	remaining 4282
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+5700/43191	cost 1	remaining 4266
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.4s
+5750/43191	cost 1	remaining 2001
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.0s
+5800/43191	cost 1	remaining 1973
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+5850/43191	cost 1	remaining 4195
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+5900/43191	cost 1	remaining 1869
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.6s
+5950/43191	cost 1	remaining 4178
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+6000/43191	cost 1	remaining 4154
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.5s
+6050/43191	cost 1	remaining 4139
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.9s
+6100/43191	cost 1	remaining 1652
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.8s
+6150/43191	cost 1	remaining 1590
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+6200/43191	cost 1	remaining 1520
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 29.5s
+6250/43191	cost 1	remaining 1428
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+6300/43191	cost 1	remaining 4029
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+6350/43191	cost 1	remaining 1324
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+6400/43191	cost 1	remaining 1293
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 38.1s
+6450/43191	cost 1	remaining 3967
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.7s
+6500/43191	cost 1	remaining 1174
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+6550/43191	cost 1	remaining 1112
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+6600/43191	cost 1	remaining 1060
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+6650/43191	cost 1	remaining 1009
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+6700/43191	cost 1	remaining 958
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+6750/43191	cost 1	remaining 926
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.3s
+6800/43191	cost 1	remaining 3869
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+6850/43191	cost 1	remaining 822
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.1s
+6900/43191	cost 1	remaining 782
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+6950/43191	cost 1	remaining 739
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+7000/43191	cost 1	remaining 665
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.9s
+7050/43191	cost 1	remaining 611
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 29.1s
+7100/43191	cost 1	remaining 3785
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+7150/43191	cost 1	remaining 3759
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.5s
+7200/43191	cost 1	remaining 387
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+7250/43191	cost 1	remaining 311
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+7300/43191	cost 1	remaining 236
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.2s
+7350/43191	cost 1	remaining 3703
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+7400/43191	cost 1	remaining 148
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+7450/43191	cost 1	remaining 95
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.7s
+7500/43191	cost 1	remaining 18
+rate limit low, sleeping until 2026-10-31T16:49:00Z
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+7550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+7600/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.6s
+7650/43191	cost 1	remaining 3425
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+7700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+7750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+7800/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+7850/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 18.8s
+7900/43191	cost 1	remaining 3376
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+7950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+8000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+8150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8300/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+8350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8700/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+8750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+8900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+8950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9050/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+9100/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 15.5s
+9150/43191	cost 1	remaining 3159
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9200/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+9250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9400/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+9450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+9500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+9650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+9700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+9800/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 12.2s
+9850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.4s
+9900/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+9950/43191	cost 1	remaining 3005
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10200/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+10250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10300/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+10350/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 17.5s
+10400/43191	cost 1	remaining 2930
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+10450/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.8s
+10500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10600/43191	cost None	remaining None
+HTTP 403 attempt 0
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 300.3s
+10650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+10750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10800/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+10850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+10950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+11150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+11200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11300/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+11350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11400/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+11450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11550/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+11600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11650/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.8s
+11700/43191	cost 1	remaining 2507
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.4s
+11750/43191	cost 1	remaining 2495
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11850/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.5s
+11900/43191	cost 1	remaining 2483
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+11950/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+12000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+12050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12200/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.2s
+12250/43191	cost 1	remaining 2460
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12450/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 18.7s
+12500/43191	cost 1	remaining 2448
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12750/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+12800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+12850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+12900/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.9s
+12950/43191	cost 1	remaining 2425
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+13050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13100/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+13150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+13450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13550/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 18.1s
+13600/43191	cost 1	remaining 2402
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+13650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13700/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.2s
+13750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+13900/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+13950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14000/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+14050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+14300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+14350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+14400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+14450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14650/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+14700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+14900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+14950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15000/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+15050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+15250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.3s
+15300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15350/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.8s
+15400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15550/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+15600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+15900/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+15950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16150/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.8s
+16200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16250/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.8s
+16300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16450/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 18.0s
+16500/43191	cost 1	remaining 2130
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16850/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.2s
+16900/43191	cost 1	remaining 2061
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+16950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17250/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+17300/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+17350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17500/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+17550/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+17600/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+17650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+17700/43191	cost None	remaining None
+HTTP 403 attempt 0
+HTTP 502 attempt 1
+split 50 -> 25 + 25
+batch took 323.9s
+17750/43191	cost 1	remaining 4954
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+17800/43191	cost 1	remaining 4913
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+17850/43191	cost 1	remaining 4985
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 33.2s
+17900/43191	cost 1	remaining 4960
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+17950/43191	cost 1	remaining 4958
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+18000/43191	cost 1	remaining 4667
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.0s
+18050/43191	cost 1	remaining 4615
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.0s
+18100/43191	cost 1	remaining 4551
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+18150/43191	cost 1	remaining 4498
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+18200/43191	cost 1	remaining 4424
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.1s
+18250/43191	cost 1	remaining 4832
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.1s
+18300/43191	cost 1	remaining 4322
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+18350/43191	cost 1	remaining 4281
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+18400/43191	cost 1	remaining 4208
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.6s
+18450/43191	cost 1	remaining 4779
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.1s
+18500/43191	cost 1	remaining 4117
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.9s
+18550/43191	cost 1	remaining 4085
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+18600/43191	cost 1	remaining 4037
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.6s
+18650/43191	cost 1	remaining 3976
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+18700/43191	cost 1	remaining 3937
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.3s
+18750/43191	cost 1	remaining 4719
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 22.6s
+18800/43191	cost 1	remaining 4705
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+18850/43191	cost 1	remaining 3797
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.5s
+18900/43191	cost 1	remaining 3756
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.8s
+18950/43191	cost 1	remaining 4639
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+19000/43191	cost 1	remaining 3648
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+19050/43191	cost 1	remaining 3573
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.5s
+19100/43191	cost 1	remaining 3507
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+19150/43191	cost 1	remaining 3454
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+19200/43191	cost 1	remaining 3369
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+19250/43191	cost 1	remaining 4535
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+19300/43191	cost 1	remaining 4531
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.3s
+19350/43191	cost 1	remaining 3143
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+19400/43191	cost 1	remaining 4490
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.5s
+19450/43191	cost 1	remaining 3052
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.6s
+19500/43191	cost 1	remaining 4449
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+19550/43191	cost 1	remaining 2924
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+19600/43191	cost 1	remaining 4433
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+19650/43191	cost 1	remaining 2798
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.6s
+19700/43191	cost 1	remaining 2757
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.8s
+19750/43191	cost 1	remaining 2709
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.9s
+19800/43191	cost 1	remaining 2656
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+19850/43191	cost 1	remaining 2590
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+19900/43191	cost 1	remaining 2515
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+19950/43191	cost 1	remaining 2462
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+20000/43191	cost 1	remaining 2398
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+20050/43191	cost 1	remaining 4295
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.9s
+20100/43191	cost 1	remaining 4268
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+20150/43191	cost 1	remaining 2254
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.4s
+20200/43191	cost 1	remaining 2212
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+20250/43191	cost 1	remaining 2157
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+20300/43191	cost 1	remaining 2072
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+20350/43191	cost 1	remaining 2019
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+20400/43191	cost 1	remaining 1964
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 37.8s
+20450/43191	cost 1	remaining 4061
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.5s
+20500/43191	cost 1	remaining 1879
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.9s
+20550/43191	cost 1	remaining 1850
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.6s
+20600/43191	cost 1	remaining 1797
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+20650/43191	cost 1	remaining 1758
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.7s
+20700/43191	cost 1	remaining 1719
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+20750/43191	cost 1	remaining 1668
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.6s
+20800/43191	cost 1	remaining 1625
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+20850/43191	cost 1	remaining 3902
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 28.8s
+20900/43191	cost 1	remaining 3853
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+20950/43191	cost 1	remaining 1460
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+21000/43191	cost 1	remaining 1422
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+21050/43191	cost 1	remaining 1390
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+21100/43191	cost 1	remaining 1328
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.1s
+21150/43191	cost 1	remaining 3757
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+21200/43191	cost 1	remaining 3731
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.0s
+21250/43191	cost 1	remaining 1218
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.8s
+21300/43191	cost 1	remaining 1176
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+21350/43191	cost 1	remaining 1115
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.1s
+21400/43191	cost 1	remaining 1071
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+21450/43191	cost 1	remaining 3659
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+21500/43191	cost 1	remaining 969
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.2s
+21550/43191	cost 1	remaining 905
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+21600/43191	cost 1	remaining 851
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.5s
+21650/43191	cost 1	remaining 3588
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.1s
+21700/43191	cost 1	remaining 739
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.1s
+21750/43191	cost 1	remaining 698
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.7s
+21800/43191	cost 1	remaining 3477
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.2s
+21850/43191	cost 1	remaining 636
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.8s
+21900/43191	cost 1	remaining 572
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+21950/43191	cost 1	remaining 506
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.9s
+22000/43191	cost 1	remaining 453
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+22050/43191	cost 1	remaining 3375
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.7s
+22100/43191	cost 1	remaining 337
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+22150/43191	cost 1	remaining 295
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+22200/43191	cost 1	remaining 3291
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.1s
+22250/43191	cost 1	remaining 3288
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+22300/43191	cost 1	remaining 115
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+22350/43191	cost 1	remaining 40
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 20.0s
+22400/43191	cost 1	remaining 3270
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+22450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+22500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+22550/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+22600/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 18.7s
+22650/43191	cost 1	remaining 3224
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+22700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+22750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+22800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+22850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+22900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+22950/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.4s
+23000/43191	cost 1	remaining 3200
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23050/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+23100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23300/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+23350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+23500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+23550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23700/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 403 attempt 0
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 319.0s
+23750/43191	cost 1	remaining 2849
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+23800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+23950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+24000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24050/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+24100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24250/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 18.0s
+24300/43191	cost 1	remaining 2814
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.3s
+24350/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+24400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24550/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+24600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24650/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+24700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+24950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+25400/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+25450/43191	cost None	remaining None
+HTTP 403 attempt 0
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 300.4s
+25500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+25600/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+25650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+25750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+25950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+26000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+26050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+26100/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+26150/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+26200/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.3s
+26250/43191	cost 1	remaining 2328
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+26300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+26350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+26400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+26450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+26500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+26550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+26600/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+26650/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+26700/43191	cost None	remaining None
+HTTP 403 attempt 0
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 300.3s
+26750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+26800/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+26850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+26900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+26950/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+27000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+27050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+27100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+27150/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.3s
+27200/43191	cost 1	remaining 1940
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+27250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+27300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+27350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+27400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.3s
+27450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+27500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+27550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+27600/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+27650/43191	cost 1	remaining 1904
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+27700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+27750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+27800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+27850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+27900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+27950/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 403 attempt 0
+batch took 324.6s
+28000/43191	cost 1	remaining 4905
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.9s
+28050/43191	cost 1	remaining 4866
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+28100/43191	cost 1	remaining 4828
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+28150/43191	cost 1	remaining 4919
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+28200/43191	cost 1	remaining 4884
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+28250/43191	cost 1	remaining 4647
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.2s
+28300/43191	cost 1	remaining 4594
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.8s
+28350/43191	cost 1	remaining 4832
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.5s
+28400/43191	cost 1	remaining 4806
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+28450/43191	cost 1	remaining 4458
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+28500/43191	cost 1	remaining 4759
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+28550/43191	cost 1	remaining 4316
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.3s
+28600/43191	cost 1	remaining 4264
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.4s
+28650/43191	cost 1	remaining 4211
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+28700/43191	cost 1	remaining 4159
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+28750/43191	cost 1	remaining 4096
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+28800/43191	cost 1	remaining 4044
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+28850/43191	cost 1	remaining 3959
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.0s
+28900/43191	cost 1	remaining 3895
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.1s
+28950/43191	cost 1	remaining 4631
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+29000/43191	cost 1	remaining 4596
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+29050/43191	cost 1	remaining 3689
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.0s
+29100/43191	cost 1	remaining 4568
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 23.7s
+29150/43191	cost 1	remaining 4557
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.0s
+29200/43191	cost 1	remaining 3505
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+29250/43191	cost 1	remaining 4537
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+29300/43191	cost 1	remaining 3380
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.7s
+29350/43191	cost 1	remaining 4494
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.6s
+29400/43191	cost 1	remaining 3268
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.8s
+29450/43191	cost 1	remaining 3239
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.7s
+29500/43191	cost 1	remaining 3186
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.2s
+29550/43191	cost 1	remaining 3120
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.2s
+29600/43191	cost 1	remaining 4429
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.7s
+29650/43191	cost 1	remaining 2948
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.7s
+29700/43191	cost 1	remaining 2885
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+29750/43191	cost 1	remaining 2824
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.1s
+29800/43191	cost 1	remaining 4379
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.8s
+29850/43191	cost 1	remaining 2707
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.5s
+29900/43191	cost 1	remaining 2655
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.5s
+29950/43191	cost 1	remaining 2599
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+30000/43191	cost 1	remaining 2523
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.8s
+30050/43191	cost 1	remaining 2473
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.3s
+30100/43191	cost 1	remaining 2428
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+30150/43191	cost 1	remaining 2366
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+30200/43191	cost 1	remaining 2335
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+30250/43191	cost 1	remaining 4130
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 34.4s
+30300/43191	cost 1	remaining 2180
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+30350/43191	cost 1	remaining 2105
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+30400/43191	cost 1	remaining 2062
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.2s
+30450/43191	cost 1	remaining 2010
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.5s
+30500/43191	cost 1	remaining 1957
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.8s
+30550/43191	cost 1	remaining 1898
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+30600/43191	cost 1	remaining 1858
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+30650/43191	cost 1	remaining 3993
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+30700/43191	cost 1	remaining 1781
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.2s
+30750/43191	cost 1	remaining 1721
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+30800/43191	cost 1	remaining 1688
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+30850/43191	cost 1	remaining 1639
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+30900/43191	cost 1	remaining 1588
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.3s
+30950/43191	cost 1	remaining 3902
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+31000/43191	cost 1	remaining 1507
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.5s
+31050/43191	cost 1	remaining 1466
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.5s
+31100/43191	cost 1	remaining 3839
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.5s
+31150/43191	cost 1	remaining 1371
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+31200/43191	cost 1	remaining 1315
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.7s
+31250/43191	cost 1	remaining 1252
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.1s
+31300/43191	cost 1	remaining 1209
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+31350/43191	cost 1	remaining 1156
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.8s
+31400/43191	cost 1	remaining 3717
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+31450/43191	cost 1	remaining 3680
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.7s
+31500/43191	cost 1	remaining 979
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.3s
+31550/43191	cost 1	remaining 936
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.2s
+31600/43191	cost 1	remaining 3616
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+31650/43191	cost 1	remaining 845
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+31700/43191	cost 1	remaining 3554
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.7s
+31750/43191	cost 1	remaining 3525
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.5s
+31800/43191	cost 1	remaining 3488
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+31850/43191	cost 1	remaining 666
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+31900/43191	cost 1	remaining 3460
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.5s
+31950/43191	cost 1	remaining 566
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.7s
+32000/43191	cost 1	remaining 534
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.1s
+32050/43191	cost 1	remaining 3407
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.3s
+32100/43191	cost 1	remaining 442
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.5s
+32150/43191	cost 1	remaining 3391
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+32200/43191	cost 1	remaining 304
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.7s
+32250/43191	cost 1	remaining 260
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 35.3s
+32300/43191	cost 1	remaining 152
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+32350/43191	cost 1	remaining 93
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+32400/43191	cost 1	remaining 3321
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 19.6s
+32450/43191	cost 1	remaining 3305
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+32500/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+32550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+32600/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+32650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+32700/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+32750/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 19.0s
+32800/43191	cost 1	remaining 3084
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+32850/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+32900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+32950/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 15.0s
+33000/43191	cost 1	remaining 2984
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33100/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+33150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+33300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33500/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 13.8s
+33550/43191	cost 1	remaining 2950
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 403 attempt 0
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 311.2s
+33600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+33700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+33750/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.2s
+33800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+33900/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 18.2s
+33950/43191	cost 1	remaining 2638
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+34000/43191	cost 1	remaining 2590
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34100/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 19.2s
+34150/43191	cost 1	remaining 2556
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34300/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+34400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34500/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+34550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34600/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 17.8s
+34650/43191	cost 1	remaining 2509
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+34750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34800/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 15.2s
+34850/43191	cost 1	remaining 2485
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+34950/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+35000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35050/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+35100/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+35150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35200/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35250/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+35300/43191	cost 1	remaining 2393
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35400/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 17.2s
+35450/43191	cost 1	remaining 2369
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.4s
+35750/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+35800/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+35850/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 18.3s
+35900/43191	cost 1	remaining 2311
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+35950/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.5s
+36000/43191	cost 1	remaining 2286
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36200/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+36250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36300/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.5s
+36350/43191	cost 1	remaining 2240
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.8s
+36400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36450/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+36500/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36650/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 17.6s
+36700/43191	cost 1	remaining 2172
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+36750/43191	cost None	remaining None
+HTTP 403 attempt 0
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 300.3s
+36800/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+36850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+36900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+36950/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.9s
+37000/43191	cost 1	remaining 1862
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+37050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+37100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+37150/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+37200/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+37250/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+37300/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 19.1s
+37350/43191	cost 1	remaining 1804
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+37400/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+37450/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 14.3s
+37500/43191	cost 1	remaining 1768
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.0s
+37550/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+37600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+37650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+37700/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+37750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+37800/43191	cost None	remaining None
+HTTP 403 attempt 0
+HTTP 502 attempt 1
+split 50 -> 25 + 25
+batch took 323.3s
+37850/43191	cost 1	remaining 4999
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+37900/43191	cost 1	remaining 4998
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.5s
+37950/43191	cost 1	remaining 4938
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.0s
+38000/43191	cost 1	remaining 4901
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+38050/43191	cost 1	remaining 4872
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+38100/43191	cost 1	remaining 4844
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+38150/43191	cost 1	remaining 4813
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.5s
+38200/43191	cost 1	remaining 4784
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+38250/43191	cost 1	remaining 4730
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 30.9s
+38300/43191	cost 1	remaining 4872
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+38350/43191	cost 1	remaining 4577
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.8s
+38400/43191	cost 1	remaining 4512
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+38450/43191	cost 1	remaining 4462
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.1s
+38500/43191	cost 1	remaining 4411
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.9s
+38550/43191	cost 1	remaining 4807
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+38600/43191	cost 1	remaining 4305
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+38650/43191	cost 1	remaining 4252
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.8s
+38700/43191	cost 1	remaining 4197
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+38750/43191	cost 1	remaining 4138
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+38800/43191	cost 1	remaining 4107
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+38850/43191	cost 1	remaining 4046
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+38900/43191	cost 1	remaining 4013
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.3s
+38950/43191	cost 1	remaining 4692
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+39000/43191	cost 1	remaining 3888
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.3s
+39050/43191	cost 1	remaining 3856
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+39100/43191	cost 1	remaining 3802
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.1s
+39150/43191	cost 1	remaining 3729
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.1s
+39200/43191	cost 1	remaining 3698
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+39250/43191	cost 1	remaining 3634
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.1s
+39300/43191	cost 1	remaining 3571
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+39350/43191	cost 1	remaining 4541
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+39400/43191	cost 1	remaining 3429
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+39450/43191	cost 1	remaining 3365
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+39500/43191	cost 1	remaining 3313
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.1s
+39550/43191	cost 1	remaining 3259
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+39600/43191	cost 1	remaining 3206
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.6s
+39650/43191	cost 1	remaining 4489
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.9s
+39700/43191	cost 1	remaining 3103
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+39750/43191	cost 1	remaining 4454
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+39800/43191	cost 1	remaining 2994
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.0s
+39850/43191	cost 1	remaining 2932
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.6s
+39900/43191	cost 1	remaining 2882
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.0s
+39950/43191	cost 1	remaining 2829
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.1s
+40000/43191	cost 1	remaining 4381
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+40050/43191	cost 1	remaining 4364
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+40100/43191	cost 1	remaining 2694
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+40150/43191	cost 1	remaining 2631
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+40200/43191	cost 1	remaining 2586
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+40250/43191	cost 1	remaining 2547
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.8s
+40300/43191	cost 1	remaining 2484
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+40350/43191	cost 1	remaining 2430
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+40400/43191	cost 1	remaining 2354
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+40450/43191	cost 1	remaining 2279
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.9s
+40500/43191	cost 1	remaining 2221
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+40550/43191	cost 1	remaining 2145
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.0s
+40600/43191	cost 1	remaining 2070
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+40650/43191	cost 1	remaining 2004
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.4s
+40700/43191	cost 1	remaining 1938
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+40750/43191	cost 1	remaining 1878
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.3s
+40800/43191	cost 1	remaining 1836
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+40850/43191	cost 1	remaining 1772
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+40900/43191	cost 1	remaining 1716
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+40950/43191	cost 1	remaining 1654
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.9s
+41000/43191	cost 1	remaining 1580
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.9s
+41050/43191	cost 1	remaining 4012
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.9s
+41100/43191	cost 1	remaining 1464
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+41150/43191	cost 1	remaining 1432
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.1s
+41200/43191	cost 1	remaining 1387
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+41250/43191	cost 1	remaining 1300
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 27.6s
+41300/43191	cost 1	remaining 3901
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 20.9s
+41350/43191	cost 1	remaining 1170
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+41400/43191	cost 1	remaining 1106
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.5s
+41450/43191	cost 1	remaining 3845
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.5s
+41500/43191	cost 1	remaining 3833
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+41550/43191	cost 1	remaining 905
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.5s
+41600/43191	cost 1	remaining 854
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.7s
+41650/43191	cost 1	remaining 787
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.5s
+41700/43191	cost 1	remaining 3768
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.2s
+41750/43191	cost 1	remaining 3754
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.3s
+41800/43191	cost 1	remaining 3739
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+41850/43191	cost 1	remaining 493
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+41900/43191	cost 1	remaining 454
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+41950/43191	cost 1	remaining 413
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.6s
+42000/43191	cost 1	remaining 357
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+42050/43191	cost 1	remaining 316
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.3s
+42100/43191	cost 1	remaining 3602
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+42150/43191	cost 1	remaining 199
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+42200/43191	cost 1	remaining 143
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.4s
+42250/43191	cost 1	remaining 3548
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.5s
+42300/43191	cost 1	remaining 15
+rate limit low, sleeping until 2026-10-31T19:51:00Z
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.2s
+42350/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+42400/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+42450/43191	cost 1	remaining 3248
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+42500/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 11.1s
+42550/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+42600/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+42650/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+42700/43191	cost None	remaining None
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+error batch of 25: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 10.9s
+42750/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+42800/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.9s
+42850/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+42900/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+42950/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+43000/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+43050/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+43100/43191	cost None	remaining None
+error batch of 50: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+43150/43191	cost None	remaining None
+error batch of 41: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'message': 'API rate limit already exceeded for site ID installation.'}]
+batch took 0.1s
+43191/43191	cost None	remaining None
+finished 2026-10-31T19:32:26Z
