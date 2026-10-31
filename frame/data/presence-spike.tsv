@@ -1,0 +1,501 @@
+repo	status	commits	fork	archived	stars	created_at	default_branch	root_files	dir_entries	clinerules_kind
+0xuezhang985/985gmgn-helper	ok	218	False	False	29	2026-08-07T02:50:58Z	main			
+197g/oxide-auth	ok	1027	False	False	786	2017-11-29T15:01:24Z	master			
+AG-Boerries/MIRACUM-Pipe	ok	696	False	True	18	2019-05-23T07:41:38Z	master			
+AMD-AGI/Magpie	ok	193	False	False	84	2025-11-25T17:21:49Z	main			
+ANFAIA/SkillNet	ok	821	False	False	22	2026-06-26T12:55:59Z	main	AGENTS.md		
+Abdess/retrobios	ok	3891	False	False	7557	2020-05-04T16:33:06Z	main			
+AccelProf/AccelProf	ok	472	False	False	26	2025-05-30T21:21:55Z	main			
+Ackee-Blockchain/wake	ok	2359	False	False	378	2022-01-12T17:03:42Z	main			
+AlgoGators/trade-ngin	ok	693	False	False	12	2024-10-31T02:03:56Z	main			
+Ansub/tv-detox	ok	146	False	False	1947	2026-10-18T06:42:29Z	main			
+ArtifexSoftware/pdf2docx	ok	882	False	False	3544	2019-06-20T07:32:24Z	master			
+Atomistica/atomistica	ok	1193	False	False	93	2012-12-09T22:45:32Z	master			
+Azure-Samples/communication-services-authentication-hero-nodejs	ok	494	False	False	12	2021-11-19T20:11:29Z	main			
+Byterialab/renef	ok	123	False	False	259	2025-12-05T20:50:34Z	main			
+CIROH-UA/NGIAB_data_preprocess	ok	344	False	False	16	2024-03-07T00:16:56Z	main			
+Celasha/Toolasha	ok	3903	False	False	10	2025-12-30T00:05:10Z	main	CLAUDE.md,AGENTS.md		
+Clownacy/clowndoom	ok	799	False	False	12	2020-12-28T00:34:36Z	master			
+Consensys/corset	ok	948	False	True	21	2022-08-29T13:05:55Z	master			
+Correia-jpv/fucking-awesome-react-native	ok	2197	False	False	18	2022-01-28T20:58:42Z	main			
+Crackle2K/Vantage	ok	987	False	True	19	2026-01-15T01:36:41Z	main	CLAUDE.md,AGENTS.md		
+D-Robotics/x5-kernel	ok	762	False	False	15	2024-07-20T16:31:31Z	main			
+DarkRoyalty/shnajder-vpn-configs	ok	2407	False	False	12	2026-05-03T13:31:19Z	main			
+Doezer/Questarr	ok	3188	False	False	705	2025-09-22T18:16:04Z	main	CLAUDE.md,AGENTS.md,.github/copilot-instructions.md	.github/instructions/sonarqube_mcp.instructions.md	
+Dogebox-WG/os	ok	321	False	False	14	2024-03-19T00:59:27Z	main			
+ESMAP-World-Bank-Group/EPM	ok	2667	False	False	13	2024-11-18T11:22:26Z	main	CLAUDE.md		
+EasyKiconverter/EasyKiConverter	ok	1032	False	False	99	2025-09-27T07:25:29Z	master			
+ElectroGamesDev/CryonicEngine	ok	1090	False	False	13	2023-11-18T17:07:11Z	master			
+EngAndres/ud-public	ok	1190	False	False	105	2024-03-04T02:40:22Z	main			
+EnigmaCurry/nixos-vm-template	ok	551	False	False	22	2026-01-22T23:13:30Z	master	CLAUDE.md		
+Felis2026/nonebot-plugin-rollpig-plus	ok	128	False	False	24	2026-06-26T10:41:01Z	main			
+FilenCloudDienste/filen-ts	ok	2803	False	False	58	2025-08-16T18:16:38Z	main			
+FireBird-Technologies/Auto-Dash	ok	230	False	False	20	2025-10-11T21:44:24Z	main			
+FirmamentMC/Firmament	ok	1057	False	False	103	2023-05-07T23:36:17Z	mc-26.1			
+GBeurier/nirs4all	ok	1993	False	False	42	2025-02-26T09:24:00Z	main	CLAUDE.md,AGENTS.md,.github/copilot-instructions.md		
+GNOME/accerciser	ok	1921	False	False	17	2012-06-03T04:31:49Z	master			
+GalvarinoDev/DeckOps-Nightly	ok	847	False	False	17	2026-03-22T04:34:55Z	main			
+H1d3rOne/Qingcao_Tools	ok	152	False	False	140	2026-05-19T21:39:59Z	main			
+HEnquist/camillagui	ok	657	False	False	17	2020-07-08T20:06:33Z	master			
+HecticKiwi/Web-Osu-Mania	ok	500	False	False	76	2024-08-13T01:32:49Z	main			
+ICUnit/Tokai	ok	235	False	False	38	2026-04-18T21:07:24Z	main			
+Ideal-Ontology/GensokyoOntologics	ok	875	False	False	21	2022-10-17T02:32:00Z	master			
+ImperialCollegeLondon/prefect-managedfiletransfer	ok	117	False	False	14	2025-07-31T11:26:17Z	main	CLAUDE.md,AGENTS.md		
+Inakitajes/convoy	ok	366	False	False	116	2026-05-19T15:51:23Z	main			
+JEFF7712/nix-agent	ok	216	False	False	17	2026-03-19T03:57:49Z	main			
+JimMarley420/spicetify-extension	ok	336	False	False	13	2026-03-29T14:47:09Z	master			
+JuliaArrays/BlockArrays.jl	ok	426	False	False	257	2016-05-09T15:23:31Z	master			
+JungHoonGhae/opencode-kilo-auth	ok	290	False	False	43	2026-02-16T10:10:49Z	main	AGENTS.md		
+Kminer2053/gongmuwon	ok	140	False	False	10	2026-04-20T07:50:32Z	main	AGENTS.md		
+LIHPC-Computational-Geometry/honeycomb	ok	631	False	False	12	2024-02-06T08:10:25Z	master			
+LagrangeDev/LagrangeV2	ok	684	False	True	206	2025-02-28T23:48:16Z	main			
+Logging-Studio/RetroUI	ok	503	False	False	1631	2024-08-31T22:41:13Z	main			
+LvStrnggg/aidsfuscator	ok	335	False	False	115	2025-08-06T09:30:55Z	v2			
+MTES-MCT/qualicharge	ok	1104	False	False	10	2024-03-22T18:01:23Z	main			
+MarechalSp/NuvioGTvMod	ok	5366	False	False	19	2026-09-25T21:11:13Z	main			
+Martian238/Vanilla-Expansion-Mod	ok	237	False	False	49	2026-03-08T15:46:51Z	main			
+Mininglamp-OSS/openclaw-channel-octo	ok	230	False	False	26	2026-05-16T04:17:11Z	main			
+MintPlayer/MintPlayer.Dotnet.Tools	ok	400	False	False	23	2019-10-18T12:04:59Z	master			
+MohammadShehadeh/hirael	ok	178	False	False	40	2026-05-19T18:35:23Z	main	CLAUDE.md,AGENTS.md		
+MystiaFin/amane	ok	340	False	False	419	2026-10-04T02:57:26Z	main			
+NeatLogs/neatlogs	ok	594	False	False	106	2025-05-12T12:49:18Z	main			
+NekoyaHouse/Epsilon	ok	1007	False	False	186	2026-02-21T04:39:06Z	26.3.x	AGENTS.md		
+Nyarlathoteppppp/pi-durabletask-mcp	ok	179	False	False	17	2026-10-03T07:09:42Z	main	CLAUDE.md		
+OGMatrix/mcmodding-mcp	ok	133	False	False	70	2025-12-10T15:42:27Z	dev			
+Obyflow/obyflow	ok	216	False	False	12	2026-08-14T06:13:03Z	main			
+OpenFreeEnergy/kartograf	ok	391	False	False	40	2023-01-27T14:58:52Z	main			
+ParisaH-Lab/CyclicMPNN	ok	101	False	False	52	2025-07-19T17:42:49Z	main			
+ProjectAILeap/claude-code-releases	ok	256	False	False	14	2026-03-26T04:12:09Z	main	CLAUDE.md		
+QuintinShaw/pi-dynamic-workflows	ok	235	False	False	572	2026-05-30T18:02:49Z	main	AGENTS.md		
+RGB-Tools/rgb-lightning-node	ok	403	False	False	52	2023-08-08T08:27:48Z	master			
+RedCMD/TmLanguage-Syntax-Highlighter	ok	820	False	False	53	2021-12-18T02:28:25Z	main			
+Rick1330/collabsphere	ok	225	False	False	17	2026-03-24T18:45:16Z	main	AGENTS.md		
+RobustiPy/robustipy	ok	631	False	False	30	2024-05-02T11:02:38Z	main			
+SIMO-io/simo	ok	1497	False	False	13	2023-12-20T11:33:30Z	master			
+Schr0d/Archon	ok	175	False	False	21	2026-04-02T11:58:55Z	main	CLAUDE.md		
+SculkPowered/sculk-server	ok	433	False	False	9	2022-11-04T21:48:07Z	master			
+Seeky91/immich-tv-webos	ok	189	False	False	43	2025-12-29T19:20:33Z	main			
+ShixiangWang/sigminer	ok	1298	False	False	163	2018-12-30T16:56:05Z	master			
+Simplifine-gamedev/orca-engine	ok	412	False	False	84	2025-08-14T22:18:51Z	main			
+StarMoe-org/Moesekai	ok	824	False	False	55	2026-01-11T13:33:00Z	main	AGENTS.md		
+SylphxAI/pdf-reader-mcp	ok	961	False	False	1059	2025-04-04T16:17:42Z	main	AGENTS.md		
+Terykon/Vyshyvanka	ok	207	False	False	25	2025-12-26T13:46:41Z	main			
+TexasInstruments/tiovx	ok	3695	False	False	18	2023-06-02T20:18:18Z	main			
+U8F69/open-webui	ok	16575	False	True	367	2025-02-20T05:45:54Z	dev	.github/copilot-instructions.md		
+UMSATS/cdh-tsat	ok	446	False	False	10	2022-05-07T23:28:46Z	main			
+Vchitect/VBench	ok	1113	False	False	1834	2023-11-27T12:41:46Z	master			
+Vleerapp/Vleer	ok	624	False	False	220	2023-04-08T13:09:21Z	main			
+Yangsh888/TypeRenew	ok	285	False	False	127	2026-03-07T12:55:40Z	main			
+YounesBensafia/DevLens	ok	159	False	False	26	2025-07-26T23:38:06Z	main			
+ZingerLittleBee/Heeler	ok	3208	False	False	713	2026-07-18T01:49:37Z	main	CLAUDE.md,AGENTS.md		
+aaronmunsters/wastrumentation	ok	420	False	False	17	2023-11-17T10:11:28Z	main			
+aaronriekenberg/rust-parallel	ok	1330	False	False	322	2022-11-21T23:02:07Z	main			
+aaw/sat	ok	442	False	False	10	2018-10-27T13:54:52Z	master			
+adelks/zegrapher	ok	1481	False	False	81	2015-08-01T22:57:36Z	master			
+adodb/adodb	ok	2336	False	False	461	2013-08-08T22:06:36Z	master			
+af-74413592/DeepWerewolf	ok	145	False	False	73	2025-09-24T01:25:22Z	main			
+aimeos/laravel-nestedset	ok	409	False	False	39	2026-01-26T16:45:43Z	master			
+ajax333221/isepic-chess	ok	706	False	False	21	2012-12-27T00:42:28Z	master			
+albatrossflavour/puppet_os_patching	ok	957	False	False	46	2018-05-23T22:12:04Z	main			
+aleph-one-marathon/alephone	ok	6374	False	False	820	2015-07-25T20:07:24Z	master			
+alexphillips-dev/FolderView-Plus	ok	2095	False	False	31	2026-03-03T23:22:09Z	main			
+alfredorueda/HexaStock	ok	492	False	False	83	2025-07-11T13:58:45Z	main			
+alfresco/alfresco-identity-service	ok	443	False	False	36	2018-03-22T19:53:40Z	master			
+alicebob/miniredis	ok	870	False	False	3633	2014-09-03T15:24:50Z	master			
+allsmog/vuln-scout	ok	111	False	False	25	2026-02-23T21:36:35Z	main	CLAUDE.md,AGENTS.md		
+amieiro/disposable-email-domains	ok	12041	False	False	90	2020-07-01T12:31:07Z	master			
+amzn/amazon-payments-magento-2-plugin	ok	1786	False	False	108	2016-05-27T18:00:03Z	master			
+analogdevicesinc/precision-converters-firmware	ok	338	False	False	28	2022-12-07T19:19:18Z	main			
+andersonlucasg3/dilink-auto-android	ok	491	False	False	58	2026-04-25T19:30:29Z	develop			
+andreafrancia/trash-cli	ok	2351	False	False	4622	2011-11-09T17:06:36Z	master	AGENTS.md		
+anjalisilva/MPLNClust	ok	473	False	False	20	2018-07-15T01:32:33Z	master			
+ankit76/ad_afqmc	ok	887	False	False	23	2023-06-15T16:07:59Z	main			
+anno-mods/vscode-anno-modding-tools	ok	540	False	False	12	2021-10-07T17:18:54Z	main			
+antoinedc/MantaUI	ok	4284	False	False	11	2026-05-16T08:57:37Z	main	AGENTS.md		
+antonellilab/raxmlgui	ok	719	False	False	23	2019-03-21T15:05:10Z	master			
+apache/maven-scm	ok	2400	False	False	103	2009-05-21T00:33:04Z	master	AGENTS.md		
+apernet/hysteria	ok	1404	False	False	22814	2020-04-21T00:01:34Z	master			
+aphiria/aphiria	ok	1408	False	False	143	2019-08-21T00:08:53Z	1.x			
+apiflask/apiflask	ok	1193	False	False	1140	2021-01-13T04:08:48Z	main	AGENTS.md		
+apitap/apitap-lib	ok	943	False	False	54	2026-07-11T23:21:13Z	main			
+apollographql/federation-jvm	ok	541	False	False	274	2019-05-06T20:02:36Z	main			
+apollon77/iobroker.daikin	ok	397	False	False	13	2017-03-23T15:55:47Z	master			
+arcaneplugins/levelledmobs	ok	1429	False	False	269	2020-01-15T02:17:55Z	master			
+arilotter/dotfiles	ok	497	False	False	14	2014-06-01T17:35:01Z	master	AGENTS.md		
+arpcard/rgi	ok	733	False	False	436	2017-02-07T01:23:34Z	master			
+artemnoor/CodeSlicer	ok	141	False	False	14	2026-07-11T00:34:02Z	main	AGENTS.md		
+asaaki/rust-wasm-on-lambda-edge	ok	1619	False	True	34	2021-01-16T18:30:49Z	main			
+ascemu/ascemu	ok	7065	False	False	115	2014-08-17T13:43:22Z	master			
+asgardeo/asgardeo-auth-react-sdk	ok	1781	False	False	42	2020-12-18T05:01:36Z	main			
+askomics/flaskomics	ok	1440	False	False	14	2019-01-18T16:02:40Z	dev			
+async-aws/core	ok	493	False	False	106	2020-01-31T08:24:32Z	master			
+atomicman57/universal-config-converter	ok	345	False	False	14	2025-12-29T15:06:37Z	main			
+atorber/chatflow	ok	553	False	False	434	2022-05-04T08:38:28Z	main			
+atrocore/atrocore	ok	20892	False	False	243	2020-09-24T12:40:09Z	master			
+automicus/pyisy	ok	396	False	False	19	2014-02-23T23:58:31Z	v3.x.x	CLAUDE.md		
+aws/aws-ofi-nccl	ok	1552	False	False	238	2018-10-05T19:17:39Z	master	AGENTS.md		
+aws/aws-sdk-ruby	ok	8316	False	False	3654	2011-07-14T22:21:47Z	version-3			
+azure/azure-functions-nodejs-worker	ok	458	False	False	110	2017-04-11T17:36:24Z	v3.x			
+b0bbywan/odios	ok	306	False	False	74	2026-02-11T00:45:27Z	main			
+ballerina-platform/module-ballerina-observe	ok	535	False	False	102	2021-10-26T10:46:46Z	main			
+basementstudio/shader-lab	ok	384	False	False	716	2026-03-17T16:18:49Z	main	AGENTS.md		
+basnijholt/home-assistant-streamdeck-yaml-addon	ok	331	False	False	111	2023-03-31T08:42:39Z	main			
+benjamin-hodgson/pidgin	ok	565	False	False	1109	2017-04-05T14:43:32Z	main			
+betagouv/aidants_connect	ok	4855	False	False	27	2019-04-08T12:02:11Z	main			
+bigmlcom/bigml-java	ok	386	False	False	12	2015-11-03T15:50:11Z	master			
+biocentral/biocentral	ok	1060	False	False	20	2024-07-26T16:43:24Z	main			
+block/goose	ok	5913	False	False	56034	2024-08-23T19:03:36Z	main	CLAUDE.md,AGENTS.md,.github/copilot-instructions.md		
+blockchain-lab-um/masca	ok	670	False	False	59	2022-05-09T10:58:47Z	develop			
+bluzky/prana	ok	405	False	False	25	2025-06-20T03:38:41Z	main	CLAUDE.md		
+bmurmann/EE628	ok	614	False	False	202	2023-10-31T19:09:41Z	main			
+borexola/neolink.net	ok	398	False	False	156	2026-07-05T06:10:07Z	main			
+bot-base/telegram-bot-template	ok	712	False	False	444	2021-12-20T20:45:24Z	main			
+bretfisher/kubernetes-mastery	ok	2045	False	False	263	2019-06-27T02:52:22Z	mastery			
+brodieG/vetr	ok	1117	False	False	80	2014-12-06T01:43:47Z	master			
+browser-gateway/browser-gateway	ok	233	False	False	19	2026-03-25T15:04:43Z	main			
+brson/brson.github.com	ok	1879	False	False	12	2012-04-05T19:18:16Z	master			
+brunob/leaflet.fullscreen	ok	397	False	False	423	2012-06-22T19:34:00Z	master			
+bruxisma/outcome	ok	501	False	True	40	2021-07-20T06:38:51Z	main			
+btcz/bitcoinz	ok	12546	False	False	130	2017-09-09T20:30:24Z	master			
+buildcraft/buildcraft	ok	7380	False	False	1372	2012-04-16T10:57:39Z	8.0.x-1.12.2			
+burrsutter/fantaco-redhat-one-2026	ok	239	False	False	26	2025-12-04T14:46:20Z	main	AGENTS.md		
+c3bottles/c3bottles	ok	548	False	False	44	2015-03-18T09:19:37Z	main			
+caffeinelabs/mops	ok	2058	False	False	46	2022-06-19T09:02:45Z	main	CLAUDE.md,AGENTS.md		
+caido-community/shift	ok	387	False	False	59	2024-12-09T21:52:19Z	main			
+cakehonolulu/pciem	ok	303	False	False	375	2025-10-25T15:00:11Z	main			
+campbio/celda	ok	3939	False	False	156	2018-11-21T22:01:57Z	master			
+canonical/ubuntu-server-documentation	ok	1183	False	False	92	2024-06-17T08:46:15Z	main	AGENTS.md,.github/copilot-instructions.md	.github/instructions/docs-review.instructions.md,.github/instructions/explanation-template.instructions.md,.github/instructions/how-to-template.instructions.md,.github/instructions/landing-pages.instructions.md,.github/instructions/page-completeness.instructions.md,.github/instructions/reference-template.instructions.md,.github/instructions/tutorial-template.instructions.md	
+carloshpdoc/memorydetective	ok	100	False	False	14	2026-05-01T12:58:28Z	main			
+cessproject/cess	ok	790	False	False	255	2021-09-30T07:39:50Z	main			
+chr15m/rogule.com	ok	317	False	False	205	2022-03-07T09:02:35Z	master			
+cisco-foundation-ai/PEAK-Assistant	ok	367	False	False	65	2025-04-30T18:24:07Z	main			
+cleancut/rusty_engine	ok	396	False	False	423	2020-03-15T05:03:03Z	main	.github/copilot-instructions.md		
+clintongormley/everything-presence-pro-grid	ok	2891	False	False	41	2026-03-04T18:47:48Z	main	CLAUDE.md		
+cloudboss/keights	ok	805	False	False	26	2017-11-05T18:00:21Z	master			
+cnlohr/cilbox	ok	404	False	False	42	2025-05-26T10:15:58Z	master			
+codeinwp/visualizer	ok	3219	False	False	108	2013-07-20T17:58:23Z	master	AGENTS.md		
+com-lihaoyi/utest	ok	756	False	False	509	2014-01-27T03:12:39Z	master			
+comma-csv/comma	ok	430	False	False	521	2009-02-22T10:53:16Z	master	.github/copilot-instructions.md		
+condenast/atjson	ok	3084	False	False	233	2017-09-01T15:48:57Z	main			
+contrast-security-oss/agent-operator	ok	784	False	False	18	2022-04-11T14:25:03Z	master			
+coo-moon/quanti	ok	270	False	False	20	2026-03-19T08:29:12Z	main	CLAUDE.md		
+ctoth/Qlatt	ok	2888	False	False	12	2025-04-10T01:55:03Z	master	CLAUDE.md,AGENTS.md		
+cweagans/composer-patches	ok	556	False	False	1736	2015-04-22T18:09:14Z	main			
+cyberark/conjur-authn-k8s-client	ok	738	False	False	11	2018-05-07T20:37:04Z	master			
+czerwonk/atlas_exporter	ok	319	False	False	101	2017-05-16T12:25:12Z	main			
+d-kimuson/claude-code-viewer	ok	798	False	False	1303	2025-08-31T07:54:51Z	main	CLAUDE.md,AGENTS.md		
+d3cod3/ofxvisualprogramming	ok	925	False	False	170	2018-06-18T07:56:31Z	master			
+dFoiler/notes	ok	1177	False	False	12	2021-12-11T04:43:03Z	master			
+danreeves/darktide-mods	ok	395	False	False	16	2023-01-14T22:18:16Z	main			
+danue1/danube	ok	325	False	False	37	2020-07-21T16:44:26Z	main			
+datawhalechina/jev-cookbook	ok	141	False	False	557	2026-09-20T06:39:31Z	main			
+davwheat/mastdatabase.co.uk	ok	898	False	False	17	2022-05-03T20:04:59Z	main			
+dchapyshev/aspia	ok	8539	False	False	1964	2016-10-26T16:17:31Z	master			
+deepmtch/thoughtcop	ok	164	False	False	66	2026-10-08T13:59:56Z	main	AGENTS.md		
+deleplace/programming-idioms	ok	771	False	False	129	2015-08-04T11:54:42Z	master			
+deltachat/deltachat-ios	ok	7159	False	False	457	2017-11-06T09:27:18Z	main			
+devlead/devlead.console.template	ok	666	False	False	37	2021-01-12T21:42:31Z	develop			
+digitallysavvy/go-ai	ok	1673	False	False	48	2025-12-06T17:15:04Z	main	AGENTS.md		
+digoarthur/github-automated-repos	ok	391	False	False	1698	2023-01-05T20:38:36Z	main			
+diracgrid/dirac	ok	38705	False	False	125	2011-04-06T11:47:53Z	integration	AGENTS.md		
+discourse/discourse-post-voting	ok	440	False	True	34	2021-10-13T08:31:46Z	main			
+djkyc/cf-nav	ok	150	False	False	82	2025-12-19T07:46:55Z	main			
+dkratzert/finalcif	ok	5158	False	False	22	2019-06-14T06:41:16Z	master	AGENTS.md		
+dockersamples/labspace-infra	ok	460	False	False	14	2025-03-11T21:15:17Z	main	CLAUDE.md		
+documentdb/booking-agents-sample	ok	117	False	False	17	2026-01-07T22:52:13Z	workshop			
+donknap/dpanel	ok	1450	False	False	4160	2023-11-23T16:10:46Z	master	AGENTS.md		
+dottspina/dtsh	ok	372	False	False	76	2022-08-19T04:45:13Z	dtsh-next			
+dpobel/metalsmith-filemetadata	ok	310	False	False	21	2014-05-14T07:50:57Z	main			
+eckhchri/pcars-ds-liveview	ok	1606	False	False	17	2015-07-10T12:03:26Z	master			
+eclipse-lsp4jakarta/lsp4jakarta	ok	787	False	False	41	2020-09-16T20:15:23Z	main			
+eddlm/autosport-racing-system-gta	ok	1951	False	False	16	2019-08-11T17:50:46Z	master	AGENTS.md		
+elastic-interval/pretenst	ok	2158	False	False	15	2019-03-21T17:35:38Z	master			
+elephantrobotics/mycobot_ros	ok	870	False	False	237	2020-12-24T08:38:05Z	noetic			
+endorlabs/endor-labs-agent-kit	ok	304	False	False	13	2026-05-04T13:31:44Z	main	GEMINI.md		
+ensdomains/thorin	ok	1107	False	False	100	2022-01-04T00:12:56Z	main			
+epiforecasts/covid	ok	1592	False	False	108	2020-03-21T15:44:20Z	master			
+eppye-bots/bots	ok	1069	False	False	78	2015-08-15T14:45:45Z	master			
+eternallycyf/ims-view-pc	ok	549	False	False	26	2023-09-30T14:04:49Z	master			
+expo/snack	ok	633	False	False	512	2020-11-24T12:24:39Z	main			
+famoser/pdf-generator	ok	624	False	False	18	2019-01-28T19:05:20Z	main			
+fgsfds/BuildLauncher	ok	708	False	False	124	2023-12-22T19:00:37Z	master			
+fhamonic/mippp	ok	707	False	False	18	2021-06-23T21:57:23Z	main			
+field-robotics-japan/unitysensors	ok	417	False	False	329	2020-05-07T13:09:20Z	master			
+figorr/meteocat	ok	838	False	False	16	2024-11-16T12:38:51Z	master			
+fitchmultz/pi-posthorse	ok	227	False	False	278	2026-08-31T15:06:23Z	main	AGENTS.md		
+fnbbdevs/bruhanimate	ok	406	False	False	17	2022-12-28T02:17:54Z	main	AGENTS.md		
+framework7io/framework7-cli	ok	424	False	False	89	2017-02-13T19:00:35Z	master			
+freessshare/freessshare	ok	11744	False	False	29	2024-12-31T03:56:43Z	main			
+fritz-marshal/fritz	ok	1222	False	False	28	2020-02-04T02:01:51Z	main			
+galaxyproject/galaxy	ok	99519	False	False	1886	2015-02-23T14:18:06Z	dev			
+garrekstemo/TransferMatrix.jl	ok	326	False	False	19	2022-08-31T07:24:58Z	main			
+geotrekce/geotrek-mobile	ok	392	False	False	26	2014-04-17T09:31:48Z	main			
+ghostbsd/ghostbsd-build	ok	1432	False	False	124	2014-02-15T19:22:16Z	master			
+go-via/via	ok	275	False	False	40	2025-10-26T00:49:55Z	main	CLAUDE.md,AGENTS.md		
+google/codeworld	ok	2821	False	False	1270	2014-06-19T21:56:15Z	master			
+google/google-api-objectivec-client-for-rest	ok	676	False	False	858	2016-04-28T12:54:23Z	main			
+google/openhtf	ok	1366	False	False	728	2015-08-28T01:14:17Z	master			
+google/truth	ok	2308	False	False	2794	2011-06-22T18:55:12Z	master			
+gopro2027/ArduinoAirSuspensionController	ok	1314	False	False	78	2022-10-05T03:52:33Z	main	CLAUDE.md		
+gurux/guruxdlms.c	ok	423	False	False	136	2018-10-30T16:21:11Z	master			
+h0x91b/dev-3.0	ok	2358	False	False	323	2026-02-18T12:21:07Z	main	CLAUDE.md,AGENTS.md		
+harvard-edge/cs249r_book	ok	25882	False	False	29748	2023-09-06T19:31:06Z	dev			
+hashicorp/terraform-provider-scaffolding-framework	ok	322	False	False	441	2021-11-29T17:57:44Z	main			
+hdu-ailab/EasyResearch	ok	642	False	False	14	2026-08-04T06:12:32Z	main			
+hirosystems/token-metadata-api	ok	419	False	False	10	2022-07-08T21:20:55Z	main			
+hodgef/apiker	ok	518	False	False	128	2021-11-04T02:40:33Z	master	AGENTS.md		
+html2rss/html2rss	ok	660	False	False	169	2018-05-27T15:37:40Z	master	AGENTS.md		
+hyperfiddle/electric-fiddle	ok	1972	False	False	68	2023-07-15T18:57:02Z	main			
+iains/gcc-14-branch	ok	212740	False	False	18	2024-04-26T14:45:46Z	gcc-14-4-darwin			
+iccanobif/gikopoi2	ok	2944	False	False	48	2015-03-01T17:10:18Z	master	AGENTS.md		
+identitypython/idpy-oidc	ok	589	False	False	49	2022-03-24T12:57:14Z	main			
+ihaoljy/VPN_Tool	ok	695	False	False	13	2023-09-15T09:32:32Z	main			
+image-charts/javascript	ok	2479	False	False	46	2020-05-09T14:22:48Z	master			
+immunomind/immunarch	ok	739	False	False	342	2019-02-26T15:28:11Z	master			
+indunet/robot-bus	ok	240	False	False	24	2026-07-13T14:38:13Z	master			
+industrial-optimization-group/desdeo	ok	2619	False	False	48	2016-05-06T12:07:43Z	master			
+infinispan/infinispan-images	ok	425	False	False	30	2019-07-25T09:37:03Z	main			
+injectivelabs/injective-chain-releases	ok	522	False	True	65	2021-02-12T18:49:55Z	master			
+irisnet/irismod	ok	874	False	False	45	2019-12-11T09:48:29Z	main			
+ironcorelabs/recrypt-wasm-binding	ok	351	False	False	22	2018-12-13T22:34:26Z	main			
+isac322/homelab	ok	1903	False	False	10	2022-05-06T07:55:24Z	master	AGENTS.md		
+jamiedavenport/openpolicy	ok	206	False	False	165	2026-03-03T00:55:54Z	main	CLAUDE.md		
+jchristopherson/fstats	ok	453	False	False	15	2022-12-21T13:24:06Z	main			
+jentic/jentic-one	ok	1380	False	False	220	2026-03-19T17:47:41Z	main	CLAUDE.md,AGENTS.md,GEMINI.md	.cursor/rules/git-conventions.mdc	
+jesse-ai/jesse	ok	3583	False	False	8742	2018-11-09T10:38:44Z	master	AGENTS.md		
+jhd3197/faro	ok	503	False	False	50	2026-05-22T01:32:17Z	main	CLAUDE.md		
+jj/nodeo	ok	473	False	False	22	2013-11-06T17:27:41Z	master			
+johnwmillr/lyricsgenius	ok	572	False	False	1129	2017-07-07T14:36:42Z	master	CLAUDE.md,AGENTS.md		
+jokerhutt/x-clone	ok	367	False	False	30	2025-05-29T14:06:44Z	master			
+joshjetson/phosphor	ok	197	False	False	12	2026-03-21T03:47:49Z	main			
+justsift/resift	ok	448	False	False	40	2019-07-04T18:05:48Z	master			
+k-nuth/kth-old	ok	451	False	False	31	2020-01-30T03:43:51Z	master			
+k3nsei/ng-in-viewport	ok	834	False	False	227	2016-05-06T20:53:04Z	develop	AGENTS.md,.github/copilot-instructions.md		
+kalsan/compony	ok	640	False	False	19	2024-03-07T11:53:43Z	main	CLAUDE.md		
+kaorii-ako/Shiori-v1	ok	180	False	False	47	2026-04-08T05:54:33Z	master	CLAUDE.md,AGENTS.md		
+karmab/kcli-ztp	ok	818	False	False	20	2020-04-06T17:16:10Z	main			
+kbanc85/claudia	ok	458	False	False	300	2026-01-23T22:38:14Z	main	CLAUDE.md	.claude/rules/claudia-principles.md	
+kbingham/libcamera	ok	6520	False	False	190	2019-04-30T08:53:34Z	master			
+kbtale/findthagame	ok	315	False	False	27	2025-12-31T06:14:15Z	main			
+kdcokenny/ocx	ok	388	False	False	982	2025-12-28T22:05:08Z	main	AGENTS.md		
+kernel/kernel-mcp-server	ok	744	False	False	38	2025-07-15T18:29:11Z	main	AGENTS.md		
+kettingpowered/Ketting-1-20-x	ok	1255	False	False	130	2023-10-27T13:37:02Z	1.20.1			
+kh-recoded-decomp/kh-recoded-decomp	ok	635	False	False	17	2026-09-23T14:00:35Z	main			
+kharchenkolab/conos	ok	1115	False	False	233	2018-07-21T17:38:52Z	main			
+kissgyorgy/coding-agents	ok	1594	False	False	15	2026-02-14T13:32:06Z	master	AGENTS.md		
+kobanium/aobazero	ok	347	False	False	61	2019-03-03T15:58:48Z	release			
+koralabs/api.handle.me	ok	1528	False	False	14	2022-10-06T20:26:09Z	mainnet	AGENTS.md		
+koriym/koriym.phpskeleton	ok	465	False	False	180	2011-10-15T07:40:11Z	1.x			
+kosli-dev/cli	ok	3108	False	False	17	2021-04-13T11:15:48Z	main	CLAUDE.md		
+kubeovn/kube-ovn	ok	6196	False	False	2415	2019-03-22T04:02:14Z	master	CLAUDE.md,AGENTS.md		
+kubernetes/perf-tests	ok	5874	False	False	994	2016-09-21T01:59:44Z	master			
+kubestellar/kubeflex	ok	1004	False	False	190	2023-06-09T01:23:28Z	main			
+l888r88f8-spec/lio_sam_hesai	ok	267	False	False	11	2025-12-23T11:41:20Z	main			
+lKolabrodl/nmo-helper	ok	193	False	False	11	2026-04-05T08:20:43Z	main	AGENTS.md		
+laminlabs/bionty	ok	436	False	False	27	2024-01-29T14:29:44Z	main	AGENTS.md		
+laraxot/laravelpizza.com	ok	526	False	False	26	2025-12-16T15:32:01Z	dev	CLAUDE.md,AGENTS.md,GEMINI.md		
+leon0399/leon0399.ru	ok	1062	False	False	16	2021-12-31T13:22:09Z	master			
+leyna64/companella	ok	297	False	False	25	2025-12-14T22:14:15Z	live			
+lfnovo/open-notebook	ok	1019	False	False	41051	2024-10-21T17:58:46Z	main	CLAUDE.md,AGENTS.md		
+liberu-real-estate/real-estate-laravel	ok	2654	False	False	115	2024-02-04T14:40:42Z	main	CLAUDE.md,AGENTS.md,GEMINI.md,.github/copilot-instructions.md	.cursor/rules/lerd.mdc	
+libpinyin/libpinyin	ok	2125	False	False	499	2010-10-18T06:09:50Z	main			
+lidofinance/ethereum-validators-monitoring	ok	569	False	False	102	2022-07-19T13:07:47Z	develop			
+login-securite/lsassy	ok	575	False	False	2214	2019-12-03T14:03:41Z	master			
+lrq3000/futo-voiceinput-whisper	ok	302	False	False	19	2023-11-06T12:17:22Z	master			
+lxqt/libqtxdg	ok	637	False	False	80	2013-08-06T13:36:21Z	master			
+lylo/pagecord	ok	4214	False	False	194	2024-03-20T15:50:55Z	main	CLAUDE.md,AGENTS.md		
+m13v/ai-browser-profile	ok	201	False	False	55	2026-03-04T18:04:18Z	main	CLAUDE.md		
+macadmins/osquery-extension	ok	467	False	False	134	2020-06-17T19:06:44Z	main			
+maddthesane/playerpro	ok	2567	False	False	65	2013-09-10T03:56:44Z	master			
+madebyzan/knovum	ok	502	False	False	16	2026-09-09T08:37:54Z	main	AGENTS.md		
+magento/magento2	ok	162526	False	False	12217	2011-11-30T15:30:13Z	2.4-develop			
+magnussolution/magnusbilling7	ok	1695	False	False	0	2026-08-03T14:20:21Z	source			
+maicos-devel/maicos	ok	1231	False	False	17	2025-05-09T11:47:41Z	main	.github/copilot-instructions.md		
+manit6752025/AXIOM-AI	ok	1385	False	False	21	2026-09-22T20:18:59Z	main			
+mannercode/nest-msa	ok	1046	False	False	21	2024-08-29T21:34:28Z	main	AGENTS.md		
+margooey/Lapsus	ok	121	False	False	62	2025-12-17T03:21:26Z	main			
+mathiasconradt/tektite	ok	296	False	False	119	2026-05-18T12:46:44Z	dev	CLAUDE.md,AGENTS.md		
+matsu/bitvisor	ok	864	False	False	100	2016-06-15T03:12:27Z	master			
+max0x7ba/atomic_queue	ok	892	False	False	1902	2018-09-19T19:00:16Z	master			
+maxxrider/leech-pro	ok	609	False	False	428	2020-06-27T17:19:38Z	master			
+mayerrobert/jmurmel	ok	3830	False	False	26	2021-05-02T16:41:20Z	master			
+mbenhard/unship	ok	146	False	False	23	2026-06-04T15:25:00Z	main			
+mcampa/sparkrun-ui	ok	155	False	False	28	2026-05-31T19:39:13Z	main			
+mdabrowski1990/uds	ok	315	False	False	151	2021-02-06T06:40:27Z	main			
+medusajs/medusa	ok	11144	False	False	37030	2020-01-18T13:39:04Z	develop	CLAUDE.md,AGENTS.md		
+mgsloan/mgsloan-dotfiles	ok	791	False	False	26	2010-08-27T02:57:28Z	master			
+mic92/ssh-to-pgp	ok	511	False	False	35	2021-02-01T08:52:57Z	main			
+michaelwillis/dragonfly-reverb	ok	419	False	False	1161	2017-11-11T16:42:14Z	master			
+microsoft/microhacks-trust-ai	ok	147	False	False	20	2025-12-12T16:55:31Z	main			
+microsoft/teams.py	ok	465	False	False	67	2025-04-14T18:05:53Z	main	CLAUDE.md,.github/copilot-instructions.md		
+microsoft/vscode-cmake-tools	ok	3686	False	False	1687	2016-04-16T21:00:29Z	main	.github/copilot-instructions.md		
+mihawk-99/PS5_Vulkan	ok	271	False	False	117	2026-09-20T18:55:00Z	main	AGENTS.md		
+minio/operator	ok	1462	False	True	1421	2018-10-24T22:40:09Z	master			
+mkniewallner/migrate-to-uv	ok	895	False	False	1162	2024-12-26T17:30:43Z	main			
+mlapaglia/Borgitory	ok	163	False	False	194	2025-08-30T14:12:11Z	develop		.cursor/rules/windows-dev-environment.mdc	
+modstart-lib/linkandroid	ok	609	False	False	2753	2024-09-17T09:27:19Z	main			
+mojohaus/mojohaus.github.io	ok	976	False	False	44	2015-05-15T21:12:30Z	site			
+mpalourdio/SpringBootTemplate	ok	847	False	False	12	2015-10-10T15:24:54Z	main			
+mretallack/ukfuelfinder-ha	ok	102	False	False	18	2026-02-03T18:13:20Z	main			
+mretegan/crispy	ok	1025	False	False	46	2016-03-11T10:48:40Z	main			
+mrmidi/ASFireWire	ok	1663	False	False	187	2025-08-24T09:03:54Z	main	CLAUDE.md,AGENTS.md,GEMINI.md		
+mrshu/muxboard	ok	147	False	False	11	2026-06-20T21:11:19Z	main			
+mvanhorn/cli-printing-press	ok	2178	False	False	4898	2026-03-23T16:02:09Z	main	CLAUDE.md,AGENTS.md		
+myui/rtrec	ok	434	False	False	17	2024-08-16T02:32:57Z	main	CLAUDE.md		
+natashabatalha/virga	ok	301	False	False	36	2019-10-30T00:14:50Z	master			
+ncaq/dotfiles	ok	5380	False	False	11	2019-01-14T07:31:52Z	master	CLAUDE.md,AGENTS.md,.github/copilot-instructions.md		
+ncbi/icn3d	ok	1661	False	False	178	2016-01-20T16:16:12Z	master			
+neogate-io/NeoGate	ok	392	False	False	14	2026-06-03T13:55:12Z	main			
+nerdocs/pydifact	ok	621	False	False	190	2017-05-09T22:05:30Z	master	CLAUDE.md,AGENTS.md		
+nette/security	ok	447	False	False	376	2014-03-13T03:47:30Z	master	AGENTS.md		
+nextcloud/sharepoint	ok	484	False	False	34	2017-04-26T13:01:48Z	master			
+ngrunwald/datasplash	ok	679	False	False	133	2015-04-18T16:11:03Z	master			
+nickjj/dotfiles	ok	1194	False	False	1353	2018-12-18T13:53:57Z	master			
+nikhilsnayak/nikhilsnayak.dev	ok	679	False	False	42	2024-03-22T20:31:57Z	main	CLAUDE.md,AGENTS.md		
+nirholas/three.ws	ok	14020	False	False	262	2026-01-08T20:46:03Z	main	CLAUDE.md,AGENTS.md		
+nordicsemi/Android-BLE-Library	ok	1094	False	False	2426	2017-12-18T14:17:43Z	main			
+nscheuer/Generalized_ADCS	ok	361	False	False	10	2025-10-31T22:41:42Z	main			
+nulab/bee	ok	284	False	False	98	2026-03-03T07:16:10Z	main	AGENTS.md		
+null-object-0000/ai-clash	ok	323	False	False	19	2025-12-15T08:03:41Z	main	CLAUDE.md		
+numtide/llm-agents.nix	ok	22789	False	False	2215	2025-07-18T10:29:06Z	main	CLAUDE.md,AGENTS.md		
+nuxcodes/rockpod	ok	39107	False	False	242	2026-02-13T21:22:17Z	master	CLAUDE.md,AGENTS.md		
+nxp-imx/mfgtools	ok	1039	False	False	674	2016-05-10T20:20:59Z	master			
+oaslananka/easyeda-mcp-pro	ok	627	False	False	64	2026-06-13T06:49:32Z	main	AGENTS.md		
+objeck/objeck-lang	ok	50000	False	False	165	2014-06-08T03:25:12Z	master			
+oca/contract	ok	770	False	False	226	2014-06-16T18:42:03Z	19.0			
+omatheusmesmo/ShoppMate	ok	395	False	False	23	2024-11-23T12:00:22Z	main	AGENTS.md		
+omise/omise-node	ok	439	False	False	104	2015-02-02T03:22:34Z	master			
+onemen/firefox-scripts	ok	450	False	False	22	2026-08-07T05:15:39Z	main	AGENTS.md		
+oomichi/try-kubernetes	ok	649	False	False	12	2016-10-11T18:32:46Z	main			
+openboardview/openboardview	ok	1053	False	False	1915	2016-05-17T17:01:25Z	master			
+opencast/annotation-tool	ok	2129	False	False	42	2018-01-10T08:37:35Z	master			
+openedx/openedx-events	ok	502	False	False	13	2021-04-07T23:40:38Z	main			
+openfga/cli	ok	927	False	False	108	2023-06-05T23:19:57Z	main			
+openma-ai/backchat	ok	398	False	False	12	2026-06-08T06:25:46Z	main	CLAUDE.md,AGENTS.md		
+openuserjs/openuserjs.org	ok	3219	False	False	1012	2013-11-06T21:34:20Z	master			
+osu-tournament-rating/otr	ok	3189	False	False	11	2023-08-26T23:44:26Z	master	CLAUDE.md,AGENTS.md		
+ota-meshi/astro-eslint-parser	ok	557	False	False	89	2022-04-26T09:00:08Z	main			
+ovirt/terraform-provider-ovirt	ok	512	False	False	146	2018-05-16T08:17:10Z	main			
+p14c31355/fullerene	ok	4196	False	False	11	2024-01-02T04:43:28Z	main			
+pan94u/forge	ok	401	False	False	40	2026-02-18T01:31:26Z	main	CLAUDE.md		
+parasxos/apple-mail-mcp	ok	227	False	False	33	2026-05-20T12:45:28Z	main			
+pardus/pardus-pen	ok	688	False	False	31	2024-03-01T07:15:03Z	master			
+pattty847/Sentinel	ok	1584	False	False	25	2025-06-17T02:37:21Z	main	AGENTS.md		
+percy/percy-js	ok	331	False	True	31	2016-01-15T19:25:00Z	master			
+peridyno/peridyno	ok	2433	False	False	302	2021-02-04T10:08:40Z	master			
+phreezone/LogSimv2	ok	254	False	False	10	2026-03-27T13:16:04Z	main			
+pinellolab/chorus	ok	509	False	False	72	2025-06-02T16:55:35Z	main	CLAUDE.md		
+pivotlake/pivot	ok	744	False	False	74	2026-03-17T16:33:06Z	main	CLAUDE.md		
+pmborg/WoMA3Dengine	ok	861	False	False	15	2023-03-12T17:11:39Z	main			
+proffesor-for-testing/agentic-qe	ok	3073	False	False	520	2025-09-11T11:03:30Z	main	CLAUDE.md,AGENTS.md,.github/copilot-instructions.md		
+psd-tools/psd-tools	ok	2822	False	False	1484	2012-10-14T04:26:41Z	main	CLAUDE.md		
+pullrun/pullrun	ok	245	False	False	134	2026-06-11T23:39:24Z	main			
+pulumi/pulumi-provider-boilerplate	ok	738	False	False	85	2020-03-10T06:13:59Z	main			
+punktfunk/punktfunk	ok	11863	False	False	26	2026-09-15T21:06:02Z	main	AGENTS.md		
+pushingkarmaorg/python-plexapi	ok	2673	False	False	1293	2014-12-29T02:38:06Z	master			
+pytorch/text	ok	1313	False	True	3555	2016-12-12T00:56:03Z	main			
+pywbem/pywbem	ok	3132	False	False	43	2015-10-06T20:22:46Z	master			
+qa10devteam/behive	ok	154	False	False	147	2026-07-28T09:25:03Z	main			
+qiusimons/chnroute	ok	2452	False	False	40	2020-03-03T08:00:29Z	master			
+railwayapp/docs	ok	1383	False	False	322	2021-01-14T01:07:23Z	main			
+rasendubi/uniorg	ok	419	False	False	337	2021-01-11T01:28:12Z	main			
+ratgdo/homekit-ratgdo	ok	931	False	False	260	2023-10-25T16:18:04Z	main			
+rawkode-academy/rawkode-academy	ok	2641	False	False	32	2022-02-27T21:55:54Z	main	CLAUDE.md,AGENTS.md		
+rc0/mairix	ok	359	False	False	142	2010-03-05T22:34:27Z	master			
+rcsb/py-mmcif	ok	385	False	False	51	2018-03-09T15:22:59Z	master			
+rdatatable/data.table	ok	6228	False	False	3927	2014-06-07T16:38:05Z	master	AGENTS.md		
+rdiff-backup/rdiff-backup	ok	1630	False	False	1272	2016-02-12T08:28:49Z	master			
+reactjs/react.dev	ok	7023	False	False	11827	2017-10-06T03:16:04Z	main	CLAUDE.md		
+redis-developer/sql-redis	ok	107	False	False	13	2025-12-23T23:37:53Z	main	CLAUDE.md,AGENTS.md		
+redpangilinan/crikket	ok	314	False	False	154	2026-02-03T22:19:49Z	master			
+robertsdotpm/p2pd	ok	696	False	False	105	2022-12-22T08:14:22Z	main			
+roborescue/rcrs-server	ok	1596	False	False	54	2017-08-06T16:18:45Z	master			
+roe-dl/weewx-dwd	ok	525	False	False	22	2021-03-15T15:29:12Z	master			
+rootSunc/ArkiWatch	ok	319	False	False	17	2026-08-22T21:12:54Z	main			
+royalhaskoningdhv/sam	ok	763	False	False	28	2021-12-20T13:40:30Z	main			
+rsyslog/rsyslog-pkg-rhel-centos	ok	410	False	False	18	2014-01-14T14:27:49Z	master			
+rust-embedded/svd2rust	ok	1550	False	False	865	2016-10-09T02:47:52Z	master			
+safer-rust/tag-std	ok	834	False	False	23	2025-01-04T09:29:20Z	main			
+samtools/hts-specs	ok	780	False	False	715	2012-03-09T01:58:32Z	master			
+sang765/ArchiveTune-Nightly	ok	905	False	True	102	2026-01-18T21:47:33Z	main			
+saramibreak/discimagecreator	ok	726	False	False	695	2016-05-14T13:52:41Z	master			
+sazardev/shiki	ok	215	False	False	336	2026-07-23T01:10:48Z	main	CLAUDE.md,AGENTS.md		
+schalkneethling/skills-autoresearch-flue	ok	233	False	False	15	2026-05-04T16:24:45Z	main	CLAUDE.md,AGENTS.md		
+scy-phy/minicps	ok	762	False	False	199	2015-04-10T23:15:17Z	master			
+seleniumhq/selenium	ok	35315	False	False	34579	2013-01-14T21:40:56Z	trunk	CLAUDE.md,AGENTS.md,.github/copilot-instructions.md		
+semperos/ari	ok	521	False	False	10	2024-05-14T21:23:57Z	main			
+serapeum-org/earthlens	ok	358	False	False	69	2022-05-24T23:08:30Z	main			
+shaharia-lab/slackcli	ok	273	False	False	257	2025-11-09T17:21:54Z	main	CLAUDE.md,AGENTS.md		
+shajen/rtl-sdr-scanner-cpp	ok	317	False	False	777	2021-08-25T10:52:52Z	master			
+shopify/deprecation_toolkit	ok	322	False	False	540	2018-03-02T05:05:47Z	main			
+shyhunter/PaperOtter	ok	812	False	False	57	2026-09-12T20:07:03Z	main			
+simformsolutionspvtltd/flutter_calendar_view	ok	317	False	False	527	2021-05-26T11:12:39Z	master			
+simovilab/databus	ok	383	False	False	101	2023-12-08T01:25:31Z	main	CLAUDE.md,AGENTS.md		
+singerdmx/flutter-quill	ok	2594	False	False	2916	2020-12-14T09:17:10Z	master			
+sitaggart/aremycolorsaccessible	ok	1466	False	False	16	2016-05-23T16:55:42Z	main			
+skodaconnect/homeassistant-myskoda	ok	707	False	False	354	2024-09-12T18:51:24Z	main	CLAUDE.md,AGENTS.md		
+smarzban/tsk	ok	922	False	False	245	2026-08-19T18:26:28Z	main	CLAUDE.md,AGENTS.md		
+sminez/ad	ok	1225	False	False	749	2023-09-27T08:18:11Z	develop			
+smol-rs/async-io	ok	328	False	False	618	2020-06-28T20:16:29Z	master			
+smtcoq/smtcoq	ok	950	False	False	170	2015-01-09T14:18:38Z	main			
+smylermc/terramap	ok	814	False	False	15	2020-05-11T14:37:38Z	master			
+soraiyu/KyuubiMask	ok	191	False	False	23	2026-02-11T16:14:27Z	main			
+sous-chefs/nginx	ok	1676	False	False	559	2012-03-14T18:35:37Z	main	.github/copilot-instructions.md		
+spankybot/spanky.py	ok	691	False	False	16	2018-12-05T23:22:29Z	master			
+spomky-labs/cbor-php	ok	314	False	False	61	2018-03-07T10:58:50Z	3.5.x			
+square/moshi	ok	1501	False	False	10168	2014-08-09T15:58:42Z	master			
+ssdeanx/AgentStack	ok	400	False	False	45	2025-11-16T06:10:00Z	main	AGENTS.md,.github/copilot-instructions.md	.windsurf/rules/commit-message-format.md,.windsurf/rules/pr-message-format.md,.windsurf/rules/prompt-injection-guard.md,.windsurf/rules/test-strategy.md,.windsurf/rules/v5.md,.github/instructions/agent-skills.instructions.md,.github/instructions/code-review-generic.instructions.md,.github/instructions/conventions.md,.github/instructions/convex.instructions.md,.github/instructions/github-actions-ci-cd-best-practices.instructions.md,.github/instructions/markdown.instructions.md,.github/instructions/memory-bank-instructions.md,.github/instructions/next-js.instructions.md,.github/instructions/self-explanatory-code-commenting.instructions.md,.github/instructions/update-docs-on-code-change.instructions.md	
+ssupt/omarchy-audio-control	ok	115	False	False	18	2026-08-14T12:04:27Z	main			
+stablekernel/opencode-cursor	ok	125	False	False	33	2026-06-10T14:10:09Z	main			
+stefanilchev/elementumservice	ok	407	False	False	72	2021-10-13T17:32:59Z	master			
+steveghee/octo_studio_extensions	ok	353	False	False	19	2020-06-26T12:58:20Z	master			
+struphy-hub/struphy	ok	2235	False	False	42	2025-10-23T11:26:40Z	devel	CLAUDE.md,AGENTS.md		
+sveinbjornt/ensk.is	ok	1218	False	False	43	2021-11-06T21:38:41Z	master	CLAUDE.md		
+swstegall/meteor-decomp	ok	3992	False	False	14	2026-05-01T03:46:44Z	develop	AGENTS.md		
+sylvainde/didyoumean-python	ok	736	False	False	122	2014-10-26T08:29:48Z	master			
+tardis-sn/carsus	ok	828	False	False	27	2016-03-03T05:25:41Z	master			
+taylorsatula/mira-OSS	ok	330	False	False	481	2025-10-18T21:46:43Z	main	AGENTS.md		
+the-lean-crate/criner	ok	878	False	False	144	2020-02-22T01:09:19Z	main			
+thedavidweng/monarchmoney-cli	ok	294	False	False	33	2026-05-09T01:15:48Z	main	AGENTS.md		
+thehappykoala/harmony-of-the-spheres	ok	1480	False	False	137	2018-06-06T16:39:47Z	master			
+time-series-machine-learning/tsml-eval	ok	691	False	False	60	2022-06-30T13:23:16Z	main	AGENTS.md		
+tkersey/dotfiles	ok	2514	False	False	69	2015-02-18T18:36:26Z	main			
+tomshaw/mediable	ok	327	False	False	20	2024-01-22T19:13:01Z	master	CLAUDE.md		
+trustedsec/spoonmap	ok	347	False	False	214	2021-01-11T15:54:40Z	main	CLAUDE.md		
+trypsynth/backtalk	ok	456	False	False	66	2026-09-25T18:38:31Z	master			
+tsylvester/paynless-framework	ok	1352	False	False	80	2025-03-31T01:33:22Z	main		.cursor/rules/ai_agent_development_methodology.md,.cursor/rules/cursor_architecture_rules.md,.cursor/rules/rules.mdc,.github/instructions/agent-output.instructions.md,.github/instructions/composition.instructions.md,.github/instructions/copilot-instructions.md,.github/instructions/dependency-injection.instructions.md,.github/instructions/discovery.instructions.md,.github/instructions/error-handling.instructions.md,.github/instructions/factory.instructions.md,.github/instructions/fidelity.instructions.md,.github/instructions/linting.instructions.md,.github/instructions/logging.instructions.md,.github/instructions/loop.instructions.md,.github/instructions/mode.instructions.md,.github/instructions/ordering.instructions.md,.github/instructions/testing.instructions.md,.github/instructions/typing.instructions.md,.github/instructions/universal.instructions.md,.github/instructions/workplan.instructions.md	
+turnstonelabs/turnstone	ok	2202	False	False	1650	2026-03-02T05:12:20Z	main			
+typelevel/skunk	ok	2526	False	False	1667	2018-09-21T06:46:41Z	main			
+ufs-community/uwtools	ok	617	False	False	18	2022-01-24T20:17:14Z	main	AGENTS.md		
+ultimaweapon/tsuki	ok	665	False	False	152	2025-05-12T14:35:44Z	main			
+ultrawidelock/ultrawidelock	ok	1764	False	False	63	2026-08-15T10:28:27Z	main	AGENTS.md		
+umr-lops/xsarsea	ok	375	False	False	12	2021-04-29T07:36:10Z	master			
+unifreq/linux-6.1.y-rockchip	ok	9349	False	False	27	2025-04-11T16:26:35Z	main			
+unjs/unhead	ok	2471	False	False	1312	2022-11-02T03:55:24Z	main			
+usetrmnl/trmnl-home-assistant	ok	216	False	False	188	2025-12-27T19:15:03Z	main	CLAUDE.md		
+usnistgov/policy-machine-core	ok	474	False	False	93	2019-02-18T15:43:05Z	main			
+utilitywarehouse/semaphore-wireguard	ok	424	False	False	16	2021-03-22T15:05:52Z	main			
+vega/vegafusion	ok	726	False	False	424	2021-10-01T09:19:27Z	main	CLAUDE.md		
+victoriametrics/operator	ok	2667	False	False	597	2020-05-09T08:10:28Z	master			
+vinaghost/TravianBotSharp	ok	1218	False	False	52	2022-03-18T16:20:34Z	main	.github/copilot-instructions.md	.github/instructions/copilot-commit.instructions.md	
+visualacademy/dotnetnote	ok	2750	False	False	21	2020-10-04T16:20:44Z	main			
+wasmedge/wasmedge	ok	4922	False	False	10848	2019-11-29T19:00:17Z	master	CLAUDE.md,AGENTS.md		
+wechat-miniprogram/minigame-unity-webgl-transform	missing									
+wenwenjiang-lab/quant-research	ok	168	False	False	10	2026-07-30T05:34:56Z	main			
+winstxnhdw/nllb-api	ok	1170	False	False	148	2023-05-27T14:40:56Z	main			
+wlfcss/PlumeLens	ok	199	False	False	247	2026-04-02T16:50:11Z	main			
+wosledon/Hetu	ok	906	False	False	11	2026-06-19T17:53:43Z	main	AGENTS.md,.github/copilot-instructions.md		
+wso2/identity-anonymization-tool	ok	382	False	False	42	2018-02-07T09:51:21Z	master			
+wso2/labs-agentic-engineer	ok	3778	False	False	25	2026-05-19T11:27:19Z	main	CLAUDE.md,AGENTS.md		
+wulffern/cicsim	ok	312	False	False	27	2020-10-23T08:34:47Z	main	CLAUDE.md		
+xandjiji/exevo-pan	missing									
+xcanwin/keepchatgpt	ok	507	False	False	14890	2023-03-28T18:12:33Z	main	CLAUDE.md,AGENTS.md		
+xinnjie/onekeymap-cli	ok	178	False	False	24	2025-10-03T14:14:48Z	main			
+xudong7587/media-index	missing									
+yeti-robotics/polar-edge	ok	1521	False	False	10	2024-06-18T23:43:44Z	main	CLAUDE.md		
+yoi102/VisionProcess	ok	353	False	False	20	2023-03-27T14:18:02Z	master			
+yub168/myTvbox	ok	707	False	False	30	2024-06-11T00:01:09Z	master			
+zivid/zivid-ros	ok	302	False	False	80	2019-07-01T07:04:50Z	master			
+zsh-users/zsh-syntax-highlighting	ok	1339	False	False	23073	2010-12-25T17:28:55Z	master			
+zxwk1998/vue3-admin-better	ok	212	False	False	225	2025-07-12T22:10:14Z	main			
+zzzprojects/html-agility-pack	ok	533	False	False	2851	2017-04-30T11:29:07Z	master			
