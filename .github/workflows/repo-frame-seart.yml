@@ -1,0 +1,37 @@
+# Repository-frame cross-check with SEART GitHub Search (seart-ghs.si.usi.ch), the tool the older stratum was built
+# with. Triggered only by a push to the branch ci/repo-frame-seart; results are committed back to that branch.
+name: repo frame seart
+on:
+  push:
+    branches: [ci/repo-frame-seart]
+permissions:
+  contents: write
+jobs:
+  seart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: download from SEART (stats, then three exports)
+        timeout-minutes: 40
+        run: |
+          set -o pipefail
+          mkdir -p seart
+          B=https://seart-ghs.si.usi.ch/api/r
+          curl -sS --fail --retry 3 -m 60 "$B/stats" -o seart/stats.json
+          get() { curl -sS --fail --retry 3 -m 1800 "$B/download/csv?$2" -o "seart/$1.csv.gz"; echo "$1 $(gzip -dc seart/$1.csv.gz | wc -l) lines"; }
+          # new cohort, the author's floor, active within a year of 2026-10-30
+          get b-100 "createdMin=2025-07-01&commitsMin=100&excludeForks=true&committedMin=2025-10-30"
+          # new cohort at the older stratum's floor
+          get b-300 "createdMin=2025-07-01&commitsMin=300&excludeForks=true&committedMin=2025-10-30"
+          # the older stratum's own query today (created <= 2025-06-30), to compare with the published 165,281
+          get a-300 "createdMax=2025-06-30&commitsMin=300&excludeForks=true&committedMin=2025-10-30"
+          ls -la seart
+      - name: commit the result back to this branch
+        if: always()
+        run: |
+          git config user.name "repo-frame"
+          git config user.email "actions@users.noreply.github.com"
+          git add seart
+          git commit -m "frame: SEART exports (run ${{ github.run_id }})" || echo "nothing to commit"
+          git push origin "HEAD:${{ github.ref_name }}"
