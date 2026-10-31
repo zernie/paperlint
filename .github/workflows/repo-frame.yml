@@ -1,0 +1,26 @@
+# Repository-frame sizing: one job, triggered only by a push to the branch ci/repo-frame. The result is
+# committed back to that branch (a push made with GITHUB_TOKEN does not trigger another run).
+name: repo frame
+on:
+  push:
+    branches: [ci/repo-frame]
+permissions:
+  contents: write
+jobs:
+  size-b:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: size the frame by creation day
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -I frame/stratum_b.py size --pinned frame/pinned-date.txt --out frame/data
+      - name: commit the result back to this branch
+        if: always()
+        run: |
+          git config user.name "repo-frame"
+          git config user.email "actions@users.noreply.github.com"
+          git add frame/data
+          git commit -m "frame: size by creation day (run ${{ github.run_id }})" || echo "nothing to commit"
+          git push origin "HEAD:${{ github.ref_name }}"
