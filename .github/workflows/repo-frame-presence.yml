@@ -5,6 +5,9 @@ name: repo frame presence
 on:
   push:
     branches: [ci/repo-frame-presence]
+concurrency:
+  group: repo-frame-presence
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:

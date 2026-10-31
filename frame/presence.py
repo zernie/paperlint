@@ -20,7 +20,7 @@ import urllib.request
 ROOT_FILES = ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md", "AGENTS.override.md", "GEMINI.md", ".gemini/system.md",
               ".cursorrules", ".windsurfrules", ".github/copilot-instructions.md")
 RULE_DIRS = (".claude/rules", ".cursor/rules", ".windsurf/rules", ".clinerules", ".github/instructions")
-BATCH = 100
+BATCH = int(os.environ.get("PRESENCE_BATCH", "100"))
 COLS = ("repo", "status", "commits", "fork", "archived", "stars", "created_at", "default_branch",
         "root_files", "dir_entries", "clinerules_kind")
 
@@ -53,13 +53,35 @@ def post(q, tok):
             with urllib.request.urlopen(req, timeout=60) as r:
                 return json.loads(r.read())
         except urllib.error.HTTPError as e:
-            if e.code in (403, 429, 502, 503) and attempt < 4:
+            print(f"HTTP {e.code} attempt {attempt}", flush=True)
+            if e.code in (502, 504):
+                return {"errors": [{"message": f"HTTP {e.code}"}], "too_big": True}
+            if e.code in (403, 429, 503) and attempt < 4:
                 time.sleep(int(e.headers.get("Retry-After") or 0) or 60 * (attempt + 1))
                 continue
             return {"errors": [{"message": f"HTTP {e.code}"}]}
-        except (urllib.error.URLError, TimeoutError):
-            time.sleep(15)
+        except (urllib.error.URLError, TimeoutError) as e:
+            print(f"{type(e).__name__} attempt {attempt}", flush=True)
+            return {"errors": [{"message": type(e).__name__}], "too_big": True}
     return {"errors": [{"message": "gave up"}]}
+
+
+def ask(batch, tok):
+    """Rows for one batch. A query GitHub cuts off (502/504, client timeout) is split in half, down to one
+    repository, so the batch size finds itself instead of being guessed."""
+    data = post(query_for(batch), tok)
+    if data.get("too_big") and len(batch) > 1:
+        half = len(batch) // 2
+        print(f"split {len(batch)} -> {half} + {len(batch) - half}", flush=True)
+        a, ra = ask(batch[:half], tok)
+        b, rb = ask(batch[half:], tok)
+        return a + b, rb or ra
+    nodes = data.get("data") or {}
+    rows = [row_of(full, nodes.get(alias(i))) if "data" in data else {"repo": full, "status": "error"}
+            for i, full in enumerate(batch)]
+    if "data" not in data:
+        print(f"error batch of {len(batch)}: {data.get('errors')}", flush=True)
+    return rows, nodes.get("rateLimit") or {}
 
 
 def row_of(full, node):
@@ -98,13 +120,12 @@ def check(names_file, out):
     todo = [n for n in names if n not in done]
     for start in range(0, len(todo), BATCH):
         batch = todo[start:start + BATCH]
-        data = post(query_for(batch), tok)
-        nodes = (data.get("data") or {})
+        t0 = time.time()
+        rows, rl = ask(batch, tok)
         with open(out, "a", encoding="utf-8") as f:
-            for i, full in enumerate(batch):
-                r = row_of(full, nodes.get(alias(i))) if "data" in data else {"repo": full, "status": "error"}
+            for r in rows:
                 f.write("\t".join(str(r.get(c, "")) for c in COLS) + "\n")
-        rl = nodes.get("rateLimit") or {}
+        print(f"batch took {time.time() - t0:.1f}s", flush=True)
         print(f"{start + len(batch)}/{len(todo)}\tcost {rl.get('cost')}\tremaining {rl.get('remaining')}", flush=True)
         if rl.get("remaining") is not None and rl["remaining"] < 20:
             reset = rl.get("resetAt", "")
