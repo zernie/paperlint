@@ -55,7 +55,9 @@ def post(q, tok):
     for attempt in range(5):
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
-                return json.loads(r.read())
+                data = json.loads(r.read())
+                data["_reset"] = r.headers.get("x-ratelimit-reset")
+                return data
         except urllib.error.HTTPError as e:
             print(f"HTTP {e.code} attempt {attempt}", flush=True)
             if e.code in (502, 504):
@@ -70,10 +72,30 @@ def post(q, tok):
     return {"errors": [{"message": "gave up"}]}
 
 
+def rate_limited(data):
+    return any((e or {}).get("type") == "RATE_LIMIT" for e in data.get("errors") or [])
+
+
+def wait_for_reset(data):
+    """GitHub answers an exhausted GraphQL budget with HTTP 200 and errors[type=RATE_LIMIT], without rateLimit in
+    the body. The budget is shared by every job of the installation (run 41214730264: six shards spent it within
+    the hour, and 480 batches were written as errors in seconds). Sleep until x-ratelimit-reset (plus 5 s), or
+    60 s when the header is missing; never longer than an hour."""
+    reset = data.get("_reset")
+    secs = (int(reset) - time.time() + 5) if reset and str(reset).isdigit() else 60
+    secs = max(5, min(3600, secs))
+    print(f"rate limit exhausted, sleeping {int(secs)}s", flush=True)
+    time.sleep(secs)
+
+
 def ask(batch, tok):
     """Rows for one batch. A query GitHub cuts off (502/504, client timeout) is split in half, down to one
-    repository, so the batch size finds itself instead of being guessed."""
+    repository, so the batch size finds itself instead of being guessed. An exhausted budget is waited out and the
+    same batch asked again, never written as error rows."""
     data = post(query_for(batch), tok)
+    while rate_limited(data):
+        wait_for_reset(data)
+        data = post(query_for(batch), tok)
     if data.get("too_big") and len(batch) > 1:
         half = len(batch) // 2
         print(f"split {len(batch)} -> {half} + {len(batch) - half}", flush=True)
