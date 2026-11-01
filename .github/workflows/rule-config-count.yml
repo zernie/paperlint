@@ -1,0 +1,33 @@
+# Linter-rule config usage count: one job, triggered only by a push to ci/rule-config-count. Code search allows
+# 10 requests per minute; the result is committed back to this branch.
+name: rule config count
+on:
+  push:
+    branches: [ci/rule-config-count]
+concurrency:
+  group: rule-config-count
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  count:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: count explicit mentions per rule and config file name (resumable)
+        timeout-minutes: 50
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p frame/data
+          python3 -I frame/rule_config_count.py frame/rule-ids.json frame/data/rule-config-count.tsv | tee frame/data/rule-config-count-progress.txt
+      - name: commit the result back to this branch
+        if: always()
+        run: |
+          git config user.name "repo-frame"
+          git config user.email "actions@users.noreply.github.com"
+          git add frame/data
+          git commit -m "frame: rule config count (run ${{ github.run_id }})" || echo "nothing to commit"
+          git push origin "HEAD:${{ github.ref_name }}"
