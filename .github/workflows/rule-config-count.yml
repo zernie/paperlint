@@ -22,7 +22,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           mkdir -p frame/data
-          python3 -I frame/rule_config_count.py frame/rule-ids.json frame/data/rule-config-count.tsv | tee frame/data/rule-config-count-progress.txt
+          python3 -I frame/rule_config_count.py frame/rule-ids-risky.json frame/data/rule-config-count.tsv | tee frame/data/rule-config-count-progress.txt
       - name: commit the result back to this branch
         if: always()
         run: |
