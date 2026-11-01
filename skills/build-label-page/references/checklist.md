@@ -154,6 +154,8 @@ not run: banner, items readable, buttons off.
   side stripe on a button (it reads as decoration; the look test refuses one), and put code, configs and identifiers in
   `backticks` or the item's `code` field, so they render as code. During the practice each button also
   shows its example; on the real items the buttons stay short.
+- Code is shown so it can be judged, not counted: a `code` block marks leading and trailing
+  whitespace (a space as ·, a tab as →) and prints each line's length at its end.
 - One question per screen: an item card asks one question at a time, and the answered ones stay as a
   line with "Change".
 - A practice miss does not lock the page, but it stops the agent: ask the labeller which question

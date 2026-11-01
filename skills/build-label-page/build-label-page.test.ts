@@ -1200,3 +1200,12 @@ test("🔴 a practice button shows its answer's example, a real item's button do
   assert.match(shown, /Rule says \nmax-len 100\n; reading is \nmax-len 120/, "backticks become code spans");
   assert.doesNotMatch(shown, /`/);
 });
+
+test("🔴 a code block shows its whitespace and each line's length: indentation is seen, not counted", async () => {
+  const items = [{ source_id: "c1", group: "python", body: "Indented with four spaces?", code: "def f():\n    return 1\n\tpass  " }];
+  const { page } = build(setup("whitespace", config({ items })));
+  const shown = await showPage(page, {}, {});
+  assert.match(shown, /····\nreturn 1\n12/, "four visible spaces, the text, the line's length");
+  assert.match(shown, /→\npass\n··\n7/, "a visible tab and trailing spaces");
+  assert.match(shown, /def f\(\):\n8/);
+});

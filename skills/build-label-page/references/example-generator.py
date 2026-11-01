@@ -633,6 +633,9 @@ button[aria-pressed="true"] { border: 2px solid var(--accent); color: var(--stro
 .opts button .label { color: var(--strong); font-weight: 500; grid-column: 2; }
 .opts button .ex { color: var(--muted); grid-column: 2; }
 .opts button[aria-pressed="true"] { background: var(--surface); }
+pre.code .line { display: flex; gap: 0; white-space: pre; min-height: 1.4em; }
+pre.code .ws { color: var(--muted); }
+pre.code .len { margin-left: auto; padding-left: 16px; color: var(--muted); font-size: 0.85em; user-select: none; }
 code { font-family: var(--mono); font-size: 0.92em; color: var(--strong); background: var(--surface);
   border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
 button:disabled { opacity: 0.5; cursor: default; }
@@ -788,6 +791,22 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   }
   // `withExamples`: the practice shows each answer's example on its button; the real items keep the buttons
   // short, the examples stay on the first screen.
+  // A code block shows what a labeller would otherwise count by eye: leading and trailing whitespace as
+  // faint marks (a space as a middle dot, a tab as an arrow) and each line's length in characters.
+  function visible(ws) { return ws.replace(/ /g, "\u00b7").replace(/\t/g, "\u2192"); }
+  function codeBlock(text) {
+    var pre = el("pre", "code");
+    String(text).split("\n").forEach(function (line) {
+      var row = el("div", "line");
+      var m = /^([ \t]*)([\s\S]*?)([ \t]*)$/.exec(line);
+      if (m[1]) row.appendChild(el("span", "ws", visible(m[1])));
+      if (m[2]) row.appendChild(el("span", "", m[2]));
+      if (m[3]) row.appendChild(el("span", "ws", visible(m[3])));
+      row.appendChild(el("span", "len", String(line.length)));
+      pre.appendChild(row);
+    });
+    return pre;
+  }
   function options(opts, current, onPick, disabled, withExamples) {
     var row = el("div", "opts");
     opts.forEach(function (o) {
@@ -830,7 +849,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     card.appendChild(el("div", "id", item.id));
     if (item.title) card.appendChild(rich("h3", "", item.title));
     card.appendChild(rich("p", "body", item.body));
-    if (item.code) card.appendChild(el("pre", "", item.code));
+    if (item.code) card.appendChild(codeBlock(item.code));
     if (item.context) card.appendChild(rich("p", "muted", item.context));
     var a = answersOf(item.id);
     askOne(card, a, state.editing[item.id], function (q, v) {
@@ -889,7 +908,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     card.appendChild(el("div", "id", "Practice " + p.id));
     if (p.title) card.appendChild(rich("h3", "", p.title));
     card.appendChild(rich("p", "body", p.body));
-    if (p.code) card.appendChild(el("pre", "", p.code));
+    if (p.code) card.appendChild(codeBlock(p.code));
     if (p.context) card.appendChild(rich("p", "muted", p.context));
     var a = practiceAnswers(p.id);
     askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true);
