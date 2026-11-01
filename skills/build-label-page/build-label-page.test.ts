@@ -1035,7 +1035,10 @@ test("🔴 build refuses fewer than three practice items, an expected answer tha
     ["two", PRACTICE.slice(0, 2), /practice: needs 3 or more entries, has 2/],
     [
       "unoffered",
-      [{ ...PRACTICE[0], expected: { label: "maybe", boundary: "clear" } }, ...PRACTICE.slice(1)],
+      [
+        { ...PRACTICE[0], expected: { label: "maybe", boundary: "clear" } },
+        ...PRACTICE.slice(1),
+      ],
       /practice\[0\]\.expected\.label: 'maybe' is not one of yes, no/,
     ],
     [
@@ -1045,7 +1048,10 @@ test("🔴 build refuses fewer than three practice items, an expected answer tha
     ],
     [
       "stray",
-      [{ ...PRACTICE[0], expected: { ...PRACTICE[0]?.expected, extra: "x" } }, ...PRACTICE.slice(1)],
+      [
+        { ...PRACTICE[0], expected: { ...PRACTICE[0]?.expected, extra: "x" } },
+        ...PRACTICE.slice(1),
+      ],
       /practice\[0\]\.expected\.extra: not a question of this page/,
     ],
   ];
@@ -1062,11 +1068,16 @@ test("🔴 the first screen explains each question with an example per answer, a
   const before = await showPage(page, {}, {}, {});
   assert.match(before, /How to answer/);
   for (const q of QUESTIONS) {
-    for (const o of q.options) assert.match(before, new RegExp(escapeRe(o.example)));
+    for (const o of q.options)
+      assert.match(before, new RegExp(escapeRe(o.example)));
   }
   assert.match(before, /Practice: 0 of 3 answered/);
   assert.match(before, /sorted\(\[3, 1, 2\]\) gives \[1, 2, 3\]/);
-  assert.doesNotMatch(before, /G001/, "a real item is open before the practice");
+  assert.doesNotMatch(
+    before,
+    /G001/,
+    "a real item is open before the practice",
+  );
   assert.doesNotMatch(before, /items complete/);
 
   const after = await showPage(page, {}, {});
@@ -1083,7 +1094,10 @@ test("🔴 a practice answer shows the expected answer and why; a miss says to t
   };
   const shown = await showPage(page, {}, {}, practice);
   assert.match(shown, /Practice: 2 of 3 matched/);
-  assert.match(shown, /Expected: No · Clear-cut\. The output is the input unchanged\./);
+  assert.match(
+    shown,
+    /Expected: No · Clear-cut\. The output is the input unchanged\./,
+  );
   assert.match(shown, /tell the agent/);
   assert.match(shown, /G001/, "a miss does not lock the real items");
 });
@@ -1099,12 +1113,28 @@ test("🔴 one question per screen: an item card asks only its first unanswered 
   const { page, key } = build(setup("one-question", config()));
   const second = "Clear-cut or a real boundary case?";
   const none = await showPage(page, {}, {});
-  assert.equal(occurrences(none, second), 1, "only the first screen's explanation names it");
+  assert.equal(
+    occurrences(none, second),
+    1,
+    "only the first screen's explanation names it",
+  );
   const [a] = Object.keys(key.ids);
   assert.ok(a !== undefined);
-  const one = await showPage(page, { [a]: { answers: { label: "yes" }, source: "page" } }, {});
-  assert.equal(occurrences(one, second), 2, "the item whose first question is answered asks the second");
-  assert.match(one, /correct\?: Yes/, "the answered question stays visible as a line");
+  const one = await showPage(
+    page,
+    { [a]: { answers: { label: "yes" }, source: "page" } },
+    {},
+  );
+  assert.equal(
+    occurrences(one, second),
+    2,
+    "the item whose first question is answered asks the second",
+  );
+  assert.match(
+    one,
+    /correct\?: Yes/,
+    "the answered question stays visible as a line",
+  );
 });
 
 test("🔴 export keeps the practice out of the labels and writes it to its own file, with what matched", () => {
@@ -1112,9 +1142,16 @@ test("🔴 export keeps the practice out of the labels and writes it to its own 
   build(dir);
   const practice = {
     ...DONE_PRACTICE,
-    "r1-P2": { answers: { label: "yes", boundary: "clear" }, source: "page", savedAt: "2026-01-02T10:00:00Z" },
+    "r1-P2": {
+      answers: { label: "yes", boundary: "clear" },
+      source: "page",
+      savedAt: "2026-01-02T10:00:00Z",
+    },
   };
-  writeFileSync(join(dir, "dump.json"), JSON.stringify({ answers: {}, groups: {}, practice }));
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers: {}, groups: {}, practice }),
+  );
   const r = exportAt(dir);
   assert.equal(r.status, 0, r.out);
   const labels = labelsFile(dir);
@@ -1125,16 +1162,32 @@ test("🔴 export keeps the practice out of the labels and writes it to its own 
       matched: z.number(),
       total: z.number(),
       items: z.array(
-        z.object({ id: z.string(), matched: z.boolean(), answers: z.unknown(), expected: z.unknown() }),
+        z.object({
+          id: z.string(),
+          matched: z.boolean(),
+          answers: z.unknown(),
+          expected: z.unknown(),
+        }),
       ),
     })
-    .parse(JSON.parse(readFileSync(join(dir, "data", "demo-gold-practice-2026-01-02.json"), "utf8")));
+    .parse(
+      JSON.parse(
+        readFileSync(
+          join(dir, "data", "demo-gold-practice-2026-01-02.json"),
+          "utf8",
+        ),
+      ),
+    );
   assert.equal(file.round, 1);
   assert.equal(file.matched, 2);
   assert.equal(file.total, 3);
   assert.deepEqual(
     file.items.map((i) => [i.id, i.matched]),
-    [["P1", true], ["P2", false], ["P3", true]],
+    [
+      ["P1", true],
+      ["P2", false],
+      ["P3", true],
+    ],
   );
   assert.match(r.out, /practice round 1: 2 of 3 matched; missed P2/);
 });
@@ -1144,11 +1197,18 @@ test("🔴 export refuses a stored practice answer the key does not know, by its
   build(dir);
   writeFileSync(
     join(dir, "dump.json"),
-    JSON.stringify({ answers: {}, groups: {}, practice: { "r1-P9": { answers: {}, source: "page" } } }),
+    JSON.stringify({
+      answers: {},
+      groups: {},
+      practice: { "r1-P9": { answers: {}, source: "page" } },
+    }),
   );
   const r = exportAt(dir);
   assert.notEqual(r.status, 0);
-  assert.match(r.out, /practice\/r1-P9: the key does not know this practice item/);
+  assert.match(
+    r.out,
+    /practice\/r1-P9: the key does not know this practice item/,
+  );
 });
 
 function escapeRe(s: string): string {
@@ -1158,12 +1218,26 @@ function escapeRe(s: string): string {
 test("🔴 the answer buttons are full-width rows with space between them, and the page has one dark palette", () => {
   const { page } = build(setup("look", config()));
   const css = /<style>([\s\S]*?)<\/style>/.exec(page)?.[1] ?? "";
-  assert.match(css, /\.opts \{ display: flex; flex-direction: column; gap: \d+px; \}/);
+  assert.match(
+    css,
+    /\.opts \{ display: flex; flex-direction: column; gap: \d+px; \}/,
+  );
   assert.match(css, /button \{[^}]*width: 100%;[^}]*\}/);
-  assert.match(css, /min-height: (4[4-9]|[5-9]\d)px/, "a tap target at least 44px tall");
-  assert.doesNotMatch(css, /prefers-color-scheme|data-theme/, "one look, not a light and a dark one");
+  assert.match(
+    css,
+    /min-height: (4[4-9]|[5-9]\d)px/,
+    "a tap target at least 44px tall",
+  );
+  assert.doesNotMatch(
+    css,
+    /prefers-color-scheme|data-theme/,
+    "one look, not a light and a dark one",
+  );
   const colors = new Set(css.match(/#[0-9a-f]{6}\b/gi) ?? []);
-  assert.ok(colors.size <= 10, `every color is a palette token: ${[...colors].join(", ")}`);
+  assert.ok(
+    colors.size <= 10,
+    `every color is a palette token: ${[...colors].join(", ")}`,
+  );
   assert.doesNotMatch(page, /class="card"|"card"/, "no card around every item");
 });
 
@@ -1177,35 +1251,81 @@ test("🔴 an answer button carries its icon and label, and no button has a colo
       { ...first.options[1], icon: "❌" },
     ],
   };
-  const { page } = build(setup("icons", config({ questions: [iconed, ...rest] })));
+  const { page } = build(
+    setup("icons", config({ questions: [iconed, ...rest] })),
+  );
   assert.match(page, /"icon": ?"✅"/);
   const css = /<style>([\s\S]*?)<\/style>/.exec(page)?.[1] ?? "";
   const buttonRules = [...css.matchAll(/([^{}]*button[^{}]*)\{([^}]*)\}/g)];
   for (const [, selector, body] of buttonRules) {
-    assert.doesNotMatch(body ?? "", /border-left/, `a side stripe on ${selector?.trim() ?? ""}`);
+    assert.doesNotMatch(
+      body ?? "",
+      /border-left/,
+      `a side stripe on ${selector?.trim() ?? ""}`,
+    );
   }
-  const toned = setup("toned", config({ questions: [{ ...iconed, options: [{ ...iconed.options[0], tone: "good" }, iconed.options[1]] }, ...rest] }));
+  const toned = setup(
+    "toned",
+    config({
+      questions: [
+        {
+          ...iconed,
+          options: [{ ...iconed.options[0], tone: "good" }, iconed.options[1]],
+        },
+        ...rest,
+      ],
+    }),
+  );
   const r = run(["build", join(toned, "items.json"), join(toned, "out")]);
   assert.notEqual(r.status, 0, "`tone` is not a field");
   assert.match(r.out, /questions\[0\]\.options\[0\]/);
 });
 
 test("🔴 a practice button shows its answer's example, a real item's button does not, and backticks are code", async () => {
-  const items = [{ source_id: "c1", group: "python", body: "Rule says `max-len 100`; reading is `max-len 120`" }];
+  const items = [
+    {
+      source_id: "c1",
+      group: "python",
+      body: "Rule says `max-len 100`; reading is `max-len 120`",
+    },
+  ];
   const { page } = build(setup("code-spans", config({ items })));
   const practising = await showPage(page, {}, {}, {});
-  assert.equal(occurrences(practising, "Yes\nA sort that returns 1, 2, 3."), 3, "label then example, on each practice item");
+  assert.equal(
+    occurrences(practising, "Yes\nA sort that returns 1, 2, 3."),
+    3,
+    "label then example, on each practice item",
+  );
   const shown = await showPage(page, {}, {});
-  assert.equal(occurrences(shown, "Yes\nA sort that returns 1, 2, 3."), 0, "the real item's buttons are short");
-  assert.match(shown, /Rule says \nmax-len 100\n; reading is \nmax-len 120/, "backticks become code spans");
+  assert.equal(
+    occurrences(shown, "Yes\nA sort that returns 1, 2, 3."),
+    0,
+    "the real item's buttons are short",
+  );
+  assert.match(
+    shown,
+    /Rule says \nmax-len 100\n; reading is \nmax-len 120/,
+    "backticks become code spans",
+  );
   assert.doesNotMatch(shown, /`/);
 });
 
 test("🔴 a code block shows its whitespace and each line's length: indentation is seen, not counted", async () => {
-  const items = [{ source_id: "c1", group: "python", body: "Indented with four spaces?", code: "def f():\n    return 1\n\tpass  " }];
+  const items = [
+    {
+      source_id: "c1",
+      group: "python",
+      body: "Indented with four spaces?",
+      code: "def f():\n    return 1\n\tpass  ",
+    },
+  ];
   const { page } = build(setup("whitespace", config({ items })));
   const shown = await showPage(page, {}, {});
-  assert.match(shown, /····\nreturn 1\n12/, "four visible spaces, the text, the line's length");
+  assert.match(
+    shown,
+    /····\nreturn 1\n12/,
+    "four visible spaces, the text, the line's length",
+  );
   assert.match(shown, /→\npass\n··\n7/, "a visible tab and trailing spaces");
   assert.match(shown, /def f\(\):\n8/);
 });

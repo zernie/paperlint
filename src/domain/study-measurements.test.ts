@@ -637,11 +637,13 @@ describe("studyMessage — the new findings stand alone", () => {
   });
 });
 
-describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", () => {
-  it("the day is 2026-10-31: the first study the gates were written for was registered that day", () => {
+describe("PLAN_V2_FROM", () => {
+  it("is 2026-10-31: the first study the gates were written for was registered that day", () => {
     expect(PLAN_V2_FROM).toBe("2026-10-31");
   });
+});
 
+describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", () => {
   const V2: StudyPlan = {
     ...PLAN,
     $schema: PLAN_V2,
