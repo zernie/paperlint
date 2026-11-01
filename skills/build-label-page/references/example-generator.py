@@ -44,9 +44,9 @@ items.json:
       "familiarity_question": "How well do you know {group}?",          # optional
       "questions": [{"id": "label", "text": "Is this correct?", "short": "correct?",   # short: shown in "still needs"
                      "options": [{"value": "yes", "label": "Yes", "example": "one real case, in a line",
-                                  "icon": "✅", "tone": "good"},       # icon, tone: optional
+                                  "icon": "✅"},                       # icon: optional
                                  {"value": "no", "label": "No", "example": "another real case",
-                                  "icon": "❌", "tone": "bad"}]}],
+                                  "icon": "❌"}]}],
                                             # in any shown text, `backticks` render as code
       "practice": [{"body": "...", "expected": {"label": "yes"}, "why": "one line"}, ...],   # 3 or more
       "practice_round": 1,                  # optional; raise it after rewording, and the practice reopens
@@ -124,10 +124,10 @@ ITEM_SCHEMA = obj(
     },
     closed=False,  # an unlisted item field is the leak guard's refusal, with its own message
 )
-# `icon` (an emoji) and `tone` (what the answer means: good, mark or bad) tell the buttons apart at a glance.
+# `icon` (an emoji) tells the buttons apart at a glance. No coloured side stripe on a button: it reads as
+# decoration, not meaning (the build-label-page look test refuses one).
 OPTION_SCHEMA = obj({"value": string(), "label": string(), "example": string(),
-                     "icon": string(required=False), "tone": string(required=False)})
-TONES = ("good", "mark", "bad")
+                     "icon": string(required=False)})
 PRACTICE_SCHEMA = obj(
     {
         **{f: string(required=f == "body") for f in PAGE_FIELDS if f != "group"},
@@ -258,8 +258,6 @@ def check_config(cfg):
                 fail(f"questions[{qn}].options[{i}].label: {o['label']!r} reads the same as "
                      f"options[{shown[label]}].label — each button needs its own label")
             shown[label] = i
-            if "tone" in o and o["tone"] not in TONES:
-                fail(f"questions[{qn}].options[{i}].tone: {o['tone']!r} is not one of {', '.join(TONES)}")
     check_practice(cfg)
 
 
@@ -634,10 +632,7 @@ button[aria-pressed="true"] { border: 2px solid var(--accent); color: var(--stro
 .opts button .icon { grid-row: span 2; font-size: 1.25rem; line-height: 1.6; }
 .opts button .label { color: var(--strong); font-weight: 500; grid-column: 2; }
 .opts button .ex { color: var(--muted); grid-column: 2; }
-.opts button.tone-good { border-left: 4px solid var(--good); }
-.opts button.tone-mark { border-left: 4px solid var(--mark); }
-.opts button.tone-bad { border-left: 4px solid var(--bad); }
-.opts button[aria-pressed="true"] { border-left-width: 4px; background: var(--surface); }
+.opts button[aria-pressed="true"] { background: var(--surface); }
 code { font-family: var(--mono); font-size: 0.92em; color: var(--strong); background: var(--surface);
   border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
 button:disabled { opacity: 0.5; cursor: default; }
@@ -796,7 +791,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   function options(opts, current, onPick, disabled, withExamples) {
     var row = el("div", "opts");
     opts.forEach(function (o) {
-      var b = el("button", o.tone ? "tone-" + o.tone : "");
+      var b = el("button", "");
       if (o.icon) b.appendChild(el("span", "icon", o.icon));
       b.appendChild(el("span", "label", o.label));
       if (withExamples && o.example) b.appendChild(rich("span", "ex", o.example));

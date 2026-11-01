@@ -1167,24 +1167,27 @@ test("🔴 the answer buttons are full-width rows with space between them, and t
   assert.doesNotMatch(page, /class="card"|"card"/, "no card around every item");
 });
 
-test("🔴 an answer button carries its icon, its label and its example, and a tone marks its meaning", () => {
+test("🔴 an answer button carries its icon and label, and no button has a coloured side stripe", () => {
   const [first, ...rest] = QUESTIONS;
   assert.ok(first !== undefined);
-  const toned = {
+  const iconed = {
     ...first,
     options: [
-      { ...first.options[0], icon: "✅", tone: "good" },
-      { ...first.options[1], icon: "❌", tone: "bad" },
+      { ...first.options[0], icon: "✅" },
+      { ...first.options[1], icon: "❌" },
     ],
   };
-  const { page } = build(setup("tones", config({ questions: [toned, ...rest] })));
+  const { page } = build(setup("icons", config({ questions: [iconed, ...rest] })));
   assert.match(page, /"icon": ?"✅"/);
-  assert.match(page, /\.tone-good/);
-  assert.match(page, /\.tone-bad/);
-  const bad = setup("tone-bad", config({ questions: [{ ...toned, options: [{ ...toned.options[0], tone: "green" }, toned.options[1]] }, ...rest] }));
-  const r = run(["build", join(bad, "items.json"), join(bad, "out")]);
-  assert.notEqual(r.status, 0);
-  assert.match(r.out, /questions\[0\]\.options\[0\]\.tone: 'green' is not one of good, mark, bad/);
+  const css = /<style>([\s\S]*?)<\/style>/.exec(page)?.[1] ?? "";
+  const buttonRules = [...css.matchAll(/([^{}]*button[^{}]*)\{([^}]*)\}/g)];
+  for (const [, selector, body] of buttonRules) {
+    assert.doesNotMatch(body ?? "", /border-left/, `a side stripe on ${selector?.trim() ?? ""}`);
+  }
+  const toned = setup("toned", config({ questions: [{ ...iconed, options: [{ ...iconed.options[0], tone: "good" }, iconed.options[1]] }, ...rest] }));
+  const r = run(["build", join(toned, "items.json"), join(toned, "out")]);
+  assert.notEqual(r.status, 0, "`tone` is not a field");
+  assert.match(r.out, /questions\[0\]\.options\[0\]/);
 });
 
 test("🔴 a practice button shows its answer's example, a real item's button does not, and backticks are code", async () => {
