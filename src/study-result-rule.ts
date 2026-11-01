@@ -128,5 +128,6 @@ export const studyResultRules = (
 });
 
 /** Its level in paperlint's own config: an error. */
-export const RESULT_RULE_LEVELS: Readonly<{ "repro/study-result": "error" }> =
-  { "repro/study-result": "error" };
+export const RESULT_RULE_LEVELS: Readonly<{ "repro/study-result": "error" }> = {
+  "repro/study-result": "error",
+};

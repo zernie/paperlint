@@ -32,8 +32,7 @@ export interface StudyResult {
   readonly claim?: typeof CLAIM_LOST | undefined;
   readonly kappa?: Readonly<Record<string, number>> | undefined;
   readonly self_test?:
-    | { readonly passed: number; readonly failed: number }
-    | undefined;
+    { readonly passed: number; readonly failed: number } | undefined;
   readonly funnel?: Readonly<Record<string, number>> | undefined;
   readonly [key: string]: unknown;
 }
@@ -64,8 +63,16 @@ export interface ResultStudy {
 /** One defect of a study's result. */
 export type ResultFinding =
   | { readonly problem: "no-result-file"; readonly id: string }
-  | { readonly problem: "result-linked"; readonly id: string; readonly link: string }
-  | { readonly problem: "result-unreadable"; readonly id: string; readonly why: string }
+  | {
+      readonly problem: "result-linked";
+      readonly id: string;
+      readonly link: string;
+    }
+  | {
+      readonly problem: "result-unreadable";
+      readonly id: string;
+      readonly why: string;
+    }
   | { readonly problem: "no-number"; readonly id: string; readonly key: string }
   | {
       readonly problem: "claim-lost";
@@ -88,8 +95,16 @@ export type ResultFinding =
       readonly min: number;
       readonly got: number | null;
     }
-  | { readonly problem: "self-test"; readonly id: string; readonly failed: number | null }
-  | { readonly problem: "funnel"; readonly id: string; readonly missing: readonly string[] };
+  | {
+      readonly problem: "self-test";
+      readonly id: string;
+      readonly failed: number | null;
+    }
+  | {
+      readonly problem: "funnel";
+      readonly id: string;
+      readonly missing: readonly string[];
+    };
 
 /** What `we_lose_if` asks of `r`: the number, and a loss said in so many words. */
 const claimFindings = (
@@ -104,7 +119,9 @@ const claimFindings = (
   const said = r.claim === CLAIM_LOST;
   if (lost === said) return [];
   const at = { id, key: w.result, value, threshold: thresholdText(w) };
-  return [lost ? { problem: "claim-lost", ...at } : { problem: "claim-holds", ...at }];
+  return [
+    lost ? { problem: "claim-lost", ...at } : { problem: "claim-holds", ...at },
+  ];
 };
 
 /** What `second_check` asks of `r`: each step's kappa, at least its least. */
@@ -156,7 +173,9 @@ export const judgeResult = (s: ResultStudy): readonly ResultFinding[] => {
       return [{ problem: "result-unreadable", id: s.id, why: st.why }];
     case "read":
       return [
-        ...(s.we_lose_if === null ? [] : claimFindings(s.id, s.we_lose_if, st.result)),
+        ...(s.we_lose_if === null
+          ? []
+          : claimFindings(s.id, s.we_lose_if, st.result)),
         ...kappaFindings(s.id, s.second_check, st.result),
         ...selfTestFindings(s.id, s.self_test, st.result),
         ...funnelFindings(s.id, s.funnel, st.result),
@@ -197,7 +216,8 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
     `The ${tick(RESULT_FILE)} of ${tick(f.id)} counts no drop for ${f.missing.map(tick).join(", ")}, declared in its plan's \`funnel\`. What to do: write each in \`funnel\`, 0 when none was dropped for it.`,
 };
 
-const headOf = <P extends Problem>(p: P, f: FindingOf[P]): string => HEADS[p](f);
+const headOf = <P extends Problem>(p: P, f: FindingOf[P]): string =>
+  HEADS[p](f);
 
 /** The one text a finding is reported with. */
 export const resultMessage = (f: ResultFinding): string =>

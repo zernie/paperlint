@@ -3,11 +3,14 @@
  * parses to itself, ready, and a plan v1 stays as it was; every gate missing, misplaced or malformed
  * is refused with its reason; a gate still null keeps the plan a draft naming it.
  */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 import { PLAN_V2 } from "../../domain/study-gates.ts";
 import type { DecideFirst } from "../../domain/study-mode.ts";
 import { planText, type StudyPlan } from "../../domain/study-registry.ts";
-import { studyRegistryCodec } from "./index.ts";
+import { planV2JsonSchema, studyRegistryCodec } from "./index.ts";
 
 const DECIDED: DecideFirst = {
   kind: "decide_before_run",
@@ -111,9 +114,9 @@ it("a plan without $schema that carries a gate is refused: nobody would read it"
 it("an exploratory mode cannot carry we_lose_if, and an exploratory plan v2 needs none", () => {
   const exploratory = { kind: "exploratory", reason: "a first look" };
   // Guards: no claim, no falsifier — the shape refuses one.
-  expect(
-    why({ ...V2, mode: { ...exploratory, we_lose_if: null } }),
-  ).toContain("we_lose_if");
+  expect(why({ ...V2, mode: { ...exploratory, we_lose_if: null } })).toContain(
+    "we_lose_if",
+  );
   expect(parse({ ...V2, mode: exploratory }).kind).toBe("ready");
 });
 
@@ -145,4 +148,18 @@ it("each malformed gate is refused", () => {
   expect(bad.map((p) => parse(p).kind)).toEqual(bad.map(() => "unreadable"));
   expect(why(bad[6])).toContain("the step «a» is listed more than once");
   expect(why(bad[11])).toContain("the reason «clone failed»");
+});
+
+it("the shipped schemas/plan.v2.schema.json is the one the parser generates", () => {
+  const shipped: unknown = JSON.parse(
+    readFileSync(
+      join(
+        dirname(fileURLToPath(import.meta.url)),
+        "../../../schemas/plan.v2.schema.json",
+      ),
+      "utf8",
+    ),
+  );
+  // Guards: an editor's suggestions for a plan v2 never drift from what the parser accepts.
+  expect(shipped).toEqual(planV2JsonSchema());
 });

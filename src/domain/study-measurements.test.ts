@@ -647,12 +647,19 @@ describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", (
     funnel: "none",
   };
   const onDay = (date: string, kind: Study["kind"] = "measurement") =>
-    reg({ studies: [study({ measurement: "M1", plan: PLAN_FILE, date, kind })] });
+    reg({
+      studies: [study({ measurement: "M1", plan: PLAN_FILE, date, kind })],
+    });
 
   it("a measurement registered on the day, its plan v1: reported, with what to add", () => {
     const f = findings(onDay(PLAN_V2_FROM));
     expect(f).toEqual([
-      { problem: "plan-version", id: "P1-S01", path: PLAN_FILE, date: PLAN_V2_FROM },
+      {
+        problem: "plan-version",
+        id: "P1-S01",
+        path: PLAN_FILE,
+        date: PLAN_V2_FROM,
+      },
     ]);
     expect(studyMessage(f[0] as StudyFinding)).toContain(
       `add \`"$schema": "${PLAN_V2}"\``,
@@ -662,15 +669,13 @@ describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", (
   it("silent on a plan v1 registered before the day, a spike's from it, and a plan v2", () => {
     const v2 = onDay(PLAN_V2_FROM);
     // Guards: old plans keep passing; only a measurement is asked; v2 answers it.
-    expect(
-      [
-        findings(onDay("2026-10-31")),
-        findings(onDay(PLAN_V2_FROM, "spike")),
-        findings(v2, {
-          plans: new Map([[folderKey("P1-S01-census", PLAN_FILE), read(V2)]]),
-        }),
-      ],
-    ).toEqual([[], [], []]);
+    expect([
+      findings(onDay("2026-10-31")),
+      findings(onDay(PLAN_V2_FROM, "spike")),
+      findings(v2, {
+        plans: new Map([[folderKey("P1-S01-census", PLAN_FILE), read(V2)]]),
+      }),
+    ]).toEqual([[], [], []]);
   });
 
   it("a draft plan v1 from the day is reported too; an unreadable one is bad-plan's alone", () => {
@@ -682,7 +687,9 @@ describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", (
       [key, { kind: "unreadable", why: "x" }],
     ]);
     const r = reg({
-      studies: [study({ plan: PLAN_FILE, date: PLAN_V2_FROM, status: "designing" })],
+      studies: [
+        study({ plan: PLAN_FILE, date: PLAN_V2_FROM, status: "designing" }),
+      ],
       measurements: [],
     });
     expect(findings(r, { plans: asDraft }).map((x) => x.problem)).toEqual([

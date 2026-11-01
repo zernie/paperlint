@@ -231,7 +231,7 @@ const secondCheck = z.union([
   none,
   z
     .array(kappaStep)
-    .min(1, "lists no step — write \"none\" when nothing is labelled")
+    .min(1, 'lists no step — write "none" when nothing is labelled')
     .superRefine((steps, ctx) => {
       once("the step")(
         steps.map((t) => t.step),
@@ -256,7 +256,7 @@ const funnel = z.union([
   none,
   z
     .array(words)
-    .min(1, "lists no reason — write \"none\" when no unit is dropped")
+    .min(1, 'lists no reason — write "none" when no unit is dropped')
     .superRefine(once("the reason")),
 ]);
 
@@ -285,6 +285,23 @@ const planShape = z.strictObject({
   self_test: selfTest.nullable().optional(),
   funnel: funnel.nullable().optional(),
 });
+
+/**
+ * The JSON Schema of a plan v2, generated from the parser's own shape: what an editor offers for a
+ * `plan.json` whose `$schema` names it. Shipped as `schemas/plan.v2.schema.json`; a test holds the
+ * file to this. The rules, not the schema, decide: a gate left out of a decide-first mode, or a
+ * draft, is theirs to report.
+ */
+export const planV2JsonSchema = (): unknown =>
+  z.toJSONSchema(
+    planShape.extend({
+      $schema: z.literal(PLAN_V2),
+      second_check: secondCheck.nullable(),
+      self_test: selfTest.nullable(),
+      funnel: funnel.nullable(),
+    }),
+    { io: "input", unrepresentable: "any" },
+  );
 
 /** The gates a plan v2 declares at its top, each present (null while undecided). */
 const V2_GATES = ["second_check", "self_test", "funnel"] as const;
