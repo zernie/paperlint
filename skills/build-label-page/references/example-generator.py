@@ -43,8 +43,11 @@ items.json:
       "labeller_knows": ["python"],         # optional: items of other groups are not put on the page
       "familiarity_question": "How well do you know {group}?",          # optional
       "questions": [{"id": "label", "text": "Is this correct?", "short": "correct?",   # short: shown in "still needs"
-                     "options": [{"value": "yes", "label": "Yes", "example": "one real case, in a line"},
-                                 {"value": "no", "label": "No", "example": "another real case"}]}],
+                     "options": [{"value": "yes", "label": "Yes", "example": "one real case, in a line",
+                                  "icon": "✅", "tone": "good"},       # icon, tone: optional
+                                 {"value": "no", "label": "No", "example": "another real case",
+                                  "icon": "❌", "tone": "bad"}]}],
+                                            # in any shown text, `backticks` render as code
       "practice": [{"body": "...", "expected": {"label": "yes"}, "why": "one line"}, ...],   # 3 or more
       "practice_round": 1,                  # optional; raise it after rewording, and the practice reopens
       "items": [{"source_id": "case-0412-b", "group": "python", "body": "...", "code": "...",
@@ -121,7 +124,10 @@ ITEM_SCHEMA = obj(
     },
     closed=False,  # an unlisted item field is the leak guard's refusal, with its own message
 )
-OPTION_SCHEMA = obj({"value": string(), "label": string(), "example": string()})
+# `icon` (an emoji) and `tone` (what the answer means: good, mark or bad) tell the buttons apart at a glance.
+OPTION_SCHEMA = obj({"value": string(), "label": string(), "example": string(),
+                     "icon": string(required=False), "tone": string(required=False)})
+TONES = ("good", "mark", "bad")
 PRACTICE_SCHEMA = obj(
     {
         **{f: string(required=f == "body") for f in PAGE_FIELDS if f != "group"},
@@ -252,6 +258,8 @@ def check_config(cfg):
                 fail(f"questions[{qn}].options[{i}].label: {o['label']!r} reads the same as "
                      f"options[{shown[label]}].label — each button needs its own label")
             shown[label] = i
+            if "tone" in o and o["tone"] not in TONES:
+                fail(f"questions[{qn}].options[{i}].tone: {o['tone']!r} is not one of {', '.join(TONES)}")
     check_practice(cfg)
 
 
@@ -616,10 +624,22 @@ section { display: flex; flex-direction: column; gap: var(--gap-item); }
 .ask { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
   display: flex; flex-direction: column; gap: 12px; }
 .q { color: var(--strong); font-weight: 500; }
+.body { color: var(--strong); }
+h3 { font-size: 1rem; margin: 0; color: var(--strong); font-weight: 500; }
 .opts { display: flex; flex-direction: column; gap: 10px; }
 button { font: inherit; color: var(--text); background: transparent; border: 1px solid var(--line);
   border-radius: 10px; padding: 10px 16px; min-height: 48px; cursor: pointer; text-align: left; width: 100%; }
 button[aria-pressed="true"] { border: 2px solid var(--accent); color: var(--strong); padding: 9px 15px; }
+.opts button { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: start; }
+.opts button .icon { grid-row: span 2; font-size: 1.25rem; line-height: 1.6; }
+.opts button .label { color: var(--strong); font-weight: 500; grid-column: 2; }
+.opts button .ex { color: var(--muted); grid-column: 2; }
+.opts button.tone-good { border-left: 4px solid var(--good); }
+.opts button.tone-mark { border-left: 4px solid var(--mark); }
+.opts button.tone-bad { border-left: 4px solid var(--bad); }
+.opts button[aria-pressed="true"] { border-left-width: 4px; background: var(--surface); }
+code { font-family: var(--mono); font-size: 0.92em; color: var(--strong); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
 button:disabled { opacity: 0.5; cursor: default; }
 .answered { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); }
 .answered button { width: auto; min-height: 44px; border: 0; color: var(--accent); padding: 0 4px; }
@@ -763,10 +783,23 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     if (text !== undefined) n.textContent = text;
     return n;
   }
-  function options(opts, current, onPick, disabled) {
+  // Text with `backticks` shown as code spans; everything stays textContent, so nothing is parsed as HTML.
+  function rich(tag, cls, text) {
+    var n = el(tag, cls);
+    String(text).split("`").forEach(function (part, i) {
+      if (part) n.appendChild(el(i % 2 ? "code" : "span", "", part));
+    });
+    return n;
+  }
+  // `withExamples`: the practice shows each answer's example on its button; the real items keep the buttons
+  // short, the examples stay on the first screen.
+  function options(opts, current, onPick, disabled, withExamples) {
     var row = el("div", "opts");
     opts.forEach(function (o) {
-      var b = el("button", "", o.label);
+      var b = el("button", o.tone ? "tone-" + o.tone : "");
+      if (o.icon) b.appendChild(el("span", "icon", o.icon));
+      b.appendChild(el("span", "label", o.label));
+      if (withExamples && o.example) b.appendChild(rich("span", "ex", o.example));
       b.type = "button";
       b.setAttribute("aria-pressed", String(current === o.value));
       b.disabled = disabled;
@@ -800,10 +833,10 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     var done = itemDone(item.id);
     var card = el("article", "item");
     card.appendChild(el("div", "id", item.id));
-    if (item.title) card.appendChild(el("h3", "", item.title));
-    card.appendChild(el("p", "", item.body));
+    if (item.title) card.appendChild(rich("h3", "", item.title));
+    card.appendChild(rich("p", "body", item.body));
     if (item.code) card.appendChild(el("pre", "", item.code));
-    if (item.context) card.appendChild(el("p", "muted", item.context));
+    if (item.context) card.appendChild(rich("p", "muted", item.context));
     var a = answersOf(item.id);
     askOne(card, a, state.editing[item.id], function (q, v) {
       delete state.editing[item.id];
@@ -819,7 +852,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   }
   // One question per screen: the answered ones stay as a line (with "Change"), and only one question
   // is asked: the one being changed, else the first unanswered.
-  function askOne(card, a, editing, onPick, onChange, off) {
+  function askOne(card, a, editing, onPick, onChange, off, withExamples) {
     var open = DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
     var asked = DATA.questions.filter(function (q) { return q.id === editing; })[0] || open[0];
     DATA.questions.forEach(function (q) {
@@ -837,19 +870,19 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     if (!asked) return;
     var ask = el("div", "ask");
     ask.appendChild(el("p", "q", asked.text));
-    ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off));
+    ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples));
     card.appendChild(ask);
   }
   function howTo() {
     var sec = el("section");
-    sec.appendChild(el("h2", "", "How to answer"));
+    sec.appendChild(el("h2", "", "📖 How to answer"));
     DATA.questions.forEach(function (q) {
       sec.appendChild(el("p", "q", q.text));
       var list = el("div", "examples");
       q.options.forEach(function (o) {
         var row = el("div", "example");
-        row.appendChild(el("b", "", o.label));
-        row.appendChild(el("span", "muted", "For example: " + o.example));
+        row.appendChild(el("b", "", (o.icon ? o.icon + " " : "") + o.label));
+        row.appendChild(rich("span", "muted", "For example: " + o.example));
         list.appendChild(row);
       });
       sec.appendChild(list);
@@ -859,15 +892,15 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   function practiceCard(p, off) {
     var card = el("article", "item");
     card.appendChild(el("div", "id", "Practice " + p.id));
-    if (p.title) card.appendChild(el("h3", "", p.title));
-    card.appendChild(el("p", "", p.body));
+    if (p.title) card.appendChild(rich("h3", "", p.title));
+    card.appendChild(rich("p", "body", p.body));
     if (p.code) card.appendChild(el("pre", "", p.code));
-    if (p.context) card.appendChild(el("p", "muted", p.context));
+    if (p.context) card.appendChild(rich("p", "muted", p.context));
     var a = practiceAnswers(p.id);
-    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off);
+    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true);
     if (practiceAnswered(p)) {
       var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
-      card.appendChild(el("p", practiceMatched(p) ? "status saved" : "quote",
+      card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",
         (practiceMatched(p) ? "Matched. " : "Expected: " + expected + ". ") + p.why));
     }
     card.appendChild(statusLine("practice:" + p.id, [], null));
@@ -878,14 +911,14 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     var sec = el("section");
     if (practiceOpen()) {
       var answered = items.filter(practiceAnswered).length;
-      sec.appendChild(el("h2", "", "Practice: " + answered + " of " + items.length + " answered"));
+      sec.appendChild(el("h2", "", "🎯 Practice: " + answered + " of " + items.length + " answered"));
       sec.appendChild(el("p", "muted", "These answers are known. After each one the page shows the expected " +
         "answer. The real items open when all " + items.length + " are answered."));
       items.forEach(function (p) { sec.appendChild(practiceCard(p, off)); });
       return sec;
     }
     var missed = items.filter(function (p) { return !practiceMatched(p); });
-    sec.appendChild(el("h2", "", "Practice: " + (items.length - missed.length) + " of " + items.length + " matched"));
+    sec.appendChild(el("h2", "", (missed.length ? "⚠️ " : "✅ ") + "Practice: " + (items.length - missed.length) + " of " + items.length + " matched"));
     if (missed.length) {
       sec.appendChild(el("div", "banner", "A practice answer did not match. Before going on, tell the agent " +
         "which one: the question is reworded and you take the practice again."));

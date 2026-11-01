@@ -1166,3 +1166,34 @@ test("🔴 the answer buttons are full-width rows with space between them, and t
   assert.ok(colors.size <= 10, `every color is a palette token: ${[...colors].join(", ")}`);
   assert.doesNotMatch(page, /class="card"|"card"/, "no card around every item");
 });
+
+test("🔴 an answer button carries its icon, its label and its example, and a tone marks its meaning", () => {
+  const [first, ...rest] = QUESTIONS;
+  assert.ok(first !== undefined);
+  const toned = {
+    ...first,
+    options: [
+      { ...first.options[0], icon: "✅", tone: "good" },
+      { ...first.options[1], icon: "❌", tone: "bad" },
+    ],
+  };
+  const { page } = build(setup("tones", config({ questions: [toned, ...rest] })));
+  assert.match(page, /"icon": ?"✅"/);
+  assert.match(page, /\.tone-good/);
+  assert.match(page, /\.tone-bad/);
+  const bad = setup("tone-bad", config({ questions: [{ ...toned, options: [{ ...toned.options[0], tone: "green" }, toned.options[1]] }, ...rest] }));
+  const r = run(["build", join(bad, "items.json"), join(bad, "out")]);
+  assert.notEqual(r.status, 0);
+  assert.match(r.out, /questions\[0\]\.options\[0\]\.tone: 'green' is not one of good, mark, bad/);
+});
+
+test("🔴 a practice button shows its answer's example, a real item's button does not, and backticks are code", async () => {
+  const items = [{ source_id: "c1", group: "python", body: "Rule says `max-len 100`; reading is `max-len 120`" }];
+  const { page } = build(setup("code-spans", config({ items })));
+  const practising = await showPage(page, {}, {}, {});
+  assert.equal(occurrences(practising, "Yes\nA sort that returns 1, 2, 3."), 3, "label then example, on each practice item");
+  const shown = await showPage(page, {}, {});
+  assert.equal(occurrences(shown, "Yes\nA sort that returns 1, 2, 3."), 0, "the real item's buttons are short");
+  assert.match(shown, /Rule says \nmax-len 100\n; reading is \nmax-len 120/, "backticks become code spans");
+  assert.doesNotMatch(shown, /`/);
+});

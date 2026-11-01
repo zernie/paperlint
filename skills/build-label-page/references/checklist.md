@@ -150,6 +150,10 @@ not run: banner, items readable, buttons off.
 - Write 3 or more practice items whose answers are known (`practice`, each with `expected` for every
   question and a one-line `why`). The page shows them before the real items; after each answer it
   shows the expected answer and the reason. The real items open once all are answered.
+- Make the answers tell apart at a glance: give each option an `icon` (an emoji) and a `tone`
+  (`good`, `mark` or `bad`, what the answer means), and put code, configs and identifiers in
+  `backticks` or the item's `code` field, so they render as code. During the practice each button also
+  shows its example; on the real items the buttons stay short.
 - One question per screen: an item card asks one question at a time, and the answered ones stay as a
   line with "Change".
 - A practice miss does not lock the page, but it stops the agent: ask the labeller which question
