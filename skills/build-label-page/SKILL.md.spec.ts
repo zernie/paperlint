@@ -104,6 +104,12 @@ The full text, each with its reason and its check, is
    are also on the page to be labelled. Read each question as the labeller: can a person who did not
    design the study tell what each answer means from the question, its examples and nothing else? If
    not, reword before publishing.
+
+   Then **look at it**: screenshot \`page.html\` at 400px and at 1280px wide with the pre-installed
+   Chromium (Playwright), once before any answer and once after the practice, and open both images.
+   The generator's look is one dark palette, one column, answer buttons as full-width rows with space
+   between them, and no card inside a card; keep it when you change the generator, and fix what the
+   images show before publishing. A page that only passed its tests has not been seen.
 4. **Publish.** Load \`artifact-design\` and \`artifact-capabilities\`, then publish \`page.html\` with
    \`capabilities: {db: {}}\`. Use a title of two to four words. Do not ask the page for \`user\` or
    anything else it does not use.

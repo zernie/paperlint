@@ -1154,3 +1154,15 @@ test("🔴 export refuses a stored practice answer the key does not know, by its
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+test("🔴 the answer buttons are full-width rows with space between them, and the page has one dark palette", () => {
+  const { page } = build(setup("look", config()));
+  const css = /<style>([\s\S]*?)<\/style>/.exec(page)?.[1] ?? "";
+  assert.match(css, /\.opts \{ display: flex; flex-direction: column; gap: \d+px; \}/);
+  assert.match(css, /button \{[^}]*width: 100%;[^}]*\}/);
+  assert.match(css, /min-height: (4[4-9]|[5-9]\d)px/, "a tap target at least 44px tall");
+  assert.doesNotMatch(css, /prefers-color-scheme|data-theme/, "one look, not a light and a dark one");
+  const colors = new Set(css.match(/#[0-9a-f]{6}\b/gi) ?? []);
+  assert.ok(colors.size <= 10, `every color is a palette token: ${[...colors].join(", ")}`);
+  assert.doesNotMatch(page, /class="card"|"card"/, "no card around every item");
+});
