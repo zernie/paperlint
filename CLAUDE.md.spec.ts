@@ -73,6 +73,9 @@ Before writing machinery, **run the thing you are about to replace and paste its
     "measure-the-defect-before-the-fix": guidance(
       'Read "this is quick" as a warning. Show the defect (output, or a quoted line), name the layer and channel (more than one is a conversation, not a commit), and spend an adversarial pass on forks and on anything that goes outward.',
     ),
+    "show-a-checks-whole-flow": guidance(
+      "When a change adds or changes a gate (a plan field, a lint rule, a result check), show the author the whole flow in English as a diagram before building it: each stage, who writes it, which rule checks it, when it fires, what turns red, and what the machine cannot see. The author asked for this format (2026-11-01).",
+    ),
     "installing-paperlint-is-smooth": guidance(
       "The target is `npm i` plus one command; any further manual step is a paperlint defect, except a choice that really belongs to the user, named when it is asked. An automatic step that can fail silently is worse than an explicit one.",
     ),
