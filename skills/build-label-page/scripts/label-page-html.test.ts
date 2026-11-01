@@ -25,6 +25,7 @@ import {
   run,
   setup,
   showPage,
+  showPageWithoutStore,
 } from "../../../test/label-page-kit.ts";
 
 test("the page: neutral ids, the source ids nowhere, and the order is fixed by the seed", () => {
@@ -402,4 +403,11 @@ test("🔴 approval: a reason typed but not yet saved survives a re-render from 
     [stored("a process rule"), stored("edited on another phone")],
     ["a process rule", "edited on another phone"],
   );
+});
+
+test("🔴 without the store the page is read-only, and the real items stay readable even though no practice can be answered", async () => {
+  const { page } = build(setup("read-only", config()));
+  const shown = await showPageWithoutStore(page);
+  assert.match(shown, /cannot be saved in this view/);
+  assert.match(shown, /G001/, "a real item is shown read-only");
 });

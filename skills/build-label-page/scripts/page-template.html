@@ -438,7 +438,8 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     }
     app.appendChild(howTo());
     app.appendChild(practiceBlock(off));
-    if (practiceOpen()) return;
+    // Without the store nothing can be answered, practice included: show the real items read-only (rule 7).
+    if (practiceOpen() && state.store !== "none") return;
     var progress = el("section");
     app.appendChild(progress);
     progress.appendChild(el("p", "", done + " of " + total + " items complete"));

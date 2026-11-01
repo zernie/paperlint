@@ -203,6 +203,30 @@ export async function showPage(
   groups: Record<string, unknown>,
   practice: Record<string, unknown> = DONE_PRACTICE,
 ): Promise<string> {
+  return openPage(page, { answers, groups, practice, withStore: true });
+}
+
+/** Open the built page where the store does not run (rule 7: read-only); return what it shows. */
+export async function showPageWithoutStore(page: string): Promise<string> {
+  return openPage(page, {
+    answers: {},
+    groups: {},
+    practice: {},
+    withStore: false,
+  });
+}
+
+interface Stored {
+  readonly answers: Record<string, unknown>;
+  readonly groups: Record<string, unknown>;
+  readonly practice: Record<string, unknown>;
+  readonly withStore: boolean;
+}
+
+async function openPage(
+  page: string,
+  { answers, groups, practice, withStore }: Stored,
+): Promise<string> {
   const script = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)][0]?.[1];
   const json =
     /<script type="application\/json" id="data">([\s\S]*?)<\/script>/.exec(
@@ -236,7 +260,8 @@ export async function showPage(
       getElementById: (id: string) => (id === "data" ? data : app),
       createElement: (tag: string) => new FakeNode(tag),
     },
-    window: { claude: { use: () => Promise.resolve(store) } },
+    // Without the store: the viewer opened the page where it cannot save (rule 7).
+    window: withStore ? { claude: { use: () => Promise.resolve(store) } } : {},
     localStorage: { getItem: () => "next", setItem: () => undefined },
     Promise,
     JSON,
