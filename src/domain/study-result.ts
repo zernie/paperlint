@@ -211,11 +211,11 @@ const selfTestFindings = (
   r: StudyResult,
 ): readonly ResultFinding[] => {
   if (t === "none") return [];
-  const failed = r.self_test?.failed ?? null;
-  if (failed !== 0) return [{ problem: "self-test", id, failed }];
-  return (r.self_test?.passed ?? 0) > 0
-    ? []
-    : [{ problem: "self-test-empty", id }];
+  const run = r.self_test;
+  if (run === undefined) return [{ problem: "self-test", id, failed: null }];
+  if (run.failed !== 0)
+    return [{ problem: "self-test", id, failed: run.failed }];
+  return run.passed > 0 ? [] : [{ problem: "self-test-empty", id }];
 };
 
 /** What `funnel` asks of `r`: a count for every reason. */
