@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:ff5f42dd3d6e6230 compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:08ea3aae9448b383 compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -81,6 +81,10 @@ Before writing machinery, **run the thing you are about to replace and paste its
 ### Show A Checks Whole Flow
 
 **Guidance only** — When a change adds or changes a gate (a plan field, a lint rule, a result check), show the author the whole flow in English as a diagram before building it: each stage, who writes it, which rule checks it, when it fires, what turns red, and what the machine cannot see. The author asked for this format (2026-11-01).
+
+### Split A Pull Request Over 1000 Lines
+
+**Guidance only** — A pull request stays at most about 1000 changed lines (`git diff --shortstat origin/main`, tests and docs included), so the author can skim all of it. A feature asked for while a PR is open goes in a new PR, not into the open one. Larger work is split into PRs that each stand on their own. The author asked for this after a 7000-line PR (2026-11-01).
 
 ### Installing Paperlint Is Smooth
 

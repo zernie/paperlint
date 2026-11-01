@@ -76,6 +76,9 @@ Before writing machinery, **run the thing you are about to replace and paste its
     "show-a-checks-whole-flow": guidance(
       "When a change adds or changes a gate (a plan field, a lint rule, a result check), show the author the whole flow in English as a diagram before building it: each stage, who writes it, which rule checks it, when it fires, what turns red, and what the machine cannot see. The author asked for this format (2026-11-01).",
     ),
+    "split-a-pull-request-over-1000-lines": guidance(
+      "A pull request stays at most about 1000 changed lines (`git diff --shortstat origin/main`, tests and docs included), so the author can skim all of it. A feature asked for while a PR is open goes in a new PR, not into the open one. Larger work is split into PRs that each stand on their own. The author asked for this after a 7000-line PR (2026-11-01).",
+    ),
     "installing-paperlint-is-smooth": guidance(
       "The target is `npm i` plus one command; any further manual step is a paperlint defect, except a choice that really belongs to the user, named when it is asked. An automatic step that can fail silently is worse than an explicit one.",
     ),
