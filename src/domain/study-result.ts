@@ -149,6 +149,8 @@ export type ResultFinding =
       readonly id: string;
       readonly failed: number | null;
     }
+  /** The self-test ran no case: it says nothing about the check. */
+  | { readonly problem: "self-test-empty"; readonly id: string }
   | {
       readonly problem: "funnel";
       readonly id: string;
@@ -210,7 +212,10 @@ const selfTestFindings = (
 ): readonly ResultFinding[] => {
   if (t === "none") return [];
   const failed = r.self_test?.failed ?? null;
-  return failed === 0 ? [] : [{ problem: "self-test", id, failed }];
+  if (failed !== 0) return [{ problem: "self-test", id, failed }];
+  return (r.self_test?.passed ?? 0) > 0
+    ? []
+    : [{ problem: "self-test-empty", id }];
 };
 
 /** What `funnel` asks of `r`: a count for every reason. */
@@ -316,6 +321,8 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
     f.failed === null
       ? `The ${tick(RESULT_FILE)} of ${tick(f.id)} has no \`self_test\` counts, and its plan declares a self-test. What to do: write \`"self_test": { "passed": n, "failed": n }\` from the run on the known answers.`
       : `${tick(f.id)}: ${String(f.failed)} self-test case(s) failed — a check that misses a known answer counts nothing. What to do: fix the check or leave it out of the count, and run the self-test again.`,
+  "self-test-empty": (f) =>
+    `${tick(f.id)}: its self-test ran no case (0 passed, 0 failed) — a check never tried on a known answer is not tested. What to do: make the self-test find and run its known inputs, and write the counts of that run.`,
   funnel: (f) =>
     `The ${tick(RESULT_FILE)} of ${tick(f.id)} counts no drop for ${f.missing.map(tick).join(", ")}, declared in its plan's \`funnel\`. What to do: write each in \`funnel\`, 0 when none was dropped for it.`,
   "no-recall-audit": (f) =>
@@ -343,6 +350,7 @@ export const RESULT_PROBLEMS: readonly Problem[] = [
   "claim-holds",
   "kappa",
   "self-test",
+  "self-test-empty",
   "funnel",
   "no-recall-audit",
   "recall-sample",

@@ -134,6 +134,10 @@ describe("reported", () => {
     expect(judge({ ...GOOD, self_test: { passed: 3, failed: 2 } })).toEqual([
       { problem: "self-test", id: "P1-S01", failed: 2 },
     ]);
+    // A self-test that ran no case proves nothing about the check.
+    expect(judge({ ...GOOD, self_test: { passed: 0, failed: 0 } })).toEqual([
+      { problem: "self-test-empty", id: "P1-S01" },
+    ]);
   });
 });
 
@@ -168,6 +172,7 @@ describe("resultMessage", () => {
     { problem: "kappa", id: "P1-S01", step: "pass", min: 0.6, got: null },
     { problem: "self-test", id: "P1-S01", failed: 2 },
     { problem: "self-test", id: "P1-S01", failed: null },
+    { problem: "self-test-empty", id: "P1-S01" },
     { problem: "funnel", id: "P1-S01", missing: ["a", "b"] },
     { problem: "no-recall-audit", id: "P1-S01" },
     { problem: "recall-sample", id: "P1-S01", files: 30, min_files: 50 },
