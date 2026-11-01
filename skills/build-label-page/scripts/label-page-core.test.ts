@@ -1015,7 +1015,7 @@ test("a key from an older build: without `rounds` its own round's ids are kept; 
   const keyPath = join(dir, "out", "key.json");
   const Rounds = z.object({
     practice: z.object({
-      rounds: z.record(z.string(), z.array(z.string())),
+      rounds: z.record(z.string(), z.record(z.string(), z.unknown())),
     }),
   });
   const read = (): Record<string, unknown> =>
@@ -1037,7 +1037,9 @@ test("a key from an older build: without `rounds` its own round's ids are kept; 
   );
   setup("practice-old-key", config({ practice: PRACTICE, practice_round: 2 }));
   build(dir);
-  assert.deepEqual(Rounds.parse(read()).practice.rounds, {
+  const ids = (r: Record<string, Record<string, unknown>>) =>
+    Object.fromEntries(Object.entries(r).map(([k, v]) => [k, Object.keys(v)]));
+  assert.deepEqual(ids(Rounds.parse(read()).practice.rounds), {
     "1": ["P1", "P2", "P3", "P4"],
     "2": ["P1", "P2", "P3"],
   });
@@ -1050,7 +1052,7 @@ test("a key from an older build: without `rounds` its own round's ids are kept; 
     ),
   );
   build(dir);
-  assert.deepEqual(Rounds.parse(read()).practice.rounds, {
+  assert.deepEqual(ids(Rounds.parse(read()).practice.rounds), {
     "2": ["P1", "P2", "P3"],
   });
 });
@@ -1096,4 +1098,44 @@ test("🔴 a second practice round exported the same day does not overwrite the 
     );
   assert.deepEqual(read(1), { round: 1, matched: 2 });
   assert.deepEqual(read(2), { round: 2, matched: 3 });
+});
+
+test("🔴 exported only after a retake, the earlier round's practice still gets its own file, scored against its own answers", () => {
+  const dir = setup("practice-export-after-retake", config());
+  build(dir);
+  setup("practice-export-after-retake", config({ practice_round: 2 }));
+  build(dir);
+  const round1 = {
+    ...DONE_PRACTICE,
+    "r1-P2": { answers: { label: "yes", boundary: "clear" }, source: "page" },
+  };
+  const round2 = Object.fromEntries(
+    PRACTICE.map((p, n) => [
+      `r2-P${String(n + 1)}`,
+      { answers: p.expected, source: "page" },
+    ]),
+  );
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({
+      answers: {},
+      groups: {},
+      practice: { ...round1, ...round2 },
+    }),
+  );
+  const r = exportAt(dir);
+  assert.equal(r.status, 0, r.out);
+  const Round = z.object({ round: z.number(), matched: z.number() });
+  const read = (n: number) =>
+    Round.parse(
+      JSON.parse(
+        readFileSync(
+          join(dir, "data", `demo-gold-practice-r${String(n)}-2026-01-02.json`),
+          "utf8",
+        ),
+      ),
+    );
+  assert.deepEqual(read(1), { round: 1, matched: 2 });
+  assert.deepEqual(read(2), { round: 2, matched: 3 });
+  assert.match(r.out, /practice round 1: 2 of 3 matched; missed P2/);
 });

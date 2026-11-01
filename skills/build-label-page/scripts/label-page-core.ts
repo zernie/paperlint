@@ -650,21 +650,23 @@ function idsOf(cfg: Config, page: ReturnType<typeof itemsOnPage>): JsonObject {
     ]),
   );
 }
-/** The practice ids each earlier round of an existing key had, read from it (an older key: its own round). */
-const roundsOf = (
-  keyPath: string,
-): Readonly<Record<string, readonly string[]>> => {
+/** Round → its practice items' expected answers. */
+type Rounds = Readonly<Record<string, Expected>>;
+type Expected = Readonly<Record<string, Readonly<Record<string, string>>>>;
+/** Every round of a key's practice; a key from before `rounds` has only its own round. */
+const roundsIn = (p: NonNullable<Key["practice"]>): Rounds =>
+  p.rounds ?? { [String(p.round)]: p.expected };
+/** The rounds an existing key holds, kept by the next build. */
+const roundsOf = (keyPath: string): Rounds => {
   if (!existsSync(keyPath)) return {};
   const old = readJson(keyPath);
   assertKey(old);
-  const p = old.practice;
-  if (p === undefined) return {};
-  return p.rounds ?? { [String(p.round)]: Object.keys(p.expected) };
+  return old.practice === undefined ? {} : roundsIn(old.practice);
 };
 function keyOf(
   cfg: Config,
   page: ReturnType<typeof itemsOnPage>,
-  earlier: Readonly<Record<string, readonly string[]>>,
+  earlier: Rounds,
 ): JsonObject {
   const practice = practiceOf(cfg);
   return {
@@ -678,11 +680,13 @@ function keyOf(
     practice: {
       round: practiceRound(cfg),
       expected: Object.fromEntries(practice.map((p) => [p.id, p.expected])),
-      // The ids each round had, kept across rebuilds: a later round with fewer items does not make
-      // an earlier round's stored answers unknown to the export.
+      // Every round's items and expected answers, kept across rebuilds: an earlier round's stored
+      // answers stay known to the export (a later round may have fewer items) and are scored too.
       rounds: {
         ...earlier,
-        [String(practiceRound(cfg))]: practice.map((p) => p.id),
+        [String(practiceRound(cfg))]: Object.fromEntries(
+          practice.map((p) => [p.id, p.expected]),
+        ),
       },
     },
     ids: idsOf(cfg, page),
@@ -720,8 +724,8 @@ interface Key {
     readonly expected: Readonly<
       Record<string, Readonly<Record<string, string>>>
     >;
-    /** Round → the practice ids it had; a key from before this field has only `round`. */
-    readonly rounds?: Readonly<Record<string, readonly string[]>>;
+    /** Round → its items' expected answers; a key from before this field has only `round`. */
+    readonly rounds?: Rounds;
   };
   readonly ids: Readonly<Record<string, KeyEntry>>;
 }
@@ -764,14 +768,11 @@ const NOUN: Readonly<Record<Collection, string>> = {
  * of an earlier round are known (and kept), not refused.
  */
 const practiceDocs = (key: Key): readonly string[] => {
-  const p = key.practice ?? { round: 0, expected: {} };
-  return p.rounds
-    ? Object.entries(p.rounds).flatMap(([r, pids]) =>
-        pids.map((pid) => `r${r}-${pid}`),
-      )
-    : Array.from({ length: p.round }, (_, r) =>
-        Object.keys(p.expected).map((pid) => `r${String(r + 1)}-${pid}`),
-      ).flat();
+  const p = key.practice;
+  if (p === undefined) return [];
+  return Object.entries(roundsIn(p)).flatMap(([r, expected]) =>
+    Object.keys(expected).map((pid) => `r${r}-${pid}`),
+  );
 };
 /** For each collection: the names the key knows, the names still on the page, a document's fields. */
 function knownNames(key: Key): Readonly<
@@ -1074,9 +1075,9 @@ function reportGroups(
   }
 }
 /** Each practice item of the key's round: what was answered first, what was expected, whether they match. */
-function scorePractice(dump: JsonObject, p: NonNullable<Key["practice"]>) {
-  return Object.entries(p.expected).map(([pid, expected]) => {
-    const doc = docOf(dump["practice"], `r${String(p.round)}-${pid}`);
+function scorePractice(dump: JsonObject, round: string, all: Expected) {
+  return Object.entries(all).map(([pid, expected]) => {
+    const doc = docOf(dump["practice"], `r${round}-${pid}`);
     const answers = isObject(doc["answers"]) ? doc["answers"] : {};
     const matched = Object.entries(expected).every(
       ([q, v]) => answers[q] === v,
@@ -1093,7 +1094,10 @@ function scorePractice(dump: JsonObject, p: NonNullable<Key["practice"]>) {
 /** One file per round: a second round exported the same day keeps the first. */
 const practiceFile = (study: string, round: number, day: string): string =>
   `${study}-practice-r${String(round)}-${day}.json`;
-/** The practice of the key's round, scored, into its own file; never into the labels. */
+/**
+ * Every practice round the store holds answers for, each scored against its own expected answers
+ * into its own file; never into the labels. The key's own round is reported even unanswered.
+ */
 function exportPractice(
   dump: JsonObject,
   key: Key,
@@ -1102,24 +1106,49 @@ function exportPractice(
 ): void {
   const p = key.practice;
   if (p === undefined) return;
-  const items = scorePractice(dump, p);
+  Object.entries(roundsIn(p))
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .forEach(([round, expected]) => {
+      exportRound(
+        key.study,
+        Number(round),
+        scorePractice(dump, round, expected),
+        {
+          target,
+          day,
+          current: Number(round) === p.round,
+        },
+      );
+    });
+}
+/** One round's scored practice to `<study>-practice-r<round>-<date>.json`, and one line about it. */
+function exportRound(
+  study: string,
+  round: number,
+  items: ReturnType<typeof scorePractice>,
+  at: {
+    readonly target: string;
+    readonly day: string;
+    readonly current: boolean;
+  },
+): void {
   if (!items.some((i) => Object.keys(i.answers).length)) {
-    say(`practice round ${String(p.round)}: not answered`);
+    if (at.current) say(`practice round ${String(round)}: not answered`);
     return;
   }
   const missed = items.filter((i) => !i.matched).map((i) => i.id);
   const matched = items.length - missed.length;
-  const path = join(target, practiceFile(key.study, p.round, day));
+  const path = join(at.target, practiceFile(study, round, at.day));
   writeJson(path, {
-    study: key.study,
-    round: p.round,
-    exported: day,
+    study,
+    round,
+    exported: at.day,
     matched,
     total: items.length,
     items,
   });
   say(
-    `practice round ${String(p.round)}: ${String(matched)} of ${String(items.length)} matched${missed.length ? `; missed ${missed.join(", ")}` : ""} -> ${path}`,
+    `practice round ${String(round)}: ${String(matched)} of ${String(items.length)} matched${missed.length ? `; missed ${missed.join(", ")}` : ""} -> ${path}`,
   );
 }
 /** The labels file: every item on the page with its answers, the groups, and the counts. */
