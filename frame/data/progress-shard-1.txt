@@ -3340,3 +3340,1685 @@ error batch of 41: [{'type': 'RATE_LIMIT', 'code': 'graphql_rate_limit', 'messag
 batch took 0.1s
 43191/43191	cost None	remaining None
 finished 2026-10-31T19:32:26Z
+started 2026-10-31T21:07:48Z
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+50/20866	cost 1	remaining 4998
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.7s
+100/20866	cost 1	remaining 4972
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+150/20866	cost 1	remaining 4833
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.4s
+200/20866	cost 1	remaining 4757
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.3s
+250/20866	cost 1	remaining 4914
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.3s
+300/20866	cost 1	remaining 4899
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+350/20866	cost 1	remaining 4589
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+400/20866	cost 1	remaining 4854
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+450/20866	cost 1	remaining 4471
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.9s
+500/20866	cost 1	remaining 4427
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.7s
+550/20866	cost 1	remaining 4801
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.7s
+600/20866	cost 1	remaining 4289
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.2s
+650/20866	cost 1	remaining 4230
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.7s
+700/20866	cost 1	remaining 4175
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.1s
+750/20866	cost 1	remaining 4725
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.9s
+800/20866	cost 1	remaining 4056
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+850/20866	cost 1	remaining 4014
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.2s
+900/20866	cost 1	remaining 3938
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+950/20866	cost 1	remaining 3883
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.1s
+1000/20866	cost 1	remaining 4645
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+1050/20866	cost 1	remaining 3770
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 23.6s
+1100/20866	cost 1	remaining 4593
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+1150/20866	cost 1	remaining 3661
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+1200/20866	cost 1	remaining 4555
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+1250/20866	cost 1	remaining 3546
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+1300/20866	cost 1	remaining 3475
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.7s
+1350/20866	cost 1	remaining 4507
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+1400/20866	cost 1	remaining 3336
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+1450/20866	cost 1	remaining 3293
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+1500/20866	cost 1	remaining 3251
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+1550/20866	cost 1	remaining 3196
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+1600/20866	cost 1	remaining 4384
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+1650/20866	cost 1	remaining 4369
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+1700/20866	cost 1	remaining 3020
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+1750/20866	cost 1	remaining 2968
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.8s
+1800/20866	cost 1	remaining 2904
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.5s
+1850/20866	cost 1	remaining 4324
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+1900/20866	cost 1	remaining 2767
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+1950/20866	cost 1	remaining 4305
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+2000/20866	cost 1	remaining 2625
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+2050/20866	cost 1	remaining 2562
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.5s
+2100/20866	cost 1	remaining 4260
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.7s
+2150/20866	cost 1	remaining 2433
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+2200/20866	cost 1	remaining 4231
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+2250/20866	cost 1	remaining 2305
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.9s
+2300/20866	cost 1	remaining 2229
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+2350/20866	cost 1	remaining 2167
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+2400/20866	cost 1	remaining 2125
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+2450/20866	cost 1	remaining 2061
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+2500/20866	cost 1	remaining 2030
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.9s
+2550/20866	cost 1	remaining 1965
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.8s
+2600/20866	cost 1	remaining 1906
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+2650/20866	cost 1	remaining 1875
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+2700/20866	cost 1	remaining 1829
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.0s
+2750/20866	cost 1	remaining 1764
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.6s
+2800/20866	cost 1	remaining 3942
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.0s
+2850/20866	cost 1	remaining 1691
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+2900/20866	cost 1	remaining 3912
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+2950/20866	cost 1	remaining 1577
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+3000/20866	cost 1	remaining 1535
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.7s
+3050/20866	cost 1	remaining 1479
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+3100/20866	cost 1	remaining 1412
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.9s
+3150/20866	cost 1	remaining 1335
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+3200/20866	cost 1	remaining 3789
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.8s
+3250/20866	cost 1	remaining 1206
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+3300/20866	cost 1	remaining 1142
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+3350/20866	cost 1	remaining 1076
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.5s
+3400/20866	cost 1	remaining 1010
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.8s
+3450/20866	cost 1	remaining 935
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+3500/20866	cost 1	remaining 894
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+3550/20866	cost 1	remaining 825
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+3600/20866	cost 1	remaining 770
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+3650/20866	cost 1	remaining 706
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.3s
+3700/20866	cost 1	remaining 667
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+3750/20866	cost 1	remaining 635
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+3800/20866	cost 1	remaining 574
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.0s
+3850/20866	cost 1	remaining 522
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.1s
+3900/20866	cost 1	remaining 3570
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+3950/20866	cost 1	remaining 347
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+4000/20866	cost 1	remaining 282
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+4050/20866	cost 1	remaining 227
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.5s
+4100/20866	cost 1	remaining 150
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.7s
+4150/20866	cost 1	remaining 64
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+rate limit exhausted, sleeping 1655s
+batch took 1682.5s
+4200/20866	cost 1	remaining 3468
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.2s
+4250/20866	cost 1	remaining 4963
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+4300/20866	cost 1	remaining 4911
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.1s
+4350/20866	cost 1	remaining 4846
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+4400/20866	cost 1	remaining 4782
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.8s
+4450/20866	cost 1	remaining 4695
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.4s
+4500/20866	cost 1	remaining 4652
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.3s
+4550/20866	cost 1	remaining 4864
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.3s
+4600/20866	cost 1	remaining 4847
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+4650/20866	cost 1	remaining 4476
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+4700/20866	cost 1	remaining 4414
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+4750/20866	cost 1	remaining 4394
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.0s
+4800/20866	cost 1	remaining 4320
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.2s
+4850/20866	cost 1	remaining 4243
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+4900/20866	cost 1	remaining 4201
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+4950/20866	cost 1	remaining 4136
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+5000/20866	cost 1	remaining 4094
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.8s
+5050/20866	cost 1	remaining 4647
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+5100/20866	cost 1	remaining 3969
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.6s
+5150/20866	cost 1	remaining 3904
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+5200/20866	cost 1	remaining 3818
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.4s
+5250/20866	cost 1	remaining 4568
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.9s
+5300/20866	cost 1	remaining 3714
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.0s
+5350/20866	cost 1	remaining 3681
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+5400/20866	cost 1	remaining 3621
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.0s
+5450/20866	cost 1	remaining 4500
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.1s
+5500/20866	cost 1	remaining 3482
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+5550/20866	cost 1	remaining 3438
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+5600/20866	cost 1	remaining 4436
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+5650/20866	cost 1	remaining 3321
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+5700/20866	cost 1	remaining 3279
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+5750/20866	cost 1	remaining 3206
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+5800/20866	cost 1	remaining 3165
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+5850/20866	cost 1	remaining 3101
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+5900/20866	cost 1	remaining 3046
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.6s
+5950/20866	cost 1	remaining 2994
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+6000/20866	cost 1	remaining 4285
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+6050/20866	cost 1	remaining 2864
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.8s
+6100/20866	cost 1	remaining 2820
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.8s
+6150/20866	cost 1	remaining 2772
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.5s
+6200/20866	cost 1	remaining 2731
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.9s
+6250/20866	cost 1	remaining 2664
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+6300/20866	cost 1	remaining 2601
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+6350/20866	cost 1	remaining 2547
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+6400/20866	cost 1	remaining 4109
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+6450/20866	cost 1	remaining 2406
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+6500/20866	cost 1	remaining 2362
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.5s
+6550/20866	cost 1	remaining 4049
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+6600/20866	cost 1	remaining 2220
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.6s
+6650/20866	cost 1	remaining 4020
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+6700/20866	cost 1	remaining 2085
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.4s
+6750/20866	cost 1	remaining 3982
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+6800/20866	cost 1	remaining 3957
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+6850/20866	cost 1	remaining 1922
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.4s
+6900/20866	cost 1	remaining 1857
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+6950/20866	cost 1	remaining 3901
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+7000/20866	cost 1	remaining 1721
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.0s
+7050/20866	cost 1	remaining 1646
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+7100/20866	cost 1	remaining 1584
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.9s
+7150/20866	cost 1	remaining 1532
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+7200/20866	cost 1	remaining 1466
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.0s
+7250/20866	cost 1	remaining 1401
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.5s
+7300/20866	cost 1	remaining 3797
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+7350/20866	cost 1	remaining 1306
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+7400/20866	cost 1	remaining 1249
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+7450/20866	cost 1	remaining 1189
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+7500/20866	cost 1	remaining 3690
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.2s
+7550/20866	cost 1	remaining 1060
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+7600/20866	cost 1	remaining 984
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.1s
+7650/20866	cost 1	remaining 930
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+7700/20866	cost 1	remaining 877
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 28.2s
+7750/20866	cost 1	remaining 3630
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+7800/20866	cost 1	remaining 704
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+7850/20866	cost 1	remaining 649
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+7900/20866	cost 1	remaining 594
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.0s
+7950/20866	cost 1	remaining 3581
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.2s
+8000/20866	cost 1	remaining 3565
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+8050/20866	cost 1	remaining 400
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+8100/20866	cost 1	remaining 3541
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+8150/20866	cost 1	remaining 285
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+8200/20866	cost 1	remaining 225
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.0s
+8250/20866	cost 1	remaining 183
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 403 attempt 0
+rate limit exhausted, sleeping 1408s
+batch took 1735.8s
+8300/20866	cost 1	remaining 3441
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.9s
+8350/20866	cost 1	remaining 4953
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.0s
+8400/20866	cost 1	remaining 4889
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+8450/20866	cost 1	remaining 4837
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.8s
+8500/20866	cost 1	remaining 4795
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+8550/20866	cost 1	remaining 4898
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.1s
+8600/20866	cost 1	remaining 4884
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.2s
+8650/20866	cost 1	remaining 4607
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.5s
+8700/20866	cost 1	remaining 4530
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+8750/20866	cost 1	remaining 4465
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+8800/20866	cost 1	remaining 4402
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.7s
+8850/20866	cost 1	remaining 4346
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+8900/20866	cost 1	remaining 4260
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.1s
+8950/20866	cost 1	remaining 4193
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+9000/20866	cost 1	remaining 4739
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+9050/20866	cost 1	remaining 4088
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 29.3s
+9100/20866	cost 1	remaining 4678
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+9150/20866	cost 1	remaining 3931
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.7s
+9200/20866	cost 1	remaining 3856
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.3s
+9250/20866	cost 1	remaining 3814
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.3s
+9300/20866	cost 1	remaining 4597
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+9350/20866	cost 1	remaining 3679
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+9400/20866	cost 1	remaining 3637
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 34.3s
+9450/20866	cost 1	remaining 3565
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+9500/20866	cost 1	remaining 3522
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.8s
+9550/20866	cost 1	remaining 3468
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.3s
+9600/20866	cost 1	remaining 4425
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.9s
+9650/20866	cost 1	remaining 3352
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+9700/20866	cost 1	remaining 3288
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.7s
+9750/20866	cost 1	remaining 3234
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.6s
+9800/20866	cost 1	remaining 3168
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.8s
+9850/20866	cost 1	remaining 3105
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 25.3s
+9900/20866	cost 1	remaining 3060
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+9950/20866	cost 1	remaining 4299
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+HTTP 502 attempt 0
+split 25 -> 12 + 13
+batch took 36.4s
+10000/20866	cost 1	remaining 2871
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.5s
+10050/20866	cost 1	remaining 4277
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+10100/20866	cost 1	remaining 4259
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.1s
+10150/20866	cost 1	remaining 2693
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.1s
+10200/20866	cost 1	remaining 2614
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+10250/20866	cost 1	remaining 2550
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+10300/20866	cost 1	remaining 2487
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+10350/20866	cost 1	remaining 2434
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+10400/20866	cost 1	remaining 4123
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+10450/20866	cost 1	remaining 2328
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.1s
+10500/20866	cost 1	remaining 4095
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+10550/20866	cost 1	remaining 2198
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.0s
+10600/20866	cost 1	remaining 2135
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+10650/20866	cost 1	remaining 2072
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+10700/20866	cost 1	remaining 2007
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+10750/20866	cost 1	remaining 1930
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.6s
+10800/20866	cost 1	remaining 1878
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.8s
+10850/20866	cost 1	remaining 1805
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.5s
+10900/20866	cost 1	remaining 1752
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.1s
+10950/20866	cost 1	remaining 1676
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.2s
+11000/20866	cost 1	remaining 1620
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+11050/20866	cost 1	remaining 1554
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+11100/20866	cost 1	remaining 1491
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+11150/20866	cost 1	remaining 1436
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+11200/20866	cost 1	remaining 3870
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.0s
+11250/20866	cost 1	remaining 1342
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+11300/20866	cost 1	remaining 1272
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+11350/20866	cost 1	remaining 1225
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.5s
+11400/20866	cost 1	remaining 3805
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+11450/20866	cost 1	remaining 1077
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+11500/20866	cost 1	remaining 1024
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.9s
+11550/20866	cost 1	remaining 985
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+11600/20866	cost 1	remaining 921
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+11650/20866	cost 1	remaining 858
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+11700/20866	cost 1	remaining 791
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.7s
+11750/20866	cost 1	remaining 750
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+11800/20866	cost 1	remaining 684
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+11850/20866	cost 1	remaining 617
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.1s
+11900/20866	cost 1	remaining 567
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+11950/20866	cost 1	remaining 514
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.7s
+12000/20866	cost 1	remaining 458
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+12050/20866	cost 1	remaining 405
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.9s
+12100/20866	cost 1	remaining 340
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+12150/20866	cost 1	remaining 273
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+12200/20866	cost 1	remaining 3471
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+12250/20866	cost 1	remaining 138
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+12300/20866	cost 1	remaining 85
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.1s
+12350/20866	cost 1	remaining 3426
+rate limit exhausted, sleeping 1626s
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 1649.3s
+12400/20866	cost 1	remaining 4969
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.8s
+12450/20866	cost 1	remaining 4893
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+12500/20866	cost 1	remaining 4841
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.9s
+12550/20866	cost 1	remaining 4803
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.6s
+12600/20866	cost 1	remaining 4761
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+12650/20866	cost 1	remaining 4707
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.6s
+12700/20866	cost 1	remaining 4653
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.7s
+12750/20866	cost 1	remaining 4595
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.4s
+12800/20866	cost 1	remaining 4534
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.3s
+12850/20866	cost 1	remaining 4821
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+12900/20866	cost 1	remaining 4422
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.6s
+12950/20866	cost 1	remaining 4389
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+13000/20866	cost 1	remaining 4734
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.3s
+13050/20866	cost 1	remaining 4261
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+13100/20866	cost 1	remaining 4729
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+13150/20866	cost 1	remaining 4102
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.7s
+13200/20866	cost 1	remaining 4698
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.1s
+13250/20866	cost 1	remaining 4034
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.1s
+13300/20866	cost 1	remaining 3993
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+13350/20866	cost 1	remaining 4621
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.3s
+13400/20866	cost 1	remaining 3892
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+13450/20866	cost 1	remaining 3831
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+13500/20866	cost 1	remaining 4579
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.1s
+13550/20866	cost 1	remaining 3753
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+13600/20866	cost 1	remaining 4539
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+13650/20866	cost 1	remaining 3650
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.7s
+13700/20866	cost 1	remaining 3600
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.7s
+13750/20866	cost 1	remaining 4464
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+13800/20866	cost 1	remaining 3543
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.2s
+13850/20866	cost 1	remaining 3513
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+13900/20866	cost 1	remaining 3463
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.6s
+13950/20866	cost 1	remaining 3400
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.6s
+14000/20866	cost 1	remaining 3349
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+14050/20866	cost 1	remaining 4351
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+14100/20866	cost 1	remaining 3260
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+14150/20866	cost 1	remaining 3203
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.3s
+14200/20866	cost 1	remaining 4309
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.2s
+14250/20866	cost 1	remaining 3092
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 20.8s
+14300/20866	cost 1	remaining 3040
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+14350/20866	cost 1	remaining 2998
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+14400/20866	cost 1	remaining 4268
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+14450/20866	cost 1	remaining 2872
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.6s
+14500/20866	cost 1	remaining 2810
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.8s
+14550/20866	cost 1	remaining 4234
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.6s
+14600/20866	cost 1	remaining 2671
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.5s
+14650/20866	cost 1	remaining 2618
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.5s
+14700/20866	cost 1	remaining 2544
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+14750/20866	cost 1	remaining 2481
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.5s
+14800/20866	cost 1	remaining 2441
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.2s
+14850/20866	cost 1	remaining 2378
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+14900/20866	cost 1	remaining 4158
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.4s
+14950/20866	cost 1	remaining 2252
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.0s
+15000/20866	cost 1	remaining 2189
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+15050/20866	cost 1	remaining 4107
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.1s
+15100/20866	cost 1	remaining 2094
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.0s
+15150/20866	cost 1	remaining 4091
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.1s
+15200/20866	cost 1	remaining 1958
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.8s
+15250/20866	cost 1	remaining 4069
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.4s
+15300/20866	cost 1	remaining 4057
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.0s
+15350/20866	cost 1	remaining 1757
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.7s
+15400/20866	cost 1	remaining 1666
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+15450/20866	cost 1	remaining 1605
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.9s
+15500/20866	cost 1	remaining 1553
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+15550/20866	cost 1	remaining 1512
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+15600/20866	cost 1	remaining 1438
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+15650/20866	cost 1	remaining 1385
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+15700/20866	cost 1	remaining 3944
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+15750/20866	cost 1	remaining 1259
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.4s
+15800/20866	cost 1	remaining 3881
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.2s
+15850/20866	cost 1	remaining 1156
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 22.3s
+15900/20866	cost 1	remaining 1106
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+15950/20866	cost 1	remaining 1042
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.3s
+16000/20866	cost 1	remaining 1007
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+16050/20866	cost 1	remaining 954
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+16100/20866	cost 1	remaining 857
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+16150/20866	cost 1	remaining 817
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.2s
+16200/20866	cost 1	remaining 765
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.9s
+16250/20866	cost 1	remaining 690
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.9s
+16300/20866	cost 1	remaining 3694
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.1s
+16350/20866	cost 1	remaining 571
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+16400/20866	cost 1	remaining 542
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.9s
+16450/20866	cost 1	remaining 509
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+16500/20866	cost 1	remaining 458
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+16550/20866	cost 1	remaining 433
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.9s
+16600/20866	cost 1	remaining 370
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.2s
+16650/20866	cost 1	remaining 313
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.0s
+16700/20866	cost 1	remaining 234
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+16750/20866	cost 1	remaining 181
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.8s
+16800/20866	cost 1	remaining 120
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.3s
+16850/20866	cost 1	remaining 102
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.3s
+16900/20866	cost 1	remaining 52
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.5s
+16950/20866	cost 1	remaining 3
+rate limit low, sleeping until 2026-11-01T01:08:03Z
+rate limit exhausted, sleeping 1200s
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 1220.5s
+17000/20866	cost 1	remaining 4955
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.0s
+17050/20866	cost 1	remaining 4917
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 26.1s
+17100/20866	cost 1	remaining 4840
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.2s
+17150/20866	cost 1	remaining 4773
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.2s
+17200/20866	cost 1	remaining 4719
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.5s
+17250/20866	cost 1	remaining 4898
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.7s
+17300/20866	cost 1	remaining 4872
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.9s
+17350/20866	cost 1	remaining 4854
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+17400/20866	cost 1	remaining 4451
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.4s
+17450/20866	cost 1	remaining 4406
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+17500/20866	cost 1	remaining 4354
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+17550/20866	cost 1	remaining 4302
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.8s
+17600/20866	cost 1	remaining 4275
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.4s
+17650/20866	cost 1	remaining 4247
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.7s
+17700/20866	cost 1	remaining 4696
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.1s
+17750/20866	cost 1	remaining 4663
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.2s
+17800/20866	cost 1	remaining 4110
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.4s
+17850/20866	cost 1	remaining 4051
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+17900/20866	cost 1	remaining 3998
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.6s
+17950/20866	cost 1	remaining 3947
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.7s
+18000/20866	cost 1	remaining 3886
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 18.2s
+18050/20866	cost 1	remaining 3845
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.9s
+18100/20866	cost 1	remaining 3805
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.8s
+18150/20866	cost 1	remaining 3764
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+18200/20866	cost 1	remaining 3727
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.1s
+18250/20866	cost 1	remaining 3699
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.6s
+18300/20866	cost 1	remaining 4552
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+18350/20866	cost 1	remaining 3620
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.5s
+18400/20866	cost 1	remaining 3605
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.5s
+18450/20866	cost 1	remaining 3579
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+18500/20866	cost 1	remaining 4468
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 22.2s
+18550/20866	cost 1	remaining 3536
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+18600/20866	cost 1	remaining 4467
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.7s
+18650/20866	cost 1	remaining 3460
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.4s
+18700/20866	cost 1	remaining 3423
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.8s
+18750/20866	cost 1	remaining 3384
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.2s
+18800/20866	cost 1	remaining 3346
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.6s
+18850/20866	cost 1	remaining 3309
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+18900/20866	cost 1	remaining 3292
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+18950/20866	cost 1	remaining 3256
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.1s
+19000/20866	cost 1	remaining 4422
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+19050/20866	cost 1	remaining 3203
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.5s
+19100/20866	cost 1	remaining 4376
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+19150/20866	cost 1	remaining 3150
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.0s
+19200/20866	cost 1	remaining 3111
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+19250/20866	cost 1	remaining 3083
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.0s
+19300/20866	cost 1	remaining 4350
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.4s
+19350/20866	cost 1	remaining 3006
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.5s
+19400/20866	cost 1	remaining 4348
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.9s
+19450/20866	cost 1	remaining 2942
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+19500/20866	cost 1	remaining 2902
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.8s
+19550/20866	cost 1	remaining 2854
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.4s
+19600/20866	cost 1	remaining 2837
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 19.1s
+19650/20866	cost 1	remaining 2810
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 21.5s
+19700/20866	cost 1	remaining 2786
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.6s
+19750/20866	cost 1	remaining 2769
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+19800/20866	cost 1	remaining 2753
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.7s
+19850/20866	cost 1	remaining 2715
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.3s
+19900/20866	cost 1	remaining 4237
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.6s
+19950/20866	cost 1	remaining 2651
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.2s
+20000/20866	cost 1	remaining 2634
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.7s
+20050/20866	cost 1	remaining 2598
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 21.8s
+20100/20866	cost 1	remaining 2573
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.7s
+20150/20866	cost 1	remaining 4164
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 22.1s
+20200/20866	cost 1	remaining 2518
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 20.5s
+20250/20866	cost 1	remaining 2501
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.5s
+20300/20866	cost 1	remaining 2475
+HTTP 504 attempt 0
+split 50 -> 25 + 25
+batch took 21.2s
+20350/20866	cost 1	remaining 2447
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.3s
+20400/20866	cost 1	remaining 2442
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 24.9s
+20450/20866	cost 1	remaining 2418
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.6s
+20500/20866	cost 1	remaining 2392
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.5s
+20550/20866	cost 1	remaining 2366
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 27.0s
+20600/20866	cost 1	remaining 2352
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.7s
+20650/20866	cost 1	remaining 2327
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.5s
+20700/20866	cost 1	remaining 2302
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 25.7s
+20750/20866	cost 1	remaining 4064
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 23.9s
+20800/20866	cost 1	remaining 2274
+HTTP 502 attempt 0
+split 50 -> 25 + 25
+batch took 26.4s
+20850/20866	cost 1	remaining 2261
+batch took 5.2s
+20866/20866	cost 1	remaining 2259
+finished 2026-11-01T01:38:57Z
