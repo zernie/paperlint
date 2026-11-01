@@ -1,10 +1,10 @@
 ---
 name: build-label-page
-description: Build a phone labelling page published as a claude.ai Artifact with a shared answer store, and export the answers into the paper's study folder. Use when a study needs a person to label items (gold labels, a blind review of model outputs, "is this a real boundary case"), or on "a page to label these", "a gold-labelling page", "a blind review page". Carries the seven rules that keep such a page honest. Composes with build-benchmark and draft-paper.
+description: Build a phone labelling page published as a claude.ai Artifact with a shared answer store, and export the answers into the paper's study folder. Use when a study needs a person to label items (gold labels, a blind review of model outputs, "is this a real boundary case"), or on "a page to label these", "a gold-labelling page", "a blind review page". Carries the eight rules that keep such a page honest, the last one a check that the labeller understands each question before the real items. Composes with build-benchmark and draft-paper.
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:dd742c1fcb34cfd6 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:b647b3907591be93 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -18,7 +18,7 @@ committed, not left in the store.
 **Not for** an LLM judge (no person answers), a questionnaire about the person, or a form that collects
 anything but labels.
 
-## The seven rules
+## The eight rules
 
 The full text, each with its reason and its check, is
 [`references/checklist.md`](references/checklist.md). Read it before building. In one line each:
@@ -41,6 +41,11 @@ The full text, each with its reason and its check, is
    take the last answers in chat; patch the page blind at most once.
 7. **Save on click**, no submit button; "Saved <time>" on every card; survive a reload; render
    readable, with a banner, when the store is unavailable.
+8. **The labeller understands each question first.** Every answer option carries one real example,
+   shown on the first screen; 3 or more practice items with known answers come before the real
+   items, and the page shows the expected answer after each; one question per screen. A practice
+   miss means the question is reworded, `practice_round` raised and the practice taken again;
+   practice answers never reach the labels.
 
 ## Procedure
 
@@ -83,6 +88,18 @@ The full text, each with its reason and its check, is
    source id; it never goes on the page). Rebuilding with the same seed keeps every id, and a new item
    gets the next one. Read the page text once as a person who knows nothing about the source: if
    anything on it tells the answer, take it out of the item.
+
+   Then read it for **comprehension** (rule 8). Every option's `example` is a real case of the study
+   in one line, and the practice items are real cases whose answer you are sure of — never items that
+   are also on the page to be labelled. Read each question as the labeller: can a person who did not
+   design the study tell what each answer means from the question, its examples and nothing else? If
+   not, reword before publishing.
+
+   Then **look at it**: screenshot `page.html` at 400px and at 1280px wide with the pre-installed
+   Chromium (Playwright), once before any answer and once after the practice, and open both images.
+   The generator's look is one dark palette, one column, answer buttons as full-width rows with space
+   between them, and no card inside a card; keep it when you change the generator, and fix what the
+   images show before publishing. A page that only passed its tests has not been seen.
 4. **Publish.** Load `artifact-design` and `artifact-capabilities`, then publish `page.html` with
    `capabilities: {db: {}}`. Use a title of two to four words. Do not ask the page for `user` or
    anything else it does not use.
@@ -90,10 +107,14 @@ The full text, each with its reason and its check, is
    `answers`) to confirm the test answer arrived. `ArtifactData` can be a deferred tool: load it with
    `ToolSearch` first. Then delete the test answer's document, or tell the person which one it is
    and keep it out of the export.
-6. **Send the link** with one line on how it works: tap an answer, it saves; "Next unanswered" shows
-   what is left. Say what you tested and what you could not.
-7. **Export when the person is done, or stops** (rule 6). Save the store's two collections, `answers`
-   and `groups`, as `dump.json` in the shape the generator's header gives (answers given in chat go
+6. **Send the link** with one line on how it works: start with the practice; tap an answer, it saves;
+   "Next unanswered" shows what is left. Say what you tested and what you could not.
+   **Check the practice before the real answers count** (rule 8): list the store's `practice`
+   collection. A miss means a question was unclear: ask the labeller which one and why, reword it and
+   its examples, raise `practice_round`, rebuild, republish, and have them take the practice again.
+   Write one line per round in the study's README: what was reworded and why.
+7. **Export when the person is done, or stops** (rule 6). Save the store's three collections,
+   `answers`, `groups` and `practice`, as `dump.json` in the shape the generator's header gives (answers given in chat go
    in with `"source": "chat"`), then:
 
    ```bash
@@ -102,7 +123,9 @@ The full text, each with its reason and its check, is
 
    It writes `data/<study>-labels-<date>.json` and prints every incomplete item, every answer or
    familiarity value that is not one of the offered options (not counted, same rule as on the page;
-   correct it in the dump and export again) and every group with no familiarity answer. Commit the file in the same pass, and add the line "labels →
+   correct it in the dump and export again) and every group with no familiarity answer. The practice
+   never goes into the labels: it is scored into `data/<study>-practice-<date>.json` beside them, the
+   record of rule 8. Commit both files in the same pass, and add the line "labels →
    `data/<study>-labels-<date>.json`" to the paper's `NOTES.md` for the numbers that use them.
 
 ## When the page misbehaves

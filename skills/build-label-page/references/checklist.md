@@ -1,12 +1,12 @@
 # Labelling-page checklist
 
-Seven rules for a page where a person labels items from a paper's study (gold labels, a blind review of
+Eight rules for a page where a person labels items from a paper's study (gold labels, a blind review of
 model outputs, "is this a real boundary case"). Each rule says what to do, why, and how to check it.
 They come from four such pages built in one week; each rule is a defect one of them shipped, or a
 failure the next answer would have hidden.
 
-The generator beside this file, `example-generator.py`, does rules 2 to 5 and 7 by construction. Rules
-1 and 6 are things the agent does. Read the rule before changing the part of the generator that
+The generator beside this file, `example-generator.py`, does rules 2 to 5, 7 and the page half of 8 by
+construction. Rules 1 and 6, and the rewording in 8, are things the agent does. Read the rule before changing the part of the generator that
 carries it.
 
 ## 1. Test it in the claude.ai phone viewer before sending the link
@@ -137,6 +137,43 @@ the store is missing hides the real problem (a link opened without access) behin
 
 **Check.** Answer, reload, the answer is there with its time. Open the page where the store does
 not run: banner, items readable, buttons off.
+
+---
+
+## 8. The labeller understands each question before the real items
+
+**Do.**
+
+- Write each question in plain words, and give every answer option one `example`: a real item of
+  the study, in a line, that takes that answer. The page shows them on its first screen ("How to
+  answer"). The build refuses an option without one.
+- Write 3 or more practice items whose answers are known (`practice`, each with `expected` for every
+  question and a one-line `why`). The page shows them before the real items; after each answer it
+  shows the expected answer and the reason. The real items open once all are answered.
+- Make the answers tell apart at a glance: give each option an `icon` (an emoji), never a coloured
+  side stripe on a button (it reads as decoration; the look test refuses one), and put code, configs and identifiers in
+  `backticks` or the item's `code` field, so they render as code. During the practice each button also
+  shows its example; on the real items the buttons stay short.
+- One question per screen: an item card asks one question at a time, and the answered ones stay as a
+  line with "Change".
+- A practice miss does not lock the page, but it stops the agent: ask the labeller which question
+  was unclear, reword it (and its examples), raise `practice_round`, rebuild, and have the labeller
+  take the practice again before their real answers count. The page keeps only the FIRST answer to a
+  practice item, so the score is not a retry.
+- Keep a record in the study folder: the practice file `export` writes
+  (`<study>-practice-<date>.json`: the round, who answered, what matched), and one line in the
+  study's README per round on what was reworded after it.
+
+**Why.** A labeller who misreads the question gives labels that agree with nothing, and the agreement
+statistic then blames the items. Pages that passed rules 1 to 7 (blind, phone-tested, saved on click)
+still left their labeller unable to say what was being asked. A pilot round before the real labelling
+is ordinary practice in labelling studies: one rule-mining study labelled 30 pilot samples, resolved
+the disagreements, aligned its criteria, and only then labelled the full set.
+
+**Check.** The page opens on "How to answer" with an example under every option, then "Practice: 0
+of N answered", and no real item. Answer the practice wrongly once: the expected answer and the
+reason appear, and the banner says to tell the agent. `export` writes the labels without any
+practice answer and the practice file beside them.
 
 ---
 

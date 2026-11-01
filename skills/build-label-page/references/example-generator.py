@@ -13,10 +13,20 @@ allow-list, keep the guards. Standard library only. No network.
 claude.ai Artifact; publish page.html with `capabilities: {db: {}}`). `export` turns what the store
 holds into one JSON file for the study's data/ folder. Answers and familiarity values outside the
 offered options are not counted (page and export read the same `allowed` lists): the item or group is
-marked incomplete and reported (`invalid_answers`, `invalid_familiarity`). `dump.json` is the store's two collections:
+marked incomplete and reported (`invalid_answers`, `invalid_familiarity`). `dump.json` is the store's three collections:
 
-    {"answers": {"G001": {"answers": {"q": "v"}, "savedAt": "...", "source": "page"}, ...},
-     "groups":  {"python": {"familiarity": "well", "savedAt": "...", "source": "page"}, ...}}
+    {"answers":  {"G001": {"answers": {"q": "v"}, "savedAt": "...", "source": "page"}, ...},
+     "groups":   {"python": {"familiarity": "well", "savedAt": "...", "source": "page"}, ...},
+     "practice": {"r1-P1": {"answers": {"q": "v"}, "savedAt": "...", "source": "page"}, ...}}
+
+THE COMPREHENSION STEP (rule 8). The first screen shows every question with one real example per
+answer (`example`, required on every option). Then the practice items: their answers are known
+(`expected`, one per question), and after each one the page shows the expected answer and `why`.
+The real items open once every practice item of the current `practice_round` is answered; a miss does
+not lock them, it tells the labeller to tell the agent, who rewords the question, raises
+`practice_round` and rebuilds. The page stores the FIRST practice answer only, in its own collection
+(`practice`, documents `r<round>-P<n>`), so `export` keeps it out of the labels and writes it to
+`<study>-practice-<date>.json`. An item card asks one question at a time; answered ones stay as a line.
 
 items.json is checked once against the declared CONFIG_SCHEMA (`python3 example-generator.py schema`
 prints it): every field's type, required or optional, non-empty strings, ids as strings of letters,
@@ -33,7 +43,13 @@ items.json:
       "labeller_knows": ["python"],         # optional: items of other groups are not put on the page
       "familiarity_question": "How well do you know {group}?",          # optional
       "questions": [{"id": "label", "text": "Is this correct?", "short": "correct?",   # short: shown in "still needs"
-                     "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}]}],
+                     "options": [{"value": "yes", "label": "Yes", "example": "one real case, in a line",
+                                  "icon": "✅"},                       # icon: optional
+                                 {"value": "no", "label": "No", "example": "another real case",
+                                  "icon": "❌"}]}],
+                                            # in any shown text, `backticks` render as code
+      "practice": [{"body": "...", "expected": {"label": "yes"}, "why": "one line"}, ...],   # 3 or more
+      "practice_round": 1,                  # optional; raise it after rewording, and the practice reopens
       "items": [{"source_id": "case-0412-b", "group": "python", "body": "...", "code": "...",
                  "context": "..."}]
     }
@@ -108,7 +124,18 @@ ITEM_SCHEMA = obj(
     },
     closed=False,  # an unlisted item field is the leak guard's refusal, with its own message
 )
-OPTION_SCHEMA = obj({"value": string(), "label": string()})
+# `icon` (an emoji) tells the buttons apart at a glance. No coloured side stripe on a button: it reads as
+# decoration, not meaning (the build-label-page look test refuses one).
+OPTION_SCHEMA = obj({"value": string(), "label": string(), "example": string(),
+                     "icon": string(required=False)})
+PRACTICE_SCHEMA = obj(
+    {
+        **{f: string(required=f == "body") for f in PAGE_FIELDS if f != "group"},
+        "expected": mapping(string(), NAME_PATTERN, min=1),
+        "why": string(),
+    }
+)
+MIN_PRACTICE = 3
 QUESTION_SCHEMA = obj(
     {
         "id": string(pattern=NAME_PATTERN),
@@ -127,6 +154,8 @@ CONFIG_SCHEMA = obj(
         "labeller_knows": array(string(pattern=NAME_PATTERN), required=False),
         "familiarity_question": string(required=False),
         "questions": array(QUESTION_SCHEMA, min=1),
+        "practice": array(PRACTICE_SCHEMA, min=MIN_PRACTICE),
+        "practice_round": integer(required=False),
         "items": array(ITEM_SCHEMA, min=1),
     }
 )
@@ -229,6 +258,30 @@ def check_config(cfg):
                 fail(f"questions[{qn}].options[{i}].label: {o['label']!r} reads the same as "
                      f"options[{shown[label]}].label — each button needs its own label")
             shown[label] = i
+    check_practice(cfg)
+
+
+def check_practice(cfg):
+    """Each practice item knows the answer to every question, and only offered answers: a practice the
+    page cannot score would let a misread question through unseen."""
+    offered = {q["id"]: [o["value"] for o in q["options"]] for q in cfg["questions"]}
+    if cfg.get("practice_round", 1) < 1:
+        fail(f"practice_round: {cfg['practice_round']!r} — must be 1 or more")
+    for n, item in enumerate(cfg["practice"]):
+        where = f"practice[{n}].expected"
+        for q, v in item["expected"].items():
+            if q not in offered:
+                fail(f"{where}.{q}: not a question of this page ({', '.join(offered)})")
+            if v not in offered[q]:
+                fail(f"{where}.{q}: {v!r} is not one of {', '.join(offered[q])}")
+        for q in offered:
+            if q not in item["expected"]:
+                fail(f"{where}.{q}: every question needs its expected answer")
+
+
+def practice_of(cfg):
+    """The practice as the page shows it and the key keeps it: neutral ids P1, P2 … in the given order."""
+    return [{"id": f"P{n + 1}", **item} for n, item in enumerate(cfg["practice"])]
 
 
 def check_items(cfg):
@@ -313,6 +366,7 @@ def build(config_path, out_dir):
         "familiarity": list(FAMILIARITY),
         "allowed": allowed_values(cfg["questions"]),
         "questions": cfg["questions"],
+        "practice": {"round": cfg.get("practice_round", 1), "items": practice_of(cfg)},
         "items": [{"id": nid, **fields} for nid, fields in shown.items()],
     }
     # `</` inside JSON inside a <script> would end the script early.
@@ -330,6 +384,11 @@ def build(config_path, out_dir):
         # checks every stored answer and familiarity against it, so the build's options decide, not
         # whatever the store holds.
         "allowed": allowed_values(cfg["questions"]),
+        # The practice is scored against this at export; its answers never go into the labels.
+        "practice": {
+            "round": cfg.get("practice_round", 1),
+            "expected": {p["id"]: p["expected"] for p in practice_of(cfg)},
+        },
         "ids": {
             nid: {"source_id": sid, "group": group_of[sid], "on_page": nid in shown}
             for sid, nid in sorted(ids.items(), key=lambda kv: kv[1])
@@ -362,17 +421,21 @@ def check_dump(dump, key):
     (`boundry`), a misspelled group (`pyhton`) — and its answer lost from the labels. Refuses, naming the
     path; the fix is one edit in the dump. Every document also says where it came from: the page always
     writes `source: "page"`, so a document without one was merged by hand."""
+    practice = practice_docs(key)
     known = {
         "answers": (set(key["ids"]), ANSWER_DOC_FIELDS),
         "groups": ({meta["group"] for meta in key["ids"].values()}, GROUP_DOC_FIELDS),
+        "practice": (practice, ANSWER_DOC_FIELDS),
     }
+    noun = {"answers": "answer", "groups": "group", "practice": "practice item"}
     shown = [meta for meta in key["ids"].values() if meta["on_page"]]
     on_page = {
         "answers": {nid for nid, meta in key["ids"].items() if meta["on_page"]},
         "groups": {meta["group"] for meta in shown},
+        "practice": practice,
     }
     if not isinstance(dump, dict):
-        fail(f"store: {type(dump).__name__} — must be an object {{answers, groups}}")
+        fail(f"store: {type(dump).__name__} — must be an object {{answers, groups, practice}}")
     for kind in known:
         if kind in dump and not isinstance(dump[kind], dict):
             fail(f"{kind}: {type(dump[kind]).__name__} — must be an object {{id: stored document}}")
@@ -382,14 +445,14 @@ def check_dump(dump, key):
         for name, doc in sorted(dump.get(kind, {}).items()):
             at = f"{kind}/{name}"
             if name not in names:
-                fail(f"{at}: the key does not know this {kind[:-1]} ({', '.join(sorted(names))})")
+                fail(f"{at}: the key does not know this {noun[kind]} ({', '.join(sorted(names))})")
             if name not in on_page[kind]:
                 fail(f"{at}: stored, but no longer on the page (a rebuild left it out), so the export would "
                      f"drop it; rebuild with it on the page, or take it out of the dump on purpose")
             if not isinstance(doc, dict):
                 fail(f"{at}: must be an object with {', '.join(fields)}")
             for field in sorted(set(doc) - set(fields)):
-                fail(f"{at}/{field}: not a field of a stored {kind[:-1]} ({', '.join(fields)})")
+                fail(f"{at}/{field}: not a field of a stored {noun[kind]} ({', '.join(fields)})")
             if "source" not in doc:
                 fail(f"{at}: no source; add \"source\": \"chat\" or \"page\" (one of {SOURCES})")
             if not isinstance(doc["source"], str) or doc["source"] not in SOURCES:
@@ -403,6 +466,39 @@ def check_dump(dump, key):
                     fail(f"{at}/answers/{q}: not a question of the key ({', '.join(key['questions'])})")
                 if v is not None and not isinstance(v, str):
                     fail(f"{at}/answers/{q}: {v!r} — must be an option value (a string) or null")
+
+
+def practice_docs(key):
+    """The store documents a practice of this key may have: every round up to the key's, so the
+    answers of an earlier round are known (and kept), not refused."""
+    p = key.get("practice") or {"round": 0, "expected": {}}
+    return {f"r{r}-{pid}" for r in range(1, p["round"] + 1) for pid in p["expected"]}
+
+
+def export_practice(dump, key, out, study, day):
+    """The practice of the key's round, scored, into its own file; never into the labels."""
+    p = key.get("practice")
+    if p is None:
+        return
+    stored = dump.get("practice", {})
+    items = []
+    for pid, expected in p["expected"].items():
+        doc = stored.get(f"r{p['round']}-{pid}", {})
+        answers = doc.get("answers", {})
+        items.append({"id": pid, "answers": answers, "expected": expected,
+                      "matched": all(answers.get(q) == v for q, v in expected.items()),
+                      "savedAt": doc.get("savedAt")})
+    if not any(i["answers"] for i in items):
+        print(f"practice round {p['round']}: not answered")
+        return
+    matched = [i for i in items if i["matched"]]
+    record = {"study": study, "round": p["round"], "exported": day, "matched": len(matched),
+              "total": len(items), "items": items}
+    path = out / f"{study}-practice-{day}.json"
+    path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    missed = [i["id"] for i in items if not i["matched"]]
+    print(f"practice round {p['round']}: {len(matched)} of {len(items)} matched"
+          f"{'; missed ' + ', '.join(missed) if missed else ''} -> {path}")
 
 
 def export(dump_path, key_path, out_dir, day):
@@ -469,6 +565,7 @@ def export(dump_path, key_path, out_dir, day):
     target.mkdir(parents=True, exist_ok=True)
     path = target / f"{key['study']}-labels-{day}.json"
     path.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    export_practice(dump, key, target, key["study"], day)
     print(f"wrote {path}: {out['complete_items']} of {out['total_items']} items complete")
     for i in items:
         for q, v in i["invalid_answers"].items():
@@ -490,53 +587,77 @@ def export(dump_path, key_path, out_dir, day):
 # never scrolls itself (no scrollIntoView), uses no fixed-position element, and says everything
 # inline next to the thing it is about. "Next unanswered" is a FILTER, not a jump.
 TEMPLATE = r"""<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono&display=swap">
 <style>
+/* One look, dark whatever the viewer's theme (Material Ocean, no purple): every color is a token below.
+   One column, sections apart by a hairline and wide space, items flat; the only raised block of an item is
+   the question being asked. Answer buttons are full-width rows with space between them, so a thumb cannot
+   land between two of them, and the chosen one has a 2px accent border. */
 :root {
-  --bg: #ffffff; --fg: #1d2330; --muted: #5a6475; --card: #f3f5f9; --line: #d5dae4;
-  --accent: #2456d6; --on-accent: #ffffff; --ok: #1b7a3d; --warn: #9a5b00; --bad: #b3261e;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #14171f; --fg: #e8ebf2; --muted: #9aa4b6; --card: #1e232e; --line: #343b4a;
-    --accent: #7ea2ff; --on-accent: #0c1220; --ok: #5cc27f; --warn: #e0a23c; --bad: #ff8a80;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #14171f; --fg: #e8ebf2; --muted: #9aa4b6; --card: #1e232e; --line: #343b4a;
-  --accent: #7ea2ff; --on-accent: #0c1220; --ok: #5cc27f; --warn: #e0a23c; --bad: #ff8a80;
+  color-scheme: dark;
+  --bg: #0f111a; --surface: #1a1c25; --line: #262a3a; --text: #a6accd; --muted: #7e84a3;
+  --strong: #eeffff; --accent: #82aaff; --good: #c3e88d; --mark: #ffcb6b; --bad: #f07178;
+  --mark-bg: rgba(255, 203, 107, 0.08);
+  --sans: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Roboto Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --gap-section: 48px; --gap-item: 16px; --measure: 68ch;
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--fg);
-  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-main { max-width: 42rem; margin: 0 auto; padding: 16px; }
-h1 { font-size: 1.35rem; margin: 0 0 4px; }
-h2 { font-size: 1.1rem; margin: 0; }
-p { margin: 6px 0; }
-.muted { color: var(--muted); font-size: 0.9rem; }
-.banner { border: 1px solid var(--warn); color: var(--warn); border-radius: 8px; padding: 10px 12px; margin: 12px 0; }
-.bar { height: 8px; background: var(--card); border-radius: 4px; overflow: hidden; margin: 8px 0; }
-.bar > div { height: 100%; background: var(--ok); }
-.filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
-button { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line);
-  border-radius: 8px; padding: 10px 14px; min-height: 44px; cursor: pointer; }
-button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans);
+  font-size: 16px; line-height: 1.6; }
+main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column;
+  gap: var(--gap-section); }
+main > * + section, main > section + * { border-top: 1px solid var(--line); padding-top: var(--gap-section); }
+header.top { display: flex; flex-direction: column; gap: 8px; }
+h1 { font-size: 1.5rem; line-height: 1.3; margin: 0; color: var(--strong); font-weight: 700; }
+h2 { font-size: 1.15rem; line-height: 1.4; margin: 0; color: var(--strong); font-weight: 500; }
+p { margin: 0; max-width: var(--measure); }
+.muted { color: var(--muted); }
+.id { font-family: var(--mono); color: var(--muted); }
+section { display: flex; flex-direction: column; gap: var(--gap-item); }
+.item { display: flex; flex-direction: column; gap: 12px; padding-top: var(--gap-item);
+  border-top: 1px solid var(--line); }
+.item:first-of-type { border-top: 0; padding-top: 0; }
+.ask { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px; }
+.q { color: var(--strong); font-weight: 500; }
+.body { color: var(--strong); }
+h3 { font-size: 1rem; margin: 0; color: var(--strong); font-weight: 500; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+button { font: inherit; color: var(--text); background: transparent; border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 16px; min-height: 48px; cursor: pointer; text-align: left; width: 100%; }
+button[aria-pressed="true"] { border: 2px solid var(--accent); color: var(--strong); padding: 9px 15px; }
+.opts button { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: start; }
+.opts button .icon { grid-row: span 2; font-size: 1.25rem; line-height: 1.6; }
+.opts button .label { color: var(--strong); font-weight: 500; grid-column: 2; }
+.opts button .ex { color: var(--muted); grid-column: 2; }
+.opts button[aria-pressed="true"] { background: var(--surface); }
+code { font-family: var(--mono); font-size: 0.92em; color: var(--strong); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
 button:disabled { opacity: 0.5; cursor: default; }
-.left { background: var(--card); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; }
-.left ul { margin: 6px 0 0; padding-left: 1.2rem; }
-section.group { margin: 20px 0; }
-.group > header { margin-bottom: 8px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin: 10px 0; }
-.card.done { border-color: var(--ok); }
-.card .id { font-weight: 600; }
-.card h3 { font-size: 1rem; margin: 4px 0; }
-pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
-  padding: 8px; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; }
-.q { margin: 12px 0 4px; font-weight: 600; }
-.opts { display: flex; gap: 8px; flex-wrap: wrap; }
-.status { margin-top: 10px; font-size: 0.9rem; color: var(--muted); }
-.status.missing { color: var(--warn); }
+.answered { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); }
+.answered button { width: auto; min-height: 44px; border: 0; color: var(--accent); padding: 0 4px; }
+.examples { display: flex; flex-direction: column; gap: 12px; }
+.example b { color: var(--strong); font-weight: 500; display: block; }
+.quote, .banner { background: var(--mark-bg); border-left: 2px solid var(--mark); padding: 10px 14px;
+  border-radius: 0 8px 8px 0; color: var(--text); }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar > div { height: 100%; background: var(--good); }
+.tabs { display: flex; gap: 24px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+.tabs button { width: auto; border: 0; border-radius: 0; padding: 10px 0; min-height: 44px; color: var(--muted);
+  border-bottom: 2px solid transparent; white-space: nowrap; }
+.tabs button[aria-pressed="true"] { color: var(--strong); border: 0; border-bottom: 2px solid var(--accent);
+  padding: 10px 0; }
+ul { margin: 0; padding-left: 1.2rem; }
+pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px; font-family: var(--mono); font-size: 0.9rem; white-space: pre-wrap; word-break: break-word;
+  margin: 0; }
+.status { color: var(--muted); }
+.status.saved::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--good); margin-right: 8px; vertical-align: middle; }
+.status.missing { color: var(--mark); }
 .status.failed { color: var(--bad); }
-.status.saved { color: var(--ok); }
 </style>
 <main id="app"><p class="muted">Loading…</p></main>
 <script type="application/json" id="data">__DATA__</script>
@@ -548,10 +669,12 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
   var state = {
     answers: {},      // item id -> {answers, savedAt, source}, from the store
     groups: {},       // group id -> {familiarity, savedAt, source}
+    practice: {},     // r<round>-P<n> -> {answers, savedAt, source}; the FIRST answer, kept apart
+    editing: {},      // item id -> the question id the labeller tapped "Change" on
     mine: {},         // item/group key -> the answers this page has just written (ahead of the store)
     inflight: {},     // item/group key -> writes not yet confirmed
     failed: {},       // item/group key -> error code of the last refused write
-    loaded: { answers: false, groups: false },
+    loaded: { answers: false, groups: false, practice: false },
     store: "loading", // loading | ok | none
     filter: "all"
   };
@@ -580,6 +703,24 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
     return d && valid(DATA.allowed.familiarity, d.familiarity) ? d.familiarity : undefined;
   }
   function groupItems(g) { return DATA.items.filter(function (i) { return i.group === g; }); }
+  // ── the practice (rule 8): known answers, before the real items ──────────────────────────
+  function practiceDoc(pid) { return "r" + DATA.practice.round + "-" + pid; }
+  function practiceAnswers(pid) {
+    var key = "practice:" + pid;
+    if (state.mine[key]) return state.mine[key];
+    var d = state.practice[practiceDoc(pid)];
+    return d && d.answers ? d.answers : {};
+  }
+  function practiceMissing(pid) {
+    var a = practiceAnswers(pid);
+    return DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
+  }
+  function practiceAnswered(p) { return practiceMissing(p.id).length === 0; }
+  function practiceMatched(p) {
+    var a = practiceAnswers(p.id);
+    return DATA.questions.every(function (q) { return a[q.id] === p.expected[q.id]; });
+  }
+  function practiceOpen() { return !DATA.practice.items.every(practiceAnswered); }
   function groupDone(g) { return familiarity(g) !== undefined && groupItems(g).every(function (i) { return itemDone(i.id); }); }
 
   // ── saving: on click, one write at a time per document ────────────────────────────────────
@@ -599,13 +740,27 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
       render();
     });
   }
-  function canWrite() { return db && state.loaded.answers && state.loaded.groups && state.store === "ok"; }
+  function canWrite() {
+    return db && state.loaded.answers && state.loaded.groups && state.loaded.practice && state.store === "ok";
+  }
   function answer(id, qid, value) {
     if (!canWrite()) return;
     var next = Object.assign({}, answersOf(id));
     next[qid] = value;
     state.mine[id] = next;
     write(id, "answers", id, { answers: next, savedAt: new Date().toISOString(), source: "page" });
+    render();
+  }
+  // The first answer to a practice question is the one scored: it cannot be changed afterwards.
+  function answerPractice(pid, qid, value) {
+    if (!canWrite()) return;
+    var cur = practiceAnswers(pid);
+    if (valid(DATA.allowed.questions[qid], cur[qid])) return;
+    var next = Object.assign({}, cur);
+    next[qid] = value;
+    state.mine["practice:" + pid] = next;
+    write("practice:" + pid, "practice", practiceDoc(pid),
+      { answers: next, savedAt: new Date().toISOString(), source: "page" });
     render();
   }
   function setFamiliarity(g, value) {
@@ -623,10 +778,23 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
     if (text !== undefined) n.textContent = text;
     return n;
   }
-  function options(opts, current, onPick, disabled) {
+  // Text with `backticks` shown as code spans; everything stays textContent, so nothing is parsed as HTML.
+  function rich(tag, cls, text) {
+    var n = el(tag, cls);
+    String(text).split("`").forEach(function (part, i) {
+      if (part) n.appendChild(el(i % 2 ? "code" : "span", "", part));
+    });
+    return n;
+  }
+  // `withExamples`: the practice shows each answer's example on its button; the real items keep the buttons
+  // short, the examples stay on the first screen.
+  function options(opts, current, onPick, disabled, withExamples) {
     var row = el("div", "opts");
     opts.forEach(function (o) {
-      var b = el("button", "", o.label);
+      var b = el("button", "");
+      if (o.icon) b.appendChild(el("span", "icon", o.icon));
+      b.appendChild(el("span", "label", o.label));
+      if (withExamples && o.example) b.appendChild(rich("span", "ex", o.example));
       b.type = "button";
       b.setAttribute("aria-pressed", String(current === o.value));
       b.disabled = disabled;
@@ -658,27 +826,105 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
   }
   function itemCard(item, off) {
     var done = itemDone(item.id);
-    var card = el("div", "card" + (done ? " done" : ""));
+    var card = el("article", "item");
     card.appendChild(el("div", "id", item.id));
-    if (item.title) card.appendChild(el("h3", "", item.title));
-    card.appendChild(el("p", "", item.body));
+    if (item.title) card.appendChild(rich("h3", "", item.title));
+    card.appendChild(rich("p", "body", item.body));
     if (item.code) card.appendChild(el("pre", "", item.code));
-    if (item.context) card.appendChild(el("p", "muted", item.context));
+    if (item.context) card.appendChild(rich("p", "muted", item.context));
     var a = answersOf(item.id);
-    DATA.questions.forEach(function (q) {
-      card.appendChild(el("p", "q", q.text));
-      card.appendChild(options(q.options, a[q.id], function (v) { answer(item.id, q.id, v); }, off));
-    });
+    askOne(card, a, state.editing[item.id], function (q, v) {
+      delete state.editing[item.id];
+      answer(item.id, q.id, v);
+    }, function (q) { state.editing[item.id] = q.id; render(); }, off);
     var saved = state.answers[item.id] && state.answers[item.id].savedAt;
     card.appendChild(statusLine(item.id, missingFor(item.id), saved));
     return card;
   }
+  function labelOf(q, v) {
+    var o = q.options.filter(function (x) { return x.value === v; })[0];
+    return o ? o.label : v;
+  }
+  // One question per screen: the answered ones stay as a line (with "Change"), and only one question
+  // is asked: the one being changed, else the first unanswered.
+  function askOne(card, a, editing, onPick, onChange, off, withExamples) {
+    var open = DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
+    var asked = DATA.questions.filter(function (q) { return q.id === editing; })[0] || open[0];
+    DATA.questions.forEach(function (q) {
+      if (q === asked || !valid(DATA.allowed.questions[q.id], a[q.id])) return;
+      var line = el("p", "answered", (q.short || q.text) + ": " + labelOf(q, a[q.id]) + " ");
+      if (onChange) {
+        var b = el("button", "", "Change");
+        b.type = "button";
+        b.disabled = off;
+        b.addEventListener("click", function () { onChange(q); });
+        line.appendChild(b);
+      }
+      card.appendChild(line);
+    });
+    if (!asked) return;
+    var ask = el("div", "ask");
+    ask.appendChild(el("p", "q", asked.text));
+    ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples));
+    card.appendChild(ask);
+  }
+  function howTo() {
+    var sec = el("section");
+    sec.appendChild(el("h2", "", "📖 How to answer"));
+    DATA.questions.forEach(function (q) {
+      sec.appendChild(el("p", "q", q.text));
+      var list = el("div", "examples");
+      q.options.forEach(function (o) {
+        var row = el("div", "example");
+        row.appendChild(el("b", "", (o.icon ? o.icon + " " : "") + o.label));
+        row.appendChild(rich("span", "muted", "For example: " + o.example));
+        list.appendChild(row);
+      });
+      sec.appendChild(list);
+    });
+    return sec;
+  }
+  function practiceCard(p, off) {
+    var card = el("article", "item");
+    card.appendChild(el("div", "id", "Practice " + p.id));
+    if (p.title) card.appendChild(rich("h3", "", p.title));
+    card.appendChild(rich("p", "body", p.body));
+    if (p.code) card.appendChild(el("pre", "", p.code));
+    if (p.context) card.appendChild(rich("p", "muted", p.context));
+    var a = practiceAnswers(p.id);
+    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true);
+    if (practiceAnswered(p)) {
+      var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
+      card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",
+        (practiceMatched(p) ? "Matched. " : "Expected: " + expected + ". ") + p.why));
+    }
+    card.appendChild(statusLine("practice:" + p.id, [], null));
+    return card;
+  }
+  function practiceBlock(off) {
+    var items = DATA.practice.items;
+    var sec = el("section");
+    if (practiceOpen()) {
+      var answered = items.filter(practiceAnswered).length;
+      sec.appendChild(el("h2", "", "🎯 Practice: " + answered + " of " + items.length + " answered"));
+      sec.appendChild(el("p", "muted", "These answers are known. After each one the page shows the expected " +
+        "answer. The real items open when all " + items.length + " are answered."));
+      items.forEach(function (p) { sec.appendChild(practiceCard(p, off)); });
+      return sec;
+    }
+    var missed = items.filter(function (p) { return !practiceMatched(p); });
+    sec.appendChild(el("h2", "", (missed.length ? "⚠️ " : "✅ ") + "Practice: " + (items.length - missed.length) + " of " + items.length + " matched"));
+    if (missed.length) {
+      sec.appendChild(el("div", "banner", "A practice answer did not match. Before going on, tell the agent " +
+        "which one: the question is reworded and you take the practice again."));
+      missed.forEach(function (p) { sec.appendChild(practiceCard(p, off)); });
+    }
+    return sec;
+  }
   function groupBlock(g, off, onlyOpen) {
-    var sec = el("section", "group");
-    var head = el("header");
-    head.appendChild(el("h2", "", g.label));
-    sec.appendChild(head);
-    var fam = el("div", "card" + (familiarity(g.id) !== undefined ? " done" : ""));
+    var sec = el("section");
+    sec.appendChild(el("h2", "", g.label));
+    var fam = el("div", "ask");
     fam.appendChild(el("p", "q", DATA.familiarity_question.replace("{group}", g.label)));
     fam.appendChild(options(DATA.familiarity, familiarity(g.id), function (v) { setFamiliarity(g.id, v); }, off));
     var gs = state.groups[g.id];
@@ -696,22 +942,29 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
     var done = DATA.items.filter(function (i) { return itemDone(i.id); }).length;
     var total = DATA.items.length;
     app.textContent = "";
-    app.appendChild(el("h1", "", DATA.title));
-    if (DATA.intro) app.appendChild(el("p", "muted", DATA.intro));
+    var top = el("header", "top");
+    app.appendChild(top);
+    top.appendChild(el("h1", "", DATA.title));
+    if (DATA.intro) top.appendChild(el("p", "muted", DATA.intro));
     if (state.store === "none") {
-      app.appendChild(el("div", "banner",
+      top.appendChild(el("div", "banner",
         "Answers cannot be saved in this view, so it is read-only. Open the page from the claude.ai " +
         "artifact link while signed in with access to answer."));
     } else if (state.store === "loading" || !(state.loaded.answers && state.loaded.groups)) {
-      app.appendChild(el("p", "muted", "Loading saved answers…"));
+      top.appendChild(el("p", "muted", "Loading saved answers…"));
     }
-    app.appendChild(el("p", "", done + " of " + total + " items complete"));
+    app.appendChild(howTo());
+    app.appendChild(practiceBlock(off));
+    if (practiceOpen()) return;
+    var progress = el("section");
+    app.appendChild(progress);
+    progress.appendChild(el("p", "", done + " of " + total + " items complete"));
     var bar = el("div", "bar"), fill = el("div");
     fill.style.width = (total ? (100 * done / total) : 0) + "%";
     bar.appendChild(fill);
-    app.appendChild(bar);
+    progress.appendChild(bar);
 
-    var filters = el("div", "filters");
+    var filters = el("div", "tabs");
     [["all", "All items"], ["next", "Next unanswered"]].forEach(function (f) {
       var b = el("button", "", f[1]);
       b.type = "button";
@@ -723,13 +976,13 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
       });
       filters.appendChild(b);
     });
-    app.appendChild(filters);
+    progress.appendChild(filters);
 
     var onlyOpen = state.filter === "next";
     if (onlyOpen) {
       var rest = DATA.items.filter(function (i) { return !itemDone(i.id); });
       var open = DATA.groups.filter(function (g) { return familiarity(g.id) === undefined; });
-      var note = el("div", "left");
+      var note = el("div", "muted");
       if (!rest.length && !open.length) {
         note.appendChild(el("p", "", "Nothing left. Every item and every group is answered."));
       } else {
@@ -742,7 +995,7 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
         });
         note.appendChild(ul);
       }
-      app.appendChild(note);
+      progress.appendChild(note);
     }
     DATA.groups.forEach(function (g) {
       if (onlyOpen && groupDone(g.id)) return;
@@ -770,6 +1023,7 @@ pre { overflow-x: auto; background: var(--bg); border: 1px solid var(--line); bo
     state.store = "ok";
     db.collection("answers").onSnapshot(take("answers", "answers"), broken);
     db.collection("groups").onSnapshot(take("groups", "groups"), broken);
+    db.collection("practice").onSnapshot(take("practice", "practice"), broken);
   }, broken);
 })();
 </script>
