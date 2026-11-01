@@ -1494,10 +1494,14 @@ test("🔴 approval: a stored reason that is not text, or for a question the key
   }
 });
 
-test("🔴 approval: a reason typed but not yet saved survives a re-render from the store", async () => {
-  const { page, key } = build(setup("approval-draft", approval()));
-  const [a] = Object.keys(key.ids);
-  assert.ok(a !== undefined);
+/**
+ * The built page against a stand-in store holding `docs` (collection → id → document); `resend` sends
+ * every collection's snapshot again, as the store does after any write.
+ */
+async function openLive(
+  page: string,
+  docs: Record<string, Record<string, unknown>>,
+): Promise<{ readonly app: FakeNode; readonly resend: () => void }> {
   const script = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)][0]?.[1];
   const json =
     /<script type="application\/json" id="data">([\s\S]*?)<\/script>/.exec(
@@ -1507,17 +1511,6 @@ test("🔴 approval: a reason typed but not yet saved survives a re-render from 
   const app = new FakeNode();
   const data = new FakeNode();
   data.textContent = json.replace(/<\\\//g, "</");
-  const practice = Object.fromEntries(
-    APPROVAL_PRACTICE.map((p, n) => [
-      `r1-P${String(n + 1)}`,
-      { answers: p.expected, source: "page" },
-    ]),
-  );
-  const docs: Record<string, Record<string, unknown>> = {
-    answers: { [a]: { answers: { keep: "drop" }, source: "page" } },
-    groups: {},
-    practice,
-  };
   const listeners: (() => void)[] = [];
   const store = {
     collection: (name: string) => ({
@@ -1551,14 +1544,36 @@ test("🔴 approval: a reason typed but not yet saved survives a re-render from 
     isNaN,
   });
   await new Promise((r) => setTimeout(r, 0));
+  const resend = () => {
+    listeners.forEach((send) => {
+      send();
+    });
+  };
+  return { app, resend };
+}
+
+test("🔴 approval: a reason typed but not yet saved survives a re-render from the store", async () => {
+  const { page, key } = build(setup("approval-draft", approval()));
+  const [a] = Object.keys(key.ids);
+  assert.ok(a !== undefined);
+  const practice = Object.fromEntries(
+    APPROVAL_PRACTICE.map((p, n) => [
+      `r1-P${String(n + 1)}`,
+      { answers: p.expected, source: "page" },
+    ]),
+  );
+  const docs: Record<string, Record<string, unknown>> = {
+    answers: { [a]: { answers: { keep: "drop" }, source: "page" } },
+    groups: {},
+    practice,
+  };
+  const { app, resend } = await openLive(page, docs);
   const box = () => app.all().find((n) => n.tag === "textarea");
   const typing = box();
   assert.ok(typing !== undefined, "the drop asks for its reason");
   typing.value = "a process rule, not";
   typing.fire("input");
-  listeners.forEach((send) => {
-    send();
-  });
+  resend();
   assert.notEqual(box(), typing, "the store's snapshot rebuilt the page");
   assert.equal(box()?.value, "a process rule, not");
   // Once the store holds the typed text the draft is done: a later stored reason shows, not it.
@@ -1574,9 +1589,7 @@ test("🔴 approval: a reason typed but not yet saved survives a re-render from 
         source: "page",
       },
     };
-    listeners.forEach((send) => {
-      send();
-    });
+    resend();
     return box()?.value;
   };
   assert.deepEqual(
