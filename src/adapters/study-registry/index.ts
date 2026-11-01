@@ -424,7 +424,16 @@ const count = z.number().int().nonnegative();
  */
 const studyResult = z.looseObject({
   claim: z.literal(CLAIM_LOST).optional(),
-  kappa: z.record(z.string(), z.number()).optional(),
+  // Cohen's kappa lies in -1..1: a percentage (75) or a count is refused here, not compared with a bar.
+  kappa: z
+    .record(
+      z.string(),
+      z
+        .number()
+        .gte(-1, "is a kappa of at least -1")
+        .lte(1, "is a kappa of at most 1"),
+    )
+    .optional(),
   self_test: z.strictObject({ passed: count, failed: count }).optional(),
   funnel: z.record(z.string(), count).optional(),
 });

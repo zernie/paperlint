@@ -12,17 +12,17 @@ must show each of them.
 
 For each study that is `done`, whose plan is ready and v2:
 
-| problem             | when                                                                                           |
-| ------------------- | ---------------------------------------------------------------------------------------------- |
-| `no-result-file`    | the study's folder has no `result.json`                                                        |
-| `result-linked`     | `result.json` is reached through a symbolic link                                               |
-| `result-unreadable` | `result.json` is not JSON, or `kappa`, `self_test`, `funnel` or `claim` is not of its shape    |
-| `no-number`         | the number `mode.we_lose_if.result` names is not a number in `result.json`                     |
-| `claim-lost`        | that number crosses the threshold, and `result.json` does not say `"claim": "lost"`            |
-| `claim-holds`       | `result.json` says `"claim": "lost"`, and the number does not cross the threshold              |
-| `kappa`             | a step of `second_check` has no kappa in `result.json`'s `kappa`, or one below its `min_kappa` |
-| `self-test`         | `self_test` is declared, and `result.json`'s `self_test` is missing or `failed` is not 0       |
-| `funnel`            | a reason of `funnel` has no count in `result.json`'s `funnel`                                  |
+| problem             | when                                                                                                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no-result-file`    | the study's folder has no `result.json`                                                                                                                               |
+| `result-linked`     | `result.json` is reached through a symbolic link                                                                                                                      |
+| `result-unreadable` | `result.json` is not JSON, or `kappa`, `self_test`, `funnel` or `claim` is not of its shape (a kappa outside -1..1, such as a percentage written as `75`, is not one) |
+| `no-number`         | the number `mode.we_lose_if.result` names is not a number in `result.json`                                                                                            |
+| `claim-lost`        | that number crosses the threshold, and `result.json` does not say `"claim": "lost"`                                                                                   |
+| `claim-holds`       | `result.json` says `"claim": "lost"`, and the number does not cross the threshold                                                                                     |
+| `kappa`             | a step of `second_check` has no kappa in `result.json`'s `kappa`, or one below its `min_kappa`                                                                        |
+| `self-test`         | `self_test` is declared, and `result.json`'s `self_test` is missing or `failed` is not 0                                                                              |
+| `funnel`            | a reason of `funnel` has no count in `result.json`'s `funnel`                                                                                                         |
 
 A gate that is `"none"` asks nothing; an exploratory study has no `we_lose_if`.
 

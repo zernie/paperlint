@@ -186,6 +186,32 @@ describe("repro/study-result — reported", () => {
     ).toEqual(["claim-lost"]);
   });
 
+  it("a kappa outside -1..1 (a percentage written as 75) makes result.json unreadable, naming its path", () => {
+    const kappa = (k: number) =>
+      lint(
+        tree(
+          row(),
+          planText(V2),
+          JSON.stringify({ ...GOOD, kappa: { ...GOOD.kappa, admissible: k } }),
+        ),
+      );
+    const [high] = kappa(75);
+    // Guards: both ends of the range, and the edges themselves, which are kappas.
+    expect([
+      high?.id,
+      high?.text.includes("kappa.admissible"),
+      kappa(-1.5).map((r) => r.id),
+      kappa(1).map((r) => r.id),
+      kappa(-1).map((r) => r.id),
+    ]).toEqual([
+      "result-unreadable",
+      true,
+      ["result-unreadable"],
+      [],
+      ["kappa"],
+    ]);
+  });
+
   it("resultStudies reads the gates of the plan and the state of the result", () => {
     expect(
       resultStudies(DIR, deps(tree(row(), planText(V2), "x"))).map((s) => [
