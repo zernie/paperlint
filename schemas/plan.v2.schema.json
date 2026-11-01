@@ -291,6 +291,38 @@
           "type": "null"
         }
       ]
+    },
+    "recall_audit": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "n_files": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "min_recall": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": ["n_files", "min_recall"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "required": [
@@ -302,7 +334,8 @@
     "$schema",
     "second_check",
     "self_test",
-    "funnel"
+    "funnel",
+    "recall_audit"
   ],
   "additionalProperties": false
 }

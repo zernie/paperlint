@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:e445489aca0dd970 compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:ff5f42dd3d6e6230 compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -77,6 +77,10 @@ Before writing machinery, **run the thing you are about to replace and paste its
 ### Measure The Defect Before The Fix
 
 **Guidance only** — Read "this is quick" as a warning. Show the defect (output, or a quoted line), name the layer and channel (more than one is a conversation, not a commit), and spend an adversarial pass on forks and on anything that goes outward.
+
+### Show A Checks Whole Flow
+
+**Guidance only** — When a change adds or changes a gate (a plan field, a lint rule, a result check), show the author the whole flow in English as a diagram before building it: each stage, who writes it, which rule checks it, when it fires, what turns red, and what the machine cannot see. The author asked for this format (2026-11-01).
 
 ### Installing Paperlint Is Smooth
 

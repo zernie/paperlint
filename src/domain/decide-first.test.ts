@@ -300,6 +300,7 @@ const GATES: PlanGates = {
   second_check: [{ step: "fits", min_kappa: 0.6 }],
   self_test: "none",
   funnel: ["no linter rule"],
+  recall_audit: "none",
 };
 const OUT = { path: "RESULTS.md", ...A, order: "after" as const };
 const withGates = (
@@ -326,6 +327,7 @@ it("gates as they stood at the first output are silent; each one changed since i
     ...GATES,
     we_lose_if: { result: "share", below: 0.1 },
     funnel: ["no linter rule", "clone failed"],
+    recall_audit: { n_files: 50, min_recall: 0.5 },
   };
   const at = {
     id: "P1-S01",
@@ -353,6 +355,13 @@ it("gates as they stood at the first output are silent; each one changed since i
         gate: "funnel",
         then: ["no linter rule"],
         now: ["no linter rule", "clone failed"],
+      },
+      {
+        problem: "gates-changed",
+        ...at,
+        gate: "recall_audit",
+        then: "none",
+        now: { n_files: 50, min_recall: 0.5 },
       },
     ],
   ]);

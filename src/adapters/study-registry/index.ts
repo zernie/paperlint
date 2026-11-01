@@ -49,6 +49,7 @@ import {
   PLAN_V2,
   type Funnel,
   type KappaStep,
+  type RecallAudit,
   type SecondCheck,
   type SelfTest,
   type WeLoseIf,
@@ -260,6 +261,18 @@ const funnel = z.union([
     .superRefine(once("the reason")),
 ]);
 
+/** The audit of the extractor: files a person reads in full, and the least recall in (0, 1]. */
+const recallAudit = z.union([
+  none,
+  z.strictObject({
+    n_files: z.number().int().positive("is at least 1 file"),
+    min_recall: z
+      .number()
+      .gt(0, "is a recall above 0")
+      .lte(1, "is a recall of at most 1"),
+  }),
+]);
+
 /** How the outcomes are kept from the decisions: exactly one mode, by its `kind`. */
 const mode = z.discriminatedUnion("kind", [
   z.strictObject({
@@ -284,6 +297,7 @@ const planShape = z.strictObject({
   second_check: secondCheck.nullable().optional(),
   self_test: selfTest.nullable().optional(),
   funnel: funnel.nullable().optional(),
+  recall_audit: recallAudit.nullable().optional(),
 });
 
 /**
@@ -299,12 +313,18 @@ export const planV2JsonSchema = (): unknown =>
       second_check: secondCheck.nullable(),
       self_test: selfTest.nullable(),
       funnel: funnel.nullable(),
+      recall_audit: recallAudit.nullable(),
     }),
     { io: "input", unrepresentable: "any" },
   );
 
 /** The gates a plan v2 declares at its top, each present (null while undecided). */
-const V2_GATES = ["second_check", "self_test", "funnel"] as const;
+const V2_GATES = [
+  "second_check",
+  "self_test",
+  "funnel",
+  "recall_audit",
+] as const;
 
 /**
  * A plan v2 declares every gate, and a decide-first mode its `we_lose_if`; a plan v1 declares none
@@ -436,6 +456,23 @@ const studyResult = z.looseObject({
     .optional(),
   self_test: z.strictObject({ passed: count, failed: count }).optional(),
   funnel: z.record(z.string(), count).optional(),
+  // The counts of the audit, not a share: the files are checked against the plan, the recall computed.
+  recall_audit: z
+    .strictObject({
+      files: count,
+      units_in_files: z
+        .number()
+        .int()
+        .positive(
+          "is at least 1 unit — an audit that found none measures no recall",
+        ),
+      extracted: count,
+    })
+    .refine(
+      (c) => c.extracted <= c.units_in_files,
+      "counts more units extracted than the person found in the files",
+    )
+    .optional(),
 });
 
 /** A plan v2's gates still null, by their field: decided is anything but null. */
@@ -445,7 +482,10 @@ const gateEmpties = (p: StudyPlan): readonly PlanTextField[] =>
       (f === "mode.we_lose_if" &&
         p.mode?.kind === "decide_before_run" &&
         p.mode.we_lose_if === null) ||
-      ((f === "second_check" || f === "self_test" || f === "funnel") &&
+      ((f === "second_check" ||
+        f === "self_test" ||
+        f === "funnel" ||
+        f === "recall_audit") &&
         p[f] === null),
   );
 
@@ -533,6 +573,7 @@ export type SchemasAreTheDomain = [
   Same<z.output<typeof secondCheck>, SecondCheck>,
   Same<z.output<typeof selfTest>, SelfTest>,
   Same<z.output<typeof funnel>, Funnel>,
+  Same<z.output<typeof recallAudit>, RecallAudit>,
   Same<z.output<typeof studyResult>, StudyResult>,
 ] extends true[]
   ? true

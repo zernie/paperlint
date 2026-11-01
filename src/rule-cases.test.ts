@@ -159,6 +159,7 @@ const DONE_ON_PLAN_V2 = (
     second_check: [{ step: "pass", min_kappa: 0.6 }],
     self_test: { made_by: "selftest.mjs" },
     funnel: ["timed out"],
+    recall_audit: "none",
   };
   const facts: IndexInput = {
     plans: new Map([["P1-S01-ablation/plan.json", { kind: "ready", plan }]]),

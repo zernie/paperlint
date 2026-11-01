@@ -124,6 +124,7 @@ const project = (name: string): string => {
         second_check: "none",
         self_test: "none",
         funnel: "none",
+        recall_audit: "none",
       },
       null,
       2,

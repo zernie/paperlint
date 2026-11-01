@@ -18,9 +18,10 @@ each rule, and counted how often the readings disagreed. Refuting its design by 
   and 120 counted as interpretations, though three of them contradict the text. The number measured
   how varied configurations are, not how vague the rule is.
 
-The neighbours of that paper that hold up report three checks this design lacked: two raters with an
+The neighbours of that paper that hold up report four checks this design lacked: two raters with an
 agreement statistic (Cohen's kappa 0.86 and 0.89 in two of them), errors planted to see that the
-checker catches them, and every dropped unit counted. A preregistration template —
+checker catches them, every dropped unit counted, and an audit of the extractor — one neighbour read
+50 files in full and reports that its extraction caught 66.3% of the eligible rules. A preregistration template —
 AsPredicted's eight questions — asks "Specify exactly which analyses you will conduct to examine the
 main question/hypothesis"; the plan had no field for what decides the question.
 
@@ -41,7 +42,7 @@ same way: v2 plans keep passing.
 **There is no optional gate.** A gate left out of a plan v2 makes the file "not a study plan". The one
 way to say "not this study" is the literal `"none"`, written where the reader of the diff sees it.
 
-## The four gates
+## The five gates
 
 ### `mode.we_lose_if` — the claim can lose
 
@@ -65,7 +66,7 @@ another.
 - **Not checked:** that the number named is the right one to decide the question — the author's
   check.
 
-**Frozen at the first output.** All four gates are held by git's history
+**Frozen at the first output.** All five gates are held by git's history
 ([`repro/outputs-before-decision`](../rules/repro/outputs-before-decision.md)): the plan as it stood
 at the commit of the study's first output (the first that came after its decision) must declare each
 gate exactly as HEAD's plan does. A gate edited since is `gates-changed`: a threshold moved after the
@@ -122,6 +123,50 @@ progress of all participants through the trial" (CONSORT). `"none"` when no unit
 
 - **Checked:** `result.json`'s `funnel` holds a count for every reason (0 when none).
 
+### `recall_audit` — how much the extractor misses
+
+```json
+"recall_audit": { "n_files": 50, "min_recall": 0.6 }
+```
+
+A study that draws units out of artefacts (rules out of instruction files, functions out of code)
+counts only what its extractor found. A person reads `n_files` files of a seeded sample in full and
+marks every unit there; the recall is the share of those units the extractor found too. Without it, a
+reviewer's "how many did your parser miss?" has no number. `"none"` when nothing is extracted (the
+units are given, or a person draws them by hand).
+
+```
+ STAGE          WHO WRITES                 WHICH RULE                  RED WHEN
+ ─────────────  ─────────────────────────  ──────────────────────────  ──────────────────────────────
+ 1 plan         the author (+ agent):      repro/study-registered      key missing (schema error);
+   (before        "recall_audit":                                      null while the study runs
+    the run)      {n_files, min_recall}    repro/outputs-before-       changed after the first output
+                                           decision                    (gates-changed)
+ 2 run          the study's script:        —                           —
+                  extracts units
+ 3 audit        a PERSON reads n_files     —                           —
+                  sampled files in full,
+                  marks every unit (a
+                  build-label-page page)
+ 4 result       the study's script:        repro/study-result          counts missing (no-recall-audit);
+   (after         "recall_audit":          (when the study is done)    files < n_files (recall-sample);
+    the run)      {files, units_in_files,                              extracted / units_in_files
+                   extracted}                                          < min_recall (recall);
+                                                                       extracted > units_in_files
+                                                                       (result unreadable)
+ FIRES:  in the editor on save · npx paperlint lint · the paper's CI
+ CANNOT SEE:  whether the person really read the files in full, or counted right;
+              whether the sample was drawn as the design says
+```
+
+`result.json` carries the counts, not a share: the files are checked against the plan, and the
+recall is computed by the rule (`extracted / units_in_files`), so a share rounded in the study's
+favour cannot pass.
+
+- **Checked:** the counts are there; at least `n_files` files; the recall at least `min_recall`.
+- **Not checked:** the reading itself — the labels of the audit are data the study exports and
+  commits, like any other labels.
+
 ## `result.json`
 
 The study's own script writes it beside the plan; the rule only reads it.
@@ -136,12 +181,13 @@ The study's own script writes it beside the plan; the rule only reads it.
     "< 2 admissible readings": 37,
     "no files in scope": 5,
     "clone failed": 3
-  }
+  },
+  "recall_audit": { "files": 50, "units_in_files": 95, "extracted": 63 }
 }
 ```
 
-Its own numbers go at the top under any name. `kappa`, `self_test`, `funnel` and `claim` have the
-shapes above. It is judged once the study is `done`.
+Its own numbers go at the top under any name. `kappa`, `self_test`, `funnel`, `recall_audit` and
+`claim` have the shapes above. It is judged once the study is `done`.
 
 ## What a machine never sees
 

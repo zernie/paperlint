@@ -1,7 +1,7 @@
 /**
  * `repro/study-result` — a `done` study whose plan is v2 shows, in its `result.json`, what its plan
  * fixed before the run: the number its claim stands or falls by, each labelling step's kappa, its
- * self-test and its funnel. What is judged, and why, is `src/domain/study-result.ts` and
+ * self-test, its funnel and its extractor's recall audit. What is judged, and why, is `src/domain/study-result.ts` and
  * docs/rules/repro/study-result.md; this file finds those studies, reads their result through the
  * study folder's reader (no link followed), and reports.
  *
@@ -106,7 +106,7 @@ export const studyResultRules = (
       type: "suggestion",
       docs: {
         description:
-          "a done study whose plan is v2 shows in its result.json what its plan fixed before the run: the number its claim stands or falls by, each labelling step's kappa, its self-test and its funnel",
+          "a done study whose plan is v2 shows in its result.json what its plan fixed before the run: the number its claim stands or falls by, each labelling step's kappa, its self-test, its funnel and its extractor's recall audit",
         url: rulePageUrl(NAME),
       },
       schema: [],

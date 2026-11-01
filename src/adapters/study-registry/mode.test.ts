@@ -89,6 +89,7 @@ it("the template of a measurement is a draft decided before its run, its decisio
     "second_check",
     "self_test",
     "funnel",
+    "recall_audit",
   ]);
   expect(planTemplate("spike", "P1-S03-y").mode).toBeUndefined();
 });

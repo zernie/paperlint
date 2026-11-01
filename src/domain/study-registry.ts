@@ -23,6 +23,7 @@ import {
   PLAN_V2,
   PLAN_V2_FROM,
   type Funnel,
+  type RecallAudit,
   type SecondCheck,
   type SelfTest,
 } from "./study-gates.ts";
@@ -202,6 +203,8 @@ export interface StudyPlan {
   readonly self_test?: SelfTest | null | undefined;
   /** Plan v2: the reasons a drawn unit may be dropped; `"none"`; null while undecided. */
   readonly funnel?: Funnel | null | undefined;
+  /** Plan v2: how complete the extractor is, audited by a person reading files; `"none"`; null while undecided. */
+  readonly recall_audit?: RecallAudit | null | undefined;
 }
 
 /**
@@ -235,6 +238,7 @@ export const PLAN_FIELDS = [
   "second_check",
   "self_test",
   "funnel",
+  "recall_audit",
 ] as const;
 
 /** A plan with empty required texts: the author has not approved it. */
@@ -258,6 +262,7 @@ export const PLAN_TEXT_FIELDS = [
   "second_check",
   "self_test",
   "funnel",
+  "recall_audit",
 ] as const;
 export type PlanTextField = (typeof PLAN_TEXT_FIELDS)[number];
 
@@ -323,6 +328,7 @@ export const planTemplate = (kind: StudyKind, folder: string): DraftPlan => ({
         second_check: null,
         self_test: null,
         funnel: null,
+        recall_audit: null,
       }
     : {}),
 });
@@ -1225,7 +1231,7 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
     }
   },
   "plan-version": (f) =>
-    `The plan of ${tick(f.id)}, ${tick(f.path)} in its folder, is a plan v1, and ${tick(f.id)} is a measurement registered on ${f.date}: from ${PLAN_V2_FROM} a measurement's plan is v2 and declares the gates its number is believed by. What to do: add \`"$schema": "${PLAN_V2}"\`, then \`we_lose_if\` in a decide-first \`mode\`, \`second_check\`, \`self_test\` and \`funnel\` — each \`"none"\` where the study has none of it, null until decided (docs/design/study-gates.md).`,
+    `The plan of ${tick(f.id)}, ${tick(f.path)} in its folder, is a plan v1, and ${tick(f.id)} is a measurement registered on ${f.date}: from ${PLAN_V2_FROM} a measurement's plan is v2 and declares the gates its number is believed by. What to do: add \`"$schema": "${PLAN_V2}"\`, then \`we_lose_if\` in a decide-first \`mode\`, \`second_check\`, \`self_test\`, \`funnel\` and \`recall_audit\` — each \`"none"\` where the study has none of it, null until decided (docs/design/study-gates.md).`,
   "legacy-plan": (f) =>
     `The plan of ${tick(f.id)} is ${tick(f.path)}, its old name; it is read as the plan. What to do: rename it to \`${PLAN_FILE}\` in the study's folder (\`git mv\`) and set the row's \`plan\` to \`${PLAN_FILE}\`.`,
 };
