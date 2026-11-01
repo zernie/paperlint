@@ -45,8 +45,8 @@ const QUESTIONS = [
     text: "Is this correct?",
     short: "correct?",
     options: [
-      { value: "yes", label: "Yes" },
-      { value: "no", label: "No" },
+      { value: "yes", label: "Yes", example: "A sort that returns 1, 2, 3." },
+      { value: "no", label: "No", example: "A sort that returns 3, 1, 2." },
     ],
   },
   {
@@ -54,8 +54,12 @@ const QUESTIONS = [
     text: "Clear-cut or a real boundary case?",
     short: "boundary",
     options: [
-      { value: "clear", label: "Clear-cut" },
-      { value: "boundary", label: "Boundary" },
+      { value: "clear", label: "Clear-cut", example: "An empty list sorted." },
+      {
+        value: "boundary",
+        label: "Boundary",
+        example: "Two equal keys whose order changed.",
+      },
     ],
   },
 ];
@@ -66,6 +70,25 @@ const ITEMS: readonly Item[] = Array.from({ length: 12 }, (_, n) => ({
   body: `Item number ${String(n)} </script> & text`,
 }));
 
+/** Three practice items whose answers are known: shown before the real ones, never exported as labels. */
+const PRACTICE = [
+  {
+    body: "sorted([3, 1, 2]) gives [1, 2, 3]",
+    expected: { label: "yes", boundary: "clear" },
+    why: "The output is in order and nothing is unusual about the input.",
+  },
+  {
+    body: "sorted([3, 1, 2]) gives [3, 1, 2]",
+    expected: { label: "no", boundary: "clear" },
+    why: "The output is the input unchanged.",
+  },
+  {
+    body: "sorted([(1, 'b'), (1, 'a')], key=first) gives [(1, 'a'), (1, 'b')]",
+    expected: { label: "no", boundary: "boundary" },
+    why: "A stable sort keeps equal keys in input order; whether that matters is a judgement.",
+  },
+];
+
 const config = (
   over: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
@@ -74,6 +97,7 @@ const config = (
   seed: 7,
   groups: { python: "Python", go: "Go", rust: "Rust" },
   questions: QUESTIONS,
+  practice: PRACTICE,
   items: ITEMS,
   ...over,
 });
@@ -152,16 +176,16 @@ test("the shared per-skill checks pass", async () => {
   await checkSkill("build-label-page");
 });
 
-test("the checklist has the seven rules, numbered, and the skill names seven", () => {
+test("the checklist has the eight rules, numbered, and the skill names eight", () => {
   const checklist = readFileSync(
     join(HERE, "references", "checklist.md"),
     "utf8",
   );
   const numbers = [...checklist.matchAll(/^## (\d+)\. /gm)].map((m) => m[1]);
-  assert.deepEqual(numbers, ["1", "2", "3", "4", "5", "6", "7"]);
+  assert.deepEqual(numbers, ["1", "2", "3", "4", "5", "6", "7", "8"]);
   const skill = readFileSync(join(HERE, "SKILL.md"), "utf8");
   const listed = [...skill.matchAll(/^(\d)\. \*\*/gm)].map((m) => m[1]);
-  assert.deepEqual(listed.slice(0, 7), numbers);
+  assert.deepEqual(listed.slice(0, 8), numbers);
 });
 
 test("the page: neutral ids, the source ids nowhere, and the order is fixed by the seed", () => {
@@ -580,6 +604,14 @@ test("🔴 a familiarity_question that is not a string is refused at build, not 
   }
 });
 
+/** The practice of round 1, all answered: the real items are open. */
+const DONE_PRACTICE: Record<string, unknown> = Object.fromEntries(
+  PRACTICE.map((p, n) => [
+    `r1-P${String(n + 1)}`,
+    { answers: p.expected, source: "page" },
+  ]),
+);
+
 /** A DOM just big enough for the page script: nodes with children and text. */
 class FakeNode {
   children: FakeNode[] = [];
@@ -608,6 +640,7 @@ async function showPage(
   page: string,
   answers: Record<string, unknown>,
   groups: Record<string, unknown>,
+  practice: Record<string, unknown> = DONE_PRACTICE,
 ): Promise<string> {
   const script = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)][0]?.[1];
   const json =
@@ -624,7 +657,15 @@ async function showPage(
   const store = {
     collection: (name: string) => ({
       onSnapshot: (cb: (snap: unknown) => void) => {
-        cb(docsOf(name === "answers" ? answers : groups));
+        cb(
+          docsOf(
+            name === "answers"
+              ? answers
+              : name === "practice"
+                ? practice
+                : groups,
+          ),
+        );
       },
       doc: () => ({ set: () => Promise.resolve() }),
     }),
@@ -957,3 +998,159 @@ test("🔴 export refuses a stored field of the wrong type by its path, never a 
     assert.ok(r.out.includes(`${path}: `), `${path} must be named\n${r.out}`);
   });
 });
+
+// ── rule 8: the labeller understands the question before the real items ─────────────────────────
+
+const labelsFile = (dir: string): string =>
+  readFileSync(join(dir, "data", "demo-gold-labels-2026-01-02.json"), "utf8");
+
+const exportAt = (dir: string): { status: number | null; out: string } =>
+  run([
+    "export",
+    join(dir, "dump.json"),
+    join(dir, "out", "key.json"),
+    join(dir, "data"),
+    "--date",
+    "2026-01-02",
+  ]);
+
+const occurrences = (text: string, needle: string): number =>
+  text.split(needle).length - 1;
+
+test("🔴 build refuses an answer option without an example: every answer is shown on one real case", () => {
+  const [first, ...rest] = QUESTIONS;
+  assert.ok(first !== undefined);
+  const bare = {
+    ...first,
+    options: first.options.map(({ value, label }) => ({ value, label })),
+  };
+  const dir = setup("no-example", config({ questions: [bare, ...rest] }));
+  const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+  assert.notEqual(r.status, 0);
+  assert.match(r.out, /questions\[0\]\.options\[0\]\.example: is required/);
+});
+
+test("🔴 build refuses fewer than three practice items, an expected answer that is not offered, and one that leaves a question out", () => {
+  const cases: readonly [string, unknown, RegExp][] = [
+    ["two", PRACTICE.slice(0, 2), /practice: needs 3 or more entries, has 2/],
+    [
+      "unoffered",
+      [{ ...PRACTICE[0], expected: { label: "maybe", boundary: "clear" } }, ...PRACTICE.slice(1)],
+      /practice\[0\]\.expected\.label: 'maybe' is not one of yes, no/,
+    ],
+    [
+      "partial",
+      [{ ...PRACTICE[0], expected: { label: "yes" } }, ...PRACTICE.slice(1)],
+      /practice\[0\]\.expected\.boundary: every question needs its expected answer/,
+    ],
+    [
+      "stray",
+      [{ ...PRACTICE[0], expected: { ...PRACTICE[0]?.expected, extra: "x" } }, ...PRACTICE.slice(1)],
+      /practice\[0\]\.expected\.extra: not a question of this page/,
+    ],
+  ];
+  for (const [name, practice, message] of cases) {
+    const dir = setup(`practice-${name}`, config({ practice }));
+    const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+    assert.notEqual(r.status, 0, name);
+    assert.match(r.out, message, name);
+  }
+});
+
+test("🔴 the first screen explains each question with an example per answer, and the real items stay closed until the practice is answered", async () => {
+  const { page } = build(setup("first-screen", config()));
+  const before = await showPage(page, {}, {}, {});
+  assert.match(before, /How to answer/);
+  for (const q of QUESTIONS) {
+    for (const o of q.options) assert.match(before, new RegExp(escapeRe(o.example)));
+  }
+  assert.match(before, /Practice: 0 of 3 answered/);
+  assert.match(before, /sorted\(\[3, 1, 2\]\) gives \[1, 2, 3\]/);
+  assert.doesNotMatch(before, /G001/, "a real item is open before the practice");
+  assert.doesNotMatch(before, /items complete/);
+
+  const after = await showPage(page, {}, {});
+  assert.match(after, /Practice: 3 of 3 matched/);
+  assert.match(after, /G001/);
+  assert.match(after, /0 of 12 items complete/);
+});
+
+test("🔴 a practice answer shows the expected answer and why; a miss says to tell the agent before going on", async () => {
+  const { page } = build(setup("practice-miss", config()));
+  const practice = {
+    ...DONE_PRACTICE,
+    "r1-P2": { answers: { label: "yes", boundary: "clear" }, source: "page" },
+  };
+  const shown = await showPage(page, {}, {}, practice);
+  assert.match(shown, /Practice: 2 of 3 matched/);
+  assert.match(shown, /Expected: No · Clear-cut\. The output is the input unchanged\./);
+  assert.match(shown, /tell the agent/);
+  assert.match(shown, /G001/, "a miss does not lock the real items");
+});
+
+test("🔴 a new practice round reopens the practice: answers of an earlier round do not count", async () => {
+  const { page } = build(setup("round-2", config({ practice_round: 2 })));
+  const shown = await showPage(page, {}, {});
+  assert.match(shown, /Practice: 0 of 3 answered/);
+  assert.doesNotMatch(shown, /G001/);
+});
+
+test("🔴 one question per screen: an item card asks only its first unanswered question", async () => {
+  const { page, key } = build(setup("one-question", config()));
+  const second = "Clear-cut or a real boundary case?";
+  const none = await showPage(page, {}, {});
+  assert.equal(occurrences(none, second), 1, "only the first screen's explanation names it");
+  const [a] = Object.keys(key.ids);
+  assert.ok(a !== undefined);
+  const one = await showPage(page, { [a]: { answers: { label: "yes" }, source: "page" } }, {});
+  assert.equal(occurrences(one, second), 2, "the item whose first question is answered asks the second");
+  assert.match(one, /correct\?: Yes/, "the answered question stays visible as a line");
+});
+
+test("🔴 export keeps the practice out of the labels and writes it to its own file, with what matched", () => {
+  const dir = setup("practice-export", config());
+  build(dir);
+  const practice = {
+    ...DONE_PRACTICE,
+    "r1-P2": { answers: { label: "yes", boundary: "clear" }, source: "page", savedAt: "2026-01-02T10:00:00Z" },
+  };
+  writeFileSync(join(dir, "dump.json"), JSON.stringify({ answers: {}, groups: {}, practice }));
+  const r = exportAt(dir);
+  assert.equal(r.status, 0, r.out);
+  const labels = labelsFile(dir);
+  assert.doesNotMatch(labels, /practice|r1-P/);
+  const file = z
+    .object({
+      round: z.number(),
+      matched: z.number(),
+      total: z.number(),
+      items: z.array(
+        z.object({ id: z.string(), matched: z.boolean(), answers: z.unknown(), expected: z.unknown() }),
+      ),
+    })
+    .parse(JSON.parse(readFileSync(join(dir, "data", "demo-gold-practice-2026-01-02.json"), "utf8")));
+  assert.equal(file.round, 1);
+  assert.equal(file.matched, 2);
+  assert.equal(file.total, 3);
+  assert.deepEqual(
+    file.items.map((i) => [i.id, i.matched]),
+    [["P1", true], ["P2", false], ["P3", true]],
+  );
+  assert.match(r.out, /practice round 1: 2 of 3 matched; missed P2/);
+});
+
+test("🔴 export refuses a stored practice answer the key does not know, by its path", () => {
+  const dir = setup("practice-stray", config());
+  build(dir);
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers: {}, groups: {}, practice: { "r1-P9": { answers: {}, source: "page" } } }),
+  );
+  const r = exportAt(dir);
+  assert.notEqual(r.status, 0);
+  assert.match(r.out, /practice\/r1-P9: the key does not know this practice item/);
+});
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
