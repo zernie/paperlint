@@ -1,6 +1,6 @@
 /**
  * build-label-page — the free tier: the skill passes the shared per-skill checks, its checklist has
- * the seven rules the skill names, and the example generator does what the checklist says it does.
+ * the eight rules the skill names, and the example generator does what the checklist says it does.
  * No model, no network, no browser. Needs `python3`, the language of the template.
  *
  * 🔴 WHAT IS RUN, NOT READ: the generator is executed on a small items file and its output is
