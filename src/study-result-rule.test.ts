@@ -59,6 +59,7 @@ const V2: StudyPlan = {
   second_check: [{ step: "admissible", min_kappa: 0.6 }],
   self_test: { made_by: "selftest.mjs" },
   funnel: ["clone failed"],
+  recall_audit: { n_files: 20, min_recall: 0.6 },
 };
 
 const GOOD = {
@@ -66,6 +67,7 @@ const GOOD = {
   kappa: { admissible: 0.64 },
   self_test: { passed: 9, failed: 0 },
   funnel: { "clone failed": 1 },
+  recall_audit: { files: 20, units_in_files: 40, extracted: 30 },
 };
 
 /** A paper whose registry has `s`, its plan `plan` (text), and `result` as result.json (none when null). */
@@ -132,6 +134,7 @@ describe("repro/study-result — silent", () => {
       second_check: undefined,
       self_test: undefined,
       funnel: undefined,
+      recall_audit: undefined,
     };
     const exploratoryNone: StudyPlan = {
       ...V2,
@@ -139,6 +142,7 @@ describe("repro/study-result — silent", () => {
       second_check: "none",
       self_test: "none",
       funnel: "none",
+      recall_audit: "none",
     };
     const cases = [
       tree(row({ status: "running" }), planText(V2), null),
@@ -223,5 +227,31 @@ describe("repro/study-result — reported", () => {
 
   it("is an error in paperlint's config", () => {
     expect(RESULT_RULE_LEVELS).toEqual({ "repro/study-result": "error" });
+  });
+});
+
+describe("repro/study-result — the recall audit", () => {
+  it("a recall audit on too few files or below its bar is reported; one that counts more extracted than found is unreadable", () => {
+    const audit = (c: Record<string, number>) =>
+      lint(
+        tree(row(), planText(V2), JSON.stringify({ ...GOOD, recall_audit: c })),
+      );
+    const [over] = audit({ files: 20, units_in_files: 10, extracted: 11 });
+    // Guards: 12 of 20 is exactly the bar of 0.6 and passes; 11 of 20 does not.
+    expect([
+      audit({ files: 20, units_in_files: 20, extracted: 12 }).map((r) => r.id),
+      audit({ files: 20, units_in_files: 20, extracted: 11 }).map((r) => r.id),
+      audit({ files: 19, units_in_files: 20, extracted: 12 }).map((r) => r.id),
+      over?.id,
+      over?.text.includes("recall_audit"),
+      audit({ files: 20, units_in_files: 0, extracted: 0 }).map((r) => r.id),
+    ]).toEqual([
+      [],
+      ["recall"],
+      ["recall-sample"],
+      "result-unreadable",
+      true,
+      ["result-unreadable"],
+    ]);
   });
 });

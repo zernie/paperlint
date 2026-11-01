@@ -12,17 +12,20 @@ must show each of them.
 
 For each study that is `done`, whose plan is ready and v2:
 
-| problem             | when                                                                                                                                                                  |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `no-result-file`    | the study's folder has no `result.json`                                                                                                                               |
-| `result-linked`     | `result.json` is reached through a symbolic link                                                                                                                      |
-| `result-unreadable` | `result.json` is not JSON, or `kappa`, `self_test`, `funnel` or `claim` is not of its shape (a kappa outside -1..1, such as a percentage written as `75`, is not one) |
-| `no-number`         | the number `mode.we_lose_if.result` names is not a number in `result.json`                                                                                            |
-| `claim-lost`        | that number crosses the threshold, and `result.json` does not say `"claim": "lost"`                                                                                   |
-| `claim-holds`       | `result.json` says `"claim": "lost"`, and the number does not cross the threshold                                                                                     |
-| `kappa`             | a step of `second_check` has no kappa in `result.json`'s `kappa`, or one below its `min_kappa`                                                                        |
-| `self-test`         | `self_test` is declared, and `result.json`'s `self_test` is missing or `failed` is not 0                                                                              |
-| `funnel`            | a reason of `funnel` has no count in `result.json`'s `funnel`                                                                                                         |
+| problem             | when                                                                                                                                                                                                                                                                              |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no-result-file`    | the study's folder has no `result.json`                                                                                                                                                                                                                                           |
+| `result-linked`     | `result.json` is reached through a symbolic link                                                                                                                                                                                                                                  |
+| `result-unreadable` | `result.json` is not JSON, or `kappa`, `self_test`, `funnel`, `recall_audit` or `claim` is not of its shape (a kappa outside -1..1, such as a percentage written as `75`, is not one; an audit counting more units extracted than the person found, or no unit found, is not one) |
+| `no-number`         | the number `mode.we_lose_if.result` names is not a number in `result.json`                                                                                                                                                                                                        |
+| `claim-lost`        | that number crosses the threshold, and `result.json` does not say `"claim": "lost"`                                                                                                                                                                                               |
+| `claim-holds`       | `result.json` says `"claim": "lost"`, and the number does not cross the threshold                                                                                                                                                                                                 |
+| `kappa`             | a step of `second_check` has no kappa in `result.json`'s `kappa`, or one below its `min_kappa`                                                                                                                                                                                    |
+| `self-test`         | `self_test` is declared, and `result.json`'s `self_test` is missing or `failed` is not 0                                                                                                                                                                                          |
+| `funnel`            | a reason of `funnel` has no count in `result.json`'s `funnel`                                                                                                                                                                                                                     |
+| `no-recall-audit`   | `recall_audit` is declared, and `result.json` has no `recall_audit` counts                                                                                                                                                                                                        |
+| `recall-sample`     | the audit read fewer `files` than the plan's `n_files`                                                                                                                                                                                                                            |
+| `recall`            | `extracted / units_in_files` is below the plan's `min_recall`: the extractor misses too much                                                                                                                                                                                      |
 
 A gate that is `"none"` asks nothing; an exploratory study has no `we_lose_if`.
 
@@ -83,12 +86,14 @@ None. The rule is on at `error` in paperlint's config; a paper turns it off in i
   ([`repro/study-registered`](study-registered.md) reports those).
 - Whether a gate's `"none"` is true, whether the threshold is a sensible one, or whether the number
   is computed right: the author's check of the plan, and the study's own artifact.
-- When the plan was written: git orders the decision file before the outputs
-  ([`repro/outputs-before-decision`](outputs-before-decision.md)), not the plan.
+- Whether the gates were fixed before the outputs: [`repro/outputs-before-decision`](outputs-before-decision.md)
+  holds them to the plan as it stood at the first output.
+- Whether the person of the recall audit read the files in full, or counted right: the audit's own
+  labels, exported and committed like any other.
 
 ## How to fix
 
 Have the study's script write `result.json` beside its plan, with the number `we_lose_if` names at
-the top, and `kappa`, `self_test` and `funnel` as the plan declares them
+the top, and `kappa`, `self_test`, `funnel` and `recall_audit` as the plan declares them
 ([the shape](../../design/study-gates.md#resultjson)). A lost claim is reported, not hidden: add
 `"claim": "lost"` and say so in the paper. Never edit the plan's thresholds after the run.

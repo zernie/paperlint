@@ -5,7 +5,7 @@
  * A plan says it is v2 by its `$schema`, `PLAN_V2`. A plan without it is v1 and is judged as before;
  * a measurement study registered on or after `PLAN_V2_FROM` must be v2 (`repro/study-registered`).
  *
- * The four gates, each with ONE way to say "not this study" — the literal `"none"` — and one way to
+ * The five gates, each with ONE way to say "not this study" — the literal `"none"` — and one way to
  * say "not decided yet" — null, which keeps the plan a draft. A key left out of a v2 plan is no plan:
  *
  *   we_lose_if     inside a decide-first mode only: the number in `result.json` and the threshold
@@ -15,6 +15,9 @@
  *   self_test      the check the study runs is first run on inputs whose answer is known: a script
  *                  that makes and runs them, or one input it must catch and one it must pass.
  *   funnel         the reasons a drawn unit may be dropped; the result counts each.
+ *   recall_audit   how complete the step is that extracts units from artefacts: a person reads
+ *                  `n_files` sampled files in full, and what the extractor found of the units the
+ *                  person found must be at least `min_recall`.
  *
  * After the run the study writes `result.json` (`RESULT_FILE`) beside its plan, and
  * `repro/study-result` judges it against these (src/domain/study-result.ts). What no machine sees: a
@@ -54,11 +57,22 @@ export type SelfTest =
 /** The reasons a drawn unit may be dropped, each once. */
 export type Funnel = None | readonly string[];
 
+/**
+ * The audit of the extractor: how many files a person reads in full, and the least share of the units
+ * found there that the extractor must have found too.
+ */
+export interface RecallAuditPlan {
+  readonly n_files: number;
+  readonly min_recall: number;
+}
+
+export type RecallAudit = None | RecallAuditPlan;
+
 /** The file a study of a plan v2 writes its numbers to, beside its plan. */
 export const RESULT_FILE = "result.json";
 
 /**
- * The four gates of a plan, as the plan declares them (null while undecided): what is frozen once the
+ * The five gates of a plan, as the plan declares them (null while undecided): what is frozen once the
  * study's first output exists (`repro/outputs-before-decision`, src/domain/decide-first.ts).
  */
 export interface PlanGates {
@@ -66,6 +80,7 @@ export interface PlanGates {
   readonly second_check: SecondCheck | null;
   readonly self_test: SelfTest | null;
   readonly funnel: Funnel | null;
+  readonly recall_audit: RecallAudit | null;
 }
 
 /** The gates' names, in the order they are reported. */
@@ -74,6 +89,7 @@ export const GATE_NAMES = [
   "second_check",
   "self_test",
   "funnel",
+  "recall_audit",
 ] as const satisfies readonly (keyof PlanGates)[];
 
 /** A plan's gates, from the parts that hold them: none for a plan v1, which declares no gates. */
@@ -88,6 +104,7 @@ export const gatesOf = (plan: {
   readonly second_check?: SecondCheck | null | undefined;
   readonly self_test?: SelfTest | null | undefined;
   readonly funnel?: Funnel | null | undefined;
+  readonly recall_audit?: RecallAudit | null | undefined;
 }): PlanGates | null =>
   plan.$schema === PLAN_V2
     ? {
@@ -95,6 +112,7 @@ export const gatesOf = (plan: {
         second_check: plan.second_check ?? null,
         self_test: plan.self_test ?? null,
         funnel: plan.funnel ?? null,
+        recall_audit: plan.recall_audit ?? null,
       }
     : null;
 

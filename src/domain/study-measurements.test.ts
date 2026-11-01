@@ -650,6 +650,7 @@ describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", (
     second_check: "none",
     self_test: "none",
     funnel: "none",
+    recall_audit: "none",
   };
   const onDay = (date: string, kind: Study["kind"] = "measurement") =>
     reg({

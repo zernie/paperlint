@@ -149,7 +149,8 @@ author's check of the drawn units. `paperlint studies new` writes the template b
   },
   "second_check": null,
   "self_test": null,
-  "funnel": null
+  "funnel": null,
+  "recall_audit": null
 }
 ```
 
@@ -172,6 +173,7 @@ That is a measurement's template, a plan v2. Another kind's has no `$schema`, `m
 | `second_check`           | v2: per labelling step, the least kappa between two raters, or `"none"`              |
 | `self_test`              | v2: how the study's check is run on known answers first, or `"none"`                 |
 | `funnel`                 | v2: the reasons a drawn unit may be dropped, or `"none"`                             |
+| `recall_audit`           | v2: files a person reads in full, and the least recall of the extractor, or `"none"` |
 
 `mode` is required of a `measurement` (other kinds may omit it): how its outcomes are kept from the
 decisions on its inputs — decided before the run (the default the template writes; its `outputs`,

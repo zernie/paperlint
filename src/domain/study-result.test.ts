@@ -23,6 +23,7 @@ const GOOD: StudyResult = {
   kappa: { pass: 0.71, fits: 0.6 },
   self_test: { passed: 12, failed: 0 },
   funnel: { "timed out": 2, "clone failed": 0 },
+  recall_audit: { files: 50, units_in_files: 95, extracted: 63 },
 };
 
 const study = (
@@ -38,6 +39,7 @@ const study = (
   ],
   self_test: { made_by: "selftest.mjs" },
   funnel: ["timed out", "clone failed"],
+  recall_audit: { n_files: 50, min_recall: 0.6 },
   state,
   ...over,
 });
@@ -61,6 +63,7 @@ describe("silent", () => {
           second_check: "none",
           self_test: "none",
           funnel: "none",
+          recall_audit: "none",
         },
       ),
     ).toEqual([]);
@@ -120,6 +123,7 @@ describe("reported", () => {
         pass_rate: 0.7,
         kappa: { pass: 0.59 },
         funnel: { "timed out": 1 },
+        recall_audit: GOOD.recall_audit,
       }),
     ).toEqual([
       { problem: "kappa", id: "P1-S01", step: "pass", min: 0.6, got: 0.59 },
@@ -165,6 +169,9 @@ describe("resultMessage", () => {
     { problem: "self-test", id: "P1-S01", failed: 2 },
     { problem: "self-test", id: "P1-S01", failed: null },
     { problem: "funnel", id: "P1-S01", missing: ["a", "b"] },
+    { problem: "no-recall-audit", id: "P1-S01" },
+    { problem: "recall-sample", id: "P1-S01", files: 30, min_files: 50 },
+    { problem: "recall", id: "P1-S01", extracted: 63, units: 95, min: 0.7 },
   ];
 
   it("every problem has a text that names the study, says what to do and links the page", () => {
@@ -189,6 +196,49 @@ describe("resultMessage", () => {
   });
 });
 
+describe("recall_audit", () => {
+  it("a recall audit missing, on fewer files than the plan fixed, or below its least recall", () => {
+    expect(judge({ ...GOOD, recall_audit: undefined })).toEqual([
+      { problem: "no-recall-audit", id: "P1-S01" },
+    ]);
+    expect(
+      judge({
+        ...GOOD,
+        recall_audit: { files: 30, units_in_files: 60, extracted: 30 },
+      }),
+    ).toEqual([
+      { problem: "recall-sample", id: "P1-S01", files: 30, min_files: 50 },
+      {
+        problem: "recall",
+        id: "P1-S01",
+        extracted: 30,
+        units: 60,
+        min: 0.6,
+      },
+    ]);
+    // Guards: exactly at the bar is enough; a recall of 60 of 100 is 0.6.
+    expect(
+      judge({
+        ...GOOD,
+        recall_audit: { files: 50, units_in_files: 100, extracted: 60 },
+      }),
+    ).toEqual([]);
+  });
+  it("a recall below its bar gives the counts, the recall and the bar", () => {
+    expect(
+      resultMessage({
+        problem: "recall",
+        id: "P1-S01",
+        extracted: 63,
+        units: 95,
+        min: 0.7,
+      }).split("\n")[0],
+    ).toBe(
+      "`P1-S01`: the extractor found 63 of the 95 units a person found reading the audited files in full, a recall of 0.663, below the 0.7 its plan fixed before the run — the extractor misses too much. What to do: report the recall as a limit of the number, or fix the extractor and audit again; the bar is not lowered after the fact.",
+    );
+  });
+});
+
 describe("gatesOf — the gates of a plan, only when every one is decided", () => {
   const PLAN: StudyPlan = {
     $schema: PLAN_V2,
@@ -206,6 +256,7 @@ describe("gatesOf — the gates of a plan, only when every one is decided", () =
     second_check: "none",
     self_test: "none",
     funnel: "none",
+    recall_audit: "none",
   };
 
   it("reads a plan v2's gates, and none of a plan v1 or one with a gate undecided", () => {
@@ -214,12 +265,14 @@ describe("gatesOf — the gates of a plan, only when every one is decided", () =
       { ...PLAN, second_check: null },
       { ...PLAN, self_test: null },
       { ...PLAN, funnel: null },
+      { ...PLAN, recall_audit: null },
     ];
     expect(gatesOf(PLAN)).toEqual({
       we_lose_if: { result: "x", above: 1 },
       second_check: "none",
       self_test: "none",
       funnel: "none",
+      recall_audit: "none",
     });
     // Guards: a gate absent or null is never read as decided.
     expect(undecided.map(gatesOf)).toEqual(undecided.map(() => null));

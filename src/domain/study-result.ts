@@ -11,6 +11,10 @@
  *   second_check   each step's kappa is in `kappa`, and at least its `min_kappa`.
  *   self_test      `self_test` holds `passed` and `failed`, and `failed` is 0.
  *   funnel         `funnel` counts every declared reason.
+ *   recall_audit   `recall_audit` gives the files a person read in full, the units found there, and
+ *                  how many of them the extractor found; at least `n_files` files, and a recall
+ *                  (extracted / units) of at least `min_recall`. The counts, not a recall the study
+ *                  computed: the files are checked against the plan, and the share is computed here.
  *
  * A gate that is `"none"` asks nothing of the file. Pure.
  */
@@ -19,6 +23,8 @@ import {
   thresholdText,
   RESULT_FILE,
   type Funnel,
+  type RecallAudit,
+  type RecallAuditPlan,
   type SecondCheck,
   type SelfTest,
   type WeLoseIf,
@@ -28,13 +34,21 @@ import type { StudyPlan } from "./study-registry.ts";
 /** The value a study's result says its claim has, when its number crossed `we_lose_if`. */
 export const CLAIM_LOST = "lost";
 
-/** A study's `result.json`: its own numbers by name, and the four parts the gates read. */
+/** What a person found reading the audited files in full, and how many of those units the extractor found. */
+export interface RecallCounts {
+  readonly files: number;
+  readonly units_in_files: number;
+  readonly extracted: number;
+}
+
+/** A study's `result.json`: its own numbers by name, and the five parts the gates read. */
 export interface StudyResult {
   readonly claim?: typeof CLAIM_LOST | undefined;
   readonly kappa?: Readonly<Record<string, number>> | undefined;
   readonly self_test?:
     { readonly passed: number; readonly failed: number } | undefined;
   readonly funnel?: Readonly<Record<string, number>> | undefined;
+  readonly recall_audit?: RecallCounts | undefined;
   readonly [key: string]: unknown;
 }
 
@@ -58,13 +72,14 @@ export interface ResultStudy {
   readonly second_check: SecondCheck;
   readonly self_test: SelfTest;
   readonly funnel: Funnel;
+  readonly recall_audit: RecallAudit;
   readonly state: ResultState;
 }
 
 /** The gates a ready plan v2 declares, as the judge reads them. */
 export type Gates = Pick<
   ResultStudy,
-  "we_lose_if" | "second_check" | "self_test" | "funnel"
+  "we_lose_if" | "second_check" | "self_test" | "funnel" | "recall_audit"
 >;
 
 /** Whether a gate is decided: neither absent (a plan v1) nor null (not decided yet). */
@@ -76,8 +91,13 @@ const decided = <T>(g: T | null | undefined): g is T =>
  * plan, or one whose mode carries no `we_lose_if`, has no claim to lose.
  */
 export const gatesOf = (p: StudyPlan): Gates | null => {
-  const { second_check, self_test, funnel, mode } = p;
-  if (!decided(second_check) || !decided(self_test) || !decided(funnel))
+  const { second_check, self_test, funnel, recall_audit, mode } = p;
+  if (
+    !decided(second_check) ||
+    !decided(self_test) ||
+    !decided(funnel) ||
+    !decided(recall_audit)
+  )
     return null;
   const w = mode?.kind === "decide_before_run" ? mode.we_lose_if : null;
   return {
@@ -85,6 +105,7 @@ export const gatesOf = (p: StudyPlan): Gates | null => {
     second_check,
     self_test,
     funnel,
+    recall_audit,
   };
 };
 
@@ -132,6 +153,20 @@ export type ResultFinding =
       readonly problem: "funnel";
       readonly id: string;
       readonly missing: readonly string[];
+    }
+  | { readonly problem: "no-recall-audit"; readonly id: string }
+  | {
+      readonly problem: "recall-sample";
+      readonly id: string;
+      readonly files: number;
+      readonly min_files: number;
+    }
+  | {
+      readonly problem: "recall";
+      readonly id: string;
+      readonly extracted: number;
+      readonly units: number;
+      readonly min: number;
     };
 
 /** What `we_lose_if` asks of `r`: the number, and a loss said in so many words. */
@@ -189,6 +224,46 @@ const funnelFindings = (
   return missing.length === 0 ? [] : [{ problem: "funnel", id, missing }];
 };
 
+/** The audit's file count against the plan's: too few files is a finding. */
+const sampleFindings = (
+  id: string,
+  a: RecallAuditPlan,
+  c: RecallCounts,
+): readonly ResultFinding[] =>
+  c.files < a.n_files
+    ? [{ problem: "recall-sample", id, files: c.files, min_files: a.n_files }]
+    : [];
+
+/** The recall the counts give, against the plan's least. */
+const shareFindings = (
+  id: string,
+  a: RecallAuditPlan,
+  c: RecallCounts,
+): readonly ResultFinding[] =>
+  c.extracted / c.units_in_files < a.min_recall
+    ? [
+        {
+          problem: "recall",
+          id,
+          extracted: c.extracted,
+          units: c.units_in_files,
+          min: a.min_recall,
+        },
+      ]
+    : [];
+
+/** What `recall_audit` asks of `r`: the counts, on enough files, with a recall at least its least. */
+const recallFindings = (
+  id: string,
+  a: RecallAudit,
+  r: StudyResult,
+): readonly ResultFinding[] => {
+  if (a === "none") return [];
+  const c = r.recall_audit;
+  if (c === undefined) return [{ problem: "no-recall-audit", id }];
+  return [...sampleFindings(id, a, c), ...shareFindings(id, a, c)];
+};
+
 /** Every defect of one study's result, in the order of its gates. */
 export const judgeResult = (s: ResultStudy): readonly ResultFinding[] => {
   const st = s.state;
@@ -207,6 +282,7 @@ export const judgeResult = (s: ResultStudy): readonly ResultFinding[] => {
         ...kappaFindings(s.id, s.second_check, st.result),
         ...selfTestFindings(s.id, s.self_test, st.result),
         ...funnelFindings(s.id, s.funnel, st.result),
+        ...recallFindings(s.id, s.recall_audit, st.result),
       ];
   }
 };
@@ -242,6 +318,12 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
       : `${tick(f.id)}: ${String(f.failed)} self-test case(s) failed — a check that misses a known answer counts nothing. What to do: fix the check or leave it out of the count, and run the self-test again.`,
   funnel: (f) =>
     `The ${tick(RESULT_FILE)} of ${tick(f.id)} counts no drop for ${f.missing.map(tick).join(", ")}, declared in its plan's \`funnel\`. What to do: write each in \`funnel\`, 0 when none was dropped for it.`,
+  "no-recall-audit": (f) =>
+    `The ${tick(RESULT_FILE)} of ${tick(f.id)} has no \`recall_audit\` counts, and its plan declares a recall audit. What to do: have a person read the sampled files in full and write \`"recall_audit": { "files": n, "units_in_files": n, "extracted": n }\`.`,
+  "recall-sample": (f) =>
+    `${tick(f.id)}: its recall audit read ${String(f.files)} file(s) in full, fewer than the ${String(f.min_files)} its plan fixed. What to do: audit the remaining files of the sample before the recall is reported.`,
+  recall: (f) =>
+    `${tick(f.id)}: the extractor found ${String(f.extracted)} of the ${String(f.units)} units a person found reading the audited files in full, a recall of ${(f.extracted / f.units).toFixed(3)}, below the ${String(f.min)} its plan fixed before the run — the extractor misses too much. What to do: report the recall as a limit of the number, or fix the extractor and audit again; the bar is not lowered after the fact.`,
 };
 
 const headOf = <P extends Problem>(p: P, f: FindingOf[P]): string =>
@@ -262,4 +344,7 @@ export const RESULT_PROBLEMS: readonly Problem[] = [
   "kappa",
   "self-test",
   "funnel",
+  "no-recall-audit",
+  "recall-sample",
+  "recall",
 ];

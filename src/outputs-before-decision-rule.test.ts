@@ -269,6 +269,7 @@ const v2 = (below: number, question = "Does the hint help?"): string =>
     second_check: [{ step: "fits", min_kappa: 0.6 }],
     self_test: "none",
     funnel: ["no linter rule"],
+    recall_audit: "none",
   });
 const V2_PAPER = { ...PAPER, [`${S}/plan.json`]: v2(0.2) };
 

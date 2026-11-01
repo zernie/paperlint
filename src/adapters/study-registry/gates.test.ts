@@ -40,6 +40,7 @@ const V2: StudyPlan = {
   ],
   self_test: { made_by: "scripts/selftest.mjs" },
   funnel: ["no linter rule", "clone failed"],
+  recall_audit: { n_files: 50, min_recall: 0.6 },
 };
 
 const parse = (p: unknown) =>
@@ -72,6 +73,7 @@ it('"none" is a gate decided: a census with nothing labelled, tested or dropped 
     second_check: "none",
     self_test: "none",
     funnel: "none",
+    recall_audit: "none",
   };
   // Guards: "not this study" has one spelling, and it is a decision, not a gap.
   expect(parse(p)).toEqual({ kind: "ready", plan: p });
@@ -84,6 +86,7 @@ it("every gate still null keeps the plan a draft naming it", () => {
     second_check: null,
     self_test: null,
     funnel: null,
+    recall_audit: null,
   };
   // Guards: null is "not decided yet" — the study may not run on it.
   expect(empty(p)).toEqual([
@@ -91,6 +94,7 @@ it("every gate still null keeps the plan a draft naming it", () => {
     "second_check",
     "self_test",
     "funnel",
+    "recall_audit",
   ]);
 });
 
@@ -99,6 +103,9 @@ it("a plan v2 that leaves a gate out is no plan, the gate named", () => {
   const modeWithout = DECIDED;
   // Guards: a forgotten gate cannot be written — only "none" or null say "not this one".
   expect(why(noFunnel)).toMatch(/^funnel: is missing, and a plan v2/u);
+  expect(why({ ...V2, recall_audit: undefined })).toMatch(
+    /^recall_audit: is missing, and a plan v2/u,
+  );
   expect(why({ ...V2, mode: modeWithout })).toMatch(
     /^mode\.we_lose_if: is missing/u,
   );
@@ -108,6 +115,9 @@ it("a plan without $schema that carries a gate is refused: nobody would read it"
   // Guards: a v1 plan cannot half-declare the gates.
   expect(why({ ...V1, funnel: "none" })).toBe(
     `funnel: is a field of a plan v2 — add "$schema": "${PLAN_V2}"`,
+  );
+  expect(why({ ...V1, recall_audit: "none" })).toBe(
+    `recall_audit: is a field of a plan v2 — add "$schema": "${PLAN_V2}"`,
   );
 });
 
@@ -143,6 +153,12 @@ it("each malformed gate is refused", () => {
     { ...V2, self_test: { must_catch: "bad.js" } },
     { ...V2, funnel: [] },
     { ...V2, funnel: ["clone failed", "clone failed"] },
+    { ...V2, recall_audit: "n/a" },
+    { ...V2, recall_audit: { n_files: 0, min_recall: 0.6 } },
+    { ...V2, recall_audit: { n_files: 2.5, min_recall: 0.6 } },
+    { ...V2, recall_audit: { n_files: 50, min_recall: 0 } },
+    { ...V2, recall_audit: { n_files: 50, min_recall: 1.2 } },
+    { ...V2, recall_audit: { n_files: 50 } },
   ];
   // Guards: each of these is refused — none parses to a plan.
   expect(bad.map((p) => parse(p).kind)).toEqual(bad.map(() => "unreadable"));

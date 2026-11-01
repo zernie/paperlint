@@ -43,7 +43,7 @@ A study decided before its run — its plan's `mode` is `decide_before_run`, the
   read, and the rule says so instead of judging.
 - **`no-history`** — git could not answer (not installed, not a repository).
 - **`gates-changed`** — the plan is a plan v2 ([`docs/design/study-gates.md`](../../design/study-gates.md)),
-  and one of its gates (`mode.we_lose_if`, `second_check`, `self_test`, `funnel`) differs from what
+  and one of its gates (`mode.we_lose_if`, `second_check`, `self_test`, `funnel`, `recall_audit`) differs from what
   the plan declared at the commit of the study's first output after its decision: a threshold moved
   after a result exists. One finding per changed gate, with its value then and now.
 - **`gates-not-fixed`** — the plan v2 was not in history at that commit, or was a plan v1 or no
