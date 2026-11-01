@@ -791,7 +791,7 @@ test("🔴 export keeps the practice out of the labels and writes it to its own 
     .parse(
       JSON.parse(
         readFileSync(
-          join(dir, "data", "demo-gold-practice-2026-01-02.json"),
+          join(dir, "data", "demo-gold-practice-r1-2026-01-02.json"),
           "utf8",
         ),
       ),
@@ -1053,4 +1053,47 @@ test("a key from an older build: without `rounds` its own round's ids are kept; 
   assert.deepEqual(Rounds.parse(read()).practice.rounds, {
     "2": ["P1", "P2", "P3"],
   });
+});
+
+test("🔴 a second practice round exported the same day does not overwrite the first: each round has its own file", () => {
+  const dir = setup("practice-two-rounds", config());
+  build(dir);
+  const missed = {
+    ...DONE_PRACTICE,
+    "r1-P2": { answers: { label: "yes", boundary: "clear" }, source: "page" },
+  };
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers: {}, groups: {}, practice: missed }),
+  );
+  assert.equal(exportAt(dir).status, 0);
+  setup("practice-two-rounds", config({ practice_round: 2 }));
+  build(dir);
+  const round2 = Object.fromEntries(
+    PRACTICE.map((p, n) => [
+      `r2-P${String(n + 1)}`,
+      { answers: p.expected, source: "page" },
+    ]),
+  );
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({
+      answers: {},
+      groups: {},
+      practice: { ...missed, ...round2 },
+    }),
+  );
+  assert.equal(exportAt(dir).status, 0);
+  const Round = z.object({ round: z.number(), matched: z.number() });
+  const read = (r: number) =>
+    Round.parse(
+      JSON.parse(
+        readFileSync(
+          join(dir, "data", `demo-gold-practice-r${String(r)}-2026-01-02.json`),
+          "utf8",
+        ),
+      ),
+    );
+  assert.deepEqual(read(1), { round: 1, matched: 2 });
+  assert.deepEqual(read(2), { round: 2, matched: 3 });
 });

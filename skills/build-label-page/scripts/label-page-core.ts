@@ -1090,6 +1090,9 @@ function scorePractice(dump: JsonObject, p: NonNullable<Key["practice"]>) {
     };
   });
 }
+/** One file per round: a second round exported the same day keeps the first. */
+const practiceFile = (study: string, round: number, day: string): string =>
+  `${study}-practice-r${String(round)}-${day}.json`;
 /** The practice of the key's round, scored, into its own file; never into the labels. */
 function exportPractice(
   dump: JsonObject,
@@ -1106,7 +1109,7 @@ function exportPractice(
   }
   const missed = items.filter((i) => !i.matched).map((i) => i.id);
   const matched = items.length - missed.length;
-  const path = join(target, `${key.study}-practice-${day}.json`);
+  const path = join(target, practiceFile(key.study, p.round, day));
   writeJson(path, {
     study: key.study,
     round: p.round,

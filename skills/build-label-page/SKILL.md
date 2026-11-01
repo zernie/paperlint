@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:556c9961a31957c2 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:6323fa135f385e8b compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -131,7 +131,7 @@ building. In one line each:
    ```
 
    It writes `data/<study>-labels-<date>.json`, scores the practice into
-   `data/<study>-practice-<date>.json` beside it, and prints every item it could not count. A page
+   `data/<study>-practice-r<round>-<date>.json` beside it, and prints every item it could not count. A page
    written by hand exports to the same two files, practice kept out of the labels. Commit both in the
    same pass, and add the line "labels → `data/<study>-labels-<date>.json`" to the paper's
    `NOTES.md` for the numbers that use them.

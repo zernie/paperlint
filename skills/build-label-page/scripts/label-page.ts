@@ -5,7 +5,7 @@
  *
  *   build  <items.json> <out-dir>                          → out/page.html, out/key.json
  *   export <dump.json> <key.json> <data-dir> [--date D]    → data/<study>-labels-<D>.json
- *                                                            (+ data/<study>-practice-<D>.json)
+ *                                                            (+ data/<study>-practice-r<N>-<D>.json)
  *   schema                                                 → the declared items.json schema
  *
  * Run from the skill, never copied into a study: a fix reaches every page built after it.
@@ -27,7 +27,7 @@
  * does not lock them, it tells the labeller to tell the agent, who rewords the question, raises
  * `practice_round` and rebuilds. The page stores the FIRST practice answer only, in its own
  * collection (`practice`, documents `r<round>-P<n>`), so `export` keeps it out of the labels and
- * writes it to `<study>-practice-<date>.json`. An item card asks one question at a time.
+ * writes it to `<study>-practice-r<round>-<date>.json`. An item card asks one question at a time.
  *
  * items.json is checked once against the declared CONFIG_SCHEMA (`schema` prints it): every field's
  * type, required or optional, non-empty strings, ids as strings of letters, digits, - and _. A bad

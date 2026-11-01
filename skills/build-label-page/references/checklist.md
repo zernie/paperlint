@@ -166,7 +166,7 @@ not run: banner, items readable, buttons off.
   take the practice again before their real answers count. The page keeps only the FIRST answer to a
   practice item, so the score is not a retry.
 - Keep a record in the study folder: the practice file `export` writes
-  (`<study>-practice-<date>.json`: the round, who answered, what matched), and one line in the
+  (`<study>-practice-r<round>-<date>.json`: the round, who answered, what matched), and one line in the
   study's README per round on what was reworded after it.
 
 **Why.** A labeller who misreads the question gives labels that agree with nothing, and the agreement

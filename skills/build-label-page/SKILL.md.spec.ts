@@ -142,7 +142,7 @@ building. In one line each:
    \`\`\`
 
    It writes \`data/<study>-labels-<date>.json\`, scores the practice into
-   \`data/<study>-practice-<date>.json\` beside it, and prints every item it could not count. A page
+   \`data/<study>-practice-r<round>-<date>.json\` beside it, and prints every item it could not count. A page
    written by hand exports to the same two files, practice kept out of the labels. Commit both in the
    same pass, and add the line "labels → \`data/<study>-labels-<date>.json\`" to the paper's
    \`NOTES.md\` for the numbers that use them.
