@@ -1139,3 +1139,26 @@ test("🔴 exported only after a retake, the earlier round's practice still gets
   assert.deepEqual(read(2), { round: 2, matched: 3 });
   assert.match(r.out, /practice round 1: 2 of 3 matched; missed P2/);
 });
+
+test("🔴 a question dropped between practice rounds: the earlier round's answers are checked against that round's questions, not refused", () => {
+  const dir = setup("practice-question-dropped", config());
+  build(dir);
+  const [first] = QUESTIONS;
+  assert.ok(first !== undefined);
+  const oneQuestion = PRACTICE.map((p) => ({
+    ...p,
+    expected: { label: p.expected.label },
+  }));
+  setup(
+    "practice-question-dropped",
+    config({ questions: [first], practice: oneQuestion, practice_round: 2 }),
+  );
+  build(dir);
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers: {}, groups: {}, practice: DONE_PRACTICE }),
+  );
+  const r = exportAt(dir);
+  assert.equal(r.status, 0, r.out);
+  assert.match(r.out, /practice round 1: 3 of 3 matched/);
+});

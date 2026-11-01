@@ -767,39 +767,45 @@ const NOUN: Readonly<Record<Collection, string>> = {
  * The store documents a practice of this key may have: every round up to the key's, so the answers
  * of an earlier round are known (and kept), not refused.
  */
-const practiceDocs = (key: Key): readonly string[] => {
+const practiceDocs = (
+  key: Key,
+): readonly (readonly [string, readonly string[]])[] => {
   const p = key.practice;
   if (p === undefined) return [];
+  // Each round's own questions: a later round may have dropped or renamed one.
   return Object.entries(roundsIn(p)).flatMap(([r, expected]) =>
-    Object.keys(expected).map((pid) => `r${r}-${pid}`),
+    Object.entries(expected).map(
+      ([pid, answers]) => [`r${r}-${pid}`, Object.keys(answers)] as const,
+    ),
   );
 };
 /** For each collection: the names the key knows, the names still on the page, a document's fields. */
-function knownNames(key: Key): Readonly<
-  Record<
-    Collection,
-    {
-      known: readonly string[];
-      onPage: readonly string[];
-      fields: readonly string[];
-    }
-  >
-> {
+interface Names {
+  /** Each name the key knows, with the questions a document of it may answer. */
+  readonly known: readonly (readonly [string, readonly string[]])[];
+  readonly onPage: readonly string[];
+  readonly fields: readonly string[];
+}
+function knownNames(key: Key): Readonly<Record<Collection, Names>> {
   const entries = Object.entries(key.ids);
   const shown = entries.filter(([, m]) => m.on_page);
   const practice = practiceDocs(key);
   return {
     answers: {
-      known: entries.map(([nid]) => nid),
+      known: entries.map(([nid]) => [nid, key.questions] as const),
       onPage: shown.map(([nid]) => nid),
       fields: ANSWER_DOC_FIELDS,
     },
     groups: {
-      known: entries.map(([, m]) => m.group),
+      known: entries.map(([, m]) => [m.group, key.questions] as const),
       onPage: shown.map(([, m]) => m.group),
       fields: GROUP_DOC_FIELDS,
     },
-    practice: { known: practice, onPage: practice, fields: ANSWER_DOC_FIELDS },
+    practice: {
+      known: practice,
+      onPage: practice.map(([n]) => n),
+      fields: ANSWER_DOC_FIELDS,
+    },
   };
 }
 const sortedEntries = (o: JsonObject): readonly (readonly [string, Json])[] =>
@@ -827,11 +833,12 @@ function checkDocName(
   where: string,
   name: string,
   kind: Collection,
-  names: ReturnType<typeof knownNames>[Collection],
-): void {
-  if (!names.known.includes(name)) {
-    fail(
-      `${where}: the key does not know this ${NOUN[kind]} (${[...new Set(names.known)].sort().join(", ")})`,
+  names: Names,
+): readonly string[] {
+  const hit = names.known.find(([n]) => n === name);
+  if (hit === undefined) {
+    return fail(
+      `${where}: the key does not know this ${NOUN[kind]} (${[...new Set(names.known.map(([n]) => n))].sort().join(", ")})`,
     );
   }
   if (!names.onPage.includes(name)) {
@@ -839,6 +846,7 @@ function checkDocName(
       `${where}: stored, but no longer on the page (a rebuild left it out), so the export would drop it; rebuild with it on the page, or take it out of the dump on purpose`,
     );
   }
+  return hit[1];
 }
 function checkDocFields(
   where: string,
@@ -916,9 +924,9 @@ function checkDump(dump: Json, key: Key): asserts dump is JsonObject {
       isObject(collection) ? collection : {},
     )) {
       const where = `${kind}/${name}`;
-      checkDocName(where, name, kind, names[kind]);
+      const questions = checkDocName(where, name, kind, names[kind]);
       checkDocFields(where, doc, kind, names[kind].fields);
-      checkDocAnswers(where, doc, key.questions);
+      checkDocAnswers(where, doc, questions);
     }
   }
 }
