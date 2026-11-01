@@ -20,3 +20,17 @@ eslint	@typescript-eslint/no-explicit-any	eslint.config.mjs	200	107136	False
 eslint	@typescript-eslint/no-explicit-any	.eslintrc.json	200	61696	False
 eslint	@typescript-eslint/no-explicit-any	.eslintrc.js	200	149760	False
 eslint	@typescript-eslint/no-unused-vars	eslint.config.js	200	116480	False
+eslint	check-file/folder-naming-convention	eslint.config.js	200	273	False
+eslint	i18next/no-literal-string	eslint.config.js	200	399	False
+eslint	import/extensions	eslint.config.js	200	2208	False
+eslint	import/no-default-export	eslint.config.js	200	1158	False
+eslint	import/order	eslint.config.js	200	8016	False
+eslint	jsdoc/require-param	eslint.config.js	200	1860	False
+eslint	jsdoc/require-returns	eslint.config.js	200	2000	False
+eslint	jsx-a11y/alt-text	eslint.config.js	200	1344	False
+eslint	react/function-component-definition	eslint.config.js	200	962	False
+eslint	react/no-danger	eslint.config.js	200	808	False
+eslint	simple-import-sort/imports	eslint.config.js	200	4824	False
+eslint	unicorn/filename-case	eslint.config.js	200	1674	False
+ruff	ANN001	pyproject.toml	200	3532	False
+ruff	ANN201	pyproject.toml	200	4744	False
