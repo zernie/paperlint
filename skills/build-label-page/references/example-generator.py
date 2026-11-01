@@ -694,6 +694,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     practice: {},     // r<round>-P<n> -> {answers, savedAt, source}; the FIRST answer, kept apart
     editing: {},      // item id -> the question id the labeller tapped "Change" on
     mineWhy: {},      // item id -> the reasons this page has just written (ahead of the store)
+    draftWhy: {},     // item id -> {question id: text typed and not yet saved}
     mine: {},         // item/group key -> the answers this page has just written (ahead of the store)
     inflight: {},     // item/group key -> writes not yet confirmed
     failed: {},       // item/group key -> error code of the last refused write
@@ -720,6 +721,18 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     if (state.mineWhy[id]) return state.mineWhy[id];
     var d = state.answers[id];
     return d && d.reasons ? d.reasons : {};
+  }
+  function keepDraft(id, qid, text) {
+    state.draftWhy[id] = Object.assign({}, state.draftWhy[id] || {});
+    state.draftWhy[id][qid] = text;
+  }
+  // The text typed for a reason and not yet in the store; a draft the store now holds is done.
+  function draftOf(id, qid) {
+    var d = state.draftWhy[id];
+    if (!d || !Object.prototype.hasOwnProperty.call(d, qid)) return undefined;
+    var stored = state.answers[id] && state.answers[id].reasons;
+    if (stored && stored[qid] === d[qid]) { delete d[qid]; return undefined; }
+    return d[qid];
   }
   function needsWhy(q, v) { return (DATA.allowed.needs_why[q.id] || []).indexOf(v) !== -1; }
   // What an item still needs: an answer, or the reason its answer asks for (named "<short> (why)").
@@ -904,8 +917,11 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
       if (!o) return;
       card.appendChild(el("p", "q", o.ask_why));
       var box = el("textarea", "why");
-      box.value = reasonsOf(item.id)[q.id] || "";
+      var draft = draftOf(item.id, q.id);
+      box.value = draft !== undefined ? draft : reasonsOf(item.id)[q.id] || "";
       box.disabled = off;
+      // Every keystroke is kept as a draft, so a render from the store never erases unsaved text.
+      box.addEventListener("input", function () { keepDraft(item.id, q.id, box.value); });
       box.addEventListener("change", function () { setReason(item.id, q.id, box.value); });
       card.appendChild(box);
     });

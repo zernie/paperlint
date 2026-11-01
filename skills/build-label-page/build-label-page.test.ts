@@ -624,7 +624,13 @@ const DONE_PRACTICE: Record<string, unknown> = Object.fromEntries(
 
 /** A DOM just big enough for the page script: nodes with children and text. */
 class FakeNode {
+  readonly tag: string;
+  constructor(tag = "") {
+    this.tag = tag;
+  }
   children: FakeNode[] = [];
+  value = "";
+  private readonly listeners: Record<string, (() => void)[]> = {};
   className = "";
   disabled = false;
   type = "";
@@ -642,7 +648,19 @@ class FakeNode {
     return c;
   }
   setAttribute(): void {}
-  addEventListener(): void {}
+  addEventListener(type: string, fn: () => void): void {
+    (this.listeners[type] ??= []).push(fn);
+  }
+  /** What a person's action does: every listener of `type`. */
+  fire(type: string): void {
+    (this.listeners[type] ?? []).forEach((fn) => {
+      fn();
+    });
+  }
+  /** Every node under this one, itself first. */
+  all(): FakeNode[] {
+    return [this, ...this.children.flatMap((c) => c.all())];
+  }
 }
 
 /** Open the built page against a fake store holding `answers` and `groups`; return what it shows. */
@@ -683,7 +701,7 @@ async function showPage(
   runInNewContext(script, {
     document: {
       getElementById: (id: string) => (id === "data" ? data : app),
-      createElement: () => new FakeNode(),
+      createElement: (tag: string) => new FakeNode(tag),
     },
     window: { claude: { use: () => Promise.resolve(store) } },
     localStorage: { getItem: () => "next", setItem: () => undefined },
@@ -1474,4 +1492,95 @@ test("🔴 approval: a stored reason that is not text, or for a question the key
     assert.notEqual(r.status, 0);
     assert.match(r.out, message);
   }
+});
+
+test("🔴 approval: a reason typed but not yet saved survives a re-render from the store", async () => {
+  const { page, key } = build(setup("approval-draft", approval()));
+  const [a] = Object.keys(key.ids);
+  assert.ok(a !== undefined);
+  const script = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)][0]?.[1];
+  const json =
+    /<script type="application\/json" id="data">([\s\S]*?)<\/script>/.exec(
+      page,
+    )?.[1];
+  assert.ok(script !== undefined && json !== undefined);
+  const app = new FakeNode();
+  const data = new FakeNode();
+  data.textContent = json.replace(/<\\\//g, "</");
+  const practice = Object.fromEntries(
+    APPROVAL_PRACTICE.map((p, n) => [
+      `r1-P${String(n + 1)}`,
+      { answers: p.expected, source: "page" },
+    ]),
+  );
+  const docs: Record<string, Record<string, unknown>> = {
+    answers: { [a]: { answers: { keep: "drop" }, source: "page" } },
+    groups: {},
+    practice,
+  };
+  const listeners: (() => void)[] = [];
+  const store = {
+    collection: (name: string) => ({
+      onSnapshot: (cb: (snap: unknown) => void) => {
+        const send = () => {
+          cb({
+            docs: Object.entries(docs[name] ?? {}).map(([id, d]) => ({
+              id,
+              data: () => d,
+            })),
+          });
+        };
+        listeners.push(send);
+        send();
+      },
+      doc: () => ({ set: () => Promise.resolve() }),
+    }),
+  };
+  runInNewContext(script, {
+    document: {
+      getElementById: (id: string) => (id === "data" ? data : app),
+      createElement: (tag: string) => new FakeNode(tag),
+    },
+    window: { claude: { use: () => Promise.resolve(store) } },
+    localStorage: { getItem: () => "all", setItem: () => undefined },
+    Promise,
+    JSON,
+    Date,
+    Object,
+    String,
+    isNaN,
+  });
+  await new Promise((r) => setTimeout(r, 0));
+  const box = () => app.all().find((n) => n.tag === "textarea");
+  const typing = box();
+  assert.ok(typing !== undefined, "the drop asks for its reason");
+  typing.value = "a process rule, not";
+  typing.fire("input");
+  listeners.forEach((send) => {
+    send();
+  });
+  assert.notEqual(box(), typing, "the store's snapshot rebuilt the page");
+  assert.equal(box()?.value, "a process rule, not");
+  // Once the store holds the typed text the draft is done: a later stored reason shows, not it.
+  const now = box();
+  assert.ok(now !== undefined);
+  now.value = "a process rule";
+  now.fire("input");
+  const stored = (reason: string) => {
+    docs.answers = {
+      [a]: {
+        answers: { keep: "drop" },
+        reasons: { keep: reason },
+        source: "page",
+      },
+    };
+    listeners.forEach((send) => {
+      send();
+    });
+    return box()?.value;
+  };
+  assert.deepEqual(
+    [stored("a process rule"), stored("edited on another phone")],
+    ["a process rule", "edited on another phone"],
+  );
 });
