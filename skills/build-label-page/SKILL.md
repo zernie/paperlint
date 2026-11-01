@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:92d4cf53e6d64a40 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:556c9961a31957c2 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -25,8 +25,11 @@ anything but labels.
 | looks at one item and picks from a closed list: gold labels, a blind review of model outputs, fits / text silent / contradicts, an approval (keep / drop, and why), with an optional reason box and code blocks | **the generator** of this skill |
 | compares two outputs side by side, ranks several items, marks parts (spans) of a text — a recall audit, reading a whole file and marking every rule in it —, gives a number on a slider, or writes free text | **written by the agent** |
 
-- **The generator** is `scripts/label-page.ts`, run from the skill (commands in the procedure).
-  How to write its `items.json` — examples, practice, `ask_why`, the approval page — is
+- **The generator** is `scripts/label-page.js`, run from the skill (commands in the procedure):
+  a core with no page layout (`label-page-core.ts`: the `items.json` checks, the leak guard, the
+  neutral ids, the key, the export) and the one closed-choice page built from the core's payload
+  (`label-page-html.ts`). How to write its `items.json` — examples, practice, `ask_why`, the
+  approval page — is
   [`references/closed-choice-generator.md`](references/closed-choice-generator.md).
 - **A page written by the agent** meets the same eight rules, and each rule's **Check** line in
   [`references/checklist.md`](references/checklist.md) is its acceptance list: every one verified,
@@ -34,6 +37,9 @@ anything but labels.
   look: one dark palette, one column, answer buttons as full-width rows with space between them,
   icons rather than coloured side stripes, code shown as code with its whitespace visible, built for
   a phone first, and screenshotted at 400px and 1280px wide and looked at before publishing.
+  It can still take its blindness and its export from the core: `prepareBuild` checks
+  `items.json`, gives the items their neutral ids, writes `key.json` and returns the blind
+  payload to lay out, and `export` reads any store that keeps the generator's collections.
 - A second generator, for another page shape, is added only after that shape has been built by
   hand, following the eight rules, twice without its fields changing. Until then the agent writes
   such a page itself.

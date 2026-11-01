@@ -10,6 +10,12 @@ after the fix. The commands are in `SKILL.md` (procedure steps 3 and 8); its thi
 `schema`, prints the declared schema of `items.json`. Its header holds the full `items.json`
 example; this file says how to fill it.
 
+It is two parts. The core, `label-page-core.ts`, has no page layout: the `items.json` schema and its
+checks, the leak guard, the neutral ids, the key with its `allowed` and `needs_why` lists, the check
+of the store's dump, and the export of labels and practice. The page, `label-page-html.ts`, fills the
+one closed-choice template (`page-template.html`, its style and browser script kept as exact bytes)
+with the core's payload. Another page shape would be another template on the same core.
+
 ## What it does by construction
 
 Rules 2 to 5, 7 and the page half of 8 of [`checklist.md`](checklist.md): a filter instead of
