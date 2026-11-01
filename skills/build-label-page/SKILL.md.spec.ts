@@ -29,10 +29,33 @@ committed, not left in the store.
 **Not for** an LLM judge (no person answers), a questionnaire about the person, or a form that collects
 anything but labels.
 
+## Which page you need
+
+| the labeller… | page |
+| --- | --- |
+| looks at one item and picks from a closed list: gold labels, a blind review of model outputs, fits / text silent / contradicts, an approval (keep / drop, and why), with an optional reason box and code blocks | **the generator** of this skill |
+| compares two outputs side by side, ranks several items, marks parts (spans) of a text — a recall audit, reading a whole file and marking every rule in it —, gives a number on a slider, or writes free text | **written by the agent** |
+
+- **The generator** is \`scripts/label-page.ts\`, run from the skill (commands in the procedure).
+  How to write its \`items.json\` — examples, practice, \`ask_why\`, the approval page — is
+  [\`references/closed-choice-generator.md\`](references/closed-choice-generator.md).
+- **A page written by the agent** meets the same eight rules, and each rule's **Check** line in
+  [\`references/checklist.md\`](references/checklist.md) is its acceptance list: every one verified,
+  and stated in the hand-over, before the link is sent. It also looks the way the generator's pages
+  look: one dark palette, one column, answer buttons as full-width rows with space between them,
+  icons rather than coloured side stripes, code shown as code with its whitespace visible, built for
+  a phone first, and screenshotted at 400px and 1280px wide and looked at before publishing.
+- A second generator, for another page shape, is added only after that shape has been built by
+  hand, following the eight rules, twice without its fields changing. Until then the agent writes
+  such a page itself.
+- The other ways to build pages that were considered (a JS kit plus an automatic page check; rules
+  only; one growing generator), and when to switch: #335.
+
 ## The eight rules
 
-The full text, each with its reason and its check, is
-[\`references/checklist.md\`](references/checklist.md). Read it before building. In one line each:
+They hold for every labelling page, generated or written by hand. The full text, each with its
+reason and its check, is [\`references/checklist.md\`](references/checklist.md). Read it before
+building. In one line each:
 
 1. **Test it in the claude.ai phone viewer before sending the link.** The viewer can size the frame to
    the page, so the page cannot scroll itself and a fixed toast may be off-screen. A plain browser
@@ -43,7 +66,7 @@ The full text, each with its reason and its check, is
    question; the progress counter counts complete items only.
 4. **Blind.** Neutral ids (\`G001\`…), order shuffled with a fixed seed, no model answers, verdicts or
    source labels on the page. The generator refuses to build when an item carries a field outside an
-   allow-list; new question wording is added to the allow-list on purpose.
+   allow-list; a page written by hand checks its items against the same list.
 5. **Ask only what the labeller can answer.** Only the languages and tools they know; one "how well do
    you know it" question per group, used later as an analysis filter; "clear-cut or real boundary"
    is the labeller's judgement, not the designer's.
@@ -55,105 +78,68 @@ The full text, each with its reason and its check, is
 8. **The labeller understands each question first.** Every answer option carries one real example,
    shown on the first screen; 3 or more practice items with known answers come before the real
    items, and the page shows the expected answer after each; one question per screen. A practice
-   miss means the question is reworded, \`practice_round\` raised and the practice taken again;
-   practice answers never reach the labels.
+   miss means the question is reworded and the practice taken again; practice answers never reach
+   the labels.
 
 ## Procedure
 
-1. **Decide the labelling.** What exactly does the labeller decide per item (the questions, each with
-   a closed set of answers)? Which groups (languages, tools) does the labeller know? How many items
-   fit the time they have on a phone? Who is the labeller: a page with a store opens only for people
-   with access to the artifact, so the labeller is the owner or has been shared as a Contributor.
-   If the study design is not written yet, \`build-benchmark\` comes first.
-   If the items come from a drawn sample, the study's \`plan.json\` (written by
-   \`paperlint studies new\`) declares the population and its draw before the sample is frozen, and its
-   \`author_check\` records that the author has been shown the drawn **units** (the rules or cases, not
-   the items) with "is this what you meet in practice?". The labelling page is not that check: items
-   made from easy units each look fine on their own.
-2. **Write the items.** The study folder is
-   \`<paper-dir>/repro/<id>-<slug>/\`, made by \`npx paperlint studies new <paper-dir> "Gold labels"
-   --kind data\` when the labelling is a study of its own (\`P1-S04-gold-labels\`): the command writes
-   its \`README.md\`, its \`plan.json\` and its row in \`repro/studies.json\`, and \`repro/study-registered\`
-   checks them; fill the plan (what is labelled, the items' source, \`arms: []\`, the primary outcome)
-   before the first label. When
-   the labels are in, update the row (\`status\`, \`result\`, \`result_file\`) and run
-   \`npx paperlint studies index <paper-dir>\`. Where this sits in stage 3, and what checks each place:
-   \`docs/layout.md\` in the paperlint package.
-   \`items.json\` follows the header of the generator, \`scripts/label-page.ts\` in this skill;
-   \`node \${CLAUDE_SKILL_DIR}/scripts/label-page.js ${COMMANDS.schema}\` prints its schema. Source ids
-   in \`items.json\` are the study's own; the page never shows them.
-
-   The generator runs from the skill and is never copied into the study, so a fix to it reaches every
-   page built after the fix. The questions, examples and practice live in \`items.json\`; the guards
-   (allow-list, neutral ids, store-unavailable banner, filter instead of scrolling) live in the
-   generator. Do not work around the allow-list to make a build pass; take the field out of the item.
-3. **Build and read it as the labeller.** From the study folder (\`<study-dir>\`):
+1. **Decide the labelling and the page.** What exactly does the labeller decide per item (the
+   questions, each with its answers)? Which page that takes (the table above)? Which groups
+   (languages, tools) does the labeller know? How many items fit the time they have on a phone? Who
+   is the labeller: a page with a store opens only for people with access to the artifact, so the
+   labeller is the owner or has been shared as a Contributor. If the study design is not written
+   yet, \`build-benchmark\` comes first. If the items come from a drawn sample, the study's
+   \`plan.json\` declares the population and its draw before the sample is frozen, and its
+   \`author_check\` records that the author has been shown the drawn **units** (the rules or cases,
+   not the items) — on an approval page, not on the labelling page, where items made from easy units
+   each look fine on their own.
+2. **Make the study folder.** \`<paper-dir>/repro/<id>-<slug>/\`, made by \`npx paperlint studies new
+   <paper-dir> "Gold labels" --kind data\` when the labelling is a study of its own: the command
+   writes its \`README.md\`, its \`plan.json\` and its row in \`repro/studies.json\`, and
+   \`repro/study-registered\` checks them; fill the plan before the first label. When the labels are
+   in, update the row (\`status\`, \`result\`, \`result_file\`) and run \`npx paperlint studies index
+   <paper-dir>\`. Where this sits in stage 3: \`docs/layout.md\` in the paperlint package.
+3. **Build the page.** With the generator, write \`items.json\`
+   ([\`references/closed-choice-generator.md\`](references/closed-choice-generator.md)) and, from the
+   study folder:
 
    \`\`\`bash
    node \${CLAUDE_SKILL_DIR}/scripts/label-page.js ${COMMANDS.build} items.json label-page
    \`\`\`
 
-   This writes \`label-page/page.html\` and \`label-page/key.json\` (the only link from \`G001\` to the
-   source id; it never goes on the page). Rebuilding with the same seed keeps every id, and a new item
-   gets the next one. Read the page text once as a person who knows nothing about the source: if
-   anything on it tells the answer, take it out of the item.
-
-   Then read it for **comprehension** (rule 8). Every option's \`example\` is a real case of the study
-   in one line, and the practice items are real cases whose answer you are sure of — never items that
-   are also on the page to be labelled. Read each question as the labeller: can a person who did not
-   design the study tell what each answer means from the question, its examples and nothing else? If
-   not, reword before publishing.
-
-   Then **look at it**: screenshot \`page.html\` at 400px and at 1280px wide with the pre-installed
-   Chromium (Playwright), once before any answer and once after the practice, and open both images.
-   The generator's look is one dark palette, one column, answer buttons as full-width rows with space
-   between them, and no card inside a card; keep it when the generator changes, and fix what the
-   images show before publishing. A page that only passed its tests has not been seen.
-4. **Publish.** Load \`artifact-design\` and \`artifact-capabilities\`, then publish \`page.html\` with
+   It writes \`label-page/page.html\` and \`label-page/key.json\` (the only link from \`G001\` to the
+   source id; it never goes on the page). Written by hand, the page meets the requirements above.
+4. **Read it as the labeller, then look at it.** Read the page text once as a person who knows
+   nothing about the source: if anything on it tells the answer, take it out. Read each question as
+   someone who did not design the study: can they tell what each answer means from the question, its
+   examples and nothing else? If not, reword. Then screenshot it at 400px and at 1280px wide with the
+   pre-installed Chromium (Playwright), once before any answer and once after the practice, open both
+   images, and fix what they show. A page that only passed its tests has not been seen.
+5. **Publish.** Load \`artifact-design\` and \`artifact-capabilities\`, then publish \`page.html\` with
    \`capabilities: {db: {}}\`. Use a title of two to four words. Do not ask the page for \`user\` or
    anything else it does not use.
-5. **Test in the viewer (rule 1)** and list the store once with \`ArtifactData\` (\`list\` of
+6. **Test in the viewer (rule 1)** and list the store once with \`ArtifactData\` (\`list\` of
    \`answers\`) to confirm the test answer arrived. \`ArtifactData\` can be a deferred tool: load it with
    \`ToolSearch\` first. Then delete the test answer's document, or tell the person which one it is
    and keep it out of the export.
-6. **Send the link** with one line on how it works: start with the practice; tap an answer, it saves;
-   "Next unanswered" shows what is left. Say what you tested and what you could not.
-   **Check the practice before the real answers count** (rule 8): list the store's \`practice\`
-   collection. A miss means a question was unclear: ask the labeller which one and why, reword it and
-   its examples, raise \`practice_round\`, rebuild, republish, and have them take the practice again.
-   Write one line per round in the study's README: what was reworded and why.
-7. **Export when the person is done, or stops** (rule 6). Save the store's three collections,
-   \`answers\`, \`groups\` and \`practice\`, as \`dump.json\` in the shape the generator's header gives (answers given in chat go
-   in with \`"source": "chat"\`), then:
+7. **Send the link** with one line on how it works: start with the practice; tap an answer, it saves;
+   "Next unanswered" shows what is left. Say what you tested and what you could not. **Check the
+   practice before the real answers count** (rule 8): list the store's \`practice\` collection. A
+   miss means a question was unclear: ask the labeller which one and why, reword it and its
+   examples, rebuild, republish, and have them take the practice again. Write one line per round in
+   the study's README: what was reworded and why.
+8. **Export when the person is done, or stops** (rule 6). Save the store's collections as
+   \`dump.json\` (answers given in chat go in with \`"source": "chat"\`). With the generator:
 
    \`\`\`bash
    node \${CLAUDE_SKILL_DIR}/scripts/label-page.js ${COMMANDS.export} dump.json label-page/key.json data
    \`\`\`
 
-   It writes \`data/<study>-labels-<date>.json\` and prints every incomplete item, every answer or
-   familiarity value that is not one of the offered options (not counted, same rule as on the page;
-   correct it in the dump and export again) and every group with no familiarity answer. The practice
-   never goes into the labels: it is scored into \`data/<study>-practice-<date>.json\` beside them, the
-   record of rule 8. Commit both files in the same pass, and add the line "labels →
-   \`data/<study>-labels-<date>.json\`" to the paper's \`NOTES.md\` for the numbers that use them.
-
-## An approval page: the author keeps or drops each drawn unit
-
-The same generator builds the page on which the author checks a drawn sample before the runs (the
-plan's \`author_check\`: "is this what you meet in practice?"). It is a labelling page with one question
-whose answers are keep and drop, and the drop carries \`ask_why\`, so a dropped unit is incomplete until
-it says why:
-
-\`\`\`json
-{"id": "keep", "text": "Is this what you meet in practice?", "short": "keep?",
- "options": [{"value": "keep", "label": "Keep", "icon": "👍", "example": "\`Use 2-space indent.\`"},
-             {"value": "drop", "label": "Drop", "icon": "🗑️", "example": "\`Be nice to reviewers.\`",
-              "ask_why": "Why drop it? (not a rule, a process rule, a misreading…)"}]}
-\`\`\`
-
-The items are the drawn units verbatim. The practice is three units whose fate is obvious. Export as
-usual: each dropped unit carries its reason in the labels file. The author's words, with the date,
-then go into \`author_check\` of the plan; a dropped unit is replaced by the next one in the draw.
+   It writes \`data/<study>-labels-<date>.json\`, scores the practice into
+   \`data/<study>-practice-<date>.json\` beside it, and prints every item it could not count. A page
+   written by hand exports to the same two files, practice kept out of the labels. Commit both in the
+   same pass, and add the line "labels → \`data/<study>-labels-<date>.json\`" to the paper's
+   \`NOTES.md\` for the numbers that use them.
 
 ## When the page misbehaves
 

@@ -5,8 +5,11 @@ model outputs, "is this a real boundary case"). Each rule says what to do, why, 
 They come from four such pages built in one week; each rule is a defect one of them shipped, or a
 failure the next answer would have hidden.
 
-The generator of this skill, `scripts/label-page.ts`, does rules 2 to 5, 7 and the page half of 8 by
-construction. Rules 1 and 6, and the rewording in 8, are things the agent does. Read the rule before changing the part of the generator that
+The rules hold for every labelling page, generated or written by hand. The skill's generator,
+`scripts/label-page.ts`, does rules 2 to 5, 7 and the page half of 8 by construction
+([`closed-choice-generator.md`](closed-choice-generator.md)); a page written by hand meets each rule
+itself, and each rule's **Check** line is its acceptance list. Rules 1 and 6, and the rewording in 8,
+are things the agent does. Read the rule before changing the part of the generator that
 carries it.
 
 ## 1. Test it in the claude.ai phone viewer before sending the link
