@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:b647b3907591be93 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:ecea6299fef98a2f compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -127,6 +127,24 @@ The full text, each with its reason and its check, is
    never goes into the labels: it is scored into `data/<study>-practice-<date>.json` beside them, the
    record of rule 8. Commit both files in the same pass, and add the line "labels →
    `data/<study>-labels-<date>.json`" to the paper's `NOTES.md` for the numbers that use them.
+
+## An approval page: the author keeps or drops each drawn unit
+
+The same generator builds the page on which the author checks a drawn sample before the runs (the
+plan's `author_check`: "is this what you meet in practice?"). It is a labelling page with one question
+whose answers are keep and drop, and the drop carries `ask_why`, so a dropped unit is incomplete until
+it says why:
+
+```json
+{"id": "keep", "text": "Is this what you meet in practice?", "short": "keep?",
+ "options": [{"value": "keep", "label": "Keep", "icon": "👍", "example": "`Use 2-space indent.`"},
+             {"value": "drop", "label": "Drop", "icon": "🗑️", "example": "`Be nice to reviewers.`",
+              "ask_why": "Why drop it? (not a rule, a process rule, a misreading…)"}]}
+```
+
+The items are the drawn units verbatim. The practice is three units whose fate is obvious. Export as
+usual: each dropped unit carries its reason in the labels file. The author's words, with the date,
+then go into `author_check` of the plan; a dropped unit is replaced by the next one in the draw.
 
 ## When the page misbehaves
 

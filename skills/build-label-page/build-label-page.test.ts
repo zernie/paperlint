@@ -385,6 +385,16 @@ const FULL: DocObject = (() => {
   const doc = Doc.parse(
     config({
       intro: "Label these.",
+      questions: [
+        {
+          ...QUESTIONS[0],
+          options: [
+            QUESTIONS[0]?.options[0],
+            { ...QUESTIONS[0]?.options[1], ask_why: "What is wrong with it?" },
+          ],
+        },
+        QUESTIONS[1],
+      ],
       labeller_knows: ["python", "go", "rust"],
       familiarity_question: "How well do you know {group}?",
       items: ITEMS.map((i, n) =>
@@ -1328,4 +1338,140 @@ test("🔴 a code block shows its whitespace and each line's length: indentation
   );
   assert.match(shown, /→\npass\n··\n7/, "a visible tab and trailing spaces");
   assert.match(shown, /def f\(\):\n8/);
+});
+
+// ── an approval page: keep or drop, and a drop says why ──────────────────────────────────────────
+
+const APPROVAL_Q = [
+  {
+    id: "keep",
+    text: "Is this what you meet in practice?",
+    short: "keep?",
+    options: [
+      {
+        value: "keep",
+        label: "Keep",
+        icon: "👍",
+        example: "`Use 2-space indent.`",
+      },
+      {
+        value: "drop",
+        label: "Drop",
+        icon: "🗑️",
+        example: "`Be nice to reviewers.`",
+        ask_why: "Why drop it? (not a rule, a process rule, a misreading…)",
+      },
+    ],
+  },
+];
+const APPROVAL_PRACTICE = [
+  {
+    body: "`Run tests before every commit.`",
+    expected: { keep: "keep" },
+    why: "A rule a repository states.",
+  },
+  {
+    body: "`Be nice.`",
+    expected: { keep: "drop" },
+    why: "Not a rule anyone can check.",
+  },
+  {
+    body: "`Max line length 100.`",
+    expected: { keep: "keep" },
+    why: "A rule a linter can check.",
+  },
+];
+const approval = (
+  over: Record<string, unknown> = {},
+): Record<string, unknown> =>
+  config({ questions: APPROVAL_Q, practice: APPROVAL_PRACTICE, ...over });
+
+test("🔴 approval: a drop is not done until it says why; the page asks for the reason under the chosen answer", async () => {
+  const { page, key } = build(setup("approval-page", approval()));
+  const [a, b, c] = Object.keys(key.ids);
+  assert.ok(a !== undefined && b !== undefined && c !== undefined);
+  const practice = Object.fromEntries(
+    APPROVAL_PRACTICE.map((p, n) => [
+      `r1-P${String(n + 1)}`,
+      { answers: p.expected, source: "page" },
+    ]),
+  );
+  const answers = {
+    [a]: { answers: { keep: "keep" }, source: "page" },
+    [b]: {
+      answers: { keep: "drop" },
+      reasons: { keep: "a process rule" },
+      source: "page",
+    },
+    [c]: { answers: { keep: "drop" }, source: "page" },
+  };
+  const shown = await showPage(page, answers, {}, practice);
+  assert.match(shown, /2 of 12 items complete/, shown);
+  assert.match(shown, new RegExp(`${c} needs keep\\? \\(why\\)`), shown);
+  assert.match(shown, /Why drop it\?/, "the reason prompt is on the page");
+});
+
+test("🔴 approval: export keeps each reason with its answer, and a drop without one is incomplete and named", () => {
+  const dir = setup("approval-export", approval());
+  const { key } = build(dir);
+  const [a, b] = Object.keys(key.ids);
+  assert.ok(a !== undefined && b !== undefined);
+  const answers = {
+    [a]: {
+      answers: { keep: "drop" },
+      reasons: { keep: "a process rule" },
+      source: "page",
+    },
+    [b]: { answers: { keep: "drop" }, source: "page" },
+  };
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers, groups: {} }),
+  );
+  const r = exportAt(dir);
+  assert.equal(r.status, 0, r.out);
+  const file = z
+    .object({
+      items: z.array(
+        z.object({
+          id: z.string(),
+          complete: z.boolean(),
+          reasons: z.record(z.string(), z.string()),
+        }),
+      ),
+    })
+    .parse(JSON.parse(labelsFile(dir)));
+  assert.deepEqual(file.items.find((i) => i.id === a)?.reasons, {
+    keep: "a process rule",
+  });
+  assert.equal(file.items.find((i) => i.id === a)?.complete, true);
+  assert.equal(file.items.find((i) => i.id === b)?.complete, false);
+  assert.match(r.out, new RegExp(`${b}: keep=drop needs a reason`));
+});
+
+test("🔴 approval: a stored reason that is not text, or for a question the key does not know, is refused by path", () => {
+  const dir = setup("approval-bad-reason", approval());
+  const { key } = build(dir);
+  const [a] = Object.keys(key.ids);
+  assert.ok(a !== undefined);
+  for (const [reasons, message] of [
+    [{ keep: 3 }, new RegExp(`answers/${a}/reasons/keep: 3 — must be text`)],
+    [
+      { kept: "x" },
+      new RegExp(`answers/${a}/reasons/kept: not a question of the key`),
+    ],
+  ] as const) {
+    writeFileSync(
+      join(dir, "dump.json"),
+      JSON.stringify({
+        answers: {
+          [a]: { answers: { keep: "drop" }, reasons, source: "page" },
+        },
+        groups: {},
+      }),
+    );
+    const r = exportAt(dir);
+    assert.notEqual(r.status, 0);
+    assert.match(r.out, message);
+  }
 });

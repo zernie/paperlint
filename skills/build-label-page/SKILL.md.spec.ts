@@ -138,6 +138,24 @@ The full text, each with its reason and its check, is
    record of rule 8. Commit both files in the same pass, and add the line "labels →
    \`data/<study>-labels-<date>.json\`" to the paper's \`NOTES.md\` for the numbers that use them.
 
+## An approval page: the author keeps or drops each drawn unit
+
+The same generator builds the page on which the author checks a drawn sample before the runs (the
+plan's \`author_check\`: "is this what you meet in practice?"). It is a labelling page with one question
+whose answers are keep and drop, and the drop carries \`ask_why\`, so a dropped unit is incomplete until
+it says why:
+
+\`\`\`json
+{"id": "keep", "text": "Is this what you meet in practice?", "short": "keep?",
+ "options": [{"value": "keep", "label": "Keep", "icon": "👍", "example": "\`Use 2-space indent.\`"},
+             {"value": "drop", "label": "Drop", "icon": "🗑️", "example": "\`Be nice to reviewers.\`",
+              "ask_why": "Why drop it? (not a rule, a process rule, a misreading…)"}]}
+\`\`\`
+
+The items are the drawn units verbatim. The practice is three units whose fate is obvious. Export as
+usual: each dropped unit carries its reason in the labels file. The author's words, with the date,
+then go into \`author_check\` of the plan; a dropped unit is replaced by the next one in the draw.
+
 ## When the page misbehaves
 
 Look at what the store holds (\`ArtifactData\` \`list\`) before changing anything: the page may be fine

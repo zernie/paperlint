@@ -15,7 +15,7 @@ holds into one JSON file for the study's data/ folder. Answers and familiarity v
 offered options are not counted (page and export read the same `allowed` lists): the item or group is
 marked incomplete and reported (`invalid_answers`, `invalid_familiarity`). `dump.json` is the store's three collections:
 
-    {"answers":  {"G001": {"answers": {"q": "v"}, "savedAt": "...", "source": "page"}, ...},
+    {"answers":  {"G001": {"answers": {"q": "v"}, "reasons": {"q": "why"}, "savedAt": "...", "source": "page"}, ...},
      "groups":   {"python": {"familiarity": "well", "savedAt": "...", "source": "page"}, ...},
      "practice": {"r1-P1": {"answers": {"q": "v"}, "savedAt": "...", "source": "page"}, ...}}
 
@@ -46,7 +46,8 @@ items.json:
                      "options": [{"value": "yes", "label": "Yes", "example": "one real case, in a line",
                                   "icon": "✅"},                       # icon: optional
                                  {"value": "no", "label": "No", "example": "another real case",
-                                  "icon": "❌"}]}],
+                                  "icon": "❌", "ask_why": "What is wrong with it?"}]}],
+                                            # ask_why: optional; this answer is incomplete until a reason is given
                                             # in any shown text, `backticks` render as code
       "practice": [{"body": "...", "expected": {"label": "yes"}, "why": "one line"}, ...],   # 3 or more
       "practice_round": 1,                  # optional; raise it after rewording, and the practice reopens
@@ -126,8 +127,9 @@ ITEM_SCHEMA = obj(
 )
 # `icon` (an emoji) tells the buttons apart at a glance. No coloured side stripe on a button: it reads as
 # decoration, not meaning (the build-label-page look test refuses one).
+# `ask_why` (a prompt) makes the answer incomplete until the labeller says why: an approval page's "drop".
 OPTION_SCHEMA = obj({"value": string(), "label": string(), "example": string(),
-                     "icon": string(required=False)})
+                     "icon": string(required=False), "ask_why": string(required=False)})
 PRACTICE_SCHEMA = obj(
     {
         **{f: string(required=f == "body") for f in PAGE_FIELDS if f != "group"},
@@ -213,6 +215,8 @@ def allowed_values(questions):
     stored value counts as an answer on the page exactly when it counts in the export."""
     return {
         "questions": {q["id"]: [o["value"] for o in q["options"]] for q in questions},
+        # The answers that need a reason, per question: the page and the export read the same list.
+        "needs_why": {q["id"]: [o["value"] for o in q["options"] if "ask_why" in o] for q in questions},
         "familiarity": [o["value"] for o in FAMILIARITY],
     }
 
@@ -404,10 +408,11 @@ def escape(text):
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-ANSWER_DOC_FIELDS = ("answers", "savedAt", "source")
+ANSWER_DOC_FIELDS = ("answers", "reasons", "savedAt", "source")
 GROUP_DOC_FIELDS = ("familiarity", "savedAt", "source")
 DOC_FIELD_TYPES = (
     ("answers", lambda v: isinstance(v, dict), "an object {question: value}"),
+    ("reasons", lambda v: isinstance(v, dict), "an object {question: text}"),
     ("familiarity", lambda v: v is None or isinstance(v, str), "a familiarity value (a string) or null"),
     ("savedAt", lambda v: v is None or isinstance(v, str), "a timestamp string or null"),
 )
@@ -466,6 +471,11 @@ def check_dump(dump, key):
                     fail(f"{at}/answers/{q}: not a question of the key ({', '.join(key['questions'])})")
                 if v is not None and not isinstance(v, str):
                     fail(f"{at}/answers/{q}: {v!r} — must be an option value (a string) or null")
+            for q, v in sorted(doc.get("reasons", {}).items()):
+                if q not in key["questions"]:
+                    fail(f"{at}/reasons/{q}: not a question of the key ({', '.join(key['questions'])})")
+                if not isinstance(v, str):
+                    fail(f"{at}/reasons/{q}: {v!r} — must be text")
 
 
 def practice_docs(key):
@@ -528,13 +538,18 @@ def export(dump_path, key_path, out_dir, day):
         # beats both, and the fix is one line in the dump (`"source": "chat"` stays as it was).
         invalid = {q: v for q, v in raw.items() if v is not None and v not in allowed["questions"][q]}
         given = {q: (None if q in invalid else v) for q, v in raw.items()}
+        reasons = {q: r for q, r in doc.get("reasons", {}).items() if r.strip()}
+        needs_why = key.get("allowed", {}).get("needs_why", {})
+        unexplained = [q for q, v in given.items() if v is not None and v in needs_why.get(q, []) and q not in reasons]
         items.append({
             "id": nid,
             "source_id": meta["source_id"],
             "group": meta["group"],
             "answers": given,
             "invalid_answers": invalid,
-            "complete": all(v is not None for v in given.values()),
+            "reasons": reasons,
+            "unexplained": unexplained,
+            "complete": all(v is not None for v in given.values()) and not unexplained,
             "source": doc["source"] if doc else None,
             "saved_at": doc.get("savedAt"),
         })
@@ -574,6 +589,8 @@ def export(dump_path, key_path, out_dir, day):
             missing = [q for q, v in i["answers"].items() if v is None and q not in i["invalid_answers"]]
             if missing:
                 print(f"  incomplete {i['id']}: missing {', '.join(missing)}")
+            for q in i["unexplained"]:
+                print(f"  incomplete {i['id']}: {q}={i['answers'][q]} needs a reason")
     for g, v in out["groups"].items():
         if g in bad_fam:
             print(f"  invalid group {g}: familiarity={bad_fam[g]!r} is not one of "
@@ -633,6 +650,8 @@ button[aria-pressed="true"] { border: 2px solid var(--accent); color: var(--stro
 .opts button .label { color: var(--strong); font-weight: 500; grid-column: 2; }
 .opts button .ex { color: var(--muted); grid-column: 2; }
 .opts button[aria-pressed="true"] { background: var(--surface); }
+textarea.why { font: inherit; color: var(--strong); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 12px; min-height: 88px; width: 100%; }
 pre.code .line { display: flex; gap: 0; white-space: pre; min-height: 1.4em; }
 pre.code .ws { color: var(--muted); }
 pre.code .len { margin-left: auto; padding-left: 16px; color: var(--muted); font-size: 0.85em; user-select: none; }
@@ -674,6 +693,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     groups: {},       // group id -> {familiarity, savedAt, source}
     practice: {},     // r<round>-P<n> -> {answers, savedAt, source}; the FIRST answer, kept apart
     editing: {},      // item id -> the question id the labeller tapped "Change" on
+    mineWhy: {},      // item id -> the reasons this page has just written (ahead of the store)
     mine: {},         // item/group key -> the answers this page has just written (ahead of the store)
     inflight: {},     // item/group key -> writes not yet confirmed
     failed: {},       // item/group key -> error code of the last refused write
@@ -696,9 +716,22 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   // export reads from key.json): after a rebuild that removed an option, or a typo merged from chat,
   // the question is unanswered again and says so.
   function valid(allowed, v) { return allowed.indexOf(v) !== -1; }
+  function reasonsOf(id) {
+    if (state.mineWhy[id]) return state.mineWhy[id];
+    var d = state.answers[id];
+    return d && d.reasons ? d.reasons : {};
+  }
+  function needsWhy(q, v) { return (DATA.allowed.needs_why[q.id] || []).indexOf(v) !== -1; }
+  // What an item still needs: an answer, or the reason its answer asks for (named "<short> (why)").
   function missingFor(id) {
-    var a = answersOf(id);
-    return DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
+    var a = answersOf(id), r = reasonsOf(id);
+    return DATA.questions.map(function (q) {
+      if (!valid(DATA.allowed.questions[q.id], a[q.id])) return q;
+      if (needsWhy(q, a[q.id]) && !(r[q.id] || "").trim()) {
+        return { id: q.id, text: q.text + " (why)", short: (q.short || q.text) + " (why)" };
+      }
+      return null;
+    }).filter(function (q) { return q !== null; });
   }
   function itemDone(id) { return missingFor(id).length === 0; }
   function familiarity(g) {
@@ -734,11 +767,11 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     var run = (chains[key] || Promise.resolve()).then(step, step);
     chains[key] = run.then(function () {
       state.inflight[key] -= 1;
-      if (!state.inflight[key]) delete state.mine[key];
+      if (!state.inflight[key]) { delete state.mine[key]; delete state.mineWhy[key]; }
       render();
     }, function (e) {
       state.inflight[key] -= 1;
-      if (!state.inflight[key]) delete state.mine[key]; // a refused answer must not count as given
+      if (!state.inflight[key]) { delete state.mine[key]; delete state.mineWhy[key]; } // a refused answer must not count as given
       state.failed[key] = (e && e.code) || "unavailable";
       render();
     });
@@ -751,7 +784,17 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     var next = Object.assign({}, answersOf(id));
     next[qid] = value;
     state.mine[id] = next;
-    write(id, "answers", id, { answers: next, savedAt: new Date().toISOString(), source: "page" });
+    write(id, "answers", id, { answers: next, reasons: reasonsOf(id), savedAt: new Date().toISOString(), source: "page" });
+    render();
+  }
+  // A reason saves when the labeller leaves the box (the text equivalent of a tap).
+  function setReason(id, qid, text) {
+    if (!canWrite()) return;
+    var why = Object.assign({}, reasonsOf(id));
+    why[qid] = text;
+    state.mineWhy[id] = why;
+    state.mine[id] = Object.assign({}, answersOf(id));
+    write(id, "answers", id, { answers: answersOf(id), reasons: why, savedAt: new Date().toISOString(), source: "page" });
     render();
   }
   // The first answer to a practice question is the one scored: it cannot be changed afterwards.
@@ -856,6 +899,16 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
       delete state.editing[item.id];
       answer(item.id, q.id, v);
     }, function (q) { state.editing[item.id] = q.id; render(); }, off);
+    DATA.questions.forEach(function (q) {
+      var o = q.options.filter(function (x) { return x.value === a[q.id] && x.ask_why; })[0];
+      if (!o) return;
+      card.appendChild(el("p", "q", o.ask_why));
+      var box = el("textarea", "why");
+      box.value = reasonsOf(item.id)[q.id] || "";
+      box.disabled = off;
+      box.addEventListener("change", function () { setReason(item.id, q.id, box.value); });
+      card.appendChild(box);
+    });
     var saved = state.answers[item.id] && state.answers[item.id].savedAt;
     card.appendChild(statusLine(item.id, missingFor(item.id), saved));
     return card;
