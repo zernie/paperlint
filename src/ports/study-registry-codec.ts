@@ -8,6 +8,7 @@ import type {
   ParsedRegistry,
   StudyKind,
 } from "../domain/study-registry.ts";
+import type { ParsedResult } from "../domain/study-result.ts";
 
 export interface StudyRegistryCodec {
   /** A `studies.json`'s text: the registry, or the one reason it is not one of this schema. */
@@ -19,4 +20,6 @@ export interface StudyRegistryCodec {
   readonly parsePlan: (text: string, kind: StudyKind) => ParsedPlan;
   /** A plan still named `prereg.json`, loose: the same three outcomes. */
   readonly parseLegacyPlan: (text: string) => ParsedPlan;
+  /** A study's `result.json`: its numbers, or why it is none (src/domain/study-result.ts). */
+  readonly parseResult: (text: string) => ParsedResult;
 }

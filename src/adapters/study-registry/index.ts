@@ -44,6 +44,20 @@ import {
   type Decision,
   type StudyMode,
 } from "../../domain/study-mode.ts";
+import {
+  NONE,
+  PLAN_V2,
+  type Funnel,
+  type KappaStep,
+  type SecondCheck,
+  type SelfTest,
+  type WeLoseIf,
+} from "../../domain/study-gates.ts";
+import {
+  CLAIM_LOST,
+  type ParsedResult,
+  type StudyResult,
+} from "../../domain/study-result.ts";
 import type { StudyRegistryCodec } from "../../ports/study-registry-codec.ts";
 
 const study = z.looseObject({
@@ -190,12 +204,69 @@ const decisionShape = z.strictObject({ file: inPaper, note: z.string() });
 /** The output globs: each once; none yet in a draft. */
 const outputs = z.array(inFolder).superRefine(once("the output"));
 
+// ── a plan v2's gates (src/domain/study-gates.ts) ───────────────────────────────────
+
+/** A threshold: a finite number. */
+const threshold = z.number().refine(Number.isFinite, "is not a finite number");
+
+/** When the claim loses: below a threshold or above one, exactly one of the two. */
+const weLoseIf = z.union([
+  z.strictObject({ result: words, below: threshold }),
+  z.strictObject({ result: words, above: threshold }),
+]);
+
+/** The literal that says "this study has none of it". */
+const none = z.literal(NONE);
+
+const kappaStep = z.strictObject({
+  step: words,
+  min_kappa: z
+    .number()
+    .gt(0, "is a kappa above 0")
+    .lte(1, "is a kappa of at most 1"),
+});
+
+/** The steps judged by two raters, each named once; or none. */
+const secondCheck = z.union([
+  none,
+  z
+    .array(kappaStep)
+    .min(1, "lists no step — write \"none\" when nothing is labelled")
+    .superRefine((steps, ctx) => {
+      once("the step")(
+        steps.map((t) => t.step),
+        ctx,
+      );
+    }),
+]);
+
+/** A path inside the study's folder: a file or a folder. */
+const inStudyFolder = z
+  .string()
+  .min(1)
+  .refine(staysInside, "is not a path inside the study's folder");
+
+const selfTest = z.union([
+  none,
+  z.strictObject({ made_by: inStudyFolder }),
+  z.strictObject({ must_catch: inStudyFolder, must_pass: inStudyFolder }),
+]);
+
+const funnel = z.union([
+  none,
+  z
+    .array(words)
+    .min(1, "lists no reason — write \"none\" when no unit is dropped")
+    .superRefine(once("the reason")),
+]);
+
 /** How the outcomes are kept from the decisions: exactly one mode, by its `kind`. */
 const mode = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("decide_before_run"),
     outputs,
     decision: decisionShape,
+    we_lose_if: weLoseIf.nullable().optional(),
   }),
   z.strictObject({ kind: z.literal("exploratory"), reason: z.string() }),
 ]);
@@ -209,7 +280,43 @@ const planShape = z.strictObject({
   author_check: authorCheck.nullable(),
   extra: extra.optional(),
   mode: mode.optional(),
+  $schema: z.literal(PLAN_V2).optional(),
+  second_check: secondCheck.nullable().optional(),
+  self_test: selfTest.nullable().optional(),
+  funnel: funnel.nullable().optional(),
 });
+
+/** The gates a plan v2 declares at its top, each present (null while undecided). */
+const V2_GATES = ["second_check", "self_test", "funnel"] as const;
+
+/**
+ * A plan v2 declares every gate, and a decide-first mode its `we_lose_if`; a plan v1 declares none
+ * of them: a gate in a plan that does not say it is v2 would be read by nobody.
+ */
+const gatesOfItsVersion = (
+  p: z.output<typeof planShape>,
+  ctx: Readonly<z.core.$RefinementCtx>,
+): void => {
+  const v2 = p.$schema !== undefined;
+  const decided = p.mode?.kind === "decide_before_run" ? p.mode : undefined;
+  const gates = [
+    ...V2_GATES.map((g) => ({ path: [g], value: p[g] })),
+    ...(decided === undefined
+      ? []
+      : [{ path: ["mode", "we_lose_if"], value: decided.we_lose_if }]),
+  ];
+  gates
+    .filter((g) => (g.value === undefined) === v2)
+    .forEach((g) => {
+      ctx.addIssue({
+        code: "custom",
+        path: g.path,
+        message: v2
+          ? 'is missing, and a plan v2 declares it — "none" when the study has none of it, null until decided'
+          : `is a field of a plan v2 — add "$schema": "${PLAN_V2}"`,
+      });
+    });
+};
 
 /**
  * A plan under its old name, `prereg.json`, written by hand before the plan had a schema: open at
@@ -291,6 +398,31 @@ const modeEmpties = (
   );
 };
 
+/** A count: a whole number, 0 or more. */
+const count = z.number().int().nonnegative();
+
+/**
+ * A study's `result.json` (src/domain/study-result.ts): open — the study's own numbers by any name —
+ * with the four parts the gates read, each of a fixed shape when present.
+ */
+const studyResult = z.looseObject({
+  claim: z.literal(CLAIM_LOST).optional(),
+  kappa: z.record(z.string(), z.number()).optional(),
+  self_test: z.strictObject({ passed: count, failed: count }).optional(),
+  funnel: z.record(z.string(), count).optional(),
+});
+
+/** A plan v2's gates still null, by their field: decided is anything but null. */
+const gateEmpties = (p: StudyPlan): readonly PlanTextField[] =>
+  PLAN_TEXT_FIELDS.filter(
+    (f) =>
+      (f === "mode.we_lose_if" &&
+        p.mode?.kind === "decide_before_run" &&
+        p.mode.we_lose_if === null) ||
+      ((f === "second_check" || f === "self_test" || f === "funnel") &&
+        p[f] === null),
+  );
+
 /** A plan that parsed: ready, or a draft. */
 type ReadyOrDraft = Exclude<ParsedPlan, { readonly kind: "unreadable" }>;
 
@@ -308,6 +440,7 @@ const readyOrDraft =
     const empty = [
       ...PLAN_TEXT_FIELDS.filter((f) => paths.includes(f)),
       ...modeEmpties(p, kind),
+      ...gateEmpties(p),
     ];
     if (empty.length === 0) return { kind: "ready", plan: p };
     if (p.author_check === null)
@@ -321,7 +454,8 @@ const readyOrDraft =
   };
 
 /** A `plan.json` of a study of `kind`: strict, then ready or draft — a measurement's ready only with its mode. */
-const planFor = (kind: StudyKind) => planShape.transform(readyOrDraft(kind));
+const planFor = (kind: StudyKind) =>
+  planShape.superRefine(gatesOfItsVersion).transform(readyOrDraft(kind));
 
 /**
  * A `prereg.json`: loose, mapped onto the plan, then ready or draft. Written before modes existed, it
@@ -368,6 +502,12 @@ export type SchemasAreTheDomain = [
   Same<z.output<typeof legacyPlan>, ReadyOrDraft>,
   Same<z.output<typeof mode>, StudyMode>,
   Same<z.output<typeof decisionShape>, Decision>,
+  Same<z.output<typeof weLoseIf>, WeLoseIf>,
+  Same<z.output<typeof kappaStep>, KappaStep>,
+  Same<z.output<typeof secondCheck>, SecondCheck>,
+  Same<z.output<typeof selfTest>, SelfTest>,
+  Same<z.output<typeof funnel>, Funnel>,
+  Same<z.output<typeof studyResult>, StudyResult>,
 ] extends true[]
   ? true
   : never;
@@ -427,8 +567,19 @@ export const parseStudyPlan = (text: string, kind: StudyKind): ParsedPlan =>
 /** A plan still named `prereg.json`: loose, read only when a row names it. */
 export const parseLegacyPlan = planParser(legacyPlan);
 
+/** A study's `result.json` text, parsed once at the boundary: the result, or every reason it is none. */
+export function parseStudyResult(text: string): ParsedResult {
+  const json = jsonOf(text);
+  if (json === undefined) return { kind: "unreadable", why: "not JSON" };
+  const parsed = studyResult.safeParse(json);
+  return parsed.success
+    ? { kind: "read", result: parsed.data }
+    : { kind: "unreadable", why: reasons(parsed.error.issues) };
+}
+
 export const studyRegistryCodec: StudyRegistryCodec = {
   parse: parseStudyRegistry,
   parsePlan: parseStudyPlan,
   parseLegacyPlan,
+  parseResult: parseStudyResult,
 };

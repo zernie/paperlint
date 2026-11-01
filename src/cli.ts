@@ -215,6 +215,7 @@ import {
   outputsBeforeDecisionRules,
 } from "./outputs-before-decision-rule.ts";
 import { runStudies } from "./studies.ts";
+import { RESULT_RULE_LEVELS, studyResultRules } from "./study-result-rule.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
 import reviewFrontmatter from "#eslint-rules/review-frontmatter";
@@ -490,11 +491,13 @@ const REPRO_RULES = {
   ...reproLayoutRules(LAYOUT_RULE_DEPS),
   ...studyRegistryRules(STUDY_RULE_DEPS),
   ...outputsBeforeDecisionRules({ ...STUDY_RULE_DEPS, git: GIT }),
+  ...studyResultRules(STUDY_RULE_DEPS),
 };
 const REPRO_RULE_LEVELS = {
   ...REPRO_LAYOUT_RULE_LEVELS,
   ...STUDY_REGISTRY_RULE_LEVELS,
   ...ORDER_RULE_LEVELS,
+  ...RESULT_RULE_LEVELS,
 };
 
 /** Today in this machine's time zone, `YYYY-MM-DD`: the date `paperlint studies new` registers a study on. */
