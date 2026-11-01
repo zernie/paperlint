@@ -650,7 +650,23 @@ function idsOf(cfg: Config, page: ReturnType<typeof itemsOnPage>): JsonObject {
     ]),
   );
 }
-function keyOf(cfg: Config, page: ReturnType<typeof itemsOnPage>): JsonObject {
+/** The practice ids each earlier round of an existing key had, read from it (an older key: its own round). */
+const roundsOf = (
+  keyPath: string,
+): Readonly<Record<string, readonly string[]>> => {
+  if (!existsSync(keyPath)) return {};
+  const old = readJson(keyPath);
+  assertKey(old);
+  const p = old.practice;
+  if (p === undefined) return {};
+  return p.rounds ?? { [String(p.round)]: Object.keys(p.expected) };
+};
+function keyOf(
+  cfg: Config,
+  page: ReturnType<typeof itemsOnPage>,
+  earlier: Readonly<Record<string, readonly string[]>>,
+): JsonObject {
+  const practice = practiceOf(cfg);
   return {
     study: cfg.study,
     seed: cfg.seed,
@@ -661,9 +677,13 @@ function keyOf(cfg: Config, page: ReturnType<typeof itemsOnPage>): JsonObject {
     // The practice is scored against this at export; its answers never go into the labels.
     practice: {
       round: practiceRound(cfg),
-      expected: Object.fromEntries(
-        practiceOf(cfg).map((p) => [p.id, p.expected]),
-      ),
+      expected: Object.fromEntries(practice.map((p) => [p.id, p.expected])),
+      // The ids each round had, kept across rebuilds: a later round with fewer items does not make
+      // an earlier round's stored answers unknown to the export.
+      rounds: {
+        ...earlier,
+        [String(practiceRound(cfg))]: practice.map((p) => p.id),
+      },
     },
     ids: idsOf(cfg, page),
   };
@@ -680,8 +700,10 @@ export function prepareBuild(configPath: string, outDir: string) {
   checkItemFields(cfg);
   checkNoSourceShown(cfg);
   mkdirSync(outDir, { recursive: true });
-  const page = itemsOnPage(cfg, join(outDir, "key.json"));
-  writeJson(join(outDir, "key.json"), keyOf(cfg, page));
+  const keyPath = join(outDir, "key.json");
+  const earlier = roundsOf(keyPath);
+  const page = itemsOnPage(cfg, keyPath);
+  writeJson(keyPath, keyOf(cfg, page, earlier));
   return {
     payload: payloadOf(cfg, page),
     dropped: cfg.items.length - page.items.length,
@@ -698,6 +720,8 @@ interface Key {
     readonly expected: Readonly<
       Record<string, Readonly<Record<string, string>>>
     >;
+    /** Round → the practice ids it had; a key from before this field has only `round`. */
+    readonly rounds?: Readonly<Record<string, readonly string[]>>;
   };
   readonly ids: Readonly<Record<string, KeyEntry>>;
 }
@@ -741,9 +765,13 @@ const NOUN: Readonly<Record<Collection, string>> = {
  */
 const practiceDocs = (key: Key): readonly string[] => {
   const p = key.practice ?? { round: 0, expected: {} };
-  return Array.from({ length: p.round }, (_, r) =>
-    Object.keys(p.expected).map((pid) => `r${String(r + 1)}-${pid}`),
-  ).flat();
+  return p.rounds
+    ? Object.entries(p.rounds).flatMap(([r, pids]) =>
+        pids.map((pid) => `r${r}-${pid}`),
+      )
+    : Array.from({ length: p.round }, (_, r) =>
+        Object.keys(p.expected).map((pid) => `r${String(r + 1)}-${pid}`),
+      ).flat();
 };
 /** For each collection: the names the key knows, the names still on the page, a document's fields. */
 function knownNames(key: Key): Readonly<

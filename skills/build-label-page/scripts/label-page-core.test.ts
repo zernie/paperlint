@@ -983,3 +983,74 @@ test("export: a practice answered as expected throughout is recorded with nothin
   assert.equal(r.status, 0, r.out);
   assert.match(r.out, /practice round 1: 3 of 3 matched -> /);
 });
+
+test("🔴 a later practice round with fewer items keeps the earlier round's answers known: export does not refuse them", () => {
+  const four = [
+    ...PRACTICE,
+    { ...PRACTICE[0], body: "a fourth practice item" },
+  ];
+  const dir = setup("practice-shrinks", config({ practice: four }));
+  build(dir);
+  setup("practice-shrinks", config({ practice: PRACTICE, practice_round: 2 }));
+  build(dir);
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({
+      answers: {},
+      groups: {},
+      practice: { "r1-P4": { answers: {}, source: "page" } },
+    }),
+  );
+  const r = exportAt(dir);
+  assert.equal(r.status, 0, r.out);
+});
+
+test("a key from an older build: without `rounds` its own round's ids are kept; without `practice` there is no earlier round", () => {
+  const four = [
+    ...PRACTICE,
+    { ...PRACTICE[0], body: "a fourth practice item" },
+  ];
+  const dir = setup("practice-old-key", config({ practice: four }));
+  build(dir);
+  const keyPath = join(dir, "out", "key.json");
+  const Rounds = z.object({
+    practice: z.object({
+      rounds: z.record(z.string(), z.array(z.string())),
+    }),
+  });
+  const read = (): Record<string, unknown> =>
+    z
+      .record(z.string(), z.unknown())
+      .parse(JSON.parse(readFileSync(keyPath, "utf8")));
+  const withoutRounds = read();
+  const practice = z
+    .record(z.string(), z.unknown())
+    .parse(withoutRounds["practice"]);
+  writeFileSync(
+    keyPath,
+    JSON.stringify({
+      ...withoutRounds,
+      practice: Object.fromEntries(
+        Object.entries(practice).filter(([k]) => k !== "rounds"),
+      ),
+    }),
+  );
+  setup("practice-old-key", config({ practice: PRACTICE, practice_round: 2 }));
+  build(dir);
+  assert.deepEqual(Rounds.parse(read()).practice.rounds, {
+    "1": ["P1", "P2", "P3", "P4"],
+    "2": ["P1", "P2", "P3"],
+  });
+  writeFileSync(
+    keyPath,
+    JSON.stringify(
+      Object.fromEntries(
+        Object.entries(read()).filter(([k]) => k !== "practice"),
+      ),
+    ),
+  );
+  build(dir);
+  assert.deepEqual(Rounds.parse(read()).practice.rounds, {
+    "2": ["P1", "P2", "P3"],
+  });
+});
