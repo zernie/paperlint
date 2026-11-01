@@ -1,5 +1,6 @@
-# Linter-rule config usage count: one job, triggered only by a push to ci/rule-config-count. Code search allows
-# 10 requests per minute; the result is committed back to this branch.
+# Linter-rule config usage count: one job, triggered only by a push to ci/rule-config-count.
+# Run 3: Sourcegraph streaming search (repository counts), token in the SRC_ACCESS_TOKEN secret.
+# The result is committed back to this branch.
 name: rule config count
 on:
   push:
@@ -15,19 +16,22 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: count explicit mentions per rule and config file name (resumable)
+      - name: selftest of the stream parser
+        run: python3 -I frame/rule_config_count_sg.py --selftest
+      - name: count repositories naming each rule in a config (resumable)
         timeout-minutes: 50
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          SRC_ACCESS_TOKEN: ${{ secrets.SRC_ACCESS_TOKEN }}
         run: |
+          set -o pipefail
           mkdir -p frame/data
-          python3 -I frame/rule_config_count.py frame/rule-ids-risky.json frame/data/rule-config-count.tsv | tee frame/data/rule-config-count-progress.txt
+          python3 -I frame/rule_config_count_sg.py frame/rule-ids.json frame/data/rule-config-count-sg.tsv | tee frame/data/rule-config-count-sg-progress.txt
       - name: commit the result back to this branch
         if: always()
         run: |
           git config user.name "repo-frame"
           git config user.email "actions@users.noreply.github.com"
           git add frame/data
-          git commit -m "frame: rule config count (run ${{ github.run_id }})" || echo "nothing to commit"
+          git commit -m "frame: rule config count via Sourcegraph (run ${{ github.run_id }})" || echo "nothing to commit"
           git push origin "HEAD:${{ github.ref_name }}"
