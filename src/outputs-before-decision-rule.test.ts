@@ -335,3 +335,29 @@ it("loud when the plan at the first output was a v1 or no plan at all, and says 
     lint(decidedRun("gate-blind"), undefined, blind),
   ]).toEqual([["gates-not-fixed"], ["gates-not-fixed"], ["no-history"]]);
 });
+
+it("asks nothing of the gates while no output followed the decision, or no order could be read", () => {
+  const waiting = join(root, "gate-waiting");
+  initRepo(waiting);
+  commit(waiting, V2_PAPER, T(9));
+  commit(waiting, { [`${S}/decision.md`]: "exclude run 7\n" }, T(10));
+  const dir = "repro/P1-S01-outcome/decisions";
+  const unread = join(root, "gate-unread");
+  initRepo(unread);
+  commit(
+    unread,
+    {
+      ...V2_PAPER,
+      [`${S}/plan.json`]: v2(0.2).replace(
+        '"file": "repro/P1-S01-outcome/decision.md"',
+        `"file": "${dir}"`,
+      ),
+      [`p/${dir}/a.md`]: "exclude run 7\n",
+    },
+    T(9),
+  );
+  commit(unread, { [`${S}/RESULTS.md`]: "41 of 60\n" }, T(10));
+  // Guards: a plan v2 whose study has not run yet; one whose history yields no order is reported
+  // for that alone, never for gates it could not compare.
+  expect([lint(waiting), lint(unread)]).toEqual([[], ["decision-not-file"]]);
+});
