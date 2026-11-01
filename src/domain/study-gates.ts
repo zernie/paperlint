@@ -26,7 +26,7 @@ export const PLAN_V2 =
   "https://unpkg.com/paperlint/schemas/plan.v2.schema.json";
 
 /** A measurement study registered on this day or later must have a plan v2. */
-export const PLAN_V2_FROM = "2026-11-01";
+export const PLAN_V2_FROM = "2026-10-31";
 
 /** The one spelling of "this study has none of it". */
 export const NONE = "none";

@@ -232,7 +232,7 @@ The rule reports:
   `population.source`, `population.draw.method` or `primary_outcome` empty, or — for a measurement —
   declares no `mode` or leaves one of its texts empty, or — for a plan v2 — leaves a gate `null`
   (`bad-plan`);
-- a measurement registered on or after 2026-11-01 whose plan is v1, without `$schema`
+- a measurement registered on or after 2026-10-31 whose plan is v1, without `$schema`
   (`plan-version`): its gates are not declared. A measurement registered earlier keeps its plan v1;
 - a study of a `headline` measurement that has run with no `author_check` in its plan — or no plan —
   or, when the registry names its `author`, a check by anyone else (`author-check`).

@@ -638,6 +638,10 @@ describe("studyMessage — the new findings stand alone", () => {
 });
 
 describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", () => {
+  it("the day is 2026-10-31: the first study the gates were written for was registered that day", () => {
+    expect(PLAN_V2_FROM).toBe("2026-10-31");
+  });
+
   const V2: StudyPlan = {
     ...PLAN,
     $schema: PLAN_V2,
@@ -669,7 +673,7 @@ describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", (
     const v2 = onDay(PLAN_V2_FROM);
     // Guards: old plans keep passing; only a measurement is asked; v2 answers it.
     expect([
-      findings(onDay("2026-10-31")),
+      findings(onDay("2026-10-30")),
       findings(onDay(PLAN_V2_FROM, "spike")),
       findings(v2, {
         plans: new Map([[folderKey("P1-S01-census", PLAN_FILE), read(V2)]]),

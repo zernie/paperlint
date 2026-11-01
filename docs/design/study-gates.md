@@ -33,7 +33,7 @@ A plan says it is v2 with `"$schema": "https://unpkg.com/paperlint/schemas/plan.
 | no `$schema` (v1) | as before; it may carry none of the gates                                 |
 | v2                | every gate present: `null` (not decided: a draft), `"none"`, or its value |
 
-A measurement registered on or after **2026-11-01** must have a plan v2 (`plan-version`), so dropping
+A measurement registered on or after **2026-10-31** must have a plan v2 (`plan-version`), so dropping
 the marker is no way around the gates. A measurement registered earlier keeps its plan v1; nothing it
 had turns red. `paperlint studies new` writes a measurement's plan as v2. A later field is a v3, the
 same way: v2 plans keep passing.
