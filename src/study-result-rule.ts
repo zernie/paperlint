@@ -8,7 +8,7 @@
  * A plan that does not parse, is a draft, or is v1 is `repro/study-registered`'s to report; here it
  * asks nothing. Reported on `PIPELINE-STATUS.md`, first line, like the other `repro/` rules.
  */
-import { basename, dirname } from "node:path";
+import { basename, dirname, posix } from "node:path";
 import { filter, map, pipe } from "remeda";
 import { RESULT_FILE } from "./domain/study-gates.ts";
 import { studiesOf, type Study } from "./domain/study-registry.ts";
@@ -34,13 +34,14 @@ import { rulePageUrl } from "./venue-rules.ts";
 const STATUS_FILE = "PIPELINE-STATUS.md";
 const NAME = "repro/study-result";
 
-/** What the folder holds of a study's `result.json`. */
+/** What the folder holds of a study's `result.json`, beside its plan (`plan`, relative to the folder). */
 const resultState = (
   folder: StudyFolder,
   of: string,
+  plan: string,
   codec: StudyRegistryCodec,
 ): ResultState => {
-  const read = folder.read(of, RESULT_FILE);
+  const read = folder.read(of, posix.join(posix.dirname(plan), RESULT_FILE));
   return read.kind === "text" ? codec.parseResult(read.text) : read;
 };
 
@@ -61,7 +62,7 @@ const resultStudy = (
         id: s.id,
         folder: s.folder,
         ...gates,
-        state: resultState(folder, s.folder, codec),
+        state: resultState(folder, s.folder, s.plan, codec),
       };
 };
 

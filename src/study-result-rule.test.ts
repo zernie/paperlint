@@ -255,3 +255,27 @@ describe("repro/study-result — the recall audit", () => {
     ]);
   });
 });
+
+describe("repro/study-result — a plan in a subfolder", () => {
+  it("reads result.json beside the plan, not at the top of the study's folder", () => {
+    const nested = {
+      [`${DIR}/PIPELINE-STATUS.md`]: "# status\n",
+      [`${DIR}/repro/studies.json`]: registryText({
+        prefix: "P1",
+        studies: [row({ plan: "design/plan.json" })],
+      }),
+      [`${DIR}/repro/${FOLDER}/design/plan.json`]: planText(V2),
+      [`${DIR}/repro/${FOLDER}/design/result.json`]: JSON.stringify(GOOD),
+    };
+    expect(lint(nested)).toEqual([]);
+    const atTop = {
+      ...Object.fromEntries(
+        Object.entries(nested).filter(
+          ([k]) => !k.endsWith("design/result.json"),
+        ),
+      ),
+      [`${DIR}/repro/${FOLDER}/result.json`]: JSON.stringify(GOOD),
+    };
+    expect(lint(atTop).map((m) => m.id)).toEqual(["no-result-file"]);
+  });
+});
