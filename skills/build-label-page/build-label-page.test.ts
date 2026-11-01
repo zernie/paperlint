@@ -1,7 +1,7 @@
 /**
  * build-label-page — the free tier: the skill passes the shared per-skill checks, its checklist has
- * the eight rules the skill names, and the example generator does what the checklist says it does.
- * No model, no network, no browser. Needs `python3`, the language of the template.
+ * the eight rules the skill names, and the generator (scripts/label-page.ts) does what the checklist
+ * says it does. No model, no network, no browser.
  *
  * 🔴 WHAT IS RUN, NOT READ: the generator is executed on a small items file and its output is
  * inspected. A checklist that says "the build refuses a field outside the allow-list" is a claim
@@ -26,7 +26,7 @@ import { z } from "zod";
 import { checkSkill } from "../../lib/skill-checks.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const GENERATOR = join(HERE, "references", "example-generator.py");
+const GENERATOR = join(HERE, "scripts", "label-page.ts");
 const WORK = realpathSync(mkdtempSync(join(tmpdir(), "label-page-")));
 afterAll(() => {
   rmSync(WORK, { recursive: true, force: true });
@@ -115,8 +115,10 @@ function run(args: readonly string[]): {
   status: number | null;
   out: string;
 } {
-  const r = spawnSync("python3", [GENERATOR, ...args], { encoding: "utf8" });
-  assert.equal(r.error, undefined, `python3 is needed to run the generator`);
+  const r = spawnSync(process.execPath, [GENERATOR, ...args], {
+    encoding: "utf8",
+  });
+  assert.equal(r.error, undefined, String(r.error));
   return { status: r.status, out: `${r.stdout}${r.stderr}` };
 }
 
@@ -1596,4 +1598,206 @@ test("🔴 approval: a reason typed but not yet saved survives a re-render from 
     [stored("a process rule"), stored("edited on another phone")],
     ["a process rule", "edited on another phone"],
   );
+});
+
+// ── the generator's remaining refusals, each named by its path ───────────────────────────────
+
+/** Configs only the cross-field checks refuse, each with the refusal that names it. */
+function moreRefusals(): readonly (readonly [
+  string,
+  Record<string, unknown>,
+  string,
+])[] {
+  const [q] = QUESTIONS;
+  assert.ok(q !== undefined);
+  const [yes, no] = q.options;
+  assert.ok(yes !== undefined && no !== undefined);
+  const [first] = ITEMS;
+  assert.ok(first !== undefined);
+  return [
+    [
+      "group-key",
+      { groups: { "bad id!": "Python" } },
+      "groups.bad id!: key must be letters, digits, - and _ only",
+    ],
+    [
+      "knows-unknown",
+      { labeller_knows: ["nope"] },
+      "labeller_knows[0]: 'nope' is not in `groups`",
+    ],
+    [
+      "knows-none",
+      { labeller_knows: [] },
+      "no item is left after `labeller_knows`",
+    ],
+    [
+      "question-twice",
+      { questions: [q, q] },
+      "questions[1].id: 'label' is repeated",
+    ],
+    [
+      "value-twice",
+      { questions: [{ ...q, options: [yes, { ...yes, label: "Y2" }] }] },
+      "questions[0].options: values must be distinct, got ['yes', 'yes']",
+    ],
+    [
+      "label-twice",
+      { questions: [{ ...q, options: [yes, { ...no, label: " yes " }] }] },
+      "questions[0].options[1].label: ' yes ' reads the same as options[0].label",
+    ],
+    ["round-0", { practice_round: 0 }, "practice_round: 0 — must be 1 or more"],
+    [
+      "source-twice",
+      { items: [first, first] },
+      "items[1].source_id: 'case-1000' is repeated",
+    ],
+    [
+      "group-unknown",
+      { items: [{ ...first, group: "cobol" }] },
+      "items[0].group: 'cobol' is not in `groups`",
+    ],
+    ["quote", { study: "it's" }, `study: "it's" must be letters`],
+    ["quotes", { study: `a'b"c` }, `study: 'a\\'b"c' must be letters`],
+    ["true", { seed: true }, "seed: must be an integer, got True"],
+    ["false", { seed: false }, "seed: must be an integer, got False"],
+  ];
+}
+
+test("🔴 build refuses, by path, every config the schema alone cannot stop", () => {
+  for (const [name, over, message] of moreRefusals()) {
+    const dir = setup(`more-${name}`, config(over));
+    const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+    assert.equal(r.status, 1, `${name}\n${r.out}`);
+    assert.ok(r.out.includes(`REFUSED: ${message}`), `${name}\n${r.out}`);
+  }
+  const dir = setup("not-json", {});
+  writeFileSync(join(dir, "items.json"), "not json");
+  assert.match(
+    run(["build", join(dir, "items.json"), join(dir, "out")]).out,
+    /REFUSED: cannot read .*items\.json as JSON: /,
+  );
+}, 60_000);
+
+test("🔴 a rebuild with another seed is refused: the stored answers are keyed by the old ids", () => {
+  const dir = setup("reseed", config());
+  build(dir);
+  writeFileSync(join(dir, "items.json"), JSON.stringify(config({ seed: 8 })));
+  const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+  assert.equal(r.status, 1);
+  assert.match(r.out, /key\.json was made with seed 7; this config says 8\./);
+});
+
+test("🔴 export refuses a store, a collection or a document of the wrong kind, naming the type it got", () => {
+  const dir = setup("dump-types", config());
+  const { key } = build(dir);
+  const [a] = Object.keys(key.ids);
+  assert.ok(a !== undefined);
+  const cases: readonly [unknown, string][] = [
+    ["x", "store: str — must be an object"],
+    [1, "store: int — must be an object"],
+    [1.5, "store: float — must be an object"],
+    [true, "store: bool — must be an object"],
+    [null, "store: NoneType — must be an object"],
+    [
+      { answers: { [a]: 3 } },
+      `answers/${a}: must be an object with answers, reasons, savedAt, source`,
+    ],
+  ];
+  for (const [dump, message] of cases) {
+    writeFileSync(join(dir, "dump.json"), JSON.stringify(dump));
+    const r = exportAt(dir);
+    assert.equal(r.status, 1, r.out);
+    assert.ok(r.out.includes(`REFUSED: ${message}`), r.out);
+  }
+}, 60_000);
+
+test("🔴 a key from an older build: no `allowed` is refused; no practice or reason lists still exports", () => {
+  const dir = setup("old-key", config());
+  build(dir);
+  const keyPath = join(dir, "out", "key.json");
+  const raw = z
+    .record(z.string(), z.unknown())
+    .parse(JSON.parse(readFileSync(keyPath, "utf8")));
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers: {}, groups: {} }),
+  );
+  writeFileSync(keyPath, JSON.stringify({ ...raw, allowed: undefined }));
+  assert.match(
+    exportAt(dir).out,
+    /has no `allowed` values for every question and for familiarity/,
+  );
+  const allowed = Object.fromEntries(
+    Object.entries(
+      z.record(z.string(), z.unknown()).parse(raw["allowed"]),
+    ).filter(([k]) => k !== "needs_why"),
+  );
+  writeFileSync(
+    keyPath,
+    JSON.stringify({ ...raw, practice: undefined, allowed }),
+  );
+  const r = exportAt(dir);
+  assert.equal(r.status, 0, r.out);
+  assert.doesNotMatch(r.out, /practice round/);
+}, 60_000);
+
+test("export: a practice answered as expected throughout is recorded with nothing missed", () => {
+  const dir = setup("practice-all", config());
+  build(dir);
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers: {}, groups: {}, practice: DONE_PRACTICE }),
+  );
+  const r = exportAt(dir);
+  assert.equal(r.status, 0, r.out);
+  assert.match(r.out, /practice round 1: 3 of 3 matched -> /);
+});
+
+test("🔴 the command line: a wrong call is a usage error (2), a malformed date a refusal (1), today by default", () => {
+  for (const args of [
+    [],
+    ["build", "x"],
+    ["build", "a", "b", "--date", "2026-01-01"],
+    ["schema", "x"],
+    ["--nope"],
+  ]) {
+    const r = run(args);
+    assert.equal(r.status, 2, `${args.join(" ")}\n${r.out}`);
+    assert.match(r.out, /^usage: label-page\.js build/);
+  }
+  const dir = setup("dates", config());
+  build(dir);
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers: {}, groups: {} }),
+  );
+  const bad = run([
+    "export",
+    join(dir, "dump.json"),
+    join(dir, "out", "key.json"),
+    join(dir, "data"),
+    "--date",
+    "1 Jan",
+  ]);
+  assert.equal(bad.status, 1);
+  assert.match(bad.out, /REFUSED: --date must be YYYY-MM-DD/);
+  const today = run([
+    "export",
+    join(dir, "dump.json"),
+    join(dir, "out", "key.json"),
+    join(dir, "data"),
+  ]);
+  assert.match(
+    today.out,
+    /-labels-\d{4}-\d{2}-\d{2}\.json: 0 of 12 items complete/,
+  );
+}, 60_000);
+
+test("🔴 an error that is no refusal (an output path that is a file) exits 1 with its message, not a stack", () => {
+  const dir = setup("out-is-file", config());
+  writeFileSync(join(dir, "out"), "a file");
+  const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+  assert.equal(r.status, 1);
+  assert.match(r.out, /EEXIST|ENOTDIR/);
+  assert.doesNotMatch(r.out, /\n\s+at /);
 });

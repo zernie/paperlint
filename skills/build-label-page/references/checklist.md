@@ -5,7 +5,7 @@ model outputs, "is this a real boundary case"). Each rule says what to do, why, 
 They come from four such pages built in one week; each rule is a defect one of them shipped, or a
 failure the next answer would have hidden.
 
-The generator beside this file, `example-generator.py`, does rules 2 to 5, 7 and the page half of 8 by
+The generator of this skill, `scripts/label-page.ts`, does rules 2 to 5, 7 and the page half of 8 by
 construction. Rules 1 and 6, and the rewording in 8, are things the agent does. Read the rule before changing the part of the generator that
 carries it.
 

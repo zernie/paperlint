@@ -1,5 +1,6 @@
 // Compiled to SKILL.md by `vigiles compile`. Edit THIS file, never the markdown.
 import { experimental_skill } from "vigiles/spec";
+import { COMMANDS } from "./scripts/label-page-commands.ts";
 
 export default experimental_skill({
   name: "build-label-page",
@@ -69,7 +70,7 @@ The full text, each with its reason and its check, is
    \`author_check\` records that the author has been shown the drawn **units** (the rules or cases, not
    the items) with "is this what you meet in practice?". The labelling page is not that check: items
    made from easy units each look fine on their own.
-2. **Copy the generator into the study and write the items.** The study folder is
+2. **Write the items.** The study folder is
    \`<paper-dir>/repro/<id>-<slug>/\`, made by \`npx paperlint studies new <paper-dir> "Gold labels"
    --kind data\` when the labelling is a study of its own (\`P1-S04-gold-labels\`): the command writes
    its \`README.md\`, its \`plan.json\` and its row in \`repro/studies.json\`, and \`repro/study-registered\`
@@ -78,20 +79,18 @@ The full text, each with its reason and its check, is
    the labels are in, update the row (\`status\`, \`result\`, \`result_file\`) and run
    \`npx paperlint studies index <paper-dir>\`. Where this sits in stage 3, and what checks each place:
    \`docs/layout.md\` in the paperlint package.
-   \`items.json\` follows the header of the generator. Source ids in \`items.json\` are the study's own;
-   the page never shows them.
+   \`items.json\` follows the header of the generator, \`scripts/label-page.ts\` in this skill;
+   \`node \${CLAUDE_SKILL_DIR}/scripts/label-page.js ${COMMANDS.schema}\` prints its schema. Source ids
+   in \`items.json\` are the study's own; the page never shows them.
 
-   \`\`\`bash
-   cp \${CLAUDE_SKILL_DIR}/references/example-generator.py <study-dir>/make_label_page.py
-   \`\`\`
-
-   The generator is a template: change the questions and keep the guards (allow-list, neutral ids,
-   store-unavailable banner, filter instead of scrolling). Do not loosen the allow-list to make a
-   build pass; take the field out of the item.
+   The generator runs from the skill and is never copied into the study, so a fix to it reaches every
+   page built after the fix. The questions, examples and practice live in \`items.json\`; the guards
+   (allow-list, neutral ids, store-unavailable banner, filter instead of scrolling) live in the
+   generator. Do not work around the allow-list to make a build pass; take the field out of the item.
 3. **Build and read it as the labeller.** From the study folder (\`<study-dir>\`):
 
    \`\`\`bash
-   python3 make_label_page.py build items.json label-page
+   node \${CLAUDE_SKILL_DIR}/scripts/label-page.js ${COMMANDS.build} items.json label-page
    \`\`\`
 
    This writes \`label-page/page.html\` and \`label-page/key.json\` (the only link from \`G001\` to the
@@ -108,7 +107,7 @@ The full text, each with its reason and its check, is
    Then **look at it**: screenshot \`page.html\` at 400px and at 1280px wide with the pre-installed
    Chromium (Playwright), once before any answer and once after the practice, and open both images.
    The generator's look is one dark palette, one column, answer buttons as full-width rows with space
-   between them, and no card inside a card; keep it when you change the generator, and fix what the
+   between them, and no card inside a card; keep it when the generator changes, and fix what the
    images show before publishing. A page that only passed its tests has not been seen.
 4. **Publish.** Load \`artifact-design\` and \`artifact-capabilities\`, then publish \`page.html\` with
    \`capabilities: {db: {}}\`. Use a title of two to four words. Do not ask the page for \`user\` or
@@ -128,7 +127,7 @@ The full text, each with its reason and its check, is
    in with \`"source": "chat"\`), then:
 
    \`\`\`bash
-   python3 make_label_page.py export dump.json label-page/key.json data
+   node \${CLAUDE_SKILL_DIR}/scripts/label-page.js ${COMMANDS.export} dump.json label-page/key.json data
    \`\`\`
 
    It writes \`data/<study>-labels-<date>.json\` and prints every incomplete item, every answer or
