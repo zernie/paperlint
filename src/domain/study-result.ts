@@ -23,6 +23,7 @@ import {
   type SelfTest,
   type WeLoseIf,
 } from "./study-gates.ts";
+import type { StudyPlan } from "./study-registry.ts";
 
 /** The value a study's result says its claim has, when its number crossed `we_lose_if`. */
 export const CLAIM_LOST = "lost";
@@ -59,6 +60,33 @@ export interface ResultStudy {
   readonly funnel: Funnel;
   readonly state: ResultState;
 }
+
+/** The gates a ready plan v2 declares, as the judge reads them. */
+export type Gates = Pick<
+  ResultStudy,
+  "we_lose_if" | "second_check" | "self_test" | "funnel"
+>;
+
+/** Whether a gate is decided: neither absent (a plan v1) nor null (not decided yet). */
+const decided = <T>(g: T | null | undefined): g is T =>
+  g !== null && g !== undefined;
+
+/**
+ * The gates of plan `p`, when every one is decided; null for a plan v1 or a draft. An exploratory
+ * plan, or one whose mode carries no `we_lose_if`, has no claim to lose.
+ */
+export const gatesOf = (p: StudyPlan): Gates | null => {
+  const { second_check, self_test, funnel, mode } = p;
+  if (!decided(second_check) || !decided(self_test) || !decided(funnel))
+    return null;
+  const w = mode?.kind === "decide_before_run" ? mode.we_lose_if : null;
+  return {
+    we_lose_if: decided(w) ? w : null,
+    second_check,
+    self_test,
+    funnel,
+  };
+};
 
 /** One defect of a study's result. */
 export type ResultFinding =

@@ -95,8 +95,8 @@ it("every gate still null keeps the plan a draft naming it", () => {
 });
 
 it("a plan v2 that leaves a gate out is no plan, the gate named", () => {
-  const { funnel: _f, ...noFunnel } = V2;
-  const { we_lose_if: _w, ...modeWithout } = V2.mode as DecideFirst;
+  const noFunnel = { ...V2, funnel: undefined };
+  const modeWithout = DECIDED;
   // Guards: a forgotten gate cannot be written — only "none" or null say "not this one".
   expect(why(noFunnel)).toMatch(/^funnel: is missing, and a plan v2/u);
   expect(why({ ...V2, mode: modeWithout })).toMatch(

@@ -14,6 +14,7 @@ import { RESULT_FILE } from "./domain/study-gates.ts";
 import { studiesOf, type Study } from "./domain/study-registry.ts";
 import {
   RESULT_PROBLEMS,
+  gatesOf,
   judgeResult,
   resultMessage,
   type ResultState,
@@ -43,7 +44,7 @@ const resultState = (
   return read.kind === "text" ? codec.parseResult(read.text) : read;
 };
 
-/** The row `s` as a study to judge: `done`, its plan ready and v2; else null. */
+/** The row `s` as a study to judge: `done`, its plan ready, every gate decided; else null. */
 const resultStudy = (
   s: Study,
   folder: StudyFolder,
@@ -53,27 +54,15 @@ const resultStudy = (
   const read = folder.read(s.folder, s.plan);
   if (read.kind !== "text") return null;
   const parsed = codec.parsePlan(read.text, s.kind);
-  if (parsed.kind !== "ready") return null;
-  const p = parsed.plan;
-  if (
-    p.second_check === undefined ||
-    p.second_check === null ||
-    p.self_test === undefined ||
-    p.self_test === null ||
-    p.funnel === undefined ||
-    p.funnel === null
-  )
-    return null;
-  return {
-    id: s.id,
-    folder: s.folder,
-    we_lose_if:
-      p.mode?.kind === "decide_before_run" ? (p.mode.we_lose_if ?? null) : null,
-    second_check: p.second_check,
-    self_test: p.self_test,
-    funnel: p.funnel,
-    state: resultState(folder, s.folder, codec),
-  };
+  const gates = parsed.kind === "ready" ? gatesOf(parsed.plan) : null;
+  return gates === null
+    ? null
+    : {
+        id: s.id,
+        folder: s.folder,
+        ...gates,
+        state: resultState(folder, s.folder, codec),
+      };
 };
 
 /** Every done study of a ready plan v2 in the paper folder `paper`. */

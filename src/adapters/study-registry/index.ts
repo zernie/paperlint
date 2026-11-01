@@ -311,7 +311,7 @@ const V2_GATES = ["second_check", "self_test", "funnel"] as const;
  * of them: a gate in a plan that does not say it is v2 would be read by nobody.
  */
 const gatesOfItsVersion = (
-  p: z.output<typeof planShape>,
+  p: Readonly<z.output<typeof planShape>>,
   ctx: Readonly<z.core.$RefinementCtx>,
 ): void => {
   const v2 = p.$schema !== undefined;

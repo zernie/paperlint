@@ -21,7 +21,6 @@ import {
   type StudyInput,
   type StudyPlan,
   type StudyRegistry,
-  type StudyFinding,
   type IndexInput,
   folderKey,
 } from "./study-registry.ts";
@@ -661,7 +660,7 @@ describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", (
         date: PLAN_V2_FROM,
       },
     ]);
-    expect(studyMessage(f[0] as StudyFinding)).toContain(
+    expect(f.map(studyMessage).join("")).toContain(
       `add \`"$schema": "${PLAN_V2}"\``,
     );
   });

@@ -5,7 +5,10 @@
  * stands alone.
  */
 import { describe, expect, it } from "vitest";
+import { PLAN_V2 } from "./study-gates.ts";
+import type { StudyPlan } from "./study-registry.ts";
 import {
+  gatesOf,
   judgeResult,
   resultMessage,
   RESULT_PROBLEMS,
@@ -88,8 +91,7 @@ describe("reported", () => {
   });
 
   it("the claim's number missing, lost unsaid, or said lost while it holds", () => {
-    const { pass_rate: _p, ...noNumber } = GOOD;
-    expect(judge(noNumber)).toEqual([
+    expect(judge({ ...GOOD, pass_rate: undefined })).toEqual([
       { problem: "no-number", id: "P1-S01", key: "pass_rate" },
     ]);
     expect(judge({ ...GOOD, pass_rate: 0.4 })).toEqual([
@@ -132,6 +134,13 @@ describe("reported", () => {
 });
 
 describe("resultMessage", () => {
+  const LOST: ResultFinding = {
+    problem: "claim-lost",
+    id: "P1-S01",
+    key: "pass_rate",
+    value: 0.4,
+    threshold: "below 0.5",
+  };
   const ALL: readonly ResultFinding[] = [
     { problem: "no-result-file", id: "P1-S01" },
     { problem: "result-linked", id: "P1-S01", link: "data" },
@@ -174,8 +183,60 @@ describe("resultMessage", () => {
   });
 
   it("a lost claim says LOST, the number and the threshold fixed before the run", () => {
-    expect(resultMessage(ALL[4] as ResultFinding).split("\n")[0]).toBe(
+    expect(resultMessage(LOST).split("\n")[0]).toBe(
       '`P1-S01`\'s claim LOST: its `pass_rate` is 0.4, below 0.5, the threshold its plan fixed before the run. What to do: report the loss in the paper, and say so in `result.json` with `"claim": "lost"`; the threshold is not moved after the run.',
     );
+  });
+});
+
+describe("gatesOf — the gates of a plan, only when every one is decided", () => {
+  const PLAN: StudyPlan = {
+    $schema: PLAN_V2,
+    question: "q",
+    population: { source: "s", draw: { kind: "all", method: "census" } },
+    arms: [],
+    primary_outcome: "o",
+    author_check: null,
+    mode: {
+      kind: "decide_before_run",
+      outputs: ["result.json"],
+      decision: { file: "d.md", note: "n" },
+      we_lose_if: { result: "x", above: 1 },
+    },
+    second_check: "none",
+    self_test: "none",
+    funnel: "none",
+  };
+
+  it("reads a plan v2's gates, and none of a plan v1 or one with a gate undecided", () => {
+    const undecided: readonly StudyPlan[] = [
+      { ...PLAN, second_check: undefined },
+      { ...PLAN, second_check: null },
+      { ...PLAN, self_test: null },
+      { ...PLAN, funnel: null },
+    ];
+    expect(gatesOf(PLAN)).toEqual({
+      we_lose_if: { result: "x", above: 1 },
+      second_check: "none",
+      self_test: "none",
+      funnel: "none",
+    });
+    // Guards: a gate absent or null is never read as decided.
+    expect(undecided.map(gatesOf)).toEqual(undecided.map(() => null));
+  });
+
+  it("has no claim for an exploratory plan, or a decide-first mode without we_lose_if", () => {
+    const noClaim = {
+      kind: "decide_before_run" as const,
+      outputs: [],
+      decision: { file: "d.md", note: "n" },
+    };
+    expect(
+      [
+        { ...PLAN, mode: { kind: "exploratory" as const, reason: "r" } },
+        { ...PLAN, mode: noClaim },
+        { ...PLAN, mode: undefined },
+      ].map((p) => gatesOf(p)?.we_lose_if),
+    ).toEqual([null, null, null]);
   });
 });
