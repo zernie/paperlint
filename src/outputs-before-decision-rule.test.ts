@@ -15,8 +15,10 @@ import {
 } from "./adapters/node/index.ts";
 import { studyRegistryCodec } from "./adapters/study-registry/index.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
+import { PLAN_V2 } from "./domain/study-gates.ts";
 import { planText, registryText } from "./domain/study-registry.ts";
 import { outputsBeforeDecisionRules } from "./outputs-before-decision-rule.ts";
+import type { GitOrder } from "./ports/git-history.ts";
 import { commit, initRepo } from "../test/git-repo.ts";
 import { useTempDir } from "../test/support.ts";
 import { ROW, planOf } from "../test/study-tree.ts";
@@ -38,12 +40,18 @@ const T = (h: number): string =>
   `2026-10-16T${String(h).padStart(2, "0")}:00:00+05:00`;
 
 /** The rule's message ids over the paper in `repo`, reached through `file`. */
-const lint = (repo: string, file = "p/PIPELINE-STATUS.md"): string[] => {
+const lint = (
+  repo: string,
+  file = "p/PIPELINE-STATUS.md",
+  git: GitOrder = gitHistory(spawnProcess(), {
+    PATH: String(process.env.PATH),
+  }),
+): string[] => {
   const rule = outputsBeforeDecisionRules({
     files: nodeFiles,
     entries: nodeListEntries,
     codec: studyRegistryCodec,
-    git: gitHistory(spawnProcess(), { PATH: String(process.env.PATH) }),
+    git,
   })["outputs-before-decision"];
   const ids: string[] = [];
   rule
@@ -248,4 +256,82 @@ it("loud on a decision under a linked directory: git records the link, not the f
   // Guards: the decision file exists, and is committed as a path through a link; the order proof
   // would be read from the link's history. The study is reported instead.
   expect(lint(repo)).toEqual(["decision-linked"]);
+});
+
+// ── a plan v2's gates are fixed before the first output ─────────────────────────────────────────
+
+/** A ready plan v2 of the decide-first study, losing below `below`, its question `question`. */
+const v2 = (below: number, question = "Does the hint help?"): string =>
+  planText({
+    ...planOf({ ...DECIDED, we_lose_if: { result: "share", below } }),
+    question,
+    $schema: PLAN_V2,
+    second_check: [{ step: "fits", min_kappa: 0.6 }],
+    self_test: "none",
+    funnel: ["no linter rule"],
+  });
+const V2_PAPER = { ...PAPER, [`${S}/plan.json`]: v2(0.2) };
+
+/** The decided history: the paper with its plan, then the decision, then an output. */
+const decidedRun = (
+  name: string,
+  first: Readonly<Record<string, string>> = V2_PAPER,
+): string => {
+  const repo = join(root, name);
+  initRepo(repo);
+  commit(repo, first, T(9));
+  commit(repo, { [`${S}/decision.md`]: "exclude run 7\n" }, T(10));
+  commit(repo, { [`${S}/RESULTS.md`]: "41 of 60\n" }, T(11));
+  return repo;
+};
+
+it("loud when a gate of a plan v2 changed after the first output: the threshold cannot follow the result", () => {
+  const repo = decidedRun("gate-moved");
+  commit(repo, { [`${S}/plan.json`]: v2(0.1) }, T(12));
+  expect(lint(repo)).toEqual(["gates-changed"]);
+});
+
+it("loud when the plan v2 entered history only after the first output: its gates were not fixed before it", () => {
+  const repo = decidedRun(
+    "gate-late",
+    Object.fromEntries(
+      Object.entries(V2_PAPER).filter(([k]) => k !== `${S}/plan.json`),
+    ),
+  );
+  commit(repo, { [`${S}/plan.json`]: v2(0.2) }, T(12));
+  expect(lint(repo)).toEqual(["gates-not-fixed"]);
+});
+
+it("silent when the gates stand as they were at the first output, even if other text of the plan changed", () => {
+  const same = decidedRun("gate-same");
+  const reworded = decidedRun("gate-reworded");
+  commit(
+    reworded,
+    { [`${S}/plan.json`]: v2(0.2, "Do the hints help?") },
+    T(12),
+  );
+  const v1 = decidedRun("gate-v1", PAPER);
+  commit(v1, { [`${S}/plan.json`]: planText(planOf(DECIDED)) + "\n" }, T(12));
+  // Guards: an unchanged plan; a non-gate edit; a plan v1, which has no gates to freeze.
+  expect([lint(same), lint(reworded), lint(v1)]).toEqual([[], [], []]);
+});
+
+it("loud when the plan at the first output was a v1 or no plan at all, and says why when git cannot show it", () => {
+  const v1 = decidedRun("gate-was-v1", PAPER);
+  commit(v1, { [`${S}/plan.json`]: v2(0.2) }, T(12));
+  const garbled = decidedRun("gate-was-garbled", {
+    ...V2_PAPER,
+    [`${S}/plan.json`]: "{ not json",
+  });
+  commit(garbled, { [`${S}/plan.json`]: v2(0.2) }, T(12));
+  const real = gitHistory(spawnProcess(), { PATH: String(process.env.PATH) });
+  const blind = {
+    ...real,
+    fileAt: () => ({ kind: "unknown", why: "git show failed" }) as const,
+  };
+  expect([
+    lint(v1),
+    lint(garbled),
+    lint(decidedRun("gate-blind"), undefined, blind),
+  ]).toEqual([["gates-not-fixed"], ["gates-not-fixed"], ["no-history"]]);
 });

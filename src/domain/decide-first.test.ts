@@ -5,11 +5,14 @@
  */
 import { expect, it } from "vitest";
 import {
+  firstOutputAfter,
   judgeOrder,
   orderMessage,
   type DecideFirstStudy,
   type OrderFinding,
+  type PlanThen,
 } from "./decide-first.ts";
+import type { PlanGates } from "./study-gates.ts";
 
 const D = { commit: "d".repeat(40), date: "2026-10-16T10:00:00+05:00" };
 const A = { commit: "a".repeat(40), date: "2026-10-16T11:00:00+05:00" };
@@ -286,6 +289,125 @@ it("each finding's message: what is wrong, what to do, the rule's page", () => {
     `\`repro/P1-S01-x/RESULTS.md\`, an output of \`P1-S01\`, entered history in ${"d".repeat(12)} (${D.date}), the very commit that first recorded its decision, ${"d".repeat(12)} (${D.date}). The study is declared decided before its run, and its history does not show that order. What to do: if the decision really came first, nothing in this history can prove it — declare the study \`exploratory\` with the reason, or run it again after the decision; never rewrite the history to make it pass.` +
       PAGE,
     `\`repro/P1-S01-x/RESULTS.md\`, an output of \`P1-S01\`, entered history in ${"a".repeat(12)} (${A.date}), not after the commit that first recorded its decision, ${"d".repeat(12)} (${D.date}). The study is declared decided before its run, and its history does not show that order. What to do: if the decision really came first, nothing in this history can prove it — declare the study \`exploratory\` with the reason, or run it again after the decision; never rewrite the history to make it pass.` +
+      PAGE,
+  ]);
+});
+
+// ── a plan v2's gates against the plan at the first output ──────────────────────────────────────
+
+const GATES: PlanGates = {
+  we_lose_if: { result: "share", below: 0.2 },
+  second_check: [{ step: "fits", min_kappa: 0.6 }],
+  self_test: "none",
+  funnel: ["no linter rule"],
+};
+const OUT = { path: "RESULTS.md", ...A, order: "after" as const };
+const withGates = (
+  then: PlanThen,
+  now: PlanGates = GATES,
+): DecideFirstStudy => ({
+  ...STUDY,
+  gates: { now, output: OUT, then },
+});
+
+it("the first output after the decision is the one the gates are held to; none while none followed it", () => {
+  // Guards: the study's own files and outputs not after the decision are not it.
+  expect([
+    firstOutputAfter(
+      STUDY,
+      STUDY.facts.kind === "read" ? STUDY.facts.files : [],
+    ),
+    firstOutputAfter(STUDY, [{ path: "RESULTS.md", ...D, order: "same" }]),
+  ]).toEqual([OUT, null]);
+});
+
+it("gates as they stood at the first output are silent; each one changed since is a finding", () => {
+  const moved: PlanGates = {
+    ...GATES,
+    we_lose_if: { result: "share", below: 0.1 },
+    funnel: ["no linter rule", "clone failed"],
+  };
+  const at = {
+    id: "P1-S01",
+    folder: "P1-S01-x",
+    plan: "plan.json",
+    output: OUT,
+  };
+  // Guards: deep equality, not identity; one finding per changed gate, in the gates' order.
+  expect([
+    judgeOrder(withGates({ kind: "gates", gates: structuredClone(GATES) })),
+    judgeOrder(withGates({ kind: "gates", gates: GATES }, moved)),
+  ]).toEqual([
+    [],
+    [
+      {
+        problem: "gates-changed",
+        ...at,
+        gate: "we_lose_if",
+        then: { result: "share", below: 0.2 },
+        now: { result: "share", below: 0.1 },
+      },
+      {
+        problem: "gates-changed",
+        ...at,
+        gate: "funnel",
+        then: ["no linter rule"],
+        now: ["no linter rule", "clone failed"],
+      },
+    ],
+  ]);
+});
+
+it("no gates at the first output is a finding with its reason; a history git cannot read is said", () => {
+  const at = {
+    id: "P1-S01",
+    folder: "P1-S01-x",
+    plan: "plan.json",
+    output: OUT,
+  };
+  expect([
+    judgeOrder(withGates({ kind: "no-gates", why: "absent" })),
+    judgeOrder(withGates({ kind: "unknown", why: "fatal: x" })),
+  ]).toEqual([
+    [{ problem: "gates-not-fixed", ...at, why: "absent" }],
+    [{ problem: "no-history", id: "P1-S01", why: "fatal: x" }],
+  ]);
+});
+
+it("the gates' messages: which gate, then and now, the output's commit, and what to do", () => {
+  const at = {
+    id: "P1-S01",
+    folder: "P1-S01-x",
+    plan: "plan.json",
+    output: OUT,
+  };
+  const when = `\`RESULTS.md\`, entered history in ${"a".repeat(12)} (${A.date})`;
+  const fix =
+    "What to do: run the study again now that the plan v2 is committed; if the outputs must stand, declare the study `exploratory` with the reason.";
+  // Guards: the whole text for each finding and each reason.
+  expect(
+    [
+      {
+        problem: "gates-changed" as const,
+        ...at,
+        gate: "we_lose_if" as const,
+        then: { result: "share", below: 0.2 },
+        now: { result: "share", below: 0.1 },
+      },
+      ...(["absent", "v1", "unreadable"] as const).map((why) => ({
+        problem: "gates-not-fixed" as const,
+        ...at,
+        why,
+      })),
+    ].map(orderMessage),
+  ).toEqual([
+    `The gate \`we_lose_if\` in the plan of \`P1-S01\`, \`repro/P1-S01-x/plan.json\`, was {"result":"share","below":0.2} when its first output, ${when}, and is {"result":"share","below":0.1} now. A gate is fixed before the run: moved after a result exists, it can only follow the result. What to do: put the gate back as it was; if it was wrong, say so in the paper and run the study again under the corrected plan — never edit the history to make it pass.` +
+      PAGE,
+    `The plan of \`P1-S01\`, \`repro/P1-S01-x/plan.json\`, was not in history yet when its first output, ${when}: its gates were not fixed before the run. ${fix}` +
+      PAGE,
+    `The plan of \`P1-S01\`, \`repro/P1-S01-x/plan.json\`, was a plan v1, which declares no gates, when its first output, ${when}: its gates were not fixed before the run. ${fix}` +
+      PAGE,
+    `The plan of \`P1-S01\`, \`repro/P1-S01-x/plan.json\`, was no plan paperlint could read when its first output, ${when}: its gates were not fixed before the run. ${fix}` +
       PAGE,
   ]);
 });

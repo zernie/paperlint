@@ -35,10 +35,22 @@ export interface GitHistory {
   readonly committed: (paper: AbsolutePath, file: AbsolutePath) => Committed;
 }
 
+/** A file as it stood at a commit: its text, not there, or why git could not say. */
+export type FileAt =
+  | { readonly kind: "text"; readonly text: string }
+  | { readonly kind: "absent" }
+  | { readonly kind: "unknown"; readonly why: string };
+
 export interface GitOrder {
   /** The order of `decision`'s first commit against every file's under `studyDir` (a folder that exists). */
   readonly order: (
     studyDir: AbsolutePath,
     decision: AbsolutePath,
   ) => OrderFacts;
+  /** `path` (relative to `studyDir`) as it stood at `commit`: what a plan's gates were at the first output. */
+  readonly fileAt: (
+    studyDir: AbsolutePath,
+    commit: string,
+    path: string,
+  ) => FileAt;
 }

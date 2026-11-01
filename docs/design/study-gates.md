@@ -63,9 +63,15 @@ another.
   threshold `result.json` says `"claim": "lost"` (`claim-lost`), never of a claim that holds
   (`claim-holds`).
 - **Not checked:** that the number named is the right one to decide the question — the author's
-  check; and when the plan was written. Git orders the decision file before the outputs
-  ([`repro/outputs-before-decision`](../rules/repro/outputs-before-decision.md)), not the plan:
-  repeat the threshold in the decision's note so that order covers it.
+  check.
+
+**Frozen at the first output.** All four gates are held by git's history
+([`repro/outputs-before-decision`](../rules/repro/outputs-before-decision.md)): the plan as it stood
+at the commit of the study's first output (the first that came after its decision) must declare each
+gate exactly as HEAD's plan does. A gate edited since is `gates-changed`: a threshold moved after the
+result was seen can only follow the result. A plan that was not in history yet at that commit, or was
+a v1 or unreadable there, is `gates-not-fixed`. Edits to other parts of the plan (its question, its
+source) are not reported.
 
 ### `second_check` — two raters on each labelling step
 

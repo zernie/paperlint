@@ -42,6 +42,12 @@ A study decided before its run — its plan's `mode` is `decide_before_run`, the
 - **`shallow`** — the clone is shallow, so every file's first commit is the clone's: no order can be
   read, and the rule says so instead of judging.
 - **`no-history`** — git could not answer (not installed, not a repository).
+- **`gates-changed`** — the plan is a plan v2 ([`docs/design/study-gates.md`](../../design/study-gates.md)),
+  and one of its gates (`mode.we_lose_if`, `second_check`, `self_test`, `funnel`) differs from what
+  the plan declared at the commit of the study's first output after its decision: a threshold moved
+  after a result exists. One finding per changed gate, with its value then and now.
+- **`gates-not-fixed`** — the plan v2 was not in history at that commit, or was a plan v1 or no
+  readable plan there: its gates were not fixed before the run.
 
 The study's own files — `plan.json`, `README.md` and the decision file — are never outputs. A symbolic
 link in the study's folder is one entry, as git stores it, and is never followed: a link to the folder
@@ -93,6 +99,8 @@ No rule options. The study declares its mode in its plan.
 - What the decision says. The gate is that it is committed, not its content.
 - **A decision amended after the outputs**: the order is between FIRST commits. A later edit of the
   decision file is visible in its history (`git log -- <file>`) but not reported.
+- A plan v1, or a plan v2's parts other than its four gates: the question, the source and the note
+  may be reworded after the outputs. Only the gates are frozen.
 - That nobody ran the study before the decision and kept the outputs out of git. History records
   what was committed; a run on a machine that never committed it leaves no trace.
 - A study whose row names a folder that is not one inside `repro/` (`../x`), or a folder that is a

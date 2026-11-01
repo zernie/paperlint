@@ -7,6 +7,7 @@
 import { posix } from "node:path";
 import { filter, map, pipe } from "remeda";
 import type { NotAFile } from "./domain/decide-first.ts";
+import { gatesOf, type PlanGates } from "./domain/study-gates.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
 import {
   studiesOf,
@@ -52,6 +53,8 @@ export interface ModeStudy {
   readonly plan: string;
   readonly mode: StudyMode;
   readonly empty: readonly PlanTextField[];
+  /** A plan v2's gates as HEAD holds them; null for a plan v1. */
+  readonly gates: PlanGates | null;
 }
 
 /** What reading the plan of one row gave: its mode study, nothing, or a link on the way to it. */
@@ -81,7 +84,13 @@ export const readModeStudy = (
   const empty = parsed.kind === "draft" ? parsed.empty : [];
   return {
     kind: "mode",
-    study: { row: s, plan, mode: parsed.plan.mode, empty },
+    study: {
+      row: s,
+      plan,
+      mode: parsed.plan.mode,
+      empty,
+      gates: gatesOf(parsed.plan),
+    },
   };
 };
 

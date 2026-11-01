@@ -275,3 +275,36 @@ it("firstCommitsOf keeps each path's first commit and skips blank lines", () => 
     ["b", { commit: B, date: DATE }],
   ]);
 });
+
+it("fileAt: the text at a commit, absent when ls-tree lists nothing, and each failure a reason", () => {
+  const fail = {
+    kind: "exited",
+    status: 128,
+    stdout: "",
+    stderr: "fatal: bad object\n",
+  } as const;
+  const { git, calls } = over({
+    "ls-tree": exitedWith("plan.json\n"),
+    show: exitedWith('{"question": "q"}\n'),
+  });
+  const text = git.fileAt(STUDY, A, "plan.json");
+  const at = (lsTree: ProcessExit, show: ProcessExit = exitedWith("")) =>
+    over({ "ls-tree": lsTree, show }).git.fileAt(STUDY, A, "plan.json");
+  // Guards: the commands, from the study's folder; and every answer git can give.
+  expect([
+    calls.map((c) => [c.cwd, ...c.args.slice(2)]),
+    text,
+    at(exitedWith("")),
+    at(fail),
+    at(exitedWith("plan.json\n"), fail),
+  ]).toEqual([
+    [
+      [STUDY, "ls-tree", "--name-only", A, "--", "plan.json"],
+      [STUDY, "show", `${A}:./plan.json`],
+    ],
+    { kind: "text", text: '{"question": "q"}\n' },
+    { kind: "absent" },
+    { kind: "unknown", why: "fatal: bad object" },
+    { kind: "unknown", why: "fatal: bad object" },
+  ]);
+});

@@ -84,6 +84,7 @@ export const fakeGit = (
 ): GitHistory & GitOrder => ({
   committed: (_paper, file) => table[file] ?? { kind: "not-committed" },
   order: () => order,
+  fileAt: () => ({ kind: "unknown", why: "no history in this test" }),
 });
 
 /** `studies <sub> papers/example <id>` over `t`: the exit code, what it printed, and the files after. */

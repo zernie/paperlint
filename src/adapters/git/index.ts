@@ -7,11 +7,13 @@
  *   order       whether the clone is shallow; the decision file's first commit; every file's first
  *               commit under the study's folder (`git log --reverse --name-only`); and for each, whether
  *               any commit that touched the decision is its strict ancestor (`git rev-list -- <decision>`)
+ *   fileAt      a file under the study's folder as it stood at a commit (`git ls-tree`, then `git show`)
  */
 import type { AbsolutePath } from "../../domain/paths.ts";
 import type {
   CommitAt,
   Committed,
+  FileAt,
   FirstCommit,
   GitHistory,
   GitOrder,
@@ -110,8 +112,25 @@ export function gitHistory(
         : { kind: "changed", commit };
     },
     order: (studyDir, decision) => orderIn(git, studyDir, decision),
+    fileAt: (studyDir, commit, path) => fileAtIn(git, studyDir, commit, path),
   };
 }
+
+/** `path` (relative to `studyDir`) at `commit`: `ls-tree` says whether it is there, `show` gives its text. */
+const fileAtIn = (
+  git: Git,
+  studyDir: AbsolutePath,
+  commit: string,
+  path: string,
+): FileAt => {
+  const listed = git(studyDir, ["ls-tree", "--name-only", commit, "--", path]);
+  if ("why" in listed) return { kind: "unknown", why: listed.why };
+  if (listed.out.trim() === "") return { kind: "absent" };
+  const shown = git(studyDir, ["show", `${commit}:./${path}`]);
+  return "why" in shown
+    ? { kind: "unknown", why: shown.why }
+    : { kind: "text", text: shown.out };
+};
 
 type Git = ReturnType<typeof gitIn>;
 
