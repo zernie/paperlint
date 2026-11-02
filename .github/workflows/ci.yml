@@ -205,36 +205,26 @@ jobs:
         timeout-minutes: 5
 
   # ── DOES THIS PULL REQUEST CHANGE ANYTHING BUT DOCS? ────────────────────────────────────────────
-  # The changed files come from the API, not from git: a PR's checkout is a merge commit with the
-  # base as it is now, so a diff against `base.sha` would also count commits that landed on main
-  # since. scripts/docs-only.ts uses Node built-ins only, so this job installs nothing. An empty or
-  # failed list fails closed: the script says `docs_only=false`, or the step fails and with it the run.
+  # dorny/paths-filter lists a PR's files from the API (no checkout). With `every`, a file counts as
+  # code only if it matches all three patterns: anything, but not root or docs/ Markdown.
   changes:
     if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 3
     permissions:
-      contents: read
       pull-requests: read
     outputs:
-      docs_only: ${{ steps.scope.outputs.docs_only }}
+      code: ${{ steps.filter.outputs.code }}
     steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
-          node-version: 22
-
-      - name: changed files — docs only?
-        id: scope
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
-        run: |
-          set -euo pipefail
-          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename' > "$RUNNER_TEMP/changed.txt"
-          cat "$RUNNER_TEMP/changed.txt"
-          node scripts/docs-only.ts < "$RUNNER_TEMP/changed.txt" | tee -a "$GITHUB_OUTPUT"
+          predicate-quantifier: every
+          filters: |
+            code:
+              - "**"
+              - "!*.md"
+              - "!docs/**/*.md"
 
   # ── BUILDING THE PAPER WITH REAL pdflatex, ON LINUX AND macOS ──────────────────────────────────
   #
@@ -263,7 +253,7 @@ jobs:
     if: >-
       !cancelled() && (github.event_name != 'pull_request' ||
       (github.event.pull_request.draft == false && needs.changes.result == 'success' &&
-      needs.changes.outputs.docs_only != 'true'))
+      needs.changes.outputs.code == 'true'))
     strategy:
       fail-fast: false
       matrix:
