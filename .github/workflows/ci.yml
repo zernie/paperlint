@@ -204,6 +204,28 @@ jobs:
         run: npm run test:e2e:studies
         timeout-minutes: 5
 
+  # ── DOES THIS PULL REQUEST CHANGE ANYTHING BUT DOCS? ────────────────────────────────────────────
+  # dorny/paths-filter lists a PR's files from the API (no checkout). With `every`, a file counts as
+  # code only if it matches all three patterns: anything, but not root or docs/ Markdown.
+  changes:
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - "**"
+              - "!*.md"
+              - "!docs/**/*.md"
+
   # ── BUILDING THE PAPER WITH REAL pdflatex, ON LINUX AND macOS ──────────────────────────────────
   #
   # 🔴 ONE JOB, TWO OPERATING SYSTEMS. TeX Live comes from `paperlint toolchain` — the same command a user
@@ -220,8 +242,18 @@ jobs:
   # paper typeset in the wrong font. This repository is public, so the macOS minutes are free.
   #
   # `CI` is set: absence of TeX locally is a legitimate skip; here it is an environment failure.
+  #
+  # 🔴 EXCEPT A PULL REQUEST THAT CHANGES ONLY DOCS. A README or docs/*.md edit cannot change what
+  # this job builds, and it used to wait for TeX Live on two systems anyway (#343: one new
+  # docs/website.md). `changes` below decides; `gates` still runs on such a PR, because tests read
+  # the docs. On a push to main or a manual run `changes` does not run and this job always does.
   build-e2e:
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    needs: changes
+    # `!cancelled()`: without it a skipped `changes` (every push to main) would skip this job too.
+    if: >-
+      !cancelled() && (github.event_name != 'pull_request' ||
+      (github.event.pull_request.draft == false && needs.changes.result == 'success' &&
+      needs.changes.outputs.code == 'true'))
     strategy:
       fail-fast: false
       matrix:
