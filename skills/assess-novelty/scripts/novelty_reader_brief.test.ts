@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
+  symlinkSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -230,3 +231,18 @@ test("novelty_reader_brief", () => {
 
   console.log(`✓ novelty_reader_brief.harness — ${n} checks`);
 }, 300_000);
+
+// Consumers reach package scripts through a symlinked skill folder. Node resolves import.meta.url to the real file
+// but leaves argv[1] as the link, so a guard comparing the two never runs main(): exit 0, no output, read as success.
+test("novelty_reader_brief runs when started through a symlink", () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const dir = mkdtempSync(join(tmpdir(), "brief-link-"));
+  const link = join(dir, "novelty_reader_brief.ts");
+  symlinkSync(join(here, "novelty_reader_brief.ts"), link);
+  const r = spawnSync("node", [link], { encoding: "utf8" });
+  rmSync(dir, { recursive: true, force: true });
+  assert.deepEqual(
+    { code: r.status, usage: r.stderr.startsWith("usage: novelty_reader_brief.ts") },
+    { code: 1, usage: true },
+  );
+}, 120_000);

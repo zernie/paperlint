@@ -18,7 +18,7 @@
 //   node novelty_reader_brief.ts check <paper dir> <neighbour id>
 //       runs the coverage check on siblings/cells/<id>.json.  Exit 0: "coverage ok".  Exit 1: the errors.
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -206,5 +206,10 @@ function main(argv: string[]): number {
   return brief(paper, id, repairFile);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
+// realpath: a consumer starts this through a symlinked skill folder, where argv[1] is the link and
+// import.meta.url the real file; comparing them raw would skip main() and exit 0 with no output.
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === realpathSync(process.argv[1])
+)
   process.exit(main(process.argv.slice(2)));
