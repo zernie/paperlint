@@ -1,0 +1,63 @@
+When “Avoid” Is Not block: Safety Rules in
+AGENTS.md vs. Built-In Guards
+
+Example preprint, 05 Jan 2026
+
+Pat Doe
+
+Abstract—In AGENTS.md, “avoid” is a natural-language
+instruction that the model interprets. The agent’s block is
+a built-in guard that stops an action before the agent can take
+it. Both can express the same safety goal, but they control
+the agent in different ways. We measure this gap in 481 public
+AGENTS.md files. A model matched the extracted candidate rules
+against the documented guards, and two safety reviewers
+independently checked a sample without seeing the model’s
+answers or each other’s labels. Depending on how closely a guard
+had to match the written rule, only about 4–16%
+of the retrieved safety rules had a matching built-in guard.
+Under the strictest standard the estimate was 4.4% (95% CI:
+2.6–6.7%), and the two reviewers agreed closely on which rules
+had a match. A manual review of complete files found that our
+extraction method captured 66.3% of eligible safety rules; the
+reported rates therefore apply to the rules it captured. This is
+a usable safety problem: a rules file is a write-only channel. A
+developer writes a safety rule but gets no feedback on whether
+a guard will enforce it. The same plain-text form hides two
+kinds of rule: those a guard or sandbox can
+enforce, and those left to the model to interpret.
+
+I. INTRODUCTION
+Language models have lowered the barrier to building
+software. Many people now build applications and coding
+agents with little safety experience, and they increasingly
+direct those agents in natural language. Agent instruction files
+such as AGENTS.md extend this to safety:
+a developer writes a rule like “never print secrets,”
+“ask before deleting data,” or “only push through
+the review branch,” in plain prose, and the agent reads it. But
+this is a write-only channel. In ordinary software, stating a
+requirement comes with feedback that closes the loop: code
+
+numbers use only this rule-word pass. Our released code also
+includes an optional model step that can catch more rules, but
+we did not use it here.
+We measure rule-word-retrieval recall with a separate
+whole-file audit. The reviewer, a safety practitioner, reads
+a simple-random sample of 50 included files in full, blind
+to the candidate list and classifier outputs, and records
+every prospective safety rule that an agent could violate
+through its own action. A second scope pass over the recorded
+rows excludes text that only describes the current architecture
+or mechanism. This leaves 95 in-scope reference
+
+high pre-adjudication agreement as showing the labels can be
+reproduced under that guide, not as proof that the guide itself
+draws the boundary correctly.
+Extraction recall. Rule-word retrieval catches about two-
+thirds of the safety rules in a file. In the 50-file audit it
+finds 63 of 95 in-scope reference segments, a recall of 66.3%
+(file-clustered bootstrap 95% confidence interval [48.8, 82.0]).
+The 32 it misses are rules written as flat statements rather than
+commands, or rules using words outside the rule-word list. This does not change
+the denominator of the main estimate; it means the estimate

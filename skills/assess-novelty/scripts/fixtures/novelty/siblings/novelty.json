@@ -1,0 +1,54 @@
+{
+  "paper": "paper.tex",
+  "searched": [
+    {"source": "venue-pc", "how": "venue PC list, DBLP 2024-2026 of each member", "date": "2026-10-08"},
+    {"source": "prev-edition", "how": "previous edition accepted papers, titles and abstracts", "date": "2026-10-08"},
+    {"source": "arxiv-recent", "how": "arXiv cs.SE since 2026-01: AGENTS.md, rules files", "date": "2026-10-08"}
+  ],
+  "neighbours": [
+    {"id": "doe26", "cite": "doe2026rules", "source": "arxiv-recent", "read": "full",
+     "text": "siblings/data/doe-preprint.txt", "dates": {"first_public": "2026-01-05"},
+     "title": "When \"Avoid\" Is Not block: Safety Rules in AGENTS.md vs. Built-In Guards",
+     "url": "https://example.org/preprint/doe-2026",
+     "coverage": [{"lines": [1, 63], "quote": "We measure this gap in 481 public AGENTS.md files."}]}
+  ],
+  "claims": [
+    {"id": "R1", "ledger": "R1",
+     "sentence": "We report the recall of our rule finder on a human-segmented gold set.",
+     "type": "instrument",
+     "pieces": {
+       "population": "public agent rules files",
+       "object": "recall of the rule extractor",
+       "measure": "recall against a blind whole-file human audit"
+     },
+     "cells": {
+       "doe26": {
+         "population": {"has": "yes", "quote": "We measure this gap in 481 public AGENTS.md files."},
+         "object": {"has": "yes", "quote": "our extraction method captured 66.3% of eligible safety rules"},
+         "measure": {"has": "yes", "quote": "The reviewer, a safety practitioner, reads a simple-random sample of 50 included files in full"}
+       }
+     },
+     "objection_answer": "The finder's recall is reported as a property of our instrument, not as a first: Doe measured extraction recall (66.3%) before us."
+    },
+    {"id": "P5-1", "ledger": "P5-1",
+     "sentence": "In 50 repositories, the repository's own linter does not make 58.3% of lint-checkable requirements an error.",
+     "type": "installed-base",
+     "pieces": {
+       "population": "public agent rules files",
+       "object": "the repository's own committed linter configuration",
+       "measure": "share of lint-checkable requirements the linter does not make an error"
+     },
+     "cells": {
+       "doe26": {
+         "population": {"has": "yes", "quote": "We measure this gap in 481 public AGENTS.md files."},
+         "object": {"has": "no", "quote": null},
+         "measure": {"has": "no", "quote": null}
+       }
+     },
+     "objection_answer": "That rules are often unenforced is folklore; this is the first count against each repository's own linter configuration, at a fixed revision.",
+     "refutation": {"by": "fable", "date": "2026-10-27", "file": "siblings/2026-10-27-novelty-refutation.md", "verdict": "holds"}
+    }
+  ],
+  "paper_sentences": [],
+  "one_new_result": {"claim": "P5-1", "diluted_by": []}
+}

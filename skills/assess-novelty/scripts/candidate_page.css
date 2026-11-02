@@ -1,0 +1,31 @@
+/* Material Ocean, the palette of the candidate decision page.
+   candidate_page.ts inlines this file at the top of the page's <style>. Dark only, on
+   purpose: the page commits to one look, so every color below is set explicitly and nothing depends on the
+   viewer's theme. No purple anywhere: Material Ocean's purple (#C792EA) is left out of the set. */
+:root {
+  color-scheme: dark;
+  --bg: #0f111a; /* page */
+  --surface: #1a1c25; /* the one raised block a section may have (a decision box, a table) */
+  --line: #262a3a; /* hairlines between sections and around the raised block */
+  --text: #a6accd; /* body */
+  --muted: #7e84a3; /* captions, metadata (4.8:1 on --bg; Ocean's own comment grey is too faint to read) */
+  --strong: #eeffff; /* headings and the current tab */
+  --accent: #82aaff; /* links, the current tab's underline, the primary button: the only accent */
+  --good: #c3e88d; /* "add", saved, passed */
+  --mark: #ffcb6b; /* highlighted passage, and warnings */
+  --bad: #f07178; /* errors only */
+  --mark-bg: rgba(255, 203, 107, 0.08);
+  --paper: #ffffff; /* only behind a page image (a PDF crop), never a page surface */
+  --sans: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Roboto Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --gap-section: 48px; /* between sections */
+  --gap-item: 16px; /* between items inside a section */
+  --measure: 68ch; /* longest line of running text */
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+}
