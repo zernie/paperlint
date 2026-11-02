@@ -135,6 +135,16 @@ const RATCHET = {
   "skills/plan-paper-timeline/fixtures/fake-google-calendar.ts": {
     "max-lines-per-function": 31,
   },
+  "skills/assess-novelty/scripts/candidate_page.harness.ts": {
+    "max-lines-per-function": 138,
+  },
+  "skills/assess-novelty/scripts/candidate_page.ts": {
+    "max-lines-per-function": 55,
+  },
+  "skills/assess-novelty/scripts/novelty_reader_brief.ts": {
+    "max-lines-per-function": 32,
+    "max-params": 5,
+  },
   "src/adapters/curl/download.io.ts": { "max-lines-per-function": 39 },
   "src/adapters/references/index.ts": { "max-lines-per-function": 36 },
   "src/build-engine.ts": { "max-lines-per-function": 33 },
@@ -666,6 +676,28 @@ export default [
   {
     files: TEST_FILES,
     rules: { "max-lines-per-function": ["error", MAX_LINES_TESTS] },
+  },
+  // 🔴 DEBT, NOT A PERMISSION. The novelty-check scripts and their harnesses were moved from a consumer
+  // repository AS THEY WERE (the 2026-11-02 decision): untyped JSON in, `any` throughout. Making them pass the
+  // type-safety rules below means rewriting them, which is paperlint#339 (TypeScript rewrite of the Python
+  // checkers) and paperlint#338 (the regex priority-sentence detector). Only the rules that need typed data
+  // are off, only here; the rules about behaviour (`complexity`, `max-depth`, `no-empty`, ...) still apply.
+  // Delete this block with the rewrite.
+  {
+    files: ["skills/assess-novelty/scripts/*.ts"],
+    rules: {
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/consistent-type-assertions": "off",
+      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
+      "@typescript-eslint/no-confusing-void-expression": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+    },
   },
   // Hexagonal layers, both axes (src/CLAUDE.md): knowledge by element, purity by file category.
   IO_GLOBALS,

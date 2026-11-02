@@ -37,7 +37,9 @@ export const lineCount = (text: string): number =>
 /** Share of non-blank lines with a 6+ space gap: two page columns glued into one line by `pdftotext -layout`. */
 export const glue = (text: string): number => {
   const lines = text.split("\n").filter((l) => l.trim() !== "");
-  return lines.length === 0 ? 0 : lines.filter((l) => /\S {6,}\S/.test(l)).length / lines.length;
+  return lines.length === 0
+    ? 0
+    : lines.filter((l) => /\S {6,}\S/.test(l)).length / lines.length;
 };
 
 /**
@@ -47,7 +49,10 @@ export const glue = (text: string): number => {
 export const chunks = (n: number): [number, number][] => {
   const k = Math.ceil(n / CHUNK);
   const size = Math.ceil(n / k);
-  return Array.from({ length: k }, (_, i) => [i * size + 1, Math.min((i + 1) * size, n)]);
+  return Array.from({ length: k }, (_, i) => [
+    i * size + 1,
+    Math.min((i + 1) * size, n),
+  ]);
 };
 
 export const claimsText = (claims: Claim[]): string =>
@@ -101,15 +106,21 @@ const usage = () => {
   return 1;
 };
 
-function load(paper: string, id: string): { table: Table; n: Neighbour } | string {
+function load(
+  paper: string,
+  id: string,
+): { table: Table; n: Neighbour } | string {
   let table: Table;
   try {
-    table = JSON.parse(readFileSync(join(paper, "siblings", "novelty.json"), "utf8"));
+    table = JSON.parse(
+      readFileSync(join(paper, "siblings", "novelty.json"), "utf8"),
+    );
   } catch (e) {
     return `cannot read ${join(paper, "siblings", "novelty.json")}: ${(e as Error).message}`;
   }
   const n = (table.neighbours ?? []).find((x) => x.id === id);
-  if (!n) return `no neighbour ${id} in novelty.json (have: ${(table.neighbours ?? []).map((x) => x.id).join(", ")})`;
+  if (!n)
+    return `no neighbour ${id} in novelty.json (have: ${(table.neighbours ?? []).map((x) => x.id).join(", ")})`;
   return { table, n };
 }
 
@@ -127,7 +138,9 @@ function brief(paper: string, id: string, repairFile?: string): number {
   const { table, n } = got;
   const path = join(paper, n.text);
   if (!existsSync(path)) {
-    process.stderr.write(`text not ready: ${path} is missing; ${reextract(paper, n)}\n`);
+    process.stderr.write(
+      `text not ready: ${path} is missing; ${reextract(paper, n)}\n`,
+    );
     return 2;
   }
   const text = readFileSync(path, "utf8");
@@ -143,7 +156,9 @@ function brief(paper: string, id: string, repairFile?: string): number {
         .split("\n")
         .filter((l) => l.trim())
     : [];
-  process.stdout.write(`${readerBrief(paper, n, table.claims ?? [], lineCount(text), repair)}\n`);
+  process.stdout.write(
+    `${readerBrief(paper, n, table.claims ?? [], lineCount(text), repair)}\n`,
+  );
   return 0;
 }
 
@@ -160,7 +175,14 @@ function check(paper: string, id: string): number {
     "print(chr(10).join(e) or 'coverage ok');sys.exit(1 if e else 0)";
   const r = spawnSync(
     "python3",
-    ["-I", "-c", py, join(paper, "siblings", "cells", `${id}.json`), join(paper, got.n.text), TOOLS],
+    [
+      "-I",
+      "-c",
+      py,
+      join(paper, "siblings", "cells", `${id}.json`),
+      join(paper, got.n.text),
+      TOOLS,
+    ],
     { encoding: "utf8" },
   );
   process.stdout.write(r.stdout);
@@ -169,10 +191,20 @@ function check(paper: string, id: string): number {
 }
 
 function main(argv: string[]): number {
-  if (argv[0] === "check") return argv.length === 3 ? check(argv[1], argv[2]) : usage();
+  const [, checkPaper, checkId] = argv;
+  if (argv[0] === "check")
+    return argv.length === 3 && checkPaper && checkId
+      ? check(checkPaper, checkId)
+      : usage();
   const [paper, id, flag, repairFile] = argv;
-  if (!paper || !id || (flag !== undefined && (flag !== "--repair" || !repairFile))) return usage();
+  if (
+    !paper ||
+    !id ||
+    (flag !== undefined && (flag !== "--repair" || !repairFile))
+  )
+    return usage();
   return brief(paper, id, repairFile);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) process.exit(main(process.argv.slice(2)));
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
+  process.exit(main(process.argv.slice(2)));

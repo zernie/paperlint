@@ -30,3 +30,7 @@ projectStructure.cache.json
 
 # TeX's own output, captured whole as the readers' test inputs (test/fixtures/tex-output/README.md).
 !test/fixtures/tex-output/*/*
+
+# Python bytecode: the novelty checkers (skills/assess-novelty/scripts) are Python
+__pycache__/
+*.pyc

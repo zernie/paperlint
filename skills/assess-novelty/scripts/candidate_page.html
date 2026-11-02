@@ -1,372 +1,934 @@
 <title>__TITLE__</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400&display=swap">
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400&display=swap"
+/>
 <style>
-/* Look: Material Ocean, minimal; candidate_page.css is inlined below by candidate_page.ts.
+  /* Look: Material Ocean, minimal; candidate_page.css is inlined below by candidate_page.ts.
    Layout: sticky header (title, progress, send) over a one-row underline tab strip; one column per tab: the
    work, why it came up, each passage as its page image + the words + what it means, then the one raised block,
    the decision. */
-__OCEAN__
-.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
-header .wrap{padding-block:20px 0;display:flex;flex-direction:column;gap:14px}
-.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
-h1{margin:0;font-size:1.25rem;font-weight:500;color:var(--strong);line-height:1.3;text-wrap:balance}
-.progress{font-family:var(--mono);font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.sendrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.status{font-size:.9rem;color:var(--muted)}
-.status.warn{color:var(--mark)}
-.status.good{color:var(--good)}
-nav{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
-nav::-webkit-scrollbar{display:none}
-.tab{font:inherit;font-size:.95rem;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:6px 0 12px;cursor:pointer;white-space:nowrap;display:inline-flex;gap:8px;align-items:center;min-height:44px}
-.tab[aria-selected="true"]{color:var(--strong);border-bottom-color:var(--accent)}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--line);flex:none}
-.dot.add{background:var(--good)} .dot.cite{background:var(--accent)} .dot.skip{background:var(--muted)}
-main .wrap{padding-block:32px 96px;display:flex;flex-direction:column;gap:var(--gap-section)}
-section{display:flex;flex-direction:column;gap:var(--gap-item)}
-section + section{border-top:1px solid var(--line);padding-top:var(--gap-section)}
-h2{margin:0;font-size:1.5rem;font-weight:500;color:var(--strong);line-height:1.3;text-wrap:balance}
-h3{margin:0;font-size:.75rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-p{margin:0;max-width:var(--measure)}
-.meta{font-family:var(--mono);font-size:.85rem;color:var(--muted)}
-a{color:var(--accent)}
-.links{display:flex;flex-wrap:wrap;gap:24px}
-.links a{text-decoration:none;font-weight:500;min-height:44px;display:inline-flex;align-items:center}
-.links a:hover,.links a:focus-visible{text-decoration:underline}
-figure{margin:0;display:flex;flex-direction:column;gap:12px;min-width:0}
-figure + figure{margin-top:calc(var(--gap-section) - var(--gap-item))}
-figure img{width:100%;height:auto;border-radius:8px;background:var(--paper);display:block}
-figcaption{font-family:var(--mono);font-size:.85rem;color:var(--muted)}
-.claimtext{color:var(--muted);font-size:.9rem;max-width:var(--measure)}
-blockquote{margin:0;padding:12px 16px;border-left:2px solid var(--mark);background:var(--mark-bg);color:var(--strong);max-width:var(--measure)}
-.raised{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:var(--gap-item)}
-.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-.choice{font:inherit;text-align:left;background:transparent;border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:var(--text);cursor:pointer;display:flex;flex-direction:column;gap:4px;min-height:44px}
-.choice b{color:var(--strong);font-weight:500}
-.choice span{font-size:.85rem;color:var(--muted)}
-.choice[aria-pressed="true"].add{border:2px solid var(--good)}
-.choice[aria-pressed="true"].cite{border:2px solid var(--accent)}
-.choice[aria-pressed="true"].skip{border:2px solid var(--muted)}
-.choice:disabled{opacity:.5;cursor:default}
-label{font-size:.9rem;color:var(--muted)}
-textarea{font:inherit;width:100%;box-sizing:border-box;min-height:72px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
-.row{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
-.btn{font:inherit;font-weight:500;background:var(--accent);color:var(--bg);border:1px solid var(--accent);border-radius:8px;padding:10px 18px;cursor:pointer;min-height:44px}
-.btn.quiet{background:transparent;color:var(--accent)}
-.btn:disabled{opacity:.5;cursor:default}
-.banner{border:1px solid var(--mark);color:var(--mark);border-radius:8px;padding:12px 16px}
-.tablebox{overflow-x:auto}
-.own{display:flex;flex-direction:column;gap:12px}
-.own + .own{margin-top:calc(var(--gap-section) - var(--gap-item))}
-details{display:flex;flex-direction:column;gap:12px}
-details > p + p, .own > p + p{margin-top:0}
-summary{color:var(--accent);font-weight:500;cursor:pointer;min-height:44px;display:flex;align-items:center;list-style:none}
-summary::-webkit-details-marker{display:none}
-details[open] > summary{margin-bottom:12px}
-table{border-collapse:collapse;width:100%}
-th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-tr:last-child td{border-bottom:0}
-th{white-space:nowrap;font-size:.75rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-td a{text-decoration:none;color:var(--strong)}
-td .meta{margin-top:4px}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+  __OCEAN__ .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    height: env(safe-area-inset-top, 0px);
+    z-index: 10;
+    background: var(--bg);
+  }
+  header {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 5;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  header .wrap {
+    padding-block: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--strong);
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+  .progress {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .sendrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .status {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .status.warn {
+    color: var(--mark);
+  }
+  .status.good {
+    color: var(--good);
+  }
+  nav {
+    display: flex;
+    gap: 28px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar {
+    display: none;
+  }
+  .tab {
+    font: inherit;
+    font-size: 0.95rem;
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    padding: 6px 0 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    min-height: 44px;
+  }
+  .tab[aria-selected="true"] {
+    color: var(--strong);
+    border-bottom-color: var(--accent);
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--line);
+    flex: none;
+  }
+  .dot.add {
+    background: var(--good);
+  }
+  .dot.cite {
+    background: var(--accent);
+  }
+  .dot.skip {
+    background: var(--muted);
+  }
+  main .wrap {
+    padding-block: 32px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-section);
+  }
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-item);
+  }
+  section + section {
+    border-top: 1px solid var(--line);
+    padding-top: var(--gap-section);
+  }
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--strong);
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+  h3 {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  p {
+    margin: 0;
+    max-width: var(--measure);
+  }
+  .meta {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  a {
+    color: var(--accent);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  .links a {
+    text-decoration: none;
+    font-weight: 500;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .links a:hover,
+  .links a:focus-visible {
+    text-decoration: underline;
+  }
+  figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+  figure + figure {
+    margin-top: calc(var(--gap-section) - var(--gap-item));
+  }
+  figure img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background: var(--paper);
+    display: block;
+  }
+  figcaption {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .claimtext {
+    color: var(--muted);
+    font-size: 0.9rem;
+    max-width: var(--measure);
+  }
+  blockquote {
+    margin: 0;
+    padding: 12px 16px;
+    border-left: 2px solid var(--mark);
+    background: var(--mark-bg);
+    color: var(--strong);
+    max-width: var(--measure);
+  }
+  .raised {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-item);
+  }
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .choice {
+    font: inherit;
+    text-align: left;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 44px;
+  }
+  .choice b {
+    color: var(--strong);
+    font-weight: 500;
+  }
+  .choice span {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .choice[aria-pressed="true"].add {
+    border: 2px solid var(--good);
+  }
+  .choice[aria-pressed="true"].cite {
+    border: 2px solid var(--accent);
+  }
+  .choice[aria-pressed="true"].skip {
+    border: 2px solid var(--muted);
+  }
+  .choice:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  label {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  textarea {
+    font: inherit;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 72px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    align-items: center;
+  }
+  .btn {
+    font: inherit;
+    font-weight: 500;
+    background: var(--accent);
+    color: var(--bg);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  .btn.quiet {
+    background: transparent;
+    color: var(--accent);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .banner {
+    border: 1px solid var(--mark);
+    color: var(--mark);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .tablebox {
+    overflow-x: auto;
+  }
+  .own {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .own + .own {
+    margin-top: calc(var(--gap-section) - var(--gap-item));
+  }
+  details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  details > p + p,
+  .own > p + p {
+    margin-top: 0;
+  }
+  summary {
+    color: var(--accent);
+    font-weight: 500;
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  details[open] > summary {
+    margin-bottom: 12px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  tr:last-child td {
+    border-bottom: 0;
+  }
+  th {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  td a {
+    text-decoration: none;
+    color: var(--strong);
+  }
+  td .meta {
+    margin-top: 4px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+    }
+  }
 </style>
-<header><div class="wrap">
-  <div class="top">
-    <h1 id="title"></h1>
-    <div class="sendrow">
-      <span class="progress" id="progress"></span>
-      <button class="btn" id="send" type="button">Send decisions to Claude</button>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <h1 id="title"></h1>
+      <div class="sendrow">
+        <span class="progress" id="progress"></span>
+        <button class="btn" id="send" type="button">
+          Send decisions to Claude
+        </button>
+      </div>
     </div>
+    <div class="status" id="sendstatus"></div>
+    <nav id="tabs" role="tablist"></nav>
   </div>
-  <div class="status" id="sendstatus"></div>
-  <nav id="tabs" role="tablist"></nav>
-</div></header>
+</header>
 <main><div class="wrap" id="view"></div></main>
-<script type="application/json" id="data">__DATA__</script>
+<script type="application/json" id="data">
+  __DATA__
+</script>
 <script>
-(function () {
-  "use strict";
-  var DATA = JSON.parse(document.getElementById("data").textContent);
-  var CHOICES = [
-    ["add", "Add as neighbour", "I read it in full and add it to the novelty table"],
-    ["cite", "Cite only", "Not a neighbour; the paper should cite it"],
-    ["skip", "Skip", "Not relevant; say why"]
-  ];
-  var state = { saved: {}, store: "loading", drafts: {}, pending: {}, failed: {}, mcp: null, send: "" };
-  var db = null;
-  var byId = {};
-  DATA.candidates.forEach(function (c) { byId[c.id] = c; });
+  (function () {
+    "use strict";
+    var DATA = JSON.parse(document.getElementById("data").textContent);
+    var CHOICES = [
+      [
+        "add",
+        "Add as neighbour",
+        "I read it in full and add it to the novelty table",
+      ],
+      ["cite", "Cite only", "Not a neighbour; the paper should cite it"],
+      ["skip", "Skip", "Not relevant; say why"],
+    ];
+    var state = {
+      saved: {},
+      store: "loading",
+      drafts: {},
+      pending: {},
+      failed: {},
+      mcp: null,
+      send: "",
+    };
+    var db = null;
+    var byId = {};
+    DATA.candidates.forEach(function (c) {
+      byId[c.id] = c;
+    });
 
-  function el(tag, cls, text) {
-    var e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text !== undefined && text !== null) e.textContent = text;
-    return e;
-  }
-  function section(heading) {
-    var s = el("section");
-    if (heading) s.appendChild(el("h3", "", heading));
-    return s;
-  }
-  function decisionOf(id) { return state.saved[id] || (byId[id] && byId[id].decision) || null; }
-  function decided() { return DATA.candidates.filter(function (c) { return decisionOf(c.id); }); }
-  function current() {
-    var h = (location.hash || "").slice(1);
-    return byId[h] ? h : "overview";
-  }
-  function time(iso) {
-    try { return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch (e) { return iso; }
-  }
-  function byline(c) { return [c.authors, c.venue, c.year].filter(Boolean).join(" · "); }
-  function canWrite() { return db && state.store === "ok"; }
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text !== undefined && text !== null) e.textContent = text;
+      return e;
+    }
+    function section(heading) {
+      var s = el("section");
+      if (heading) s.appendChild(el("h3", "", heading));
+      return s;
+    }
+    function decisionOf(id) {
+      return state.saved[id] || (byId[id] && byId[id].decision) || null;
+    }
+    function decided() {
+      return DATA.candidates.filter(function (c) {
+        return decisionOf(c.id);
+      });
+    }
+    function current() {
+      var h = (location.hash || "").slice(1);
+      return byId[h] ? h : "overview";
+    }
+    function time(iso) {
+      try {
+        return new Date(iso).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } catch (e) {
+        return iso;
+      }
+    }
+    function byline(c) {
+      return [c.authors, c.venue, c.year].filter(Boolean).join(" · ");
+    }
+    function canWrite() {
+      return db && state.store === "ok";
+    }
 
-  function save(id, choice) {
-    var reason = (state.drafts[id] !== undefined ? state.drafts[id] : ((decisionOf(id) || {}).reason || "")).trim();
-    if (choice === "skip" && !reason) {
-      state.failed[id] = "Skip needs a reason: type it above, then press Skip again.";
+    function save(id, choice) {
+      var reason = (
+        state.drafts[id] !== undefined
+          ? state.drafts[id]
+          : (decisionOf(id) || {}).reason || ""
+      ).trim();
+      if (choice === "skip" && !reason) {
+        state.failed[id] =
+          "Skip needs a reason: type it above, then press Skip again.";
+        render();
+        var t = document.getElementById("reason-" + id);
+        if (t) t.focus();
+        return;
+      }
+      var doc = {
+        choice: choice,
+        reason: reason,
+        at: new Date().toISOString(),
+        source: "page",
+      };
+      state.pending[id] = true;
+      delete state.failed[id];
       render();
-      var t = document.getElementById("reason-" + id);
-      if (t) t.focus();
+      db.collection("decisions")
+        .doc(id)
+        .set(doc)
+        .then(
+          function () {
+            state.saved[id] = doc;
+            delete state.pending[id];
+            // Only the text that was sent is now saved; a reason typed while the save was in flight stays a draft.
+            if (
+              state.drafts[id] !== undefined &&
+              state.drafts[id].trim() === reason
+            )
+              delete state.drafts[id];
+            render();
+          },
+          function (e) {
+            delete state.pending[id];
+            state.failed[id] =
+              "Not saved (" +
+              ((e && e.code) || "store unavailable") +
+              "). Try again.";
+            render();
+          },
+        );
+    }
+
+    function renderTabs() {
+      var tabs = document.getElementById("tabs");
+      tabs.textContent = "";
+      var cur = current();
+      var add = function (id, label, choice) {
+        var b = el("button", "tab");
+        b.type = "button";
+        b.setAttribute("role", "tab");
+        b.setAttribute("aria-selected", String(cur === id));
+        if (id !== "overview")
+          b.appendChild(el("span", "dot" + (choice ? " " + choice : "")));
+        b.appendChild(el("span", "", label));
+        b.addEventListener("click", function () {
+          location.hash = id;
+        });
+        tabs.appendChild(b);
+      };
+      add("overview", "Overview");
+      DATA.candidates.forEach(function (c) {
+        var d = decisionOf(c.id);
+        add(
+          c.id,
+          (c.authors || c.id).split(/[ ,]/)[0] + " " + (c.year || ""),
+          d && d.choice,
+        );
+      });
+    }
+
+    function overview(view) {
+      var intro = section();
+      intro.appendChild(el("h2", "", "Works waiting for your call"));
+      intro.appendChild(
+        el(
+          "p",
+          "",
+          "Each tab is one work a refutation pass or a search turned up. Look at the highlighted passages, then " +
+            "choose: add it as a neighbour, cite it only, or skip it with a reason. A choice saves when you press it.",
+        ),
+      );
+      view.appendChild(intro);
+      var s = section(),
+        box = el("div", "raised tablebox"),
+        t = el("table"),
+        head = el("tr");
+      ["Work", "Came up for", "I suggest", "Your call"].forEach(function (h) {
+        head.appendChild(el("th", "", h));
+      });
+      t.appendChild(head);
+      DATA.candidates.forEach(function (c) {
+        var tr = el("tr"),
+          w = el("td"),
+          a = el("a", "", c.title);
+        a.href = "#" + c.id;
+        w.appendChild(a);
+        w.appendChild(el("div", "meta", byline(c)));
+        tr.appendChild(w);
+        tr.appendChild(
+          el(
+            "td",
+            "",
+            (c.found_by || [])
+              .map(function (f) {
+                return f.claim || "the paper's own references";
+              })
+              .join(", "),
+          ),
+        );
+        tr.appendChild(el("td", "", c.suggestion));
+        var d = decisionOf(c.id);
+        tr.appendChild(el("td", "", d ? d.choice : "not decided"));
+        t.appendChild(tr);
+      });
+      box.appendChild(t);
+      s.appendChild(box);
+      view.appendChild(s);
+      var used = {};
+      DATA.candidates.forEach(function (c) {
+        c.passages.forEach(function (x) {
+          if (x.claim) used[x.claim] = true;
+        });
+      });
+      var ids = Object.keys(used)
+        .filter(function (k) {
+          return DATA.claims[k];
+        })
+        .sort();
+      if (ids.length) {
+        var cl = section("The claims these passages bear on");
+        ids.forEach(function (k) {
+          cl.appendChild(el("p", "claimtext", k + ": " + DATA.claims[k]));
+        });
+        view.appendChild(cl);
+      }
+    }
+
+    function candidate(view, c) {
+      var head = section();
+      head.appendChild(el("h2", "", c.title));
+      head.appendChild(el("p", "meta", byline(c)));
+      var links = el("div", "links");
+      if (c.pdf) {
+        var p = el("a", "", "Open the PDF");
+        p.href = c.pdf;
+        p.target = "_blank";
+        p.rel = "noopener";
+        links.appendChild(p);
+      }
+      if (c.url) {
+        var s = el("a", "", "Source page");
+        s.href = c.url;
+        s.target = "_blank";
+        s.rel = "noopener";
+        links.appendChild(s);
+      }
+      head.appendChild(links);
+      head.appendChild(el("p", "", c.summary));
+      view.appendChild(head);
+
+      // What the authors say about their own work, before any passage I picked (at the top).
+      var words = section("In the authors' words");
+      [
+        ["Abstract", c.abstract],
+        ["Conclusion", c.conclusion],
+      ].forEach(function (part) {
+        var o = el("div", "own"),
+          paras = part[1].text.split(/\n\s*\n/).filter(function (t) {
+            return t.trim();
+          });
+        o.id = "own-" + c.id + "-" + part[0].toLowerCase();
+        o.appendChild(
+          el("figcaption", "", part[0] + "  ·  PDF p. " + part[1].page),
+        );
+        o.appendChild(el("p", "", paras[0]));
+        if (paras.length > 1) {
+          var more = el("details");
+          more.appendChild(
+            el(
+              "summary",
+              "",
+              "The rest of the " +
+                part[0].toLowerCase() +
+                " (" +
+                (paras.length - 1) +
+                " more paragraph" +
+                (paras.length > 2 ? "s" : "") +
+                ")",
+            ),
+          );
+          paras.slice(1).forEach(function (t) {
+            more.appendChild(el("p", "", t));
+          });
+          o.appendChild(more);
+        }
+        words.appendChild(o);
+      });
+      view.appendChild(words);
+
+      var why = section("Why it came up");
+      (c.found_by || []).forEach(function (f) {
+        why.appendChild(
+          el(
+            "p",
+            "",
+            f.claim
+              ? "The refutation pass for " +
+                  f.claim +
+                  " named it (" +
+                  f.file.split("/").pop() +
+                  ")."
+              : f.source,
+          ),
+        );
+      });
+      view.appendChild(why);
+
+      var ps = section("What it says, on the page");
+      c.passages.forEach(function (x) {
+        var f = el("figure", "passage");
+        var img = el("img");
+        img.src = x.img;
+        img.alt = "Page " + x.page + ", passage highlighted: " + x.quote;
+        img.loading = "lazy";
+        f.appendChild(img);
+        f.appendChild(
+          el(
+            "figcaption",
+            "",
+            "PDF p. " + x.page + (x.claim ? "  ·  " + x.claim : ""),
+          ),
+        );
+        f.appendChild(el("blockquote", "", x.quote));
+        f.appendChild(el("p", "", x.meaning));
+        ps.appendChild(f);
+      });
+      view.appendChild(ps);
+
+      var dec = section("Your call"),
+        box = el("div", "raised"),
+        d = decisionOf(c.id),
+        off = !canWrite() || state.pending[c.id];
+      box.appendChild(
+        el(
+          "p",
+          "",
+          "I suggest " +
+            c.suggestion +
+            (c.suggestion_why ? ": " + c.suggestion_why : "."),
+        ),
+      );
+      var row = el("div", "choices");
+      CHOICES.forEach(function (ch) {
+        var b = el("button", "choice " + ch[0]);
+        b.type = "button";
+        b.id = "choice-" + c.id + "-" + ch[0];
+        b.setAttribute("aria-pressed", String(!!d && d.choice === ch[0]));
+        b.disabled = !!off;
+        b.appendChild(el("b", "", ch[1]));
+        b.appendChild(el("span", "", ch[2]));
+        b.addEventListener("click", function () {
+          save(c.id, ch[0]);
+        });
+        row.appendChild(b);
+      });
+      var lab = el("label", "", "Reason (needed for Skip)");
+      lab.htmlFor = "reason-" + c.id;
+      var ta = el("textarea");
+      ta.id = "reason-" + c.id;
+      ta.value =
+        state.drafts[c.id] !== undefined
+          ? state.drafts[c.id]
+          : (d && d.reason) || "";
+      ta.disabled = !canWrite();
+      ta.addEventListener("input", function () {
+        state.drafts[c.id] = ta.value;
+      });
+      box.appendChild(lab);
+      box.appendChild(ta);
+      box.appendChild(row);
+      var foot = el("div", "row");
+      if (d) {
+        var up = el("button", "btn quiet", "Save the reason");
+        up.type = "button";
+        up.id = "save-reason-" + c.id;
+        up.disabled = !!off;
+        up.addEventListener("click", function () {
+          save(c.id, d.choice);
+        });
+        foot.appendChild(up);
+      }
+      foot.appendChild(
+        state.failed[c.id]
+          ? el("span", "status warn", state.failed[c.id])
+          : el(
+              "span",
+              "status" + (d ? " good" : ""),
+              state.pending[c.id]
+                ? "Saving…"
+                : d
+                  ? state.saved[c.id]
+                    ? "Saved " + time(d.at)
+                    : "Recorded in the repo " + time(d.at)
+                  : "Not decided yet",
+            ),
+      );
+      box.appendChild(foot);
+      dec.appendChild(box);
+      view.appendChild(dec);
+    }
+
+    function render() {
+      document.getElementById("title").textContent =
+        "Neighbour candidates · " + DATA.paper;
+      var n = decided().length,
+        total = DATA.candidates.length;
+      document.getElementById("progress").textContent =
+        n + " of " + total + " decided";
+      var send = document.getElementById("send");
+      send.hidden = !state.mcp || !DATA.session;
+      // A decision still saving would reach Claude as the previous one, so Send waits for every write.
+      send.disabled = n === 0 || state.send === "sending" || saving();
+      var st = document.getElementById("sendstatus");
+      st.textContent =
+        state.send && state.send !== "sending"
+          ? state.send
+          : state.send === "sending"
+            ? "Sending…"
+            : state.mcp && DATA.session
+              ? ""
+              : "When you are done, tell Claude in chat; your choices are already saved.";
+      st.hidden = !st.textContent;
+      renderTabs();
+      var view = document.getElementById("view");
+      view.textContent = "";
+      if (state.store === "none") {
+        view.appendChild(
+          el(
+            "div",
+            "banner",
+            "Choices cannot be saved in this view, so it is read-only. Open the page from its claude.ai link, signed in.",
+          ),
+        );
+      } else if (state.store === "loading") {
+        view.appendChild(el("p", "status", "Loading saved choices…"));
+      }
+      var cur = current();
+      if (cur === "overview") overview(view);
+      else candidate(view, byId[cur]);
+    }
+
+    function saving() {
+      return Object.keys(state.pending).length > 0;
+    }
+
+    function sendToClaude() {
+      if (saving()) return;
+      var lines = DATA.candidates.map(function (c) {
+        var d = decisionOf(c.id);
+        return (
+          "- " +
+          c.id +
+          ": " +
+          (d
+            ? d.choice + (d.reason ? " (" + d.reason + ")" : "")
+            : "not decided")
+        );
+      });
+      var message =
+        "Neighbour candidates for " +
+        DATA.paper +
+        ": choices are saved on the page " +
+        "(decisions collection). Read them with ArtifactData, export them and go on.\n" +
+        lines.join("\n");
+      state.send = "sending";
+      render();
+      state.mcp
+        .callTool("Claude Code Remote", "send_message", {
+          session_id: DATA.session,
+          message: message,
+        })
+        .then(
+          function () {
+            state.send =
+              "Sent to Claude at " + time(new Date().toISOString()) + ".";
+            render();
+          },
+          function (e) {
+            var code = (e && e.code) || "upstream_error";
+            var fix =
+              {
+                server_not_connected:
+                  "Claude Code Remote is not connected for you: add it in claude.ai Settings, Connectors, or tell Claude in chat.",
+                needs_reauth:
+                  "Reconnect Claude Code Remote in claude.ai Settings, Connectors, or tell Claude in chat.",
+                approval_required:
+                  "The page needs your approval to message Claude; press the button again and allow it, or tell Claude in chat.",
+                not_in_manifest:
+                  "Messaging Claude is turned off for this page; tell Claude in chat.",
+              }[code] ||
+              "Could not send (" +
+                code +
+                "). It may have arrived anyway; tell Claude in chat to be sure.";
+            state.send = fix;
+            render();
+          },
+        );
+    }
+    document.getElementById("send").addEventListener("click", sendToClaude);
+    window.addEventListener("hashchange", function () {
+      render();
+      window.scrollTo(0, 0);
+    });
+
+    render();
+    if (!window.claude || typeof window.claude.use !== "function") {
+      state.store = "none";
+      render();
       return;
     }
-    var doc = { choice: choice, reason: reason, at: new Date().toISOString(), source: "page" };
-    state.pending[id] = true;
-    delete state.failed[id];
-    render();
-    db.collection("decisions").doc(id).set(doc).then(function () {
-      state.saved[id] = doc;
-      delete state.pending[id];
-      // Only the text that was sent is now saved; a reason typed while the save was in flight stays a draft.
-      if (state.drafts[id] !== undefined && state.drafts[id].trim() === reason) delete state.drafts[id];
-      render();
-    }, function (e) {
-      delete state.pending[id];
-      state.failed[id] = "Not saved (" + ((e && e.code) || "store unavailable") + "). Try again.";
-      render();
-    });
-  }
-
-  function renderTabs() {
-    var tabs = document.getElementById("tabs");
-    tabs.textContent = "";
-    var cur = current();
-    var add = function (id, label, choice) {
-      var b = el("button", "tab");
-      b.type = "button";
-      b.setAttribute("role", "tab");
-      b.setAttribute("aria-selected", String(cur === id));
-      if (id !== "overview") b.appendChild(el("span", "dot" + (choice ? " " + choice : "")));
-      b.appendChild(el("span", "", label));
-      b.addEventListener("click", function () { location.hash = id; });
-      tabs.appendChild(b);
-    };
-    add("overview", "Overview");
-    DATA.candidates.forEach(function (c) {
-      var d = decisionOf(c.id);
-      add(c.id, (c.authors || c.id).split(/[ ,]/)[0] + " " + (c.year || ""), d && d.choice);
-    });
-  }
-
-  function overview(view) {
-    var intro = section();
-    intro.appendChild(el("h2", "", "Works waiting for your call"));
-    intro.appendChild(el("p", "",
-      "Each tab is one work a refutation pass or a search turned up. Look at the highlighted passages, then " +
-      "choose: add it as a neighbour, cite it only, or skip it with a reason. A choice saves when you press it."));
-    view.appendChild(intro);
-    var s = section(), box = el("div", "raised tablebox"), t = el("table"), head = el("tr");
-    ["Work", "Came up for", "I suggest", "Your call"].forEach(function (h) { head.appendChild(el("th", "", h)); });
-    t.appendChild(head);
-    DATA.candidates.forEach(function (c) {
-      var tr = el("tr"), w = el("td"), a = el("a", "", c.title);
-      a.href = "#" + c.id;
-      w.appendChild(a);
-      w.appendChild(el("div", "meta", byline(c)));
-      tr.appendChild(w);
-      tr.appendChild(el("td", "", (c.found_by || []).map(function (f) { return f.claim || "the paper's own references"; }).join(", ")));
-      tr.appendChild(el("td", "", c.suggestion));
-      var d = decisionOf(c.id);
-      tr.appendChild(el("td", "", d ? d.choice : "not decided"));
-      t.appendChild(tr);
-    });
-    box.appendChild(t);
-    s.appendChild(box);
-    view.appendChild(s);
-    var used = {};
-    DATA.candidates.forEach(function (c) { c.passages.forEach(function (x) { if (x.claim) used[x.claim] = true; }); });
-    var ids = Object.keys(used).filter(function (k) { return DATA.claims[k]; }).sort();
-    if (ids.length) {
-      var cl = section("The claims these passages bear on");
-      ids.forEach(function (k) { cl.appendChild(el("p", "claimtext", k + ": " + DATA.claims[k])); });
-      view.appendChild(cl);
-    }
-  }
-
-  function candidate(view, c) {
-    var head = section();
-    head.appendChild(el("h2", "", c.title));
-    head.appendChild(el("p", "meta", byline(c)));
-    var links = el("div", "links");
-    if (c.pdf) { var p = el("a", "", "Open the PDF"); p.href = c.pdf; p.target = "_blank"; p.rel = "noopener"; links.appendChild(p); }
-    if (c.url) { var s = el("a", "", "Source page"); s.href = c.url; s.target = "_blank"; s.rel = "noopener"; links.appendChild(s); }
-    head.appendChild(links);
-    head.appendChild(el("p", "", c.summary));
-    view.appendChild(head);
-
-    // What the authors say about their own work, before any passage I picked (at the top).
-    var words = section("In the authors' words");
-    [["Abstract", c.abstract], ["Conclusion", c.conclusion]].forEach(function (part) {
-      var o = el("div", "own"), paras = part[1].text.split(/\n\s*\n/).filter(function (t) { return t.trim(); });
-      o.id = "own-" + c.id + "-" + part[0].toLowerCase();
-      o.appendChild(el("figcaption", "", part[0] + "  ·  PDF p. " + part[1].page));
-      o.appendChild(el("p", "", paras[0]));
-      if (paras.length > 1) {
-        var more = el("details");
-        more.appendChild(el("summary", "", "The rest of the " + part[0].toLowerCase() + " (" + (paras.length - 1) + " more paragraph" + (paras.length > 2 ? "s" : "") + ")"));
-        paras.slice(1).forEach(function (t) { more.appendChild(el("p", "", t)); });
-        o.appendChild(more);
-      }
-      words.appendChild(o);
-    });
-    view.appendChild(words);
-
-    var why = section("Why it came up");
-    (c.found_by || []).forEach(function (f) {
-      why.appendChild(el("p", "", f.claim
-        ? "The refutation pass for " + f.claim + " named it (" + f.file.split("/").pop() + ")."
-        : f.source));
-    });
-    view.appendChild(why);
-
-    var ps = section("What it says, on the page");
-    c.passages.forEach(function (x) {
-      var f = el("figure", "passage");
-      var img = el("img");
-      img.src = x.img; img.alt = "Page " + x.page + ", passage highlighted: " + x.quote; img.loading = "lazy";
-      f.appendChild(img);
-      f.appendChild(el("figcaption", "", "PDF p. " + x.page + (x.claim ? "  ·  " + x.claim : "")));
-      f.appendChild(el("blockquote", "", x.quote));
-      f.appendChild(el("p", "", x.meaning));
-      ps.appendChild(f);
-    });
-    view.appendChild(ps);
-
-    var dec = section("Your call"), box = el("div", "raised"), d = decisionOf(c.id), off = !canWrite() || state.pending[c.id];
-    box.appendChild(el("p", "", "I suggest " + c.suggestion + (c.suggestion_why ? ": " + c.suggestion_why : ".")));
-    var row = el("div", "choices");
-    CHOICES.forEach(function (ch) {
-      var b = el("button", "choice " + ch[0]);
-      b.type = "button";
-      b.id = "choice-" + c.id + "-" + ch[0];
-      b.setAttribute("aria-pressed", String(!!d && d.choice === ch[0]));
-      b.disabled = !!off;
-      b.appendChild(el("b", "", ch[1]));
-      b.appendChild(el("span", "", ch[2]));
-      b.addEventListener("click", function () { save(c.id, ch[0]); });
-      row.appendChild(b);
-    });
-    var lab = el("label", "", "Reason (needed for Skip)");
-    lab.htmlFor = "reason-" + c.id;
-    var ta = el("textarea");
-    ta.id = "reason-" + c.id;
-    ta.value = state.drafts[c.id] !== undefined ? state.drafts[c.id] : ((d && d.reason) || "");
-    ta.disabled = !canWrite();
-    ta.addEventListener("input", function () { state.drafts[c.id] = ta.value; });
-    box.appendChild(lab);
-    box.appendChild(ta);
-    box.appendChild(row);
-    var foot = el("div", "row");
-    if (d) {
-      var up = el("button", "btn quiet", "Save the reason");
-      up.type = "button";
-      up.id = "save-reason-" + c.id;
-      up.disabled = !!off;
-      up.addEventListener("click", function () { save(c.id, d.choice); });
-      foot.appendChild(up);
-    }
-    foot.appendChild(state.failed[c.id]
-      ? el("span", "status warn", state.failed[c.id])
-      : el("span", "status" + (d ? " good" : ""), state.pending[c.id] ? "Saving…"
-        : d ? (state.saved[c.id] ? "Saved " + time(d.at) : "Recorded in the repo " + time(d.at)) : "Not decided yet"));
-    box.appendChild(foot);
-    dec.appendChild(box);
-    view.appendChild(dec);
-  }
-
-  function render() {
-    document.getElementById("title").textContent = "Neighbour candidates · " + DATA.paper;
-    var n = decided().length, total = DATA.candidates.length;
-    document.getElementById("progress").textContent = n + " of " + total + " decided";
-    var send = document.getElementById("send");
-    send.hidden = !state.mcp || !DATA.session;
-    // A decision still saving would reach Claude as the previous one, so Send waits for every write.
-    send.disabled = n === 0 || state.send === "sending" || saving();
-    var st = document.getElementById("sendstatus");
-    st.textContent = state.send && state.send !== "sending" ? state.send
-      : state.send === "sending" ? "Sending…"
-      : state.mcp && DATA.session ? "" : "When you are done, tell Claude in chat; your choices are already saved.";
-    st.hidden = !st.textContent;
-    renderTabs();
-    var view = document.getElementById("view");
-    view.textContent = "";
-    if (state.store === "none") {
-      view.appendChild(el("div", "banner",
-        "Choices cannot be saved in this view, so it is read-only. Open the page from its claude.ai link, signed in."));
-    } else if (state.store === "loading") {
-      view.appendChild(el("p", "status", "Loading saved choices…"));
-    }
-    var cur = current();
-    if (cur === "overview") overview(view); else candidate(view, byId[cur]);
-  }
-
-  function saving() { return Object.keys(state.pending).length > 0; }
-
-  function sendToClaude() {
-    if (saving()) return;
-    var lines = DATA.candidates.map(function (c) {
-      var d = decisionOf(c.id);
-      return "- " + c.id + ": " + (d ? d.choice + (d.reason ? " (" + d.reason + ")" : "") : "not decided");
-    });
-    var message = "Neighbour candidates for " + DATA.paper + ": choices are saved on the page " +
-      "(decisions collection). Read them with ArtifactData, export them and go on.\n" + lines.join("\n");
-    state.send = "sending";
-    render();
-    state.mcp.callTool("Claude Code Remote", "send_message", { session_id: DATA.session, message: message })
-      .then(function () {
-        state.send = "Sent to Claude at " + time(new Date().toISOString()) + ".";
+    window.claude.use("db").then(
+      function (store) {
+        if (!store) {
+          state.store = "none";
+          render();
+          return;
+        }
+        db = store;
+        db.collection("decisions").onSnapshot(
+          function (snap) {
+            var next = {};
+            snap.docs.forEach(function (d) {
+              next[d.id] = d.data();
+            });
+            state.saved = next;
+            state.store = "ok";
+            render();
+          },
+          function () {
+            state.store = "none";
+            render();
+          },
+        );
+      },
+      function () {
+        state.store = "none";
         render();
-      }, function (e) {
-        var code = (e && e.code) || "upstream_error";
-        var fix = {
-          server_not_connected: "Claude Code Remote is not connected for you: add it in claude.ai Settings, Connectors, or tell Claude in chat.",
-          needs_reauth: "Reconnect Claude Code Remote in claude.ai Settings, Connectors, or tell Claude in chat.",
-          approval_required: "The page needs your approval to message Claude; press the button again and allow it, or tell Claude in chat.",
-          not_in_manifest: "Messaging Claude is turned off for this page; tell Claude in chat."
-        }[code] || ("Could not send (" + code + "). It may have arrived anyway; tell Claude in chat to be sure.");
-        state.send = fix;
+      },
+    );
+    window.claude.use("mcp").then(
+      function (m) {
+        state.mcp = m;
         render();
-      });
-  }
-  document.getElementById("send").addEventListener("click", sendToClaude);
-  window.addEventListener("hashchange", function () { render(); window.scrollTo(0, 0); });
-
-  render();
-  if (!window.claude || typeof window.claude.use !== "function") { state.store = "none"; render(); return; }
-  window.claude.use("db").then(function (store) {
-    if (!store) { state.store = "none"; render(); return; }
-    db = store;
-    db.collection("decisions").onSnapshot(function (snap) {
-      var next = {};
-      snap.docs.forEach(function (d) { next[d.id] = d.data(); });
-      state.saved = next;
-      state.store = "ok";
-      render();
-    }, function () { state.store = "none"; render(); });
-  }, function () { state.store = "none"; render(); });
-  window.claude.use("mcp").then(function (m) { state.mcp = m; render(); }, function () {});
-})();
+      },
+      function () {},
+    );
+  })();
 </script>
