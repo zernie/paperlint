@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * `npm run check` — ONE command you run on yourself before pushing.
+ * `npm run check` — ONE command you run on yourself before a pull request leaves draft, and before merge.
  *
  * ── WHY IT EXISTS, AND IT IS A MEASURED FAILURE, NOT A TIDINESS IDEA ───────────────────────
  * On 2026-09-19 a change to a lint rule was pushed that broke the test suite.
