@@ -58,7 +58,7 @@ const shapeProblems = (paper: string): string => {
     );
     return "";
   } catch (e: any) {
-    return (e.stdout || e.message || "").trim();
+    return (e.stdout || e.message).trim();
   }
 };
 
