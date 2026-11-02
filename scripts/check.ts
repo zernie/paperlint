@@ -201,6 +201,9 @@ export function commandOf(gate: Gate): readonly [string, ...string[]] {
 export const NOT_COVERED: Readonly<Record<string, string>> = {
   // build-e2e's macOS cell is the one part of a covered job no local command can stand in for:
   // it exists because issue #9 appeared on macOS alone (/var is a symlink to /private/var).
+  changes:
+    "ci.yml asks dorny/paths-filter whether a pull request changes anything but docs, so " +
+    "build-e2e can skip; it checks nothing itself, and a local run always builds.",
   merge:
     "dependabot-automerge.yml merges the bot's own pull requests once CI is green. It checks " +
     "nothing itself; there is no local equivalent because it acts on GitHub, not on the tree.",
