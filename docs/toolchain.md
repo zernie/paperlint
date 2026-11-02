@@ -16,7 +16,7 @@ after deciding to use the tool, not before.
 | `texcount`           | TeX Live (`paperlint toolchain`) | render-paper, grade-paper-writing        | the length checks cannot run                                          |
 | `checkcites`         | TeX Live (`paperlint toolchain`) | render-paper                             | nothing asks whether a bibliography entry is uncited                  |
 | `java`               | any JRE (21 works)               | render-paper                             | TeXtidote does not run, and **nothing else spell-checks the text**    |
-| `python3`            | your system                      | the analysis and report scripts          | those scripts do not start                                            |
+| `python3`            | your system                      | assess-novelty, the analysis scripts     | those scripts do not start (`crop_quote.py` also needs `pymupdf`)     |
 | `tlmgr`              | TeX Live                         | the TeX installer itself                 | you cannot add a TeX package                                          |
 | `banal`              | HotCRP (`paperlint toolchain`)   | `paperlint build`, extract-pdf-facts     | page size, columns and font sizes are `null` in the facts file        |
 | `perl`               | your system (macOS has it)       | banal                                    | banal cannot run — the same `null`, and `paperlint toolchain` refuses |
