@@ -135,8 +135,28 @@ const RATCHET = {
   "skills/plan-paper-timeline/fixtures/fake-google-calendar.ts": {
     "max-lines-per-function": 31,
   },
-  "skills/assess-novelty/scripts/candidate_page.harness.ts": {
-    "max-lines-per-function": 138,
+  "skills/assess-novelty/scripts/candidate_page.test.ts": {
+    "max-lines-per-function": 342,
+    "max-nested-callbacks": 4,
+  },
+  "skills/assess-novelty/scripts/check_novelty.test.ts": {
+    "max-lines-per-function": 419,
+  },
+  "skills/assess-novelty/scripts/check_novelty_coverage.test.ts": {
+    "max-lines-per-function": 131,
+  },
+  "skills/assess-novelty/scripts/crop_quote.test.ts": {
+    "max-lines-per-function": 96,
+  },
+  "skills/assess-novelty/scripts/novelty_candidates.test.ts": {
+    "max-lines-per-function": 179,
+  },
+  "skills/assess-novelty/scripts/novelty_cells.test.ts": {
+    "max-lines-per-function": 117,
+  },
+  "skills/assess-novelty/scripts/novelty_reader_brief.test.ts": {
+    "max-lines-per-function": 180,
+    complexity: 11,
   },
   "skills/assess-novelty/scripts/candidate_page.ts": {
     "max-lines-per-function": 55,
