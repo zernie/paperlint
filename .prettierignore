@@ -28,3 +28,7 @@ skills/paper-pipeline/references/occupancy-2026-08-06-probe/
 # HotCRP deadlines pages, recorded whole (src/adapters/hotcrp/cassette/README.md): the bytes a live site
 # answered are the fixture; reformatting them would test the formatter, not the parser.
 src/adapters/hotcrp/cassette/*.html
+
+# The labelling page build-label-page generates: the generator inserts it as exact bytes, and the
+# skill's tests read its style and script as written.
+skills/build-label-page/scripts/page-template.html

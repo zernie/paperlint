@@ -19,6 +19,7 @@ import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { lockText, type LockEntry } from "./domain/versions.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
+import { PLAN_V2 } from "./domain/study-gates.ts";
 import {
   planTemplate,
   planText,
@@ -124,6 +125,54 @@ const STUDY_IN_MODE = (
         v,
       ]),
     ),
+  };
+};
+
+/**
+ * The registered study, done on a ready plan v2 — its claim lost below 0.5, kappa 0.6 on one step, a
+ * self-test, one drop reason — with `result` as its `result.json` (none when null).
+ */
+const DONE_ON_PLAN_V2 = (
+  result: Readonly<Record<string, unknown>> | null,
+): Readonly<Record<string, string>> => {
+  const r: StudyRegistry = {
+    ...REGISTRY,
+    studies: REGISTRY.studies.map((s) => ({
+      ...s,
+      status: "done",
+      result: "0.7 pass",
+      result_file: "README.md",
+      plan: "plan.json",
+    })),
+  };
+  const plan: StudyPlan = {
+    $schema: PLAN_V2,
+    question: "Which step does the work?",
+    population: { source: "tasks", draw: { kind: "all", method: "census" } },
+    arms: [],
+    primary_outcome: "pass rate",
+    author_check: null,
+    mode: {
+      kind: "exploratory",
+      reason: "the rule judges the result, not the order",
+    },
+    second_check: [{ step: "pass", min_kappa: 0.6 }],
+    self_test: { made_by: "selftest.mjs" },
+    funnel: ["timed out"],
+    recall_audit: "none",
+  };
+  const facts: IndexInput = {
+    plans: new Map([["P1-S01-ablation/plan.json", { kind: "ready", plan }]]),
+    history: new Map(),
+  };
+  return {
+    [`${P}/repro/studies.json`]: registryText(r),
+    [`${P}/repro/README.md`]: withIndex("# repro\n", r, facts),
+    [`${P}/repro/P1-S01-ablation/README.md`]: "# ablation\n",
+    [`${P}/repro/P1-S01-ablation/plan.json`]: planText(plan),
+    ...(result === null
+      ? {}
+      : { [`${P}/repro/P1-S01-ablation/result.json`]: JSON.stringify(result) }),
   };
 };
 
@@ -990,6 +1039,31 @@ const CASES: Readonly<Record<string, RuleCases>> = {
         { kind: "exploratory", reason: "a first look" },
         { "RESULTS.md": "41 of 60\n" },
       ),
+    ),
+  },
+  // A done study on a plan v2 whose result.json counts no drop for its declared funnel reason.
+  "repro/study-result": {
+    reports: {
+      tree: paper(
+        tex("x"),
+        DONE_ON_PLAN_V2({
+          kappa: { pass: 0.71 },
+          self_test: { passed: 4, failed: 0 },
+          funnel: {},
+        }),
+      ),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 2,
+      line: 1,
+    },
+    // The same study, every gate shown in its result.json.
+    silent: paper(
+      tex("x"),
+      DONE_ON_PLAN_V2({
+        kappa: { pass: 0.71 },
+        self_test: { passed: 4, failed: 0 },
+        funnel: { "timed out": 2 },
+      }),
     ),
   },
   // A study's plan still named prereg.json: read as its plan, and a warning to rename it.

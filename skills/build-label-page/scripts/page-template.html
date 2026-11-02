@@ -1,0 +1,513 @@
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono&display=swap">
+<style>
+/* One look, dark whatever the viewer's theme (Material Ocean, no purple): every color is a token below.
+   One column, sections apart by a hairline and wide space, items flat; the only raised block of an item is
+   the question being asked. Answer buttons are full-width rows with space between them, so a thumb cannot
+   land between two of them, and the chosen one has a 2px accent border. */
+:root {
+  color-scheme: dark;
+  --bg: #0f111a; --surface: #1a1c25; --line: #262a3a; --text: #a6accd; --muted: #7e84a3;
+  --strong: #eeffff; --accent: #82aaff; --good: #c3e88d; --mark: #ffcb6b; --bad: #f07178;
+  --mark-bg: rgba(255, 203, 107, 0.08);
+  --sans: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Roboto Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --gap-section: 48px; --gap-item: 16px; --measure: 68ch;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans);
+  font-size: 16px; line-height: 1.6; }
+main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column;
+  gap: var(--gap-section); }
+main > * + section, main > section + * { border-top: 1px solid var(--line); padding-top: var(--gap-section); }
+header.top { display: flex; flex-direction: column; gap: 8px; }
+h1 { font-size: 1.5rem; line-height: 1.3; margin: 0; color: var(--strong); font-weight: 700; }
+h2 { font-size: 1.15rem; line-height: 1.4; margin: 0; color: var(--strong); font-weight: 500; }
+p { margin: 0; max-width: var(--measure); }
+.muted { color: var(--muted); }
+.id { font-family: var(--mono); color: var(--muted); }
+section { display: flex; flex-direction: column; gap: var(--gap-item); }
+.item { display: flex; flex-direction: column; gap: 12px; padding-top: var(--gap-item);
+  border-top: 1px solid var(--line); }
+.item:first-of-type { border-top: 0; padding-top: 0; }
+.ask { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px; }
+.q { color: var(--strong); font-weight: 500; }
+.body { color: var(--strong); }
+h3 { font-size: 1rem; margin: 0; color: var(--strong); font-weight: 500; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+button { font: inherit; color: var(--text); background: transparent; border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 16px; min-height: 48px; cursor: pointer; text-align: left; width: 100%; }
+button[aria-pressed="true"] { border: 2px solid var(--accent); color: var(--strong); padding: 9px 15px; }
+.opts button { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: start; }
+.opts button .icon { grid-row: span 2; font-size: 1.25rem; line-height: 1.6; }
+.opts button .label { color: var(--strong); font-weight: 500; grid-column: 2; }
+.opts button .ex { color: var(--muted); grid-column: 2; }
+.opts button[aria-pressed="true"] { background: var(--surface); }
+textarea.why { font: inherit; color: var(--strong); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 12px; min-height: 88px; width: 100%; }
+pre.code .line { display: flex; gap: 0; white-space: pre; min-height: 1.4em; }
+pre.code .ws { color: var(--muted); }
+pre.code .len { margin-left: auto; padding-left: 16px; color: var(--muted); font-size: 0.85em; user-select: none; }
+code { font-family: var(--mono); font-size: 0.92em; color: var(--strong); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
+button:disabled { opacity: 0.5; cursor: default; }
+.answered { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); }
+.answered button { width: auto; min-height: 44px; border: 0; color: var(--accent); padding: 0 4px; }
+.examples { display: flex; flex-direction: column; gap: 12px; }
+.example b { color: var(--strong); font-weight: 500; display: block; }
+.quote, .banner { background: var(--mark-bg); border-left: 2px solid var(--mark); padding: 10px 14px;
+  border-radius: 0 8px 8px 0; color: var(--text); }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar > div { height: 100%; background: var(--good); }
+.tabs { display: flex; gap: 24px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+.tabs button { width: auto; border: 0; border-radius: 0; padding: 10px 0; min-height: 44px; color: var(--muted);
+  border-bottom: 2px solid transparent; white-space: nowrap; }
+.tabs button[aria-pressed="true"] { color: var(--strong); border: 0; border-bottom: 2px solid var(--accent);
+  padding: 10px 0; }
+ul { margin: 0; padding-left: 1.2rem; }
+pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px; font-family: var(--mono); font-size: 0.9rem; white-space: pre-wrap; word-break: break-word;
+  margin: 0; }
+.status { color: var(--muted); }
+.status.saved::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--good); margin-right: 8px; vertical-align: middle; }
+.status.missing { color: var(--mark); }
+.status.failed { color: var(--bad); }
+</style>
+<main id="app"><p class="muted">Loading…</p></main>
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(function () {
+  "use strict";
+  var DATA = JSON.parse(document.getElementById("data").textContent);
+  var app = document.getElementById("app");
+  var state = {
+    answers: {},      // item id -> {answers, savedAt, source}, from the store
+    groups: {},       // group id -> {familiarity, savedAt, source}
+    practice: {},     // r<round>-P<n> -> {answers, savedAt, source}; the FIRST answer, kept apart
+    editing: {},      // item id -> the question id the labeller tapped "Change" on
+    mineWhy: {},      // item id -> the reasons this page has just written (ahead of the store)
+    draftWhy: {},     // item id -> {question id: text typed and not yet saved}
+    mine: {},         // item/group key -> the answers this page has just written (ahead of the store)
+    inflight: {},     // item/group key -> writes not yet confirmed
+    failed: {},       // item/group key -> error code of the last refused write
+    loaded: { answers: false, groups: false, practice: false },
+    store: "loading", // loading | ok | none
+    filter: "all"
+  };
+  var db = null;
+  var chains = {};
+
+  try { if (localStorage.getItem("label-filter") === "next") state.filter = "next"; } catch (e) {}
+
+  // ── what "done" means ────────────────────────────────────────────────────────────────────
+  function answersOf(id) {
+    if (state.mine[id]) return state.mine[id];
+    var d = state.answers[id];
+    return d && d.answers ? d.answers : {};
+  }
+  // A stored value is an answer only if the build offers it (DATA.allowed, the same lists the
+  // export reads from key.json): after a rebuild that removed an option, or a typo merged from chat,
+  // the question is unanswered again and says so.
+  function valid(allowed, v) { return allowed.indexOf(v) !== -1; }
+  function reasonsOf(id) {
+    if (state.mineWhy[id]) return state.mineWhy[id];
+    var d = state.answers[id];
+    return d && d.reasons ? d.reasons : {};
+  }
+  function keepDraft(id, qid, text) {
+    state.draftWhy[id] = Object.assign({}, state.draftWhy[id] || {});
+    state.draftWhy[id][qid] = text;
+  }
+  // The text typed for a reason and not yet in the store; a draft the store now holds is done.
+  function draftOf(id, qid) {
+    var d = state.draftWhy[id];
+    if (!d || !Object.prototype.hasOwnProperty.call(d, qid)) return undefined;
+    var stored = state.answers[id] && state.answers[id].reasons;
+    if (stored && stored[qid] === d[qid]) { delete d[qid]; return undefined; }
+    return d[qid];
+  }
+  function needsWhy(q, v) { return (DATA.allowed.needs_why[q.id] || []).indexOf(v) !== -1; }
+  // What an item still needs: an answer, or the reason its answer asks for (named "<short> (why)").
+  function missingFor(id) {
+    var a = answersOf(id), r = reasonsOf(id);
+    return DATA.questions.map(function (q) {
+      if (!valid(DATA.allowed.questions[q.id], a[q.id])) return q;
+      if (needsWhy(q, a[q.id]) && !(r[q.id] || "").trim()) {
+        return { id: q.id, text: q.text + " (why)", short: (q.short || q.text) + " (why)" };
+      }
+      return null;
+    }).filter(function (q) { return q !== null; });
+  }
+  function itemDone(id) { return missingFor(id).length === 0; }
+  function familiarity(g) {
+    var d = state.mine["group:" + g] || state.groups[g];
+    return d && valid(DATA.allowed.familiarity, d.familiarity) ? d.familiarity : undefined;
+  }
+  function groupItems(g) { return DATA.items.filter(function (i) { return i.group === g; }); }
+  // ── the practice (rule 8): known answers, before the real items ──────────────────────────
+  function practiceDoc(pid) { return "r" + DATA.practice.round + "-" + pid; }
+  function practiceAnswers(pid) {
+    var key = "practice:" + pid;
+    if (state.mine[key]) return state.mine[key];
+    var d = state.practice[practiceDoc(pid)];
+    return d && d.answers ? d.answers : {};
+  }
+  function practiceMissing(pid) {
+    var a = practiceAnswers(pid);
+    return DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
+  }
+  function practiceAnswered(p) { return practiceMissing(p.id).length === 0; }
+  function practiceMatched(p) {
+    var a = practiceAnswers(p.id);
+    return DATA.questions.every(function (q) { return a[q.id] === p.expected[q.id]; });
+  }
+  function practiceOpen() { return !DATA.practice.items.every(practiceAnswered); }
+  function groupDone(g) { return familiarity(g) !== undefined && groupItems(g).every(function (i) { return itemDone(i.id); }); }
+
+  // ── saving: on click, one write at a time per document ────────────────────────────────────
+  function write(key, coll, docId, body) {
+    state.inflight[key] = (state.inflight[key] || 0) + 1;
+    delete state.failed[key];
+    var step = function () { return db.collection(coll).doc(docId).set(body); };
+    var run = (chains[key] || Promise.resolve()).then(step, step);
+    chains[key] = run.then(function () {
+      state.inflight[key] -= 1;
+      if (!state.inflight[key]) { delete state.mine[key]; delete state.mineWhy[key]; }
+      render();
+    }, function (e) {
+      state.inflight[key] -= 1;
+      if (!state.inflight[key]) { delete state.mine[key]; delete state.mineWhy[key]; } // a refused answer must not count as given
+      state.failed[key] = (e && e.code) || "unavailable";
+      render();
+    });
+  }
+  function canWrite() {
+    return db && state.loaded.answers && state.loaded.groups && state.loaded.practice && state.store === "ok";
+  }
+  function answer(id, qid, value) {
+    if (!canWrite()) return;
+    var next = Object.assign({}, answersOf(id));
+    next[qid] = value;
+    state.mine[id] = next;
+    write(id, "answers", id, { answers: next, reasons: reasonsOf(id), savedAt: new Date().toISOString(), source: "page" });
+    render();
+  }
+  // A reason saves when the labeller leaves the box (the text equivalent of a tap).
+  function setReason(id, qid, text) {
+    if (!canWrite()) return;
+    var why = Object.assign({}, reasonsOf(id));
+    why[qid] = text;
+    state.mineWhy[id] = why;
+    state.mine[id] = Object.assign({}, answersOf(id));
+    write(id, "answers", id, { answers: answersOf(id), reasons: why, savedAt: new Date().toISOString(), source: "page" });
+    render();
+  }
+  // The first answer to a practice question is the one scored: it cannot be changed afterwards.
+  function answerPractice(pid, qid, value) {
+    if (!canWrite()) return;
+    var cur = practiceAnswers(pid);
+    if (valid(DATA.allowed.questions[qid], cur[qid])) return;
+    var next = Object.assign({}, cur);
+    next[qid] = value;
+    state.mine["practice:" + pid] = next;
+    write("practice:" + pid, "practice", practiceDoc(pid),
+      { answers: next, savedAt: new Date().toISOString(), source: "page" });
+    render();
+  }
+  function setFamiliarity(g, value) {
+    if (!canWrite()) return;
+    var key = "group:" + g;
+    state.mine[key] = { familiarity: value };
+    write(key, "groups", g, { familiarity: value, savedAt: new Date().toISOString(), source: "page" });
+    render();
+  }
+
+  // ── rendering (everything inline; no scrolling, no toasts) ────────────────────────────────
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  // Text with `backticks` shown as code spans; everything stays textContent, so nothing is parsed as HTML.
+  function rich(tag, cls, text) {
+    var n = el(tag, cls);
+    String(text).split("`").forEach(function (part, i) {
+      if (part) n.appendChild(el(i % 2 ? "code" : "span", "", part));
+    });
+    return n;
+  }
+  // `withExamples`: the practice shows each answer's example on its button; the real items keep the buttons
+  // short, the examples stay on the first screen.
+  // A code block shows what a labeller would otherwise count by eye: leading and trailing whitespace as
+  // faint marks (a space as a middle dot, a tab as an arrow) and each line's length in characters.
+  function visible(ws) { return ws.replace(/ /g, "\u00b7").replace(/\t/g, "\u2192"); }
+  function codeBlock(text) {
+    var pre = el("pre", "code");
+    String(text).split("\n").forEach(function (line) {
+      var row = el("div", "line");
+      var m = /^([ \t]*)([\s\S]*?)([ \t]*)$/.exec(line);
+      if (m[1]) row.appendChild(el("span", "ws", visible(m[1])));
+      if (m[2]) row.appendChild(el("span", "", m[2]));
+      if (m[3]) row.appendChild(el("span", "ws", visible(m[3])));
+      row.appendChild(el("span", "len", String(line.length)));
+      pre.appendChild(row);
+    });
+    return pre;
+  }
+  function options(opts, current, onPick, disabled, withExamples) {
+    var row = el("div", "opts");
+    opts.forEach(function (o) {
+      var b = el("button", "");
+      if (o.icon) b.appendChild(el("span", "icon", o.icon));
+      b.appendChild(el("span", "label", o.label));
+      if (withExamples && o.example) b.appendChild(rich("span", "ex", o.example));
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(current === o.value));
+      b.disabled = disabled;
+      b.addEventListener("click", function () { onPick(o.value); });
+      row.appendChild(b);
+    });
+    return row;
+  }
+  function timeOf(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? "" : d.toLocaleTimeString();
+  }
+  function statusLine(key, missing, savedAt) {
+    var s = el("p", "status");
+    if (state.failed[key]) {
+      s.className = "status failed";
+      s.textContent = "Not saved (" + state.failed[key] + "). Tap the answer again.";
+    } else if (state.inflight[key]) {
+      s.textContent = "Saving…";
+    } else if (missing.length) {
+      s.className = "status missing";
+      s.textContent = "Still needs: " + missing.map(function (q) { return q.short || q.text; }).join("; ") +
+        (savedAt ? ". Saved " + timeOf(savedAt) : "");
+    } else if (savedAt) {
+      s.className = "status saved";
+      s.textContent = "Saved " + timeOf(savedAt);
+    }
+    return s;
+  }
+  function itemCard(item, off) {
+    var done = itemDone(item.id);
+    var card = el("article", "item");
+    card.appendChild(el("div", "id", item.id));
+    if (item.title) card.appendChild(rich("h3", "", item.title));
+    card.appendChild(rich("p", "body", item.body));
+    if (item.code) card.appendChild(codeBlock(item.code));
+    if (item.context) card.appendChild(rich("p", "muted", item.context));
+    var a = answersOf(item.id);
+    askOne(card, a, state.editing[item.id], function (q, v) {
+      delete state.editing[item.id];
+      answer(item.id, q.id, v);
+    }, function (q) { state.editing[item.id] = q.id; render(); }, off);
+    DATA.questions.forEach(function (q) {
+      var o = q.options.filter(function (x) { return x.value === a[q.id] && x.ask_why; })[0];
+      if (!o) return;
+      card.appendChild(el("p", "q", o.ask_why));
+      var box = el("textarea", "why");
+      var draft = draftOf(item.id, q.id);
+      box.value = draft !== undefined ? draft : reasonsOf(item.id)[q.id] || "";
+      box.disabled = off;
+      // Every keystroke is kept as a draft, so a render from the store never erases unsaved text.
+      box.addEventListener("input", function () { keepDraft(item.id, q.id, box.value); });
+      box.addEventListener("change", function () { setReason(item.id, q.id, box.value); });
+      card.appendChild(box);
+    });
+    var saved = state.answers[item.id] && state.answers[item.id].savedAt;
+    card.appendChild(statusLine(item.id, missingFor(item.id), saved));
+    return card;
+  }
+  function labelOf(q, v) {
+    var o = q.options.filter(function (x) { return x.value === v; })[0];
+    return o ? o.label : v;
+  }
+  // One question per screen: the answered ones stay as a line (with "Change"), and only one question
+  // is asked: the one being changed, else the first unanswered.
+  function askOne(card, a, editing, onPick, onChange, off, withExamples) {
+    var open = DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
+    var asked = DATA.questions.filter(function (q) { return q.id === editing; })[0] || open[0];
+    DATA.questions.forEach(function (q) {
+      if (q === asked || !valid(DATA.allowed.questions[q.id], a[q.id])) return;
+      var line = el("p", "answered", (q.short || q.text) + ": " + labelOf(q, a[q.id]) + " ");
+      if (onChange) {
+        var b = el("button", "", "Change");
+        b.type = "button";
+        b.disabled = off;
+        b.addEventListener("click", function () { onChange(q); });
+        line.appendChild(b);
+      }
+      card.appendChild(line);
+    });
+    if (!asked) return;
+    var ask = el("div", "ask");
+    ask.appendChild(el("p", "q", asked.text));
+    ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples));
+    card.appendChild(ask);
+  }
+  function howTo() {
+    var sec = el("section");
+    sec.appendChild(el("h2", "", "📖 How to answer"));
+    DATA.questions.forEach(function (q) {
+      sec.appendChild(el("p", "q", q.text));
+      var list = el("div", "examples");
+      q.options.forEach(function (o) {
+        var row = el("div", "example");
+        row.appendChild(el("b", "", (o.icon ? o.icon + " " : "") + o.label));
+        row.appendChild(rich("span", "muted", "For example: " + o.example));
+        list.appendChild(row);
+      });
+      sec.appendChild(list);
+    });
+    return sec;
+  }
+  function practiceCard(p, off) {
+    var card = el("article", "item");
+    card.appendChild(el("div", "id", "Practice " + p.id));
+    if (p.title) card.appendChild(rich("h3", "", p.title));
+    card.appendChild(rich("p", "body", p.body));
+    if (p.code) card.appendChild(codeBlock(p.code));
+    if (p.context) card.appendChild(rich("p", "muted", p.context));
+    var a = practiceAnswers(p.id);
+    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true);
+    if (practiceAnswered(p)) {
+      var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
+      card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",
+        (practiceMatched(p) ? "Matched. " : "Expected: " + expected + ". ") + p.why));
+    }
+    card.appendChild(statusLine("practice:" + p.id, [], null));
+    return card;
+  }
+  function practiceBlock(off) {
+    var items = DATA.practice.items;
+    var sec = el("section");
+    if (practiceOpen()) {
+      var answered = items.filter(practiceAnswered).length;
+      sec.appendChild(el("h2", "", "🎯 Practice: " + answered + " of " + items.length + " answered"));
+      sec.appendChild(el("p", "muted", "These answers are known. After each one the page shows the expected " +
+        "answer. The real items open when all " + items.length + " are answered."));
+      items.forEach(function (p) { sec.appendChild(practiceCard(p, off)); });
+      return sec;
+    }
+    var missed = items.filter(function (p) { return !practiceMatched(p); });
+    sec.appendChild(el("h2", "", (missed.length ? "⚠️ " : "✅ ") + "Practice: " + (items.length - missed.length) + " of " + items.length + " matched"));
+    if (missed.length) {
+      sec.appendChild(el("div", "banner", "A practice answer did not match. Before going on, tell the agent " +
+        "which one: the question is reworded and you take the practice again."));
+      missed.forEach(function (p) { sec.appendChild(practiceCard(p, off)); });
+    }
+    return sec;
+  }
+  function groupBlock(g, off, onlyOpen) {
+    var sec = el("section");
+    sec.appendChild(el("h2", "", g.label));
+    var fam = el("div", "ask");
+    fam.appendChild(el("p", "q", DATA.familiarity_question.replace("{group}", g.label)));
+    fam.appendChild(options(DATA.familiarity, familiarity(g.id), function (v) { setFamiliarity(g.id, v); }, off));
+    var gs = state.groups[g.id];
+    fam.appendChild(statusLine("group:" + g.id,
+      familiarity(g.id) === undefined ? [{ text: "an answer" }] : [], gs && gs.savedAt));
+    sec.appendChild(fam);
+    groupItems(g.id).forEach(function (i) {
+      if (onlyOpen && itemDone(i.id)) return;
+      sec.appendChild(itemCard(i, off));
+    });
+    return sec;
+  }
+  function render() {
+    var off = !canWrite();
+    var done = DATA.items.filter(function (i) { return itemDone(i.id); }).length;
+    var total = DATA.items.length;
+    app.textContent = "";
+    var top = el("header", "top");
+    app.appendChild(top);
+    top.appendChild(el("h1", "", DATA.title));
+    if (DATA.intro) top.appendChild(el("p", "muted", DATA.intro));
+    if (state.store === "none") {
+      top.appendChild(el("div", "banner",
+        "Answers cannot be saved in this view, so it is read-only. Open the page from the claude.ai " +
+        "artifact link while signed in with access to answer."));
+    } else if (state.store === "loading" || !(state.loaded.answers && state.loaded.groups)) {
+      top.appendChild(el("p", "muted", "Loading saved answers…"));
+    }
+    app.appendChild(howTo());
+    app.appendChild(practiceBlock(off));
+    // Without the store nothing can be answered, practice included: show the real items read-only (rule 7).
+    if (practiceOpen() && state.store !== "none") return;
+    var progress = el("section");
+    app.appendChild(progress);
+    progress.appendChild(el("p", "", done + " of " + total + " items complete"));
+    var bar = el("div", "bar"), fill = el("div");
+    fill.style.width = (total ? (100 * done / total) : 0) + "%";
+    bar.appendChild(fill);
+    progress.appendChild(bar);
+
+    var filters = el("div", "tabs");
+    [["all", "All items"], ["next", "Next unanswered"]].forEach(function (f) {
+      var b = el("button", "", f[1]);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.filter === f[0]));
+      b.addEventListener("click", function () {
+        state.filter = f[0];
+        try { localStorage.setItem("label-filter", f[0]); } catch (e) {}
+        render();
+      });
+      filters.appendChild(b);
+    });
+    progress.appendChild(filters);
+
+    var onlyOpen = state.filter === "next";
+    if (onlyOpen) {
+      var rest = DATA.items.filter(function (i) { return !itemDone(i.id); });
+      var open = DATA.groups.filter(function (g) { return familiarity(g.id) === undefined; });
+      var note = el("div", "muted");
+      if (!rest.length && !open.length) {
+        note.appendChild(el("p", "", "Nothing left. Every item and every group is answered."));
+      } else {
+        note.appendChild(el("p", "", "Left to do:"));
+        var ul = el("ul");
+        open.forEach(function (g) { ul.appendChild(el("li", "", g.label + ": how well you know it")); });
+        rest.forEach(function (i) {
+          ul.appendChild(el("li", "", i.id + " needs " +
+            missingFor(i.id).map(function (q) { return q.short || q.text; }).join("; ")));
+        });
+        note.appendChild(ul);
+      }
+      progress.appendChild(note);
+    }
+    DATA.groups.forEach(function (g) {
+      if (onlyOpen && groupDone(g.id)) return;
+      app.appendChild(groupBlock(g, off, onlyOpen));
+    });
+  }
+
+  // ── the store: subscribe once per collection; render without it, light up when it arrives ──
+  function take(target, loadedKey) {
+    return function (snap) {
+      var next = {};
+      snap.docs.forEach(function (d) { next[d.id] = d.data(); });
+      state[target] = next;
+      state.loaded[loadedKey] = true;
+      render();
+    };
+  }
+  function broken() { state.store = "none"; render(); }
+
+  render();
+  if (!window.claude || typeof window.claude.use !== "function") { broken(); return; }
+  window.claude.use("db").then(function (store) {
+    if (!store) { broken(); return; }
+    db = store;
+    state.store = "ok";
+    db.collection("answers").onSnapshot(take("answers", "answers"), broken);
+    db.collection("groups").onSnapshot(take("groups", "groups"), broken);
+    db.collection("practice").onSnapshot(take("practice", "practice"), broken);
+  }, broken);
+})();
+</script>

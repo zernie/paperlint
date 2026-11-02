@@ -18,11 +18,16 @@ import { filter, map, pipe } from "remeda";
 import { callerPath } from "./caller-path.ts";
 import { decisionEntry, modeStudies, type ModeStudy } from "./study-modes.ts";
 import {
+  firstOutputAfter,
   judgeOrder,
   orderMessage,
   type DecideFirstStudy,
+  type GateHistory,
   type OrderFinding,
+  type PlanThen,
 } from "./domain/decide-first.ts";
+import { gatesOf, type PlanGates } from "./domain/study-gates.ts";
+import type { StudyKind } from "./domain/study-registry.ts";
 import { REPRO_DIR } from "./domain/repro-layout.ts";
 import type { DecideFirst } from "./domain/study-mode.ts";
 import type {
@@ -51,11 +56,11 @@ export const decideFirstStudies = (
   return pipe(
     modeStudies(registryOf(paper, deps), reader, deps.codec),
     filter(isDecidedAndReady),
-    map(({ row, plan, mode }): DecideFirstStudy => {
+    map(({ row, plan, mode, gates }): DecideFirstStudy => {
       const folder = join(paper, REPRO_DIR, row.folder);
       const decision = join(paper, mode.decision.file);
       const on = decisionEntry(reader, mode.decision.file);
-      return {
+      const study: DecideFirstStudy = {
         id: row.id,
         folder: row.folder,
         plan,
@@ -66,8 +71,49 @@ export const decideFirstStudies = (
             ? deps.git.order(callerPath(folder), callerPath(decision))
             : on,
       };
+      return {
+        ...study,
+        gates: gateHistory(study, { now: gates, kind: row.kind, folder }, deps),
+      };
     }),
   );
+};
+
+/**
+ * The gates of a plan v2 now, and the plan at the study's first output after its decision: none for
+ * a plan v1, a history not read, or a study with no such output yet.
+ */
+const gateHistory = (
+  s: DecideFirstStudy,
+  from: {
+    readonly now: PlanGates | null;
+    readonly kind: StudyKind;
+    readonly folder: string;
+  },
+  deps: OrderDeps,
+): GateHistory | undefined => {
+  if (from.now === null || s.facts.kind !== "read") return undefined;
+  const output = firstOutputAfter(s, s.facts.files);
+  if (output === null) return undefined;
+  const at = deps.git.fileAt(callerPath(from.folder), output.commit, s.plan);
+  return { now: from.now, output, then: planThen(at, from.kind, deps) };
+};
+
+/** What the plan held at that commit, by gates. */
+const planThen = (
+  at: ReturnType<OrderDeps["git"]["fileAt"]>,
+  kind: StudyKind,
+  deps: OrderDeps,
+): PlanThen => {
+  if (at.kind === "unknown") return at;
+  if (at.kind === "absent") return { kind: "no-gates", why: "absent" };
+  const parsed = deps.codec.parsePlan(at.text, kind);
+  if (parsed.kind === "unreadable")
+    return { kind: "no-gates", why: "unreadable" };
+  const gates = gatesOf(parsed.plan);
+  return gates === null
+    ? { kind: "no-gates", why: "v1" }
+    : { kind: "gates", gates };
 };
 
 /** Only a ready plan decides: a draft may name no outputs, or an empty decision file. */
@@ -85,6 +131,8 @@ const PROBLEMS: readonly OrderFinding["problem"][] = [
   "shallow",
   "undecided-output",
   "output-before-decision",
+  "gates-changed",
+  "gates-not-fixed",
 ];
 
 const NAME = "repro/outputs-before-decision";

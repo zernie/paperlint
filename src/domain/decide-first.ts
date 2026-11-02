@@ -12,9 +12,16 @@
  *   - a history that cannot be read: no git, or a shallow clone, whose every file starts at the clone.
  *
  * Outputs that were committed and later deleted count: an output that existed before the decision is
- * evidence after it is gone. Pure.
+ * evidence after it is gone.
+ *
+ * A plan v2's gates (src/domain/study-gates.ts) are frozen by the same history: the plan as it stood
+ * at the commit of the study's first output must declare them exactly as HEAD's does. A gate changed
+ * since is `gates-changed` (a threshold moved after the result was seen); a plan absent from that
+ * commit, or one without gates there (v1, or unreadable), is `gates-not-fixed`. Pure.
  */
+import { isDeepEqual } from "remeda";
 import { README } from "./repro-layout.ts";
+import { GATE_NAMES, type PlanGates } from "./study-gates.ts";
 import {
   decisionAsOutput,
   inStudy,
@@ -68,6 +75,23 @@ export type OrderFacts =
       readonly files: readonly FirstCommit[];
     };
 
+/** The plan as it stood at the commit of the study's first output, as git gave it. */
+export type PlanThen =
+  | { readonly kind: "gates"; readonly gates: PlanGates }
+  /** No gates were fixed there: no plan at that commit, a plan v1, or a text that is no plan. */
+  | {
+      readonly kind: "no-gates";
+      readonly why: "absent" | "v1" | "unreadable";
+    }
+  | { readonly kind: "unknown"; readonly why: string };
+
+/** A plan v2's gates now, and the plan at the study's first output (the first that came after the decision). */
+export interface GateHistory {
+  readonly now: PlanGates;
+  readonly output: FirstCommit;
+  readonly then: PlanThen;
+}
+
 /** What the judge reads of one decide-first study. */
 export interface DecideFirstStudy {
   readonly id: string;
@@ -78,6 +102,8 @@ export interface DecideFirstStudy {
   /** Every file under the study's folder now, relative to it. */
   readonly tree: readonly string[];
   readonly facts: OrderFacts;
+  /** Only for a plan v2 with an output after its decision: nothing to freeze otherwise. */
+  readonly gates?: GateHistory | undefined;
 }
 
 /** One defect `repro/outputs-before-decision` reports. */
@@ -119,6 +145,24 @@ export type OrderFinding =
       readonly decision: string;
     }
   | {
+      readonly problem: "gates-changed";
+      readonly id: string;
+      readonly folder: string;
+      readonly plan: string;
+      readonly gate: (typeof GATE_NAMES)[number];
+      readonly then: unknown;
+      readonly now: unknown;
+      readonly output: FirstCommit;
+    }
+  | {
+      readonly problem: "gates-not-fixed";
+      readonly id: string;
+      readonly folder: string;
+      readonly plan: string;
+      readonly why: "absent" | "v1" | "unreadable";
+      readonly output: FirstCommit;
+    }
+  | {
       readonly problem: "output-before-decision";
       readonly id: string;
       readonly folder: string;
@@ -140,6 +184,41 @@ export const outputCommits = (
   s: DecideFirstStudy,
   files: readonly FirstCommit[],
 ): readonly FirstCommit[] => files.filter((f) => outputOf(s)(f.path));
+
+/**
+ * The first output of the study that entered history after its decision: the commit whose plan the
+ * gates are held to. None while no output followed the decision.
+ */
+export const firstOutputAfter = (
+  s: DecideFirstStudy,
+  files: readonly FirstCommit[],
+): FirstCommit | null =>
+  outputCommits(s, files).find((f) => f.order === "after") ?? null;
+
+/** The findings of a plan v2's gates against the plan at the study's first output. */
+const gateFindings = (s: DecideFirstStudy): readonly OrderFinding[] => {
+  const g = s.gates;
+  if (g === undefined) return [];
+  const at = { id: s.id, folder: s.folder, plan: s.plan, output: g.output };
+  switch (g.then.kind) {
+    case "unknown":
+      return [{ problem: "no-history", id: s.id, why: g.then.why }];
+    case "no-gates":
+      return [{ problem: "gates-not-fixed", ...at, why: g.then.why }];
+    case "gates": {
+      const then = g.then.gates;
+      return GATE_NAMES.filter((n) => !isDeepEqual(then[n], g.now[n])).map(
+        (gate) => ({
+          problem: "gates-changed",
+          ...at,
+          gate,
+          then: then[gate],
+          now: g.now[gate],
+        }),
+      );
+    }
+  }
+};
 
 /** The findings of a history that was read. */
 const ordered = (
@@ -185,7 +264,7 @@ export const judgeOrder = (s: DecideFirstStudy): readonly OrderFinding[] => {
             glob,
           },
         ];
-  return [...clash, ...historyFindings(s)];
+  return [...clash, ...historyFindings(s), ...gateFindings(s)];
 };
 
 /** The findings of a decide-first study's history, whatever git could say of it. */
@@ -227,6 +306,13 @@ const NOT_A_FILE: Readonly<Record<NotAFile, string>> = {
   "special file": "git tracks only regular files",
 };
 
+/** What the plan was at the first output, when it fixed no gates. */
+const GATES_THEN: Readonly<Record<"absent" | "v1" | "unreadable", string>> = {
+  absent: "was not in history yet",
+  v1: "was a plan v1, which declares no gates,",
+  unreadable: "was no plan paperlint could read",
+};
+
 const short = (c: CommitAt): string => `${c.commit.slice(0, 12)} (${c.date})`;
 
 const HEADS: {
@@ -246,6 +332,10 @@ const HEADS: {
     `\`${f.id}\` is decided before its run, and this clone is shallow: every file's first commit is the clone's first, so the order of decision and outputs cannot be read. What to do: fetch the whole history (\`git fetch --unshallow\`; in GitHub Actions, \`actions/checkout\` with \`fetch-depth: 0\`).`,
   "undecided-output": (f) =>
     `\`repro/${f.folder}/${f.path}\` is an output of \`${f.id}\` — in the tree, or in its history — and the study is decided before its run, but its decision \`${f.decision}\` was never committed. What to do: write and commit the decision, check it with \`npx paperlint studies gate <paper-dir> ${f.id}\`, then run the study again; if the output was made before any decision, declare the study \`exploratory\` with the reason. Deleting the output does not undo it: history keeps it.`,
+  "gates-changed": (f) =>
+    `The gate \`${f.gate}\` in the plan of \`${f.id}\`, \`repro/${f.folder}/${f.plan}\`, was ${JSON.stringify(f.then)} when its first output, \`${f.output.path}\`, entered history in ${short(f.output)}, and is ${JSON.stringify(f.now)} now. A gate is fixed before the run: moved after a result exists, it can only follow the result. What to do: put the gate back as it was; if it was wrong, say so in the paper and run the study again under the corrected plan — never edit the history to make it pass.`,
+  "gates-not-fixed": (f) =>
+    `The plan of \`${f.id}\`, \`repro/${f.folder}/${f.plan}\`, ${GATES_THEN[f.why]} when its first output, \`${f.output.path}\`, entered history in ${short(f.output)}: its gates were not fixed before the run. What to do: run the study again now that the plan v2 is committed; if the outputs must stand, declare the study \`exploratory\` with the reason.`,
   "output-before-decision": (f) =>
     `\`repro/${f.folder}/${f.path}\`, an output of \`${f.id}\`, entered history in ${short(f.output)}, ${f.same ? "the very commit" : "not after the commit"} that first recorded its decision, ${short(f.decision)}. The study is declared decided before its run, and its history does not show that order. What to do: if the decision really came first, nothing in this history can prove it — declare the study \`exploratory\` with the reason, or run it again after the decision; never rewrite the history to make it pass.`,
 };

@@ -24,6 +24,7 @@ import {
   type IndexInput,
   folderKey,
 } from "./study-registry.ts";
+import { PLAN_V2, PLAN_V2_FROM } from "./study-gates.ts";
 
 /** No plan and no history: the index with every mode column `—`. */
 const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
@@ -633,5 +634,75 @@ describe("studyMessage — the new findings stand alone", () => {
     ).toBe(
       "The plan of `P1-S01` is `prereg.json`, its old name; it is read as the plan. What to do: rename it to `plan.json` in the study's folder (`git mv`) and set the row's `plan` to `plan.json`.\nRule repro/study-plan-name: https://github.com/zernie/paperlint/blob/main/docs/rules/repro/study-plan-name.md",
     );
+  });
+});
+
+describe("PLAN_V2_FROM", () => {
+  it("is 2026-10-31: the first study the gates were written for was registered that day", () => {
+    expect(PLAN_V2_FROM).toBe("2026-10-31");
+  });
+});
+
+describe("plans — a measurement registered from PLAN_V2_FROM has a plan v2", () => {
+  const V2: StudyPlan = {
+    ...PLAN,
+    $schema: PLAN_V2,
+    second_check: "none",
+    self_test: "none",
+    funnel: "none",
+    recall_audit: "none",
+  };
+  const onDay = (date: string, kind: Study["kind"] = "measurement") =>
+    reg({
+      studies: [study({ measurement: "M1", plan: PLAN_FILE, date, kind })],
+    });
+
+  it("a measurement registered on the day, its plan v1: reported, with what to add", () => {
+    const f = findings(onDay(PLAN_V2_FROM));
+    expect(f).toEqual([
+      {
+        problem: "plan-version",
+        id: "P1-S01",
+        path: PLAN_FILE,
+        date: PLAN_V2_FROM,
+      },
+    ]);
+    expect(f.map(studyMessage).join("")).toContain(
+      `add \`"$schema": "${PLAN_V2}"\``,
+    );
+  });
+
+  it("silent on a plan v1 registered before the day, a spike's from it, and a plan v2", () => {
+    const v2 = onDay(PLAN_V2_FROM);
+    // Guards: old plans keep passing; only a measurement is asked; v2 answers it.
+    expect([
+      findings(onDay("2026-10-30")),
+      findings(onDay(PLAN_V2_FROM, "spike")),
+      findings(v2, {
+        plans: new Map([[folderKey("P1-S01-census", PLAN_FILE), read(V2)]]),
+      }),
+    ]).toEqual([[], [], []]);
+  });
+
+  it("a draft plan v1 from the day is reported too; an unreadable one is bad-plan's alone", () => {
+    const key = folderKey("P1-S01-census", PLAN_FILE);
+    const asDraft = new Map<string, PlanState>([
+      [key, draft({ ...PLAN, author_check: null })],
+    ]);
+    const unreadable = new Map<string, PlanState>([
+      [key, { kind: "unreadable", why: "x" }],
+    ]);
+    const r = reg({
+      studies: [
+        study({ plan: PLAN_FILE, date: PLAN_V2_FROM, status: "designing" }),
+      ],
+      measurements: [],
+    });
+    expect(findings(r, { plans: asDraft }).map((x) => x.problem)).toEqual([
+      "plan-version",
+    ]);
+    expect(findings(r, { plans: unreadable }).map((x) => x.problem)).toEqual([
+      "bad-plan",
+    ]);
   });
 });

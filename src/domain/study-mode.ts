@@ -18,6 +18,7 @@
 import { posix } from "node:path";
 import { REPRO_DIR } from "./repro-layout.ts";
 import type { StudyKind } from "./study-registry.ts";
+import type { WeLoseIf } from "./study-gates.ts";
 
 /** A decision recorded in a file: where, and what it decides. */
 export interface Decision {
@@ -32,6 +33,11 @@ export interface DecideFirst {
   /** Globs relative to the study's folder: the files the run produces. */
   readonly outputs: readonly string[];
   readonly decision: Decision;
+  /**
+   * A plan v2's falsifier (src/domain/study-gates.ts): when the claim loses; null while undecided.
+   * Absent from a plan v1; an exploratory mode cannot carry one.
+   */
+  readonly we_lose_if?: WeLoseIf | null | undefined;
 }
 
 /** Exploratory: no gate, and reported as exploratory. */

@@ -132,6 +132,7 @@ author's check of the drawn units. `paperlint studies new` writes the template b
 
 ```json
 {
+  "$schema": "https://unpkg.com/paperlint/schemas/plan.v2.schema.json",
   "question": "",
   "population": {
     "source": "",
@@ -143,23 +144,36 @@ author's check of the drawn units. `paperlint studies new` writes the template b
   "mode": {
     "kind": "decide_before_run",
     "outputs": [],
-    "decision": { "file": "repro/P1-S02-census/decision.md", "note": "" }
-  }
+    "decision": { "file": "repro/P1-S02-census/decision.md", "note": "" },
+    "we_lose_if": null
+  },
+  "second_check": null,
+  "self_test": null,
+  "funnel": null,
+  "recall_audit": null
 }
 ```
 
-| field                    | what it holds                                                                    |
-| ------------------------ | -------------------------------------------------------------------------------- |
-| `question`               | what the study measures, one sentence                                            |
-| `population.source`      | where the units come from: the census, crawl or registry, with its date          |
-| `population.draw.kind`   | `all` (the whole population, a census: no seed) or `seeded` (a sample)           |
-| `population.draw.method` | how the sample is drawn: `census`, `random`, `stratified` …                      |
-| `population.draw.seed`   | `seeded` only, and required there: the draw's seed, a string or a number         |
-| `arms`                   | the conditions compared, each `{ "name": … }`, each name once; `[]` for a census |
-| `primary_outcome`        | the one number the study reports first                                           |
-| `author_check`           | `null` until the author has seen the drawn units; then `by`, `date`, `quote`     |
-| `extra`                  | optional: the paper's own keys (hypotheses, models, budget), kept unread         |
-| `mode`                   | a measurement's: exactly one of `decide_before_run` or `exploratory`             |
+That is a measurement's template, a plan v2. Another kind's has no `$schema`, `mode` or gates.
+
+| field                    | what it holds                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| `question`               | what the study measures, one sentence                                                |
+| `population.source`      | where the units come from: the census, crawl or registry, with its date              |
+| `population.draw.kind`   | `all` (the whole population, a census: no seed) or `seeded` (a sample)               |
+| `population.draw.method` | how the sample is drawn: `census`, `random`, `stratified` …                          |
+| `population.draw.seed`   | `seeded` only, and required there: the draw's seed, a string or a number             |
+| `arms`                   | the conditions compared, each `{ "name": … }`, each name once; `[]` for a census     |
+| `primary_outcome`        | the one number the study reports first                                               |
+| `author_check`           | `null` until the author has seen the drawn units; then `by`, `date`, `quote`         |
+| `extra`                  | optional: the paper's own keys (hypotheses, models, budget), kept unread             |
+| `mode`                   | a measurement's: exactly one of `decide_before_run` or `exploratory`                 |
+| `$schema`                | a plan v2 says so here; without it the plan is v1                                    |
+| `mode.we_lose_if`        | v2, decide-first only: the number its claim loses by, `below` or `above` a threshold |
+| `second_check`           | v2: per labelling step, the least kappa between two raters, or `"none"`              |
+| `self_test`              | v2: how the study's check is run on known answers first, or `"none"`                 |
+| `funnel`                 | v2: the reasons a drawn unit may be dropped, or `"none"`                             |
+| `recall_audit`           | v2: files a person reads in full, and the least recall of the extractor, or `"none"` |
 
 `mode` is required of a `measurement` (other kinds may omit it): how its outcomes are kept from the
 decisions on its inputs — decided before the run (the default the template writes; its `outputs`,
@@ -167,6 +181,12 @@ and its `decision` file relative to the paper, committed before the run) or `exp
 `reason`. Without it a measurement's plan is a draft whose empty text is `mode`. The modes, and the
 rule that holds the order in git, [`repro/outputs-before-decision`](outputs-before-decision.md), are
 in [`docs/design/study-modes.md`](../../design/study-modes.md).
+
+The four gates of a plan v2 — what each is for, what the machine checks and what it cannot — are in
+[`docs/design/study-gates.md`](../../design/study-gates.md). Each is `null` until decided (the plan is
+a draft), `"none"` when the study has none of it, or its value; a plan v2 that leaves one out is not
+a plan. A plan without `$schema` is v1 and is judged as before, and may carry none of the gates. The
+result a done study's plan v2 asks for is judged by [`repro/study-result`](study-result.md).
 
 The template's draw is of all the population; a sampled study changes it to
 `{ "kind": "seeded", "method": "random", "seed": 7 }`. The population's size is not stored: it is
@@ -212,7 +232,10 @@ The rule reports:
 - a row's `plan` that is outside its folder, not a file, reached through a symbolic link, or not of the plan's shape — and, once the
   study has run (`running`, `done`, `stopped`, `superseded`), a plan that leaves `question`,
   `population.source`, `population.draw.method` or `primary_outcome` empty, or — for a measurement —
-  declares no `mode` or leaves one of its texts empty (`bad-plan`);
+  declares no `mode` or leaves one of its texts empty, or — for a plan v2 — leaves a gate `null`
+  (`bad-plan`);
+- a measurement registered on or after 2026-10-31 whose plan is v1, without `$schema`
+  (`plan-version`): its gates are not declared. A measurement registered earlier keeps its plan v1;
 - a study of a `headline` measurement that has run with no `author_check` in its plan — or no plan —
   or, when the registry names its `author`, a check by anyone else (`author-check`).
 

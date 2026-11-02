@@ -76,6 +76,7 @@ it("the template of a measurement is a draft decided before its run, its decisio
     kind: "decide_before_run",
     outputs: [],
     decision: { file: "repro/P1-S02-x/decision.md", note: "" },
+    we_lose_if: null,
   });
   expect(empty(planText(t))).toEqual([
     "question",
@@ -84,6 +85,11 @@ it("the template of a measurement is a draft decided before its run, its decisio
     "primary_outcome",
     "mode.outputs",
     "mode.decision.note",
+    "mode.we_lose_if",
+    "second_check",
+    "self_test",
+    "funnel",
+    "recall_audit",
   ]);
   expect(planTemplate("spike", "P1-S03-y").mode).toBeUndefined();
 });

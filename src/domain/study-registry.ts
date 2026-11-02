@@ -20,6 +20,14 @@ import { isAbsolute, posix, win32 } from "node:path";
 import { STUDIES_FILE, STUDY_SLUG } from "./repro-layout.ts";
 import { needsMode, type StudyMode } from "./study-mode.ts";
 import {
+  PLAN_V2,
+  PLAN_V2_FROM,
+  type Funnel,
+  type RecallAudit,
+  type SecondCheck,
+  type SelfTest,
+} from "./study-gates.ts";
+import {
   decisionCell,
   firstOutputCell,
   modeCell,
@@ -187,6 +195,16 @@ export interface StudyPlan {
    * exploratory (src/domain/study-mode.ts). A measurement study's plan is not ready without it.
    */
   readonly mode?: StudyMode | undefined;
+  /** A plan v2 says so here (src/domain/study-gates.ts); a plan without it is v1. */
+  readonly $schema?: typeof PLAN_V2 | undefined;
+  /** Plan v2: the least kappa of each labelling step; `"none"`; null while undecided. */
+  readonly second_check?: SecondCheck | null | undefined;
+  /** Plan v2: how the study's check is run on known answers first; `"none"`; null while undecided. */
+  readonly self_test?: SelfTest | null | undefined;
+  /** Plan v2: the reasons a drawn unit may be dropped; `"none"`; null while undecided. */
+  readonly funnel?: Funnel | null | undefined;
+  /** Plan v2: how complete the extractor is, audited by a person reading files; `"none"`; null while undecided. */
+  readonly recall_audit?: RecallAudit | null | undefined;
 }
 
 /**
@@ -216,12 +234,20 @@ export const PLAN_FIELDS = [
   "author_check",
   "extra",
   "mode",
+  "$schema",
+  "second_check",
+  "self_test",
+  "funnel",
+  "recall_audit",
 ] as const;
 
 /** A plan with empty required texts: the author has not approved it. */
 export type DraftPlan = StudyPlan & { readonly author_check: null };
 
-/** The texts a plan must fill before the study runs, in the order they are named. */
+/**
+ * The fields a plan must fill before the study runs, in the order they are named: its texts, and a
+ * plan v2's gates, each null until decided.
+ */
 export const PLAN_TEXT_FIELDS = [
   "question",
   "population.source",
@@ -232,6 +258,11 @@ export const PLAN_TEXT_FIELDS = [
   "mode.decision.file",
   "mode.decision.note",
   "mode.reason",
+  "mode.we_lose_if",
+  "second_check",
+  "self_test",
+  "funnel",
+  "recall_audit",
 ] as const;
 export type PlanTextField = (typeof PLAN_TEXT_FIELDS)[number];
 
@@ -276,9 +307,11 @@ export const DECISION_FILE = "decision.md";
  * The plan `paperlint studies new` writes for a study of `kind` in `folder`: every field present, its
  * value to fill. Its draw is of all the population (a census); a sampled study changes it to
  * `{ "kind": "seeded", "method", "seed" }`. A study that must declare its mode gets the default one,
- * decided before the run, its decision file named and its outputs and note to fill.
+ * decided before the run, its decision file named and its outputs and note to fill; its plan is v2,
+ * its gates null until decided (src/domain/study-gates.ts).
  */
 export const planTemplate = (kind: StudyKind, folder: string): DraftPlan => ({
+  ...(needsMode(kind) ? { $schema: PLAN_V2 } : {}),
   question: "",
   population: { source: "", draw: { kind: "all", method: "" } },
   arms: [],
@@ -290,7 +323,12 @@ export const planTemplate = (kind: StudyKind, folder: string): DraftPlan => ({
           kind: "decide_before_run",
           outputs: [],
           decision: { file: decisionPath(folder), note: "" },
+          we_lose_if: null,
         },
+        second_check: null,
+        self_test: null,
+        funnel: null,
+        recall_audit: null,
       }
     : {}),
 });
@@ -453,6 +491,12 @@ export type StudyFinding =
       readonly problem: "legacy-plan";
       readonly id: string;
       readonly path: string;
+    }
+  | {
+      readonly problem: "plan-version";
+      readonly id: string;
+      readonly path: string;
+      readonly date: string;
     };
 
 /** The findings `repro/study-plan-name` reports, a warning; every other is `repro/study-registered`'s. */
@@ -765,6 +809,21 @@ const checkProblem = (
     : { why: "not-author", by: check.by, author: r.author };
 };
 
+/**
+ * A measurement registered on or after `PLAN_V2_FROM` whose plan parsed and is v1: its gates
+ * (src/domain/study-gates.ts) are not declared. A plan that does not parse is `bad-plan`'s.
+ */
+const planVersion: RowCheck = ({ s, input }) => {
+  const path = s.plan;
+  if (path === undefined || !needsMode(s.kind) || s.date < PLAN_V2_FROM)
+    return null;
+  const state = planStateOf(input, s, path);
+  return (state.kind === "ready" || state.kind === "draft") &&
+    state.plan.$schema === undefined
+    ? { problem: "plan-version", id: s.id, path, date: s.date }
+    : null;
+};
+
 /** The checks of a row, in the order their findings are reported. */
 const ROW_CHECKS: readonly RowCheck[] = [
   badId,
@@ -778,6 +837,7 @@ const ROW_CHECKS: readonly RowCheck[] = [
   noSuccessor,
   unknownMeasurement,
   badPlan,
+  planVersion,
   legacyPlan,
   authorCheck,
 ];
@@ -1170,6 +1230,8 @@ const HEADS: { readonly [P in Problem]: (f: FindingOf[P]) => string } = {
         return `${head} the \`author_check\` in its plan is by ${f.by}, not by the registry's \`author\`, ${f.author}. What to do: only the author approves the drawn units of a headline measurement; record their own answer.`;
     }
   },
+  "plan-version": (f) =>
+    `The plan of ${tick(f.id)}, ${tick(f.path)} in its folder, is a plan v1, and ${tick(f.id)} is a measurement registered on ${f.date}: from ${PLAN_V2_FROM} a measurement's plan is v2 and declares the gates its number is believed by. What to do: add \`"$schema": "${PLAN_V2}"\`, then \`we_lose_if\` in a decide-first \`mode\`, \`second_check\`, \`self_test\`, \`funnel\` and \`recall_audit\` — each \`"none"\` where the study has none of it, null until decided (docs/design/study-gates.md).`,
   "legacy-plan": (f) =>
     `The plan of ${tick(f.id)} is ${tick(f.path)}, its old name; it is read as the plan. What to do: rename it to \`${PLAN_FILE}\` in the study's folder (\`git mv\`) and set the row's \`plan\` to \`${PLAN_FILE}\`.`,
 };

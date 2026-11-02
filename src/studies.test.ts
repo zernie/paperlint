@@ -93,6 +93,9 @@ function studies(
           decisionDeleted: false,
           files: [],
         }),
+        fileAt: () => {
+          throw new Error("new and index never read a file at a commit");
+        },
       },
       log: (l) => log.push(l),
       err: (l) => err.push(l),

@@ -1,0 +1,341 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "question": {
+      "type": "string"
+    },
+    "population": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "draw": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "seeded"
+                },
+                "method": {
+                  "type": "string"
+                },
+                "seed": {
+                  "type": ["string", "number"]
+                }
+              },
+              "required": ["kind", "method", "seed"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "all"
+                },
+                "method": {
+                  "type": "string"
+                }
+              },
+              "required": ["kind", "method"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": ["source", "draw"],
+      "additionalProperties": false
+    },
+    "arms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      }
+    },
+    "primary_outcome": {
+      "type": "string"
+    },
+    "author_check": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "by": {
+              "type": "string",
+              "minLength": 1
+            },
+            "date": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "quote": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["by", "date", "quote"],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extra": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "mode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "decide_before_run"
+            },
+            "outputs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "decision": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": ["file", "note"],
+              "additionalProperties": false
+            },
+            "we_lose_if": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "result": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "below": {
+                          "type": "number"
+                        }
+                      },
+                      "required": ["result", "below"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "result": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "above": {
+                          "type": "number"
+                        }
+                      },
+                      "required": ["result", "above"],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": ["kind", "outputs", "decision"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "exploratory"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": ["kind", "reason"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "$schema": {
+      "type": "string",
+      "const": "https://unpkg.com/paperlint/schemas/plan.v2.schema.json"
+    },
+    "second_check": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "step": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "min_kappa": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "required": ["step", "min_kappa"],
+                "additionalProperties": false
+              }
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "self_test": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "made_by": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": ["made_by"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "must_catch": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "must_pass": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": ["must_catch", "must_pass"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "funnel": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "recall_audit": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "n_files": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "min_recall": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": ["n_files", "min_recall"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "question",
+    "population",
+    "arms",
+    "primary_outcome",
+    "author_check",
+    "$schema",
+    "second_check",
+    "self_test",
+    "funnel",
+    "recall_audit"
+  ],
+  "additionalProperties": false
+}

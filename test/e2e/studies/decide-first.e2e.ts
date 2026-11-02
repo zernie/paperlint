@@ -119,7 +119,12 @@ const project = (name: string): string => {
           ...plan.mode,
           outputs: ["RESULTS.md"],
           decision: { ...plan.mode.decision, note: "exclusions" },
+          we_lose_if: { result: "pass_rate", below: 0.5 },
         },
+        second_check: "none",
+        self_test: "none",
+        funnel: "none",
+        recall_audit: "none",
       },
       null,
       2,
@@ -148,6 +153,7 @@ describe.skipIf(SKIP)(
           file: "repro/P1-S01-outcome/decision.md",
           note: "exclusions",
         },
+        we_lose_if: { result: "pass_rate", below: 0.5 },
       });
     });
 
