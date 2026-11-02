@@ -105,8 +105,11 @@ npm run check                     # every gate CI runs, and the list of what it 
 ```
 
 While editing, run the tests you touched, `npx tsc --noEmit`, `npx eslint <files>` and
-`npm run fmt:check`. **Before every push, run `npm run check` and read its exit code** — the
-coverage gate cannot be judged from one file.
+`npm run fmt:check`. A `wip:` push to a draft pull request needs only that: CI skips the gates on a
+draft, and the push is not "the gates passed". **Before taking a pull request out of draft, and
+before merging, run `npm run check` and read its exit code** — the coverage gate cannot be judged
+from one file. Waiting ten minutes for the whole suite on every wip push bought nothing the
+pre-ready run does not (2026-11-03).
 
 ⚠️ **Not `vigiles test .`**, and never drop `--min=1` from `npm test`. Measured 2026-09-11:
 
