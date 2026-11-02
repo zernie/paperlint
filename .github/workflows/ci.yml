@@ -204,6 +204,38 @@ jobs:
         run: npm run test:e2e:studies
         timeout-minutes: 5
 
+  # ── DOES THIS PULL REQUEST CHANGE ANYTHING BUT DOCS? ────────────────────────────────────────────
+  # The changed files come from the API, not from git: a PR's checkout is a merge commit with the
+  # base as it is now, so a diff against `base.sha` would also count commits that landed on main
+  # since. scripts/docs-only.ts uses Node built-ins only, so this job installs nothing. An empty or
+  # failed list fails closed: the script says `docs_only=false`, or the step fails and with it the run.
+  changes:
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      docs_only: ${{ steps.scope.outputs.docs_only }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: changed files — docs only?
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename' > "$RUNNER_TEMP/changed.txt"
+          cat "$RUNNER_TEMP/changed.txt"
+          node scripts/docs-only.ts < "$RUNNER_TEMP/changed.txt" | tee -a "$GITHUB_OUTPUT"
+
   # ── BUILDING THE PAPER WITH REAL pdflatex, ON LINUX AND macOS ──────────────────────────────────
   #
   # 🔴 ONE JOB, TWO OPERATING SYSTEMS. TeX Live comes from `paperlint toolchain` — the same command a user
@@ -220,8 +252,18 @@ jobs:
   # paper typeset in the wrong font. This repository is public, so the macOS minutes are free.
   #
   # `CI` is set: absence of TeX locally is a legitimate skip; here it is an environment failure.
+  #
+  # 🔴 EXCEPT A PULL REQUEST THAT CHANGES ONLY DOCS. A README or docs/*.md edit cannot change what
+  # this job builds, and it used to wait for TeX Live on two systems anyway (#343: one new
+  # docs/website.md). `changes` below decides; `gates` still runs on such a PR, because tests read
+  # the docs. On a push to main or a manual run `changes` does not run and this job always does.
   build-e2e:
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    needs: changes
+    # `!cancelled()`: without it a skipped `changes` (every push to main) would skip this job too.
+    if: >-
+      !cancelled() && (github.event_name != 'pull_request' ||
+      (github.event.pull_request.draft == false && needs.changes.result == 'success' &&
+      needs.changes.outputs.docs_only != 'true'))
     strategy:
       fail-fast: false
       matrix:
