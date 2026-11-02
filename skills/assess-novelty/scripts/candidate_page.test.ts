@@ -40,8 +40,7 @@ test("candidate_page", async () => {
     "/usr/bin/google-chrome-stable",
     "/usr/bin/chromium",
     "/usr/bin/chromium-browser",
-    // The macOS runner ships Google Chrome as an app bundle, not on a Linux path.
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // the macOS runner's Chrome
   ];
   const chromiumPath = (): string => {
     const builds = existsSync(BROWSERS_DIR)

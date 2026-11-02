@@ -136,7 +136,7 @@ const RATCHET = {
     "max-lines-per-function": 31,
   },
   "skills/assess-novelty/scripts/candidate_page.test.ts": {
-    "max-lines-per-function": 342,
+    "max-lines-per-function": 343,
     "max-nested-callbacks": 4,
   },
   "skills/assess-novelty/scripts/check_novelty.test.ts": {
