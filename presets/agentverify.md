@@ -26,8 +26,10 @@ researchr page `conf.researchr.org/home/agentverify-2027` only redirects to the 
   preset keeps the family's `\documentclass[conference]{IEEEtran}`.
 - **Publisher**: «Accepted papers will appear in the ICSE 2027 workshop proceedings by default.»
   The ICSE workshops page: «The workshop papers will be published by the IEEE.» The CFP does not
-  say what a non-default route would be, or whether it is archival.
-- **Presenting**: «At least one author of each accepted paper must register and present.»
+  say what a non-default route would be, or whether it is archival. The organizers: no other route
+  is offered (below).
+- **Presenting**: «At least one author of each accepted paper must register and present.» Remote
+  presentation is allowed (below).
 - **Deadlines (AoE)**: submission 13 Nov 2026, reviews due 5 Dec, final notification 11 Dec 2026,
   camera-ready 29 Jan 2027.
 
@@ -65,10 +67,19 @@ and are over the limit. Count the PDF's pages yourself before submitting.
   scheduled workflow; notification and camera-ready are the site's. No `registration`: there is no
   abstract deadline.
 
+## Answered by the organizers (emails to an author, not public)
+
+- **Remote presentation** (2026-10-23): «In general, remote presentations will be allowed for
+  authors who are unable to attend the workshop in person. However, at least one author of each
+  accepted paper must register for the workshop to ensure its inclusion in the proceedings.»
+- **APC** (2026-10-27), for every paper kind: «APC. It is free completely.»
+- **Proceedings** (2026-10-27): «Workshop papers are normally published in an ICSE companion
+  IEEE/ACM proceedings.» Asked whether a non-archival option exists: «The non-trivial [sic:
+  non-archival] option is not offered.» So every accepted paper is archival.
+
 ## Not verified
 
-- **Remote presentation**: not stated (only «must register and present»).
-- **Archival / non-archival choice**: «by default» suggests an alternative; none is described.
+- **Digital library**: whether the 2027 companion volume goes to IEEE Xplore or the ACM DL.
 - **AI / LLM usage policy and required sections**: none stated.
 
 ## What the preset resolves to
