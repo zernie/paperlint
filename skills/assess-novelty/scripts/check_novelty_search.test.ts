@@ -218,6 +218,34 @@ test("check_novelty_search: migrating a table, and claims that are not free", ()
   }
 }, 120_000);
 
+test("check_novelty_search: an explicit null scope is malformed, not a table-wide search", () => {
+  const r = run((j) => {
+    for (const e of j.searched) e.claims = null;
+    for (const c of j.claims) c.added = "2026-10-08";
+  });
+  // Guards: "claims": null is not the same as no "claims". A null scope in every source must not authorize 🟢 for
+  // every claim added before the searches (Codex review on #370); it is named and covers nothing.
+  assert.equal(r.code, 1);
+  assert.deepEqual(
+    r.errors.filter((e) => e.startsWith("searched[")),
+    nullScopeErrors(3),
+  );
+  assert.ok(
+    r.errors.some((e) =>
+      e.startsWith(
+        "P5-1: 🟢 but no search covers it in venue-pc, prev-edition, arxiv-recent",
+      ),
+    ),
+    r.errors.join("\n"),
+  );
+}, 120_000);
+const nullScopeErrors = (n: number) =>
+  Array.from(
+    { length: n },
+    (_, i) =>
+      `searched[${i}]: "claims" must be a non-empty list of claim ids, got None`,
+  );
+
 test("check_novelty_search: malformed claims, added and dates", () => {
   const r = run((j) => {
     j.searched[0].claims = ["R1", "P5-1", "C9"];

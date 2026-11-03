@@ -27,14 +27,17 @@ def day(value):
         return None
 
 
+TABLE_WIDE = object()  # an entry without "claims"; an explicit "claims": null is malformed, not this
+
+
 def named(entry):
-    """The claim ids an entry names, or None for an entry without "claims" (a search of the whole table)."""
-    return entry["claims"] if "claims" in entry else None
+    """The claim ids an entry names, or TABLE_WIDE for an entry without "claims" (a search of the whole table)."""
+    return entry["claims"] if "claims" in entry else TABLE_WIDE
 
 
 def well_formed(entry):
     ids = named(entry)
-    return ids is None or (isinstance(ids, list) and bool(ids) and all(isinstance(i, str) for i in ids))
+    return ids is TABLE_WIDE or (isinstance(ids, list) and bool(ids) and all(isinstance(i, str) for i in ids))
 
 
 def covers(entry, claim):
@@ -42,7 +45,7 @@ def covers(entry, claim):
     if not (entry.get("how") or "").strip() or not well_formed(entry):
         return False
     ids = named(entry)
-    if ids is not None:
+    if ids is not TABLE_WIDE:
         return claim.get("id") in ids
     searched_on, added = day(entry.get("date")), day(claim.get("added"))
     return searched_on is not None and added is not None and added <= searched_on
@@ -57,7 +60,7 @@ def entry_errors(searched):
     """
     def one(i, e):
         ids = named(e)
-        if ids is None:
+        if ids is TABLE_WIDE:
             return ([] if day(e.get("date")) else
                     [f"searched[{i}]: date {e.get('date')!r} is not YYYY-MM-DD; a search without \"claims\" covers"
                      " the claims added on or before its date"])
@@ -75,7 +78,7 @@ def claim_errors(claim, searched, verdict):
     missing = [s for s in SOURCES if not any(e.get("source") == s and covers(e, claim) for e in searched)]
     if not missing:
         return bad_added
-    table_wide = any(e.get("source") in missing and named(e) is None and (e.get("how") or "").strip()
+    table_wide = any(e.get("source") in missing and named(e) is TABLE_WIDE and (e.get("how") or "").strip()
                      for e in searched)
     hint = ("" if not table_wide else
             f' (or set "added" to the day {cid} entered the table: {SCOPE})' if day(claim.get("added")) is None else
