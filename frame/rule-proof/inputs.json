@@ -1,0 +1,170 @@
+[
+ {
+  "id": "A02",
+  "repo": "VSC-NeuroPilot/neuropilot",
+  "sha": "0b0abd373a440d13614080b4767a284cca17e538",
+  "linter": "eslint",
+  "rule": "@typescript-eslint/no-unused-vars",
+  "readings": [
+   {
+    "key": "on|[{\"argsIgnorePattern\":\"^_\",\"varsIgnorePattern\":\"^_\"}]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "@typescript-eslint/no-unused-vars",
+     "options": [
+      {
+       "argsIgnorePattern": "^_",
+       "varsIgnorePattern": "^_"
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.ts",
+      "text": "export function compute(a: number): number {\n  const unused = a * 2;\n  return a + 1;\n}\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.ts",
+      "text": "export function compute(a: number): number {\n  const _unused = a * 2;\n  return a + 1;\n}\n"
+     }
+    }
+   },
+   {
+    "key": "on|[{\"args\":\"all\",\"argsIgnorePattern\":\"^_\",\"ignoreRestSiblings\":true}]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "@typescript-eslint/no-unused-vars",
+     "options": [
+      {
+       "args": "all",
+       "argsIgnorePattern": "^_",
+       "ignoreRestSiblings": true
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.ts",
+      "text": "export function add(a: number, b: number, unused: number): number {\n  return a + b;\n}\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.ts",
+      "text": "export function add(a: number, b: number, _unused: number): number {\n  return a + b;\n}\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "A04",
+  "repo": "ultralytics/yolov3",
+  "sha": "9fdccf7b691c1ea00f440e52519fb36eee2c056f",
+  "linter": "ruff",
+  "rule": "F401",
+  "readings": [
+   {
+    "key": "on|{}|tests:included",
+    "reading": {
+     "linter": "ruff",
+     "rule": "F401",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.py",
+      "text": "import os\nimport sys\n\n\ndef main():\n    return sys.argv[1:]\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.py",
+      "text": "import sys\n\n\ndef main():\n    return sys.argv[1:]\n"
+     }
+    }
+   },
+   {
+    "key": "on|{}|tests:excluded",
+    "reading": {
+     "linter": "ruff",
+     "rule": "F401",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "**/test/**",
+       "**/tests/**",
+       "**/__tests__/**",
+       "**/spec/**",
+       "**/e2e/**",
+       "**/*.test.*",
+       "**/*.spec.*",
+       "**/test_*.py",
+       "**/*_test.py"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.py",
+      "text": "import os\nimport sys\n\n\ndef main():\n    return sys.argv[1:]\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.py",
+      "text": "import sys\n\n\ndef main():\n    return sys.argv[1:]\n"
+     }
+    }
+   }
+  ]
+ }
+]
