@@ -140,6 +140,7 @@ const SOURCES_SHOWN = `(${SOURCES.map(quoted).join(", ")})`;
 type SchemaNode =
   | { kind: "string"; required: boolean; pattern?: string }
   | { kind: "integer"; required: boolean }
+  | { kind: "boolean"; required: boolean }
   | { kind: "array"; required: boolean; min: number; items: SchemaNode }
   | {
       kind: "map";
@@ -161,6 +162,10 @@ const string = (required = true, pattern?: string): SchemaNode =>
     : { kind: "string", required, pattern };
 const integer = (required = true): SchemaNode => ({
   kind: "integer",
+  required,
+});
+const boolean = (required = true): SchemaNode => ({
+  kind: "boolean",
   required,
 });
 const array = (items: SchemaNode, required = true, min = 0): SchemaNode => ({
@@ -233,6 +238,9 @@ export const CONFIG_SCHEMA = obj({
   seed: integer(),
   groups: mapping(string(), NAME_PATTERN, 1), // ids become store document ids
   labeller_knows: array(string(true, NAME_PATTERN), false),
+  // false: no "how well do you know {group}" question (an approval page: the author has never seen
+  // these repositories, so its answer means nothing). Left out, every group is asked (rule 5).
+  familiarity: boolean(false),
   familiarity_question: string(false),
   questions: array(QUESTION_SCHEMA, true, 1),
   practice: array(PRACTICE_SCHEMA, true, MIN_PRACTICE),
@@ -309,6 +317,10 @@ function checkObject(
     );
   }
 }
+function checkBoolean(value: Json, where: string): void {
+  if (typeof value !== "boolean")
+    fail(`${where}: must be true or false, got ${repr(value)}`);
+}
 /** Refuse the first place `value` departs from `node`; the message starts with the field's path. */
 function checkValue(value: Json, node: SchemaNode, path: string): void {
   const where = path || "items.json";
@@ -320,6 +332,9 @@ function checkValue(value: Json, node: SchemaNode, path: string): void {
       if (typeof value !== "number" || !Number.isInteger(value)) {
         fail(`${where}: must be an integer, got ${repr(value)}`);
       }
+      break;
+    case "boolean":
+      checkBoolean(value, where);
       break;
     case "array":
       checkArray(value, node, path, where);
@@ -369,6 +384,7 @@ interface Config {
   readonly seed: number;
   readonly groups: Readonly<Record<string, string>>;
   readonly labeller_knows?: readonly string[];
+  readonly familiarity?: boolean;
   readonly familiarity_question?: string;
   readonly questions: readonly Question[];
   readonly practice: readonly Practice[];
@@ -385,7 +401,10 @@ function assertConfig(value: Json): asserts value is Json & Config {
  * The page script (`DATA.allowed`) and the exporter (`key.json`) both read this one result, so a
  * stored value counts as an answer on the page exactly when it counts in the export.
  */
-const allowedValues = (questions: readonly Question[]): JsonObject => ({
+const allowedValues = (
+  questions: readonly Question[],
+  asksFamiliarity: boolean,
+): JsonObject => ({
   questions: Object.fromEntries(
     questions.map((q) => [q.id, q.options.map((o) => o.value)]),
   ),
@@ -396,8 +415,10 @@ const allowedValues = (questions: readonly Question[]): JsonObject => ({
       q.options.filter((o) => o.ask_why !== undefined).map((o) => o.value),
     ]),
   ),
-  familiarity: FAMILIARITY.map((o) => o.value),
+  // Empty when the page asks no familiarity: the export then expects no group document at all.
+  familiarity: asksFamiliarity ? FAMILIARITY.map((o) => o.value) : [],
 });
+const asksFamiliarity = (cfg: Config): boolean => cfg.familiarity !== false;
 
 /** Two values that read the same once case and surrounding space are gone. */
 const readsAs = (s: string): string => s.trim().toLowerCase();
@@ -481,6 +502,11 @@ function checkPractice(cfg: Config): void {
 }
 function checkConfig(cfg: Config): void {
   checkGroups(cfg);
+  if (!asksFamiliarity(cfg) && cfg.familiarity_question !== undefined) {
+    fail(
+      `familiarity_question: ${repr(cfg.familiarity_question)} is never asked, because \`familiarity\` is false — remove one of the two`,
+    );
+  }
   cfg.questions.forEach((q, qn) => {
     checkQuestion(
       q,
@@ -667,10 +693,11 @@ function payloadOf(
     title: cfg.title,
     intro: cfg.intro ?? "",
     groups: used.map((g) => ({ id: g, label: String(cfg.groups[g]) })),
-    familiarity_question:
-      cfg.familiarity_question ?? "How well do you know {group}?",
-    familiarity: FAMILIARITY,
-    allowed: allowedValues(cfg.questions),
+    familiarity_question: asksFamiliarity(cfg)
+      ? (cfg.familiarity_question ?? "How well do you know {group}?")
+      : "",
+    familiarity: asksFamiliarity(cfg) ? FAMILIARITY : [],
+    allowed: allowedValues(cfg.questions, asksFamiliarity(cfg)),
     questions: cfg.questions,
     practice: { round: practiceRound(cfg), items: practiceOf(cfg) },
     items: page.items.map((i) => ({
@@ -728,7 +755,7 @@ function keyOf(
     questions: cfg.questions.map((q) => q.id),
     // What counts as an answer: the same lists the page was given (`allowedValues`). `export`
     // checks every stored answer and familiarity against them, so the build's options decide.
-    allowed: allowedValues(cfg.questions),
+    allowed: allowedValues(cfg.questions, asksFamiliarity(cfg)),
     // The practice is scored against this at export; its answers never go into the labels.
     practice: {
       round: practiceRound(cfg),
@@ -985,6 +1012,17 @@ function checkDump(dump: Json, key: Key): asserts dump is JsonObject {
   }
 }
 
+/** A page built with `familiarity: false` asks no group anything: a group document came from elsewhere. */
+function checkNoFamiliarity(dump: JsonObject, allowed: Allowed): void {
+  const groups = isObject(dump["groups"]) ? dump["groups"] : {};
+  const [first] = Object.keys(groups).sort(byText);
+  if (allowed.familiarity.length === 0 && first !== undefined) {
+    fail(
+      `groups/${first}: familiarity is off for this page (items.json \`familiarity: false\`), so no group document is expected — take it out of the dump`,
+    );
+  }
+}
+
 // ── export ────────────────────────────────────────────────────────────────────────────────────
 interface Allowed {
   readonly questions: Readonly<Record<string, readonly string[]>>;
@@ -1219,11 +1257,13 @@ function labelsOf(dump: JsonObject, ctx: Ctx, day: string) {
   const items = onPage.map(([nid, meta]) =>
     labelOf(nid, meta, docOf(dump["answers"], nid), ctx),
   );
-  const groups = groupsOf(
-    [...new Set(onPage.map(([, m]) => m.group))],
-    dump["groups"],
-    ctx.allowed,
-  );
+  const groups = ctx.allowed.familiarity.length
+    ? groupsOf(
+        [...new Set(onPage.map(([, m]) => m.group))],
+        dump["groups"],
+        ctx.allowed,
+      )
+    : {};
   return {
     study: ctx.key.study,
     exported: day,
@@ -1251,6 +1291,7 @@ export function exportLabels(
   const allowed = key.allowed;
   assertAllowed(allowed, key, keyPath);
   checkDump(dump, key);
+  checkNoFamiliarity(dump, allowed);
   const out = labelsOf(dump, { key, allowed }, day);
   mkdirSync(outDir, { recursive: true });
   const path = join(outDir, `${key.study}-labels-${day}.json`);

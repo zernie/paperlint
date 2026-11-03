@@ -74,7 +74,8 @@ building. In one line each:
    source labels on the page. The generator refuses to build when an item carries a field outside an
    allow-list; a page written by hand checks its items against the same list.
 5. **Ask only what the labeller can answer.** Only the languages and tools they know; one "how well do
-   you know it" question per group, used later as an analysis filter; "clear-cut or real boundary"
+   you know it" question per group, used later as an analysis filter (off on an approval page,
+   \`"familiarity": false\`: the author has not seen those repositories); "clear-cut or real boundary"
    is the labeller's judgement, not the designer's.
 6. **Export into the repository right away**, one JSON per page into the study's \`data/\` with the
    export date, commit it, and record answers given in chat with \`source: "chat"\`. If the page fails,

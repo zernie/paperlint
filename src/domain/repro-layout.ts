@@ -13,7 +13,7 @@
  *   ├── tools/                 scripts used across the paper (numbers, figures, anonymity check, harnesses)
  *   └── data/                  shared data (tables, caches)
  *
- * plus `.gitignore`. A loose note belongs in its study's folder or in the paper's `research/`.
+ * plus `.gitignore`, and optionally the agent instruction files `CLAUDE.md` and `AGENTS.md`. A loose note belongs in its study's folder or in the paper's `research/`.
  *
  * ── A STUDY'S NAME ───────────────────────────────────────────────────────────────
  * `<id>-<slug>` (`P1-S03-baseline`): the id of the study's row in `repro/studies.json` — the paper's
@@ -58,6 +58,14 @@ export const REPRO_FILE_NOTES: readonly {
     note: "the study registry: id, title, status and result of each study",
   },
   { name: ".gitignore", note: "keeps the scripts' byproducts out of git" },
+  {
+    name: "CLAUDE.md",
+    note: "optional: instructions an agent loads when it works in repro/",
+  },
+  {
+    name: "AGENTS.md",
+    note: "optional: the same, for agents that read AGENTS.md",
+  },
 ];
 export const REPRO_FILES: readonly string[] = REPRO_FILE_NOTES.map(
   (f) => f.name,

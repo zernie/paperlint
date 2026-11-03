@@ -203,6 +203,15 @@ export class FakeNode {
   }
 }
 
+/** Leaving the page and focus are what label-page-browser.test.ts drives in Chromium; here, inert. */
+const addEventListener = (): void => undefined;
+const FAKE_DOCUMENT = (data: FakeNode, app: FakeNode) => ({
+  getElementById: (id: string) => (id === "data" ? data : app),
+  createElement: (tag: string) => new FakeNode(tag),
+  activeElement: null,
+  addEventListener,
+});
+
 /** Open the built page against a fake store holding `answers` and `groups`; return what it shows. */
 export async function showPage(
   page: string,
@@ -263,12 +272,11 @@ async function openPage(
     }),
   };
   runInNewContext(script, {
-    document: {
-      getElementById: (id: string) => (id === "data" ? data : app),
-      createElement: (tag: string) => new FakeNode(tag),
-    },
+    document: FAKE_DOCUMENT(data, app),
     // Without the store: the viewer opened the page where it cannot save (rule 7).
-    window: withStore ? { claude: { use: () => Promise.resolve(store) } } : {},
+    window: withStore
+      ? { claude: { use: () => Promise.resolve(store) }, addEventListener }
+      : { addEventListener },
     localStorage: { getItem: () => "next", setItem: () => undefined },
     Promise,
     JSON,
@@ -276,6 +284,8 @@ async function openPage(
     Object,
     String,
     isNaN,
+    setTimeout,
+    clearTimeout,
   });
   await new Promise((r) => setTimeout(r, 0));
   return app.textContent;
@@ -383,11 +393,8 @@ export async function openLive(
     }),
   };
   runInNewContext(script, {
-    document: {
-      getElementById: (id: string) => (id === "data" ? data : app),
-      createElement: (tag: string) => new FakeNode(tag),
-    },
-    window: { claude: { use: () => Promise.resolve(store) } },
+    document: FAKE_DOCUMENT(data, app),
+    window: { claude: { use: () => Promise.resolve(store) }, addEventListener },
     localStorage: { getItem: () => "all", setItem: () => undefined },
     Promise,
     JSON,
@@ -395,6 +402,8 @@ export async function openLive(
     Object,
     String,
     isNaN,
+    setTimeout,
+    clearTimeout,
   });
   await new Promise((r) => setTimeout(r, 0));
   const resend = () => {

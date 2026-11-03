@@ -14,6 +14,7 @@ import {
   ITEMS,
   PRACTICE,
   QUESTIONS,
+  WORK,
   approval,
   build,
   config,
@@ -26,7 +27,7 @@ import {
 /** A node of the declared config schema, as `example-generator.py schema` prints it. */
 const Node: z.ZodType<SchemaNode> = z.lazy(() =>
   z.object({
-    kind: z.enum(["string", "integer", "map", "array", "object"]),
+    kind: z.enum(["string", "integer", "boolean", "map", "array", "object"]),
     required: z.boolean(),
     pattern: z.string().optional(),
     key_pattern: z.string().optional(),
@@ -39,7 +40,7 @@ const Node: z.ZodType<SchemaNode> = z.lazy(() =>
 );
 
 interface SchemaNode {
-  readonly kind: "string" | "integer" | "map" | "array" | "object";
+  readonly kind: "string" | "integer" | "boolean" | "map" | "array" | "object";
   readonly required: boolean;
   readonly pattern?: string | undefined;
   readonly key_pattern?: string | undefined;
@@ -77,6 +78,7 @@ const FULL: DocObject = (() => {
         QUESTIONS[1],
       ],
       labeller_knows: ["python", "go", "rust"],
+      familiarity: true,
       familiarity_question: "How well do you know {group}?",
       items: ITEMS.map((i, n) =>
         n === 0
@@ -183,6 +185,7 @@ function spoil(path: string, bad: Doc | undefined): DocObject {
 const WRONG_TYPES: Readonly<Record<SchemaNode["kind"], readonly Doc[]>> = {
   string: [null, 1, true, ["x"], {}, "", "   "],
   integer: [null, "7", true, 7.5, []],
+  boolean: [null, "false", 0, [], {}],
   map: [null, "x", ["x"], 1],
   array: [null, "x", {}, 1],
   object: [null, "x", ["x"], 1],
@@ -246,6 +249,7 @@ const DOCUMENTED_FIELDS = [
   "seed",
   "groups",
   "labeller_knows",
+  "familiarity",
   "familiarity_question",
   "questions",
   "items",
@@ -1206,4 +1210,63 @@ test("🔴 an item that names a linter rule: the build takes the rule's descript
     r2.out,
     /ruff 'NOPE1' has no description from the linter \(`ruff rule` does not know it/,
   );
+});
+
+test("🔴 familiarity off: the key asks for none, the export reports no missing familiarity, and a stored one is refused", () => {
+  const dir = setup("familiarity-off", approval({ familiarity: false }));
+  const { key } = build(dir);
+  assert.deepEqual(key.allowed.familiarity, []);
+  const [a] = Object.keys(key.ids);
+  assert.ok(a !== undefined);
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({
+      answers: { [a]: { answers: { keep: "keep" }, source: "page" } },
+      groups: {},
+    }),
+  );
+  const r = exportAt(dir);
+  assert.equal(r.status, 0, r.out);
+  assert.doesNotMatch(r.out, /no familiarity answer|invalid group/);
+  assert.deepEqual(Exported.parse(JSON.parse(labelsFile(dir))).groups, {});
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({
+      answers: {},
+      groups: { python: { familiarity: "well", source: "chat" } },
+    }),
+  );
+  const refused = exportAt(dir);
+  assert.notEqual(refused.status, 0);
+  assert.match(refused.out, /groups\/python: .*familiarity is off/);
+});
+
+test("🔴 familiarity off with a familiarity_question is a contradiction the build refuses", () => {
+  const r = run([
+    "build",
+    join(
+      setup(
+        "familiarity-contradiction",
+        approval({ familiarity: false, familiarity_question: "How well?" }),
+      ),
+      "items.json",
+    ),
+    join(WORK, "contradiction-out"),
+  ]);
+  assert.notEqual(r.status, 0);
+  assert.match(
+    r.out,
+    /REFUSED: familiarity_question: .*`familiarity` is false/,
+  );
+});
+
+test("familiarity left out: every group is still asked (rule 5), and a missing one is reported", () => {
+  const dir = setup("familiarity-default", approval());
+  const { key } = build(dir);
+  assert.deepEqual(key.allowed.familiarity, ["well", "somewhat", "not_really"]);
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers: {}, groups: {} }),
+  );
+  assert.match(exportAt(dir).out, /group python: no familiarity answer/);
 });
