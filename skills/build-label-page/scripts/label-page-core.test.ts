@@ -81,7 +81,15 @@ const FULL: DocObject = (() => {
       familiarity: true,
       familiarity_question: "How well do you know {group}?",
       items: ITEMS.map((i, n) =>
-        n === 0 ? { ...i, title: "T", code: "c = 1", context: "ctx" } : i,
+        n === 0
+          ? {
+              ...i,
+              title: "T",
+              code: "c = 1",
+              context: "ctx",
+              unit: { id: "L0", text: "One line.", part: 1, of: 1 },
+            }
+          : i,
       ),
     }),
   );
@@ -1165,6 +1173,138 @@ test("🔴 a question dropped between practice rounds: the earlier round's answe
   const r = exportAt(dir);
   assert.equal(r.status, 0, r.out);
   assert.match(r.out, /practice round 1: 3 of 3 matched/);
+});
+
+/** Items 0 and 3 (both Rust) as the two requirements of one line. */
+const LINE = "TypeScript only (no JavaScript); top-level await is allowed.";
+const withUnit = (
+  parts: readonly (readonly [n: number, unit: Record<string, unknown>])[],
+): Record<string, unknown> =>
+  config({
+    items: ITEMS.map((item, n) => {
+      const u = parts.find(([at]) => at === n);
+      return u === undefined ? item : { ...item, unit: u[1] };
+    }),
+  });
+
+/** A line whose parts do not add up, and the refusal that names it. */
+const UNIT_REFUSALS: readonly (readonly [
+  string,
+  Record<string, unknown>,
+  string,
+])[] = [
+  [
+    "unit-missing-part",
+    withUnit([[0, { id: "L1", text: LINE, part: 1, of: 2 }]]),
+    `items[0].unit: part 2 of 2 of line 'L1' is not among the items`,
+  ],
+  [
+    "unit-part-twice",
+    withUnit([
+      [0, { id: "L1", text: LINE, part: 1, of: 2 }],
+      [3, { id: "L1", text: LINE, part: 1, of: 2 }],
+    ]),
+    "items[3].unit.part: 1 repeats items[0].unit.part",
+  ],
+  [
+    "unit-of-differs",
+    withUnit([
+      [0, { id: "L1", text: LINE, part: 1, of: 2 }],
+      [3, { id: "L1", text: LINE, part: 2, of: 3 }],
+    ]),
+    "items[3].unit.of: 3, but items[0].unit.of says 2 for the same line",
+  ],
+  [
+    "unit-part-range",
+    withUnit([[0, { id: "L1", text: LINE, part: 3, of: 2 }]]),
+    "items[0].unit.part: 3 is not between 1 and 2",
+  ],
+  [
+    "unit-groups-differ",
+    withUnit([
+      [0, { id: "L1", text: LINE, part: 1, of: 2 }],
+      [1, { id: "L1", text: LINE, part: 2, of: 2 }],
+    ]),
+    "items[1].group: 'python', but items[0] of the same line is in 'rust'",
+  ],
+  [
+    "unit-text-differs",
+    withUnit([
+      [0, { id: "L1", text: LINE, part: 1, of: 2 }],
+      [3, { id: "L1", text: "Another line.", part: 2, of: 2 }],
+    ]),
+    "items[3].unit.text: 'Another line.', but items[0] of line 'L1' says",
+  ],
+  [
+    "unit-halves-of-two-occurrences",
+    withUnit([
+      [0, { id: "L1", text: LINE, part: 1, of: 2 }],
+      [3, { id: "L2", text: LINE, part: 2, of: 2 }],
+    ]),
+    "items[0].unit: part 2 of 2 of line 'L1' is not among the items",
+  ],
+  [
+    "unit-leaks-source",
+    withUnit([[0, { id: "L1", text: "as in case-1003", part: 1, of: 1 }]]),
+    "the source id 'case-1003' appears in the visible `unit` of item case-1000",
+  ],
+];
+
+test("🔴 a line with several requirements: build refuses a unit whose parts do not add up, naming the item", () => {
+  for (const [name, cfg, message] of UNIT_REFUSALS) {
+    const dir = setup(name, cfg);
+    const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+    assert.equal(r.status, 1, `${name}\n${r.out}`);
+    assert.ok(r.out.includes(`REFUSED: ${message}`), `${name}\n${r.out}`);
+  }
+});
+
+test("a line whose every requirement is an item builds, and each item carries its part and the whole line", () => {
+  const dir = setup(
+    "unit-ok",
+    withUnit([
+      [0, { id: "L1", text: LINE, part: 1, of: 2 }],
+      [3, { id: "L1", text: LINE, part: 2, of: 2 }],
+    ]),
+  );
+  const { page } = build(dir);
+  const json =
+    /<script type="application\/json" id="data">([\s\S]*?)<\/script>/.exec(
+      page,
+    )?.[1];
+  assert.ok(json !== undefined);
+  const units = z
+    .object({
+      items: z.array(
+        z.object({
+          unit: z
+            .object({ text: z.string(), part: z.number(), of: z.number() })
+            .optional(),
+        }),
+      ),
+    })
+    .parse(JSON.parse(json.replace(/<\\\//g, "</")))
+    .items.flatMap((i) => (i.unit ? [i.unit] : []))
+    .sort((a, b) => a.part - b.part);
+  // what the page carries: the part and the line, never the line's private id
+  assert.deepEqual(units, [
+    { text: LINE, part: 1, of: 2 },
+    { text: LINE, part: 2, of: 2 },
+  ]);
+});
+
+test("🔴 the same line in two places is two lines: four items, two ids, it builds, and the id stays off the page", () => {
+  const dir = setup(
+    "unit-same-text",
+    withUnit([
+      [0, { id: "a.md:3", text: LINE, part: 1, of: 2 }],
+      [3, { id: "a.md:3", text: LINE, part: 2, of: 2 }],
+      [6, { id: "b.md:9", text: LINE, part: 1, of: 2 }],
+      [9, { id: "b.md:9", text: LINE, part: 2, of: 2 }],
+    ]),
+  );
+  const { page } = build(dir);
+  assert.ok(!page.includes("a.md:3"), "the line's id is private");
 });
 
 test("🔴 familiarity off: the key asks for none, the export reports no missing familiarity, and a stored one is refused", () => {

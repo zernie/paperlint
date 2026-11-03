@@ -412,6 +412,44 @@ test("🔴 without the store the page is read-only, and the real items stay read
   assert.match(shown, /G001/, "a real item is shown read-only");
 });
 
+test("🔴 one requirement of a line: its card shows which part it is and the whole line beneath", async () => {
+  const line = "TypeScript only (no JavaScript); top-level await is allowed.";
+  const { page } = build(
+    setup(
+      "unit-card",
+      config({
+        items: ITEMS.map((item, n) =>
+          n === 0
+            ? {
+                ...item,
+                body: "TypeScript only (no JavaScript)",
+                unit: { id: "L1", text: line, part: 1, of: 2 },
+              }
+            : n === 3
+              ? {
+                  ...item,
+                  body: "top-level await is allowed",
+                  unit: { id: "L1", text: line, part: 2, of: 2 },
+                }
+              : item,
+        ),
+      }),
+    ),
+  );
+  const shown = await showPage(page, {}, {});
+  assert.match(
+    shown,
+    /From the line \(requirement 1 of 2\):\nTypeScript only \(no JavaScript\); top-level await is allowed\./,
+    shown,
+  );
+  assert.match(shown, /From the line \(requirement 2 of 2\):/);
+  assert.equal(
+    occurrences(shown, "From the line"),
+    2,
+    "only the two parts carry the line",
+  );
+});
+
 test("🔴 familiarity off: no group asks how well it is known, and a group is done when its items are", async () => {
   const { page, key } = build(
     setup("familiarity-off-page", approval({ familiarity: false })),
