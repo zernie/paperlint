@@ -1,6 +1,7 @@
-# Linter readings run on real repositories (vigiles experimental_ruleProof), triggered only by a push to
-# ci/rule-proof-run. The run job executes other repositories' linters and plugins, so it holds no write token and
-# keeps no git credentials; only the commit job, which runs nothing from those repositories, may push.
+# Linter readings run on real repositories (vigiles experimental_ruleProof), triggered only by a push of
+# frame/rule-proof/inputs.json to ci/rule-proof-run. One job per repository, in parallel. The run jobs execute other
+# repositories' linters and plugins, so they hold no write token and keep no git credentials; only the commit job,
+# which runs nothing from those repositories, may push.
 name: rule proof run
 on:
   push:
@@ -10,11 +11,30 @@ concurrency:
   group: rule-proof-run
   cancel-in-progress: false
 jobs:
-  run:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 5
     permissions:
       contents: read
+    outputs:
+      indices: ${{ steps.list.outputs.indices }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: list
+        run: echo "indices=$(node -e 'const a=require(`./frame/rule-proof/inputs.json`);console.log(JSON.stringify(a.map((_,i)=>i)))')" >> "$GITHUB_OUTPUT"
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        index: ${{ fromJSON(needs.plan.outputs.indices) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,13 +48,13 @@ jobs:
       - name: install the runner (vigiles only, no install scripts)
         working-directory: frame/rule-proof
         run: npm install --ignore-scripts --no-audit --no-fund
-      - name: run every repository of inputs.json
-        timeout-minutes: 140
-        run: node frame/rule-proof/run.mjs frame/rule-proof/inputs.json results
+      - name: run one repository of inputs.json
+        timeout-minutes: 40
+        run: node frame/rule-proof/run.mjs frame/rule-proof/inputs.json results --only ${{ matrix.index }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rule-proof-results
+          name: rule-proof-result-${{ matrix.index }}
           path: results
           if-no-files-found: warn
   commit:
@@ -48,7 +68,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: rule-proof-results
+          pattern: rule-proof-result-*
+          merge-multiple: true
           path: frame/rule-proof/results
       - name: commit the results back to this branch
         run: |

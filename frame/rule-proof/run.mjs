@@ -11,7 +11,7 @@
 // One JSON file per repository in <out-dir>; nothing from the repository is executed except its linter and the
 // plugins its own lockfile installs. Every outcome is written, including "not installed" and "not run".
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
@@ -52,32 +52,84 @@ export function ruffSettings(flat, version) {
   return out;
 }
 
-export function finish(reading, pinned) {
-  if (reading.linter === "ruff") return { ...reading, settings: ruffSettings(reading.settings, pinned.version) };
-  const ts = ["@typescript-eslint/parser", "typescript-eslint"].find((p) => existsSync(path.join(pinned.dir, "node_modules", p, "package.json")));
-  return ts ? { ...reading, parser: ts === "typescript-eslint" ? "typescript-eslint/parser" : ts } : reading;
+// The package an ESLint rule id needs, by ESLint's naming convention.
+export function pluginOf(rule) {
+  if (!rule.includes("/")) return null;
+  const prefix = rule.slice(0, rule.lastIndexOf("/"));
+  if (prefix.startsWith("@")) return prefix.includes("/") ? `${prefix.split("/")[0]}/eslint-plugin-${prefix.split("/")[1]}` : `${prefix}/eslint-plugin`;
+  return `eslint-plugin-${prefix}`;
 }
 
-function runOne(item) {
+// pnpm keeps transitive packages out of the top of node_modules; it keeps them in node_modules/.pnpm/node_modules.
+// A package the repository's own install has there is linked to the top, unchanged. Returns true when it linked.
+export function expose(dir, pkg) {
+  const top = path.join(dir, "node_modules", pkg);
+  if (existsSync(path.join(top, "package.json"))) return false;
+  const hidden = path.join(dir, "node_modules", ".pnpm", "node_modules", pkg);
+  if (!existsSync(path.join(hidden, "package.json"))) return false;
+  mkdirSync(path.dirname(top), { recursive: true });
+  symlinkSync(realpathSync(hidden), top, "dir");
+  return true;
+}
+
+export function finish(reading, pinned, adjustments) {
+  if (reading.linter === "ruff") return { ...reading, settings: ruffSettings(reading.settings, pinned.version) };
+  const plugin = pluginOf(reading.rule);
+  if (plugin && expose(pinned.dir, plugin)) adjustments.add("pnpm-exposed");
+  const ts = reading.rule.startsWith("@typescript-eslint/") || existsSync(path.join(pinned.dir, "tsconfig.json"));
+  if (ts && expose(pinned.dir, "@typescript-eslint/parser")) adjustments.add("pnpm-exposed");
+  return existsSync(path.join(pinned.dir, "node_modules", "@typescript-eslint/parser", "package.json"))
+    ? { ...reading, parser: "@typescript-eslint/parser" } : reading;
+}
+
+// Ruff with no pin: the latest release uploaded to PyPI before the commit (DESIGN.md §9.8), not a pre-release.
+export function dateMatched(releases, commitIso) {
+  const at = Date.parse(commitIso);
+  const ok = Object.entries(releases)
+    .filter(([v, files]) => /^\d+\.\d+\.\d+$/.test(v) && files.length > 0 && Math.min(...files.map((f) => Date.parse(f.upload_time_iso_8601))) <= at)
+    .map(([v]) => v.split(".").map(Number));
+  ok.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+  return ok.length ? ok.at(-1).join(".") : null;
+}
+
+async function ruffReleases() {
+  const r = await fetch("https://pypi.org/pypi/ruff/json");
+  return (await r.json()).releases;
+}
+
+async function runOne(item) {
   const dir = path.join(work, "repo");
   const t0 = Date.now();
+  const adjustments = new Set();
   const result = { id: item.id, repo: item.repo, sha: item.sha, linter: item.linter, rule: item.rule };
   try {
     result.checked_out = clone(item.repo, item.sha, dir);
   } catch (e) {
     return { ...result, clone: { kind: "failed", reason: String(e.stderr ?? e.message).slice(0, 500) } };
   }
-  const installed = rp.install(item.linter, dir, { cacheDir });
-  if (installed.kind !== "installed") return { ...result, install: installed, seconds: (Date.now() - t0) / 1000 };
+  let installed = rp.install(item.linter, dir, { cacheDir });
+  if (installed.kind !== "installed" && item.linter === "ruff" && installed.stage === "no-pin") {
+    const commitIso = git(dir, "log", "-1", "--format=%cI").trim();
+    const version = dateMatched(await ruffReleases(), commitIso);
+    result.as_designed_install = installed;
+    if (version) {
+      writeFileSync(path.join(dir, "requirements-date-matched-ruff.txt"), `ruff==${version}\n`);
+      adjustments.add("date-matched-version");
+      result.date_matched = { commit: commitIso, ruff: version };
+      installed = rp.install(item.linter, dir, { cacheDir });
+    }
+  }
+  if (installed.kind !== "installed") return { ...result, install: installed, adjustments: [...adjustments], seconds: (Date.now() - t0) / 1000 };
   const pinned = installed.linter;
   result.install = { kind: "installed", version: pinned.version };
   result.readings = item.readings.map(({ key, reading, pair }) => {
-    const full = finish(reading, pinned);
+    const full = finish(reading, pinned, adjustments);
     const proof = rp.prove(pinned, full, pair);
     if (proof.kind !== "proved") return { key, reading: full, proof };
     const flagged = rp.flagged(proof.reading);
     return { key, reading: full, proof: { kind: "proved" }, flagged };
   });
+  result.adjustments = [...adjustments];
   result.seconds = (Date.now() - t0) / 1000;
   rmSync(dir, { recursive: true, force: true });
   return result;
@@ -91,7 +143,7 @@ if (inputsPath) {
     if (only !== null && i !== only) continue;
     const out = path.join(outDir, `${item.id}.json`);
     if (existsSync(out)) { console.log(`skip ${item.id} (done)`); continue; }
-    const r = runOne(item);
+    const r = await runOne(item);
     writeFileSync(out, JSON.stringify(r, null, 1) + "\n");
     const proved = (r.readings ?? []).filter((x) => x.proof.kind === "proved").length;
     console.log(`${item.id} ${item.repo}: install ${r.install?.kind ?? r.clone?.kind} ${r.install?.version ?? ""}, ` +
