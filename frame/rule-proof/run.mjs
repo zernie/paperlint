@@ -72,6 +72,12 @@ export function expose(dir, pkg) {
   return true;
 }
 
+// Ordered pairs (i, j), i != j, of proved readings that both carry a planted pair: who runs on whose violation.
+export function crossPlan(readings) {
+  const ok = readings.map((r, i) => (r.proved && r.pair ? i : -1)).filter((i) => i >= 0);
+  return ok.flatMap((i) => ok.filter((j) => j !== i).map((j) => [i, j]));
+}
+
 export function finish(reading, pinned, adjustments) {
   if (reading.linter === "ruff") return { ...reading, settings: ruffSettings(reading.settings, pinned.version) };
   const plugin = pluginOf(reading.rule);
@@ -122,13 +128,26 @@ async function runOne(item) {
   if (installed.kind !== "installed") return { ...result, install: installed, adjustments: [...adjustments], seconds: (Date.now() - t0) / 1000 };
   const pinned = installed.linter;
   result.install = { kind: "installed", version: pinned.version };
+  const fulls = [];
   result.readings = item.readings.map(({ key, reading, pair }) => {
     const full = finish(reading, pinned, adjustments);
+    fulls.push(full);
     const proof = rp.prove(pinned, full, pair);
     if (proof.kind !== "proved") return { key, reading: full, proof };
     const flagged = rp.flagged(proof.reading);
     return { key, reading: full, proof: { kind: "proved" }, flagged };
   });
+  if (item.cross) {
+    // Cross-example check: each proved reading A on every other proved reading B's planted violation, judged with
+    // A's own quiet twin, so `proved` = A flags B's violation; `not-proved` with badHits 0 = A passes it; a not-run
+    // stage (e.g. pair-outside-scope: B's file lies outside A's scope) is kept as it is.
+    result.cross = crossPlan(result.readings.map((r, i) => ({ proved: r.proof.kind === "proved", pair: item.readings[i].pair })))
+      .map(([i, j]) => {
+        const p = rp.prove(pinned, fulls[i], { bad: item.readings[j].pair.bad, good: item.readings[i].pair.good });
+        return { a: item.readings[i].key, b: item.readings[j].key, kind: p.kind, badHits: p.badHits, goodHits: p.goodHits,
+          stage: p.stage, reason: p.reason?.slice(0, 300) };
+      });
+  }
   result.adjustments = [...adjustments];
   result.seconds = (Date.now() - t0) / 1000;
   rmSync(dir, { recursive: true, force: true });

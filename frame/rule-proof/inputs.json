@@ -1,103 +1,181 @@
 [
  {
-  "id": "A11",
-  "repo": "visgl/luma.gl",
-  "sha": "256c1061346e49c2a2586e2b926e9cbdcef95733",
-  "linter": "eslint",
-  "rule": "@typescript-eslint/consistent-type-assertions",
+  "id": "S1",
+  "repo": "NatLabRockies/gdx-pandas",
+  "sha": "aad60d3a939f1405f593eb0a5b9947b906284e9a",
+  "linter": "ruff",
+  "rule": "ANN201",
+  "cross": true,
   "readings": [
    {
-    "key": "on|[{\"assertionStyle\":\"as\"}]|tests:included",
+    "key": "anthropic-s1",
     "reading": {
-     "linter": "eslint",
-     "rule": "@typescript-eslint/consistent-type-assertions",
-     "options": [
-      {
-       "assertionStyle": "as"
-      }
-     ],
+     "linter": "ruff",
+     "rule": "ANN201",
+     "settings": {},
      "scope": {
       "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
+       "src/gdxpds/__init__.py",
+       "src/gdxpds/read_gdx.py",
+       "src/gdxpds/write_gdx.py",
+       "src/gdxpds/gdx.py",
+       "src/gdxpds/special.py",
+       "src/gdxpds/tools.py",
+       "src/gdxpds/cli/**/*.py"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "src/gdxpds/_*.py",
+       "src/gdxpds/_verify_install/**"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "p3s108-pair/bad.ts",
-      "text": "interface Point {\n  x: number;\n  y: number;\n}\n\nconst raw: unknown = { x: 1, y: 2 };\nconst point = <Point>raw;\n\nexport function norm(): number {\n  return Math.hypot(point.x, point.y);\n}\n"
+      "path": "src/gdxpds/cli/p3s109-pair/bad.py",
+      "text": "import os\n\n\ndef list_gdx_files(directory: str):\n    return [f for f in os.listdir(directory) if f.endswith(\".gdx\")]\n"
      },
      "good": {
-      "path": "p3s108-pair/good.ts",
-      "text": "interface Point {\n  x: number;\n  y: number;\n}\n\nconst raw: unknown = { x: 1, y: 2 };\nconst point = raw as Point;\n\nexport function norm(): number {\n  return Math.hypot(point.x, point.y);\n}\n"
+      "path": "src/gdxpds/cli/p3s109-pair/good.py",
+      "text": "import os\n\n\ndef list_gdx_files(directory: str) -> list[str]:\n    return [f for f in os.listdir(directory) if f.endswith(\".gdx\")]\n"
      }
     }
    },
    {
-    "key": "on|[{\"assertionStyle\":\"as\",\"objectLiteralTypeAssertions\":\"never\"}]|tests:included",
+    "key": "anthropic-s2",
     "reading": {
-     "linter": "eslint",
-     "rule": "@typescript-eslint/consistent-type-assertions",
-     "options": [
-      {
-       "assertionStyle": "as",
-       "objectLiteralTypeAssertions": "never"
-      }
-     ],
+     "linter": "ruff",
+     "rule": "ANN201",
+     "settings": {},
      "scope": {
       "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
+       "src/gdxpds/__init__.py",
+       "src/gdxpds/read_gdx.py",
+       "src/gdxpds/write_gdx.py",
+       "src/gdxpds/gdx.py",
+       "src/gdxpds/special.py",
+       "src/gdxpds/tools.py",
+       "src/gdxpds/cli/**/*.py"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "src/gdxpds/_*.py",
+       "src/gdxpds/_verify_install/**"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "p3s108-pair/bad.ts",
-      "text": "interface Point {\n  x: number;\n  y: number;\n}\n\nexport const origin = { x: 0, y: 0 } as Point;\n"
+      "path": "src/gdxpds/cli/p3s109-pair/bad.py",
+      "text": "import os\n\n\ndef list_gdx_files(directory: str):\n    return [f for f in os.listdir(directory) if f.endswith(\".gdx\")]\n"
      },
      "good": {
-      "path": "p3s108-pair/good.ts",
-      "text": "interface Point {\n  x: number;\n  y: number;\n}\n\nexport const origin: Point = { x: 0, y: 0 };\n"
+      "path": "src/gdxpds/cli/p3s109-pair/good.py",
+      "text": "import os\n\n\ndef list_gdx_files(directory: str) -> list[str]:\n    return [f for f in os.listdir(directory) if f.endswith(\".gdx\")]\n"
      }
     }
    }
   ]
  },
  {
-  "id": "A12",
+  "id": "S2",
   "repo": "nullvoxpopuli/limber",
   "sha": "4472ef469c08839823267e512d99eac105b50624",
   "linter": "eslint",
   "rule": "quotes",
+  "cross": true,
   "readings": [
    {
-    "key": "on|[\"single\"]|tests:included",
+    "key": "anthropic-s1",
+    "reading": {
+     "linter": "eslint",
+     "rule": "quotes",
+     "options": [
+      "single",
+      {
+       "avoidEscape": true
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.gjs",
+       "**/*.gts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "apps/tutorial/public/**",
+       "apps/repl/public/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.js",
+      "text": "const greeting = \"hello world\";\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.js",
+      "text": "const greeting = 'hello world';\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
+     }
+    }
+   },
+   {
+    "key": "anthropic-s2",
+    "reading": {
+     "linter": "eslint",
+     "rule": "quotes",
+     "options": [
+      "single",
+      {
+       "avoidEscape": true
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.gjs",
+       "**/*.gts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "apps/tutorial/public/**",
+       "apps/repl/public/**",
+       "**/node_modules/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.js",
+      "text": "const greeting = \"hello world\";\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.js",
+      "text": "const greeting = 'hello world';\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s1",
     "reading": {
      "linter": "eslint",
      "rule": "quotes",
@@ -107,6 +185,84 @@
      "scope": {
       "files": [
        "**/*.js",
+       "**/*.ts",
+       "**/*.gjs",
+       "**/*.gts",
+       "**/*.mjs",
+       "**/*.cjs"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.js",
+      "text": "const greeting = \"hello\";\n\nfunction greet(name) {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.js",
+      "text": "const greeting = 'hello';\n\nfunction greet(name) {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s2",
+    "reading": {
+     "linter": "eslint",
+     "rule": "quotes",
+     "options": [
+      "single",
+      {
+       "avoidEscape": true
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.ts",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.gjs",
+       "**/*.gts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.js",
+      "text": "const greeting = \"hello world\";\n\nfunction greet(name) {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = greet;\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.js",
+      "text": "const greeting = 'hello world';\n\nfunction greet(name) {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = greet;\n"
+     }
+    }
+   },
+   {
+    "key": "google-s1",
+    "reading": {
+     "linter": "eslint",
+     "rule": "quotes",
+     "options": [
+      "single",
+      {
+       "avoidEscape": true
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
        "**/*.jsx",
        "**/*.mjs",
        "**/*.cjs",
@@ -125,56 +281,17 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s108-pair/bad.js",
+      "path": "p3s109-pair/bad.js",
       "text": "const greeting = \"hello world\";\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
      },
      "good": {
-      "path": "p3s108-pair/good.js",
+      "path": "p3s109-pair/good.js",
       "text": "const greeting = 'hello world';\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
      }
     }
    },
    {
-    "key": "on|[\"single\",\"avoid-escape\"]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "quotes",
-     "options": [
-      "single",
-      "avoid-escape"
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "const greeting = \"hello world\";\nconst name = 'Ada';\n\nfunction greet() {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "const greeting = 'hello world';\nconst name = 'Ada';\n\nfunction greet() {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
-     }
-    }
-   },
-   {
-    "key": "on|[\"single\",{\"avoidEscape\":true}]|tests:included",
+    "key": "google-s2",
     "reading": {
      "linter": "eslint",
      "rule": "quotes",
@@ -205,905 +322,12 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "const greeting = \"hello world\";\n\nfunction greet(name) {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
+      "path": "p3s109-pair/bad.js",
+      "text": "const greeting = \"hello world\";\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
      },
      "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "const greeting = 'hello world';\n\nfunction greet(name) {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
-     }
-    }
-   },
-   {
-    "key": "on|[\"single\",{\"allowTemplateLiterals\":true,\"avoidEscape\":true}]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "quotes",
-     "options": [
-      "single",
-      {
-       "allowTemplateLiterals": true,
-       "avoidEscape": true
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "const greeting = \"hello\";\nconst name = 'world';\n\nconsole.log(greeting, name);\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "const greeting = 'hello';\nconst name = 'world';\n\nconsole.log(greeting, name);\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "A14",
-  "repo": "BastiTee/python-boilerplate",
-  "sha": "2ab97ff5386e958adb982ccc26449627d668463b",
-  "linter": "ruff",
-  "rule": "E501",
-  "readings": [
-   {
-    "key": "on|{\"line-length\":88}|tests:included",
-    "reading": {
-     "linter": "ruff",
-     "rule": "E501",
-     "settings": {
-      "line-length": 88
-     },
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.py",
-      "text": "def greet():\n    message = \"this is a fairly long string literal that keeps going well past the limit of eighty-eight characters\"\n    return message\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.py",
-      "text": "def greet():\n    message = (\n        \"this is a fairly long string literal that keeps going well past the limit \"\n        \"of eighty-eight characters\"\n    )\n    return message\n"
-     }
-    }
-   },
-   {
-    "key": "on|{}|tests:excluded",
-    "reading": {
-     "linter": "ruff",
-     "rule": "E501",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/test/**",
-       "**/tests/**",
-       "**/__tests__/**",
-       "**/spec/**",
-       "**/e2e/**",
-       "**/*.test.*",
-       "**/*.spec.*",
-       "**/test_*.py",
-       "**/*_test.py"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.py",
-      "text": "def greet():\n    message = \"This is a rather long message that keeps going well past the limit of eighty-eight characters\"\n    return message\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.py",
-      "text": "def greet():\n    message = (\n        \"This is a rather long message that keeps going well past the limit \"\n        \"of eighty-eight characters\"\n    )\n    return message\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "A19",
-  "repo": "dbdiff/dbdiff",
-  "sha": "6e8d94823b93c42ed303b631045697f5810b7024",
-  "linter": "eslint",
-  "rule": "no-magic-numbers",
-  "readings": [
-   {
-    "key": "on|[{\"ignore\":[0]}]|tests:excluded",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-magic-numbers",
-     "options": [
-      {
-       "ignore": [
-        0
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/test/**",
-       "**/tests/**",
-       "**/__tests__/**",
-       "**/spec/**",
-       "**/e2e/**",
-       "**/*.test.*",
-       "**/*.spec.*",
-       "**/test_*.py",
-       "**/*_test.py"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "function applyDiscount(price) {\n  return price * 0.85;\n}\n\nmodule.exports = { applyDiscount };\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "const DISCOUNT_FACTOR = 0.85;\n\nfunction applyDiscount(price) {\n  return price * DISCOUNT_FACTOR;\n}\n\nmodule.exports = { applyDiscount };\n"
-     }
-    }
-   },
-   {
-    "key": "on|[{\"ignore\":[0]}]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-magic-numbers",
-     "options": [
-      {
-       "ignore": [
-        0
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "function totalWithTax(price) {\n  return price * 1.2;\n}\n\nmodule.exports = { totalWithTax };\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "const TAX_MULTIPLIER = 1.2;\n\nfunction totalWithTax(price) {\n  return price * TAX_MULTIPLIER;\n}\n\nmodule.exports = { totalWithTax };\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "A20",
-  "repo": "plurid/plurid",
-  "sha": "a27510396d4c14f1d24095ccb5fc23b2855fbc79",
-  "linter": "eslint",
-  "rule": "indent",
-  "readings": [
-   {
-    "key": "on|[4]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "indent",
-     "options": [
-      4
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
-     }
-    }
-   },
-   {
-    "key": "on|[4,{\"SwitchCase\":1}]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "indent",
-     "options": [
-      4,
-      {
-       "SwitchCase": 1
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "function greet(name) {\n  if (name) {\n    return 'hello ' + name;\n  }\n  return 'hello';\n}\n\nmodule.exports = greet;\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "function greet(name) {\n    if (name) {\n        return 'hello ' + name;\n    }\n    return 'hello';\n}\n\nmodule.exports = greet;\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "B11",
-  "repo": "evo-design/proto-tools",
-  "sha": "04972164c6c7925ef2f0a14a86d1a1c27eab730a",
-  "linter": "ruff",
-  "rule": "PLC0415",
-  "readings": [
-   {
-    "key": "on|{}|tests:excluded",
-    "reading": {
-     "linter": "ruff",
-     "rule": "PLC0415",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/test/**",
-       "**/tests/**",
-       "**/__tests__/**",
-       "**/spec/**",
-       "**/e2e/**",
-       "**/*.test.*",
-       "**/*.spec.*",
-       "**/test_*.py",
-       "**/*_test.py"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.py",
-      "text": "def embed(texts):\n    import torch\n\n    return torch.tensor([len(t) for t in texts])\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.py",
-      "text": "import torch\n\n\ndef embed(texts):\n    return torch.tensor([len(t) for t in texts])\n"
-     }
-    }
-   },
-   {
-    "key": "on|{}|tests:included",
-    "reading": {
-     "linter": "ruff",
-     "rule": "PLC0415",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.py",
-      "text": "def embed(texts):\n    import numpy as np\n\n    return np.array([len(t) for t in texts])\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.py",
-      "text": "import numpy as np\n\n\ndef embed(texts):\n    return np.array([len(t) for t in texts])\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "B14",
-  "repo": "fmflurry/settings-opencode",
-  "sha": "72095d85cf600565e26e6a79dd7f105ecdb4433f",
-  "linter": "eslint",
-  "rule": "no-unused-vars",
-  "readings": [
-   {
-    "key": "on|[{\"args\":\"none\",\"vars\":\"all\"}]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-unused-vars",
-     "options": [
-      {
-       "args": "none",
-       "vars": "all"
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "import { readFile } from 'fs';\n\nexport function double(n) {\n  const factor = 2;\n  const unused = n * 3;\n  return n * factor;\n}\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "export function double(n) {\n  const factor = 2;\n  return n * factor;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "on|[]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-unused-vars",
-     "options": [],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "import { readFile } from 'fs';\n\nfunction total(items) {\n  const tax = 0.2;\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n\nexport { total };\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "function total(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}\n\nexport { total };\n"
-     }
-    }
-   },
-   {
-    "key": "on|[{\"varsIgnorePattern\":\"^[A-Z_]\"}]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-unused-vars",
-     "options": [
-      {
-       "varsIgnorePattern": "^[A-Z_]"
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "import { parse } from \"./parser\";\nimport { format } from \"./format\";\n\nexport function render(value) {\n  return format(value);\n}\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "import { format } from \"./format\";\n\nexport function render(value) {\n  return format(value);\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "B17",
-  "repo": "wilsonzlin/aero",
-  "sha": "a9c285941109cd85ac858a4bcd255fa5e6e15389",
-  "linter": "eslint",
-  "rule": "id-denylist",
-  "readings": [
-   {
-    "key": "on|[]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "id-denylist",
-     "options": [],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "const data = [1, 2, 3];\n\nfunction total(items) {\n  return items.reduce((sum, n) => sum + n, 0);\n}\n\nconsole.log(total(data));\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "const numbers = [1, 2, 3];\n\nfunction total(items) {\n  return items.reduce((sum, n) => sum + n, 0);\n}\n\nconsole.log(total(numbers));\n"
-     }
-    }
-   },
-   {
-    "key": "on|[\"any\",\"Number\",\"number\",\"String\",\"string\",\"Boolean\",\"boolean\",\"Undefined\",\"undefined\"]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "id-denylist",
-     "options": [
-      "any",
-      "Number",
-      "number",
-      "String",
-      "string",
-      "Boolean",
-      "boolean",
-      "Undefined",
-      "undefined"
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "const number = 42;\n\nfunction double(value) {\n  return value * 2;\n}\n\nconsole.log(double(number));\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "const count = 42;\n\nfunction double(value) {\n  return value * 2;\n}\n\nconsole.log(double(count));\n"
-     }
-    }
-   },
-   {
-    "key": "on|[\"any\",\"Number\",\"String\",\"string\",\"Boolean\",\"boolean\",\"Undefined\",\"undefined\"]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "id-denylist",
-     "options": [
-      "any",
-      "Number",
-      "String",
-      "string",
-      "Boolean",
-      "boolean",
-      "Undefined",
-      "undefined"
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "function greet(string) {\n  return 'Hello, ' + string;\n}\n\nconst message = greet('world');\nconsole.log(message);\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "function greet(name) {\n  return 'Hello, ' + name;\n}\n\nconst message = greet('world');\nconsole.log(message);\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "B18",
-  "repo": "clemperorpenguin/xian-vl",
-  "sha": "055d5d9203d60b37f261670d3e93bcc2ed04d9c8",
-  "linter": "ruff",
-  "rule": "TID251",
-  "readings": [
-   {
-    "key": "on|{}|tests:included",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.py",
-      "text": "import asyncio\n\n\nasync def fetch(item):\n    return item\n\n\nclass Worker:\n    def __init__(self, processor):\n        self.processor = processor\n\n    def handle(self, item):\n        return asyncio.run(fetch(item))\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.py",
-      "text": "async def fetch(item):\n    return item\n\n\nclass Worker:\n    def __init__(self, processor):\n        self.processor = processor\n\n    def handle(self, item):\n        return self.processor.engine.submit(fetch(item))\n"
-     }
-    }
-   },
-   {
-    "key": "on|{\"flake8-tidy-imports.banned-api\":{\"functools.lru_cache\":{\"msg\":\"This function does not retain type information for the wrapped function's arguments; The `lru_cache` function from `_utils` should be used instead\"}}}|tests:included",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports.banned-api": {
-       "functools.lru_cache": {
-        "msg": "This function does not retain type information for the wrapped function's arguments; The `lru_cache` function from `_utils` should be used instead"
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.py",
-      "text": "import functools\n\n\nclass Handler:\n    def __init__(self, processor):\n        self.processor = processor\n\n    @functools.lru_cache(maxsize=128)\n    def lookup(self, key):\n        return key\n\n    async def fetch(self, key):\n        return self.lookup(key)\n\n    def run(self, key):\n        return self.processor.engine.submit(self.fetch(key))\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.py",
-      "text": "from _utils import lru_cache\n\n\nclass Handler:\n    def __init__(self, processor):\n        self.processor = processor\n\n    @lru_cache(maxsize=128)\n    def lookup(self, key):\n        return key\n\n    async def fetch(self, key):\n        return self.lookup(key)\n\n    def run(self, key):\n        return self.processor.engine.submit(self.fetch(key))\n"
-     }
-    }
-   },
-   {
-    "key": "on|{\"flake8-tidy-imports.banned-api\":{\"re.match\":{\"msg\":\"use re.fullmatch() or re.search() instead\"},\"typing.TYPE_CHECKING\":{\"msg\":\"use TYPE_CHECKING = False instead\"}}}|tests:included",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports.banned-api": {
-       "re.match": {
-        "msg": "use re.fullmatch() or re.search() instead"
-       },
-       "typing.TYPE_CHECKING": {
-        "msg": "use TYPE_CHECKING = False instead"
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.py",
-      "text": "import re\n\n\nclass Worker:\n    def __init__(self, processor):\n        self.processor = processor\n\n    async def fetch(self, text):\n        return text\n\n    def run(self, text):\n        if re.match(r\"\\d+\", text):\n            return self.processor.engine.submit(self.fetch(text))\n        return None\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.py",
-      "text": "import re\n\n\nclass Worker:\n    def __init__(self, processor):\n        self.processor = processor\n\n    async def fetch(self, text):\n        return text\n\n    def run(self, text):\n        if re.fullmatch(r\"\\d+\", text):\n            return self.processor.engine.submit(self.fetch(text))\n        return None\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "B20",
-  "repo": "cramt/m365-copilot-proxy",
-  "sha": "65905e881d6597040966aff9b087aa9a908b358a",
-  "linter": "eslint",
-  "rule": "max-lines",
-  "readings": [
-   {
-    "key": "on|[]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "max-lines",
-     "options": [],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "const a = 1;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nexport default a;\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "const a = 1;\n\nexport default a;\n"
-     }
-    }
-   },
-   {
-    "key": "on|[350]|tests:excluded",
-    "reading": {
-     "linter": "eslint",
-     "rule": "max-lines",
-     "options": [
-      350
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/test/**",
-       "**/tests/**",
-       "**/__tests__/**",
-       "**/spec/**",
-       "**/e2e/**",
-       "**/*.test.*",
-       "**/*.spec.*",
-       "**/test_*.py",
-       "**/*_test.py"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "const a = 1;\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nexport { a };\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "const a = 1;\n\nexport { a };\n"
-     }
-    }
-   },
-   {
-    "key": "on|[{\"max\":450,\"skipBlankLines\":true,\"skipComments\":false}]|tests:included",
-    "reading": {
-     "linter": "eslint",
-     "rule": "max-lines",
-     "options": [
-      {
-       "max": 450,
-       "skipBlankLines": true,
-       "skipComments": false
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s108-pair/bad.js",
-      "text": "x;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\nx;\n"
-     },
-     "good": {
-      "path": "p3s108-pair/good.js",
-      "text": "x;\nx;\nx;\n"
+      "path": "p3s109-pair/good.js",
+      "text": "const greeting = 'hello world';\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
      }
     }
    }
