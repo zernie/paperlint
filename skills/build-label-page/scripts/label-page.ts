@@ -40,6 +40,7 @@
  *     "seed": 7,                            fixes the order; change it and every id changes
  *     "groups": {"python": "Python"},
  *     "labeller_knows": ["python"],         optional: items of other groups are not put on the page
+ *     "familiarity": false,                 optional: no "how well do you know" question (approval page)
  *     "familiarity_question": "How well do you know {group}?",          optional
  *     "questions": [{"id": "label", "text": "Is this correct?", "short": "correct?",
  *                    "options": [{"value": "yes", "label": "Yes", "example": "one real case",

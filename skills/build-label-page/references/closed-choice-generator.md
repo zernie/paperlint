@@ -50,7 +50,9 @@ length.
 - **`seed`**: fixes the order. Rebuilding with the same seed keeps every id, and a new item gets the
   next one; a different seed is refused once a key exists.
 - **`ask_why`** on an option: a prompt. That answer is incomplete, on the page and in the export,
-  until a reason is saved.
+  until a reason is saved. The reason saves as it is typed (after a pause, and when the page is
+  left), so a labeller who closes the page from inside the box does not leave a drop without its
+  reason; a store echo while typing keeps the box and its focus.
 
 ## The approval page
 
@@ -81,8 +83,15 @@ drop, the drop carrying `ask_why`.
 }
 ```
 
-The items are the drawn units verbatim. The practice is three units whose fate is obvious. Each
-dropped unit carries its reason in the labels file. The author's words, with the date, then go into
+The page sets `"familiarity": false`: the author is judging drawn units, not repositories they
+have seen, so the per-group "how well do you know it" question is left out (and a
+`familiarity_question` beside it is refused).
+
+The items are the drawn units verbatim, in a language the author reads. Units in other languages
+are taken out before the draw, as a population rule the study's `plan.json` states ("English-language
+units only") with the number excluded reported in the paper; a unit dropped at approval because the
+author cannot read it is an exclusion made after the draw and goes unrecorded. The practice is three
+units whose fate is obvious. Each dropped unit carries its reason in the labels file. The author's words, with the date, then go into
 `author_check` of the plan; a dropped unit is replaced by the next one in the draw.
 
 ## The export

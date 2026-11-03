@@ -449,3 +449,25 @@ test("🔴 one requirement of a line: its card shows which part it is and the wh
     "only the two parts carry the line",
   );
 });
+
+test("🔴 familiarity off: no group asks how well it is known, and a group is done when its items are", async () => {
+  const { page, key } = build(
+    setup("familiarity-off-page", approval({ familiarity: false })),
+  );
+  const practice = Object.fromEntries(
+    APPROVAL_PRACTICE.map((p, n) => [
+      `r1-P${String(n + 1)}`,
+      { answers: p.expected, source: "page" },
+    ]),
+  );
+  const answers = Object.fromEntries(
+    Object.keys(key.ids).map((id) => [
+      id,
+      { answers: { keep: "keep" }, source: "page" },
+    ]),
+  );
+  const shown = await showPage(page, answers, {}, practice);
+  assert.doesNotMatch(shown, /How well/);
+  assert.doesNotMatch(shown, /how well you know it/);
+  assert.match(shown, /Nothing left/, shown);
+});
