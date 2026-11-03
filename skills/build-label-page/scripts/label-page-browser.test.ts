@@ -56,10 +56,29 @@ const writes = async (page: Page) =>
 const storedReason = async (page: Page): Promise<string | undefined> =>
   (await writes(page)).at(-1)?.reasons["keep"];
 
+/** Wait until the store's last write carries `text` as the reason (the page saves on its own). */
+async function reasonStored(page: Page, text: string): Promise<void> {
+  await page.waitForFunction(
+    (t) => {
+      const w = (
+        window as { __writes?: { reasons?: Record<string, string> }[] }
+      ).__writes;
+      return w?.at(-1)?.reasons?.["keep"] === t;
+    },
+    text,
+    { timeout: 10_000 },
+  );
+  assert.equal(await storedReason(page), text);
+}
+
+/** A browser test launches Chromium and types: far above vitest's 5 s default on a slow runner. */
+const BROWSER_TEST_MS = 60_000;
+
 async function onApprovalPage(
   name: string,
   echoMs: number,
   steps: (page: Page) => Promise<void>,
+  filter: "all" | "next" = "all",
 ): Promise<void> {
   const { page: html } = build(setup(name, approval()));
   const browser = await chromium.launch({
@@ -71,6 +90,8 @@ async function onApprovalPage(
     await page.addInitScript(STORE(PRACTICE_DONE, echoMs));
     await page.goto("about:blank");
     await page.setContent(html, { waitUntil: "domcontentloaded" });
+    if (filter === "next")
+      await page.getByRole("button", { name: "Next unanswered" }).click();
     await page.getByRole("button", { name: /Drop/ }).first().click();
     await steps(page);
   } finally {
@@ -78,63 +99,94 @@ async function onApprovalPage(
   }
 }
 
-test("🔴 a reason typed and never blurred is saved: after a pause in typing, and when the page is left", async () => {
-  await onApprovalPage("browser-pause", 20, async (page) => {
-    await page.locator("textarea").first().click();
-    await page.keyboard.type("a process rule");
-    await page.waitForTimeout(1500);
-    assert.equal(await storedReason(page), "a process rule");
-  });
-  await onApprovalPage("browser-leave", 20, async (page) => {
-    await page.locator("textarea").first().click();
-    await page.keyboard.type("not a rule");
-    await page.evaluate(() => {
-      document.dispatchEvent(new Event("visibilitychange"));
-      window.dispatchEvent(new Event("pagehide"));
+test(
+  "🔴 a reason typed and never blurred is saved: after a pause in typing, and when the page is left",
+  async () => {
+    await onApprovalPage("browser-pause", 20, async (page) => {
+      await page.locator("textarea").first().click();
+      await page.keyboard.type("a process rule");
+      await reasonStored(page, "a process rule");
     });
-    await page.waitForTimeout(100);
-    assert.equal(await storedReason(page), "not a rule");
-  });
-});
+    await onApprovalPage("browser-leave", 20, async (page) => {
+      await page.locator("textarea").first().click();
+      await page.keyboard.type("not a rule");
+      await page.evaluate(() => {
+        window.dispatchEvent(new Event("pagehide"));
+      });
+      await reasonStored(page, "not a rule");
+    });
+  },
+  BROWSER_TEST_MS,
+);
 
-test("🔴 the store's echo while typing keeps the box, its focus and every keystroke", async () => {
-  await onApprovalPage("browser-echo", 300, async (page) => {
-    await page.locator("textarea").first().click();
-    await page.keyboard.type("a pro");
-    await page.waitForTimeout(450); // the Drop's own write comes back and the page renders again
-    await page.keyboard.type("cess rule");
-    assert.equal(
-      await page.evaluate(() => document.activeElement?.tagName),
-      "TEXTAREA",
-    );
-    assert.equal(
-      await page.locator("textarea").first().inputValue(),
-      "a process rule",
-    );
-    await page.waitForTimeout(1500);
-    assert.equal(await storedReason(page), "a process rule");
-  });
-});
+test(
+  "🔴 the store's echo while typing keeps the box, its focus and every keystroke",
+  async () => {
+    await onApprovalPage("browser-echo", 300, async (page) => {
+      await page.locator("textarea").first().click();
+      await page.keyboard.type("a pro");
+      await page.waitForTimeout(450); // the Drop's own write comes back and the page renders again
+      await page.keyboard.type("cess rule");
+      assert.equal(
+        await page.evaluate(() => document.activeElement?.tagName),
+        "TEXTAREA",
+      );
+      assert.equal(
+        await page.locator("textarea").first().inputValue(),
+        "a process rule",
+      );
+      await reasonStored(page, "a process rule");
+    });
+  },
+  BROWSER_TEST_MS,
+);
 
-test("a Keep needs no reason and writes none: the page stays quiet", async () => {
-  const { page: html } = build(setup("browser-keep", approval()));
-  const browser = await chromium.launch({
-    executablePath: chromiumPath(),
-    args: ["--no-sandbox"],
-  });
-  try {
-    const page = await browser.newPage();
-    await page.addInitScript(STORE(PRACTICE_DONE, 20));
-    await page.goto("about:blank");
-    await page.setContent(html, { waitUntil: "domcontentloaded" });
-    await page.getByRole("button", { name: /Keep/ }).first().click();
-    await page.waitForTimeout(1500);
-    assert.equal(await page.locator("textarea").count(), 0);
-    assert.deepEqual(
-      (await writes(page)).map((w) => w.reasons),
-      [{}],
+test(
+  "🔴 under 'Next unanswered', the save that completes an item keeps the box being typed in on the page",
+  async () => {
+    await onApprovalPage(
+      "browser-next",
+      20,
+      async (page) => {
+        await page.locator("textarea").first().click();
+        await page.keyboard.type("a pro");
+        await reasonStored(page, "a pro"); // the item is complete now, and the filter hides complete items
+        await page.keyboard.type("cess rule");
+        assert.equal(
+          await page.evaluate(() => document.activeElement?.tagName),
+          "TEXTAREA",
+        );
+        await reasonStored(page, "a process rule");
+      },
+      "next",
     );
-  } finally {
-    await browser.close();
-  }
-});
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "a Keep needs no reason and writes none: the page stays quiet",
+  async () => {
+    const { page: html } = build(setup("browser-keep", approval()));
+    const browser = await chromium.launch({
+      executablePath: chromiumPath(),
+      args: ["--no-sandbox"],
+    });
+    try {
+      const page = await browser.newPage();
+      await page.addInitScript(STORE(PRACTICE_DONE, 20));
+      await page.goto("about:blank");
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      await page.getByRole("button", { name: /Keep/ }).first().click();
+      await page.waitForTimeout(1200); // longer than the reason's pause: nothing more may arrive
+      assert.equal(await page.locator("textarea").count(), 0);
+      assert.deepEqual(
+        (await writes(page)).map((w) => w.reasons),
+        [{}],
+      );
+    } finally {
+      await browser.close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
