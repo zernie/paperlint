@@ -90,6 +90,8 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     editing: {},      // item id -> the question id the labeller tapped "Change" on
     mineWhy: {},      // item id -> the reasons this page has just written (ahead of the store)
     draftWhy: {},     // item id -> {question id: text typed and not yet saved}
+    whyTimers: {},    // "<item id>|<question id>" -> the pending save of a reason being typed
+    whyBoxes: {},     // "<item id>|<question id>" -> the reason box of the last render
     mine: {},         // item/group key -> the answers this page has just written (ahead of the store)
     inflight: {},     // item/group key -> writes not yet confirmed
     failed: {},       // item/group key -> error code of the last refused write
@@ -99,6 +101,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   };
   var db = null;
   var chains = {};
+  var WHY_PAUSE_MS = 800;
 
   try { if (localStorage.getItem("label-filter") === "next") state.filter = "next"; } catch (e) {}
 
@@ -197,6 +200,8 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   }
   // A reason saves when the labeller leaves the box (the text equivalent of a tap).
   function setReason(id, qid, text) {
+    clearTimeout(state.whyTimers[id + "|" + qid]);
+    delete state.whyTimers[id + "|" + qid];
     if (!canWrite()) return;
     var why = Object.assign({}, reasonsOf(id));
     why[qid] = text;
@@ -315,8 +320,16 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
       var draft = draftOf(item.id, q.id);
       box.value = draft !== undefined ? draft : reasonsOf(item.id)[q.id] || "";
       box.disabled = off;
-      // Every keystroke is kept as a draft, so a render from the store never erases unsaved text.
-      box.addEventListener("input", function () { keepDraft(item.id, q.id, box.value); });
+      // Every keystroke is kept as a draft, so a render from the store never erases unsaved text,
+      // and a pause in typing saves it: a reason that waits for the box to lose focus is lost when
+      // the labeller leaves the page from inside the box (measured: the store kept the drop alone).
+      box.addEventListener("input", function () {
+        keepDraft(item.id, q.id, box.value);
+        var k = item.id + "|" + q.id;
+        clearTimeout(state.whyTimers[k]);
+        state.whyTimers[k] = setTimeout(function () { setReason(item.id, q.id, box.value); }, WHY_PAUSE_MS);
+      });
+      state.whyBoxes[item.id + "|" + q.id] = box;
       box.addEventListener("change", function () { setReason(item.id, q.id, box.value); });
       card.appendChild(box);
     });
@@ -420,7 +433,29 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     });
     return sec;
   }
+  // Every reason typed and not yet saved goes to the store now: the page is being left.
+  function flushReasons() {
+    Object.keys(state.whyTimers).forEach(function (k) {
+      var at = k.indexOf("|"), id = k.slice(0, at), qid = k.slice(at + 1);
+      var draft = draftOf(id, qid);
+      if (draft === undefined) { clearTimeout(state.whyTimers[k]); delete state.whyTimers[k]; return; }
+      setReason(id, qid, draft);
+    });
+  }
+  // The page is rebuilt on every store snapshot; the reason box being typed in gets the keyboard back,
+  // with its caret where it was, or the rest of the sentence goes nowhere.
   function render() {
+    var typing = null;
+    Object.keys(state.whyBoxes).forEach(function (k) {
+      var b = state.whyBoxes[k];
+      if (document.activeElement === b) typing = { key: k, start: b.selectionStart, end: b.selectionEnd };
+    });
+    state.whyBoxes = {};
+    paint();
+    var again = typing && state.whyBoxes[typing.key];
+    if (again) { again.focus(); again.setSelectionRange(typing.start, typing.end); }
+  }
+  function paint() {
     var off = !canWrite();
     var done = DATA.items.filter(function (i) { return itemDone(i.id); }).length;
     var total = DATA.items.length;
@@ -499,6 +534,10 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   }
   function broken() { state.store = "none"; render(); }
 
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible") flushReasons();
+  });
+  window.addEventListener("pagehide", flushReasons);
   render();
   if (!window.claude || typeof window.claude.use !== "function") { broken(); return; }
   window.claude.use("db").then(function (store) {
