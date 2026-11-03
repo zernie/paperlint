@@ -52,7 +52,10 @@
  *     "practice": [{"body": "…", "expected": {"label": "yes"}, "why": "one line"}, …],   3 or more
  *     "practice_round": 1,                  optional; raise it after rewording, the practice reopens
  *     "items": [{"source_id": "case-0412-b", "group": "python", "body": "…", "code": "…",
- *                "context": "…"}]
+ *                "context": "…",
+ *                "unit": {"text": "the whole line", "part": 1, "of": 2}}]
+ *                                           unit: optional; one requirement of a line that holds
+ *                                           several. Every part of the line is an item, in one group.
  *   }
  *
  * TypeScript, compiled beside itself to `label-page.js` by `npm run build`: a consumer runs the skill

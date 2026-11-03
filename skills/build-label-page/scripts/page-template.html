@@ -302,6 +302,11 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     card.appendChild(rich("p", "body", item.body));
     if (item.code) card.appendChild(codeBlock(item.code));
     if (item.context) card.appendChild(rich("p", "muted", item.context));
+    // One requirement of a line that holds several: which one, and the whole line it came from.
+    if (item.unit) {
+      card.appendChild(el("p", "muted", "From the line (requirement " + item.unit.part + " of " + item.unit.of + "):"));
+      card.appendChild(rich("p", "quote", item.unit.text));
+    }
     var a = answersOf(item.id);
     askOne(card, a, state.editing[item.id], function (q, v) {
       delete state.editing[item.id];

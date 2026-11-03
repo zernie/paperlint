@@ -37,8 +37,14 @@ length.
 - **`practice_round`**: raise it after rewording a question; the practice reopens and the answers of
   the earlier round are kept but not counted.
 - **`items`**: `source_id` (the study's own, never shown), `group`, `body`, and optionally `title`,
-  `code`, `context`. Nothing else: the allow-list is fixed in the generator, and a field outside it
+  `code`, `context`, `unit`. Nothing else: the allow-list is fixed in the generator, and a field outside it
   is taken out of the item, not added to the list to make a build pass.
+- **`unit`**: `{text, part, of}` on an item that is one requirement of a line holding several
+  ("TypeScript only (no JavaScript); top-level await is allowed" is two). Each requirement is its
+  own item with its own question, and its card shows "From the line (requirement 1 of 2):" and the
+  whole line beneath, so the labeller judges one requirement at a time and sees where it came from.
+  The build refuses a line whose parts do not add up (one missing, repeated, a different `of`, or
+  split across groups), naming the item. Splitting the line is the study's job, before the page.
 - **`seed`**: fixes the order. Rebuilding with the same seed keeps every id, and a new item gets the
   next one; a different seed is refused once a key exists.
 - **`ask_why`** on an option: a prompt. That answer is incomplete, on the page and in the export,
