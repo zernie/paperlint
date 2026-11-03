@@ -1,0 +1,59 @@
+# Linter readings run on real repositories (vigiles experimental_ruleProof), triggered only by a push to
+# ci/rule-proof-run. The run job executes other repositories' linters and plugins, so it holds no write token and
+# keeps no git credentials; only the commit job, which runs nothing from those repositories, may push.
+name: rule proof run
+on:
+  push:
+    branches: [ci/rule-proof-run]
+    paths: [frame/rule-proof/inputs.json]
+concurrency:
+  group: rule-proof-run
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: astral-sh/setup-uv@v6
+      - name: corepack for pnpm and yarn lockfiles
+        run: corepack enable
+      - name: install the runner (vigiles only, no install scripts)
+        working-directory: frame/rule-proof
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: run every repository of inputs.json
+        timeout-minutes: 140
+        run: node frame/rule-proof/run.mjs frame/rule-proof/inputs.json results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rule-proof-results
+          path: results
+          if-no-files-found: warn
+  commit:
+    needs: run
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: rule-proof-results
+          path: frame/rule-proof/results
+      - name: commit the results back to this branch
+        run: |
+          git config user.name "rule-proof"
+          git config user.email "actions@users.noreply.github.com"
+          git add frame/rule-proof/results
+          git commit -m "rule proof: results (run ${{ github.run_id }})" || echo "nothing to commit"
+          git push origin "HEAD:${{ github.ref_name }}"

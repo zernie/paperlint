@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Runner for linter readings on real repositories (vigiles experimental_ruleProof); used by .github/workflows/rule-proof-run.yml only",
+  "dependencies": {
+    "vigiles": "41.1.0"
+  }
+}
