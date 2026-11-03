@@ -1,9 +1,12 @@
 {
   "paper": "paper.tex",
   "searched": [
-    {"source": "venue-pc", "how": "venue PC list, DBLP 2024-2026 of each member", "date": "2026-10-08"},
-    {"source": "prev-edition", "how": "previous edition accepted papers, titles and abstracts", "date": "2026-10-08"},
-    {"source": "arxiv-recent", "how": "arXiv cs.SE since 2026-01: AGENTS.md, rules files", "date": "2026-10-08"}
+    {"source": "venue-pc", "how": "venue PC list, DBLP 2024-2026 of each member", "date": "2026-10-08",
+     "claims": ["R1", "P5-1"]},
+    {"source": "prev-edition", "how": "previous edition accepted papers, titles and abstracts", "date": "2026-10-08",
+     "claims": ["R1", "P5-1"]},
+    {"source": "arxiv-recent", "how": "arXiv cs.SE since 2026-01: AGENTS.md, rules files", "date": "2026-10-08",
+     "claims": ["R1", "P5-1"]}
   ],
   "neighbours": [
     {"id": "doe26", "cite": "doe2026rules", "source": "arxiv-recent", "read": "full",
