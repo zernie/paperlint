@@ -94,6 +94,16 @@ describe("repro/allowed-files-only — silent", () => {
     ).toEqual([]);
   });
 
+  it("on agent instruction files at the top (CLAUDE.md, AGENTS.md)", () => {
+    expect(
+      lint({
+        ...SCAFFOLD,
+        [`${DIR}/repro/CLAUDE.md`]: "x",
+        [`${DIR}/repro/AGENTS.md`]: "x",
+      }),
+    ).toEqual([]);
+  });
+
   it("on a paper with no repro/", () => {
     expect(lint(SCAFFOLD)).toEqual([]);
   });
