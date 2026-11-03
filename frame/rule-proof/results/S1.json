@@ -1,0 +1,118 @@
+{
+ "id": "S1",
+ "repo": "NatLabRockies/gdx-pandas",
+ "sha": "aad60d3a939f1405f593eb0a5b9947b906284e9a",
+ "linter": "ruff",
+ "rule": "ANN201",
+ "checked_out": "aad60d3a939f1405f593eb0a5b9947b906284e9a",
+ "install": {
+  "kind": "installed",
+  "version": "0.15.13"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "src/gdxpds/__init__.py",
+      "src/gdxpds/read_gdx.py",
+      "src/gdxpds/write_gdx.py",
+      "src/gdxpds/gdx.py",
+      "src/gdxpds/special.py",
+      "src/gdxpds/tools.py",
+      "src/gdxpds/cli/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/gdxpds/_*.py",
+      "src/gdxpds/_verify_install/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 9,
+    "flagged": [
+     "src/gdxpds/cli/csv_to_gdx.py",
+     "src/gdxpds/cli/gdx_to_csv.py",
+     "src/gdxpds/cli/main.py",
+     "src/gdxpds/gdx.py",
+     "src/gdxpds/read_gdx.py",
+     "src/gdxpds/special.py",
+     "src/gdxpds/write_gdx.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "src/gdxpds/__init__.py",
+      "src/gdxpds/read_gdx.py",
+      "src/gdxpds/write_gdx.py",
+      "src/gdxpds/gdx.py",
+      "src/gdxpds/special.py",
+      "src/gdxpds/tools.py",
+      "src/gdxpds/cli/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/gdxpds/_*.py",
+      "src/gdxpds/_verify_install/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 9,
+    "flagged": [
+     "src/gdxpds/cli/csv_to_gdx.py",
+     "src/gdxpds/cli/gdx_to_csv.py",
+     "src/gdxpds/cli/main.py",
+     "src/gdxpds/gdx.py",
+     "src/gdxpds/read_gdx.py",
+     "src/gdxpds/special.py",
+     "src/gdxpds/write_gdx.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [],
+ "seconds": 2.353
+}
