@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:08ea3aae9448b383 compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:58c66e374c084cc5 compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -37,9 +37,9 @@ This file loads on every turn, so it holds only what applies to **any** change h
 | changing CI, Dependabot or the release | [`.github/CLAUDE.md`](.github/CLAUDE.md) | cost, Dependabot cadence, release from the PR title |
 | writing a test | [`docs/testing.md`](docs/testing.md), [`docs/e2e.md`](docs/e2e.md) | which kind of test, fakes, the e2e triggers |
 
-## Before every push
+## Before leaving draft and before merge
 
-`npm run check`, exit code read without a pipe. Red first · assert the whole value · no test touches the real network · 100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e gate fails, and it says so; `npx paperlint toolchain` installs it.
+`npm run check`, exit code read without a pipe; a `wip:` push to a DRAFT pull request needs only the tests of what it touched (`npx vitest run <dir>`), and is never reported as "the gates", because CI does not run the gates on a draft. Red first · assert the whole value · no test touches the real network · 100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e gate fails, and it says so; `npx paperlint toolchain` installs it.
 
 ## Commits
 

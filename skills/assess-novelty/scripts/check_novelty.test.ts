@@ -21,50 +21,51 @@ import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { test } from "vitest";
 
+const here = dirname(fileURLToPath(import.meta.url));
+const FIXTURE = join(here, "fixtures", "novelty");
+const CHECKER = join(here, "check_novelty.py");
+
+// Copy the fixture, apply one change, run the checker; returns {code, out}.
+type Files = { json: any; tex: string; claims: string; dir: string };
+type Change = (f: Files) => void;
+const run = (change: Change = () => undefined) => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "novelty-")));
+  try {
+    cpSync(FIXTURE, dir, { recursive: true });
+    const jsonPath = join(dir, "siblings", "novelty.json");
+    const files = {
+      json: JSON.parse(readFileSync(jsonPath, "utf8")),
+      tex: readFileSync(join(dir, "paper.tex"), "utf8"),
+      claims: readFileSync(join(dir, "CLAIMS.md"), "utf8"),
+      dir,
+    };
+    change(files);
+    writeFileSync(jsonPath, JSON.stringify(files.json, null, 2));
+    writeFileSync(join(dir, "paper.tex"), files.tex);
+    writeFileSync(join(dir, "CLAIMS.md"), files.claims);
+    const r = spawnSync("python3", ["-I", CHECKER, dir], {
+      encoding: "utf8",
+    });
+    return { code: r.status, out: `${r.stdout}\n${r.stderr}` };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+const passes = (change: Change, what: string) => {
+  const r = run(change);
+  assert.equal(r.code, 0, `must pass: ${what}\n${r.out}`);
+  return r.out;
+};
+const fails = (change: Change, re: RegExp, what: string) => {
+  const r = run(change);
+  assert.equal(r.code, 1, `must fail: ${what}\n${r.out}`);
+  assert.match(r.out, re, `wrong reason for: ${what}\n${r.out}`);
+};
+const claim = (j: any, id: string) => j.claims.find((c: any) => c.id === id);
+const FIRST =
+  "This is the first rule finder recall reported in this literature.";
+
 test("check_novelty", () => {
-  const here = dirname(fileURLToPath(import.meta.url));
-  const FIXTURE = join(here, "fixtures", "novelty");
-  const CHECKER = join(here, "check_novelty.py");
-
-  // Copy the fixture, apply one change, run the checker; returns {code, out}.
-  type Files = { json: any; tex: string; claims: string };
-  type Change = (f: Files) => void;
-  const run = (change: Change = () => undefined) => {
-    const dir = realpathSync(mkdtempSync(join(tmpdir(), "novelty-")));
-    try {
-      cpSync(FIXTURE, dir, { recursive: true });
-      const jsonPath = join(dir, "siblings", "novelty.json");
-      const files = {
-        json: JSON.parse(readFileSync(jsonPath, "utf8")),
-        tex: readFileSync(join(dir, "paper.tex"), "utf8"),
-        claims: readFileSync(join(dir, "CLAIMS.md"), "utf8"),
-      };
-      change(files);
-      writeFileSync(jsonPath, JSON.stringify(files.json, null, 2));
-      writeFileSync(join(dir, "paper.tex"), files.tex);
-      writeFileSync(join(dir, "CLAIMS.md"), files.claims);
-      const r = spawnSync("python3", ["-I", CHECKER, dir], {
-        encoding: "utf8",
-      });
-      return { code: r.status, out: `${r.stdout}\n${r.stderr}` };
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
-  };
-  const passes = (change: Change, what: string) => {
-    const r = run(change);
-    assert.equal(r.code, 0, `must pass: ${what}\n${r.out}`);
-    return r.out;
-  };
-  const fails = (change: Change, re: RegExp, what: string) => {
-    const r = run(change);
-    assert.equal(r.code, 1, `must fail: ${what}\n${r.out}`);
-    assert.match(r.out, re, `wrong reason for: ${what}\n${r.out}`);
-  };
-  const claim = (j: any, id: string) => j.claims.find((c: any) => c.id === id);
-  const FIRST =
-    "This is the first rule finder recall reported in this literature.";
-
   // ── clean fixture: passes, verdicts computed from the cells ────────────────────
   {
     const out = passes(() => undefined, "the fixture as committed");
@@ -485,6 +486,139 @@ test("check_novelty", () => {
       "abstract-only neighbour whose text is saved",
     );
   }
+}, 300_000);
 
-  console.log("check_novelty.harness: all cases pass");
+test("check_novelty: a ledger more cautious than the cells", () => {
+  // ── 4b. a ledger MORE cautious than the cells, with a written reason ──────────
+  // A claim may carry "ledger_narrower_because": a reason naming an existing file. With it a ledger status
+  // strictly more cautious than the computed one (🟢 > 🟡 > 🔴) is accepted; a bolder one never is, and the
+  // field beside equal statuses is a stale reason. P5-1 computes 🟢 in the fixture (refutation file exists).
+  {
+    const REASON =
+      "siblings/2026-10-27-novelty-refutation.md: the refutation pass kept the claim narrower than the cells";
+    const P51_GREEN =
+      "| P5-1 | The repository's linter does not make 58.3 % of lint-checkable requirements an error | 🟢 ours |";
+    const P51_AMBER =
+      "| P5-1 | The repository's linter does not make 58.3 % of lint-checkable requirements an error | 🟡 narrowed |";
+    const amber = (f: Files, reason?: string) => {
+      assert.ok(f.claims.includes(P51_GREEN), "fixture row P5-1 changed");
+      f.claims = f.claims.replace(P51_GREEN, P51_AMBER);
+      if (reason !== undefined)
+        claim(f.json, "P5-1").ledger_narrower_because = reason;
+    };
+    // (a) ledger 🟡, cells 🟢, field naming an existing file: accepted, the printed verdict stays computed
+    {
+      const out = passes(
+        (f) => amber(f, REASON),
+        "(a) ledger 🟡, cells 🟢, reason names an existing file",
+      );
+      assert.match(
+        out,
+        /P5-1\s+🟢/,
+        "the printed verdict stays the computed one",
+      );
+    }
+    // (b) the same without the field: the error ends with the hint
+    fails(
+      (f) => amber(f),
+      /P5-1: CLAIMS\.md row P5-1 says 🟡, the cells give 🟢.*; a more cautious ledger needs ledger_narrower_because naming the file with the reason/s,
+      "(b) ledger 🟡, cells 🟢, no field",
+    );
+    // (c) ledger bolder than the cells: an error with or without the field
+    const oneNo = (f: Files) => {
+      claim(f.json, "R1").cells.doe26.measure = { has: "no", quote: null };
+    };
+    const bolder = (f: Files, reason?: string) => {
+      oneNo(f); // R1 computes 🟡
+      assert.ok(
+        f.claims.includes("| 🔴 taken (Doe 2026, recall 66.3 %) |"),
+        "fixture row R1 changed",
+      );
+      f.claims = f.claims.replace(
+        "| 🔴 taken (Doe 2026, recall 66.3 %) |",
+        "| 🟢 ours |",
+      );
+      if (reason !== undefined)
+        claim(f.json, "R1").ledger_narrower_because = reason;
+    };
+    fails(
+      (f) => bolder(f, REASON),
+      /R1: CLAIMS\.md row R1 says 🟢, the cells give 🟡/,
+      "(c) ledger 🟢, cells 🟡, with the field",
+    );
+    fails(
+      (f) => bolder(f),
+      /R1: CLAIMS\.md row R1 says 🟢, the cells give 🟡/,
+      "(c) ledger 🟢, cells 🟡, no field",
+    );
+    // (d) the named file is missing, no file is named, or the field is empty
+    fails(
+      (f) => amber(f, "siblings/no-such-refutation.md: kept narrower"),
+      /P5-1: ledger_narrower_because names siblings\/no-such-refutation\.md.*does not exist/,
+      "(d) the named file is missing",
+    );
+    fails(
+      (f) => amber(f, "kept narrower by hand"),
+      /P5-1: ledger_narrower_because names no file/,
+      "(d) a reason naming no file",
+    );
+    fails(
+      (f) => amber(f, "  "),
+      /P5-1: ledger_narrower_because is empty/,
+      "(d) an empty reason",
+    );
+    // (e) equal statuses with the field: a stale reason
+    fails(
+      (f) => {
+        claim(f.json, "P5-1").ledger_narrower_because = REASON;
+      },
+      /P5-1: ledger_narrower_because is set but the ledger equals the computed verdict 🟢/,
+      "(e) equal statuses with the field",
+    );
+    // ⚪ is not on the scale: a ledger ⚪ over a computed 🟢 is unchecked, not more cautious
+    fails(
+      (f) => {
+        f.claims = f.claims.replace(
+          P51_GREEN,
+          P51_GREEN.replace("🟢 ours", "⚪ unchecked"),
+        );
+        claim(f.json, "P5-1").ledger_narrower_because = REASON;
+      },
+      /P5-1: CLAIMS\.md row P5-1 says ⚪, the cells give 🟢/,
+      "ledger ⚪ over computed 🟢, with the field",
+    );
+    // the more cautious ledger on a 🔴: ledger 🔴 (as committed), cells 🟡, accepted with the field
+    passes((f) => {
+      oneNo(f);
+      claim(f.json, "R1").ledger_narrower_because = REASON;
+    }, "ledger 🔴, cells 🟡, reason names an existing file");
+  }
+}, 300_000);
+
+test("check_novelty: a text with its columns glued", () => {
+  // ── 10. a text extracted with `pdftotext -layout` has its two columns glued into one line ──
+  // A sentence is then split across two lines and a verbatim quote is not contiguous. The glued copy pairs
+  // the fixture's own lines with an 8-space gap; the clean twin is the fixture as committed.
+  {
+    const DOE = "doe-preprint.txt";
+    const glue = (f: Files) => {
+      const p = join(f.dir, "siblings", "data", DOE);
+      const lines = readFileSync(p, "utf8")
+        .split("\n")
+        .filter((l) => l.trim());
+      const pairs: string[] = [];
+      for (let i = 0; i < lines.length; i += 2)
+        pairs.push(`${lines[i]}        ${lines[i + 1] ?? ""}`);
+      writeFileSync(p, pairs.join("\n") + "\n");
+    };
+    fails(
+      glue,
+      /neighbour doe26: siblings\/data\/doe-preprint\.txt has \d+% glued lines.*re-extract with plain pdftotext \(no -layout\)/,
+      "a neighbour text with its columns glued",
+    );
+    passes(
+      () => undefined,
+      "the same text extracted without -layout (the fixture as committed)",
+    );
+  }
 }, 300_000);

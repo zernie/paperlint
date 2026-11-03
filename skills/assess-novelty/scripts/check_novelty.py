@@ -12,7 +12,11 @@ The verdict is computed from the cells, never stored, over neighbours read in fu
 Errors: a 'yes' cell without a quote or with a quote not in the text · a 'no' cell on an abstract-only
 neighbour · a missing search source · a priority sentence in paper.tex (first / none of the studies /
 to our knowledge / ...) not mapped to a 🟢 claim · CLAIMS.md disagreeing with the computed verdict ·
-a 🟢 claim without a refutation file · a claim without a known type or an objection_answer.
+a 🟢 claim without a refutation file · a claim without a known type or an objection_answer · a saved text
+with more than 30 % glued lines (two page columns merged by `pdftotext -layout`).
+The ledger may be MORE cautious than the computed verdict (🟢 > 🟡 > 🔴), never bolder: a claim then carries
+"ledger_narrower_because", a reason naming an existing file in the paper folder. A bolder ledger, a ⚪ on either
+side, or the field beside equal statuses (a stale reason) is an error.
 A quote is a presence check (quote_match.py's matcher), not a proof that it supports the cell.
 A neighbour read 'full' proves it with `coverage`, one quote per chunk of its text (novelty_coverage.py).
 A work a refutation or a search surfaced is a candidate until the author decides on it (novelty_candidates.py):
@@ -29,6 +33,9 @@ from novelty_coverage import coverage_errors  # noqa: E402
 import novelty_candidates  # noqa: E402
 import novelty_cells  # noqa: E402
 
+# Boldness of a ledger status; ⚪ is not on the scale (unchecked is neither more nor less cautious).
+BOLDNESS = {"🟢": 2, "🟡": 1, "🔴": 0}
+FILE_NAME = re.compile(r"[\w./-]+\.(?:md|txt|json|tex|tsv|csv|py|ts|mjs)\b")
 SOURCES = ("venue-pc", "prev-edition", "arxiv-recent")
 TYPES = {"new-object", "transfer", "installed-base", "instrument", "refutation", "replication"}
 # The result itself: what is examined and what number comes out. A neighbour with both already reported the
@@ -53,6 +60,17 @@ PRIORITY = re.compile(
 )
 
 
+# `pdftotext -layout` prints a two-column page as one line per row, the columns joined by a run of spaces, so a
+# sentence is split across two lines and a quote is not contiguous.
+GLUED = re.compile(r"\S {6,}\S")
+GLUED_LIMIT = 0.30
+
+
+def glued_share(text):
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    return sum(1 for l in lines if GLUED.search(l)) / len(lines) if lines else 0.0
+
+
 def tex_sentences(tex):
     tex = re.sub(r"(?<!\\)%.*", "", tex)
     tex = re.sub(r"\\(?:cite|ref|label|eqref|autoref|cref|documentclass|usepackage|begin|end|input|include)\*?"
@@ -72,6 +90,17 @@ def ledger_status(claims_md, row):
                         return mark
             return "no status"
     return None
+
+
+def narrower_reason_errors(cid, reason, paper):
+    """Problems with a claim's ledger_narrower_because: empty, naming no file, or naming a missing one."""
+    if not isinstance(reason, str) or not reason.strip():
+        return [f"{cid}: ledger_narrower_because is empty (a reason naming a file in the paper folder)"]
+    names = FILE_NAME.findall(reason)
+    if not names:
+        return [f"{cid}: ledger_narrower_because names no file (give the path of the file holding the reason)"]
+    return [f"{cid}: ledger_narrower_because names {n}, which does not exist"
+            for n in names if not os.path.isfile(os.path.join(paper, n))]
 
 
 def verdict(claim, neighbours):
@@ -138,6 +167,10 @@ def main():
             errors.append(f"neighbour {n['id']}: read 'full' but no text at {n.get('text')}")
         if os.path.isfile(path):
             t = open(path, encoding="utf-8", errors="replace").read()
+            share = glued_share(t)
+            if share > GLUED_LIMIT:
+                errors.append(f"neighbour {n['id']}: {n.get('text')} has {share:.0%} glued lines (two page columns"
+                              " merged into one line); re-extract with plain pdftotext (no -layout)")
             texts[n["id"]] = (norm(t), letters(t))
             if n.get("read") == "full":
                 errors += coverage_errors(n["id"], t, n.get("coverage"))
@@ -176,7 +209,19 @@ def main():
         elif status is None:
             errors.append(f"{cid}: ledger row {row!r} not found in CLAIMS.md")
         elif status != v:
-            errors.append(f"{cid}: CLAIMS.md row {row} says {status}, the cells give {v} ({why})")
+            narrower = status in BOLDNESS and v in BOLDNESS and BOLDNESS[status] < BOLDNESS[v]
+            reason = c.get("ledger_narrower_because")
+            if narrower and "ledger_narrower_because" in c:
+                errors += narrower_reason_errors(cid, reason, paper)
+            else:
+                hint = ("; a more cautious ledger needs ledger_narrower_because naming the file with the reason"
+                        if narrower else
+                        "; ledger_narrower_because excuses only a MORE cautious ledger" if "ledger_narrower_because" in c
+                        else "")
+                errors.append(f"{cid}: CLAIMS.md row {row} says {status}, the cells give {v} ({why}){hint}")
+        elif "ledger_narrower_because" in c:
+            errors.append(f"{cid}: ledger_narrower_because is set but the ledger equals the computed verdict {v}"
+                          " (stale reason; remove the field)")
         if v == "🟢":
             ref = c.get("refutation") or {}
             if not ref.get("file"):
