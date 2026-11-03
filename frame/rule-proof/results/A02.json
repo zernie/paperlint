@@ -1,0 +1,120 @@
+{
+ "id": "A02",
+ "repo": "VSC-NeuroPilot/neuropilot",
+ "sha": "0b0abd373a440d13614080b4767a284cca17e538",
+ "linter": "eslint",
+ "rule": "@typescript-eslint/no-unused-vars",
+ "checked_out": "0b0abd373a440d13614080b4767a284cca17e538",
+ "install": {
+  "kind": "installed",
+  "version": "10.8.1"
+ },
+ "readings": [
+  {
+   "key": "on|[{\"argsIgnorePattern\":\"^_\",\"varsIgnorePattern\":\"^_\"}]|tests:included",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-unused-vars",
+    "options": [
+     {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 93,
+    "flagged": [
+     "scripts/check-malicious-packages.js",
+     "src/rce.ts",
+     "src/types/ts-mockito.d.ts",
+     "src/utils/neuro_client.ts"
+    ],
+    "parseErrors": [
+     "playground/fixme.js"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "on|[{\"args\":\"all\",\"argsIgnorePattern\":\"^_\",\"ignoreRestSiblings\":true}]|tests:included",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-unused-vars",
+    "options": [
+     {
+      "args": "all",
+      "argsIgnorePattern": "^_",
+      "ignoreRestSiblings": true
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 93,
+    "flagged": [
+     "scripts/check-malicious-packages.js",
+     "src/chat.ts",
+     "src/completions.ts",
+     "src/file_actions.ts",
+     "src/rce.ts",
+     "src/types/ts-mockito.d.ts",
+     "src/utils/neuro_client.ts"
+    ],
+    "parseErrors": [
+     "playground/fixme.js"
+    ],
+    "ignored": []
+   }
+  }
+ ],
+ "adjustments": [
+  "pnpm-exposed"
+ ],
+ "seconds": 13.007
+}

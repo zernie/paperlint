@@ -1,0 +1,15 @@
+{
+ "id": "B09",
+ "repo": "strangeadvancedmarketing/Adam",
+ "sha": "191f95acfdfcd11cee73031338bc24af6e36989e",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "191f95acfdfcd11cee73031338bc24af6e36989e",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 0.26
+}

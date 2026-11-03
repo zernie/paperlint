@@ -1,0 +1,15 @@
+{
+ "id": "B06",
+ "repo": "better-i18n/oss",
+ "sha": "7a59b152abcaca17e34d4d7e2f1f688a2e85aba8",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "7a59b152abcaca17e34d4d7e2f1f688a2e85aba8",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 4.605
+}

@@ -1,0 +1,106 @@
+{
+ "id": "A10",
+ "repo": "felesh-ai/arshai",
+ "sha": "7a47ead122eed668e2acf210f9f6003d69e66288",
+ "linter": "ruff",
+ "rule": "RUF006",
+ "checked_out": "7a47ead122eed668e2acf210f9f6003d69e66288",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-11T23:20:28+03:30",
+  "ruff": "0.17.0"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.0"
+ },
+ "readings": [
+  {
+   "key": "on|{}|tests:included",
+   "reading": {
+    "linter": "ruff",
+    "rule": "RUF006",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 171,
+    "flagged": [
+     "arshai/llms/ai_gateway.py",
+     "arshai/llms/azure.py",
+     "arshai/llms/openai.py",
+     "arshai/llms/openrouter.py",
+     "arshai/observability/decorators.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "on|{}|tests:excluded",
+   "reading": {
+    "linter": "ruff",
+    "rule": "RUF006",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/test/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "**/spec/**",
+      "**/e2e/**",
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/test_*.py",
+      "**/*_test.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 127,
+    "flagged": [
+     "arshai/llms/ai_gateway.py",
+     "arshai/llms/azure.py",
+     "arshai/llms/openai.py",
+     "arshai/llms/openrouter.py",
+     "arshai/observability/decorators.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 1.151
+}

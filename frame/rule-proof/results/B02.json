@@ -1,0 +1,99 @@
+{
+ "id": "B02",
+ "repo": "SinanTufekci/agent-intern",
+ "sha": "bca6df790451ff3cf8b09b43ef7a85d18f367b1a",
+ "linter": "ruff",
+ "rule": "T201",
+ "checked_out": "bca6df790451ff3cf8b09b43ef7a85d18f367b1a",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-11-02T16:34:48+03:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "on|{}|tests:included",
+   "reading": {
+    "linter": "ruff",
+    "rule": "T201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 37,
+    "flagged": [
+     "test_smoke.py",
+     "tools/capture_watch_gif.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "on|{}|tests:excluded",
+   "reading": {
+    "linter": "ruff",
+    "rule": "T201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/test/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "**/spec/**",
+      "**/e2e/**",
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/test_*.py",
+      "**/*_test.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 25,
+    "flagged": [
+     "tools/capture_watch_gif.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 1.313
+}

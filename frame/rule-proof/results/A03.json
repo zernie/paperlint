@@ -1,0 +1,189 @@
+{
+ "id": "A03",
+ "repo": "NatLabRockies/gdx-pandas",
+ "sha": "aad60d3a939f1405f593eb0a5b9947b906284e9a",
+ "linter": "ruff",
+ "rule": "ANN201",
+ "checked_out": "aad60d3a939f1405f593eb0a5b9947b906284e9a",
+ "install": {
+  "kind": "installed",
+  "version": "0.15.13"
+ },
+ "readings": [
+  {
+   "key": "on|{}|tests:excluded",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/test/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "**/spec/**",
+      "**/e2e/**",
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/test_*.py",
+      "**/*_test.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 24,
+    "flagged": [
+     "dev/build_alias_fixture.py",
+     "dev/build_set_text_fixture.py",
+     "dev/build_strict_domain_fixture.py",
+     "dev/build_symbol_types_fixture.py",
+     "dev/build_universe_alias_fixture.py",
+     "dev/build_verify_install_sample.py",
+     "dev/profile_gdxcc_write.py",
+     "dev/profile_raw_gdxcc.py",
+     "src/gdxpds/cli/csv_to_gdx.py",
+     "src/gdxpds/cli/gdx_to_csv.py",
+     "src/gdxpds/cli/main.py",
+     "src/gdxpds/gdx.py",
+     "src/gdxpds/read_gdx.py",
+     "src/gdxpds/special.py",
+     "src/gdxpds/write_gdx.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "on|{}|tests:included",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 38,
+    "flagged": [
+     "dev/build_alias_fixture.py",
+     "dev/build_set_text_fixture.py",
+     "dev/build_strict_domain_fixture.py",
+     "dev/build_symbol_types_fixture.py",
+     "dev/build_universe_alias_fixture.py",
+     "dev/build_verify_install_sample.py",
+     "dev/profile_gdxcc_write.py",
+     "dev/profile_raw_gdxcc.py",
+     "src/gdxpds/cli/csv_to_gdx.py",
+     "src/gdxpds/cli/gdx_to_csv.py",
+     "src/gdxpds/cli/main.py",
+     "src/gdxpds/gdx.py",
+     "src/gdxpds/read_gdx.py",
+     "src/gdxpds/special.py",
+     "src/gdxpds/write_gdx.py",
+     "tests/conftest.py",
+     "tests/test_alias.py",
+     "tests/test_conversions.py",
+     "tests/test_diagnostics.py",
+     "tests/test_domain.py",
+     "tests/test_engine_parity.py",
+     "tests/test_engine_selection.py",
+     "tests/test_engine_timing.py",
+     "tests/test_handle_lifecycle.py",
+     "tests/test_imports.py",
+     "tests/test_read.py",
+     "tests/test_set_ordering.py",
+     "tests/test_specials.py",
+     "tests/test_write.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "on|{\"flake8-annotations\":{\"allow-star-arg-any\":true}}|tests:excluded",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN201",
+    "settings": {
+     "lint": {
+      "flake8-annotations": {
+       "allow-star-arg-any": true
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/test/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "**/spec/**",
+      "**/e2e/**",
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/test_*.py",
+      "**/*_test.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 24,
+    "flagged": [
+     "dev/build_alias_fixture.py",
+     "dev/build_set_text_fixture.py",
+     "dev/build_strict_domain_fixture.py",
+     "dev/build_symbol_types_fixture.py",
+     "dev/build_universe_alias_fixture.py",
+     "dev/build_verify_install_sample.py",
+     "dev/profile_gdxcc_write.py",
+     "dev/profile_raw_gdxcc.py",
+     "src/gdxpds/cli/csv_to_gdx.py",
+     "src/gdxpds/cli/gdx_to_csv.py",
+     "src/gdxpds/cli/main.py",
+     "src/gdxpds/gdx.py",
+     "src/gdxpds/read_gdx.py",
+     "src/gdxpds/special.py",
+     "src/gdxpds/write_gdx.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "adjustments": [],
+ "seconds": 1.334
+}

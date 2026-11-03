@@ -1,0 +1,15 @@
+{
+ "id": "B07",
+ "repo": "ire-research/ire",
+ "sha": "5b650cc8fefd1b31cca262940c1979254b0ab408",
+ "linter": "eslint",
+ "rule": "@typescript-eslint/no-unused-vars",
+ "checked_out": "5b650cc8fefd1b31cca262940c1979254b0ab408",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 3.574
+}
