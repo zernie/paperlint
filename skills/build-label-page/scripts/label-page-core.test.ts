@@ -79,7 +79,15 @@ const FULL: DocObject = (() => {
       labeller_knows: ["python", "go", "rust"],
       familiarity_question: "How well do you know {group}?",
       items: ITEMS.map((i, n) =>
-        n === 0 ? { ...i, title: "T", code: "c = 1", context: "ctx" } : i,
+        n === 0
+          ? {
+              ...i,
+              title: "T",
+              code: "c = 1",
+              context: "ctx",
+              rules: [{ linter: "eslint", id: "no-console" }],
+            }
+          : i,
       ),
     }),
   );
@@ -1161,4 +1169,30 @@ test("🔴 a question dropped between practice rounds: the earlier round's answe
   const r = exportAt(dir);
   assert.equal(r.status, 0, r.out);
   assert.match(r.out, /practice round 1: 3 of 3 matched/);
+});
+
+test("🔴 an item that names a linter rule: the build takes the rule's description from the linter, and refuses one it cannot describe", () => {
+  const named = (rules: readonly Record<string, string>[]) =>
+    config({
+      items: ITEMS.map((item, n) => (n === 0 ? { ...item, rules } : item)),
+    });
+  const { page } = build(
+    setup("rules-ok", named([{ linter: "eslint", id: "no-console" }])),
+  );
+  assert.ok(
+    page.includes(
+      '"rules": [{"linter": "eslint", "id": "no-console", "description": "Disallow the use of `console`"}]',
+    ),
+    "the page carries the linter's own description",
+  );
+  const dir = setup(
+    "rules-unknown",
+    named([{ linter: "eslint", id: "no-such-rule" }]),
+  );
+  const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+  assert.equal(r.status, 1, r.out);
+  assert.match(
+    r.out,
+    /REFUSED: items\[0\]\.rules\[0\]: eslint 'no-such-rule' has no description from the linter/,
+  );
 });

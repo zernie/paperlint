@@ -10,6 +10,7 @@ import {
   readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,6 +22,12 @@ import { cli } from "../skills/build-label-page/scripts/label-page-cli.ts";
 import { build as buildPage } from "../skills/build-label-page/scripts/label-page-html.ts";
 
 export const WORK = realpathSync(mkdtempSync(join(tmpdir(), "label-page-")));
+// A study's items.json sits in a repository with its linters installed; here, this repository's
+// own node_modules, so a rule an item names is described by a real ESLint (rule-descriptions.ts).
+symlinkSync(
+  join(import.meta.dirname, "..", "node_modules"),
+  join(WORK, "node_modules"),
+);
 
 afterAll(() => {
   rmSync(WORK, { recursive: true, force: true });

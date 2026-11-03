@@ -37,8 +37,14 @@ length.
 - **`practice_round`**: raise it after rewording a question; the practice reopens and the answers of
   the earlier round are kept but not counted.
 - **`items`**: `source_id` (the study's own, never shown), `group`, `body`, and optionally `title`,
-  `code`, `context`. Nothing else: the allow-list is fixed in the generator, and a field outside it
+  `code`, `context`, `rules`. Nothing else: the allow-list is fixed in the generator, and a field outside it
   is taken out of the item, not added to the list to make a build pass.
+- **`rules`**: `[{linter, id}]` (`linter` is `eslint` or `ruff`) on an item read as a linter rule.
+  The card shows "Rule ruff TID253: Checks for module-level imports that should instead be imported
+  lazily…", the description taken at build time from the linter itself: `ruff rule <id>`'s "What it
+  does" paragraph, or the ESLint rule's `meta.docs.description` from the ESLint and plugins
+  installed where `items.json` is. The build refuses a rule the linter cannot describe; a
+  description is never typed into `items.json`.
 - **`seed`**: fixes the order. Rebuilding with the same seed keeps every id, and a new item gets the
   next one; a different seed is refused once a key exists.
 - **`ask_why`** on an option: a prompt. That answer is incomplete, on the page and in the export,

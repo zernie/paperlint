@@ -411,3 +411,29 @@ test("🔴 without the store the page is read-only, and the real items stay read
   assert.match(shown, /cannot be saved in this view/);
   assert.match(shown, /G001/, "a real item is shown read-only");
 });
+
+test("🔴 an item that names a rule: its card says which rule and what it does, in the linter's words", async () => {
+  const { page } = build(
+    setup(
+      "rules-card",
+      config({
+        items: ITEMS.map((item, n) =>
+          n === 0
+            ? { ...item, rules: [{ linter: "eslint", id: "no-console" }] }
+            : item,
+        ),
+      }),
+    ),
+  );
+  const shown = await showPage(page, {}, {});
+  assert.match(
+    shown,
+    /Rule eslint no-console: Disallow the use of \nconsole\n/,
+    shown,
+  );
+  assert.equal(
+    occurrences(shown, "Rule eslint"),
+    1,
+    "only the item that names it",
+  );
+});

@@ -302,6 +302,10 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     card.appendChild(rich("p", "body", item.body));
     if (item.code) card.appendChild(codeBlock(item.code));
     if (item.context) card.appendChild(rich("p", "muted", item.context));
+    // A rule the item names, with what it does in the linter's own words (looked up at build time).
+    (item.rules || []).forEach(function (r) {
+      card.appendChild(rich("p", "muted", "Rule " + r.linter + " " + r.id + ": " + r.description));
+    });
     var a = answersOf(item.id);
     askOne(card, a, state.editing[item.id], function (q, v) {
       delete state.editing[item.id];

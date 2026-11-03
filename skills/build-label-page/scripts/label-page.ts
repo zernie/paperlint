@@ -52,7 +52,10 @@
  *     "practice": [{"body": "…", "expected": {"label": "yes"}, "why": "one line"}, …],   3 or more
  *     "practice_round": 1,                  optional; raise it after rewording, the practice reopens
  *     "items": [{"source_id": "case-0412-b", "group": "python", "body": "…", "code": "…",
- *                "context": "…"}]
+ *                "context": "…",
+ *                "rules": [{"linter": "ruff", "id": "TID253"}]}]
+ *                                           rules: optional; each shown with the linter's own
+ *                                           description (`ruff rule`, ESLint meta.docs.description)
  *   }
  *
  * TypeScript, compiled beside itself to `label-page.js` by `npm run build`: a consumer runs the skill
