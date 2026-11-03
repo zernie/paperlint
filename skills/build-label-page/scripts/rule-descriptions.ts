@@ -60,6 +60,12 @@ function pluginOf(id: string): readonly [string, string] {
     ];
   return [`eslint-plugin-${String(scope)}`, name];
 }
+// `require` of an ES-module plugin returns its namespace: the plugin object is then its `default`.
+const EsmPlugin = z.object({ default: Plugin });
+const pluginRules = (mod: unknown): Readonly<Record<string, unknown>> => {
+  const esm = EsmPlugin.safeParse(mod);
+  return esm.success ? esm.data.default.rules : Plugin.parse(mod).rules;
+};
 const description = (rule: unknown): string | undefined => {
   const r = RuleModule.safeParse(rule);
   return r.success ? r.data.meta.docs.description : undefined;
@@ -73,7 +79,7 @@ function eslintDescription(id: string, fromDir: string): string | undefined {
       return description(core.builtinRules.get(id));
     }
     const [pkg, name] = pluginOf(id);
-    return description(Plugin.parse(load(pkg)).rules[name]);
+    return description(pluginRules(load(pkg))[name]);
   } catch {
     // ESLint or the plugin is not installed where items.json is: the linter cannot answer.
     return undefined;

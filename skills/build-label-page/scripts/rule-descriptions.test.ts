@@ -4,7 +4,14 @@
  * --output-format json` printed (fixtures/ruff-rule-TID253.json), so no test needs the ruff binary.
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { test } from "vitest";
 import {
@@ -85,5 +92,27 @@ test("🔴 a relative folder (the documented `build items.json label-page`) is r
       fakeRuff,
     ),
     "Disallow the use of `console`",
+  );
+});
+
+test("🔴 an ES-module plugin whose rules sit under its default export is described too", () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "esm-plugin-")));
+  const pkg = join(dir, "node_modules", "eslint-plugin-esmonly");
+  mkdirSync(pkg, { recursive: true });
+  writeFileSync(
+    join(pkg, "package.json"),
+    JSON.stringify({
+      name: "eslint-plugin-esmonly",
+      type: "module",
+      main: "index.js",
+    }),
+  );
+  writeFileSync(
+    join(pkg, "index.js"),
+    'export default { rules: { r: { meta: { docs: { description: "Only via default" } } } } };\n',
+  );
+  assert.equal(
+    describeRule({ linter: "eslint", id: "esmonly/r" }, dir, fakeRuff),
+    "Only via default",
   );
 });
