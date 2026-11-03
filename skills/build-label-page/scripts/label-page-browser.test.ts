@@ -59,13 +59,8 @@ const storedReason = async (page: Page): Promise<string | undefined> =>
 /** Wait until the store's last write carries `text` as the reason (the page saves on its own). */
 async function reasonStored(page: Page, text: string): Promise<void> {
   await page.waitForFunction(
-    (t) => {
-      const w = (
-        window as { __writes?: { reasons?: Record<string, string> }[] }
-      ).__writes;
-      return w?.at(-1)?.reasons?.["keep"] === t;
-    },
-    text,
+    `(window.__writes || []).at(-1)?.reasons?.keep === ${JSON.stringify(text)}`,
+    undefined,
     { timeout: 10_000 },
   );
   assert.equal(await storedReason(page), text);
