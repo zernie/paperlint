@@ -10,7 +10,9 @@ The verdict is computed from the cells, never stored, over neighbours read in fu
   result · ⚪ a piece nobody has excluded yet could still complete a neighbour (an unread cell, or an
   abstract-only read).
 Errors: a 'yes' cell without a quote or with a quote not in the text · a 'no' cell on an abstract-only
-neighbour · a missing search source · a priority sentence in paper.tex (first / none of the studies /
+neighbour · a missing search source · a 🟢 claim that some source has no search covering (a `searched`
+entry covers the claims its "claims" names, or, without "claims", the claims "added" on or before its date:
+novelty_search.py) · a priority sentence in paper.tex (first / none of the studies /
 to our knowledge / ...) not mapped to a 🟢 claim · CLAIMS.md disagreeing with the computed verdict ·
 a 🟢 claim without a refutation file · a claim without a known type or an objection_answer · a saved text
 with more than 30 % glued lines (two page columns merged by `pdftotext -layout`).
@@ -32,11 +34,12 @@ from quote_match import found, letters, norm  # noqa: E402
 from novelty_coverage import coverage_errors  # noqa: E402
 import novelty_candidates  # noqa: E402
 import novelty_cells  # noqa: E402
+import novelty_search  # noqa: E402
+from novelty_search import SOURCES  # noqa: E402
 
 # Boldness of a ledger status; ⚪ is not on the scale (unchecked is neither more nor less cautious).
 BOLDNESS = {"🟢": 2, "🟡": 1, "🔴": 0}
 FILE_NAME = re.compile(r"[\w./-]+\.(?:md|txt|json|tex|tsv|csv|py|ts|mjs)\b")
-SOURCES = ("venue-pc", "prev-edition", "arxiv-recent")
 TYPES = {"new-object", "transfer", "installed-base", "instrument", "refutation", "replication"}
 # The result itself: what is examined and what number comes out. A neighbour with both already reported the
 # result, so the claim's delta over it is setting (population, comparator, instrument): 🟡 at best, never 🟢,
@@ -158,6 +161,7 @@ def main():
 
     have = {s.get("source") for s in data.get("searched", []) if (s.get("how") or "").strip()}
     errors += [f"searched: no '{s}' search recorded (source + how)" for s in SOURCES if s not in have]
+    errors += novelty_search.entry_errors(data.get("searched", []))
 
     neighbours = data.get("neighbours", [])
     texts = {}
@@ -228,6 +232,7 @@ def main():
                 errors.append(f"{cid}: 🟢 without a refutation pass (refutation.file)")
             elif not os.path.isfile(os.path.join(paper, ref["file"])):
                 errors.append(f"{cid}: refutation file {ref['file']} does not exist")
+        errors += novelty_search.claim_errors(c, data.get("searched", []), v)
         print(f"{cid}  {v}  {why}")
         print(table(c, neighbours))
 
