@@ -304,6 +304,10 @@ function checkObject(
     );
   }
 }
+function checkBoolean(value: Json, where: string): void {
+  if (typeof value !== "boolean")
+    fail(`${where}: must be true or false, got ${repr(value)}`);
+}
 /** Refuse the first place `value` departs from `node`; the message starts with the field's path. */
 function checkValue(value: Json, node: SchemaNode, path: string): void {
   const where = path || "items.json";
@@ -317,9 +321,7 @@ function checkValue(value: Json, node: SchemaNode, path: string): void {
       }
       break;
     case "boolean":
-      if (typeof value !== "boolean") {
-        fail(`${where}: must be true or false, got ${repr(value)}`);
-      }
+      checkBoolean(value, where);
       break;
     case "array":
       checkArray(value, node, path, where);
