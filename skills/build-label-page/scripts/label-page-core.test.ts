@@ -1195,4 +1195,15 @@ test("🔴 an item that names a linter rule: the build takes the rule's descript
     r.out,
     /REFUSED: items\[0\]\.rules\[0\]: eslint 'no-such-rule' has no description from the linter/,
   );
+  // ruff answers the same whether it is missing or does not know the code: no description.
+  const ruff = setup(
+    "rules-ruff-unknown",
+    named([{ linter: "ruff", id: "NOPE1" }]),
+  );
+  const r2 = run(["build", join(ruff, "items.json"), join(ruff, "out")]);
+  assert.equal(r2.status, 1, r2.out);
+  assert.match(
+    r2.out,
+    /ruff 'NOPE1' has no description from the linter \(`ruff rule` does not know it/,
+  );
 });

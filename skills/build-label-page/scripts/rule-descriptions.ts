@@ -24,7 +24,7 @@ export type RunProcess = (
   args: readonly string[],
 ) => { readonly status: number | null; readonly stdout: string };
 
-const runProcess: RunProcess = (cmd, args) => {
+export const runProcess: RunProcess = (cmd, args) => {
   const r = spawnSync(cmd, args, { encoding: "utf8" });
   return { status: r.status, stdout: r.stdout };
 };

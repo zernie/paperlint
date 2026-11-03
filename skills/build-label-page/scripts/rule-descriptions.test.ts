@@ -7,7 +7,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
-import { describeRule, type RunProcess } from "./rule-descriptions.ts";
+import {
+  describeRule,
+  runProcess,
+  type RunProcess,
+} from "./rule-descriptions.ts";
 
 const REPO = join(import.meta.dirname, "..", "..", "..");
 const TID253 = readFileSync(
@@ -61,4 +65,14 @@ test("a rule the linter does not know, or a plugin that is not installed has no 
     undefined,
     undefined,
   ]);
+});
+
+test("the real process runner returns the exit status and what was printed (node stands in for ruff)", () => {
+  assert.deepEqual(
+    runProcess(process.execPath, [
+      "-e",
+      "process.stdout.write('x'); process.exit(3)",
+    ]),
+    { status: 3, stdout: "x" },
+  );
 });
