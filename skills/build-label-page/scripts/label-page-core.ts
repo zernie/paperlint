@@ -192,7 +192,8 @@ const ITEM_SCHEMA = obj(
       PAGE_FIELDS.map((f) => [f, string(f === "group" || f === "body")]),
     ),
     [UNIT_FIELD]: obj(
-      { text: string(), part: integer(), of: integer() },
+      // `id` names one occurrence of the line (two files may hold the same words): never shown.
+      { id: string(), text: string(), part: integer(), of: integer() },
       true,
       false,
     ),
@@ -347,6 +348,7 @@ interface Question {
   readonly options: readonly Option[];
 }
 interface Unit {
+  readonly id: string;
   readonly text: string;
   readonly part: number;
   readonly of: number;
@@ -519,9 +521,9 @@ const linesOf = (cfg: Config): ReadonlyMap<string, Parts> =>
   cfg.items.reduce((byLine, item, n) => {
     if (item.unit === undefined) return byLine;
     const part: Part = { item, unit: item.unit, n };
-    const seen = byLine.get(item.unit.text);
+    const seen = byLine.get(item.unit.id);
     return byLine.set(
-      item.unit.text,
+      item.unit.id,
       seen ? [seen[0], ...seen.slice(1), part] : [part],
     );
   }, new Map<string, Parts>());
@@ -529,6 +531,10 @@ const linesOf = (cfg: Config): ReadonlyMap<string, Parts> =>
 function checkPart({ item, unit, n }: Part, parts: Parts): void {
   const [first] = parts;
   const at = `items[${String(n)}]`;
+  if (unit.text !== first.unit.text)
+    fail(
+      `${at}.unit.text: ${repr(unit.text)}, but items[${String(first.n)}] of line ${repr(unit.id)} says ${repr(first.unit.text)}`,
+    );
   if (unit.of !== first.unit.of)
     fail(
       `${at}.unit.of: ${String(unit.of)}, but items[${String(first.n)}].unit.of says ${String(first.unit.of)} for the same line`,
@@ -558,7 +564,7 @@ function checkUnits(cfg: Config): void {
     );
     if (missing !== undefined)
       fail(
-        `items[${String(first.n)}].unit: part ${String(missing)} of ${String(first.unit.of)} of ${repr(line)} is not among the items`,
+        `items[${String(first.n)}].unit: part ${String(missing)} of ${String(first.unit.of)} of line ${repr(line)} is not among the items`,
       );
   }
 }
@@ -672,14 +678,26 @@ function assignIds(
 }
 
 // ── a build, short of the page ──────────────────────────────────────────────────────────────────
-const shownFields = (item: Item): Readonly<Record<string, string | Unit>> => ({
+/** A unit as the page shows it: the part and the line, without the line's private id. */
+type ShownUnit = Omit<Unit, "id">;
+const shownFields = (
+  item: Item,
+): Readonly<Record<string, string | ShownUnit>> => ({
   ...Object.fromEntries(
     PAGE_FIELDS.flatMap((f) => {
       const v = item[f];
       return v === undefined ? [] : [[f, v]];
     }),
   ),
-  ...(item.unit === undefined ? {} : { [UNIT_FIELD]: item.unit }),
+  ...(item.unit === undefined
+    ? {}
+    : {
+        [UNIT_FIELD]: {
+          text: item.unit.text,
+          part: item.unit.part,
+          of: item.unit.of,
+        },
+      }),
 });
 
 /** Only what the labeller can answer goes on the page, and only that gets an id, in id order. */

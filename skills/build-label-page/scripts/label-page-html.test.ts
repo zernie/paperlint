@@ -423,13 +423,13 @@ test("🔴 one requirement of a line: its card shows which part it is and the wh
             ? {
                 ...item,
                 body: "TypeScript only (no JavaScript)",
-                unit: { text: line, part: 1, of: 2 },
+                unit: { id: "L1", text: line, part: 1, of: 2 },
               }
             : n === 3
               ? {
                   ...item,
                   body: "top-level await is allowed",
-                  unit: { text: line, part: 2, of: 2 },
+                  unit: { id: "L1", text: line, part: 2, of: 2 },
                 }
               : item,
         ),
