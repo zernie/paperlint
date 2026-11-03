@@ -1,0 +1,85 @@
+{
+ "id": "A14",
+ "repo": "BastiTee/python-boilerplate",
+ "sha": "2ab97ff5386e958adb982ccc26449627d668463b",
+ "linter": "ruff",
+ "rule": "E501",
+ "checked_out": "2ab97ff5386e958adb982ccc26449627d668463b",
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "on|{\"line-length\":88}|tests:included",
+   "reading": {
+    "linter": "ruff",
+    "rule": "E501",
+    "settings": {
+     "line-length": 88
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 4,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "on|{}|tests:excluded",
+   "reading": {
+    "linter": "ruff",
+    "rule": "E501",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/test/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "**/spec/**",
+      "**/e2e/**",
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/test_*.py",
+      "**/*_test.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 2,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "adjustments": [],
+ "seconds": 1.077
+}

@@ -1,0 +1,15 @@
+{
+ "id": "B14",
+ "repo": "fmflurry/settings-opencode",
+ "sha": "72095d85cf600565e26e6a79dd7f105ecdb4433f",
+ "linter": "eslint",
+ "rule": "no-unused-vars",
+ "checked_out": "72095d85cf600565e26e6a79dd7f105ecdb4433f",
+ "install": {
+  "kind": "not-installed",
+  "stage": "install",
+  "reason": "npx exited 1: Resolving dependencies\nResolved, downloaded and extracted [21]\nerror: lockfile had changes, but lockfile is frozen\nnote: overrides in package.json changed since bun.lock was saved\nnote: try re-running without --frozen-lockfile and commit the updated lockfile"
+ },
+ "adjustments": [],
+ "seconds": 4.032
+}

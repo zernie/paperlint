@@ -1,0 +1,15 @@
+{
+ "id": "B17",
+ "repo": "wilsonzlin/aero",
+ "sha": "a9c285941109cd85ac858a4bcd255fa5e6e15389",
+ "linter": "eslint",
+ "rule": "id-denylist",
+ "checked_out": "a9c285941109cd85ac858a4bcd255fa5e6e15389",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 10.442
+}

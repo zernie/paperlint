@@ -1,0 +1,15 @@
+{
+ "id": "A11",
+ "repo": "visgl/luma.gl",
+ "sha": "256c1061346e49c2a2586e2b926e9cbdcef95733",
+ "linter": "eslint",
+ "rule": "@typescript-eslint/consistent-type-assertions",
+ "checked_out": "256c1061346e49c2a2586e2b926e9cbdcef95733",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 91.793
+}

@@ -1,0 +1,134 @@
+{
+ "id": "B18",
+ "repo": "clemperorpenguin/xian-vl",
+ "sha": "055d5d9203d60b37f261670d3e93bcc2ed04d9c8",
+ "linter": "ruff",
+ "rule": "TID251",
+ "checked_out": "055d5d9203d60b37f261670d3e93bcc2ed04d9c8",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-02T08:36:04-06:00",
+  "ruff": "0.16.10"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.16.10"
+ },
+ "readings": [
+  {
+   "key": "on|{}|tests:included",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "on|{\"flake8-tidy-imports.banned-api\":{\"functools.lru_cache\":{\"msg\":\"This function does not retain type information for the wrapped function's arguments; The `lru_cache` function from `_utils` should be used instead\"}}}|tests:included",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "functools.lru_cache": {
+         "msg": "This function does not retain type information for the wrapped function's arguments; The `lru_cache` function from `_utils` should be used instead"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 158,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "on|{\"flake8-tidy-imports.banned-api\":{\"re.match\":{\"msg\":\"use re.fullmatch() or re.search() instead\"},\"typing.TYPE_CHECKING\":{\"msg\":\"use TYPE_CHECKING = False instead\"}}}|tests:included",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "re.match": {
+         "msg": "use re.fullmatch() or re.search() instead"
+        },
+        "typing.TYPE_CHECKING": {
+         "msg": "use TYPE_CHECKING = False instead"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 158,
+    "flagged": [
+     "scripts/add_gpl_headers.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 1.449
+}
