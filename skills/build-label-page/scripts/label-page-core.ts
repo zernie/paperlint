@@ -6,8 +6,9 @@
  */
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { z } from "zod";
+import { describeRule, type RuleRef } from "./rule-descriptions.ts";
 
 // ── refusals and output ───────────────────────────────────────────────────────────────────────
 export class Refusal extends Error {
@@ -94,11 +95,15 @@ const readJson = (path: string): Json => {
 // labeller what the answer is, or where the item came from?" — never to make a build pass.
 const PAGE_FIELDS = ["group", "title", "body", "code", "context"] as const;
 const PRIVATE_FIELDS = ["source_id"] as const;
+// The linter rules an item names ("read as ruff `TID253`"): the page shows each with the linter's
+// own description, looked up at build time (rule-descriptions.ts), never typed into items.json.
+const RULES_FIELD = "rules";
 // One requirement of a line that holds several: the whole line and which part this item is. Shown on
 // the card beneath the item; the line is text the labeller may read, like `context`.
 const UNIT_FIELD = "unit";
 const ALLOWED_FIELDS: readonly string[] = [
   ...PAGE_FIELDS,
+  RULES_FIELD,
   UNIT_FIELD,
   ...PRIVATE_FIELDS,
 ];
@@ -195,6 +200,11 @@ const ITEM_SCHEMA = obj(
     source_id: string(),
     ...Object.fromEntries(
       PAGE_FIELDS.map((f) => [f, string(f === "group" || f === "body")]),
+    ),
+    [RULES_FIELD]: array(
+      obj({ linter: string(true, "eslint|ruff"), id: string() }),
+      false,
+      1,
     ),
     [UNIT_FIELD]: obj(
       // `id` names one occurrence of the line (two files may hold the same words): never shown.
@@ -374,6 +384,7 @@ type Item = {
   readonly source_id: string;
   readonly group: string;
   readonly body: string;
+  readonly rules?: readonly RuleRef[];
   readonly unit?: Unit;
 };
 interface Practice {
@@ -725,6 +736,34 @@ const shownFields = (
         },
       }),
 });
+/** Rule → the linter's description, for every rule an item on the page names. */
+type Described = ReadonlyMap<string, string>;
+const ruleKey = (r: RuleRef): string => `${r.linter} ${r.id}`;
+/** Ask the linter for every rule named; refuse, by path, a rule it cannot describe. */
+function describeRules(cfg: Config, fromDir: string): Described {
+  return new Map(
+    cfg.items.flatMap((item, n) =>
+      (item.rules ?? []).map((r, k): readonly [string, string] => {
+        const text = describeRule(r, fromDir);
+        return text === undefined
+          ? fail(
+              `items[${String(n)}].rules[${String(k)}]: ${r.linter} ${repr(r.id)} has no description from the linter (${r.linter === "ruff" ? "`ruff rule` does not know it, or ruff is not on PATH" : "not a rule of the ESLint, or of a plugin, installed where items.json is"}) — check the id`,
+            )
+          : [ruleKey(r), text];
+      }),
+    ),
+  );
+}
+const rulesShown = (item: Item, described: Described) =>
+  item.rules === undefined
+    ? {}
+    : {
+        [RULES_FIELD]: item.rules.map((r) => ({
+          linter: r.linter,
+          id: r.id,
+          description: String(described.get(ruleKey(r))),
+        })),
+      };
 
 /** Only what the labeller can answer goes on the page, and only that gets an id, in id order. */
 function itemsOnPage(cfg: Config, keyPath: string) {
@@ -742,7 +781,11 @@ function itemsOnPage(cfg: Config, keyPath: string) {
 const practiceRound = (cfg: Config): number => cfg.practice_round ?? 1;
 
 /** What a page shows: the questions, the practice and the items, blind, with their neutral ids. */
-function payloadOf(cfg: Config, page: ReturnType<typeof itemsOnPage>) {
+function payloadOf(
+  cfg: Config,
+  page: ReturnType<typeof itemsOnPage>,
+  described: Described,
+) {
   const used = Object.keys(cfg.groups).filter((g) =>
     page.items.some((i) => i.group === g),
   );
@@ -757,7 +800,11 @@ function payloadOf(cfg: Config, page: ReturnType<typeof itemsOnPage>) {
     allowed: allowedValues(cfg.questions, asksFamiliarity(cfg)),
     questions: cfg.questions,
     practice: { round: practiceRound(cfg), items: practiceOf(cfg) },
-    items: page.items.map((i) => ({ id: page.idOf(i), ...shownFields(i) })),
+    items: page.items.map((i) => ({
+      id: page.idOf(i),
+      ...shownFields(i),
+      ...rulesShown(i, described),
+    })),
   };
 }
 export type Payload = ReturnType<typeof payloadOf>;
@@ -837,13 +884,14 @@ export function prepareBuild(configPath: string, outDir: string) {
   checkItemFields(cfg);
   checkUnits(cfg);
   checkNoSourceShown(cfg);
+  const described = describeRules(cfg, dirname(configPath));
   mkdirSync(outDir, { recursive: true });
   const keyPath = join(outDir, "key.json");
   const earlier = roundsOf(keyPath);
   const page = itemsOnPage(cfg, keyPath);
   writeJson(keyPath, keyOf(cfg, page, earlier));
   return {
-    payload: payloadOf(cfg, page),
+    payload: payloadOf(cfg, page, described),
     dropped: cfg.items.length - page.items.length,
   };
 }

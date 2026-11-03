@@ -1,0 +1,23 @@
+{
+  "name": "banned-module-level-imports",
+  "code": "TID253",
+  "linter": "flake8-tidy-imports",
+  "summary": "`{name}` is banned at the module level",
+  "message_formats": [
+    "`{name}` is banned at the module level"
+  ],
+  "fix": "Fix is not available.",
+  "fix_availability": "None",
+  "explanation": "## What it does\nChecks for module-level imports that should instead be imported lazily\n(e.g., within a function definition, or an `if TYPE_CHECKING:` block, or\nsome other nested context).\n\n## Why is this bad?\nSome modules are expensive to import. For example, importing `torch` or\n`tensorflow` can introduce a noticeable delay in the startup time of a\nPython program.\n\nIn such cases, you may want to enforce that the module is imported lazily\nas needed, rather than at the top of the file. This could involve inlining\nthe import into the function that uses it, rather than importing it\nunconditionally, to ensure that the module is only imported when necessary.\n\n## Example\n```python\nimport tensorflow as tf\n\n\ndef show_version():\n    print(tf.__version__)\n```\n\nUse instead:\n```python\ndef show_version():\n    import tensorflow as tf\n\n    print(tf.__version__)\n```\n\n## Options\n- `lint.flake8-tidy-imports.banned-module-level-imports`\n",
+  "preview": false,
+  "status": {
+    "Stable": {
+      "since": "v0.0.285"
+    }
+  },
+  "category": "restriction",
+  "source_location": {
+    "file": "crates/ruff_linter/src/rules/flake8_tidy_imports/rules/banned_module_level_imports.rs",
+    "line": 46
+  }
+}

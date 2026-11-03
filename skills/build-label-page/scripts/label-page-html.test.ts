@@ -412,6 +412,54 @@ test("🔴 without the store the page is read-only, and the real items stay read
   assert.match(shown, /G001/, "a real item is shown read-only");
 });
 
+test("🔴 an item that names a rule: its card says which rule and what it does, in the linter's words", async () => {
+  const { page } = build(
+    setup(
+      "rules-card",
+      config({
+        items: ITEMS.map((item, n) =>
+          n === 0
+            ? { ...item, rules: [{ linter: "eslint", id: "no-console" }] }
+            : item,
+        ),
+      }),
+    ),
+  );
+  const shown = await showPage(page, {}, {});
+  assert.match(
+    shown,
+    /Rule eslint no-console: Disallow the use of \nconsole\n/,
+    shown,
+  );
+  assert.equal(
+    occurrences(shown, "Rule eslint"),
+    1,
+    "only the item that names it",
+  );
+});
+
+test("🔴 familiarity off: no group asks how well it is known, and a group is done when its items are", async () => {
+  const { page, key } = build(
+    setup("familiarity-off-page", approval({ familiarity: false })),
+  );
+  const practice = Object.fromEntries(
+    APPROVAL_PRACTICE.map((p, n) => [
+      `r1-P${String(n + 1)}`,
+      { answers: p.expected, source: "page" },
+    ]),
+  );
+  const answers = Object.fromEntries(
+    Object.keys(key.ids).map((id) => [
+      id,
+      { answers: { keep: "keep" }, source: "page" },
+    ]),
+  );
+  const shown = await showPage(page, answers, {}, practice);
+  assert.doesNotMatch(shown, /How well/);
+  assert.doesNotMatch(shown, /how well you know it/);
+  assert.match(shown, /Nothing left/, shown);
+});
+
 test("🔴 one requirement of a line: its card shows which part it is and the whole line beneath", async () => {
   const line = "TypeScript only (no JavaScript); top-level await is allowed.";
   const { page } = build(
@@ -448,26 +496,4 @@ test("🔴 one requirement of a line: its card shows which part it is and the wh
     2,
     "only the two parts carry the line",
   );
-});
-
-test("🔴 familiarity off: no group asks how well it is known, and a group is done when its items are", async () => {
-  const { page, key } = build(
-    setup("familiarity-off-page", approval({ familiarity: false })),
-  );
-  const practice = Object.fromEntries(
-    APPROVAL_PRACTICE.map((p, n) => [
-      `r1-P${String(n + 1)}`,
-      { answers: p.expected, source: "page" },
-    ]),
-  );
-  const answers = Object.fromEntries(
-    Object.keys(key.ids).map((id) => [
-      id,
-      { answers: { keep: "keep" }, source: "page" },
-    ]),
-  );
-  const shown = await showPage(page, answers, {}, practice);
-  assert.doesNotMatch(shown, /How well/);
-  assert.doesNotMatch(shown, /how well you know it/);
-  assert.match(shown, /Nothing left/, shown);
 });

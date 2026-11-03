@@ -87,6 +87,7 @@ const FULL: DocObject = (() => {
               title: "T",
               code: "c = 1",
               context: "ctx",
+              rules: [{ linter: "eslint", id: "no-console" }],
               unit: { id: "L0", text: "One line.", part: 1, of: 1 },
             }
           : i,
@@ -1175,6 +1176,102 @@ test("🔴 a question dropped between practice rounds: the earlier round's answe
   assert.match(r.out, /practice round 1: 3 of 3 matched/);
 });
 
+test("🔴 an item that names a linter rule: the build takes the rule's description from the linter, and refuses one it cannot describe", () => {
+  const named = (rules: readonly Record<string, string>[]) =>
+    config({
+      items: ITEMS.map((item, n) => (n === 0 ? { ...item, rules } : item)),
+    });
+  const { page } = build(
+    setup("rules-ok", named([{ linter: "eslint", id: "no-console" }])),
+  );
+  assert.ok(
+    page.includes(
+      '"rules": [{"linter": "eslint", "id": "no-console", "description": "Disallow the use of `console`"}]',
+    ),
+    "the page carries the linter's own description",
+  );
+  const dir = setup(
+    "rules-unknown",
+    named([{ linter: "eslint", id: "no-such-rule" }]),
+  );
+  const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+  assert.equal(r.status, 1, r.out);
+  assert.match(
+    r.out,
+    /REFUSED: items\[0\]\.rules\[0\]: eslint 'no-such-rule' has no description from the linter/,
+  );
+  // ruff answers the same whether it is missing or does not know the code: no description.
+  const ruff = setup(
+    "rules-ruff-unknown",
+    named([{ linter: "ruff", id: "NOPE1" }]),
+  );
+  const r2 = run(["build", join(ruff, "items.json"), join(ruff, "out")]);
+  assert.equal(r2.status, 1, r2.out);
+  assert.match(
+    r2.out,
+    /ruff 'NOPE1' has no description from the linter \(`ruff rule` does not know it/,
+  );
+});
+
+test("🔴 familiarity off: the key asks for none, the export reports no missing familiarity, and a stored one is refused", () => {
+  const dir = setup("familiarity-off", approval({ familiarity: false }));
+  const { key } = build(dir);
+  assert.deepEqual(key.allowed.familiarity, []);
+  const [a] = Object.keys(key.ids);
+  assert.ok(a !== undefined);
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({
+      answers: { [a]: { answers: { keep: "keep" }, source: "page" } },
+      groups: {},
+    }),
+  );
+  const r = exportAt(dir);
+  assert.equal(r.status, 0, r.out);
+  assert.doesNotMatch(r.out, /no familiarity answer|invalid group/);
+  assert.deepEqual(Exported.parse(JSON.parse(labelsFile(dir))).groups, {});
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({
+      answers: {},
+      groups: { python: { familiarity: "well", source: "chat" } },
+    }),
+  );
+  const refused = exportAt(dir);
+  assert.notEqual(refused.status, 0);
+  assert.match(refused.out, /groups\/python: .*familiarity is off/);
+});
+
+test("🔴 familiarity off with a familiarity_question is a contradiction the build refuses", () => {
+  const r = run([
+    "build",
+    join(
+      setup(
+        "familiarity-contradiction",
+        approval({ familiarity: false, familiarity_question: "How well?" }),
+      ),
+      "items.json",
+    ),
+    join(WORK, "contradiction-out"),
+  ]);
+  assert.notEqual(r.status, 0);
+  assert.match(
+    r.out,
+    /REFUSED: familiarity_question: .*`familiarity` is false/,
+  );
+});
+
+test("familiarity left out: every group is still asked (rule 5), and a missing one is reported", () => {
+  const dir = setup("familiarity-default", approval());
+  const { key } = build(dir);
+  assert.deepEqual(key.allowed.familiarity, ["well", "somewhat", "not_really"]);
+  writeFileSync(
+    join(dir, "dump.json"),
+    JSON.stringify({ answers: {}, groups: {} }),
+  );
+  assert.match(exportAt(dir).out, /group python: no familiarity answer/);
+});
+
 /** Items 0 and 3 (both Rust) as the two requirements of one line. */
 const LINE = "TypeScript only (no JavaScript); top-level await is allowed.";
 const withUnit = (
@@ -1305,63 +1402,4 @@ test("🔴 the same line in two places is two lines: four items, two ids, it bui
   );
   const { page } = build(dir);
   assert.ok(!page.includes("a.md:3"), "the line's id is private");
-});
-
-test("🔴 familiarity off: the key asks for none, the export reports no missing familiarity, and a stored one is refused", () => {
-  const dir = setup("familiarity-off", approval({ familiarity: false }));
-  const { key } = build(dir);
-  assert.deepEqual(key.allowed.familiarity, []);
-  const [a] = Object.keys(key.ids);
-  assert.ok(a !== undefined);
-  writeFileSync(
-    join(dir, "dump.json"),
-    JSON.stringify({
-      answers: { [a]: { answers: { keep: "keep" }, source: "page" } },
-      groups: {},
-    }),
-  );
-  const r = exportAt(dir);
-  assert.equal(r.status, 0, r.out);
-  assert.doesNotMatch(r.out, /no familiarity answer|invalid group/);
-  assert.deepEqual(Exported.parse(JSON.parse(labelsFile(dir))).groups, {});
-  writeFileSync(
-    join(dir, "dump.json"),
-    JSON.stringify({
-      answers: {},
-      groups: { python: { familiarity: "well", source: "chat" } },
-    }),
-  );
-  const refused = exportAt(dir);
-  assert.notEqual(refused.status, 0);
-  assert.match(refused.out, /groups\/python: .*familiarity is off/);
-});
-
-test("🔴 familiarity off with a familiarity_question is a contradiction the build refuses", () => {
-  const r = run([
-    "build",
-    join(
-      setup(
-        "familiarity-contradiction",
-        approval({ familiarity: false, familiarity_question: "How well?" }),
-      ),
-      "items.json",
-    ),
-    join(WORK, "contradiction-out"),
-  ]);
-  assert.notEqual(r.status, 0);
-  assert.match(
-    r.out,
-    /REFUSED: familiarity_question: .*`familiarity` is false/,
-  );
-});
-
-test("familiarity left out: every group is still asked (rule 5), and a missing one is reported", () => {
-  const dir = setup("familiarity-default", approval());
-  const { key } = build(dir);
-  assert.deepEqual(key.allowed.familiarity, ["well", "somewhat", "not_really"]);
-  writeFileSync(
-    join(dir, "dump.json"),
-    JSON.stringify({ answers: {}, groups: {} }),
-  );
-  assert.match(exportAt(dir).out, /group python: no familiarity answer/);
 });
