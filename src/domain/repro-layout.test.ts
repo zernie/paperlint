@@ -208,6 +208,8 @@ describe("reproMessage — stands alone", () => {
         "├── README.md      ← the index: one line per study, generated from studies.json",
         "├── studies.json   ← the study registry: id, title, status and result of each study",
         "├── .gitignore     ← keeps the scripts' byproducts out of git",
+        "├── CLAUDE.md      ← optional: instructions an agent loads when it works in repro/",
+        "├── AGENTS.md      ← optional: the same, for agents that read AGENTS.md",
         "├── tools/         ← scripts used across the paper (numbers, figures, anonymity check, harnesses)",
         "├── data/          ← shared data (tables, caches)",
         "└── <id>-<slug>/   ← one folder per study or spike, named by its row in studies.json (P1-S03-baseline)",
