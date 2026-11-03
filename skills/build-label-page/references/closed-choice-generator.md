@@ -42,7 +42,9 @@ length.
 - **`seed`**: fixes the order. Rebuilding with the same seed keeps every id, and a new item gets the
   next one; a different seed is refused once a key exists.
 - **`ask_why`** on an option: a prompt. That answer is incomplete, on the page and in the export,
-  until a reason is saved.
+  until a reason is saved. The reason saves as it is typed (after a pause, and when the page is
+  left), so a labeller who closes the page from inside the box does not leave a drop without its
+  reason; a store echo while typing keeps the box and its focus.
 
 ## The approval page
 
