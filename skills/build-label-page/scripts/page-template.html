@@ -142,7 +142,11 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     }).filter(function (q) { return q !== null; });
   }
   function itemDone(id) { return missingFor(id).length === 0; }
+  // A page built with "familiarity": false asks no group anything (an approval page): every group
+  // counts as rated, and neither the question nor "how well you know it" is ever shown.
+  var ASKS_FAMILIARITY = DATA.familiarity.length > 0;
   function familiarity(g) {
+    if (!ASKS_FAMILIARITY) return null;
     var d = state.mine["group:" + g] || state.groups[g];
     return d && valid(DATA.allowed.familiarity, d.familiarity) ? d.familiarity : undefined;
   }
@@ -407,13 +411,15 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   function groupBlock(g, off, onlyOpen) {
     var sec = el("section");
     sec.appendChild(el("h2", "", g.label));
-    var fam = el("div", "ask");
-    fam.appendChild(el("p", "q", DATA.familiarity_question.replace("{group}", g.label)));
-    fam.appendChild(options(DATA.familiarity, familiarity(g.id), function (v) { setFamiliarity(g.id, v); }, off));
-    var gs = state.groups[g.id];
-    fam.appendChild(statusLine("group:" + g.id,
-      familiarity(g.id) === undefined ? [{ text: "an answer" }] : [], gs && gs.savedAt));
-    sec.appendChild(fam);
+    if (ASKS_FAMILIARITY) {
+      var fam = el("div", "ask");
+      fam.appendChild(el("p", "q", DATA.familiarity_question.replace("{group}", g.label)));
+      fam.appendChild(options(DATA.familiarity, familiarity(g.id), function (v) { setFamiliarity(g.id, v); }, off));
+      var gs = state.groups[g.id];
+      fam.appendChild(statusLine("group:" + g.id,
+        familiarity(g.id) === undefined ? [{ text: "an answer" }] : [], gs && gs.savedAt));
+      sec.appendChild(fam);
+    }
     groupItems(g.id).forEach(function (i) {
       if (onlyOpen && itemDone(i.id)) return;
       sec.appendChild(itemCard(i, off));

@@ -411,3 +411,25 @@ test("🔴 without the store the page is read-only, and the real items stay read
   assert.match(shown, /cannot be saved in this view/);
   assert.match(shown, /G001/, "a real item is shown read-only");
 });
+
+test("🔴 familiarity off: no group asks how well it is known, and a group is done when its items are", async () => {
+  const { page, key } = build(
+    setup("familiarity-off-page", approval({ familiarity: false })),
+  );
+  const practice = Object.fromEntries(
+    APPROVAL_PRACTICE.map((p, n) => [
+      `r1-P${String(n + 1)}`,
+      { answers: p.expected, source: "page" },
+    ]),
+  );
+  const answers = Object.fromEntries(
+    Object.keys(key.ids).map((id) => [
+      id,
+      { answers: { keep: "keep" }, source: "page" },
+    ]),
+  );
+  const shown = await showPage(page, answers, {}, practice);
+  assert.doesNotMatch(shown, /How well/);
+  assert.doesNotMatch(shown, /how well you know it/);
+  assert.match(shown, /Nothing left/, shown);
+});

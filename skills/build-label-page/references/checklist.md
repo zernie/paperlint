@@ -83,7 +83,9 @@ the text of an allowed field says.
   other groups are not put on the page and get no id.
 - Add one question per group, "how well do you know this language / tool" (well / somewhat / not
   really). It is an analysis filter: the study can report the labels with and without the groups
-  the labeller does not know well.
+  the labeller does not know well. An approval page asks none (`"familiarity": false` in
+  `items.json`): its question is about a drawn unit, not about repositories the author has seen,
+  and an answer to "how well do you know the projects of this group" there means nothing.
 - The per-item judgement "clear-cut or a real boundary case" is the labeller's. The study design
   does not decide it in advance and does not pre-fill it.
 
@@ -92,7 +94,7 @@ answer is the only way to find it afterwards. And a boundary case is boundary be
 person hesitates; a designer who tags it in advance has measured the design, not the item.
 
 **Check.** The build prints how many items were left out; the export has a familiarity value for
-every group.
+every group, or the page was built with `"familiarity": false` and the export has no groups.
 
 ## 6. Export into the repository right away
 
