@@ -92,6 +92,124 @@
   ]
  },
  {
+  "id": "A03",
+  "repo": "NatLabRockies/gdx-pandas",
+  "sha": "aad60d3a939f1405f593eb0a5b9947b906284e9a",
+  "linter": "ruff",
+  "rule": "ANN201",
+  "readings": [
+   {
+    "key": "on|{}|tests:excluded",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN201",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "**/test/**",
+       "**/tests/**",
+       "**/__tests__/**",
+       "**/spec/**",
+       "**/e2e/**",
+       "**/*.test.*",
+       "**/*.spec.*",
+       "**/test_*.py",
+       "**/*_test.py"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.py",
+      "text": "def build_greeting(name: str):\n    return \"Hello, \" + name\n\n\nclass Greeter:\n    def __init__(self, prefix: str) -> None:\n        self.prefix = prefix\n\n    def greet(self, name: str) -> str:\n        return self.prefix + build_greeting(name)\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.py",
+      "text": "def build_greeting(name: str) -> str:\n    return \"Hello, \" + name\n\n\nclass Greeter:\n    def __init__(self, prefix: str) -> None:\n        self.prefix = prefix\n\n    def greet(self, name: str) -> str:\n        return self.prefix + build_greeting(name)\n"
+     }
+    }
+   },
+   {
+    "key": "on|{}|tests:included",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN201",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.py",
+      "text": "def compute_total(prices, tax):\n    return sum(prices) * (1 + tax)\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.py",
+      "text": "def compute_total(prices, tax) -> float:\n    return sum(prices) * (1 + tax)\n"
+     }
+    }
+   },
+   {
+    "key": "on|{\"flake8-annotations\":{\"allow-star-arg-any\":true}}|tests:excluded",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN201",
+     "settings": {
+      "flake8-annotations": {
+       "allow-star-arg-any": true
+      }
+     },
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "**/test/**",
+       "**/tests/**",
+       "**/__tests__/**",
+       "**/spec/**",
+       "**/e2e/**",
+       "**/*.test.*",
+       "**/*.spec.*",
+       "**/test_*.py",
+       "**/*_test.py"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.py",
+      "text": "def load_users(path: str):\n    with open(path) as handle:\n        return [line.strip() for line in handle]\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.py",
+      "text": "def load_users(path: str) -> list[str]:\n    with open(path) as handle:\n        return [line.strip() for line in handle]\n"
+     }
+    }
+   }
+  ]
+ },
+ {
   "id": "A04",
   "repo": "ultralytics/yolov3",
   "sha": "9fdccf7b691c1ea00f440e52519fb36eee2c056f",
@@ -162,6 +280,621 @@
      "good": {
       "path": "p3s108-pair/good.py",
       "text": "import sys\n\n\ndef main():\n    return sys.argv[1:]\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "A10",
+  "repo": "felesh-ai/arshai",
+  "sha": "7a47ead122eed668e2acf210f9f6003d69e66288",
+  "linter": "ruff",
+  "rule": "RUF006",
+  "readings": [
+   {
+    "key": "on|{}|tests:included",
+    "reading": {
+     "linter": "ruff",
+     "rule": "RUF006",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.py",
+      "text": "import asyncio\n\n\nasync def work():\n    await asyncio.sleep(1)\n\n\nasync def main():\n    asyncio.create_task(work())\n    await asyncio.sleep(2)\n\n\nasyncio.run(main())\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.py",
+      "text": "import asyncio\n\nbackground_tasks = set()\n\n\nasync def work():\n    await asyncio.sleep(1)\n\n\nasync def main():\n    task = asyncio.create_task(work())\n    background_tasks.add(task)\n    task.add_done_callback(background_tasks.discard)\n    await asyncio.sleep(2)\n\n\nasyncio.run(main())\n"
+     }
+    }
+   },
+   {
+    "key": "on|{}|tests:excluded",
+    "reading": {
+     "linter": "ruff",
+     "rule": "RUF006",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "**/test/**",
+       "**/tests/**",
+       "**/__tests__/**",
+       "**/spec/**",
+       "**/e2e/**",
+       "**/*.test.*",
+       "**/*.spec.*",
+       "**/test_*.py",
+       "**/*_test.py"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.py",
+      "text": "import asyncio\n\n\nasync def work():\n    await asyncio.sleep(1)\n\n\nasync def main():\n    asyncio.create_task(work())\n    await asyncio.sleep(2)\n\n\nasyncio.run(main())\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.py",
+      "text": "import asyncio\n\nbackground_tasks = set()\n\n\nasync def work():\n    await asyncio.sleep(1)\n\n\nasync def main():\n    task = asyncio.create_task(work())\n    background_tasks.add(task)\n    task.add_done_callback(background_tasks.discard)\n    await asyncio.sleep(2)\n\n\nasyncio.run(main())\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "B02",
+  "repo": "SinanTufekci/agent-intern",
+  "sha": "bca6df790451ff3cf8b09b43ef7a85d18f367b1a",
+  "linter": "ruff",
+  "rule": "T201",
+  "readings": [
+   {
+    "key": "on|{}|tests:included",
+    "reading": {
+     "linter": "ruff",
+     "rule": "T201",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.py",
+      "text": "import logging\n\nlogger = logging.getLogger(__name__)\n\n\ndef handle_request(payload):\n    result = payload.get(\"value\", 0) * 2\n    print(\"handled request\", result)\n    return result\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.py",
+      "text": "import logging\n\nlogger = logging.getLogger(__name__)\n\n\ndef handle_request(payload):\n    result = payload.get(\"value\", 0) * 2\n    logger.info(\"handled request %s\", result)\n    return result\n"
+     }
+    }
+   },
+   {
+    "key": "on|{}|tests:excluded",
+    "reading": {
+     "linter": "ruff",
+     "rule": "T201",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "**/test/**",
+       "**/tests/**",
+       "**/__tests__/**",
+       "**/spec/**",
+       "**/e2e/**",
+       "**/*.test.*",
+       "**/*.spec.*",
+       "**/test_*.py",
+       "**/*_test.py"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.py",
+      "text": "import logging\n\nlogger = logging.getLogger(__name__)\n\n\ndef handle_request(payload):\n    result = {\"echo\": payload}\n    print(\"handled request\", result)\n    return result\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.py",
+      "text": "import logging\n\nlogger = logging.getLogger(__name__)\n\n\ndef handle_request(payload):\n    result = {\"echo\": payload}\n    logger.info(\"handled request %s\", result)\n    return result\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "B06",
+  "repo": "better-i18n/oss",
+  "sha": "7a59b152abcaca17e34d4d7e2f1f688a2e85aba8",
+  "linter": "eslint",
+  "rule": "no-restricted-syntax",
+  "readings": [
+   {
+    "key": "on|[]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "no-restricted-syntax",
+     "options": [],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.js",
+      "text": "const payload = 'Y29uc29sZS5sb2coMSk=';\nconst decoded = Buffer.from(payload, 'base64').toString('utf8');\neval(decoded);\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.js",
+      "text": "const payload = 'console.log(1)';\nconst decoded = payload.trim();\nconsole.log(decoded);\n"
+     }
+    }
+   },
+   {
+    "key": "on|[\"BreakStatement\",\"ContinueStatement\",\"DebuggerStatement\",\"LabeledStatement\",\"WithStatement\"]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "no-restricted-syntax",
+     "options": [
+      "BreakStatement",
+      "ContinueStatement",
+      "DebuggerStatement",
+      "LabeledStatement",
+      "WithStatement"
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.js",
+      "text": "const encoded = 'Y29uc29sZS5sb2coMSk=';\nconst items = [1, 2, 3];\n\nfor (const item of items) {\n  if (item === 2) {\n    break;\n  }\n  console.log(item);\n}\n\nconsole.log(Buffer.from(encoded, 'base64').toString('utf8'));\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.js",
+      "text": "const encoded = 'Y29uc29sZS5sb2coMSk=';\nconst items = [1, 2, 3];\n\nfor (const item of items) {\n  if (item !== 2) {\n    console.log(item);\n  }\n}\n\nconsole.log(Buffer.from(encoded, 'base64').toString('utf8'));\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "B07",
+  "repo": "ire-research/ire",
+  "sha": "5b650cc8fefd1b31cca262940c1979254b0ab408",
+  "linter": "eslint",
+  "rule": "@typescript-eslint/no-unused-vars",
+  "readings": [
+   {
+    "key": "on|[]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "@typescript-eslint/no-unused-vars",
+     "options": [],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.ts",
+      "text": "import { readFileSync } from 'fs';\nimport { join } from 'path';\n\nexport function loadConfig(dir: string): string {\n  const unusedPath = join(dir, 'config.json');\n  return readFileSync(dir + '/config.json', 'utf8');\n}\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.ts",
+      "text": "import { readFileSync } from 'fs';\n\nexport function loadConfig(dir: string): string {\n  return readFileSync(dir + '/config.json', 'utf8');\n}\n"
+     }
+    }
+   },
+   {
+    "key": "on|[{\"argsIgnorePattern\":\"^_\",\"varsIgnorePattern\":\"^_\"}]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "@typescript-eslint/no-unused-vars",
+     "options": [
+      {
+       "argsIgnorePattern": "^_",
+       "varsIgnorePattern": "^_"
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.ts",
+      "text": "import { readFileSync } from 'fs';\nimport { join } from 'path';\n\nexport function load(name: string): string {\n  const unused = join('data', name);\n  return readFileSync(name, 'utf8');\n}\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.ts",
+      "text": "import { readFileSync } from 'fs';\n\nexport function load(name: string): string {\n  return readFileSync(name, 'utf8');\n}\n"
+     }
+    }
+   },
+   {
+    "key": "on|[{\"argsIgnorePattern\":\"^_\"}]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "@typescript-eslint/no-unused-vars",
+     "options": [
+      {
+       "argsIgnorePattern": "^_"
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.ts",
+      "text": "import { readFileSync } from 'fs';\n\nexport function add(a: number, b: number): number {\n  const unused = a * b;\n  return a + b;\n}\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.ts",
+      "text": "export function add(a: number, b: number): number {\n  return a + b;\n}\n"
+     }
+    }
+   },
+   {
+    "key": "on|[{\"args\":\"none\"}]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "@typescript-eslint/no-unused-vars",
+     "options": [
+      {
+       "args": "none"
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.ts",
+      "text": "import { readFileSync } from 'fs';\n\nexport function add(a: number, b: number): number {\n  const unused = a * b;\n  return a + b;\n}\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.ts",
+      "text": "export function add(a: number, b: number): number {\n  return a + b;\n}\n"
+     }
+    }
+   },
+   {
+    "key": "on|[{\"args\":\"all\",\"argsIgnorePattern\":\"^_\",\"ignoreRestSiblings\":true}]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "@typescript-eslint/no-unused-vars",
+     "options": [
+      {
+       "args": "all",
+       "argsIgnorePattern": "^_",
+       "ignoreRestSiblings": true
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.ts",
+      "text": "import { readFileSync } from 'fs';\n\nexport function total(items: number[], factor: number, offset: number): number {\n  const unused = items.length;\n  return items.reduce((sum, item) => sum + item * factor, 0);\n}\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.ts",
+      "text": "export function total(items: number[], factor: number, _offset: number): number {\n  return items.reduce((sum, item) => sum + item * factor, 0);\n}\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "B09",
+  "repo": "strangeadvancedmarketing/Adam",
+  "sha": "191f95acfdfcd11cee73031338bc24af6e36989e",
+  "linter": "eslint",
+  "rule": "no-restricted-syntax",
+  "readings": [
+   {
+    "key": "on|[]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "no-restricted-syntax",
+     "options": [],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.js",
+      "text": "const path = require('path');\n\nconst notesDir = '~/AdamsVault/notes';\n\nfunction notePath(name) {\n  return path.join(notesDir, name + '.md');\n}\n\nmodule.exports = { notePath };\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.js",
+      "text": "const path = require('path');\n\nconst notesDir = process.env.NOTES_DIR || './notes';\n\nfunction notePath(name) {\n  return path.join(notesDir, name + '.md');\n}\n\nmodule.exports = { notePath };\n"
+     }
+    }
+   },
+   {
+    "key": "on|[\"BreakStatement\",\"DebuggerStatement\",\"ForInStatement\",\"LabeledStatement\",\"WithStatement\"]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "no-restricted-syntax",
+     "options": [
+      "BreakStatement",
+      "DebuggerStatement",
+      "ForInStatement",
+      "LabeledStatement",
+      "WithStatement"
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.js",
+      "text": "const files = ['a.md', 'b.md', 'c.md'];\nlet found = null;\n\nfor (const file of files) {\n  if (file === 'b.md') {\n    found = file;\n    break;\n  }\n}\n\nconsole.log(found);\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.js",
+      "text": "const files = ['a.md', 'b.md', 'c.md'];\nconst found = files.find((file) => file === 'b.md') ?? null;\n\nconsole.log(found);\n"
+     }
+    }
+   },
+   {
+    "key": "on|[\"BreakStatement\",\"ContinueStatement\",\"DebuggerStatement\",\"LabeledStatement\",\"WithStatement\"]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "no-restricted-syntax",
+     "options": [
+      "BreakStatement",
+      "ContinueStatement",
+      "DebuggerStatement",
+      "LabeledStatement",
+      "WithStatement"
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.js",
+      "text": "const files = ['a.md', 'b.md', 'c.md'];\nlet found = null;\n\nfor (const file of files) {\n  if (file === 'b.md') {\n    found = file;\n    break;\n  }\n}\n\nexport default found;\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.js",
+      "text": "const files = ['a.md', 'b.md', 'c.md'];\nconst found = files.find((file) => file === 'b.md') ?? null;\n\nexport default found;\n"
+     }
+    }
+   },
+   {
+    "key": "on|[\"LabeledStatement\",\"WithStatement\"]|tests:included",
+    "reading": {
+     "linter": "eslint",
+     "rule": "no-restricted-syntax",
+     "options": [
+      "LabeledStatement",
+      "WithStatement"
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s108-pair/bad.js",
+      "text": "function findPair(rows, target) {\n  let found = null;\n  outer: for (const row of rows) {\n    for (const value of row) {\n      if (value === target) {\n        found = value;\n        break outer;\n      }\n    }\n  }\n  return found;\n}\n\nmodule.exports = { findPair };\n"
+     },
+     "good": {
+      "path": "p3s108-pair/good.js",
+      "text": "function findPair(rows, target) {\n  for (const row of rows) {\n    for (const value of row) {\n      if (value === target) {\n        return value;\n      }\n    }\n  }\n  return null;\n}\n\nmodule.exports = { findPair };\n"
      }
     }
    }
