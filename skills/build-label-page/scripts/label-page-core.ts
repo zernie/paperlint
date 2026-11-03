@@ -98,9 +98,13 @@ const PRIVATE_FIELDS = ["source_id"] as const;
 // The linter rules an item names ("read as ruff `TID253`"): the page shows each with the linter's
 // own description, looked up at build time (rule-descriptions.ts), never typed into items.json.
 const RULES_FIELD = "rules";
+// One requirement of a line that holds several: the whole line and which part this item is. Shown on
+// the card beneath the item; the line is text the labeller may read, like `context`.
+const UNIT_FIELD = "unit";
 const ALLOWED_FIELDS: readonly string[] = [
   ...PAGE_FIELDS,
   RULES_FIELD,
+  UNIT_FIELD,
   ...PRIVATE_FIELDS,
 ];
 
@@ -188,7 +192,8 @@ const mapping = (
 const obj = (
   fields: Readonly<Record<string, SchemaNode>>,
   closed = true,
-): SchemaNode => ({ kind: "object", required: true, closed, fields });
+  required = true,
+): SchemaNode => ({ kind: "object", required, closed, fields });
 
 const ITEM_SCHEMA = obj(
   {
@@ -200,6 +205,12 @@ const ITEM_SCHEMA = obj(
       obj({ linter: string(true, "eslint|ruff"), id: string() }),
       false,
       1,
+    ),
+    [UNIT_FIELD]: obj(
+      // `id` names one occurrence of the line (two files may hold the same words): never shown.
+      { id: string(), text: string(), part: integer(), of: integer() },
+      true,
+      false,
     ),
   },
   false, // an unlisted item field is the leak guard's refusal, with its own message
@@ -361,6 +372,12 @@ interface Question {
   readonly short?: string;
   readonly options: readonly Option[];
 }
+interface Unit {
+  readonly id: string;
+  readonly text: string;
+  readonly part: number;
+  readonly of: number;
+}
 type Item = {
   readonly [F in (typeof PAGE_FIELDS)[number]]?: string;
 } & {
@@ -368,6 +385,7 @@ type Item = {
   readonly group: string;
   readonly body: string;
   readonly rules?: readonly RuleRef[];
+  readonly unit?: Unit;
 };
 interface Practice {
   readonly title?: string;
@@ -524,6 +542,69 @@ const practiceOf = (
   cfg.practice.map((item, n) => ({ id: `P${String(n + 1)}`, ...item }));
 
 // ── the items: the leak guard, and the references to the config ───────────────────────────────
+/**
+ * A line with several requirements is split upstream into one item per requirement, each carrying
+ * `unit: {text, part, of}`. Every part of a line must be an item, once, in one group (so
+ * `labeller_knows` keeps or drops the whole line): a lost part is a requirement nobody judged.
+ */
+interface Part {
+  readonly item: Item;
+  readonly unit: Unit;
+  readonly n: number;
+}
+type Parts = readonly [Part, ...Part[]];
+/** The items of each line, in items.json order; a line's list is never empty. */
+const linesOf = (cfg: Config): ReadonlyMap<string, Parts> =>
+  cfg.items.reduce((byLine, item, n) => {
+    if (item.unit === undefined) return byLine;
+    const part: Part = { item, unit: item.unit, n };
+    const seen = byLine.get(item.unit.id);
+    return byLine.set(
+      item.unit.id,
+      seen ? [seen[0], ...seen.slice(1), part] : [part],
+    );
+  }, new Map<string, Parts>());
+/** One part against the first part of its line: same count, in range, not repeated, same group. */
+function checkPart({ item, unit, n }: Part, parts: Parts): void {
+  const [first] = parts;
+  const at = `items[${String(n)}]`;
+  if (unit.text !== first.unit.text)
+    fail(
+      `${at}.unit.text: ${repr(unit.text)}, but items[${String(first.n)}] of line ${repr(unit.id)} says ${repr(first.unit.text)}`,
+    );
+  if (unit.of !== first.unit.of)
+    fail(
+      `${at}.unit.of: ${String(unit.of)}, but items[${String(first.n)}].unit.of says ${String(first.unit.of)} for the same line`,
+    );
+  if (unit.part < 1 || unit.part > unit.of)
+    fail(
+      `${at}.unit.part: ${String(unit.part)} is not between 1 and ${String(unit.of)}`,
+    );
+  const earlier = parts.find((p) => p.n < n && p.unit.part === unit.part);
+  if (earlier !== undefined)
+    fail(
+      `${at}.unit.part: ${String(unit.part)} repeats items[${String(earlier.n)}].unit.part`,
+    );
+  if (item.group !== first.item.group)
+    fail(
+      `${at}.group: ${repr(item.group)}, but items[${String(first.n)}] of the same line is in ${repr(first.item.group)}`,
+    );
+}
+function checkUnits(cfg: Config): void {
+  for (const [line, parts] of linesOf(cfg)) {
+    parts.forEach((p) => {
+      checkPart(p, parts);
+    });
+    const [first] = parts;
+    const missing = Array.from({ length: first.unit.of }, (_, k) => k + 1).find(
+      (k) => !parts.some((p) => p.unit.part === k),
+    );
+    if (missing !== undefined)
+      fail(
+        `items[${String(first.n)}].unit: part ${String(missing)} of ${String(first.unit.of)} of line ${repr(line)} is not among the items`,
+      );
+  }
+}
 function checkItemFields(cfg: Config): void {
   const sids: string[] = [];
   cfg.items.forEach((item, n) => {
@@ -546,6 +627,11 @@ function checkItemFields(cfg: Config): void {
       );
   });
 }
+/** Every text of an item the labeller sees, by field: the page fields and the line of a unit. */
+const visibleTexts = (item: Item): readonly (readonly [string, string])[] => [
+  ...PAGE_FIELDS.map((f): readonly [string, string] => [f, item[f] ?? ""]),
+  [UNIT_FIELD, item.unit?.text ?? ""],
+];
 const escapeRegExp = (s: string): string =>
   s.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&");
 /**
@@ -562,7 +648,7 @@ function checkNoSourceShown(cfg: Config): void {
         `(?<![\\p{L}\\p{N}_-])${escapeRegExp(sid)}(?![\\p{L}\\p{N}_-])`,
         "u",
       );
-      const field = PAGE_FIELDS.find((f) => word.test(item[f] ?? ""));
+      const field = visibleTexts(item).find(([, text]) => word.test(text))?.[0];
       if (field !== undefined) {
         fail(
           `the source id ${repr(sid)} appears in the visible \`${field}\` of item ${item.source_id}. Take it out of the text (or use source ids that are not natural words).`,
@@ -629,13 +715,27 @@ function assignIds(
 }
 
 // ── a build, short of the page ──────────────────────────────────────────────────────────────────
-const shownFields = (item: Item): Readonly<Record<string, string>> =>
-  Object.fromEntries(
+/** A unit as the page shows it: the part and the line, without the line's private id. */
+type ShownUnit = Omit<Unit, "id">;
+const shownFields = (
+  item: Item,
+): Readonly<Record<string, string | ShownUnit>> => ({
+  ...Object.fromEntries(
     PAGE_FIELDS.flatMap((f) => {
       const v = item[f];
       return v === undefined ? [] : [[f, v]];
     }),
-  );
+  ),
+  ...(item.unit === undefined
+    ? {}
+    : {
+        [UNIT_FIELD]: {
+          text: item.unit.text,
+          part: item.unit.part,
+          of: item.unit.of,
+        },
+      }),
+});
 /** Rule → the linter's description, for every rule an item on the page names. */
 type Described = ReadonlyMap<string, string>;
 const ruleKey = (r: RuleRef): string => `${r.linter} ${r.id}`;
@@ -782,6 +882,7 @@ export function prepareBuild(configPath: string, outDir: string) {
   assertConfig(cfg);
   checkConfig(cfg);
   checkItemFields(cfg);
+  checkUnits(cfg);
   checkNoSourceShown(cfg);
   const described = describeRules(cfg, dirname(configPath));
   mkdirSync(outDir, { recursive: true });

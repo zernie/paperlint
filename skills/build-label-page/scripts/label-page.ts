@@ -54,9 +54,13 @@
  *     "practice_round": 1,                  optional; raise it after rewording, the practice reopens
  *     "items": [{"source_id": "case-0412-b", "group": "python", "body": "…", "code": "…",
  *                "context": "…",
- *                "rules": [{"linter": "ruff", "id": "TID253"}]}]
+ *                "rules": [{"linter": "ruff", "id": "TID253"}],
+ *                "unit": {"id": "a.md:12", "text": "the whole line", "part": 1, "of": 2}}]
  *                                           rules: optional; each shown with the linter's own
  *                                           description (`ruff rule`, ESLint meta.docs.description)
+ *                                           unit: optional; one requirement of a line that holds
+ *                                           several. Every part of the line is an item, in one group;
+ *                                           id (never shown) tells two places with the same words apart.
  *   }
  *
  * TypeScript, compiled beside itself to `label-page.js` by `npm run build`: a consumer runs the skill

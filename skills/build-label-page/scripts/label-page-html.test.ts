@@ -459,3 +459,41 @@ test("🔴 familiarity off: no group asks how well it is known, and a group is d
   assert.doesNotMatch(shown, /how well you know it/);
   assert.match(shown, /Nothing left/, shown);
 });
+
+test("🔴 one requirement of a line: its card shows which part it is and the whole line beneath", async () => {
+  const line = "TypeScript only (no JavaScript); top-level await is allowed.";
+  const { page } = build(
+    setup(
+      "unit-card",
+      config({
+        items: ITEMS.map((item, n) =>
+          n === 0
+            ? {
+                ...item,
+                body: "TypeScript only (no JavaScript)",
+                unit: { id: "L1", text: line, part: 1, of: 2 },
+              }
+            : n === 3
+              ? {
+                  ...item,
+                  body: "top-level await is allowed",
+                  unit: { id: "L1", text: line, part: 2, of: 2 },
+                }
+              : item,
+        ),
+      }),
+    ),
+  );
+  const shown = await showPage(page, {}, {});
+  assert.match(
+    shown,
+    /From the line \(requirement 1 of 2\):\nTypeScript only \(no JavaScript\); top-level await is allowed\./,
+    shown,
+  );
+  assert.match(shown, /From the line \(requirement 2 of 2\):/);
+  assert.equal(
+    occurrences(shown, "From the line"),
+    2,
+    "only the two parts carry the line",
+  );
+});
