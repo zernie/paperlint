@@ -5,7 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { test } from "vitest";
 import {
   describeRule,
@@ -74,5 +74,16 @@ test("the real process runner returns the exit status and what was printed (node
       "process.stdout.write('x'); process.exit(3)",
     ]),
     { status: 3, stdout: "x" },
+  );
+});
+
+test("🔴 a relative folder (the documented `build items.json label-page`) is resolved before ESLint is looked up", () => {
+  assert.equal(
+    describeRule(
+      { linter: "eslint", id: "no-console" },
+      relative(process.cwd(), REPO) || ".",
+      fakeRuff,
+    ),
+    "Disallow the use of `console`",
   );
 });

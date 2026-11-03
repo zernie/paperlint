@@ -11,7 +11,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { resolve } from "node:path";
 import { z } from "zod";
 
 export interface RuleRef {
@@ -65,7 +65,8 @@ const description = (rule: unknown): string | undefined => {
   return r.success ? r.data.meta.docs.description : undefined;
 };
 function eslintDescription(id: string, fromDir: string): string | undefined {
-  const load = createRequire(join(fromDir, "items.json"));
+  // createRequire takes an absolute path only; items.json is often named relative to the study folder.
+  const load = createRequire(resolve(fromDir, "items.json"));
   try {
     if (!id.includes("/")) {
       const core = Builtins.parse(load("eslint/use-at-your-own-risk"));
