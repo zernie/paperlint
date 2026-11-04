@@ -361,10 +361,11 @@ test(
       );
       // Guards: the settings are folded, and the question sits below the code.
       assert.deepEqual(
-        await card
-          .locator("details")
-          .evaluateAll((els) => els.map((e) => (e as HTMLDetailsElement).open)),
-        [false, false],
+        [
+          await card.locator("details").count(),
+          await card.locator("details[open]").count(),
+        ],
+        [2, 0],
       );
       const code = await card.locator("pre.numbered").boundingBox();
       const ask = await card.locator(".ask").boundingBox();
