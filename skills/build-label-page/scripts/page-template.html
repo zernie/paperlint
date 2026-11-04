@@ -139,10 +139,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
 
   // ── what "done" means ────────────────────────────────────────────────────────────────────
   function answersOf(id) {
-    if (state.pending[id]) return state.pending[id];
-    if (state.mine[id]) return state.mine[id];
-    var d = state.answers[id];
-    return d && d.answers ? d.answers : {};
+    return state.pending[id] || savedOf(id);
   }
   // A stored value is an answer only if the build offers it (DATA.allowed, the same lists the
   // export reads from key.json): after a rebuild that removed an option, or a typo merged from chat,
@@ -232,19 +229,30 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   // the store keeps what it had, so an export never meets an answer without the reason it needs. Every
   // write leaves out each such answer, not only the one just picked: on a page of several questions the
   // next answer would otherwise carry the waiting one into the store without its reason.
+  // A waiting answer that replaces a saved one leaves the saved one in the write until its reason comes.
   // A stored answer to a question this page no longer asks (removed or renamed between builds) is kept
   // as it was and never checked: the page has no question to check it against.
-  function resolved(answers, reasons) {
-    var out = {};
+  function resolved(answers, reasons, saved) {
+    var out = {}, waiting = false;
     Object.keys(answers).forEach(function (q) {
       var asked = questionOf(q);
       if (!(asked && needsWhy(asked, answers[q]) && !(reasons[q] || "").trim())) out[q] = answers[q];
+      else {
+        waiting = true;
+        if (Object.prototype.hasOwnProperty.call(saved, q)) out[q] = saved[q];
+      }
     });
-    return out;
+    return { ready: out, waiting: waiting };
+  }
+  // What the store holds for an item, or what this page last wrote to it ahead of the store.
+  function savedOf(id) {
+    if (state.mine[id]) return state.mine[id];
+    var d = state.answers[id];
+    return d && d.answers ? d.answers : {};
   }
   function keep(id, next, reasons) {
-    var ready = resolved(next, reasons);
-    if (Object.keys(ready).length < Object.keys(next).length) state.pending[id] = next;
+    var r = resolved(next, reasons, savedOf(id)), ready = r.ready;
+    if (r.waiting) state.pending[id] = next;
     else delete state.pending[id];
     delete state.refusedWhy[id];
     state.mine[id] = ready;

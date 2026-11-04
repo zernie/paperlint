@@ -526,6 +526,60 @@ test(
 );
 
 test(
+  "🔴 a saved answer changed to one still waiting for its reason stays saved when another question is answered",
+  async () => {
+    const [label, boundary] = QUESTIONS;
+    assert.ok(label !== undefined && boundary !== undefined);
+    const withWhy = {
+      ...label,
+      options: label.options.map((o) =>
+        o.value === "no" ? { ...o, ask_why: "Why not?" } : o,
+      ),
+    };
+    const { page: html } = build(
+      setup(
+        "browser-pending-saved",
+        config({ questions: [withWhy, boundary] }),
+      ),
+    );
+    const done = Object.fromEntries(
+      PRACTICE.map((p, n) => [
+        `r1-P${String(n + 1)}`,
+        { answers: p.expected, source: "page" },
+      ]),
+    );
+    const page = await (await sharedBrowser()).newPage();
+    try {
+      await page.addInitScript(
+        STORE(done, 20, {
+          G001: {
+            answers: { label: "yes", boundary: "clear" },
+            reasons: {},
+            source: "page",
+          },
+        }),
+      );
+      await page.goto("about:blank");
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      const card = page.locator("article.item").filter({ hasText: "G001" });
+      await card.getByRole("button", { name: "Change" }).first().click();
+      await card.getByRole("button", { name: "No", exact: true }).click();
+      await card.getByRole("button", { name: "Change" }).last().click();
+      await card.getByRole("button", { name: "Boundary" }).click();
+      await page.waitForTimeout(100);
+      // Guards: the store keeps «yes» until the reason for «no» is typed; the new boundary is saved.
+      assert.deepEqual(
+        (await writes(page)).map((w) => w["answers"]),
+        [{ label: "yes", boundary: "boundary" }],
+      );
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
   "🔴 a stored answer to a question the page no longer asks does not stop the next answer from saving",
   async () => {
     const { page: html } = build(setup("browser-stale-question", approval()));
