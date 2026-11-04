@@ -821,12 +821,35 @@ function checkUnits(cfg: Config): void {
   }
 }
 /**
+ * A situation's sentence or question may name the marked line as `{line}`: the build writes «line N»
+ * and the line's code there, so the question sits next to the code it is about (round-3 feedback).
+ */
+const LINE_TOKEN = "{line}";
+const SITUATION_TEXTS = ["summary", "question"] as const;
+/** `{line}` → «line N (`code`)», N and code of the example's marked line (checkWitness: one exists). */
+const withLine = (card: Card, text: string): string =>
+  text.replaceAll(LINE_TOKEN, () => {
+    const line = card.example?.lines.find((l) => l.mark);
+    return `line ${String(line?.n)} (\`${String(line?.text.trim())}\`)`;
+  });
+/** `{line}` in a situation needs a marked line to stand for. */
+function checkLineToken(at: string, card: Card): void {
+  const token = SITUATION_TEXTS.find((f) =>
+    card.situation?.[f].includes(LINE_TOKEN),
+  );
+  if (token !== undefined && !card.example?.lines.some((l) => l.mark))
+    fail(
+      `${at}.situation.${token}: \`${LINE_TOKEN}\` names the marked line, and the example has no marked line — mark the line the linter caught (\`mark: true\`), or write the ${token} without \`${LINE_TOKEN}\``,
+    );
+}
+/**
  * What the witness schema cannot say: the caught line is marked, a rule's explanation says what the
  * rule does unless its source has none, a repeat sits inside its count, and on a witness page every
  * rule carries its explanation.
  */
 function checkWitness(cfg: Config): void {
   cardsOf(cfg).forEach(([at, card]) => {
+    checkLineToken(at, card);
     if (card.example !== undefined && !card.example.lines.some((l) => l.mark))
       fail(
         `${at}.example.lines: no line is marked — mark the line the linter caught (\`mark: true\`)`,
@@ -878,15 +901,21 @@ function checkItemFields(cfg: Config): void {
   });
 }
 /** Every text of an item the labeller sees, by field: the page fields and the line of a unit. */
-const visibleTexts = (item: Item): readonly (readonly [string, string])[] => [
-  ...PAGE_FIELDS.map((f): readonly [string, string] => [f, item[f] ?? ""]),
-  [UNIT_FIELD, item.unit?.text ?? ""],
-  [READINGS_FIELD, `${item.readings?.a ?? ""} ${item.readings?.b ?? ""}`],
-  ...WITNESS_FIELDS.map((f): readonly [string, string] => [
-    f,
-    JSON.stringify(item[f] ?? ""),
-  ]),
-];
+// The witness fields as the page shows them (a repeat without its group), and every rule with the
+// explanation its card renders.
+const visibleTexts = (item: Item): readonly (readonly [string, string])[] => {
+  const shown = shownFields(item);
+  return [
+    ...PAGE_FIELDS.map((f): readonly [string, string] => [f, item[f] ?? ""]),
+    [UNIT_FIELD, item.unit?.text ?? ""],
+    [READINGS_FIELD, `${item.readings?.a ?? ""} ${item.readings?.b ?? ""}`],
+    ...WITNESS_FIELDS.map((f): readonly [string, string] => [
+      f,
+      JSON.stringify(shown[f] ?? ""),
+    ]),
+    [RULES_FIELD, JSON.stringify(item.rules ?? "")],
+  ];
+};
 const escapeRegExp = (s: string): string =>
   s.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&");
 /**
@@ -970,6 +999,17 @@ function assignIds(
 }
 
 // ── a build, short of the page ──────────────────────────────────────────────────────────────────
+/** A card's situation as the page shows it: `{line}` written out. */
+const situationShown = (item: Card) =>
+  item.situation === undefined
+    ? {}
+    : {
+        situation: {
+          kind: item.situation.kind,
+          summary: withLine(item, item.situation.summary),
+          question: withLine(item, item.situation.question),
+        },
+      };
 const shownFields = (item: Card): Readonly<Record<string, unknown>> => ({
   ...Object.fromEntries(
     PAGE_FIELDS.flatMap((f) => {
@@ -989,10 +1029,11 @@ const shownFields = (item: Card): Readonly<Record<string, unknown>> => ({
       }),
   ...(item.readings === undefined ? {} : { [READINGS_FIELD]: item.readings }),
   ...Object.fromEntries(
-    WITNESS_FIELDS.filter((f) => f !== "repeat").flatMap((f) =>
-      item[f] === undefined ? [] : [[f, item[f]]],
+    WITNESS_FIELDS.filter((f) => f !== "repeat" && f !== "situation").flatMap(
+      (f) => (item[f] === undefined ? [] : [[f, item[f]]]),
     ),
   ),
+  ...situationShown(item),
   ...(item.repeat === undefined
     ? {}
     : { repeat: { index: item.repeat.index, of: item.repeat.of } }),

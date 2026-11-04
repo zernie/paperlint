@@ -88,7 +88,10 @@ a { color: var(--accent); }
 summary { cursor: pointer; color: var(--accent); min-height: 44px; display: flex; align-items: center; gap: 8px; }
 .situation { color: var(--strong); font-weight: 500; }
 pre.numbered { white-space: normal; padding: 8px 0; }
-pre.numbered .line { display: grid; grid-template-columns: 5ch 1fr; white-space: pre-wrap; padding: 0 10px 0 0; }
+pre.numbered .line { display: grid; grid-template-columns: 2ch 4ch 1fr; white-space: pre-wrap; padding: 0 10px 0 0; }
+/* The marked line reads as marked without its colour: a marker in the gutter and a label after the code. */
+pre.numbered .g { color: var(--mark); text-align: center; user-select: none; }
+pre.numbered .this { color: var(--mark); font-weight: 700; margin-left: 1ch; white-space: nowrap; user-select: none; }
 pre.numbered .n { color: var(--muted); text-align: right; padding-right: 1.5ch; user-select: none; }
 pre.numbered .hit { background: var(--mark-bg); }
 pre.numbered .hit .n { color: var(--mark); font-weight: 700; }
@@ -302,8 +305,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     return n;
   }
-  // `withExamples`: the practice shows each answer's example on its button; the real items keep the buttons
-  // short, the examples stay on the first screen.
+  // `withExamples`: a practice card that is not a witness card shows each answer's example on its button;
+  // real items and witness cards keep the buttons short, the examples stay in «How to answer».
   // A code block shows what a labeller would otherwise count by eye: leading and trailing whitespace as
   // faint marks (a space as a middle dot, a tab as an arrow) and each line's length in characters.
   function visible(ws) { return ws.replace(/ /g, "\u00b7").replace(/\t/g, "\u2192"); }
@@ -391,6 +394,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     var saved = state.answers[item.id] && state.answers[item.id].savedAt;
     card.appendChild(statusLine(item.id, missingFor(item.id), saved));
+    witnessMore(card, item);
     if (item.details) card.appendChild(settings(item));
     return card;
   }
@@ -446,8 +450,10 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     var pre = el("pre", "numbered");
     ex.lines.forEach(function (l) {
       var line = el("div", "line" + (l.mark ? " hit" : ""));
+      line.appendChild(el("span", "g", l.mark ? "\u25b6" : ""));
       line.appendChild(el("span", "n", String(l.n)));
-      line.appendChild(el("span", "", l.text));
+      var code = line.appendChild(el("span", "", l.text));
+      if (l.mark) code.appendChild(el("span", "this", "\u2190 this line"));
       pre.appendChild(line);
     });
     box.appendChild(pre);
@@ -463,6 +469,9 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     if (x.source === "none") box.appendChild(el("p", "muted", "No official explanation for this rule."));
     else box.appendChild(clamp(rich("p", "", (x.source === "config message" ? "The config's own message: " : "") + x.what), x.what));
     if (x.why) box.appendChild(clamp(rich("p", "", "Why: " + x.why), x.why));
+    if (x.example_bad || x.example_good) {
+      box.appendChild(el("p", "muted", "The rule docs' own examples, with the docs' own settings, not this project's:"));
+    }
     [["Flagged", x.example_bad], ["Allowed", x.example_good]].forEach(function (e) {
       if (e[1]) box.appendChild(row(e[0], clamp(plainCode(e[1]), e[1])));
     });
@@ -503,7 +512,9 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     return d;
   }
-  // The witness card's face (#380): the requirement, the situation, the code, the rule, the files like it.
+  // The witness card's face (#380), above its question: the requirement, the situation, the example file
+  // with its marked line and the linter's message. The question comes right after it (round-3 feedback:
+  // a question a screen away from its code could mean any code block on the card).
   function witnessFace(card, item) {
     card.appendChild(row("Requirement", rich("p", "body", item.body)));
     if (item.repeat && item.repeat.of > 1) {
@@ -512,7 +523,16 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     if (item.unit) card.appendChild(row("Line", markedLine(item.unit)));
     card.appendChild(rich("p", "situation", item.situation.summary));
     card.appendChild(exampleBlock(item.example));
-    (item.rules || []).forEach(function (r) { card.appendChild(row("Rule", ruleBlock(r))); });
+  }
+  // Below the question and its answers: the rule as its docs explain it, folded, then the files like it.
+  function witnessMore(card, item) {
+    if (!item.situation) return;
+    var rules = item.rules || [];
+    if (rules.length) {
+      var d = card.appendChild(el("details"));
+      d.appendChild(el("summary", "", rules.length > 1 ? "What the rules do (official docs)" : "What the rule does (official docs)"));
+      rules.forEach(function (r) { d.appendChild(row("Rule", ruleBlock(r))); });
+    }
     if (item.more_like_this && item.more_like_this.count > 0) card.appendChild(moreLike(item.more_like_this));
     if (item.context) card.appendChild(rich("p", "muted", item.context));
   }
@@ -557,7 +577,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     if (!asked) return;
     var ask = el("div", "ask");
-    ask.appendChild(el("p", "q", situation ? situation.question : asked.text));
+    ask.appendChild(rich("p", "q", situation ? situation.question : asked.text));
     ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples));
     card.appendChild(ask);
   }
@@ -588,13 +608,15 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     card.appendChild(el("div", "id", "Practice " + p.id));
     evidence(card, p);
     var a = practiceAnswers(p.id);
-    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true, p.situation);
+    // A witness card's buttons stay plain: its question names the line, the examples are in «How to answer».
+    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, !p.situation, p.situation);
     if (practiceAnswered(p)) {
       var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
       card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",
         (practiceMatched(p) ? "Matched. " : "Not matched. Expected: " + expected + ". ") + p.why));
     }
     card.appendChild(statusLine("practice:" + p.id, [], null));
+    witnessMore(card, p);
     if (p.details) card.appendChild(settings(p));
     return card;
   }

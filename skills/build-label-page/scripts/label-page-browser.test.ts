@@ -321,6 +321,7 @@ const WITNESS_FIXTURE = join(
 async function onWitnessPage(
   name: string,
   steps: (page: Page) => Promise<void>,
+  practiceDone = true,
 ): Promise<void> {
   const cfg = z
     .object({
@@ -341,7 +342,7 @@ async function onWitnessPage(
     await sharedBrowser()
   ).newPage({ viewport: { width: 400, height: 900 } });
   try {
-    await page.addInitScript(STORE(done, 20));
+    await page.addInitScript(STORE(practiceDone ? done : {}, 20));
     await page.goto("about:blank");
     await page.setContent(html, { waitUntil: "domcontentloaded" });
     await steps(page);
@@ -351,25 +352,42 @@ async function onWitnessPage(
 }
 
 test(
-  "🔴 at phone width a witness card lights the caught line in its numbered code, keeps its settings folded, opens a long text on «more», and nothing pushes the page sideways",
+  "🔴 at phone width a witness card labels the caught line in its numbered code, asks its question right under that code, folds the rule docs and the settings, opens a long text on «more», and nothing pushes the page sideways",
   async () => {
     await onWitnessPage("browser-witness", async (page) => {
       const card = page.locator("article.item", { hasText: "seed_db.py" });
+      // The marked line reads as marked without colour: a gutter marker and a label.
       assert.equal(
         await card.locator("pre.numbered .hit").textContent(),
-        '18print(f"seeded {len(rows)} rows")',
+        '▶18print(f"seeded {len(rows)} rows")← this line',
       );
-      // Guards: the settings are folded, and the question sits below the code.
+      // Guards: the rule docs, the files like it and the settings are folded.
       assert.deepEqual(
         [
           await card.locator("details").count(),
           await card.locator("details[open]").count(),
         ],
-        [2, 0],
+        [3, 0],
       );
+      // The question sits right under the code it is about: only the linter's message between them,
+      // and the rule's docs start below the answers.
+      const docsSummary = card.locator("summary", {
+        hasText: "What the rule does (official docs)",
+      });
       const code = await card.locator("pre.numbered").boundingBox();
+      const said = await card
+        .locator("p", { hasText: "The linter says:" })
+        .boundingBox();
       const ask = await card.locator(".ask").boundingBox();
-      assert.ok(code && ask && ask.y > code.y + code.height);
+      const docs = await docsSummary.boundingBox();
+      assert.ok(code && said && ask && docs);
+      assert.ok(said.y > code.y + code.height && ask.y > said.y + said.height);
+      assert.ok(
+        ask.y - (said.y + said.height) < 40,
+        `gap ${String(ask.y - (said.y + said.height))}`,
+      );
+      assert.ok(docs.y > ask.y + ask.height);
+      await docsSummary.click();
       const why = card.locator(".clamped", { hasText: "Why:" });
       const folded = (await why.boundingBox())?.height ?? 0;
       await card.getByRole("button", { name: "more" }).first().click();
@@ -388,26 +406,43 @@ test(
 );
 
 test(
+  "🔴 a witness practice card's answer buttons carry no example line: the examples stay in «How to answer»",
+  async () => {
+    await onWitnessPage(
+      "browser-witness-buttons",
+      async (page) => {
+        const practice = page.locator("article.item").first();
+        assert.deepEqual(
+          [
+            await practice.locator(".id").textContent(),
+            await practice.locator(".opts button").count(),
+            await practice.locator(".opts .ex").count(),
+            await page.locator(".examples .example").count(),
+          ],
+          ["Practice P1", 4, 0, 4],
+        );
+      },
+      false,
+    );
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
   "🔴 under 'Next unanswered' the card just answered stays, with Change, until the next card is answered",
   async () => {
     await onWitnessPage("browser-witness-next", async (page) => {
       await page.getByRole("button", { name: "Next unanswered" }).click();
       const cards = page.locator("article.item");
       assert.equal(await cards.count(), 3);
-      await cards
-        .nth(0)
-        .getByRole("button", { name: /words cover it/ })
-        .click();
+      await cards.nth(0).getByRole("button", { name: "Yes" }).click();
       await page.waitForTimeout(100);
       assert.equal(await cards.count(), 3, "the answered card is still there");
       assert.equal(
         await cards.nth(0).getByRole("button", { name: "Change" }).count(),
         1,
       );
-      await cards
-        .nth(1)
-        .getByRole("button", { name: /words cover it/ })
-        .click();
+      await cards.nth(1).getByRole("button", { name: "Yes" }).click();
       await page.waitForTimeout(100);
       assert.equal(await cards.count(), 2, "the first one has gone");
     });

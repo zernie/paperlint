@@ -8,32 +8,32 @@
   "questions": [
     {
       "id": "witness",
-      "text": "Do the requirement's words settle this code?",
-      "short": "settled?",
+      "text": "Does the requirement forbid this line, or apply to this file?",
+      "short": "answer",
       "options": [
         {
           "value": "covers",
-          "label": "Yes: the words cover it",
+          "label": "Yes",
           "icon": "✅",
-          "example": "«Use `===`» and the line `a == b`: the words forbid it"
+          "example": "«Use `===`» and the line `a == b`: yes, the requirement forbids it"
         },
         {
           "value": "excludes",
-          "label": "No: the words don't mean it",
+          "label": "No",
           "icon": "🚫",
-          "example": "«No `console` in shipped code» and a test file: tests are not shipped"
+          "example": "«No `console` in shipped code» and a test file: no, tests are not shipped"
         },
         {
           "value": "open",
-          "label": "The words don't settle it",
+          "label": "Unclear: the wording could be read either way",
           "icon": "↔️",
-          "example": "«Use `===`» and the line `x == null`: a common exception the words neither allow nor forbid"
+          "example": "«Use `===`» and the line `x == null`: unclear, a common exception the wording neither allows nor forbids"
         },
         {
           "value": "unsure",
-          "label": "Can't judge",
+          "label": "I can't judge (tell me why)",
           "icon": "❔",
-          "example": "the code is in a language you cannot read",
+          "example": "the code is in a language you cannot read: say so in the box",
           "ask_why": "Why can't you judge it?"
         }
       ]
@@ -45,7 +45,7 @@
       "situation": {
         "kind": "construct",
         "summary": "One setting allows up to 5 parameters, the other up to 3.",
-        "question": "Does the requirement forbid the marked line?"
+        "question": "Does «Functions take at most 3 parameters» forbid {line}?"
       },
       "example": {
         "file": "src/orders/create.ts",
@@ -82,7 +82,7 @@
       "situation": {
         "kind": "construct",
         "summary": "One setting allows `== null`, the other forbids every `==`.",
-        "question": "Does the requirement forbid the marked line?"
+        "question": "Does «Use `===`, never `==`» forbid {line}?"
       },
       "example": {
         "file": "src/cache/lookup.ts",
@@ -178,7 +178,7 @@
       "situation": {
         "kind": "construct",
         "summary": "One setting allows `print` behind a debug flag, the other forbids every `print`.",
-        "question": "Does the requirement forbid the marked line?"
+        "question": "Does «Never log with `print`; use the `logging` module» forbid {line}?"
       },
       "example": {
         "file": "shop/cart.py",
@@ -206,7 +206,7 @@
       "situation": {
         "kind": "construct",
         "summary": "One setting forbids any path below a package's folder, the other only paths into src/internal/.",
-        "question": "Does the requirement forbid the marked line?"
+        "question": "Does «Import from a package's public entry point, never from its internals» forbid {line}?"
       },
       "example": {
         "file": "apps/web/src/checkout/total.ts",

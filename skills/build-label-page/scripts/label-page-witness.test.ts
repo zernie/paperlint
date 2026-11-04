@@ -110,6 +110,39 @@ const REFUSED: readonly (readonly [string, Record<string, unknown>, string])[] =
       "items[0].rules[0].explanation.what: is required unless `source` is 'none' — what the rule does, in its source's words",
     ],
     [
+      "witness-line-no-mark",
+      firstItem((i) => ({
+        ...i,
+        situation: {
+          kind: "construct",
+          summary: "One setting reports it.",
+          question: "Does it forbid {line}?",
+        },
+        example: {
+          ...firstExample,
+          lines: firstExample.lines.map((l) => ({ ...l, mark: false })),
+        },
+      })),
+      "items[0].situation.question: `{line}` names the marked line, and the example has no marked line — mark the line the linter caught (`mark: true`), or write the question without `{line}`",
+    ],
+    [
+      "witness-source-in-explanation",
+      firstItem((i) => ({
+        ...i,
+        rules: [
+          {
+            ...firstRule,
+            explanation: {
+              source: "ruff rule",
+              what: "Checks for print.",
+              why: "drawn for req-logging:tests",
+            },
+          },
+        ],
+      })),
+      "the source id 'req-logging:tests' appears in the visible `rules` of item req-logging:tests. Take it out of the text (or use source ids that are not natural words).",
+    ],
+    [
       "witness-repeat-range",
       firstItem((i) => ({ ...i, repeat: { group: "g", index: 3, of: 2 } })),
       "items[0].repeat.index: 3 is not between 1 and 2",
@@ -133,7 +166,7 @@ const REFUSED: readonly (readonly [string, Record<string, unknown>, string])[] =
     ],
   ];
 
-test("🔴 a witness page refuses old items, an unmarked example, a rule without its explanation, a repeat out of range and a second question", () => {
+test("🔴 a witness page refuses old items, an unmarked example, a rule without its explanation, `{line}` with no marked line, a source id in a rule's explanation, a repeat out of range and a second question", () => {
   assert.deepEqual(
     REFUSED.map(([name, cfg]) => {
       const dir = setup(name, cfg);
@@ -160,6 +193,37 @@ test("a witness page builds from the generic fixture; no source id and no repeat
   );
 });
 
+test("🔴 a repeat whose group is the item's own source id builds: the group never reaches the page, so it is no leak", () => {
+  const { page } = build(
+    setup(
+      "witness-repeat-own-id",
+      firstItem((i) => ({
+        ...i,
+        repeat: { group: "req-logging:tests", index: 1, of: 2 },
+      })),
+    ),
+  );
+  assert.ok(page.includes('"repeat": {"index": 1, "of": 2}'));
+});
+
+test("🔴 `{line}` in a situation becomes «line N» and the marked line's code; a question without it is kept as written", async () => {
+  const { page } = build(setup("witness-line", witness()));
+  const shown = await showPage(page, {}, {}, PRACTICE_DONE);
+  // Guards: N and the code are the marked line's; leading spaces are not part of the code shown.
+  assert.ok(
+    shown
+      .replace(/\n/g, "")
+      .includes(
+        'Does «Never log with print; use the logging module» forbid line 31 (print("cart", cart.id, cart.total))?',
+      ),
+  );
+  assert.match(
+    shown,
+    /Should this requirement apply to the scripts\/ folder\?/,
+  );
+  assert.ok(!shown.includes("{line}"));
+});
+
 /** `text` with every given part present, in this order. */
 const inOrder = (text: string, parts: readonly string[]): readonly string[] => {
   const at = parts.map((p) => text.indexOf(p));
@@ -168,7 +232,7 @@ const inOrder = (text: string, parts: readonly string[]): readonly string[] => {
   );
 };
 
-test("🔴 a witness card reads top to bottom: requirement, situation, the code with its line numbers, the linter's message, the rule explained, N more like it, the question, then the settings", async () => {
+test("🔴 a witness card reads top to bottom: requirement, situation, the code with its marked line labelled, the linter's message, the question and its answers, then the rule's docs folded, N more like it, and the settings", async () => {
   const { page, key } = build(setup("witness-face", witness()));
   const shown = await showPage(page, {}, {}, PRACTICE_DONE);
   const id = Object.entries(key.ids).find(
@@ -186,16 +250,21 @@ test("🔴 a witness card reads top to bottom: requirement, situation, the code 
       "scripts/seed_db.py",
       "18",
       'print(f"seeded {len(rows)} rows")',
+      "← this line",
       "The linter says:",
+      "Should this requirement apply to the scripts/ folder?",
+      "Unclear: the wording could be read either way",
+      "I can't judge (tell me why)",
+      "What the rule does (official docs)",
       "Checks for",
       "Why:",
+      "The rule docs' own examples, with the docs' own settings, not this project's",
       "Flagged",
       "Allowed",
       "Rule docs",
       "3 more like it",
       "scripts/backfill_prices.py",
       "and 1 more",
-      "Should this requirement apply to the scripts/ folder?",
       "Settings behind this card",
       "Setting B flags the example line; setting A passes it.",
       "A only",
@@ -206,7 +275,11 @@ test("🔴 a witness card reads top to bottom: requirement, situation, the code 
     ]),
     [],
   );
-  assert.ok(!card.includes("Do the requirement's words settle this code?"));
+  assert.ok(
+    !card.includes(
+      "Does the requirement forbid this line, or apply to this file?",
+    ),
+  );
 });
 
 test("a rule with no official explanation says so; a card that is not repeated says nothing about repeats", async () => {
