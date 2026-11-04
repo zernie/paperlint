@@ -1,11 +1,12 @@
 // Selftest of run.mjs's pure parts: node frame/rule-proof/run.selftest.mjs (exit 1 on a defect).
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { findingsSchema, jsonSchema } from "./install-schema.mjs";
-import { FINDINGS_CAP, contextOf, crossPlan, fileFindings, findingsOf, parseFindings, pluginOf, ruffSettings, utcInstant } from "./run.mjs";
+import { FINDINGS_CAP, configArgs, contextOf, crossPlan, fileFindings, findingsOf, parseFindings, pluginOf, ruffSettings, utcInstant } from "./run.mjs";
 
 const fail = [];
 const plan = crossPlan([{ proved: true, pair: {} }, { proved: false, pair: {} }, { proved: true, pair: {} }, { proved: true, pair: null }]);
@@ -45,15 +46,24 @@ const text = ["l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8", "l9"].join("\n") +
 if (!same(contextOf(text, 2, 3, 400), [{ n: 1, text: "l1", mark: false }, { n: 2, text: "l2", mark: true }, { n: 3, text: "l3", mark: false },
   { n: 4, text: "l4", mark: false }, { n: 5, text: "l5", mark: false }])) fail.push(`context at the top edge: ${JSON.stringify(contextOf(text, 2, 3, 400))}`);
 if (contextOf(text, 9, 3, 400).map((l) => l.n).join() !== "6,7,8,9") fail.push(`context at the bottom edge: ${JSON.stringify(contextOf(text, 9, 3, 400))}`);
-if (!same(contextOf("a\r\nbcdefgh\r\n", 2, 0, 3), [{ n: 2, text: "bcd", mark: true, cut: 7 }])) fail.push(`a long line is cut and says its length; CRLF read as one break: ${JSON.stringify(contextOf("a\r\nbcdefgh\r\n", 2, 0, 3))}`);
-if (FINDINGS_CAP.per_file !== 5 || FINDINGS_CAP.context !== 3) fail.push(`cap: 5 findings per file, 3 lines each side: ${JSON.stringify(FINDINGS_CAP)}`);
+const sha = (t) => createHash("sha256").update(t).digest("hex");
+if (!same(contextOf("a\r\nbcdefgh\r\n", 2, 0, 3), [{ n: 2, text: "bcd", mark: true, cut: 7, sha256: sha("bcdefgh") }])) fail.push(`a long line is cut and says its length and sha256; CRLF read as one break: ${JSON.stringify(contextOf("a\r\nbcdefgh\r\n", 2, 0, 3))}`);
+// 30,000 characters: the first 20,000 kept, the full length, the sha256 of the full line.
+const huge = "x".repeat(19_999) + "y" + "z".repeat(10_000);
+const hugeCtx = contextOf(`${huge}\nnext\n`, 1, 1, FINDINGS_CAP.line_chars);
+if (hugeCtx[0].text !== huge.slice(0, 20_000) || hugeCtx[0].cut !== 30_000 || hugeCtx[0].sha256 !== sha(huge))
+  fail.push(`a 30,000-character line: 20,000 kept, cut 30000, sha256 of the full line: ${hugeCtx[0].text.length} ${hugeCtx[0].cut} ${hugeCtx[0].sha256}`);
+// A line of exactly the limit is whole: no cut, no hash.
+const exact = contextOf(`${"q".repeat(20_000)}\n`, 1, 0, FINDINGS_CAP.line_chars)[0];
+if (exact.text.length !== 20_000 || "cut" in exact || "sha256" in exact) fail.push(`a 20,000-character line is kept whole: ${JSON.stringify({ ...exact, text: exact.text.length })}`);
+if (FINDINGS_CAP.per_file !== null || FINDINGS_CAP.context !== 3 || FINDINGS_CAP.line_chars !== 20_000) fail.push(`cap: no findings limit, 3 lines each side, 20,000 characters a line: ${JSON.stringify(FINDINGS_CAP)}`);
 
-// Per file: sorted by line then column, the first `per_file` kept, the total and whether the cap applied.
+// Per file: sorted by line then column, EVERY finding kept, the total, `capped` always false.
 const seven = Array.from({ length: 7 }, (_, i) => ({ path: "src/a.js", line: 9 - i, column: 1, ruleId: "no-tabs", message: "m" }));
 const ff = fileFindings([...seven, { path: "src/z.js", line: 1, column: 2, ruleId: "no-tabs", message: "m" }],
-  (p) => (p === "src/a.js" ? text : "only\n"), { per_file: 5, context: 1, line_chars: 400 });
-if (ff["src/a.js"]?.total !== 7 || ff["src/a.js"]?.capped !== true || ff["src/a.js"]?.items.map((x) => x.line).join() !== "3,4,5,6,7")
-  fail.push(`seven findings: the first five by line, total 7, capped: ${JSON.stringify(ff["src/a.js"])}`);
+  (p) => (p === "src/a.js" ? text : "only\n"), { ...FINDINGS_CAP, context: 1 });
+if (ff["src/a.js"]?.total !== 7 || ff["src/a.js"]?.capped !== false || ff["src/a.js"]?.items.map((x) => x.line).join() !== "3,4,5,6,7,8,9")
+  fail.push(`seven findings: all seven kept by line, total 7, never capped: ${JSON.stringify(ff["src/a.js"])}`);
 if (!same(ff["src/z.js"], { total: 1, capped: false, items: [{ line: 1, column: 2, ruleId: "no-tabs", message: "m", lines: [{ n: 1, text: "only", mark: true }] }] }))
   fail.push(`one finding: not capped, its source line marked: ${JSON.stringify(ff["src/z.js"])}`);
 if (!same(fileFindings([{ path: "gone.js", line: 1, column: 1, ruleId: "x", message: "m" }], () => null, FINDINGS_CAP)["gone.js"].items[0].lines, []))
@@ -63,6 +73,13 @@ if (!same(fileFindings([{ path: "gone.js", line: 1, column: 1, ruleId: "x", mess
 const rec = { cap: FINDINGS_CAP, files: ff };
 if (!findingsSchema.safeParse(rec).success) fail.push(`the findings record parses under findingsSchema: ${JSON.stringify(findingsSchema.safeParse(rec).error?.issues)}`);
 if (findingsSchema.safeParse({ cap: FINDINGS_CAP, files: { "a.js": { total: 1, capped: false, items: [{ line: "4" }] } } }).success) fail.push("a finding without its fields is refused");
+// A result file written under the old limit (5 per file, 400 characters, `capped` true) still parses.
+const legacy = { cap: { per_file: 5, context: 3, line_chars: 400 }, files: { "a.js": { total: 9, capped: true, items: [{ line: 1, column: 1, ruleId: "x", message: "m", lines: [{ n: 1, text: "ab", mark: true, cut: 900 }] }] } } };
+if (!findingsSchema.safeParse(legacy).success) fail.push(`a result written under the old cap still parses: ${JSON.stringify(findingsSchema.safeParse(legacy).error?.issues)}`);
+// The call that prints the config the linter resolved for one file, per linter.
+const call = { configPath: "/r/.cfg", args: ["ignored"] };
+if (!same(configArgs({ linter: "eslint", rule: "no-tabs" }, call, "src/a.js"), ["--config", "/r/.cfg", "--print-config", "src/a.js"])) fail.push(`ESLint prints its config with --print-config: ${JSON.stringify(configArgs({ linter: "eslint", rule: "no-tabs" }, call, "src/a.js"))}`);
+if (!same(configArgs({ linter: "ruff", rule: "PT009" }, call, "t.py"), ["check", "--no-cache", "--show-settings", "--exit-zero", "--no-force-exclude", "--no-fix", "--select", "PT009", "--config", "/r/.cfg", "t.py"])) fail.push(`Ruff prints its settings with --show-settings: ${JSON.stringify(configArgs({ linter: "ruff", rule: "PT009" }, call, "t.py"))}`);
 if (!jsonSchema().$defs?.findings?.properties?.files) fail.push("the findings record is in the emitted schema under $defs.findings");
 
 // End to end on the runner's own ESLint (no network): the planted tab is found at its line and column, the clean file
@@ -78,7 +95,14 @@ writeFileSync(path.join(repo, "src", "other.js"), "\tconst c = 3;\n");
 const eslintBin = path.join(path.dirname(fileURLToPath(import.meta.url)), "node_modules", ".bin", "eslint");
 const pinned = { dir: repo, run: { kit: eslintKit, command: [eslintBin], options: { cacheDir: path.join(repo, ".cache"), lintTimeoutMs: 120_000 } } };
 const reading = { linter: "eslint", rule: "no-tabs", options: [], scope: { files: ["**/*.js"], ignores: [] } };
-const got = findingsOf(pinned, reading, ["src/bad.js", "src/good.js"]);
+const got = findingsOf(pinned, reading, ["src/bad.js", "src/good.js"], FINDINGS_CAP, "9.99.0");
+const eslintVersion = JSON.parse(readFileSync(path.join(path.dirname(eslintBin), "..", "eslint", "package.json"), "utf8")).version;
+if (got.linter?.version !== "9.99.0" || got.linter?.reported !== `v${eslintVersion}`) fail.push(`the linter's version (as installed) and its own --version are recorded: ${JSON.stringify(got.linter)} vs v${eslintVersion}`);
+if (got.config?.file !== "src/bad.js" || got.config?.exit !== 0 || !got.config?.text.includes("no-tabs") || !got.config.text.includes("rules")) fail.push(`the resolved config for the first flagged file is recorded as the linter printed it: ${JSON.stringify(got.config)?.slice(0, 300)}`);
+// Seven tabs in one file: all seven come back from the real linter.
+writeFileSync(path.join(repo, "src", "many.js"), "if (a) {\n" + "\tx();\n".repeat(7) + "}\n");
+const many = findingsOf(pinned, reading, ["src/many.js"]).files["src/many.js"];
+if (many?.total !== 7 || many.items.length !== 7 || many.capped !== false) fail.push(`real ESLint: seven findings in a file, seven kept: ${JSON.stringify({ total: many?.total, kept: many?.items.length })}`);
 const bad = got.files?.["src/bad.js"];
 if (!bad || bad.total !== 1 || bad.items[0].line !== 3 || bad.items[0].column !== 1 || bad.items[0].ruleId !== "no-tabs"
   || !bad.items[0].lines.find((l) => l.mark && l.text === "\tconsole.log(a);")) fail.push(`real ESLint: the tab at line 3, column 1, marked: ${JSON.stringify(got)}`);
@@ -88,4 +112,4 @@ const broken = findingsOf({ ...pinned, run: { ...pinned.run, command: [process.e
 if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) fail.push(`a linter that exits outside its report codes gives an error, not empty findings: ${JSON.stringify(broken)}`);
 
 if (fail.length) { console.log("FAIL:\n  " + fail.join("\n  ")); process.exit(1); }
-console.log("ok: cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, 5 per file), on a real ESLint run");
+console.log("ok: cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, every finding, long lines kept to 20,000 characters with length and sha256), the linter\'s version and resolved config, on a real ESLint run");
