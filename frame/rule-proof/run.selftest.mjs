@@ -165,10 +165,20 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
   const pBig = planOf(Array.from({ length: 100_000 }, (_, i) => ({ id: `I${i}`, node: String(18 + 2 * (i % 4)) })));
   if (pBig.length > MAX_JOBS || !covers(pBig, 100_000)) fail.push(`100,000 items in at most 256 jobs, each once: ${pBig.length}`);
   if (!same(planOf([{ id: "a" }, { id: "b", node: "20" }, { id: "c" }]), [{ batch: 0, node: "20", items: "1" }, { batch: 1, node: "22", items: "0,2" }])) fail.push(`small plan: ${JSON.stringify(planOf([{ id: "a" }, { id: "b", node: "20" }, { id: "c" }]))}`);
-  if (!same(planOf([]), [])) fail.push("no items, no jobs");
+  // No items: GitHub refuses an empty matrix, so the plan fails, by name, instead of handing the run job nothing.
+  let emptyError = null;
+  try { planOf([]); } catch (e) { emptyError = e.message; }
+  if (!/inputs\.json has no items/.test(emptyError ?? "")) fail.push(`an empty inputs.json is refused by the plan: ${emptyError}`);
+  const emptyInputs = path.join(mkdtempSync(path.join(tmpdir(), "rp-empty-")), "inputs.json");
+  writeFileSync(emptyInputs, "[]\n");
+  const planRun = spawnSync(process.execPath, [fileURLToPath(new URL("./run.mjs", import.meta.url)), "--plan", emptyInputs], { encoding: "utf8" });
+  if (planRun.status === 0 || planRun.stdout !== "" || !/inputs\.json has no items/.test(planRun.stderr)) fail.push(`run.mjs --plan on [] exits non-zero, prints no matrix, and says why: ${planRun.status} ${JSON.stringify(planRun.stdout)} ${planRun.stderr.slice(-200)}`);
   // The workflow reads the plan from `run.mjs --plan` and runs each batch with `--items`.
   const wf = readFileSync(new URL("../../.github/workflows/rule-proof-run.yml", import.meta.url), "utf8");
   if (!wf.includes("run.mjs --plan frame/rule-proof/inputs.json") || !wf.includes("--items ${{ matrix.items }}") || wf.includes("--only")) fail.push("the workflow plans batches and runs each with --items");
+  // The plan's exit status reaches the step: an assignment carries it under the runner's bash -e, an echo of a command
+  // substitution would not (echo exits 0).
+  if (!wf.includes('matrix="$(node frame/rule-proof/run.mjs --plan frame/rule-proof/inputs.json)"') || /echo "matrix=\$\(/.test(wf)) fail.push("the plan step fails when run.mjs --plan fails");
   // The runner's own dependencies come from its committed lockfile (npm ci), so runner.sha pins them all.
   const installs = wf.match(/working-directory: frame\/rule-proof\n\s+run: npm [^\n]+/g) ?? [];
   const tracked = spawnSync("git", ["ls-files", "--error-unmatch", "package-lock.json"], { cwd: path.dirname(fileURLToPath(import.meta.url)), stdio: "ignore" }).status === 0;

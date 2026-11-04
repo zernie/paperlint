@@ -22,7 +22,9 @@ const byNode = (a, b) => a.localeCompare(b, "en", { numeric: true });
 
 // items (inputs.json) -> [{ batch, node, items: "i,j,k" }]: the plan job's matrix. Within one Node version, the items
 // in input order, cut into batches whose sizes differ by at most one.
+// No items is refused: GitHub rejects a run whose matrix is empty, after the plan job has already passed.
 export function planOf(items, { batchItems = BATCH_ITEMS, maxJobs = MAX_JOBS } = {}) {
+  if (!Array.isArray(items) || items.length === 0) throw new Error("inputs.json has no items: there is nothing to run, and GitHub refuses an empty matrix");
   const groups = new Map();
   items.forEach((it, index) => {
     const node = String(it.node ?? "22");

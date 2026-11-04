@@ -33,8 +33,12 @@ jobs:
       # The runner's own selftests gate the run: no repository is run on a runner whose install paths are red.
       - name: runner selftests
         run: node frame/rule-proof/run.selftest.mjs && node frame/rule-proof/install.selftest.mjs
+      # The assignment carries run.mjs's exit status (the step's shell is bash -e); an echo of the substitution would not.
+      # An empty inputs.json fails here, by name, instead of as an empty matrix.
       - id: list
-        run: echo "matrix=$(node frame/rule-proof/run.mjs --plan frame/rule-proof/inputs.json)" >> "$GITHUB_OUTPUT"
+        run: |
+          matrix="$(node frame/rule-proof/run.mjs --plan frame/rule-proof/inputs.json)"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
   run:
     needs: plan
     runs-on: ubuntu-latest

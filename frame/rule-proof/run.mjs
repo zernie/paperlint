@@ -834,7 +834,8 @@ const summary = (r, n) => `${r.id} ${r.repo}: install ${r.install.outcome} ${r.i
 export const ITEM_SECONDS = 1500;
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain && inputsPath === "--plan") {
-  console.log(JSON.stringify(planOf(JSON.parse(readFileSync(outDir, "utf8")))));
+  // the matrix on stdout, or nothing on stdout and the reason on stderr, exit 1
+  try { console.log(JSON.stringify(planOf(JSON.parse(readFileSync(outDir, "utf8"))))); } catch (e) { console.error(`plan: ${e.message}`); process.exit(1); }
 } else if (isMain && inputsPath === "--worker") {
   // node run.mjs --worker <inputs.json> <run folder> <index> <limit seconds> <runner json>: one item, its result written
   // into the run folder (only the batch runner starts this).
