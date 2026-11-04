@@ -5,11 +5,144 @@
  "linter": "eslint",
  "rule": "no-tabs",
  "checked_out": "ccea9712f28a73b380829621fa6c2fb6540685f1",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "lockfile-pinned",
+  "aside": [],
+  "versions": {
+   "eslint": "9.39.5"
+  },
+  "plugins": {},
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "webapps/frontend",
+   "lockfile": "webapps/frontend/package-lock.json",
+   "candidates": [
+    "webapps/frontend (1298 files)",
+    "webapps-neo/frontend (278 files)"
+   ]
+  },
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [
+    "webapps-neo/frontend/package.json",
+    "webapps/frontend/package.json"
+   ],
+   "package_jsons": 4
+  },
+  "commit": "2026-11-03T11:28:08Z",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "9.39.5"
+ },
+ "readings": [
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-tabs",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1258,
+    "flagged": [
+     "webapps/frontend/operaton-bpm-sdk-js/lib/api-client/resources/deployment.js",
+     "webapps/frontend/operaton-bpm-sdk-js/lib/api-client/resources/external-task.js",
+     "webapps/frontend/operaton-bpm-sdk-js/lib/api-client/resources/history.js",
+     "webapps/frontend/operaton-bpm-sdk-js/lib/api-client/resources/process-definition.js"
+    ],
+    "parseErrors": [
+     "webapps-neo/frontend/src/api/helper.jsx",
+     "webapps-neo/frontend/src/assets/icons.jsx",
+     "webapps-neo/frontend/src/components/Accordion.jsx",
+     "webapps-neo/frontend/src/components/Accordion.test.jsx",
+     "webapps-neo/frontend/src/components/BPMNViewer.jsx",
+     "webapps-neo/frontend/src/components/Breadcrumbs.jsx",
+     "webapps-neo/frontend/src/components/Breadcrumbs.test.jsx",
+     "webapps-neo/frontend/src/components/CamundaForm.jsx",
+     "webapps-neo/frontend/src/components/CamundaForm.test.jsx",
+     "webapps-neo/frontend/src/components/Dialog.jsx",
+     "webapps-neo/frontend/src/components/Dialog.test.jsx",
+     "webapps-neo/frontend/src/components/DMNViewer.jsx",
+     "webapps-neo/frontend/src/components/DMNViewer.test.jsx",
+     "webapps-neo/frontend/src/components/FilterEditForm.jsx",
+     "webapps-neo/frontend/src/components/FilterEditForm.test.jsx",
+     "webapps-neo/frontend/src/components/GoTo.jsx",
+     "webapps-neo/frontend/src/components/Header.jsx",
+     "webapps-neo/frontend/src/components/IdentitySearch.jsx",
+     "webapps-neo/frontend/src/components/IdentitySearch.test.jsx",
+     "webapps-neo/frontend/src/components/ListFilter.jsx",
+     "webapps-neo/frontend/src/components/ListFilter.test.jsx",
+     "webapps-neo/frontend/src/components/ListSearch.jsx",
+     "webapps-neo/frontend/src/components/ManageFilters.jsx",
+     "webapps-neo/frontend/src/components/ManageFilters.test.jsx",
+     "webapps-neo/frontend/src/components/PasswordPolicy.jsx",
+     "webapps-neo/frontend/src/components/RelativeTime.jsx",
+     "webapps-neo/frontend/src/components/RelativeTime.test.jsx",
+     "webapps-neo/frontend/src/components/RequireApp.jsx",
+     "webapps-neo/frontend/src/components/SuspensionDialog.jsx",
+     "webapps-neo/frontend/src/components/Tabs.jsx",
+     "webapps-neo/frontend/src/components/Tabs.test.jsx",
+     "webapps-neo/frontend/src/components/TaskForm.jsx",
+     "webapps-neo/frontend/src/components/VariableRows.jsx",
+     "webapps-neo/frontend/src/components/VariableRows.test.jsx",
+     "webapps-neo/frontend/src/helper/keyPressHook.test.jsx",
+     "webapps-neo/frontend/src/index.jsx",
+     "webapps-neo/frontend/src/pages/_404.jsx",
+     "webapps-neo/frontend/src/pages/_404.test.jsx",
+     "webapps-neo/frontend/src/pages/Account.jsx",
+     "webapps-neo/frontend/src/pages/Admin.jsx",
+     "webapps-neo/frontend/src/pages/Batches.jsx",
+     "webapps-neo/frontend/src/pages/Dashboard.jsx",
+     "webapps-neo/frontend/src/pages/Decisions.jsx",
+     "webapps-neo/frontend/src/pages/Deployments.jsx",
+     "webapps-neo/frontend/src/pages/Home.jsx",
+     "webapps-neo/frontend/src/pages/Home.test.jsx",
+     "webapps-neo/frontend/src/pages/Migrations.jsx",
+     "webapps-neo/frontend/src/pages/Processes.jsx",
+     "webapps-neo/frontend/src/pages/Setup.jsx",
+     "webapps-neo/frontend/src/pages/StartProcessList.jsx",
+     "webapps-neo/frontend/src/pages/Tasks.jsx",
+     "webapps-neo/frontend/src/plugins/bundled/metrics/plugin.jsx",
+     "webapps-neo/frontend/src/plugins/bundled/metrics/plugin.test.jsx",
+     "webapps-neo/frontend/src/plugins/plugin_api.test.jsx"
+    ],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 4.311
+ "seconds": 15.153
 }

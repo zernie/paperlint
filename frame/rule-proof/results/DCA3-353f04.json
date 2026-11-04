@@ -5,11 +5,397 @@
  "linter": "eslint",
  "rule": "@typescript-eslint/ban-ts-comment",
  "checked_out": "610b93b62edd1f7b430182ae7e1d8f753c590928",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "install",
   "reason": "corepack exited 1: "
  },
+ "install": {
+  "path": "lockfile-pinned",
+  "aside": [
+   "package.json",
+   "yarn.lock",
+   ".yarnrc.yml"
+  ],
+  "versions": {
+   "eslint": "10.12.0",
+   "@typescript-eslint/parser": "8.71.2",
+   "typescript": "6.0.3"
+  },
+  "plugins": {
+   "@typescript-eslint/eslint-plugin": {
+    "version": "8.71.2",
+    "error": null
+   }
+  },
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": ".",
+   "lockfile": "yarn.lock",
+   "candidates": [
+    ". (2549 files)",
+    "packages/protocol (109 files)"
+   ]
+  },
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "install",
+   "reason": "corepack exited 1: "
+  },
+  "repo_eslint": {
+   "declared": [
+    "package.json",
+    "packages/protocol/package.json"
+   ],
+   "package_jsons": 19
+  },
+  "commit": "2026-11-03T19:14:09+01:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.12.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/ban-ts-comment",
+    "options": [
+     {
+      "ts-expect-error": true,
+      "ts-ignore": true,
+      "ts-nocheck": true,
+      "ts-check": false
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/gen/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "@typescript-eslint/eslint-plugin",
+     "version": "8.71.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 591,
+    "flagged": [
+     "packages/contracts/src/test/decode-public-states.test.ts",
+     "packages/contracts/src/test/deploy-contract.test.ts",
+     "packages/contracts/src/test/era-dispatch.test.ts",
+     "packages/contracts/src/test/era-records.test.ts",
+     "packages/contracts/src/test/errors.test.ts",
+     "packages/contracts/src/test/find-deployed-contract.test.ts",
+     "packages/contracts/src/test/keep-state.test.ts",
+     "packages/contracts/src/test/ledger8-low-level.test.ts",
+     "packages/contracts/src/test/ledger9-low-level.test.ts",
+     "packages/contracts/src/test/ledger9-session-loads-no-ledger8.test.ts",
+     "packages/contracts/src/test/scoped-era.test.ts",
+     "packages/contracts/src/test/submit-payload.test.ts",
+     "packages/contracts/src/test/submit-tx.test.ts",
+     "packages/contracts/src/test/typecheck/call-args.test-d.ts",
+     "packages/contracts/src/test/typecheck/deploy-private-state-pairing.test-d.ts",
+     "packages/contracts/src/test/typecheck/era-aliases.test-d.ts",
+     "packages/contracts/src/test/typecheck/era-pairing.test-d.ts",
+     "packages/contracts/src/test/typecheck/ledger8-low-level.test-d.ts",
+     "packages/contracts/src/test/typecheck/overloads.test-d.ts",
+     "packages/contracts/src/test/typecheck/serialized-states-at-the-boundary.test-d.ts",
+     "packages/contracts/src/test/v8-native.test.ts",
+     "packages/dapp-connector-proof-provider/src/test/dapp-connector-proof-provider.test.ts",
+     "packages/http-client-proof-provider/src/test/http-client-proof-provider.test.ts",
+     "packages/level-private-state-provider/src/test/level-private-state-provider-errors.test.ts",
+     "packages/level-private-state-provider/src/test/level-private-state-provider.test.ts",
+     "packages/logger-provider/src/test/logger-provider.test.ts",
+     "packages/protocol/src/test/era-load-era.test.ts",
+     "packages/protocol/src/test/ledger-transaction.test.ts",
+     "packages/protocol/src/test/v8-prove.test.ts",
+     "packages/types/src/test/era-handlers.test-d.ts",
+     "packages/types/src/test/era-handlers.test.ts",
+     "packages/types/src/test/ledger-transaction-ledger8-not-loaded.test.ts",
+     "packages/types/src/test/ledger-transaction.test-d.ts",
+     "packages/types/src/test/ledger-transaction.test.ts",
+     "packages/types/src/test/ledger9-transaction-names.test-d.ts",
+     "packages/types/src/test/proof-provider-from-proving-providers.test-d.ts",
+     "packages/types/src/test/proof-provider-from-proving-providers.test.ts",
+     "packages/types/src/test/proof-provider.test.ts",
+     "packages/types/src/test/provider-adapters.test.ts",
+     "packages/types/src/test/public-data-provider.test-d.ts",
+     "packages/types/src/test/serialized-state.test-d.ts",
+     "packages/types/src/test/serialized-state.test.ts",
+     "packages/types/src/test/versioned.test-d.ts",
+     "packages/utils/src/test/assert-never.test.ts",
+     "packages/utils/src/test/error-codes.test.ts",
+     "packages/utils/src/test/typed-wrappers.test.ts",
+     "testkit-js/testkit-js-e2e/src/block-time-api.ts",
+     "testkit-js/testkit-js-e2e/src/counter-api.ts",
+     "testkit-js/testkit-js-e2e/src/double-counter-api.ts",
+     "testkit-js/testkit-js-e2e/src/events-api.ts",
+     "testkit-js/testkit-js/test/env-vars.ut.test.ts",
+     "testkit-js/testkit-js/test/midnight-wallet-provider.ut.test.ts",
+     "testkit-js/testkit-js/test/testing-api.e2e.test.ts",
+     "testkit-js/testkit-js/test/testing-api.it.test.ts",
+     "testkit-js/testkit-js/test/testing-api.ut.test.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/ban-ts-comment",
+    "options": [
+     {
+      "ts-expect-error": true,
+      "ts-ignore": true,
+      "ts-nocheck": true,
+      "ts-check": false
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "@typescript-eslint/eslint-plugin",
+     "version": "8.71.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 596,
+    "flagged": [
+     "packages/contracts/src/test/decode-public-states.test.ts",
+     "packages/contracts/src/test/deploy-contract.test.ts",
+     "packages/contracts/src/test/era-dispatch.test.ts",
+     "packages/contracts/src/test/era-records.test.ts",
+     "packages/contracts/src/test/errors.test.ts",
+     "packages/contracts/src/test/find-deployed-contract.test.ts",
+     "packages/contracts/src/test/keep-state.test.ts",
+     "packages/contracts/src/test/ledger8-low-level.test.ts",
+     "packages/contracts/src/test/ledger9-low-level.test.ts",
+     "packages/contracts/src/test/ledger9-session-loads-no-ledger8.test.ts",
+     "packages/contracts/src/test/scoped-era.test.ts",
+     "packages/contracts/src/test/submit-payload.test.ts",
+     "packages/contracts/src/test/submit-tx.test.ts",
+     "packages/contracts/src/test/typecheck/call-args.test-d.ts",
+     "packages/contracts/src/test/typecheck/deploy-private-state-pairing.test-d.ts",
+     "packages/contracts/src/test/typecheck/era-aliases.test-d.ts",
+     "packages/contracts/src/test/typecheck/era-pairing.test-d.ts",
+     "packages/contracts/src/test/typecheck/ledger8-low-level.test-d.ts",
+     "packages/contracts/src/test/typecheck/overloads.test-d.ts",
+     "packages/contracts/src/test/typecheck/serialized-states-at-the-boundary.test-d.ts",
+     "packages/contracts/src/test/v8-native.test.ts",
+     "packages/dapp-connector-proof-provider/src/test/dapp-connector-proof-provider.test.ts",
+     "packages/http-client-proof-provider/src/test/http-client-proof-provider.test.ts",
+     "packages/level-private-state-provider/src/test/level-private-state-provider-errors.test.ts",
+     "packages/level-private-state-provider/src/test/level-private-state-provider.test.ts",
+     "packages/logger-provider/src/test/logger-provider.test.ts",
+     "packages/protocol/src/test/era-load-era.test.ts",
+     "packages/protocol/src/test/ledger-transaction.test.ts",
+     "packages/protocol/src/test/v8-prove.test.ts",
+     "packages/types/src/test/era-handlers.test-d.ts",
+     "packages/types/src/test/era-handlers.test.ts",
+     "packages/types/src/test/ledger-transaction-ledger8-not-loaded.test.ts",
+     "packages/types/src/test/ledger-transaction.test-d.ts",
+     "packages/types/src/test/ledger-transaction.test.ts",
+     "packages/types/src/test/ledger9-transaction-names.test-d.ts",
+     "packages/types/src/test/proof-provider-from-proving-providers.test-d.ts",
+     "packages/types/src/test/proof-provider-from-proving-providers.test.ts",
+     "packages/types/src/test/proof-provider.test.ts",
+     "packages/types/src/test/provider-adapters.test.ts",
+     "packages/types/src/test/public-data-provider.test-d.ts",
+     "packages/types/src/test/serialized-state.test-d.ts",
+     "packages/types/src/test/serialized-state.test.ts",
+     "packages/types/src/test/versioned.test-d.ts",
+     "packages/utils/src/test/assert-never.test.ts",
+     "packages/utils/src/test/error-codes.test.ts",
+     "packages/utils/src/test/typed-wrappers.test.ts",
+     "testkit-js/testkit-js-e2e/src/block-time-api.ts",
+     "testkit-js/testkit-js-e2e/src/counter-api.ts",
+     "testkit-js/testkit-js-e2e/src/double-counter-api.ts",
+     "testkit-js/testkit-js-e2e/src/events-api.ts",
+     "testkit-js/testkit-js/test/env-vars.ut.test.ts",
+     "testkit-js/testkit-js/test/midnight-wallet-provider.ut.test.ts",
+     "testkit-js/testkit-js/test/testing-api.e2e.test.ts",
+     "testkit-js/testkit-js/test/testing-api.it.test.ts",
+     "testkit-js/testkit-js/test/testing-api.ut.test.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/ban-ts-comment",
+    "options": [
+     {
+      "ts-expect-error": true,
+      "ts-ignore": true,
+      "ts-nocheck": true,
+      "ts-check": false
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "@typescript-eslint/eslint-plugin",
+     "version": "8.71.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 596,
+    "flagged": [
+     "packages/contracts/src/test/decode-public-states.test.ts",
+     "packages/contracts/src/test/deploy-contract.test.ts",
+     "packages/contracts/src/test/era-dispatch.test.ts",
+     "packages/contracts/src/test/era-records.test.ts",
+     "packages/contracts/src/test/errors.test.ts",
+     "packages/contracts/src/test/find-deployed-contract.test.ts",
+     "packages/contracts/src/test/keep-state.test.ts",
+     "packages/contracts/src/test/ledger8-low-level.test.ts",
+     "packages/contracts/src/test/ledger9-low-level.test.ts",
+     "packages/contracts/src/test/ledger9-session-loads-no-ledger8.test.ts",
+     "packages/contracts/src/test/scoped-era.test.ts",
+     "packages/contracts/src/test/submit-payload.test.ts",
+     "packages/contracts/src/test/submit-tx.test.ts",
+     "packages/contracts/src/test/typecheck/call-args.test-d.ts",
+     "packages/contracts/src/test/typecheck/deploy-private-state-pairing.test-d.ts",
+     "packages/contracts/src/test/typecheck/era-aliases.test-d.ts",
+     "packages/contracts/src/test/typecheck/era-pairing.test-d.ts",
+     "packages/contracts/src/test/typecheck/ledger8-low-level.test-d.ts",
+     "packages/contracts/src/test/typecheck/overloads.test-d.ts",
+     "packages/contracts/src/test/typecheck/serialized-states-at-the-boundary.test-d.ts",
+     "packages/contracts/src/test/v8-native.test.ts",
+     "packages/dapp-connector-proof-provider/src/test/dapp-connector-proof-provider.test.ts",
+     "packages/http-client-proof-provider/src/test/http-client-proof-provider.test.ts",
+     "packages/level-private-state-provider/src/test/level-private-state-provider-errors.test.ts",
+     "packages/level-private-state-provider/src/test/level-private-state-provider.test.ts",
+     "packages/logger-provider/src/test/logger-provider.test.ts",
+     "packages/protocol/src/test/era-load-era.test.ts",
+     "packages/protocol/src/test/ledger-transaction.test.ts",
+     "packages/protocol/src/test/v8-prove.test.ts",
+     "packages/types/src/test/era-handlers.test-d.ts",
+     "packages/types/src/test/era-handlers.test.ts",
+     "packages/types/src/test/ledger-transaction-ledger8-not-loaded.test.ts",
+     "packages/types/src/test/ledger-transaction.test-d.ts",
+     "packages/types/src/test/ledger-transaction.test.ts",
+     "packages/types/src/test/ledger9-transaction-names.test-d.ts",
+     "packages/types/src/test/proof-provider-from-proving-providers.test-d.ts",
+     "packages/types/src/test/proof-provider-from-proving-providers.test.ts",
+     "packages/types/src/test/proof-provider.test.ts",
+     "packages/types/src/test/provider-adapters.test.ts",
+     "packages/types/src/test/public-data-provider.test-d.ts",
+     "packages/types/src/test/serialized-state.test-d.ts",
+     "packages/types/src/test/serialized-state.test.ts",
+     "packages/types/src/test/versioned.test-d.ts",
+     "packages/utils/src/test/assert-never.test.ts",
+     "packages/utils/src/test/error-codes.test.ts",
+     "packages/utils/src/test/typed-wrappers.test.ts",
+     "testkit-js/testkit-js-e2e/src/block-time-api.ts",
+     "testkit-js/testkit-js-e2e/src/counter-api.ts",
+     "testkit-js/testkit-js-e2e/src/double-counter-api.ts",
+     "testkit-js/testkit-js-e2e/src/events-api.ts",
+     "testkit-js/testkit-js/test/env-vars.ut.test.ts",
+     "testkit-js/testkit-js/test/midnight-wallet-provider.ut.test.ts",
+     "testkit-js/testkit-js/test/testing-api.e2e.test.ts",
+     "testkit-js/testkit-js/test/testing-api.it.test.ts",
+     "testkit-js/testkit-js/test/testing-api.ut.test.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 24.335
+ "seconds": 65.729
 }

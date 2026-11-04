@@ -5,11 +5,106 @@
  "linter": "eslint",
  "rule": "no-restricted-properties",
  "checked_out": "31dd33b4fddc4f4247c3a250c4b2f5329369d047",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "lockfile-pinned",
+  "aside": [],
+  "versions": {
+   "eslint": "9.39.4"
+  },
+  "plugins": {},
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "src/web",
+   "lockfile": "src/web/yarn.lock",
+   "candidates": [
+    "src/web (1897 files)"
+   ]
+  },
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [
+    "src/web/package.json"
+   ],
+   "package_jsons": 3
+  },
+  "commit": "2026-10-23T15:57:29+08:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "9.39.4"
+ },
+ "readings": [
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-properties",
+    "options": [
+     {
+      "property": "focus"
+     }
+    ],
+    "scope": {
+     "files": [
+      "features/data-sync/map/**/*"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-ignored",
+    "reason": "features/data-sync/map/p3s109-pair/bad.ts: the linter ignored the planted file"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-properties",
+    "options": [
+     {
+      "property": "focus"
+     }
+    ],
+    "scope": {
+     "files": [
+      "features/data-sync/map/**/*.ts",
+      "features/data-sync/map/**/*.tsx",
+      "features/data-sync/map/**/*.js",
+      "features/data-sync/map/**/*.jsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "features/data-sync/map/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 2.548
+ "seconds": 6.275
 }

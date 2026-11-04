@@ -5,11 +5,767 @@
  "linter": "eslint",
  "rule": "camelcase",
  "checked_out": "67785d883bf32a12212dc063c2b47da44356634b",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [],
+  "versions": {
+   "eslint": "10.14.0"
+  },
+  "plugins": {},
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 0
+  },
+  "commit": "2026-11-02T14:55:40+01:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.14.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "camelcase",
+    "options": [
+     {
+      "properties": "always",
+      "ignoreDestructuring": false
+     }
+    ],
+    "scope": {
+     "files": [
+      "meshroom/ui/qml/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [
+     "meshroom/ui/qml/GraphEditor/AnySetUtils.js",
+     "meshroom/ui/qml/PluginManager/Common/PluginUtils.js",
+     "meshroom/ui/qml/Utils/errorHandler.js",
+     "meshroom/ui/qml/Utils/format.js",
+     "meshroom/ui/qml/Utils/request.js",
+     "meshroom/ui/qml/Viewer3D/Inspector3DUtils.js"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "camelcase",
+    "options": [
+     {
+      "properties": "always"
+     }
+    ],
+    "scope": {
+     "files": [
+      "meshroom/ui/qml/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [
+     "meshroom/ui/qml/GraphEditor/AnySetUtils.js",
+     "meshroom/ui/qml/PluginManager/Common/PluginUtils.js",
+     "meshroom/ui/qml/Utils/errorHandler.js",
+     "meshroom/ui/qml/Utils/format.js",
+     "meshroom/ui/qml/Utils/request.js",
+     "meshroom/ui/qml/Viewer3D/Inspector3DUtils.js"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "camelcase",
+    "options": [
+     {
+      "properties": "always"
+     }
+    ],
+    "scope": {
+     "files": [
+      "meshroom/ui/qml/**/*.js",
+      "meshroom/ui/qml/**/*.qml"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [
+     "meshroom/ui/qml/AboutDialog.qml",
+     "meshroom/ui/qml/Application.qml",
+     "meshroom/ui/qml/Charts/ChartViewCheckBox.qml",
+     "meshroom/ui/qml/Charts/ChartViewLegend.qml",
+     "meshroom/ui/qml/Charts/InteractiveChartView.qml",
+     "meshroom/ui/qml/Controls/ApplicationChunks.qml",
+     "meshroom/ui/qml/Controls/ColorChart.qml",
+     "meshroom/ui/qml/Controls/ColorSelector.qml",
+     "meshroom/ui/qml/Controls/DelegateSelectionBox.qml",
+     "meshroom/ui/qml/Controls/DelegateSelectionLine.qml",
+     "meshroom/ui/qml/Controls/DirectionalLightPane.qml",
+     "meshroom/ui/qml/Controls/ExifOrientedViewer.qml",
+     "meshroom/ui/qml/Controls/ExpandableGroup.qml",
+     "meshroom/ui/qml/Controls/FilterComboBox.qml",
+     "meshroom/ui/qml/Controls/FloatingPane.qml",
+     "meshroom/ui/qml/Controls/Group.qml",
+     "meshroom/ui/qml/Controls/IntSelector.qml",
+     "meshroom/ui/qml/Controls/KeyValue.qml",
+     "meshroom/ui/qml/Controls/MessageDialog.qml",
+     "meshroom/ui/qml/Controls/MScrollBar.qml",
+     "meshroom/ui/qml/Controls/MSplitView.qml",
+     "meshroom/ui/qml/Controls/NodeActions.qml",
+     "meshroom/ui/qml/Controls/Panel.qml",
+     "meshroom/ui/qml/Controls/SearchBar.qml",
+     "meshroom/ui/qml/Controls/SelectionBox.qml",
+     "meshroom/ui/qml/Controls/SelectionLine.qml",
+     "meshroom/ui/qml/Controls/StatusBar.qml",
+     "meshroom/ui/qml/Controls/StatusMessages.qml",
+     "meshroom/ui/qml/Controls/TabPanel.qml",
+     "meshroom/ui/qml/Controls/TextFileViewer.qml",
+     "meshroom/ui/qml/Controls/ThinSlider.qml",
+     "meshroom/ui/qml/Controls/TimelineSlider.qml",
+     "meshroom/ui/qml/CurveEditor/CurveCanvas.qml",
+     "meshroom/ui/qml/CurveEditor/CurveEditor.qml",
+     "meshroom/ui/qml/CurveEditor/CurveList.qml",
+     "meshroom/ui/qml/CurveEditor/CurveListDelegate.qml",
+     "meshroom/ui/qml/CurveEditor/CurveTimeBar.qml",
+     "meshroom/ui/qml/DialogsFactory.qml",
+     "meshroom/ui/qml/Docking/DockArea.qml",
+     "meshroom/ui/qml/Docking/DockGroup.qml",
+     "meshroom/ui/qml/Docking/DockManager.qml",
+     "meshroom/ui/qml/Docking/DockNode.qml",
+     "meshroom/ui/qml/Docking/DockPanel.qml",
+     "meshroom/ui/qml/Docking/DockWindow.qml",
+     "meshroom/ui/qml/Docking/WorkspaceDialogs.qml",
+     "meshroom/ui/qml/Docking/WorkspacesMenu.qml",
+     "meshroom/ui/qml/GraphEditor/AnySetUtils.js",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/CheckBoxRow.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/Choice.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/ChoiceMulti.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/Color.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/ColorHue.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/NotComputed.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/SliderField.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/TextAreaFlick.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/TextFieldRow.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeEditor.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeItemDelegate.qml",
+     "meshroom/ui/qml/GraphEditor/AttributePin.qml",
+     "meshroom/ui/qml/GraphEditor/Backdrop.qml",
+     "meshroom/ui/qml/GraphEditor/ChunksListView.qml",
+     "meshroom/ui/qml/GraphEditor/CompatibilityBadge.qml",
+     "meshroom/ui/qml/GraphEditor/CompatibilityManager.qml",
+     "meshroom/ui/qml/GraphEditor/Edge.qml",
+     "meshroom/ui/qml/GraphEditor/GraphEditor.qml",
+     "meshroom/ui/qml/GraphEditor/GraphEditorSettings.qml",
+     "meshroom/ui/qml/GraphEditor/Node.qml",
+     "meshroom/ui/qml/GraphEditor/NodeCategoryMenu.qml",
+     "meshroom/ui/qml/GraphEditor/NodeChunks.qml",
+     "meshroom/ui/qml/GraphEditor/NodeDocumentation.qml",
+     "meshroom/ui/qml/GraphEditor/NodeEditor.qml",
+     "meshroom/ui/qml/GraphEditor/NodeFileBrowser.qml",
+     "meshroom/ui/qml/GraphEditor/NodeLog.qml",
+     "meshroom/ui/qml/GraphEditor/NodeStatistics.qml",
+     "meshroom/ui/qml/GraphEditor/NodeStatus.qml",
+     "meshroom/ui/qml/GraphEditor/ScriptEditor.qml",
+     "meshroom/ui/qml/GraphEditor/StatViewer.qml",
+     "meshroom/ui/qml/GraphEditor/TaskManager.qml",
+     "meshroom/ui/qml/Homepage.qml",
+     "meshroom/ui/qml/ImageGallery/ImageBadge.qml",
+     "meshroom/ui/qml/ImageGallery/ImageDelegate.qml",
+     "meshroom/ui/qml/ImageGallery/ImageGallery.qml",
+     "meshroom/ui/qml/ImageGallery/ImageGridView.qml",
+     "meshroom/ui/qml/ImageGallery/ImageListView.qml",
+     "meshroom/ui/qml/ImageGallery/IntrinsicDisplayDelegate.qml",
+     "meshroom/ui/qml/ImageGallery/IntrinsicsIndicator.qml",
+     "meshroom/ui/qml/ImageGallery/SensorDBDialog.qml",
+     "meshroom/ui/qml/main.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialIcons.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialLabel.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialToolButton.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialToolLabel.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialToolLabelButton.qml",
+     "meshroom/ui/qml/MaterialIcons/MLabel.qml",
+     "meshroom/ui/qml/PluginManager/Common/PluginPublisherLabel.qml",
+     "meshroom/ui/qml/PluginManager/Common/PluginTypeBadge.qml",
+     "meshroom/ui/qml/PluginManager/Common/PluginUtils.js",
+     "meshroom/ui/qml/PluginManager/Details/NoticePane.qml",
+     "meshroom/ui/qml/PluginManager/Details/PluginDetailsPane.qml",
+     "meshroom/ui/qml/PluginManager/List/PluginColumnHeader.qml",
+     "meshroom/ui/qml/PluginManager/List/PluginListItemDelegate.qml",
+     "meshroom/ui/qml/PluginManager/List/PluginListPane.qml",
+     "meshroom/ui/qml/PluginManager/PluginManagerWindow.qml",
+     "meshroom/ui/qml/PluginManager/Tasks/PluginTaskDelegate.qml",
+     "meshroom/ui/qml/PluginManager/Tasks/PluginTaskPane.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/ShapeAttributeItem.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/ShapeDataItem.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/ShapeFileItem.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/ShapeListAttributeItem.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/Utils/ItemHeader.qml",
+     "meshroom/ui/qml/Shapes/Editor/ShapeEditor.qml",
+     "meshroom/ui/qml/Shapes/Editor/ShapeEditorItem.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/BaseLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/CircleLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/LineLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/PointLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/RectangleLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/SurveyPointLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/TextLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/Utils/Handle.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/Utils/MoveArea.qml",
+     "meshroom/ui/qml/Shapes/Viewer/ShapeViewer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/ShapeViewerAttributeLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/ShapeViewerAttributeLoader.qml",
+     "meshroom/ui/qml/Shapes/Viewer/ShapeViewerLayer.qml",
+     "meshroom/ui/qml/Utils/Clipboard.qml",
+     "meshroom/ui/qml/Utils/Colors.qml",
+     "meshroom/ui/qml/Utils/errorHandler.js",
+     "meshroom/ui/qml/Utils/ExifOrientation.qml",
+     "meshroom/ui/qml/Utils/ExpressionTextField.qml",
+     "meshroom/ui/qml/Utils/Filepath.qml",
+     "meshroom/ui/qml/Utils/format.js",
+     "meshroom/ui/qml/Utils/request.js",
+     "meshroom/ui/qml/Utils/Scene3DHelper.qml",
+     "meshroom/ui/qml/Utils/SortFilterDelegateModel.qml",
+     "meshroom/ui/qml/Utils/Transformations3DHelper.qml",
+     "meshroom/ui/qml/Viewer/CameraResponseGraph.qml",
+     "meshroom/ui/qml/Viewer/CircleGizmo.qml",
+     "meshroom/ui/qml/Viewer/ColorCheckerEntity.qml",
+     "meshroom/ui/qml/Viewer/ColorCheckerPane.qml",
+     "meshroom/ui/qml/Viewer/ColorCheckerViewer.qml",
+     "meshroom/ui/qml/Viewer/FeaturesInfoOverlay.qml",
+     "meshroom/ui/qml/Viewer/FeaturesViewer.qml",
+     "meshroom/ui/qml/Viewer/FloatImage.qml",
+     "meshroom/ui/qml/Viewer/HdrImageToolbar.qml",
+     "meshroom/ui/qml/Viewer/HistogramView.qml",
+     "meshroom/ui/qml/Viewer/ImageMetadataView.qml",
+     "meshroom/ui/qml/Viewer/LensDistortionToolbar.qml",
+     "meshroom/ui/qml/Viewer/MFeatures.qml",
+     "meshroom/ui/qml/Viewer/MSfMData.qml",
+     "meshroom/ui/qml/Viewer/MTracks.qml",
+     "meshroom/ui/qml/Viewer/PanoramaToolbar.qml",
+     "meshroom/ui/qml/Viewer/PanoramaViewer.qml",
+     "meshroom/ui/qml/Viewer/PhongImageViewer.qml",
+     "meshroom/ui/qml/Viewer/PhongImageViewerToolbar.qml",
+     "meshroom/ui/qml/Viewer/SequencePlayer.qml",
+     "meshroom/ui/qml/Viewer/SfmGlobalStats.qml",
+     "meshroom/ui/qml/Viewer/SfmStatsView.qml",
+     "meshroom/ui/qml/Viewer/TestAliceVisionPlugin.qml",
+     "meshroom/ui/qml/Viewer/TextViewer.qml",
+     "meshroom/ui/qml/Viewer/VectorScopeView.qml",
+     "meshroom/ui/qml/Viewer/Viewer2D.qml",
+     "meshroom/ui/qml/Viewer/WaveformView.qml",
+     "meshroom/ui/qml/Viewer3D/AttributeWatcher.qml",
+     "meshroom/ui/qml/Viewer3D/BoxControlMouseArea.qml",
+     "meshroom/ui/qml/Viewer3D/CameraGroup.qml",
+     "meshroom/ui/qml/Viewer3D/DepthmapEntry.qml",
+     "meshroom/ui/qml/Viewer3D/DepthmapGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/DragMouseArea.qml",
+     "meshroom/ui/qml/Viewer3D/FreeViewMouseArea.qml",
+     "meshroom/ui/qml/Viewer3D/ImageGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/Inspector3D.qml",
+     "meshroom/ui/qml/Viewer3D/Inspector3DUtils.js",
+     "meshroom/ui/qml/Viewer3D/LayerList.qml",
+     "meshroom/ui/qml/Viewer3D/LayerListGroup.qml",
+     "meshroom/ui/qml/Viewer3D/LayerRow.qml",
+     "meshroom/ui/qml/Viewer3D/LoadingRemoveButton.qml",
+     "meshroom/ui/qml/Viewer3D/MeshEntry.qml",
+     "meshroom/ui/qml/Viewer3D/MeshesGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/MeshingBoundingBox.qml",
+     "meshroom/ui/qml/Viewer3D/PointGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/PropertyComboBox.qml",
+     "meshroom/ui/qml/Viewer3D/PropertySlider.qml",
+     "meshroom/ui/qml/Viewer3D/SceneObjectCollection.qml",
+     "meshroom/ui/qml/Viewer3D/SfmDataEntry.qml",
+     "meshroom/ui/qml/Viewer3D/SfmDataGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/SfmViewMouseArea.qml",
+     "meshroom/ui/qml/Viewer3D/ToggleIconButton.qml",
+     "meshroom/ui/qml/Viewer3D/Viewer3D.qml",
+     "meshroom/ui/qml/Viewer3D/Viewer3DPanel.qml",
+     "meshroom/ui/qml/WorkspaceView.qml"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "camelcase",
+    "options": [
+     {
+      "properties": "always"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [
+     "meshroom/ui/qml/GraphEditor/AnySetUtils.js",
+     "meshroom/ui/qml/PluginManager/Common/PluginUtils.js",
+     "meshroom/ui/qml/Utils/errorHandler.js",
+     "meshroom/ui/qml/Utils/format.js",
+     "meshroom/ui/qml/Utils/request.js",
+     "meshroom/ui/qml/Viewer3D/Inspector3DUtils.js"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "camelcase",
+    "options": [
+     {
+      "properties": "always"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.qml"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [
+     "meshroom/ui/qml/AboutDialog.qml",
+     "meshroom/ui/qml/Application.qml",
+     "meshroom/ui/qml/Charts/ChartViewCheckBox.qml",
+     "meshroom/ui/qml/Charts/ChartViewLegend.qml",
+     "meshroom/ui/qml/Charts/InteractiveChartView.qml",
+     "meshroom/ui/qml/Controls/ApplicationChunks.qml",
+     "meshroom/ui/qml/Controls/ColorChart.qml",
+     "meshroom/ui/qml/Controls/ColorSelector.qml",
+     "meshroom/ui/qml/Controls/DelegateSelectionBox.qml",
+     "meshroom/ui/qml/Controls/DelegateSelectionLine.qml",
+     "meshroom/ui/qml/Controls/DirectionalLightPane.qml",
+     "meshroom/ui/qml/Controls/ExifOrientedViewer.qml",
+     "meshroom/ui/qml/Controls/ExpandableGroup.qml",
+     "meshroom/ui/qml/Controls/FilterComboBox.qml",
+     "meshroom/ui/qml/Controls/FloatingPane.qml",
+     "meshroom/ui/qml/Controls/Group.qml",
+     "meshroom/ui/qml/Controls/IntSelector.qml",
+     "meshroom/ui/qml/Controls/KeyValue.qml",
+     "meshroom/ui/qml/Controls/MessageDialog.qml",
+     "meshroom/ui/qml/Controls/MScrollBar.qml",
+     "meshroom/ui/qml/Controls/MSplitView.qml",
+     "meshroom/ui/qml/Controls/NodeActions.qml",
+     "meshroom/ui/qml/Controls/Panel.qml",
+     "meshroom/ui/qml/Controls/SearchBar.qml",
+     "meshroom/ui/qml/Controls/SelectionBox.qml",
+     "meshroom/ui/qml/Controls/SelectionLine.qml",
+     "meshroom/ui/qml/Controls/StatusBar.qml",
+     "meshroom/ui/qml/Controls/StatusMessages.qml",
+     "meshroom/ui/qml/Controls/TabPanel.qml",
+     "meshroom/ui/qml/Controls/TextFileViewer.qml",
+     "meshroom/ui/qml/Controls/ThinSlider.qml",
+     "meshroom/ui/qml/Controls/TimelineSlider.qml",
+     "meshroom/ui/qml/CurveEditor/CurveCanvas.qml",
+     "meshroom/ui/qml/CurveEditor/CurveEditor.qml",
+     "meshroom/ui/qml/CurveEditor/CurveList.qml",
+     "meshroom/ui/qml/CurveEditor/CurveListDelegate.qml",
+     "meshroom/ui/qml/CurveEditor/CurveTimeBar.qml",
+     "meshroom/ui/qml/DialogsFactory.qml",
+     "meshroom/ui/qml/Docking/DockArea.qml",
+     "meshroom/ui/qml/Docking/DockGroup.qml",
+     "meshroom/ui/qml/Docking/DockManager.qml",
+     "meshroom/ui/qml/Docking/DockNode.qml",
+     "meshroom/ui/qml/Docking/DockPanel.qml",
+     "meshroom/ui/qml/Docking/DockWindow.qml",
+     "meshroom/ui/qml/Docking/WorkspaceDialogs.qml",
+     "meshroom/ui/qml/Docking/WorkspacesMenu.qml",
+     "meshroom/ui/qml/GraphEditor/AnySetUtils.js",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/CheckBoxRow.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/Choice.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/ChoiceMulti.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/Color.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/ColorHue.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/NotComputed.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/SliderField.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/TextAreaFlick.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeControls/TextFieldRow.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeEditor.qml",
+     "meshroom/ui/qml/GraphEditor/AttributeItemDelegate.qml",
+     "meshroom/ui/qml/GraphEditor/AttributePin.qml",
+     "meshroom/ui/qml/GraphEditor/Backdrop.qml",
+     "meshroom/ui/qml/GraphEditor/ChunksListView.qml",
+     "meshroom/ui/qml/GraphEditor/CompatibilityBadge.qml",
+     "meshroom/ui/qml/GraphEditor/CompatibilityManager.qml",
+     "meshroom/ui/qml/GraphEditor/Edge.qml",
+     "meshroom/ui/qml/GraphEditor/GraphEditor.qml",
+     "meshroom/ui/qml/GraphEditor/GraphEditorSettings.qml",
+     "meshroom/ui/qml/GraphEditor/Node.qml",
+     "meshroom/ui/qml/GraphEditor/NodeCategoryMenu.qml",
+     "meshroom/ui/qml/GraphEditor/NodeChunks.qml",
+     "meshroom/ui/qml/GraphEditor/NodeDocumentation.qml",
+     "meshroom/ui/qml/GraphEditor/NodeEditor.qml",
+     "meshroom/ui/qml/GraphEditor/NodeFileBrowser.qml",
+     "meshroom/ui/qml/GraphEditor/NodeLog.qml",
+     "meshroom/ui/qml/GraphEditor/NodeStatistics.qml",
+     "meshroom/ui/qml/GraphEditor/NodeStatus.qml",
+     "meshroom/ui/qml/GraphEditor/ScriptEditor.qml",
+     "meshroom/ui/qml/GraphEditor/StatViewer.qml",
+     "meshroom/ui/qml/GraphEditor/TaskManager.qml",
+     "meshroom/ui/qml/Homepage.qml",
+     "meshroom/ui/qml/ImageGallery/ImageBadge.qml",
+     "meshroom/ui/qml/ImageGallery/ImageDelegate.qml",
+     "meshroom/ui/qml/ImageGallery/ImageGallery.qml",
+     "meshroom/ui/qml/ImageGallery/ImageGridView.qml",
+     "meshroom/ui/qml/ImageGallery/ImageListView.qml",
+     "meshroom/ui/qml/ImageGallery/IntrinsicDisplayDelegate.qml",
+     "meshroom/ui/qml/ImageGallery/IntrinsicsIndicator.qml",
+     "meshroom/ui/qml/ImageGallery/SensorDBDialog.qml",
+     "meshroom/ui/qml/main.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialIcons.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialLabel.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialToolButton.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialToolLabel.qml",
+     "meshroom/ui/qml/MaterialIcons/MaterialToolLabelButton.qml",
+     "meshroom/ui/qml/MaterialIcons/MLabel.qml",
+     "meshroom/ui/qml/PluginManager/Common/PluginPublisherLabel.qml",
+     "meshroom/ui/qml/PluginManager/Common/PluginTypeBadge.qml",
+     "meshroom/ui/qml/PluginManager/Common/PluginUtils.js",
+     "meshroom/ui/qml/PluginManager/Details/NoticePane.qml",
+     "meshroom/ui/qml/PluginManager/Details/PluginDetailsPane.qml",
+     "meshroom/ui/qml/PluginManager/List/PluginColumnHeader.qml",
+     "meshroom/ui/qml/PluginManager/List/PluginListItemDelegate.qml",
+     "meshroom/ui/qml/PluginManager/List/PluginListPane.qml",
+     "meshroom/ui/qml/PluginManager/PluginManagerWindow.qml",
+     "meshroom/ui/qml/PluginManager/Tasks/PluginTaskDelegate.qml",
+     "meshroom/ui/qml/PluginManager/Tasks/PluginTaskPane.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/ShapeAttributeItem.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/ShapeDataItem.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/ShapeFileItem.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/ShapeListAttributeItem.qml",
+     "meshroom/ui/qml/Shapes/Editor/Items/Utils/ItemHeader.qml",
+     "meshroom/ui/qml/Shapes/Editor/ShapeEditor.qml",
+     "meshroom/ui/qml/Shapes/Editor/ShapeEditorItem.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/BaseLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/CircleLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/LineLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/PointLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/RectangleLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/SurveyPointLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/TextLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/Utils/Handle.qml",
+     "meshroom/ui/qml/Shapes/Viewer/Layers/Utils/MoveArea.qml",
+     "meshroom/ui/qml/Shapes/Viewer/ShapeViewer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/ShapeViewerAttributeLayer.qml",
+     "meshroom/ui/qml/Shapes/Viewer/ShapeViewerAttributeLoader.qml",
+     "meshroom/ui/qml/Shapes/Viewer/ShapeViewerLayer.qml",
+     "meshroom/ui/qml/Utils/Clipboard.qml",
+     "meshroom/ui/qml/Utils/Colors.qml",
+     "meshroom/ui/qml/Utils/errorHandler.js",
+     "meshroom/ui/qml/Utils/ExifOrientation.qml",
+     "meshroom/ui/qml/Utils/ExpressionTextField.qml",
+     "meshroom/ui/qml/Utils/Filepath.qml",
+     "meshroom/ui/qml/Utils/format.js",
+     "meshroom/ui/qml/Utils/request.js",
+     "meshroom/ui/qml/Utils/Scene3DHelper.qml",
+     "meshroom/ui/qml/Utils/SortFilterDelegateModel.qml",
+     "meshroom/ui/qml/Utils/Transformations3DHelper.qml",
+     "meshroom/ui/qml/Viewer/CameraResponseGraph.qml",
+     "meshroom/ui/qml/Viewer/CircleGizmo.qml",
+     "meshroom/ui/qml/Viewer/ColorCheckerEntity.qml",
+     "meshroom/ui/qml/Viewer/ColorCheckerPane.qml",
+     "meshroom/ui/qml/Viewer/ColorCheckerViewer.qml",
+     "meshroom/ui/qml/Viewer/FeaturesInfoOverlay.qml",
+     "meshroom/ui/qml/Viewer/FeaturesViewer.qml",
+     "meshroom/ui/qml/Viewer/FloatImage.qml",
+     "meshroom/ui/qml/Viewer/HdrImageToolbar.qml",
+     "meshroom/ui/qml/Viewer/HistogramView.qml",
+     "meshroom/ui/qml/Viewer/ImageMetadataView.qml",
+     "meshroom/ui/qml/Viewer/LensDistortionToolbar.qml",
+     "meshroom/ui/qml/Viewer/MFeatures.qml",
+     "meshroom/ui/qml/Viewer/MSfMData.qml",
+     "meshroom/ui/qml/Viewer/MTracks.qml",
+     "meshroom/ui/qml/Viewer/PanoramaToolbar.qml",
+     "meshroom/ui/qml/Viewer/PanoramaViewer.qml",
+     "meshroom/ui/qml/Viewer/PhongImageViewer.qml",
+     "meshroom/ui/qml/Viewer/PhongImageViewerToolbar.qml",
+     "meshroom/ui/qml/Viewer/SequencePlayer.qml",
+     "meshroom/ui/qml/Viewer/SfmGlobalStats.qml",
+     "meshroom/ui/qml/Viewer/SfmStatsView.qml",
+     "meshroom/ui/qml/Viewer/TestAliceVisionPlugin.qml",
+     "meshroom/ui/qml/Viewer/TextViewer.qml",
+     "meshroom/ui/qml/Viewer/VectorScopeView.qml",
+     "meshroom/ui/qml/Viewer/Viewer2D.qml",
+     "meshroom/ui/qml/Viewer/WaveformView.qml",
+     "meshroom/ui/qml/Viewer3D/AttributeWatcher.qml",
+     "meshroom/ui/qml/Viewer3D/BoxControlMouseArea.qml",
+     "meshroom/ui/qml/Viewer3D/CameraGroup.qml",
+     "meshroom/ui/qml/Viewer3D/DepthmapEntry.qml",
+     "meshroom/ui/qml/Viewer3D/DepthmapGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/DragMouseArea.qml",
+     "meshroom/ui/qml/Viewer3D/FreeViewMouseArea.qml",
+     "meshroom/ui/qml/Viewer3D/ImageGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/Inspector3D.qml",
+     "meshroom/ui/qml/Viewer3D/Inspector3DUtils.js",
+     "meshroom/ui/qml/Viewer3D/LayerList.qml",
+     "meshroom/ui/qml/Viewer3D/LayerListGroup.qml",
+     "meshroom/ui/qml/Viewer3D/LayerRow.qml",
+     "meshroom/ui/qml/Viewer3D/LoadingRemoveButton.qml",
+     "meshroom/ui/qml/Viewer3D/MeshEntry.qml",
+     "meshroom/ui/qml/Viewer3D/MeshesGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/MeshingBoundingBox.qml",
+     "meshroom/ui/qml/Viewer3D/PointGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/PropertyComboBox.qml",
+     "meshroom/ui/qml/Viewer3D/PropertySlider.qml",
+     "meshroom/ui/qml/Viewer3D/SceneObjectCollection.qml",
+     "meshroom/ui/qml/Viewer3D/SfmDataEntry.qml",
+     "meshroom/ui/qml/Viewer3D/SfmDataGroup3D.qml",
+     "meshroom/ui/qml/Viewer3D/SfmViewMouseArea.qml",
+     "meshroom/ui/qml/Viewer3D/ToggleIconButton.qml",
+     "meshroom/ui/qml/Viewer3D/Viewer3D.qml",
+     "meshroom/ui/qml/Viewer3D/Viewer3DPanel.qml",
+     "meshroom/ui/qml/WorkspaceView.qml"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "camelcase",
+    "options": [
+     "error",
+     {
+      "properties": "always"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at /home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:627:27\n    at Array.map (<anonymous>)\n    at lintFilesWithoutMultithreading (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:625:13)\n    at ESLint.lintFiles (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:1071:20)\n    at async Object.execute (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/cli.js:386:14)"
+   },
+   "diagnosis": {
+    "plugin": null,
+    "plugin_loaded": null,
+    "rule_known": true,
+    "options_valid": false,
+    "schema": "present",
+    "errors": [
+     "options: data should NOT have more than 1 items"
+    ]
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 0.907
+ "seconds": 7.597
 }

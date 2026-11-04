@@ -5,11 +5,266 @@
  "linter": "ruff",
  "rule": "I002",
  "checked_out": "971b7a375524024c92adf70177a0fa88092d1399",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "install",
   "reason": "uvx exited 1: error: Failed to resolve tool requirement\n  cause: Distribution not found at: file:///home/runner/work/_temp/rule-proof-work/repo/f12be1ebaa5351c1fc76472de98db2c3446c8253"
  },
- "adjustments": [],
- "seconds": 0.563
+ "date_matched": {
+  "commit": "2026-10-06T11:39:43-04:00",
+  "ruff": "0.16.10"
+ },
+ "install": {
+  "path": "as-designed",
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "install",
+   "reason": "uvx exited 1: error: Failed to resolve tool requirement\n  cause: Distribution not found at: file:///home/runner/work/_temp/rule-proof-work/repo/f12be1ebaa5351c1fc76472de98db2c3446c8253"
+  },
+  "date_matched": {
+   "commit": "2026-10-06T11:39:43-04:00",
+   "ruff": "0.16.10"
+  },
+  "adjustments": [
+   "pre-commit-rev-not-a-release",
+   "date-matched-version"
+  ],
+  "kind": "installed",
+  "version": "0.16.10"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "I002",
+    "settings": {
+     "lint": {
+      "lint": {
+       "isort": {
+        "required-imports": [
+         "from __future__ import annotations"
+        ]
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "  Cause: TOML parse error at line 1, column 7\n  |\n1 | [lint.lint.isort]\n  |       ^^^^\nunknown field `lint`, expected one of `allowed-confusables`, `dummy-variable-rgx`, `extend-ignore`, `extend-select`, `extend-fixable`, `extend-unfixable`, `external`, `fixable`, `ignore`, `extend-safe-fixes`, `extend-unsafe-fixes`, `ignore-init-module-imports`, `logger-objects`, `select`, `explicit-preview-rules`, `task-tags`, `typing-modules`, `unfixable`, `flake8-annotations`, `flake8-bandit`, `flake8-boolean-trap`, `flake8-bugbear`, `flake8-builtins`, `flake8-comprehensions`, `flake8-copyright`, `flake8-errmsg`, `flake8-quotes`, `flake8-self`, `flake8-tidy-imports`, `flake8-type-checking`, `flake8-gettext`, `flake8-implicit-str-concat`, `flake8-import-conventions`, `flake8-pytest-style`, `flake8-unused-arguments`, `isort`, `mccabe`, `pep8-naming`, `pycodestyle`, `pydocstyle`, `pyflakes`, `pylint`, `pyupgrade`, `per-file-ignores`, `extend-per-file-ignores`, `exclude`, `pydoclint`, `ruff`, `preview`, `typing-extensions`, `future-annotations`"
+   },
+   "diagnosis": {
+    "rule_known": true,
+    "exit": 0,
+    "plugin": null,
+    "plugin_loaded": null,
+    "options_valid": null,
+    "errors": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "I002",
+    "settings": {
+     "lint": {
+      "lint": {
+       "isort": {
+        "required-imports": [
+         "from __future__ import annotations"
+        ]
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "  Cause: TOML parse error at line 1, column 7\n  |\n1 | [lint.lint.isort]\n  |       ^^^^\nunknown field `lint`, expected one of `allowed-confusables`, `dummy-variable-rgx`, `extend-ignore`, `extend-select`, `extend-fixable`, `extend-unfixable`, `external`, `fixable`, `ignore`, `extend-safe-fixes`, `extend-unsafe-fixes`, `ignore-init-module-imports`, `logger-objects`, `select`, `explicit-preview-rules`, `task-tags`, `typing-modules`, `unfixable`, `flake8-annotations`, `flake8-bandit`, `flake8-boolean-trap`, `flake8-bugbear`, `flake8-builtins`, `flake8-comprehensions`, `flake8-copyright`, `flake8-errmsg`, `flake8-quotes`, `flake8-self`, `flake8-tidy-imports`, `flake8-type-checking`, `flake8-gettext`, `flake8-implicit-str-concat`, `flake8-import-conventions`, `flake8-pytest-style`, `flake8-unused-arguments`, `isort`, `mccabe`, `pep8-naming`, `pycodestyle`, `pydocstyle`, `pyflakes`, `pylint`, `pyupgrade`, `per-file-ignores`, `extend-per-file-ignores`, `exclude`, `pydoclint`, `ruff`, `preview`, `typing-extensions`, `future-annotations`"
+   },
+   "diagnosis": {
+    "rule_known": true,
+    "exit": 0,
+    "plugin": null,
+    "plugin_loaded": null,
+    "options_valid": null,
+    "errors": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "FA102",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "FA100",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "I002",
+    "settings": {
+     "lint": {
+      "isort": {
+       "required-imports": [
+        "from __future__ import annotations"
+       ]
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 85,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "I002",
+    "settings": {
+     "lint": {
+      "isort": {
+       "required-imports": [
+        "from __future__ import annotations"
+       ]
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 85,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "pre-commit-rev-not-a-release",
+  "date-matched-version"
+ ],
+ "seconds": 1.309
 }

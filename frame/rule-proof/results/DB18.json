@@ -5,11 +5,292 @@
  "linter": "eslint",
  "rule": "check-file/filename-naming-convention",
  "checked_out": "d776e736b70a30082b62945a72f8e2906dabd0b8",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [
+   ".npmrc"
+  ],
+  "versions": {
+   "eslint": "10.14.0"
+  },
+  "plugins": {
+   "eslint-plugin-check-file": {
+    "version": "3.3.2",
+    "error": null
+   },
+   "eslint-plugin-filenames": {
+    "version": "1.3.2",
+    "error": null
+   },
+   "eslint-plugin-unicorn": {
+    "version": "79.0.0",
+    "error": null
+   }
+  },
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 0
+  },
+  "commit": "2026-11-02T18:08:12Z",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.14.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "check-file/filename-naming-convention",
+    "options": [
+     {
+      "**/*.{js,mjs,cjs,ts}": "SNAKE_CASE"
+     },
+     {
+      "ignoreMiddleExtensions": true
+     }
+    ],
+    "scope": {
+     "files": [
+      "web/**/*.js",
+      "tool/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-check-file",
+     "version": "3.3.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "check-file/filename-naming-convention",
+    "options": [
+     {
+      "**/*.{js,mjs,cjs}": "SNAKE_CASE"
+     },
+     {
+      "ignoreMiddleExtensions": true
+     }
+    ],
+    "scope": {
+     "files": [
+      "web/**/*.js",
+      "tool/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-check-file",
+     "version": "3.3.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "filenames/match-regex",
+    "options": [
+     "^[a-z][a-z0-9]*(_[a-z][a-z0-9]*)?(\\.[a-zA-Z0-9]+)?$"
+    ],
+    "scope": {
+     "files": [
+      "**/*"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-filenames",
+     "version": "1.3.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at /home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:627:27\n    at Array.map (<anonymous>)\n    at lintFilesWithoutMultithreading (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:625:13)\n    at ESLint.lintFiles (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:1071:20)\n    at async Object.execute (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/cli.js:386:14)"
+   },
+   "diagnosis": {
+    "plugin": "eslint-plugin-filenames",
+    "plugin_loaded": true,
+    "rule_known": true,
+    "options_valid": false,
+    "schema": "present",
+    "errors": [
+     "options: data should NOT have more than 0 items"
+    ]
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "unicorn/filename-case",
+    "options": [
+     {
+      "case": "snakeCase"
+     }
+    ],
+    "scope": {
+     "files": [
+      "web/**/*.js",
+      "tool/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-unicorn",
+     "version": "79.0.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 1,
+    "goodHits": 1
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "unicorn/filename-case",
+    "options": [
+     {
+      "case": "snakeCase"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-unicorn",
+     "version": "79.0.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "unicorn/filename-case",
+    "options": [
+     {
+      "case": "snakeCase"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-unicorn",
+     "version": "79.0.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 1,
+    "goodHits": 1
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 0.932
+ "seconds": 10.644
 }

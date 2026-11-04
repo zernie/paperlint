@@ -5,11 +5,585 @@
  "linter": "eslint",
  "rule": "class-methods-use-this",
  "checked_out": "6cd3d0f39f38c1e5915afe9f8436de56195a14f9",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-linter",
   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   ".npmrc",
+   "pnpm-workspace.yaml"
+  ],
+  "versions": {
+   "eslint": "10.4.1",
+   "@typescript-eslint/parser": "8.60.0",
+   "typescript": "6.0.3"
+  },
+  "plugins": {},
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-linter",
+   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 4
+  },
+  "commit": "2026-06-01T10:22:04+02:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.4.1"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "class-methods-use-this",
+    "options": [
+     {
+      "enforceForClassFields": true
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/components/**/*.ts",
+      "src/core/**/*.ts",
+      "shared/src/components/**/*.ts",
+      "shared/src/core/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.test.ts",
+      "**/tests/**",
+      "**/*.d.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 182,
+    "flagged": [
+     "shared/src/components/component-renderer/view.ts",
+     "shared/src/components/file-explorer/folder-collapser.ts",
+     "shared/src/components/mountable/helpers.ts",
+     "shared/src/components/primitives/icon-picker.ts",
+     "shared/src/core/commands/macro-command.ts",
+     "shared/src/core/data-access/code-block-file.ts",
+     "shared/src/core/data-access/code-block-repository.ts",
+     "shared/src/core/evaluator/base.ts",
+     "shared/src/core/evaluator/color.ts",
+     "shared/src/core/evaluator/filter.ts",
+     "shared/src/core/indexer.ts",
+     "shared/src/core/license/license-manager.ts",
+     "shared/src/core/settings/settings-ui-builder.ts",
+     "shared/src/core/vault-table/persistence/persistent-table-cache.ts",
+     "shared/src/core/vault-table/vault-table-commands.ts",
+     "shared/src/core/vault-table/vault-table.ts",
+     "src/components/graph/header.ts",
+     "src/components/graph/zoom-indicator.ts",
+     "src/components/graph/zoom-preview.ts",
+     "src/components/layout/collision-detector.ts",
+     "src/components/layout/constellation-positioner.ts",
+     "src/components/layout/graph-layout-manager.ts",
+     "src/components/layout/node-organizer.ts",
+     "src/components/relationship-adder.ts",
+     "src/components/views/moc-view.ts",
+     "src/components/views/nexus-view-switcher.ts",
+     "src/core/commands/delete-node-command.ts",
+     "src/core/commands/edit-node-command.ts",
+     "src/core/graph-builder.ts",
+     "src/core/hierarchy/moc-content-strategy.ts",
+     "src/core/node-creator.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "class-methods-use-this",
+    "options": [
+     {
+      "enforceForClassFields": true
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/components/**/*.ts",
+      "src/core/**/*.ts",
+      "shared/src/components/**/*.ts",
+      "shared/src/core/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.test.ts",
+      "**/*.d.ts",
+      "**/tests/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 182,
+    "flagged": [
+     "shared/src/components/component-renderer/view.ts",
+     "shared/src/components/file-explorer/folder-collapser.ts",
+     "shared/src/components/mountable/helpers.ts",
+     "shared/src/components/primitives/icon-picker.ts",
+     "shared/src/core/commands/macro-command.ts",
+     "shared/src/core/data-access/code-block-file.ts",
+     "shared/src/core/data-access/code-block-repository.ts",
+     "shared/src/core/evaluator/base.ts",
+     "shared/src/core/evaluator/color.ts",
+     "shared/src/core/evaluator/filter.ts",
+     "shared/src/core/indexer.ts",
+     "shared/src/core/license/license-manager.ts",
+     "shared/src/core/settings/settings-ui-builder.ts",
+     "shared/src/core/vault-table/persistence/persistent-table-cache.ts",
+     "shared/src/core/vault-table/vault-table-commands.ts",
+     "shared/src/core/vault-table/vault-table.ts",
+     "src/components/graph/header.ts",
+     "src/components/graph/zoom-indicator.ts",
+     "src/components/graph/zoom-preview.ts",
+     "src/components/layout/collision-detector.ts",
+     "src/components/layout/constellation-positioner.ts",
+     "src/components/layout/graph-layout-manager.ts",
+     "src/components/layout/node-organizer.ts",
+     "src/components/relationship-adder.ts",
+     "src/components/views/moc-view.ts",
+     "src/components/views/nexus-view-switcher.ts",
+     "src/core/commands/delete-node-command.ts",
+     "src/core/commands/edit-node-command.ts",
+     "src/core/graph-builder.ts",
+     "src/core/hierarchy/moc-content-strategy.ts",
+     "src/core/node-creator.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "class-methods-use-this",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mjs",
+      "**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx",
+      "e2e/**",
+      "shared-react/tests/**",
+      "shared/tests/**",
+      "tests/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 540,
+    "flagged": [
+     "shared-react/src/page-header/store.ts",
+     "shared-react/src/react-view.tsx",
+     "shared/src/components/component-renderer/view.ts",
+     "shared/src/components/file-explorer/folder-collapser.ts",
+     "shared/src/components/mountable/helpers.ts",
+     "shared/src/components/primitives/icon-picker.ts",
+     "shared/src/core/commands/macro-command.ts",
+     "shared/src/core/data-access/code-block-file.ts",
+     "shared/src/core/data-access/code-block-repository.ts",
+     "shared/src/core/evaluator/base.ts",
+     "shared/src/core/evaluator/color.ts",
+     "shared/src/core/evaluator/filter.ts",
+     "shared/src/core/indexer.ts",
+     "shared/src/core/license/license-manager.ts",
+     "shared/src/core/settings/settings-ui-builder.ts",
+     "shared/src/core/vault-table/persistence/persistent-table-cache.ts",
+     "shared/src/core/vault-table/vault-table-commands.ts",
+     "shared/src/core/vault-table/vault-table.ts",
+     "shared/src/integrations/api-gateway/http-api-server.ts",
+     "shared/src/integrations/api-gateway/plugin-api-gateway.ts",
+     "shared/src/testing/e2e/infra-error-reporter.ts",
+     "shared/src/testing/mocks/obsidian.ts",
+     "shared/src/testing/mocks/vault-table.ts",
+     "src/components/graph/header.ts",
+     "src/components/graph/zoom-indicator.ts",
+     "src/components/graph/zoom-preview.ts",
+     "src/components/layout/collision-detector.ts",
+     "src/components/layout/constellation-positioner.ts",
+     "src/components/layout/graph-layout-manager.ts",
+     "src/components/layout/node-organizer.ts",
+     "src/components/relationship-adder.ts",
+     "src/components/views/moc-view.ts",
+     "src/components/views/nexus-view-switcher.ts",
+     "src/core/commands/delete-node-command.ts",
+     "src/core/commands/edit-node-command.ts",
+     "src/core/graph-builder.ts",
+     "src/core/hierarchy/moc-content-strategy.ts",
+     "src/core/node-creator.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "MethodDefinition > BlockStatement > FunctionDeclaration, MethodDefinition > BlockStatement > FunctionExpression, MethodDefinition > BlockStatement > ArrowFunctionExpression",
+      "message": "Utility functions must not be defined inside component or service class methods. Extract them to a separate utility module."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "shared/src/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "tests/**",
+      "shared/tests/**",
+      "shared-react/tests/**",
+      "e2e/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "class-methods-use-this",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 822,
+    "flagged": [
+     "shared-react/src/page-header/store.ts",
+     "shared-react/src/react-view.tsx",
+     "shared/src/components/component-renderer/view.ts",
+     "shared/src/components/file-explorer/folder-collapser.ts",
+     "shared/src/components/mountable/helpers.ts",
+     "shared/src/components/primitives/icon-picker.ts",
+     "shared/src/core/commands/macro-command.ts",
+     "shared/src/core/data-access/code-block-file.ts",
+     "shared/src/core/data-access/code-block-repository.ts",
+     "shared/src/core/evaluator/base.ts",
+     "shared/src/core/evaluator/color.ts",
+     "shared/src/core/evaluator/filter.ts",
+     "shared/src/core/indexer.ts",
+     "shared/src/core/license/license-manager.ts",
+     "shared/src/core/settings/settings-ui-builder.ts",
+     "shared/src/core/vault-table/persistence/persistent-table-cache.ts",
+     "shared/src/core/vault-table/vault-table-commands.ts",
+     "shared/src/core/vault-table/vault-table.ts",
+     "shared/src/integrations/api-gateway/http-api-server.ts",
+     "shared/src/integrations/api-gateway/plugin-api-gateway.ts",
+     "shared/src/testing/e2e/infra-error-reporter.ts",
+     "shared/src/testing/mocks/obsidian.ts",
+     "shared/src/testing/mocks/vault-table.ts",
+     "shared/tests/commands/command.test.ts",
+     "shared/tests/components/progress-modal.test.ts",
+     "shared/tests/mountable/view.test.ts",
+     "src/components/graph/header.ts",
+     "src/components/graph/zoom-indicator.ts",
+     "src/components/graph/zoom-preview.ts",
+     "src/components/layout/collision-detector.ts",
+     "src/components/layout/constellation-positioner.ts",
+     "src/components/layout/graph-layout-manager.ts",
+     "src/components/layout/node-organizer.ts",
+     "src/components/relationship-adder.ts",
+     "src/components/views/moc-view.ts",
+     "src/components/views/nexus-view-switcher.ts",
+     "src/core/commands/delete-node-command.ts",
+     "src/core/commands/edit-node-command.ts",
+     "src/core/graph-builder.ts",
+     "src/core/hierarchy/moc-content-strategy.ts",
+     "src/core/node-creator.ts",
+     "tests/commands/command-manager.test.ts",
+     "tests/mocks/obsidian.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "class-methods-use-this",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 822,
+    "flagged": [
+     "shared-react/src/page-header/store.ts",
+     "shared-react/src/react-view.tsx",
+     "shared/src/components/component-renderer/view.ts",
+     "shared/src/components/file-explorer/folder-collapser.ts",
+     "shared/src/components/mountable/helpers.ts",
+     "shared/src/components/primitives/icon-picker.ts",
+     "shared/src/core/commands/macro-command.ts",
+     "shared/src/core/data-access/code-block-file.ts",
+     "shared/src/core/data-access/code-block-repository.ts",
+     "shared/src/core/evaluator/base.ts",
+     "shared/src/core/evaluator/color.ts",
+     "shared/src/core/evaluator/filter.ts",
+     "shared/src/core/indexer.ts",
+     "shared/src/core/license/license-manager.ts",
+     "shared/src/core/settings/settings-ui-builder.ts",
+     "shared/src/core/vault-table/persistence/persistent-table-cache.ts",
+     "shared/src/core/vault-table/vault-table-commands.ts",
+     "shared/src/core/vault-table/vault-table.ts",
+     "shared/src/integrations/api-gateway/http-api-server.ts",
+     "shared/src/integrations/api-gateway/plugin-api-gateway.ts",
+     "shared/src/testing/e2e/infra-error-reporter.ts",
+     "shared/src/testing/mocks/obsidian.ts",
+     "shared/src/testing/mocks/vault-table.ts",
+     "shared/tests/commands/command.test.ts",
+     "shared/tests/components/progress-modal.test.ts",
+     "shared/tests/mountable/view.test.ts",
+     "src/components/graph/header.ts",
+     "src/components/graph/zoom-indicator.ts",
+     "src/components/graph/zoom-preview.ts",
+     "src/components/layout/collision-detector.ts",
+     "src/components/layout/constellation-positioner.ts",
+     "src/components/layout/graph-layout-manager.ts",
+     "src/components/layout/node-organizer.ts",
+     "src/components/relationship-adder.ts",
+     "src/components/views/moc-view.ts",
+     "src/components/views/nexus-view-switcher.ts",
+     "src/core/commands/delete-node-command.ts",
+     "src/core/commands/edit-node-command.ts",
+     "src/core/graph-builder.ts",
+     "src/core/hierarchy/moc-content-strategy.ts",
+     "src/core/node-creator.ts",
+     "tests/commands/command-manager.test.ts",
+     "tests/mocks/obsidian.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 9.097
+ "seconds": 60.66
 }

@@ -5,11 +5,225 @@
  "linter": "eslint",
  "rule": "check-file/folder-naming-convention",
  "checked_out": "6a44c3488e6aee8d33b31de9e67bbd70fc0d153e",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [],
+  "versions": {
+   "eslint": "10.14.0"
+  },
+  "plugins": {
+   "eslint-plugin-check-file": {
+    "version": "3.3.2",
+    "error": null
+   }
+  },
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 0
+  },
+  "commit": "2026-11-02T15:57:12+01:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.14.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "check-file/folder-naming-convention",
+    "options": [
+     {
+      "rpact-org_website/vignettes/*/*": "SNAKE_CASE"
+     }
+    ],
+    "scope": {
+     "files": [
+      "rpact-org_website/vignettes/**"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-check-file",
+     "version": "3.3.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-ignored",
+    "reason": "rpact-org_website/vignettes/p3s109-pair/bad.ts: the linter ignored the planted file"
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "check-file/folder-naming-convention",
+    "options": [
+     {
+      "rpact-org_website/vignettes/*/*": "SNAKE_CASE"
+     }
+    ],
+    "scope": {
+     "files": [
+      "rpact-org_website/vignettes/**/*"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-check-file",
+     "version": "3.3.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-ignored",
+    "reason": "rpact-org_website/vignettes/p3s109-pair/bad.ts: the linter ignored the planted file"
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "check-file/folder-naming-convention",
+    "options": [
+     {
+      "target": "vignettes/*/",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-check-file",
+     "version": "3.3.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "check-file/folder-naming-convention",
+    "options": [
+     {
+      "match": "^[a-z0-9]+(_[a-z0-9]+)*$",
+      "message": "Vignette directory must be named in snake_case"
+     }
+    ],
+    "scope": {
+     "files": [
+      "vignettes/**"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-check-file",
+     "version": "3.3.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-ignored",
+    "reason": "vignettes/p3s109-pair/bad.ts: the linter ignored the planted file"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "check-file/folder-naming-convention",
+    "options": [
+     {
+      "vignettes/*/*/": "SNAKE_CASE"
+     }
+    ],
+    "scope": {
+     "files": [
+      "vignettes/**/*"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-check-file",
+     "version": "3.3.2",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-ignored",
+    "reason": "vignettes/p3s109-pair/bad.ts: the linter ignored the planted file"
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 0.799
+ "seconds": 4.642
 }

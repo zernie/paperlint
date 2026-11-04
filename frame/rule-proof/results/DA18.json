@@ -5,11 +5,294 @@
  "linter": "eslint",
  "rule": "no-restricted-syntax",
  "checked_out": "034ef2e66db2e01776b83f910f9fcbcafc4625fc",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-linter",
   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
  },
+ "install": {
+  "path": "lockfile-pinned",
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   ".npmrc",
+   "pnpm-workspace.yaml"
+  ],
+  "versions": {
+   "eslint": "8.57.1"
+  },
+  "plugins": {
+   "eslint-plugin-local": {
+    "version": null,
+    "error": "eslint-plugin-local is not pinned by pnpm-lock.yaml"
+   }
+  },
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "controlplane",
+   "lockfile": "pnpm-lock.yaml",
+   "candidates": [
+    "controlplane (903 files)",
+    "studio (441 files)",
+    "cli (238 files)",
+    "composition (142 files)",
+    "protographic (76 files)",
+    "shared (34 files)",
+    "cdn-server (22 files)",
+    "cdn-server/cdn (8 files)",
+    "controlplane/emails (7 files)"
+   ]
+  },
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-linter",
+   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+  },
+  "repo_eslint": {
+   "declared": [
+    "cdn-server/cdn/package.json",
+    "cdn-server/package.json",
+    "cli/package.json",
+    "composition/package.json",
+    "controlplane/emails/package.json",
+    "controlplane/package.json",
+    "protographic/package.json",
+    "shared/package.json",
+    "studio/package.json"
+   ],
+   "package_jsons": 24
+  },
+  "commit": "2026-11-02T12:22:33+01:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "8.57.1"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "NewExpression[callee.name='URLSearchParams']",
+      "message": "Use buildUrl from @/lib/build-url instead of URLSearchParams."
+     },
+     {
+      "selector": "TemplateElement[value.raw=/[?][a-zA-Z_]+=$/]",
+      "message": "Use buildUrl from @/lib/build-url instead of concatenating query strings in template literals."
+     },
+     {
+      "selector": "BinaryExpression[operator='+'] > Literal[value=/[?][a-zA-Z_]+=$/]",
+      "message": "Use buildUrl from @/lib/build-url instead of string concatenation to build URLs."
+     }
+    ],
+    "scope": {
+     "files": [
+      "studio/src/**/*.ts",
+      "studio/src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "studio/src/lib/build-url.ts"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "studio/src/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "NewExpression[callee.name='URLSearchParams']",
+      "message": "Build URLs with buildUrl from '@/lib/build-url' instead of URLSearchParams."
+     },
+     {
+      "selector": "BinaryExpression[operator='+'] > Literal[value=/[?&][a-zA-Z_-]+=$/]",
+      "message": "Build URLs with buildUrl from '@/lib/build-url' instead of string concatenation."
+     },
+     {
+      "selector": "TemplateElement[value.raw=/[?&][a-zA-Z_-]+=$/]",
+      "message": "Build URLs with buildUrl from '@/lib/build-url' instead of interpolating query strings."
+     }
+    ],
+    "scope": {
+     "files": [
+      "studio/src/**/*.ts",
+      "studio/src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "studio/src/lib/build-url.ts",
+      "studio/src/lib/build-url.test.ts"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "studio/src/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-globals",
+    "options": [
+     {
+      "name": "URLSearchParams",
+      "message": "Use buildUrl from @/lib/build-url instead of URLSearchParams"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.{ts,tsx,js,jsx}"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "local/use-build-url",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-local",
+     "version": null,
+     "error": "eslint-plugin-local is not pinned by pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-local",
+    "reason": "eslint-plugin-local is not pinned by pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-globals",
+    "options": [
+     {
+      "name": "URLSearchParams",
+      "message": "Build URLs with `buildUrl` from `@/lib/build-url`, not string concatenation or `URLSearchParams`."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-globals",
+    "options": [
+     {
+      "name": "URLSearchParams",
+      "message": "Build URLs with buildUrl from @/lib/build-url, not string concatenation or URLSearchParams."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 23.766
+ "seconds": 35.885
 }

@@ -5,11 +5,671 @@
  "linter": "eslint",
  "rule": "padding-line-between-statements",
  "checked_out": "925cca7b47596af47fd8bf7ae52b7fabf171c4d4",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [],
+  "versions": {
+   "eslint": "10.14.0"
+  },
+  "plugins": {},
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 0
+  },
+  "commit": "2026-11-02T20:42:59Z",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.14.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "padding-line-between-statements",
+    "options": [
+     {
+      "blankLine": "always",
+      "prev": "block-like",
+      "next": "*"
+     }
+    ],
+    "scope": {
+     "files": [
+      "docfx/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "docfx/**/*.min.js"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 2,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "padding-line-between-statements",
+    "options": [
+     {
+      "blankLine": "always",
+      "prev": "*",
+      "next": "return"
+     },
+     {
+      "blankLine": "always",
+      "prev": "block-like",
+      "next": "*"
+     }
+    ],
+    "scope": {
+     "files": [
+      "docfx/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.min.js"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 2,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "padding-line-between-statements",
+    "options": [
+     {
+      "blankLine": "always",
+      "prev": "block-like",
+      "next": "*"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 72,
+    "flagged": [
+     "docfx/_exported_templates/modern/public/blockDiagram-9f4a6865-KQGFBXS7.min.js",
+     "docfx/_exported_templates/modern/public/c4Diagram-ae766693-CZAYTAZR.min.js",
+     "docfx/_exported_templates/modern/public/chunk-5FWMXAFW.min.js",
+     "docfx/_exported_templates/modern/public/chunk-CA32PY7O.min.js",
+     "docfx/_exported_templates/modern/public/chunk-K2MRC2FE.min.js",
+     "docfx/_exported_templates/modern/public/chunk-K4EHOM77.min.js",
+     "docfx/_exported_templates/modern/public/chunk-LUX5WYVM.min.js",
+     "docfx/_exported_templates/modern/public/chunk-LXB37CFX.min.js",
+     "docfx/_exported_templates/modern/public/chunk-N4EFGQ5G.min.js",
+     "docfx/_exported_templates/modern/public/chunk-NRE4YRK7.min.js",
+     "docfx/_exported_templates/modern/public/chunk-QRBMAIWT.min.js",
+     "docfx/_exported_templates/modern/public/chunk-RNO6SWHZ.min.js",
+     "docfx/_exported_templates/modern/public/chunk-XUHMPXWX.min.js",
+     "docfx/_exported_templates/modern/public/chunk-YEACHCAA.min.js",
+     "docfx/_exported_templates/modern/public/classDiagram-fb54d2a0-HROX7LLG.min.js",
+     "docfx/_exported_templates/modern/public/classDiagram-v2-a2b738ad-P3OHMUUZ.min.js",
+     "docfx/_exported_templates/modern/public/docfx.min.js",
+     "docfx/_exported_templates/modern/public/erDiagram-09d1c15f-DTEA6AXO.min.js",
+     "docfx/_exported_templates/modern/public/es-NKDSMAKG.min.js",
+     "docfx/_exported_templates/modern/public/flowchart-elk-definition-ae0efee6-MAQF265M.min.js",
+     "docfx/_exported_templates/modern/public/flowDiagram-b222e15a-KHGBC5KH.min.js",
+     "docfx/_exported_templates/modern/public/ganttDiagram-b62c793e-AG7E44IT.min.js",
+     "docfx/_exported_templates/modern/public/gitGraphDiagram-942e62fe-MKYST3PD.min.js",
+     "docfx/_exported_templates/modern/public/infoDiagram-94cd232f-QDJEABPW.min.js",
+     "docfx/_exported_templates/modern/public/journeyDiagram-6625b456-5PROY5YP.min.js",
+     "docfx/_exported_templates/modern/public/katex-F45OXAZ7.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ar-JYYLL55L.min.js",
+     "docfx/_exported_templates/modern/public/lunr.da-ABNGX3GR.min.js",
+     "docfx/_exported_templates/modern/public/lunr.de-N7IL7F5Q.min.js",
+     "docfx/_exported_templates/modern/public/lunr.du-4P4FUVNV.min.js",
+     "docfx/_exported_templates/modern/public/lunr.el-XMPY4SDR.min.js",
+     "docfx/_exported_templates/modern/public/lunr.es-QJ3NV5ZH.min.js",
+     "docfx/_exported_templates/modern/public/lunr.fi-OGLGHFAM.min.js",
+     "docfx/_exported_templates/modern/public/lunr.fr-6WMI3F4I.min.js",
+     "docfx/_exported_templates/modern/public/lunr.hu-XPANPY4P.min.js",
+     "docfx/_exported_templates/modern/public/lunr.it-RN72ONT7.min.js",
+     "docfx/_exported_templates/modern/public/lunr.nl-XJLTQY4R.min.js",
+     "docfx/_exported_templates/modern/public/lunr.no-E5T5VKQC.min.js",
+     "docfx/_exported_templates/modern/public/lunr.pt-KEDPJIZQ.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ro-WWA7JY55.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ru-NQVTAHVP.min.js",
+     "docfx/_exported_templates/modern/public/lunr.sv-GCGNSHUK.min.js",
+     "docfx/_exported_templates/modern/public/lunr.tr-2MGZGM7A.min.js",
+     "docfx/_exported_templates/modern/public/mindmap-definition-307c710a-X5KDYKIG.min.js",
+     "docfx/_exported_templates/modern/public/pieDiagram-bb1d19e5-S5GML3CT.min.js",
+     "docfx/_exported_templates/modern/public/quadrantDiagram-c759a472-M63GQYLB.min.js",
+     "docfx/_exported_templates/modern/public/requirementDiagram-87253d64-XJI5VOSH.min.js",
+     "docfx/_exported_templates/modern/public/sankeyDiagram-707fac0f-3GVBJS6H.min.js",
+     "docfx/_exported_templates/modern/public/search-worker.min.js",
+     "docfx/_exported_templates/modern/public/sequenceDiagram-6894f283-AJU5ZNMQ.min.js",
+     "docfx/_exported_templates/modern/public/stateDiagram-5dee940d-56243UMQ.min.js",
+     "docfx/_exported_templates/modern/public/stateDiagram-v2-1992cada-ZUI7IUPQ.min.js",
+     "docfx/_exported_templates/modern/public/tex-svg-full-JPZ3Q247.min.js",
+     "docfx/_exported_templates/modern/public/timeline-definition-bf702344-YJZ3MVX7.min.js",
+     "docfx/_exported_templates/modern/public/xychartDiagram-f11f50a6-N45Z7OOP.min.js"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "padding-line-between-statements",
+    "options": [
+     {
+      "blankLine": "always",
+      "prev": "block-like",
+      "next": "*"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 72,
+    "flagged": [
+     "docfx/_exported_templates/modern/public/blockDiagram-9f4a6865-KQGFBXS7.min.js",
+     "docfx/_exported_templates/modern/public/c4Diagram-ae766693-CZAYTAZR.min.js",
+     "docfx/_exported_templates/modern/public/chunk-5FWMXAFW.min.js",
+     "docfx/_exported_templates/modern/public/chunk-CA32PY7O.min.js",
+     "docfx/_exported_templates/modern/public/chunk-K2MRC2FE.min.js",
+     "docfx/_exported_templates/modern/public/chunk-K4EHOM77.min.js",
+     "docfx/_exported_templates/modern/public/chunk-LUX5WYVM.min.js",
+     "docfx/_exported_templates/modern/public/chunk-LXB37CFX.min.js",
+     "docfx/_exported_templates/modern/public/chunk-N4EFGQ5G.min.js",
+     "docfx/_exported_templates/modern/public/chunk-NRE4YRK7.min.js",
+     "docfx/_exported_templates/modern/public/chunk-QRBMAIWT.min.js",
+     "docfx/_exported_templates/modern/public/chunk-RNO6SWHZ.min.js",
+     "docfx/_exported_templates/modern/public/chunk-XUHMPXWX.min.js",
+     "docfx/_exported_templates/modern/public/chunk-YEACHCAA.min.js",
+     "docfx/_exported_templates/modern/public/classDiagram-fb54d2a0-HROX7LLG.min.js",
+     "docfx/_exported_templates/modern/public/classDiagram-v2-a2b738ad-P3OHMUUZ.min.js",
+     "docfx/_exported_templates/modern/public/docfx.min.js",
+     "docfx/_exported_templates/modern/public/erDiagram-09d1c15f-DTEA6AXO.min.js",
+     "docfx/_exported_templates/modern/public/es-NKDSMAKG.min.js",
+     "docfx/_exported_templates/modern/public/flowchart-elk-definition-ae0efee6-MAQF265M.min.js",
+     "docfx/_exported_templates/modern/public/flowDiagram-b222e15a-KHGBC5KH.min.js",
+     "docfx/_exported_templates/modern/public/ganttDiagram-b62c793e-AG7E44IT.min.js",
+     "docfx/_exported_templates/modern/public/gitGraphDiagram-942e62fe-MKYST3PD.min.js",
+     "docfx/_exported_templates/modern/public/infoDiagram-94cd232f-QDJEABPW.min.js",
+     "docfx/_exported_templates/modern/public/journeyDiagram-6625b456-5PROY5YP.min.js",
+     "docfx/_exported_templates/modern/public/katex-F45OXAZ7.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ar-JYYLL55L.min.js",
+     "docfx/_exported_templates/modern/public/lunr.da-ABNGX3GR.min.js",
+     "docfx/_exported_templates/modern/public/lunr.de-N7IL7F5Q.min.js",
+     "docfx/_exported_templates/modern/public/lunr.du-4P4FUVNV.min.js",
+     "docfx/_exported_templates/modern/public/lunr.el-XMPY4SDR.min.js",
+     "docfx/_exported_templates/modern/public/lunr.es-QJ3NV5ZH.min.js",
+     "docfx/_exported_templates/modern/public/lunr.fi-OGLGHFAM.min.js",
+     "docfx/_exported_templates/modern/public/lunr.fr-6WMI3F4I.min.js",
+     "docfx/_exported_templates/modern/public/lunr.hu-XPANPY4P.min.js",
+     "docfx/_exported_templates/modern/public/lunr.it-RN72ONT7.min.js",
+     "docfx/_exported_templates/modern/public/lunr.nl-XJLTQY4R.min.js",
+     "docfx/_exported_templates/modern/public/lunr.no-E5T5VKQC.min.js",
+     "docfx/_exported_templates/modern/public/lunr.pt-KEDPJIZQ.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ro-WWA7JY55.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ru-NQVTAHVP.min.js",
+     "docfx/_exported_templates/modern/public/lunr.sv-GCGNSHUK.min.js",
+     "docfx/_exported_templates/modern/public/lunr.tr-2MGZGM7A.min.js",
+     "docfx/_exported_templates/modern/public/mindmap-definition-307c710a-X5KDYKIG.min.js",
+     "docfx/_exported_templates/modern/public/pieDiagram-bb1d19e5-S5GML3CT.min.js",
+     "docfx/_exported_templates/modern/public/quadrantDiagram-c759a472-M63GQYLB.min.js",
+     "docfx/_exported_templates/modern/public/requirementDiagram-87253d64-XJI5VOSH.min.js",
+     "docfx/_exported_templates/modern/public/sankeyDiagram-707fac0f-3GVBJS6H.min.js",
+     "docfx/_exported_templates/modern/public/search-worker.min.js",
+     "docfx/_exported_templates/modern/public/sequenceDiagram-6894f283-AJU5ZNMQ.min.js",
+     "docfx/_exported_templates/modern/public/stateDiagram-5dee940d-56243UMQ.min.js",
+     "docfx/_exported_templates/modern/public/stateDiagram-v2-1992cada-ZUI7IUPQ.min.js",
+     "docfx/_exported_templates/modern/public/tex-svg-full-JPZ3Q247.min.js",
+     "docfx/_exported_templates/modern/public/timeline-definition-bf702344-YJZ3MVX7.min.js",
+     "docfx/_exported_templates/modern/public/xychartDiagram-f11f50a6-N45Z7OOP.min.js"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "padding-line-between-statements",
+    "options": [
+     {
+      "blankLine": "always",
+      "prev": "block-like",
+      "next": "*"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 72,
+    "flagged": [
+     "docfx/_exported_templates/modern/public/blockDiagram-9f4a6865-KQGFBXS7.min.js",
+     "docfx/_exported_templates/modern/public/c4Diagram-ae766693-CZAYTAZR.min.js",
+     "docfx/_exported_templates/modern/public/chunk-5FWMXAFW.min.js",
+     "docfx/_exported_templates/modern/public/chunk-CA32PY7O.min.js",
+     "docfx/_exported_templates/modern/public/chunk-K2MRC2FE.min.js",
+     "docfx/_exported_templates/modern/public/chunk-K4EHOM77.min.js",
+     "docfx/_exported_templates/modern/public/chunk-LUX5WYVM.min.js",
+     "docfx/_exported_templates/modern/public/chunk-LXB37CFX.min.js",
+     "docfx/_exported_templates/modern/public/chunk-N4EFGQ5G.min.js",
+     "docfx/_exported_templates/modern/public/chunk-NRE4YRK7.min.js",
+     "docfx/_exported_templates/modern/public/chunk-QRBMAIWT.min.js",
+     "docfx/_exported_templates/modern/public/chunk-RNO6SWHZ.min.js",
+     "docfx/_exported_templates/modern/public/chunk-XUHMPXWX.min.js",
+     "docfx/_exported_templates/modern/public/chunk-YEACHCAA.min.js",
+     "docfx/_exported_templates/modern/public/classDiagram-fb54d2a0-HROX7LLG.min.js",
+     "docfx/_exported_templates/modern/public/classDiagram-v2-a2b738ad-P3OHMUUZ.min.js",
+     "docfx/_exported_templates/modern/public/docfx.min.js",
+     "docfx/_exported_templates/modern/public/erDiagram-09d1c15f-DTEA6AXO.min.js",
+     "docfx/_exported_templates/modern/public/es-NKDSMAKG.min.js",
+     "docfx/_exported_templates/modern/public/flowchart-elk-definition-ae0efee6-MAQF265M.min.js",
+     "docfx/_exported_templates/modern/public/flowDiagram-b222e15a-KHGBC5KH.min.js",
+     "docfx/_exported_templates/modern/public/ganttDiagram-b62c793e-AG7E44IT.min.js",
+     "docfx/_exported_templates/modern/public/gitGraphDiagram-942e62fe-MKYST3PD.min.js",
+     "docfx/_exported_templates/modern/public/infoDiagram-94cd232f-QDJEABPW.min.js",
+     "docfx/_exported_templates/modern/public/journeyDiagram-6625b456-5PROY5YP.min.js",
+     "docfx/_exported_templates/modern/public/katex-F45OXAZ7.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ar-JYYLL55L.min.js",
+     "docfx/_exported_templates/modern/public/lunr.da-ABNGX3GR.min.js",
+     "docfx/_exported_templates/modern/public/lunr.de-N7IL7F5Q.min.js",
+     "docfx/_exported_templates/modern/public/lunr.du-4P4FUVNV.min.js",
+     "docfx/_exported_templates/modern/public/lunr.el-XMPY4SDR.min.js",
+     "docfx/_exported_templates/modern/public/lunr.es-QJ3NV5ZH.min.js",
+     "docfx/_exported_templates/modern/public/lunr.fi-OGLGHFAM.min.js",
+     "docfx/_exported_templates/modern/public/lunr.fr-6WMI3F4I.min.js",
+     "docfx/_exported_templates/modern/public/lunr.hu-XPANPY4P.min.js",
+     "docfx/_exported_templates/modern/public/lunr.it-RN72ONT7.min.js",
+     "docfx/_exported_templates/modern/public/lunr.nl-XJLTQY4R.min.js",
+     "docfx/_exported_templates/modern/public/lunr.no-E5T5VKQC.min.js",
+     "docfx/_exported_templates/modern/public/lunr.pt-KEDPJIZQ.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ro-WWA7JY55.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ru-NQVTAHVP.min.js",
+     "docfx/_exported_templates/modern/public/lunr.sv-GCGNSHUK.min.js",
+     "docfx/_exported_templates/modern/public/lunr.tr-2MGZGM7A.min.js",
+     "docfx/_exported_templates/modern/public/mindmap-definition-307c710a-X5KDYKIG.min.js",
+     "docfx/_exported_templates/modern/public/pieDiagram-bb1d19e5-S5GML3CT.min.js",
+     "docfx/_exported_templates/modern/public/quadrantDiagram-c759a472-M63GQYLB.min.js",
+     "docfx/_exported_templates/modern/public/requirementDiagram-87253d64-XJI5VOSH.min.js",
+     "docfx/_exported_templates/modern/public/sankeyDiagram-707fac0f-3GVBJS6H.min.js",
+     "docfx/_exported_templates/modern/public/search-worker.min.js",
+     "docfx/_exported_templates/modern/public/sequenceDiagram-6894f283-AJU5ZNMQ.min.js",
+     "docfx/_exported_templates/modern/public/stateDiagram-5dee940d-56243UMQ.min.js",
+     "docfx/_exported_templates/modern/public/stateDiagram-v2-1992cada-ZUI7IUPQ.min.js",
+     "docfx/_exported_templates/modern/public/tex-svg-full-JPZ3Q247.min.js",
+     "docfx/_exported_templates/modern/public/timeline-definition-bf702344-YJZ3MVX7.min.js",
+     "docfx/_exported_templates/modern/public/xychartDiagram-f11f50a6-N45Z7OOP.min.js"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "padding-line-between-statements",
+    "options": [
+     {
+      "blankLine": "always",
+      "prev": "block-like",
+      "next": "*"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 72,
+    "flagged": [
+     "docfx/_exported_templates/modern/public/blockDiagram-9f4a6865-KQGFBXS7.min.js",
+     "docfx/_exported_templates/modern/public/c4Diagram-ae766693-CZAYTAZR.min.js",
+     "docfx/_exported_templates/modern/public/chunk-5FWMXAFW.min.js",
+     "docfx/_exported_templates/modern/public/chunk-CA32PY7O.min.js",
+     "docfx/_exported_templates/modern/public/chunk-K2MRC2FE.min.js",
+     "docfx/_exported_templates/modern/public/chunk-K4EHOM77.min.js",
+     "docfx/_exported_templates/modern/public/chunk-LUX5WYVM.min.js",
+     "docfx/_exported_templates/modern/public/chunk-LXB37CFX.min.js",
+     "docfx/_exported_templates/modern/public/chunk-N4EFGQ5G.min.js",
+     "docfx/_exported_templates/modern/public/chunk-NRE4YRK7.min.js",
+     "docfx/_exported_templates/modern/public/chunk-QRBMAIWT.min.js",
+     "docfx/_exported_templates/modern/public/chunk-RNO6SWHZ.min.js",
+     "docfx/_exported_templates/modern/public/chunk-XUHMPXWX.min.js",
+     "docfx/_exported_templates/modern/public/chunk-YEACHCAA.min.js",
+     "docfx/_exported_templates/modern/public/classDiagram-fb54d2a0-HROX7LLG.min.js",
+     "docfx/_exported_templates/modern/public/classDiagram-v2-a2b738ad-P3OHMUUZ.min.js",
+     "docfx/_exported_templates/modern/public/docfx.min.js",
+     "docfx/_exported_templates/modern/public/erDiagram-09d1c15f-DTEA6AXO.min.js",
+     "docfx/_exported_templates/modern/public/es-NKDSMAKG.min.js",
+     "docfx/_exported_templates/modern/public/flowchart-elk-definition-ae0efee6-MAQF265M.min.js",
+     "docfx/_exported_templates/modern/public/flowDiagram-b222e15a-KHGBC5KH.min.js",
+     "docfx/_exported_templates/modern/public/ganttDiagram-b62c793e-AG7E44IT.min.js",
+     "docfx/_exported_templates/modern/public/gitGraphDiagram-942e62fe-MKYST3PD.min.js",
+     "docfx/_exported_templates/modern/public/infoDiagram-94cd232f-QDJEABPW.min.js",
+     "docfx/_exported_templates/modern/public/journeyDiagram-6625b456-5PROY5YP.min.js",
+     "docfx/_exported_templates/modern/public/katex-F45OXAZ7.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ar-JYYLL55L.min.js",
+     "docfx/_exported_templates/modern/public/lunr.da-ABNGX3GR.min.js",
+     "docfx/_exported_templates/modern/public/lunr.de-N7IL7F5Q.min.js",
+     "docfx/_exported_templates/modern/public/lunr.du-4P4FUVNV.min.js",
+     "docfx/_exported_templates/modern/public/lunr.el-XMPY4SDR.min.js",
+     "docfx/_exported_templates/modern/public/lunr.es-QJ3NV5ZH.min.js",
+     "docfx/_exported_templates/modern/public/lunr.fi-OGLGHFAM.min.js",
+     "docfx/_exported_templates/modern/public/lunr.fr-6WMI3F4I.min.js",
+     "docfx/_exported_templates/modern/public/lunr.hu-XPANPY4P.min.js",
+     "docfx/_exported_templates/modern/public/lunr.it-RN72ONT7.min.js",
+     "docfx/_exported_templates/modern/public/lunr.nl-XJLTQY4R.min.js",
+     "docfx/_exported_templates/modern/public/lunr.no-E5T5VKQC.min.js",
+     "docfx/_exported_templates/modern/public/lunr.pt-KEDPJIZQ.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ro-WWA7JY55.min.js",
+     "docfx/_exported_templates/modern/public/lunr.ru-NQVTAHVP.min.js",
+     "docfx/_exported_templates/modern/public/lunr.sv-GCGNSHUK.min.js",
+     "docfx/_exported_templates/modern/public/lunr.tr-2MGZGM7A.min.js",
+     "docfx/_exported_templates/modern/public/mindmap-definition-307c710a-X5KDYKIG.min.js",
+     "docfx/_exported_templates/modern/public/pieDiagram-bb1d19e5-S5GML3CT.min.js",
+     "docfx/_exported_templates/modern/public/quadrantDiagram-c759a472-M63GQYLB.min.js",
+     "docfx/_exported_templates/modern/public/requirementDiagram-87253d64-XJI5VOSH.min.js",
+     "docfx/_exported_templates/modern/public/sankeyDiagram-707fac0f-3GVBJS6H.min.js",
+     "docfx/_exported_templates/modern/public/search-worker.min.js",
+     "docfx/_exported_templates/modern/public/sequenceDiagram-6894f283-AJU5ZNMQ.min.js",
+     "docfx/_exported_templates/modern/public/stateDiagram-5dee940d-56243UMQ.min.js",
+     "docfx/_exported_templates/modern/public/stateDiagram-v2-1992cada-ZUI7IUPQ.min.js",
+     "docfx/_exported_templates/modern/public/tex-svg-full-JPZ3Q247.min.js",
+     "docfx/_exported_templates/modern/public/timeline-definition-bf702344-YJZ3MVX7.min.js",
+     "docfx/_exported_templates/modern/public/xychartDiagram-f11f50a6-N45Z7OOP.min.js"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 2.004
+ "seconds": 57.148
 }

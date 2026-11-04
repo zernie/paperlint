@@ -5,11 +5,213 @@
  "linter": "eslint",
  "rule": "eslint-comments/no-use",
  "checked_out": "610b93b62edd1f7b430182ae7e1d8f753c590928",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "install",
   "reason": "corepack exited 1: "
  },
+ "install": {
+  "path": "lockfile-pinned",
+  "aside": [
+   "package.json",
+   "yarn.lock",
+   ".yarnrc.yml"
+  ],
+  "versions": {
+   "eslint": "10.12.0"
+  },
+  "plugins": {
+   "eslint-plugin-eslint-comments": {
+    "version": null,
+    "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+   }
+  },
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": ".",
+   "lockfile": "yarn.lock",
+   "candidates": [
+    ". (2549 files)",
+    "packages/protocol (109 files)"
+   ]
+  },
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "install",
+   "reason": "corepack exited 1: "
+  },
+  "repo_eslint": {
+   "declared": [
+    "package.json",
+    "packages/protocol/package.json"
+   ],
+   "package_jsons": 19
+  },
+  "commit": "2026-11-03T19:14:09+01:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.12.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "eslint-comments/no-use",
+    "options": [
+     {
+      "allow": []
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-eslint-comments",
+     "version": null,
+     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-eslint-comments",
+    "reason": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "eslint-comments/no-use",
+    "options": [],
+    "scope": {
+     "files": [
+      "packages/**/*.{ts,mjs,js}",
+      "consumer-e2e/**/*.{ts,mjs,js}",
+      "build-tools/**/*.{ts,mjs,js}",
+      "scripts/**/*.{ts,js}",
+      ".github/scripts/**/*.{js,mjs}"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-eslint-comments",
+     "version": null,
+     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-eslint-comments",
+    "reason": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "eslint-comments/no-use",
+    "options": [
+     {
+      "allow": []
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-eslint-comments",
+     "version": null,
+     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-eslint-comments",
+    "reason": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "eslint-comments/no-use",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-eslint-comments",
+     "version": null,
+     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-eslint-comments",
+    "reason": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 23.839
+ "seconds": 29.487
 }

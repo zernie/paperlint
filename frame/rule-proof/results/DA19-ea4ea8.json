@@ -5,11 +5,286 @@
  "linter": "eslint",
  "rule": "no-restricted-syntax",
  "checked_out": "5cdec39776bb68e58eff8927d4df1b333278304f",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [],
+  "versions": {
+   "eslint": "10.14.0"
+  },
+  "plugins": {},
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 2
+  },
+  "commit": "2026-11-03T18:02:40+03:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.14.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "LogicalExpression[operator='??'][left.name=/keeperPort/i][right.name=/dbPort/i]",
+      "message": "Do not derive the keeper port from the database port; every port must be stated."
+     },
+     {
+      "selector": "LogicalExpression[operator='??'][left.property.name=/keeperPort/i][right.property.name=/dbPort/i]",
+      "message": "Do not derive the keeper port from the database port; every port must be stated."
+     },
+     {
+      "selector": "LogicalExpression[right.value=22][left.name=/ssh/i]",
+      "message": "No ssh-22 fallback; the ssh port is mandatory."
+     },
+     {
+      "selector": "LogicalExpression[right.value=22][left.property.name=/ssh/i]",
+      "message": "No ssh-22 fallback; the ssh port is mandatory."
+     },
+     {
+      "selector": "Identifier[name='withKeeperPort']",
+      "message": "No withKeeperPort form mode; a deploy states every port."
+     },
+     {
+      "selector": "JSXIdentifier[name='withKeeperPort']",
+      "message": "No withKeeperPort form mode; a deploy states every port."
+     }
+    ],
+    "scope": {
+     "files": [
+      "app/**/*.ts",
+      "app/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "app/**/*.test.ts",
+      "app/**/*.test.tsx"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "app/p3s109-pair/bad.ts: Parsing error: Unexpected token interface"
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "LogicalExpression[operator='??'][left.name=/Port$/][right.name=/Port$/]",
+      "message": "Ports are never derived from one another (no keeperPort ?? dbPort)."
+     },
+     {
+      "selector": "LogicalExpression[operator='||'][left.name=/Port$/][right.name=/Port$/]",
+      "message": "Ports are never derived from one another."
+     },
+     {
+      "selector": "LogicalExpression[right.value=22]",
+      "message": "No ssh-22 fallback: the ssh port must be stated explicitly."
+     },
+     {
+      "selector": "Identifier[name='withKeeperPort']",
+      "message": "No withKeeperPort form mode: every port is mandatory."
+     },
+     {
+      "selector": "Identifier[name='NodeInputFormat']",
+      "message": "No NodeInputFormat mirroring one port into another."
+     }
+    ],
+    "scope": {
+     "files": [
+      "app/**/*.ts",
+      "app/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "app/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "LogicalExpression[operator='??'][left.name='sshPort'][right.value=22]",
+      "message": "No ssh-22 fallback allowed. SSH port must be explicitly provided."
+     },
+     {
+      "selector": "LogicalExpression[operator='??'][left.name='keeperPort'][right.name='dbPort']",
+      "message": "No keeperPort ?? dbPort. Each port must be independently stated."
+     },
+     {
+      "selector": "Literal[value='withKeeperPort']",
+      "message": "The 'withKeeperPort' form mode is banned. Use explicit per-port inputs."
+     }
+    ],
+    "scope": {
+     "files": [
+      "app/**/*.ts",
+      "app/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "app/p3s109-pair/bad.ts: Parsing error: Unexpected token interface"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "LogicalExpression[operator=\"??\"][right.value=22] > Identifier.left[name=\"sshPort\"]",
+     "LogicalExpression[operator=\"||\"][right.value=22] > Identifier.left[name=\"sshPort\"]",
+     "LogicalExpression[operator=\"??\"]:has(Identifier.left[name=\"keeperPort\"]):has(Identifier.right[name=\"dbPort\"])",
+     "LogicalExpression[operator=\"||\"]:has(Identifier.left[name=\"keeperPort\"]):has(Identifier.right[name=\"dbPort\"])",
+     "Identifier[name=\"withKeeperPort\"]"
+    ],
+    "scope": {
+     "files": [
+      "app/**/*.ts",
+      "app/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "app/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "error",
+     {
+      "selector": "LogicalExpression[operator='??'][left.name='keeperPort'][right.name='dbPort']",
+      "message": "No keeperPort ?? dbPort fallback allowed."
+     },
+     {
+      "selector": "LogicalExpression[operator='??'][left.name='sshPort'][right.value=22]",
+      "message": "No ssh-22 fallback allowed."
+     },
+     {
+      "selector": "Identifier[name='withKeeperPort']",
+      "message": "No withKeeperPort form mode allowed."
+     }
+    ],
+    "scope": {
+     "files": [
+      "app/**/*.ts",
+      "app/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "app/p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "LogicalExpression[operator='??'][left.name='keeperPort'][right.name='dbPort']",
+      "message": "No keeperPort ?? dbPort fallback is allowed."
+     },
+     {
+      "selector": "Identifier[name='withKeeperPort']",
+      "message": "No withKeeperPort form mode allowed."
+     },
+     {
+      "selector": "Identifier[name='NodeInputFormat']",
+      "message": "No NodeInputFormat mirroring ports allowed."
+     }
+    ],
+    "scope": {
+     "files": [
+      "app/**/*.ts",
+      "app/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "app/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 0.563
+ "seconds": 4.756
 }

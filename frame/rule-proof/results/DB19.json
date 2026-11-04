@@ -5,11 +5,39 @@
  "linter": "eslint",
  "rule": "better-tailwindcss/no-restricted-classes",
  "checked_out": "dfae0c4b6c31b5201a07afb282fea809b9a63ba9",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-linter",
   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [
+   "package.json",
+   "package-lock.json"
+  ],
+  "versions": {
+   "eslint": "10.14.0",
+   "@typescript-eslint/parser": "8.72.1",
+   "typescript": "7.0.2"
+  },
+  "plugins": {},
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-linter",
+   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 1
+  },
+  "commit": "2026-10-31T21:51:31+01:00",
+  "adjustments": [],
+  "kind": "not-installed",
+  "stage": "install",
+  "reason": "npm install --package-lock-only exited 1: npm error to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_37_276Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_37_276Z-debug-0.log"
+ },
  "adjustments": [],
- "seconds": 4.127
+ "seconds": 5.825
 }

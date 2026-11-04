@@ -5,11 +5,290 @@
  "linter": "eslint",
  "rule": "import/no-relative-packages",
  "checked_out": "91cc0609912e2dafcaaa2a5ddb2ba8b851ebbd6b",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-linter",
   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
  },
+ "install": {
+  "path": "lockfile-pinned",
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   "pnpm-workspace.yaml"
+  ],
+  "versions": {
+   "eslint": "9.39.4"
+  },
+  "plugins": {
+   "eslint-plugin-import": {
+    "version": null,
+    "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  },
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "demo-app",
+   "lockfile": "pnpm-lock.yaml",
+   "candidates": [
+    "demo-app (51 files)",
+    "react-examples/examples/live-auction (29 files)",
+    "react-examples/examples/chat-widget (22 files)",
+    "recording-sdk-app-examples/react-examples/record-single-preset (18 files)"
+   ]
+  },
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-linter",
+   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+  },
+  "repo_eslint": {
+   "declared": [
+    "demo-app/package.json",
+    "react-examples/examples/chat-widget/package.json",
+    "react-examples/examples/live-auction/package.json",
+    "recording-sdk-app-examples/react-examples/record-single-preset/package.json"
+   ],
+   "package_jsons": 36
+  },
+  "commit": "2026-10-19T16:13:28+05:30",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "9.39.4"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       {
+        "group": [
+         "**/examples/**"
+        ],
+        "message": "Examples must be self-contained; do not import from another example."
+       },
+       {
+        "regex": "^(\\.\\./){3,}",
+        "message": "Do not reach outside this example with deep relative imports; examples must be self-contained."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "react-examples/examples/**/*.{ts,tsx,js,jsx}",
+      "angular-examples/examples/**/*.{ts,js}",
+      "html-examples/examples/**/*.js",
+      "recording-sdk-app-examples/**/*.{ts,tsx,js,jsx}"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "react-examples/examples/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       {
+        "group": [
+         "**/examples/**",
+         "**/examples"
+        ],
+        "message": "Examples must be self-contained: do not import from another example."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "react-examples/examples/**/*.{ts,tsx,js,jsx}",
+      "angular-examples/examples/**/*.{ts,js}",
+      "html-examples/examples/**/*.js",
+      "recording-sdk-app-examples/**/src/**/*.{ts,tsx,js,jsx}"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/node_modules/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "react-examples/examples/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/no-relative-packages",
+    "options": [],
+    "scope": {
+     "files": [
+      "react-examples/examples/**/*.{ts,tsx,js,jsx}",
+      "angular-examples/examples/**/*.ts",
+      "html-examples/examples/**/*.js",
+      "recording-sdk-app-examples/angular-examples/**/*.ts",
+      "recording-sdk-app-examples/react-examples/**/*.{ts,tsx,js,jsx}"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": null,
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-import",
+    "reason": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/no-relative-parent-imports",
+    "options": [],
+    "scope": {
+     "files": [
+      "angular-examples/examples/*/src/**/*.ts",
+      "angular-examples/examples/*/src/**/*.ts",
+      "angular-examples/examples/*/src/**/*.tsx",
+      "react-examples/examples/*/src/**/*.ts",
+      "react-examples/examples/*/src/**/*.tsx",
+      "html-examples/examples/**/*.js",
+      "recording-sdk-app-examples/angular-examples/*/src/**/*.ts",
+      "recording-sdk-app-examples/react-examples/*/src/**/*.ts",
+      "recording-sdk-app-examples/react-examples/*/src/**/*.tsx",
+      "demo-app/app/**/*.ts",
+      "demo-app/app/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": null,
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-import",
+    "reason": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/no-relative-packages",
+    "options": [],
+    "scope": {
+     "files": [
+      "angular-examples/examples/**/*.ts",
+      "react-examples/examples/**/*.{ts,tsx}",
+      "recording-sdk-app-examples/**/*.ts",
+      "recording-sdk-app-examples/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": null,
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-import",
+    "reason": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/no-relative-packages",
+    "options": [],
+    "scope": {
+     "files": [
+      "angular-examples/examples/**/*.ts",
+      "html-examples/examples/**/*.js",
+      "react-examples/examples/**/*.ts",
+      "react-examples/examples/**/*.tsx",
+      "recording-sdk-app-examples/**/*.ts",
+      "recording-sdk-app-examples/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": null,
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-import",
+    "reason": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 5.232
+ "seconds": 13.151
 }

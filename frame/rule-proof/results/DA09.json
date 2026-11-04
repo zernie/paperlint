@@ -5,11 +5,498 @@
  "linter": "eslint",
  "rule": "id-denylist",
  "checked_out": "3b2322808a465fb497ee37cfe1a22e25157d063f",
- "install": {
-  "kind": "not-installed",
-  "stage": "install",
-  "reason": "corepack exited 1: error strapi-plugin-meilisearch@0.16.6: The engine \"node\" is incompatible with this module. Expected version \">=20 <21\". Got \"22.23.4\"\nerror Found incompatible module."
+ "node": {
+  "asked": "20",
+  "ran": "v20.20.2",
+  "why": "engines.node '>=20 <21'"
  },
+ "install": {
+  "path": "as-designed",
+  "kind": "installed",
+  "version": "10.0.2",
+  "plugins": {},
+  "adjustments": []
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "id-denylist",
+    "options": [
+     "entry",
+     "entries"
+    ],
+    "scope": {
+     "files": [
+      "server/src/**/*.js",
+      "tests/integrations/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 63,
+    "flagged": [
+     "server/src/__tests__/adapter.test.js",
+     "server/src/__tests__/configuration.test.js",
+     "server/src/__tests__/content-types.test.js",
+     "server/src/__tests__/document-middleware.test.js",
+     "server/src/__tests__/meilisearch.test.js",
+     "server/src/__tests__/utils/meilisearch-locale-helpers.js",
+     "server/src/services/content-types/content-types.js",
+     "server/src/services/document-middleware/entry-candidates.js",
+     "server/src/services/document-middleware/index.js",
+     "server/src/services/document-middleware/locale-resolution.js",
+     "server/src/services/meilisearch/adapter.js",
+     "server/src/services/meilisearch/config.js",
+     "server/src/services/meilisearch/connector.js"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "id-denylist",
+    "options": [
+     "entry",
+     "entries"
+    ],
+    "scope": {
+     "files": [
+      "server/src/**/*.js",
+      "tests/integrations/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 63,
+    "flagged": [
+     "server/src/__tests__/adapter.test.js",
+     "server/src/__tests__/configuration.test.js",
+     "server/src/__tests__/content-types.test.js",
+     "server/src/__tests__/document-middleware.test.js",
+     "server/src/__tests__/meilisearch.test.js",
+     "server/src/__tests__/utils/meilisearch-locale-helpers.js",
+     "server/src/services/content-types/content-types.js",
+     "server/src/services/document-middleware/entry-candidates.js",
+     "server/src/services/document-middleware/index.js",
+     "server/src/services/document-middleware/locale-resolution.js",
+     "server/src/services/meilisearch/adapter.js",
+     "server/src/services/meilisearch/config.js",
+     "server/src/services/meilisearch/connector.js"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "id-denylist",
+    "options": [
+     "entry"
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 127,
+    "flagged": [
+     "playground/config/plugins.js",
+     "resources/entries-transformers/asynchronous-transform.js",
+     "resources/entries-transformers/dates-transformer.js",
+     "resources/entries-transformers/flatten.js",
+     "resources/entries-transformers/remove-fields.js",
+     "resources/meilisearch-settings/make-relationship-filterable.js",
+     "server/src/__tests__/adapter.test.js",
+     "server/src/__tests__/configuration.test.js",
+     "server/src/__tests__/content-types.test.js",
+     "server/src/services/content-types/content-types.js",
+     "server/src/services/document-middleware/entry-candidates.js",
+     "server/src/services/document-middleware/index.js",
+     "server/src/services/document-middleware/locale-resolution.js",
+     "server/src/services/meilisearch/adapter.js",
+     "server/src/services/meilisearch/config.js",
+     "server/src/services/meilisearch/connector.js",
+     "tests/fixtures/strapi-app-i18n/config/plugins.js",
+     "tests/fixtures/strapi-app/config/plugins.js"
+    ],
+    "parseErrors": [
+     "admin/src/components/PluginIcon.jsx",
+     "admin/src/containers/Collection/CollectionColumn.jsx",
+     "admin/src/containers/Collection/CollectionTable.jsx",
+     "admin/src/containers/Collection/CollectionTableHeader.jsx",
+     "admin/src/containers/PluginTabs.jsx",
+     "admin/src/containers/Settings/Credentials.jsx",
+     "admin/src/containers/Settings/index.jsx",
+     "admin/src/containers/Settings/PluginActions.jsx",
+     "admin/src/pages/App.jsx",
+     "admin/src/pages/HomePage.jsx",
+     "admin/src/utils/serverRestartWatcher.ts",
+     "playground/types/generated/contentTypes.d.ts"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "Identifier[name='entry']",
+      "message": "Do not use 'entry' to refer to a Meilisearch document. Use 'document' instead."
+     },
+     {
+      "selector": "Literal[value=/\\bentry\\b/]",
+      "message": "Do not use the word 'entry' to refer to a Meilisearch document in string literals. Use 'document' instead."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "id-denylist",
+    "options": [
+     "entry",
+     "entries",
+     "Entry",
+     "Entries"
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 127,
+    "flagged": [
+     "playground/config/plugins.js",
+     "resources/entries-transformers/asynchronous-transform.js",
+     "resources/entries-transformers/dates-transformer.js",
+     "resources/entries-transformers/flatten.js",
+     "resources/entries-transformers/remove-fields.js",
+     "resources/meilisearch-settings/make-relationship-filterable.js",
+     "server/src/__tests__/adapter.test.js",
+     "server/src/__tests__/configuration.test.js",
+     "server/src/__tests__/content-types.test.js",
+     "server/src/__tests__/document-middleware.test.js",
+     "server/src/__tests__/meilisearch.test.js",
+     "server/src/__tests__/utils/meilisearch-locale-helpers.js",
+     "server/src/services/content-types/content-types.js",
+     "server/src/services/document-middleware/entry-candidates.js",
+     "server/src/services/document-middleware/index.js",
+     "server/src/services/document-middleware/locale-resolution.js",
+     "server/src/services/meilisearch/adapter.js",
+     "server/src/services/meilisearch/config.js",
+     "server/src/services/meilisearch/connector.js",
+     "tests/fixtures/strapi-app-i18n/config/plugins.js",
+     "tests/fixtures/strapi-app/config/plugins.js"
+    ],
+    "parseErrors": [
+     "admin/src/components/PluginIcon.jsx",
+     "admin/src/containers/Collection/CollectionColumn.jsx",
+     "admin/src/containers/Collection/CollectionTable.jsx",
+     "admin/src/containers/Collection/CollectionTableHeader.jsx",
+     "admin/src/containers/PluginTabs.jsx",
+     "admin/src/containers/Settings/Credentials.jsx",
+     "admin/src/containers/Settings/index.jsx",
+     "admin/src/containers/Settings/PluginActions.jsx",
+     "admin/src/pages/App.jsx",
+     "admin/src/pages/HomePage.jsx",
+     "admin/src/utils/serverRestartWatcher.ts",
+     "playground/types/generated/contentTypes.d.ts"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "id-denylist",
+    "options": [
+     "entry",
+     "entries",
+     "Entry",
+     "Entries"
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 127,
+    "flagged": [
+     "playground/config/plugins.js",
+     "resources/entries-transformers/asynchronous-transform.js",
+     "resources/entries-transformers/dates-transformer.js",
+     "resources/entries-transformers/flatten.js",
+     "resources/entries-transformers/remove-fields.js",
+     "resources/meilisearch-settings/make-relationship-filterable.js",
+     "server/src/__tests__/adapter.test.js",
+     "server/src/__tests__/configuration.test.js",
+     "server/src/__tests__/content-types.test.js",
+     "server/src/__tests__/document-middleware.test.js",
+     "server/src/__tests__/meilisearch.test.js",
+     "server/src/__tests__/utils/meilisearch-locale-helpers.js",
+     "server/src/services/content-types/content-types.js",
+     "server/src/services/document-middleware/entry-candidates.js",
+     "server/src/services/document-middleware/index.js",
+     "server/src/services/document-middleware/locale-resolution.js",
+     "server/src/services/meilisearch/adapter.js",
+     "server/src/services/meilisearch/config.js",
+     "server/src/services/meilisearch/connector.js",
+     "tests/fixtures/strapi-app-i18n/config/plugins.js",
+     "tests/fixtures/strapi-app/config/plugins.js"
+    ],
+    "parseErrors": [
+     "admin/src/components/PluginIcon.jsx",
+     "admin/src/containers/Collection/CollectionColumn.jsx",
+     "admin/src/containers/Collection/CollectionTable.jsx",
+     "admin/src/containers/Collection/CollectionTableHeader.jsx",
+     "admin/src/containers/PluginTabs.jsx",
+     "admin/src/containers/Settings/Credentials.jsx",
+     "admin/src/containers/Settings/index.jsx",
+     "admin/src/containers/Settings/PluginActions.jsx",
+     "admin/src/pages/App.jsx",
+     "admin/src/pages/HomePage.jsx",
+     "admin/src/utils/serverRestartWatcher.ts",
+     "playground/types/generated/contentTypes.d.ts"
+    ],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 0.982
+ "seconds": 100.156
 }

@@ -5,11 +5,316 @@
  "linter": "eslint",
  "rule": "import/no-default-export",
  "checked_out": "ee122d6fe4bdf3c22f2507e2944f5a213ddcf7a6",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-linter",
   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
  },
+ "install": {
+  "path": "lockfile-pinned",
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   "pnpm-workspace.yaml"
+  ],
+  "versions": {
+   "eslint": "9.39.2",
+   "@typescript-eslint/parser": "8.50.0",
+   "typescript": "5.9.3"
+  },
+  "plugins": {
+   "eslint-plugin-import": {
+    "version": null,
+    "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  },
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "packages/ui",
+   "lockfile": "pnpm-lock.yaml",
+   "candidates": [
+    "packages/ui (476 files)"
+   ]
+  },
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-linter",
+   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+  },
+  "repo_eslint": {
+   "declared": [
+    "packages/ui/package.json"
+   ],
+   "package_jsons": 9
+  },
+  "commit": "2026-05-20T16:23:17+08:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "9.39.2"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "ExportDefaultDeclaration",
+      "message": "Use named exports instead of default exports."
+     },
+     {
+      "selector": "ExportSpecifier[exported.name='default']",
+      "message": "Use named exports instead of default exports."
+     }
+    ],
+    "scope": {
+     "files": [
+      "packages/ui/src/**/*.ts",
+      "packages/ui/src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "packages/ui/src/**/*.d.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 429,
+    "flagged": [
+     "packages/ui/src/App.tsx",
+     "packages/ui/src/lib/i18n.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "ExportDefaultDeclaration",
+      "message": "Use named exports instead of default exports."
+     },
+     {
+      "selector": "ExportNamedDeclaration > ExportSpecifier[exported.name='default']",
+      "message": "Use named exports instead of default exports."
+     }
+    ],
+    "scope": {
+     "files": [
+      "packages/ui/src/**/*.ts",
+      "packages/ui/src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "packages/ui/src/**/*.d.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 429,
+    "flagged": [
+     "packages/ui/src/App.tsx",
+     "packages/ui/src/lib/i18n.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/no-default-export",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "docs-site/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": null,
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-import",
+    "reason": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/no-default-export",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.{js,jsx,ts,tsx,mjs,cjs}"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.d.ts",
+      "**/pages/**/*",
+      "**/layouts/**/*",
+      "**/app/**/*"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": null,
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-import",
+    "reason": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/no-default-export",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.config.{js,ts,mjs,cjs}",
+      "docs-site/src/pages/**/*.{js,jsx,ts,tsx}",
+      "docs-site/src/theme/**/*.{js,jsx,ts,tsx}",
+      "docs-site/sidebars.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": null,
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-import",
+    "reason": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/no-default-export",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.config.{js,ts,mjs,cjs}",
+      "docs-site/src/pages/**/*",
+      "docs-site/src/theme/**/*",
+      "packages/ui/src/pages/**/*",
+      "packages/ui/src/layouts/**/*"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": null,
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-import",
+    "reason": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 7.037
+ "seconds": 18.533
 }

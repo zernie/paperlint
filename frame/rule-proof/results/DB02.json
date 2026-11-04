@@ -5,11 +5,373 @@
  "linter": "eslint",
  "rule": "no-restricted-imports",
  "checked_out": "2aa78c30c73c8d562db2a39730c1a8e12a5d5293",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [],
+  "versions": {
+   "eslint": "10.4.0"
+  },
+  "plugins": {},
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 0
+  },
+  "commit": "2026-05-19T19:23:22+08:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.4.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "paths": [
+       {
+        "name": "openai",
+        "message": "Do not introduce LLM dependencies"
+       },
+       {
+        "name": "@anthropic-ai/sdk",
+        "message": "Do not introduce LLM dependencies"
+       },
+       {
+        "name": "@google/generative-ai",
+        "message": "Do not introduce LLM dependencies"
+       },
+       {
+        "name": "langchain",
+        "message": "Do not introduce LLM dependencies"
+       },
+       {
+        "name": "ollama",
+        "message": "Do not introduce LLM dependencies"
+       },
+       {
+        "name": "cohere-ai",
+        "message": "Do not introduce LLM dependencies"
+       },
+       {
+        "name": "@mistralai/mistralai",
+        "message": "Do not introduce LLM dependencies"
+       },
+       {
+        "name": "ai",
+        "message": "Do not introduce LLM dependencies"
+       }
+      ],
+      "patterns": [
+       {
+        "group": [
+         "@langchain/*",
+         "@ai-sdk/*",
+         "openai/*",
+         "@anthropic-ai/*"
+        ],
+        "message": "Do not introduce LLM dependencies"
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "paths": [
+       {
+        "name": "openai",
+        "message": "Do not introduce LLM dependencies."
+       },
+       {
+        "name": "@anthropic-ai/sdk",
+        "message": "Do not introduce LLM dependencies."
+       },
+       {
+        "name": "@google/generative-ai",
+        "message": "Do not introduce LLM dependencies."
+       },
+       {
+        "name": "langchain",
+        "message": "Do not introduce LLM dependencies."
+       },
+       {
+        "name": "ollama",
+        "message": "Do not introduce LLM dependencies."
+       },
+       {
+        "name": "ai",
+        "message": "Do not introduce LLM dependencies."
+       }
+      ],
+      "patterns": [
+       {
+        "group": [
+         "@langchain/*",
+         "@ai-sdk/*",
+         "openai/*",
+         "@anthropic-ai/*",
+         "@google/genai*",
+         "llamaindex*",
+         "@huggingface/*"
+        ],
+        "message": "Do not introduce LLM dependencies."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     "openai",
+     "anthropic",
+     "langchain",
+     "cohere",
+     "huggingface",
+     "llama",
+     "chatgpt",
+     "gpt4all",
+     "tiktoken"
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "paths": [
+       {
+        "name": "openai",
+        "message": "Do not introduce LLM dependencies."
+       },
+       {
+        "name": "@anthropic-ai/sdk",
+        "message": "Do not introduce LLM dependencies."
+       },
+       {
+        "name": "google-generative-ai",
+        "message": "Do not introduce LLM dependencies."
+       },
+       {
+        "name": "cohere-ai",
+        "message": "Do not introduce LLM dependencies."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "paths": [
+       "openai",
+       "@anthropic-ai/sdk",
+       "langchain",
+       "llamaindex"
+      ],
+      "patterns": [
+       "langchain-*",
+       "@langchain/*"
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "paths": [
+       "openai",
+       "anthropic",
+       "langchain",
+       "@google/generative-ai",
+       "llamaindex"
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 0.7
+ "seconds": 3.545
 }

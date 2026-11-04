@@ -5,11 +5,246 @@
  "linter": "eslint",
  "rule": "no-restricted-syntax",
  "checked_out": "284b783b5a080841dc8e6d69ce8af2248cf51fc0",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "lockfile-pinned",
+  "aside": [],
+  "versions": {
+   "eslint": "9.39.5"
+  },
+  "plugins": {},
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "apps/console",
+   "lockfile": "apps/console/package-lock.json",
+   "candidates": [
+    "apps/console (178 files)"
+   ]
+  },
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [
+    "apps/console/package.json"
+   ],
+   "package_jsons": 2
+  },
+  "commit": "2026-11-01T02:12:14+04:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "9.39.5"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "AssignmentExpression[left.type='MemberExpression'][left.object.name='workspace'][left.property.name='status']",
+      "message": "Do not assign workspace.status directly; route state transitions through WorkspaceStateMachine.assert_transition(from, to)."
+     }
+    ],
+    "scope": {
+     "files": [
+      "apps/console/**/*.ts",
+      "apps/console/**/*.tsx",
+      "apps/console/**/*.mjs"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "apps/console/**/*.test.mjs",
+      "apps/console/tests/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "apps/console/p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "AssignmentExpression[left.type='MemberExpression'][left.object.name='workspace'][left.property.name='status']",
+      "message": "Do not assign workspace.status directly; route state transitions through WorkspaceStateMachine.assert_transition(from, to)."
+     }
+    ],
+    "scope": {
+     "files": [
+      "apps/console/**/*.{ts,tsx,js,jsx,mjs}"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "apps/console/tests/**",
+      "apps/console/**/*.test.mjs",
+      "apps/console/**/*.test.ts"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "apps/console/p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "AssignmentExpression > MemberExpression[object.name=\"workspace\"][property.name=\"status\"]",
+      "message": "Direct assignment to workspace.status is forbidden; use WorkspaceStateMachine.assert_transition(from, to)."
+     }
+    ],
+    "scope": {
+     "files": [
+      "apps/console/**/*.ts",
+      "apps/console/**/*.tsx",
+      "apps/console/**/*.mjs"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "apps/console/p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "AssignmentExpression[operator='='] > MemberExpression.left[object.name='workspace'][property.name='status']"
+    ],
+    "scope": {
+     "files": [
+      "apps/console/**/*.ts",
+      "apps/console/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "apps/console/p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "AssignmentExpression[left.object.name='workspace'][left.property.name='status']",
+      "message": "State transitions must route through WorkspaceStateMachine.assert_transition(from, to). Direct assignment is a bug."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "AssignmentExpression[left.type='MemberExpression'][left.object.name='workspace'][left.property.name='status']",
+      "message": "State transitions must route through WorkspaceStateMachine.assert_transition(from, to). Direct workspace.status assignment is a bug."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 2.465
+ "seconds": 6.426
 }

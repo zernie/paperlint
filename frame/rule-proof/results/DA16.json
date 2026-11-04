@@ -5,11 +5,46 @@
  "linter": "eslint",
  "rule": "no-restricted-syntax",
  "checked_out": "f8230233737bf2e444452223f8281aec26aa49ed",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-linter",
   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   ".npmrc",
+   "pnpm-workspace.yaml"
+  ],
+  "versions": {
+   "eslint": "10.13.0",
+   "@typescript-eslint/parser": "8.72.1",
+   "typescript": "7.0.2"
+  },
+  "plugins": {
+   "@typescript-eslint/eslint-plugin": {
+    "version": "8.72.1",
+    "error": null
+   }
+  },
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-linter",
+   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 36
+  },
+  "commit": "2026-10-28T13:45:00+08:00",
+  "adjustments": [],
+  "kind": "not-installed",
+  "stage": "install",
+  "reason": "npm install --package-lock-only exited 1: npm error to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_26_06_169Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_26_06_169Z-debug-0.log"
+ },
  "adjustments": [],
- "seconds": 8.187
+ "seconds": 13.519
 }

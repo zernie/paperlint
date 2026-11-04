@@ -5,11 +5,50 @@
  "linter": "eslint",
  "rule": "@typescript-eslint/id-denylist",
  "checked_out": "6cd6f7779acf411be16c803239e53b43f77f80e0",
- "install": {
+ "node": {
+  "asked": "24",
+  "ran": "v24.22.1",
+  "why": "engines.node '>=24'"
+ },
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-linter",
   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   "pnpm-workspace.yaml"
+  ],
+  "versions": {
+   "eslint": "10.12.0",
+   "@typescript-eslint/parser": "8.71.0",
+   "typescript": "7.0.2"
+  },
+  "plugins": {
+   "@typescript-eslint/eslint-plugin": {
+    "version": "8.71.0",
+    "error": null
+   }
+  },
+  "legacy_peer_deps": false,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-linter",
+   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 5
+  },
+  "commit": "2026-10-04T13:53:39+04:00",
+  "adjustments": [],
+  "kind": "not-installed",
+  "stage": "install",
+  "reason": "npm install --package-lock-only exited 1: npm error Fix the upstream dependency conflict, or retry this command with --force or --legacy-peer-deps to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_51_266Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_51_266Z-debug-0.log"
+ },
  "adjustments": [],
- "seconds": 6.357
+ "seconds": 8.912
 }

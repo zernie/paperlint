@@ -5,11 +5,371 @@
  "linter": "eslint",
  "rule": "jest/no-restricted-matchers",
  "checked_out": "4589b69a081272508be2b00220f38b9d6ee488de",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-linter",
   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
  },
+ "install": {
+  "path": "lockfile-pinned",
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   ".npmrc",
+   "pnpm-workspace.yaml",
+   "bunfig.toml"
+  ],
+  "versions": {
+   "eslint": "9.39.2"
+  },
+  "plugins": {
+   "eslint-plugin-jest": {
+    "version": null,
+    "error": "eslint-plugin-jest is not pinned by eval/pnpm-lock.yaml"
+   },
+   "eslint-plugin-vitest": {
+    "version": null,
+    "error": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml"
+   }
+  },
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "eval",
+   "lockfile": "eval/pnpm-lock.yaml",
+   "candidates": [
+    "eval (280 files)",
+    "agent-eval/templates/reshaped-storybook (18 files)",
+    "eval/templates/project (8 files)"
+   ]
+  },
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-linter",
+   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+  },
+  "repo_eslint": {
+   "declared": [
+    "agent-eval/templates/reshaped-storybook/package.json",
+    "eval/package.json",
+    "eval/templates/project/package.json"
+   ],
+   "package_jsons": 62
+  },
+  "commit": "2026-09-07T16:28:14+02:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "9.39.2"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "vitest/no-restricted-matchers",
+    "options": [
+     {
+      "toMatchSnapshot": "Use toMatchInlineSnapshot for response validation instead of external snapshots."
+     }
+    ],
+    "scope": {
+     "files": [
+      "packages/**/*.test.ts",
+      "apps/**/*.test.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/node_modules/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-vitest",
+     "version": null,
+     "error": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-vitest",
+    "reason": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.property.name='toMatchSnapshot']",
+      "message": "Use toMatchInlineSnapshot for response validation instead of external snapshot files."
+     }
+    ],
+    "scope": {
+     "files": [
+      "packages/addon-mcp/**/*.test.ts",
+      "packages/mcp/**/*.test.ts",
+      "apps/internal-storybook/tests/**/*.test.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 8,
+    "flagged": [],
+    "parseErrors": [
+     "apps/internal-storybook/tests/check-deps.e2e.test.ts",
+     "apps/internal-storybook/tests/mcp-composition-auth.e2e.test.ts",
+     "apps/internal-storybook/tests/mcp-composition-docgen-server.e2e.test.ts",
+     "apps/internal-storybook/tests/mcp-composition.e2e.test.ts",
+     "apps/internal-storybook/tests/mcp-endpoint.e2e.test.ts",
+     "packages/addon-mcp/src/instructions/build-server-instructions.test.ts",
+     "packages/addon-mcp/src/manifests/core-format-contract.test.ts",
+     "packages/addon-mcp/src/manifests/in-process-provider.test.ts",
+     "packages/addon-mcp/src/mcp-handler.test.ts",
+     "packages/addon-mcp/src/preset.test.ts",
+     "packages/addon-mcp/src/storybook-ai-metadata.test.ts",
+     "packages/addon-mcp/src/telemetry.test.ts",
+     "packages/addon-mcp/src/tools/display-review.test.ts",
+     "packages/addon-mcp/src/tools/get-changed-stories.test.ts",
+     "packages/addon-mcp/src/tools/get-stories-by-component.test.ts",
+     "packages/addon-mcp/src/tools/get-storybook-story-instructions.test.ts",
+     "packages/addon-mcp/src/tools/is-manifest-available.test.ts",
+     "packages/addon-mcp/src/tools/preview-stories.test.ts",
+     "packages/addon-mcp/src/tools/run-story-tests.test.ts",
+     "packages/addon-mcp/src/utils/build-args-param.test.ts",
+     "packages/addon-mcp/src/utils/detect-unreachable-changes.test.ts",
+     "packages/addon-mcp/src/utils/find-story-ids.test.ts",
+     "packages/addon-mcp/src/utils/format-validation-issues.test.ts",
+     "packages/addon-mcp/src/utils/get-story-index.test.ts",
+     "packages/addon-mcp/src/utils/is-review-available.test.ts",
+     "packages/addon-mcp/src/utils/resolve-component-stories.test.ts",
+     "packages/mcp/bin.test.ts",
+     "packages/mcp/src/index.test.ts",
+     "packages/mcp/src/tools/get-documentation-for-story.test.ts",
+     "packages/mcp/src/tools/get-documentation.test.ts",
+     "packages/mcp/src/tools/list-all-documentation.test.ts",
+     "packages/mcp/src/utils/adapt-core-manifest.test.ts",
+     "packages/mcp/src/utils/get-manifest.test.ts",
+     "packages/mcp/src/utils/manifest-formatter/markdown.test.ts",
+     "packages/mcp/src/utils/parse-react-docgen.test.ts"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "vitest/prefer-inline-snapshots",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/tests/**"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-vitest",
+     "version": null,
+     "error": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-vitest",
+    "reason": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "jest/prefer-inline-snapshots",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.test.*",
+      "**/*.stories.*"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-jest",
+     "version": null,
+     "error": "eslint-plugin-jest is not pinned by eval/pnpm-lock.yaml"
+    }
+   ],
+   "proof": {
+    "kind": "plugin-not-installed",
+    "plugin": "eslint-plugin-jest",
+    "reason": "eslint-plugin-jest is not pinned by eval/pnpm-lock.yaml"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.property.name='toMatchSnapshot']",
+      "message": "Use inline snapshots (toMatchInlineSnapshot) for response validation in tests"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.test.js",
+      "**/*.test.jsx",
+      "**/tests/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 9,
+    "flagged": [],
+    "parseErrors": [
+     "agent-eval/lib/mcp/codex-browser-mock.test.ts",
+     "agent-eval/lib/mcp/preview-browser-mock.test.ts",
+     "agent-eval/lib/templates.test.ts",
+     "agent-eval/lib/test-utils.test.ts",
+     "apps/internal-storybook/tests/check-deps.e2e.test.ts",
+     "apps/internal-storybook/tests/helpers.ts",
+     "apps/internal-storybook/tests/mcp-composition-auth.e2e.test.ts",
+     "apps/internal-storybook/tests/mcp-composition-docgen-server.e2e.test.ts",
+     "apps/internal-storybook/tests/mcp-composition.e2e.test.ts",
+     "apps/internal-storybook/tests/mcp-endpoint.e2e.test.ts",
+     "eval/lib/graders/judge.test.ts",
+     "eval/lib/graders/mcp-tools.test.ts",
+     "eval/lib/quality/component-usage.test.ts",
+     "eval/lib/quality/error-counts.test.ts",
+     "eval/lib/quality/mcp-tools-coverage.test.ts",
+     "packages/addon-mcp/src/instructions/build-server-instructions.test.ts",
+     "packages/addon-mcp/src/manifests/core-format-contract.test.ts",
+     "packages/addon-mcp/src/manifests/in-process-provider.test.ts",
+     "packages/addon-mcp/src/mcp-handler.test.ts",
+     "packages/addon-mcp/src/preset.test.ts",
+     "packages/addon-mcp/src/storybook-ai-metadata.test.ts",
+     "packages/addon-mcp/src/telemetry.test.ts",
+     "packages/addon-mcp/src/tools/display-review.test.ts",
+     "packages/addon-mcp/src/tools/get-changed-stories.test.ts",
+     "packages/addon-mcp/src/tools/get-stories-by-component.test.ts",
+     "packages/addon-mcp/src/tools/get-storybook-story-instructions.test.ts",
+     "packages/addon-mcp/src/tools/is-manifest-available.test.ts",
+     "packages/addon-mcp/src/tools/preview-stories.test.ts",
+     "packages/addon-mcp/src/tools/run-story-tests.test.ts",
+     "packages/addon-mcp/src/utils/build-args-param.test.ts",
+     "packages/addon-mcp/src/utils/detect-unreachable-changes.test.ts",
+     "packages/addon-mcp/src/utils/find-story-ids.test.ts",
+     "packages/addon-mcp/src/utils/format-validation-issues.test.ts",
+     "packages/addon-mcp/src/utils/get-story-index.test.ts",
+     "packages/addon-mcp/src/utils/is-review-available.test.ts",
+     "packages/addon-mcp/src/utils/resolve-component-stories.test.ts",
+     "packages/claude-plugin/plugin.test.ts",
+     "packages/mcp/bin.test.ts",
+     "packages/mcp/src/index.test.ts",
+     "packages/mcp/src/tools/get-documentation-for-story.test.ts",
+     "packages/mcp/src/tools/get-documentation.test.ts",
+     "packages/mcp/src/tools/list-all-documentation.test.ts",
+     "packages/mcp/src/utils/adapt-core-manifest.test.ts",
+     "packages/mcp/src/utils/get-manifest.test.ts",
+     "packages/mcp/src/utils/manifest-formatter/markdown.test.ts",
+     "packages/mcp/src/utils/parse-react-docgen.test.ts"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-properties",
+    "options": [
+     {
+      "property": "toMatchSnapshot",
+      "message": "Use inline snapshots (toMatchInlineSnapshot) for response validation in tests"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.test.js",
+      "**/*.test.mjs"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "parse",
+    "reason": "p3s109-pair/bad.test.ts: Parsing error: Unexpected token :"
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.test.ts is not in the reading's scope"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 10.854
+ "seconds": 18.915
 }

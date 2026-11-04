@@ -5,11 +5,192 @@
  "linter": "eslint",
  "rule": "import/no-restricted-paths",
  "checked_out": "6a8e660fde2e3a11962bfc33592c27bb09dd96a2",
- "install": {
+ "as_designed_install": {
   "kind": "not-installed",
   "stage": "no-lockfile",
   "reason": "no lockfile: the linter version would not be the repository's"
  },
+ "install": {
+  "path": "date-matched",
+  "aside": [],
+  "versions": {
+   "eslint": "10.13.0"
+  },
+  "plugins": {
+   "eslint-plugin-import": {
+    "version": "2.32.0",
+    "error": null,
+    "peer_conflict": true
+   }
+  },
+  "legacy_peer_deps": true,
+  "as_designed": {
+   "kind": "not-installed",
+   "stage": "no-lockfile",
+   "reason": "no lockfile: the linter version would not be the repository's"
+  },
+  "repo_eslint": {
+   "declared": [],
+   "package_jsons": 0
+  },
+  "commit": "2026-10-23T12:36:02+08:00",
+  "adjustments": [],
+  "kind": "installed",
+  "version": "10.13.0"
+ },
+ "readings": [
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/no-restricted-paths",
+    "options": [
+     {
+      "zones": [
+       {
+        "target": "src/dde_tray_plugin/**",
+        "from": "src/core/**",
+        "message": "Tray plugin must not call app-core services."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/dde_tray_plugin/**"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": "2.32.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-ignored",
+    "reason": "src/dde_tray_plugin/p3s109-pair/bad.ts: the linter ignored the planted file"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       "src/core/**",
+       "src/app/**",
+       "src/platform/**",
+       "src/system_tray/**",
+       "src/log/**"
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/dde_tray_plugin/**/*"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-ignored",
+    "reason": "src/dde_tray_plugin/p3s109-pair/bad.ts: the linter ignored the planted file"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       {
+        "group": [
+         "**/src/core/**",
+         "**/src/app/**"
+        ],
+        "message": "Tray plugin must not call app-core services; link config/repository/daemon services directly."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/dde_tray_plugin/**"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-ignored",
+    "reason": "src/dde_tray_plugin/p3s109-pair/bad.ts: the linter ignored the planted file"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       {
+        "group": [
+         "**/src/app/**",
+         "**/src/core/**"
+        ],
+        "message": "Tray plugin must not call app-core services; link config/sqlite_repository/daemon_service directly"
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/dde_tray_plugin/**"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-ignored",
+    "reason": "src/dde_tray_plugin/p3s109-pair/bad.ts: the linter ignored the planted file"
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 0.792
+ "seconds": 8.062
 }
