@@ -5,48 +5,41 @@
  "linter": "eslint",
  "rule": "jest/no-restricted-matchers",
  "checked_out": "4589b69a081272508be2b00220f38b9d6ee488de",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-linter",
-  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
- },
  "install": {
+  "outcome": "installed",
   "path": "lockfile-pinned",
-  "aside": [
-   "package.json",
-   "pnpm-lock.yaml",
-   ".npmrc",
-   "pnpm-workspace.yaml",
-   "bunfig.toml"
-  ],
+  "version": "9.39.2",
   "versions": {
    "eslint": "9.39.2"
   },
   "plugins": {
    "eslint-plugin-jest": {
     "version": null,
-    "error": "eslint-plugin-jest is not pinned by eval/pnpm-lock.yaml"
+    "error": "eslint-plugin-jest is not pinned by eval/pnpm-lock.yaml",
+    "cause": "package-not-found"
    },
    "eslint-plugin-vitest": {
     "version": null,
-    "error": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml"
+    "error": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml",
+    "cause": "package-not-found"
    }
   },
-  "legacy_peer_deps": false,
-  "lockfile_pinned": {
-   "package": "eval",
-   "lockfile": "eval/pnpm-lock.yaml",
-   "candidates": [
-    "eval (280 files)",
-    "agent-eval/templates/reshaped-storybook (18 files)",
-    "eval/templates/project (8 files)"
-   ]
-  },
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-linter",
-   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "linter-in-subpackage",
+     "detail": "the install left no node_modules/eslint: the repository does not depend on it"
+    }
+   },
+   {
+    "path": "lockfile-pinned",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [
     "agent-eval/templates/reshaped-storybook/package.json",
@@ -56,9 +49,23 @@
    "package_jsons": 62
   },
   "commit": "2026-09-07T16:28:14+02:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "9.39.2"
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   ".npmrc",
+   "pnpm-workspace.yaml",
+   "bunfig.toml"
+  ],
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "eval",
+   "lockfile": "eval/pnpm-lock.yaml",
+   "candidates": [
+    "eval (280 files)",
+    "agent-eval/templates/reshaped-storybook (18 files)",
+    "eval/templates/project (8 files)"
+   ]
+  }
  },
  "readings": [
   {
@@ -89,7 +96,8 @@
     {
      "name": "eslint-plugin-vitest",
      "version": null,
-     "error": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml"
+     "error": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -195,7 +203,8 @@
     {
      "name": "eslint-plugin-vitest",
      "version": null,
-     "error": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml"
+     "error": "eslint-plugin-vitest is not pinned by eval/pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -227,7 +236,8 @@
     {
      "name": "eslint-plugin-jest",
      "version": null,
-     "error": "eslint-plugin-jest is not pinned by eval/pnpm-lock.yaml"
+     "error": "eslint-plugin-jest is not pinned by eval/pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -371,5 +381,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 18.915
+ "seconds": 19.542
 }

@@ -5,18 +5,10 @@
  "linter": "eslint",
  "rule": "import/no-default-export",
  "checked_out": "ee122d6fe4bdf3c22f2507e2944f5a213ddcf7a6",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-linter",
-  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
- },
  "install": {
+  "outcome": "installed",
   "path": "lockfile-pinned",
-  "aside": [
-   "package.json",
-   "pnpm-lock.yaml",
-   "pnpm-workspace.yaml"
-  ],
+  "version": "9.39.2",
   "versions": {
    "eslint": "9.39.2",
    "@typescript-eslint/parser": "8.50.0",
@@ -25,22 +17,26 @@
   "plugins": {
    "eslint-plugin-import": {
     "version": null,
-    "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+    "cause": "package-not-found"
    }
   },
-  "legacy_peer_deps": false,
-  "lockfile_pinned": {
-   "package": "packages/ui",
-   "lockfile": "pnpm-lock.yaml",
-   "candidates": [
-    "packages/ui (476 files)"
-   ]
-  },
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-linter",
-   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "linter-in-subpackage",
+     "detail": "the install left no node_modules/eslint: the repository does not depend on it"
+    }
+   },
+   {
+    "path": "lockfile-pinned",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [
     "packages/ui/package.json"
@@ -48,9 +44,19 @@
    "package_jsons": 9
   },
   "commit": "2026-05-20T16:23:17+08:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "9.39.2"
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   "pnpm-workspace.yaml"
+  ],
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "packages/ui",
+   "lockfile": "pnpm-lock.yaml",
+   "candidates": [
+    "packages/ui (476 files)"
+   ]
+  }
  },
  "readings": [
   {
@@ -174,7 +180,8 @@
     {
      "name": "eslint-plugin-import",
      "version": null,
-     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -210,7 +217,8 @@
     {
      "name": "eslint-plugin-import",
      "version": null,
-     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -253,7 +261,8 @@
     {
      "name": "eslint-plugin-import",
      "version": null,
-     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -293,7 +302,8 @@
     {
      "name": "eslint-plugin-import",
      "version": null,
-     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -316,5 +326,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 18.533
+ "seconds": 23.155
 }

@@ -5,41 +5,36 @@
  "linter": "eslint",
  "rule": "eslint-comments/no-use",
  "checked_out": "610b93b62edd1f7b430182ae7e1d8f753c590928",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "install",
-  "reason": "corepack exited 1: "
- },
  "install": {
+  "outcome": "installed",
   "path": "lockfile-pinned",
-  "aside": [
-   "package.json",
-   "yarn.lock",
-   ".yarnrc.yml"
-  ],
+  "version": "10.12.0",
   "versions": {
    "eslint": "10.12.0"
   },
   "plugins": {
    "eslint-plugin-eslint-comments": {
     "version": null,
-    "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+    "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock",
+    "cause": "package-not-found"
    }
   },
-  "legacy_peer_deps": false,
-  "lockfile_pinned": {
-   "package": ".",
-   "lockfile": "yarn.lock",
-   "candidates": [
-    ". (2549 files)",
-    "packages/protocol (109 files)"
-   ]
-  },
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "install",
-   "reason": "corepack exited 1: "
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "fetch",
+     "cause": "unknown",
+     "detail": "corepack exited 1: "
+    }
+   },
+   {
+    "path": "lockfile-pinned",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [
     "package.json",
@@ -48,9 +43,20 @@
    "package_jsons": 19
   },
   "commit": "2026-11-03T19:14:09+01:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "10.12.0"
+  "aside": [
+   "package.json",
+   "yarn.lock",
+   ".yarnrc.yml"
+  ],
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": ".",
+   "lockfile": "yarn.lock",
+   "candidates": [
+    ". (2549 files)",
+    "packages/protocol (109 files)"
+   ]
+  }
  },
  "readings": [
   {
@@ -86,7 +92,8 @@
     {
      "name": "eslint-plugin-eslint-comments",
      "version": null,
-     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -121,7 +128,8 @@
     {
      "name": "eslint-plugin-eslint-comments",
      "version": null,
-     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -163,7 +171,8 @@
     {
      "name": "eslint-plugin-eslint-comments",
      "version": null,
-     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -201,7 +210,8 @@
     {
      "name": "eslint-plugin-eslint-comments",
      "version": null,
-     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock"
+     "error": "eslint-plugin-eslint-comments is not pinned by yarn.lock",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -213,5 +223,5 @@
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 29.487
+ "seconds": 22.499
 }

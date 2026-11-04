@@ -10,22 +10,15 @@
   "ran": "v24.22.1",
   "why": "engines.node '>=24'"
  },
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-linter",
-  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
- },
  "install": {
+  "outcome": "installed",
   "path": "date-matched",
-  "aside": [
-   "package.json",
-   "pnpm-lock.yaml",
-   "pnpm-workspace.yaml"
-  ],
+  "version": "10.12.0",
   "versions": {
    "eslint": "10.12.0",
    "@typescript-eslint/parser": "8.71.0",
-   "typescript": "6.0.3"
+   "typescript": "6.0.3",
+   "@typescript-eslint/eslint-plugin": "8.71.0"
   },
   "plugins": {
    "@typescript-eslint/eslint-plugin": {
@@ -33,21 +26,40 @@
     "error": null
    }
   },
-  "legacy_peer_deps": false,
-  "typescript_peer_resolved": true,
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-linter",
-   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-linter-dependency",
+     "detail": "the install left no node_modules/eslint: the repository does not depend on it"
+    }
+   },
+   {
+    "path": "date-matched",
+    "outcome": "installed",
+    "resolved": [
+     {
+      "cause": "peer-conflict-typescript",
+      "by": "typescript left to the parser's peer range"
+     }
+    ]
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [],
    "package_jsons": 5
   },
   "commit": "2026-10-04T13:53:39+04:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "10.12.0"
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   "pnpm-workspace.yaml"
+  ],
+  "legacy_peer_deps": false,
+  "typescript_peer_resolved": true
  },
  "readings": [
   {
@@ -101,5 +113,5 @@
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 12.625
+ "seconds": 15.048
 }

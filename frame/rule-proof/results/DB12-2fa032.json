@@ -5,31 +5,30 @@
  "linter": "eslint",
  "rule": "no-unused-vars",
  "checked_out": "9df711ad6b7f50fcb45d34a59b6c62c1db5bcdc4",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-lockfile",
-  "reason": "no lockfile: the linter version would not be the repository's"
- },
  "install": {
+  "outcome": "installed",
   "path": "lockfile-pinned",
-  "aside": [],
+  "version": "8.57.1",
   "versions": {
    "eslint": "8.57.1"
   },
   "plugins": {},
-  "legacy_peer_deps": false,
-  "lockfile_pinned": {
-   "package": "frontend",
-   "lockfile": "frontend/package-lock.json",
-   "candidates": [
-    "frontend (595 files)"
-   ]
-  },
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-lockfile",
-   "reason": "no lockfile: the linter version would not be the repository's"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-lockfile",
+     "detail": "no lockfile: the linter version would not be the repository's"
+    }
+   },
+   {
+    "path": "lockfile-pinned",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [
     "frontend/package.json"
@@ -37,9 +36,15 @@
    "package_jsons": 1
   },
   "commit": "2026-11-03T13:48:58+08:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "8.57.1"
+  "aside": [],
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "frontend",
+   "lockfile": "frontend/package-lock.json",
+   "candidates": [
+    "frontend (595 files)"
+   ]
+  }
  },
  "readings": [
   {
@@ -954,5 +959,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 18.095
+ "seconds": 16.135
 }

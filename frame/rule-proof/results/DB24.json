@@ -5,31 +5,30 @@
  "linter": "eslint",
  "rule": "no-restricted-syntax",
  "checked_out": "284b783b5a080841dc8e6d69ce8af2248cf51fc0",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-lockfile",
-  "reason": "no lockfile: the linter version would not be the repository's"
- },
  "install": {
+  "outcome": "installed",
   "path": "lockfile-pinned",
-  "aside": [],
+  "version": "9.39.5",
   "versions": {
    "eslint": "9.39.5"
   },
   "plugins": {},
-  "legacy_peer_deps": false,
-  "lockfile_pinned": {
-   "package": "apps/console",
-   "lockfile": "apps/console/package-lock.json",
-   "candidates": [
-    "apps/console (178 files)"
-   ]
-  },
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-lockfile",
-   "reason": "no lockfile: the linter version would not be the repository's"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-lockfile",
+     "detail": "no lockfile: the linter version would not be the repository's"
+    }
+   },
+   {
+    "path": "lockfile-pinned",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [
     "apps/console/package.json"
@@ -37,9 +36,15 @@
    "package_jsons": 2
   },
   "commit": "2026-11-01T02:12:14+04:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "9.39.5"
+  "aside": [],
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "apps/console",
+   "lockfile": "apps/console/package-lock.json",
+   "candidates": [
+    "apps/console (178 files)"
+   ]
+  }
  },
  "readings": [
   {
@@ -246,5 +251,5 @@
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 6.426
+ "seconds": 6.479
 }

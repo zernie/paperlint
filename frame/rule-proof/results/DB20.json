@@ -5,43 +5,36 @@
  "linter": "eslint",
  "rule": "import/no-relative-packages",
  "checked_out": "91cc0609912e2dafcaaa2a5ddb2ba8b851ebbd6b",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-linter",
-  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
- },
  "install": {
+  "outcome": "installed",
   "path": "lockfile-pinned",
-  "aside": [
-   "package.json",
-   "pnpm-lock.yaml",
-   "pnpm-workspace.yaml"
-  ],
+  "version": "9.39.4",
   "versions": {
    "eslint": "9.39.4"
   },
   "plugins": {
    "eslint-plugin-import": {
     "version": null,
-    "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+    "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+    "cause": "package-not-found"
    }
   },
-  "legacy_peer_deps": false,
-  "lockfile_pinned": {
-   "package": "demo-app",
-   "lockfile": "pnpm-lock.yaml",
-   "candidates": [
-    "demo-app (51 files)",
-    "react-examples/examples/live-auction (29 files)",
-    "react-examples/examples/chat-widget (22 files)",
-    "recording-sdk-app-examples/react-examples/record-single-preset (18 files)"
-   ]
-  },
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-linter",
-   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "linter-in-subpackage",
+     "detail": "the install left no node_modules/eslint: the repository does not depend on it"
+    }
+   },
+   {
+    "path": "lockfile-pinned",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [
     "demo-app/package.json",
@@ -52,9 +45,22 @@
    "package_jsons": 36
   },
   "commit": "2026-10-19T16:13:28+05:30",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "9.39.4"
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   "pnpm-workspace.yaml"
+  ],
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "demo-app",
+   "lockfile": "pnpm-lock.yaml",
+   "candidates": [
+    "demo-app (51 files)",
+    "react-examples/examples/live-auction (29 files)",
+    "react-examples/examples/chat-widget (22 files)",
+    "recording-sdk-app-examples/react-examples/record-single-preset (18 files)"
+   ]
+  }
  },
  "readings": [
   {
@@ -167,7 +173,8 @@
     {
      "name": "eslint-plugin-import",
      "version": null,
-     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -208,7 +215,8 @@
     {
      "name": "eslint-plugin-import",
      "version": null,
-     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -242,7 +250,8 @@
     {
      "name": "eslint-plugin-import",
      "version": null,
-     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -278,7 +287,8 @@
     {
      "name": "eslint-plugin-import",
      "version": null,
-     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml"
+     "error": "eslint-plugin-import is not pinned by pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -290,5 +300,5 @@
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 13.151
+ "seconds": 13.842
 }

@@ -5,38 +5,49 @@
  "linter": "eslint",
  "rule": "better-tailwindcss/no-restricted-classes",
  "checked_out": "dfae0c4b6c31b5201a07afb282fea809b9a63ba9",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-linter",
-  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
- },
  "install": {
+  "outcome": "installed",
   "path": "date-matched",
-  "aside": [
-   "package.json",
-   "package-lock.json"
-  ],
+  "version": "10.14.0",
   "versions": {
    "eslint": "10.14.0",
    "@typescript-eslint/parser": "8.72.1",
    "typescript": "6.0.3"
   },
   "plugins": {},
-  "legacy_peer_deps": false,
-  "typescript_peer_resolved": true,
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-linter",
-   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-linter-dependency",
+     "detail": "the install left no node_modules/eslint: the repository does not depend on it"
+    }
+   },
+   {
+    "path": "date-matched",
+    "outcome": "installed",
+    "resolved": [
+     {
+      "cause": "peer-conflict-typescript",
+      "by": "typescript left to the parser's peer range"
+     }
+    ]
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [],
    "package_jsons": 1
   },
   "commit": "2026-10-31T21:51:31+01:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "10.14.0"
+  "aside": [
+   "package.json",
+   "package-lock.json"
+  ],
+  "legacy_peer_deps": false,
+  "typescript_peer_resolved": true
  },
  "readings": [
   {
@@ -293,5 +304,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 19.681
+ "seconds": 26.041
 }

@@ -5,16 +5,13 @@
  "linter": "eslint",
  "rule": "check-file/folder-naming-convention",
  "checked_out": "6a44c3488e6aee8d33b31de9e67bbd70fc0d153e",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-lockfile",
-  "reason": "no lockfile: the linter version would not be the repository's"
- },
  "install": {
+  "outcome": "installed",
   "path": "date-matched",
-  "aside": [],
+  "version": "10.14.0",
   "versions": {
-   "eslint": "10.14.0"
+   "eslint": "10.14.0",
+   "eslint-plugin-check-file": "3.3.2"
   },
   "plugins": {
    "eslint-plugin-check-file": {
@@ -22,20 +19,29 @@
     "error": null
    }
   },
-  "legacy_peer_deps": false,
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-lockfile",
-   "reason": "no lockfile: the linter version would not be the repository's"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-lockfile",
+     "detail": "no lockfile: the linter version would not be the repository's"
+    }
+   },
+   {
+    "path": "date-matched",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [],
    "package_jsons": 0
   },
   "commit": "2026-11-02T15:57:12+01:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "10.14.0"
+  "aside": [],
+  "legacy_peer_deps": false
  },
  "readings": [
   {
@@ -225,5 +231,5 @@
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 4.642
+ "seconds": 5.154
 }

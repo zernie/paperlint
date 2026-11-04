@@ -5,18 +5,15 @@
  "linter": "eslint",
  "rule": "@typescript-eslint/no-restricted-imports",
  "checked_out": "1aee88cbaa8d5ffbd6e91b37492e145aea9a75d5",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-lockfile",
-  "reason": "no lockfile: the linter version would not be the repository's"
- },
  "install": {
+  "outcome": "installed",
   "path": "date-matched",
-  "aside": [],
+  "version": "10.14.0",
   "versions": {
    "eslint": "10.14.0",
    "@typescript-eslint/parser": "8.72.1",
-   "typescript": "6.0.3"
+   "typescript": "6.0.3",
+   "@typescript-eslint/eslint-plugin": "8.72.1"
   },
   "plugins": {
    "@typescript-eslint/eslint-plugin": {
@@ -24,21 +21,36 @@
     "error": null
    }
   },
-  "legacy_peer_deps": false,
-  "typescript_peer_resolved": true,
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-lockfile",
-   "reason": "no lockfile: the linter version would not be the repository's"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-lockfile",
+     "detail": "no lockfile: the linter version would not be the repository's"
+    }
+   },
+   {
+    "path": "date-matched",
+    "outcome": "installed",
+    "resolved": [
+     {
+      "cause": "peer-conflict-typescript",
+      "by": "typescript left to the parser's peer range"
+     }
+    ]
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [],
    "package_jsons": 2
   },
   "commit": "2026-11-02T17:10:47+01:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "10.14.0"
+  "aside": [],
+  "legacy_peer_deps": false,
+  "typescript_peer_resolved": true
  },
  "readings": [
   {
@@ -101,5 +113,5 @@
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 14.06
+ "seconds": 13.87
 }

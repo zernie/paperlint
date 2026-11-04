@@ -5,36 +5,32 @@
  "linter": "eslint",
  "rule": "no-useless-catch",
  "checked_out": "71ec00fc7015df8d9188153fc3fe13da2098933c",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-linter",
-  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
- },
  "install": {
+  "outcome": "installed",
   "path": "lockfile-pinned",
-  "aside": [
-   "package.json",
-   "pnpm-lock.yaml"
-  ],
+  "version": "9.39.1",
   "versions": {
    "eslint": "9.39.1",
    "@typescript-eslint/parser": "8.47.0",
    "typescript": "5.9.3"
   },
   "plugins": {},
-  "legacy_peer_deps": false,
-  "lockfile_pinned": {
-   "package": "lib/next-boilerplate",
-   "lockfile": "lib/next-boilerplate/pnpm-lock.yaml",
-   "candidates": [
-    "lib/next-boilerplate (18 files)"
-   ]
-  },
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-linter",
-   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "linter-in-subpackage",
+     "detail": "the install left no node_modules/eslint: the repository does not depend on it"
+    }
+   },
+   {
+    "path": "lockfile-pinned",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [
     "lib/next-boilerplate/package.json"
@@ -42,9 +38,18 @@
    "package_jsons": 2
   },
   "commit": "2026-11-03T17:44:25-03:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "9.39.1"
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml"
+  ],
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "lib/next-boilerplate",
+   "lockfile": "lib/next-boilerplate/pnpm-lock.yaml",
+   "candidates": [
+    "lib/next-boilerplate (18 files)"
+   ]
+  }
  },
  "readings": [
   {
@@ -429,5 +434,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 58.099
+ "seconds": 41.231
 }

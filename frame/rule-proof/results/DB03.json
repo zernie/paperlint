@@ -5,16 +5,13 @@
  "linter": "eslint",
  "rule": "import/no-restricted-paths",
  "checked_out": "6a8e660fde2e3a11962bfc33592c27bb09dd96a2",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-lockfile",
-  "reason": "no lockfile: the linter version would not be the repository's"
- },
  "install": {
+  "outcome": "installed",
   "path": "date-matched",
-  "aside": [],
+  "version": "10.13.0",
   "versions": {
-   "eslint": "10.13.0"
+   "eslint": "10.13.0",
+   "eslint-plugin-import": "2.32.0"
   },
   "plugins": {
    "eslint-plugin-import": {
@@ -23,20 +20,35 @@
     "peer_conflict": true
    }
   },
-  "legacy_peer_deps": true,
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-lockfile",
-   "reason": "no lockfile: the linter version would not be the repository's"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-lockfile",
+     "detail": "no lockfile: the linter version would not be the repository's"
+    }
+   },
+   {
+    "path": "date-matched",
+    "outcome": "installed",
+    "resolved": [
+     {
+      "cause": "peer-conflict-other",
+      "by": "--legacy-peer-deps for eslint-plugin-import"
+     }
+    ]
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [],
    "package_jsons": 0
   },
   "commit": "2026-10-23T12:36:02+08:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "10.13.0"
+  "aside": [],
+  "legacy_peer_deps": true
  },
  "readings": [
   {
@@ -192,5 +204,5 @@
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 8.062
+ "seconds": 6.29
 }

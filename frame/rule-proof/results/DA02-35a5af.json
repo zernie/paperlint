@@ -5,32 +5,30 @@
  "linter": "eslint",
  "rule": "no-tabs",
  "checked_out": "ccea9712f28a73b380829621fa6c2fb6540685f1",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-lockfile",
-  "reason": "no lockfile: the linter version would not be the repository's"
- },
  "install": {
+  "outcome": "installed",
   "path": "lockfile-pinned",
-  "aside": [],
+  "version": "9.39.5",
   "versions": {
    "eslint": "9.39.5"
   },
   "plugins": {},
-  "legacy_peer_deps": false,
-  "lockfile_pinned": {
-   "package": "webapps/frontend",
-   "lockfile": "webapps/frontend/package-lock.json",
-   "candidates": [
-    "webapps/frontend (1298 files)",
-    "webapps-neo/frontend (278 files)"
-   ]
-  },
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-lockfile",
-   "reason": "no lockfile: the linter version would not be the repository's"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-lockfile",
+     "detail": "no lockfile: the linter version would not be the repository's"
+    }
+   },
+   {
+    "path": "lockfile-pinned",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [
     "webapps-neo/frontend/package.json",
@@ -39,9 +37,16 @@
    "package_jsons": 4
   },
   "commit": "2026-11-03T11:28:08Z",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "9.39.5"
+  "aside": [],
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "webapps/frontend",
+   "lockfile": "webapps/frontend/package-lock.json",
+   "candidates": [
+    "webapps/frontend (1298 files)",
+    "webapps-neo/frontend (278 files)"
+   ]
+  }
  },
  "readings": [
   {
@@ -144,5 +149,5 @@
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 15.153
+ "seconds": 14.799
 }

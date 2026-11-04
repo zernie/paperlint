@@ -5,49 +5,36 @@
  "linter": "eslint",
  "rule": "no-restricted-syntax",
  "checked_out": "034ef2e66db2e01776b83f910f9fcbcafc4625fc",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-linter",
-  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
- },
  "install": {
+  "outcome": "installed",
   "path": "lockfile-pinned",
-  "aside": [
-   "package.json",
-   "pnpm-lock.yaml",
-   ".npmrc",
-   "pnpm-workspace.yaml"
-  ],
+  "version": "8.57.1",
   "versions": {
    "eslint": "8.57.1"
   },
   "plugins": {
    "eslint-plugin-local": {
     "version": null,
-    "error": "eslint-plugin-local is not pinned by pnpm-lock.yaml"
+    "error": "eslint-plugin-local is not pinned by pnpm-lock.yaml",
+    "cause": "package-not-found"
    }
   },
-  "legacy_peer_deps": false,
-  "lockfile_pinned": {
-   "package": "controlplane",
-   "lockfile": "pnpm-lock.yaml",
-   "candidates": [
-    "controlplane (903 files)",
-    "studio (441 files)",
-    "cli (238 files)",
-    "composition (142 files)",
-    "protographic (76 files)",
-    "shared (34 files)",
-    "cdn-server (22 files)",
-    "cdn-server/cdn (8 files)",
-    "controlplane/emails (7 files)"
-   ]
-  },
-  "as_designed": {
-   "kind": "not-installed",
-   "stage": "no-linter",
-   "reason": "the install left no node_modules/eslint: the repository does not depend on it"
-  },
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "linter-in-subpackage",
+     "detail": "the install left no node_modules/eslint: the repository does not depend on it"
+    }
+   },
+   {
+    "path": "lockfile-pinned",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": [],
   "repo_eslint": {
    "declared": [
     "cdn-server/cdn/package.json",
@@ -63,9 +50,28 @@
    "package_jsons": 24
   },
   "commit": "2026-11-02T12:22:33+01:00",
-  "adjustments": [],
-  "kind": "installed",
-  "version": "8.57.1"
+  "aside": [
+   "package.json",
+   "pnpm-lock.yaml",
+   ".npmrc",
+   "pnpm-workspace.yaml"
+  ],
+  "legacy_peer_deps": false,
+  "lockfile_pinned": {
+   "package": "controlplane",
+   "lockfile": "pnpm-lock.yaml",
+   "candidates": [
+    "controlplane (903 files)",
+    "studio (441 files)",
+    "cli (238 files)",
+    "composition (142 files)",
+    "protographic (76 files)",
+    "shared (34 files)",
+    "cdn-server (22 files)",
+    "cdn-server/cdn (8 files)",
+    "controlplane/emails (7 files)"
+   ]
+  }
  },
  "readings": [
   {
@@ -208,7 +214,8 @@
     {
      "name": "eslint-plugin-local",
      "version": null,
-     "error": "eslint-plugin-local is not pinned by pnpm-lock.yaml"
+     "error": "eslint-plugin-local is not pinned by pnpm-lock.yaml",
+     "cause": "package-not-found"
     }
    ],
    "proof": {
@@ -294,5 +301,5 @@
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 35.885
+ "seconds": 30.298
 }
