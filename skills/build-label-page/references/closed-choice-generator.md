@@ -48,11 +48,11 @@ length.
 - **`kind`** (required): what the page asks, and so which card fields every item and practice card
   must carry. A card without one fails the schema, naming the field and why the kind needs it:
 
-  | kind       | the labeller decides                                 | required on every card                             |
-  | ---------- | ---------------------------------------------------- | -------------------------------------------------- |
-  | `approval` | keep or drop a drawn requirement                     | `unit` (the line, the requirement marked), `rules` |
-  | `witness`  | one situation in code where two readings split      | `situation`, `example`, `details` (below)          |
-  | `labels`   | a gold label, a blind review                         | nothing beyond the item                            |
+  | kind       | the labeller decides                           | required on every card                             |
+  | ---------- | ---------------------------------------------- | -------------------------------------------------- |
+  | `approval` | keep or drop a drawn requirement               | `unit` (the line, the requirement marked), `rules` |
+  | `witness`  | one situation in code where two readings split | `situation`, `example`, `details` (below)          |
+  | `labels`   | a gold label, a blind review                   | nothing beyond the item                            |
 
   Nothing reads `context`: it stays free text. A rule, a line or two readings written there show
   none of what their fields show, so on an `approval` or `witness` page they go in the fields.
