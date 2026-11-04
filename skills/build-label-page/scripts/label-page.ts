@@ -35,12 +35,14 @@
  *
  *   {
  *     "study": "demo-gold",                 file-name stem
+ *     "kind": "labels",                     approval | witness | labels: which card fields are required
  *     "title": "Label these",               2-4 words; the page title
  *     "intro": "One or two sentences.",     optional
  *     "seed": 7,                            fixes the order; change it and every id changes
  *     "groups": {"python": "Python"},
  *     "labeller_knows": ["python"],         optional: items of other groups are not put on the page
- *     "familiarity": false,                 optional: no "how well do you know" question (approval page)
+ *     "familiarity": true,                  optional: a "how well do you know" question per group;
+ *                                           left out, none is asked (an approval page)
  *     "familiarity_question": "How well do you know {group}?",          optional
  *     "questions": [{"id": "label", "text": "Is this correct?", "short": "correct?",
  *                    "options": [{"value": "yes", "label": "Yes", "example": "one real case",
@@ -50,17 +52,20 @@
  *                                           ask_why: optional; the answer is incomplete until a
  *                                           reason is given. In any shown text, backticks render
  *                                           as code.
- *     "practice": [{"body": "…", "expected": {"label": "yes"}, "why": "one line"}, …],   3 or more
+ *     "practice": [{"body": "…", "expected": {"label": "yes"}, "why": "one line"}, …],   3 or more;
+ *                                           a practice card may carry rules, unit, readings, file
  *     "practice_round": 1,                  optional; raise it after rewording, the practice reopens
  *     "items": [{"source_id": "case-0412-b", "group": "python", "body": "…", "code": "…",
  *                "context": "…",
  *                "rules": [{"linter": "ruff", "id": "TID253"}],
- *                "unit": {"id": "a.md:12", "text": "the whole line", "part": 1, "of": 2}}]
+ *                "unit": {"id": "a.md:12", "text": "the whole line", "mark": "whole", "part": 1, "of": 2},
+ *                "readings": {"a": "…", "b": "…"}, "file": "`src/a.ts`: B flags it"}]
  *                                           rules: optional; each shown with the linter's own
  *                                           description (`ruff rule`, ESLint meta.docs.description)
- *                                           unit: optional; one requirement of a line that holds
- *                                           several. Every part of the line is an item, in one group;
- *                                           id (never shown) tells two places with the same words apart.
+ *                                           unit: optional; the line an item is drawn from, the
+ *                                           requirement marked in it; id (never shown) tells two
+ *                                           places with the same words apart. kind approval requires
+ *                                           unit and rules; kind witness rules, readings and file.
  *   }
  *
  * TypeScript, compiled beside itself to `label-page.js` by `npm run build`: a consumer runs the skill

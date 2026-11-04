@@ -74,8 +74,8 @@ building. In one line each:
    source labels on the page. The generator refuses to build when an item carries a field outside an
    allow-list; a page written by hand checks its items against the same list.
 5. **Ask only what the labeller can answer.** Only the languages and tools they know; one "how well do
-   you know it" question per group, used later as an analysis filter (off on an approval page,
-   \`"familiarity": false\`: the author has not seen those repositories); "clear-cut or real boundary"
+   you know it" question per group when the study filters on it (\`"familiarity": true\`; left
+   out, none is asked, as on an approval page, whose author has not seen those repositories); "clear-cut or real boundary"
    is the labeller's judgement, not the designer's.
 6. **Export into the repository right away**, one JSON per page into the study's \`data/\` with the
    export date, commit it, and record answers given in chat with \`source: "chat"\`. If the page fails,
@@ -115,7 +115,8 @@ building. In one line each:
    \`\`\`
 
    It writes \`label-page/page.html\` and \`label-page/key.json\` (the only link from \`G001\` to the
-   source id; it never goes on the page). Written by hand, the page meets the requirements above.
+   source id; it never goes on the page). \`kind\` (\`approval\`, \`witness\`, \`labels\`) is required,
+   and each kind requires its card fields on every item and practice card. Written by hand, the page meets the requirements above.
 4. **Read it as the labeller, then look at it.** Read the page text once as a person who knows
    nothing about the source: if anything on it tells the answer, take it out. Read each question as
    someone who did not design the study: can they tell what each answer means from the question, its

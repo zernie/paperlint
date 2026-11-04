@@ -412,29 +412,52 @@ test("🔴 without the store the page is read-only, and the real items stay read
   assert.match(shown, /G001/, "a real item is shown read-only");
 });
 
-test("🔴 an item that names a rule: its card says which rule and what it does, in the linter's words", async () => {
+test("🔴 a card shows each field on its own labelled row: the line with its requirement marked, the rule, readings A and B, the file", async () => {
+  const line = "TypeScript only (no JavaScript); top-level await is allowed.";
+  const card = {
+    body: "top-level await is allowed",
+    unit: {
+      id: "L1",
+      text: line,
+      mark: "top-level await is allowed",
+      part: 2,
+      of: 2,
+    },
+    rules: [{ linter: "eslint", id: "no-console" }],
+    readings: { a: "allows it", b: "forbids it" },
+    file: "`src/a.ts`: B flags it",
+  };
   const { page } = build(
     setup(
-      "rules-card",
-      config({
-        items: ITEMS.map((item, n) =>
-          n === 0
-            ? { ...item, rules: [{ linter: "eslint", id: "no-console" }] }
-            : item,
-        ),
-      }),
+      "card-rows",
+      config({ items: ITEMS.map((i, n) => (n === 0 ? { ...i, ...card } : i)) }),
     ),
   );
-  const shown = await showPage(page, {}, {});
-  assert.match(
-    shown,
-    /Rule eslint no-console: Disallow the use of \nconsole\n/,
-    shown,
+  const { app } = await openLive(page, { practice: DONE_PRACTICE });
+  // Guards: a short label per row, in this order, the two readings told apart by their class.
+  assert.deepEqual(
+    app
+      .all()
+      .filter((n) => n.className.startsWith("row"))
+      .map((n) => [n.className, ...n.children.map((c) => c.textContent)]),
+    [
+      [
+        "row",
+        "Line · part 2 of 2",
+        "TypeScript only (no JavaScript); \ntop-level await is allowed\n.",
+      ],
+      ["row", "Rule", "eslint \nno-console\n: Disallow the use of \nconsole"],
+      ["row reading a", "Reading A", "allows it"],
+      ["row reading b", "Reading B", "forbids it"],
+      ["row", "File", "src/a.ts\n: B flags it"],
+    ],
   );
-  assert.equal(
-    occurrences(shown, "Rule eslint"),
-    1,
-    "only the item that names it",
+  assert.deepEqual(
+    app
+      .all()
+      .filter((n) => n.tag === "mark")
+      .map((n) => n.textContent),
+    ["top-level await is allowed"],
   );
 });
 
@@ -458,42 +481,4 @@ test("🔴 familiarity off: no group asks how well it is known, and a group is d
   assert.doesNotMatch(shown, /How well/);
   assert.doesNotMatch(shown, /how well you know it/);
   assert.match(shown, /Nothing left/, shown);
-});
-
-test("🔴 one requirement of a line: its card shows which part it is and the whole line beneath", async () => {
-  const line = "TypeScript only (no JavaScript); top-level await is allowed.";
-  const { page } = build(
-    setup(
-      "unit-card",
-      config({
-        items: ITEMS.map((item, n) =>
-          n === 0
-            ? {
-                ...item,
-                body: "TypeScript only (no JavaScript)",
-                unit: { id: "L1", text: line, part: 1, of: 2 },
-              }
-            : n === 3
-              ? {
-                  ...item,
-                  body: "top-level await is allowed",
-                  unit: { id: "L1", text: line, part: 2, of: 2 },
-                }
-              : item,
-        ),
-      }),
-    ),
-  );
-  const shown = await showPage(page, {}, {});
-  assert.match(
-    shown,
-    /From the line \(requirement 1 of 2\):\nTypeScript only \(no JavaScript\); top-level await is allowed\./,
-    shown,
-  );
-  assert.match(shown, /From the line \(requirement 2 of 2\):/);
-  assert.equal(
-    occurrences(shown, "From the line"),
-    2,
-    "only the two parts carry the line",
-  );
 });
