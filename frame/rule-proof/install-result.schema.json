@@ -482,6 +482,132 @@
     "eslint"
    ],
    "additionalProperties": false
+  },
+  "findings": {
+   "type": "object",
+   "properties": {
+    "cap": {
+     "type": "object",
+     "properties": {
+      "per_file": {
+       "type": "integer",
+       "exclusiveMinimum": 0,
+       "maximum": 9007199254740991
+      },
+      "context": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "line_chars": {
+       "type": "integer",
+       "exclusiveMinimum": 0,
+       "maximum": 9007199254740991
+      }
+     },
+     "required": [
+      "per_file",
+      "context",
+      "line_chars"
+     ],
+     "additionalProperties": false
+    },
+    "files": {
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "type": "object",
+      "properties": {
+       "total": {
+        "type": "integer",
+        "exclusiveMinimum": 0,
+        "maximum": 9007199254740991
+       },
+       "capped": {
+        "type": "boolean"
+       },
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "line": {
+           "type": "integer",
+           "minimum": -9007199254740991,
+           "maximum": 9007199254740991
+          },
+          "column": {
+           "type": "integer",
+           "minimum": -9007199254740991,
+           "maximum": 9007199254740991
+          },
+          "ruleId": {
+           "type": "string"
+          },
+          "message": {
+           "type": "string"
+          },
+          "lines": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "properties": {
+             "n": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+             },
+             "text": {
+              "type": "string"
+             },
+             "mark": {
+              "type": "boolean"
+             },
+             "cut": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+             }
+            },
+            "required": [
+             "n",
+             "text",
+             "mark"
+            ],
+            "additionalProperties": false
+           }
+          }
+         },
+         "required": [
+          "line",
+          "column",
+          "ruleId",
+          "message",
+          "lines"
+         ],
+         "additionalProperties": false
+        }
+       }
+      },
+      "required": [
+       "total",
+       "capped",
+       "items"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "error": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "cap",
+    "files"
+   ],
+   "additionalProperties": false
   }
  }
 }

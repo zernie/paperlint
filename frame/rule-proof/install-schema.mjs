@@ -92,11 +92,25 @@ export const pairCheckSchema = z.strictObject({
   eslint: z.strictObject({ version: z.string().nullable(), bad: fileConfig, good: fileConfig, errors: z.array(z.string()) }).nullable(),
 });
 
+// A proved reading's `findings` in a result (beside `flagged`): where each flagged file is flagged, read from the
+// linter's own JSON report (ESLint --format json, Ruff --output-format json). Per file the first `cap.per_file`
+// findings by line and column, `total` and whether the cap cut any; each with the source lines around it (the marked
+// line ± `cap.context`, a line longer than `cap.line_chars` cut, `cut` its length). `error`: the extra lint call gave
+// no report (the files stay flagged; only their places are missing).
+const sourceLine = z.strictObject({ n: z.number().int().positive(), text: z.string(), mark: z.boolean(), cut: z.number().int().optional() });
+const finding = z.strictObject({ line: z.number().int(), column: z.number().int(), ruleId: z.string(), message: z.string(), lines: z.array(sourceLine) });
+export const findingsSchema = z.strictObject({
+  cap: z.strictObject({ per_file: z.number().int().positive(), context: z.number().int().nonnegative(), line_chars: z.number().int().positive() }),
+  files: z.record(z.string(), z.strictObject({ total: z.number().int().positive(), capped: z.boolean(), items: z.array(finding) })),
+  error: z.string().optional(),
+});
+
 // The install record's schema at the top level (what a reader validates `install` against); the pair check under
-// $defs.pair_check.
+// $defs.pair_check, a reading's findings under $defs.findings.
 export const jsonSchema = () => {
   const { $schema: _s, ...pairCheck } = z.toJSONSchema(pairCheckSchema, { io: "input" });
-  return { $comment: "generated from install-schema.mjs; do not edit", ...z.toJSONSchema(installSchema, { io: "input" }), $defs: { pair_check: pairCheck } };
+  const { $schema: _f, ...findings } = z.toJSONSchema(findingsSchema, { io: "input" });
+  return { $comment: "generated from install-schema.mjs; do not edit", ...z.toJSONSchema(installSchema, { io: "input" }), $defs: { pair_check: pairCheck, findings } };
 };
 
 if (process.argv[2] === "--write") {

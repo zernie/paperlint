@@ -25,12 +25,16 @@ import toml from "@iarna/toml";
 import yarnLockV1 from "@yarnpkg/lockfile";
 import yaml from "js-yaml";
 import semver from "semver";
-import { installSchema, pairCheckSchema } from "./install-schema.mjs";
+import { z } from "zod";
+import { findingsSchema, installSchema, pairCheckSchema } from "./install-schema.mjs";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
-// The Ruff kit's own reading of a repository's pin files (vigiles, the same version the runner installs). Its module is
-// not in vigiles' export map, so it is required by its path inside the installed package.
-const { ruffPin } = createRequire(import.meta.url)(path.join(path.dirname(fileURLToPath(import.meta.resolve("vigiles/rule-proof"))), "..", "core", "rule-proof", "kits", "ruff.js"));
+// The Ruff kit's own reading of a repository's pin files, and the helper every kit reads its linter's JSON report
+// with (vigiles, the same version the runner installs). Their modules are not in vigiles' export map, so they are
+// required by their path inside the installed package.
+const ruleProofDir = path.join(path.dirname(fileURLToPath(import.meta.resolve("vigiles/rule-proof"))), "..", "core", "rule-proof");
+const { ruffPin } = createRequire(import.meta.url)(path.join(ruleProofDir, "kits", "ruff.js"));
+const { jsonArray, toRelative } = createRequire(import.meta.url)(path.join(ruleProofDir, "report.js"));
 
 const [inputsPath, outDir, ...rest] = process.argv.slice(2);
 const only = rest[0] === "--only" ? Number(rest[1]) : null;
@@ -506,6 +510,77 @@ export async function installFor(item, dir, deps) {
   return shape(installed2, record);
 }
 
+// ---- Where each flagged file is flagged ------------------------------------------------------------------------------
+// vigiles' `flagged` keeps a hit count per file. The places come from a second lint call on the flagged files alone,
+// through the same kit and pinned linter (its invocation: the same config, `--format json` / `--output-format json`),
+// read by a schema of the linter's own report. Never from text output.
+export const FINDINGS_CAP = { per_file: 5, context: 3, line_chars: 400 };
+const eslintReport = z.array(z.object({ filePath: z.string(), messages: z.array(z.object({
+  ruleId: z.string().nullable(), message: z.string(), line: z.number().int().optional(), column: z.number().int().optional() })) }));
+const ruffReport = z.array(z.object({ filename: z.string(), code: z.string().nullable(), message: z.string(),
+  location: z.object({ row: z.number().int(), column: z.number().int() }) }));
+
+// A linter's JSON stdout -> { findings: [{ path, line, column, ruleId, message }] } for `rule` only, or { unreadable }.
+export function parseFindings(linter, stdout, dir, rule) {
+  const parsed = (linter === "ruff" ? ruffReport : eslintReport).safeParse(jsonArray(stdout));
+  if (!parsed.success) return { unreadable: `no ${linter} JSON report in the output: ${stdout.slice(0, 200)}` };
+  if (linter === "ruff") {
+    return { findings: parsed.data.filter((d) => d.code === rule).map((d) => ({ path: toRelative(dir, d.filename),
+      line: d.location.row, column: d.location.column, ruleId: d.code, message: d.message })) };
+  }
+  return { findings: parsed.data.flatMap((f) => f.messages.filter((m) => m.ruleId === rule && typeof m.line === "number")
+    .map((m) => ({ path: toRelative(dir, f.filePath), line: m.line, column: m.column ?? 0, ruleId: m.ruleId, message: m.message }))) };
+}
+
+// The source lines around `line` (1-based): line ± n, clipped at the file's edges; a line longer than `max` characters
+// is cut and `cut` holds its length (a minified bundle is one line of megabytes).
+export function contextOf(text, line, n, max) {
+  const lines = text.split("\n").map((l) => (l.endsWith("\r") ? l.slice(0, -1) : l));
+  const last = lines.at(-1) === "" ? lines.length - 1 : lines.length;
+  const from = Math.max(1, line - n), to = Math.min(last, line + n);
+  return Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => {
+    const k = from + i, t = lines[k - 1];
+    return { n: k, text: t.length > max ? t.slice(0, max) : t, mark: k === line, ...(t.length > max ? { cut: t.length } : {}) };
+  });
+}
+
+// Findings grouped per file: sorted by line, then column; the first `cap.per_file` kept with their source lines.
+// read(path) -> the file's text, or null when it cannot be read (then no source lines).
+export function fileFindings(findings, read, cap) {
+  // (no Object.groupBy: an item may run on Node 18 or 20)
+  const byFile = {};
+  for (const f of findings) (byFile[f.path] ??= []).push(f);
+  return Object.fromEntries(Object.entries(byFile).sort(([a], [b]) => a.localeCompare(b)).map(([p, fs]) => {
+    const text = read(p);
+    const items = [...fs].sort((a, b) => a.line - b.line || a.column - b.column).slice(0, cap.per_file)
+      .map(({ path: _p, ...f }) => ({ ...f, lines: text === null ? [] : contextOf(text, f.line, cap.context, cap.line_chars) }));
+    return [p, { total: fs.length, capped: fs.length > cap.per_file, items }];
+  }));
+}
+
+// The flagged files' findings for one proved reading, on its pinned linter. pinned: { dir, run: { kit, command, options } }
+// (vigiles' PinnedLinter). -> the findingsSchema record.
+export function findingsOf(pinned, reading, files, cap = FINDINGS_CAP) {
+  const { kit, command, options } = pinned.run;
+  const chunks = Array.from({ length: Math.ceil(files.length / 200) }, (_, i) => files.slice(i * 200, (i + 1) * 200));
+  const env = { ...process.env, HOME: path.posix.join(options.cacheDir, "home"), XDG_CACHE_HOME: path.posix.join(options.cacheDir, "xdg"), CI: "1", ...kit.env(options.cacheDir) };
+  const runs = chunks.map((chunk) => {
+    const call = kit.invocation(reading, chunk, { dir: pinned.dir, cacheDir: options.cacheDir });
+    if (existsSync(call.configPath)) return { unreadable: `${path.relative(pinned.dir, call.configPath)} already exists in the repository` };
+    writeFileSync(call.configPath, call.configText);
+    try {
+      const [bin, ...prefix] = command;
+      const r = spawnSync(bin, [...prefix, ...call.args], { cwd: pinned.dir, env, encoding: "utf8", timeout: options.lintTimeoutMs ?? 150_000, maxBuffer: 256 * 1024 * 1024 });
+      if (r.error || !kit.reportCodes.includes(r.status)) return { unreadable: `the linter exited ${r.status ?? r.error?.code}: ${tailOf(`${r.stderr ?? ""}`)}` };
+      return parseFindings(reading.linter, r.stdout, pinned.dir, reading.rule);
+    } finally { rmSync(call.configPath, { force: true }); }
+  });
+  const error = runs.find((x) => "unreadable" in x)?.unreadable;
+  const read = (p) => { try { return readFileSync(path.join(pinned.dir, p), "utf8"); } catch { return null; } };
+  const files_ = fileFindings(runs.flatMap((x) => x.findings ?? []), read, cap);
+  return findingsSchema.parse({ cap, files: files_, ...(error ? { error } : {}) });
+}
+
 // The plan job's matrix: one entry per item; Node 22 unless the item names another (from the repository's engines).
 export const matrixOf = (items) => items.map((it, index) => ({ index, node: String(it.node ?? "22") }));
 
@@ -620,7 +695,8 @@ async function runOne(item) {
     if (proof.kind === "not-run" && (proof.stage === "parse" || proof.stage === "pair-ignored")) return { key, reading: full, plugins, proof, pair_check: pairCheck(pinned, full, pair, proof) };
     if (proof.kind !== "proved") return { key, reading: full, plugins, proof };
     const flagged = rp.flagged(proof.reading);
-    return { key, reading: full, plugins, proof: { kind: "proved" }, flagged };
+    const findings = flagged.kind === "ran" && flagged.flagged.length ? findingsOf(proof.reading.pinned, proof.reading.reading, flagged.flagged) : undefined;
+    return { key, reading: full, plugins, proof: { kind: "proved" }, flagged, ...(findings ? { findings } : {}) };
   });
   if (item.cross) {
     // Cross-example check: each proved reading A on every other proved reading B's planted violation, judged with
