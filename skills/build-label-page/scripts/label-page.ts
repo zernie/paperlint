@@ -35,6 +35,7 @@
  *
  *   {
  *     "study": "demo-gold",                 file-name stem
+ *     "kind": "labels",                     approval | witness | labels: which card fields are required
  *     "title": "Label these",               2-4 words; the page title
  *     "intro": "One or two sentences.",     optional
  *     "seed": 7,                            fixes the order; change it and every id changes
@@ -63,8 +64,8 @@
  *                                           description (`ruff rule`, ESLint meta.docs.description)
  *                                           unit: optional; the line an item is drawn from, the
  *                                           requirement marked in it; id (never shown) tells two
- *                                           places with the same words apart. A rule, a line or two
- *                                           readings written in the text instead is refused.
+ *                                           places with the same words apart. kind approval requires
+ *                                           unit and rules; kind witness rules, readings and file.
  *   }
  *
  * TypeScript, compiled beside itself to `label-page.js` by `npm run build`: a consumer runs the skill

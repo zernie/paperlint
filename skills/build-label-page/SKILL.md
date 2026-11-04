@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:eafea85455567e87 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:6e828827dc6fcfc1 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -104,8 +104,8 @@ building. In one line each:
    ```
 
    It writes `label-page/page.html` and `label-page/key.json` (the only link from `G001` to the
-   source id; it never goes on the page). It refuses a card whose text names a linter rule, carries
-   a source line or two readings, without the field that shows it (`rules`, `unit`, `readings`). Written by hand, the page meets the requirements above.
+   source id; it never goes on the page). `kind` (`approval`, `witness`, `labels`) is required,
+   and each kind requires its card fields on every item and practice card. Written by hand, the page meets the requirements above.
 4. **Read it as the labeller, then look at it.** Read the page text once as a person who knows
    nothing about the source: if anything on it tells the answer, take it out. Read each question as
    someone who did not design the study: can they tell what each answer means from the question, its

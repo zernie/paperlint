@@ -8,7 +8,6 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { z } from "zod";
-import { type Finding, oldShapes } from "./item-text.ts";
 import {
   describeRule,
   type Described as RuleText,
@@ -104,8 +103,6 @@ const PRIVATE_FIELDS = ["source_id"] as const;
 // The linter rules an item names ("read as ruff `TID253`"): the page shows each with the linter's
 // own description, looked up at build time (rule-descriptions.ts), never typed into items.json.
 const RULES_FIELD = "rules";
-// The prose of a card, read for what belongs in a field (item-text.ts); `code` is code, not prose.
-const TEXT_FIELDS = ["title", "body", "context"] as const;
 // The source line an item was drawn from, with its requirement marked (`mark`, words of the line)
 // and which part of the line it is. Shown on the card; the line is text the labeller may read.
 const UNIT_FIELD = "unit";
@@ -151,8 +148,9 @@ const SOURCES_SHOWN = `(${SOURCES.map(quoted).join(", ")})`;
 // the field's path (`questions[0].options[1].label`). A NEW FIELD IS A NEW LINE HERE; the
 // build-label-page test walks this very table (`schema` prints it) with a wrong type, null and an
 // empty value for each path, so a field without a line is a test failure, not a review finding.
-// The leak guard on items (ALLOWED_FIELDS) stays separate and stays closed.
-type SchemaNode =
+// The leak guard on items (ALLOWED_FIELDS) stays separate and stays closed. `why` says, in a
+// refusal, what a value must be (a pattern) or why a field is required (a page kind needs it).
+type SchemaNode = (
   | { kind: "string"; required: boolean; pattern?: string }
   | { kind: "integer"; required: boolean }
   | { kind: "boolean"; required: boolean }
@@ -169,12 +167,18 @@ type SchemaNode =
       required: boolean;
       closed: boolean;
       fields: Readonly<Record<string, SchemaNode>>;
-    };
+    }
+) & { why?: string };
 
-const string = (required = true, pattern?: string): SchemaNode =>
+const string = (required = true, pattern?: string, why?: string): SchemaNode =>
   pattern === undefined
     ? { kind: "string", required }
-    : { kind: "string", required, pattern };
+    : {
+        kind: "string",
+        required,
+        pattern,
+        ...(why === undefined ? {} : { why }),
+      };
 const integer = (required = true): SchemaNode => ({
   kind: "integer",
   required,
@@ -207,10 +211,13 @@ const obj = (
 ): SchemaNode => ({ kind: "object", required, closed, fields });
 
 // What an item and a practice item both may carry beyond text: a practice card looks like the real
-// cards it rehearses.
-const CARD_FIELDS = {
+// cards it rehearses. Each is optional here; a page's `kind` makes some of them required (KINDS).
+const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
   [RULES_FIELD]: array(
-    obj({ linter: string(true, "eslint|ruff"), id: string() }),
+    obj({
+      linter: string(true, "eslint|ruff", "eslint or ruff"),
+      id: string(),
+    }),
     false,
     1,
   ),
@@ -227,17 +234,58 @@ const CARD_FIELDS = {
     false,
   ),
   [READINGS_FIELD]: obj({ a: string(), b: string() }, true, false),
+  file: string(false),
 };
-const ITEM_SCHEMA = obj(
-  {
-    source_id: string(),
-    ...Object.fromEntries(
-      PAGE_FIELDS.map((f) => [f, string(f === "group" || f === "body")]),
-    ),
-    ...CARD_FIELDS,
+/**
+ * THE PAGE KINDS, and the card fields each requires on every item and practice card (#373). A fix to
+ * a card is a field; a kind that needs it makes it required, so a page built without it fails the
+ * schema with the field named instead of shipping the old card.
+ */
+type Kind = "approval" | "witness" | "labels";
+const KINDS: Readonly<Record<Kind, Readonly<Record<string, string>>>> = {
+  // keep or drop a drawn requirement: the line it came from, marked, and the rule read for it
+  approval: {
+    [UNIT_FIELD]:
+      "an approval card shows the line its requirement was drawn from, the requirement marked",
+    [RULES_FIELD]:
+      "an approval card shows the rule read for it, with the linter's own description",
   },
-  false, // an unlisted item field is the leak guard's refusal, with its own message
-);
+  // why two readings of one requirement disagree on a file
+  witness: {
+    [RULES_FIELD]:
+      "a witness card shows the rule both readings configure, with the linter's description",
+    [READINGS_FIELD]: "a witness card shows the two readings, one row each",
+    file: "a witness card shows the file the readings disagree on, on its own row",
+  },
+  // gold labels, a blind review: the card is the item, nothing more is required
+  labels: {},
+};
+const KIND_NAMES = Object.keys(KINDS).join(", ");
+/** The card fields of a page of `kind`: those it needs, required and saying why. */
+const cardFields = (kind: Kind): Readonly<Record<string, SchemaNode>> =>
+  Object.fromEntries(
+    Object.entries(CARD_FIELDS).map(([name, node]) => {
+      const why = KINDS[kind][name];
+      return [
+        name,
+        why === undefined ? node : { ...node, required: true, why },
+      ];
+    }),
+  );
+const itemSchema = (kind: Kind): SchemaNode =>
+  obj(
+    {
+      source_id: string(),
+      ...Object.fromEntries(
+        PAGE_FIELDS.filter((f) => f !== "file").map((f) => [
+          f,
+          string(f === "group" || f === "body"),
+        ]),
+      ),
+      ...cardFields(kind),
+    },
+    false, // an unlisted item field is the leak guard's refusal, with its own message
+  );
 // `icon` (an emoji) tells the buttons apart at a glance. No coloured side stripe on a button: it
 // reads as decoration, not meaning (the build-label-page look test refuses one).
 // `ask_why` (a prompt) makes the answer incomplete until the labeller says why: an approval page's "drop".
@@ -248,17 +296,18 @@ const OPTION_SCHEMA = obj({
   icon: string(false),
   ask_why: string(false),
 });
-const PRACTICE_SCHEMA = obj({
-  ...Object.fromEntries(
-    PAGE_FIELDS.filter((f) => f !== "group").map((f) => [
-      f,
-      string(f === "body"),
-    ]),
-  ),
-  ...CARD_FIELDS,
-  expected: mapping(string(), NAME_PATTERN, 1),
-  why: string(),
-});
+const practiceSchema = (kind: Kind): SchemaNode =>
+  obj({
+    ...Object.fromEntries(
+      PAGE_FIELDS.filter((f) => f !== "group" && f !== "file").map((f) => [
+        f,
+        string(f === "body"),
+      ]),
+    ),
+    ...cardFields(kind),
+    expected: mapping(string(), NAME_PATTERN, 1),
+    why: string(),
+  });
 const MIN_PRACTICE = 3;
 const QUESTION_SCHEMA = obj({
   id: string(true, NAME_PATTERN),
@@ -266,22 +315,26 @@ const QUESTION_SCHEMA = obj({
   short: string(false),
   options: array(OPTION_SCHEMA, true, 2),
 });
-export const CONFIG_SCHEMA = obj({
-  study: string(true, NAME_PATTERN), // becomes a file name
-  title: string(),
-  intro: string(false),
-  seed: integer(),
-  groups: mapping(string(), NAME_PATTERN, 1), // ids become store document ids
-  labeller_knows: array(string(true, NAME_PATTERN), false),
-  // true: a "how well do you know {group}" question per group, for a study that filters on it
-  // (rule 5). Left out, none is asked: an approval page's author has never seen the repositories.
-  familiarity: boolean(false),
-  familiarity_question: string(false),
-  questions: array(QUESTION_SCHEMA, true, 1),
-  practice: array(PRACTICE_SCHEMA, true, MIN_PRACTICE),
-  practice_round: integer(false),
-  items: array(ITEM_SCHEMA, true, 1),
-});
+const configSchema = (kind: Kind): SchemaNode =>
+  obj({
+    study: string(true, NAME_PATTERN), // becomes a file name
+    kind: string(true, Object.keys(KINDS).join("|"), `one of ${KIND_NAMES}`),
+    title: string(),
+    intro: string(false),
+    seed: integer(),
+    groups: mapping(string(), NAME_PATTERN, 1), // ids become store document ids
+    labeller_knows: array(string(true, NAME_PATTERN), false),
+    // true: a "how well do you know {group}" question per group, for a study that filters on it
+    // (rule 5). Left out, none is asked: an approval page's author has never seen the repositories.
+    familiarity: boolean(false),
+    familiarity_question: string(false),
+    questions: array(QUESTION_SCHEMA, true, 1),
+    practice: array(practiceSchema(kind), true, MIN_PRACTICE),
+    practice_round: integer(false),
+    items: array(itemSchema(kind), true, 1),
+  });
+/** The declared schema (`schema` prints it): every field, those a kind requires left optional. */
+export const CONFIG_SCHEMA = configSchema("labels");
 
 // ── checking a value against the schema ──────────────────────────────────────────────────────
 const at = (path: string, name: string): string =>
@@ -292,13 +345,13 @@ const ID_RULE = "letters, digits, - and _ only";
 
 function checkString(
   value: Json,
-  node: { pattern?: string },
+  node: { pattern?: string; why?: string },
   where: string,
 ): void {
   if (typeof value !== "string" || !value.trim()) {
     fail(`${where}: must be a non-empty string, got ${repr(value)}`);
   } else if (node.pattern !== undefined && !fullMatch(node.pattern, value)) {
-    fail(`${where}: ${repr(value)} must be ${ID_RULE}`);
+    fail(`${where}: ${repr(value)} must be ${node.why ?? ID_RULE}`);
   }
 }
 const checkCount = (n: number, min: number, where: string): void => {
@@ -343,7 +396,10 @@ function checkObject(
     return fail(`${where}: must be an object, got ${repr(value)}`);
   for (const [name, sub] of Object.entries(node.fields)) {
     if (has(value, name)) checkValue(value[name] ?? null, sub, at(path, name));
-    else if (sub.required) fail(`${at(path, name)}: is required and missing`);
+    else if (sub.required)
+      fail(
+        `${at(path, name)}: is required and missing${sub.why === undefined ? "" : ` — ${sub.why}`}`,
+      );
   }
   const unknown = Object.keys(value).find((name) => !has(node.fields, name));
   if (node.closed && unknown !== undefined) {
@@ -419,6 +475,7 @@ type Practice = Card & {
 };
 interface Config {
   readonly study: string;
+  readonly kind: Kind;
   readonly title: string;
   readonly intro?: string;
   readonly seed: number;
@@ -631,45 +688,11 @@ function checkUnits(cfg: Config): void {
     });
   }
 }
-/** Every card of the config, items then practice, by path (and source id when `withSource`). */
-const cardsOf = (cfg: Config, withSource = false) => [
-  ...cfg.items.map((i, n) => {
-    const at = `items[${String(n)}]`;
-    return [withSource ? `${at} (${i.source_id})` : at, i] as const;
-  }),
+/** Every card of the config, items then practice, by path. */
+const cardsOf = (cfg: Config) => [
+  ...cfg.items.map((i, n) => [`items[${String(n)}]`, i] as const),
   ...cfg.practice.map((p, n) => [`practice[${String(n)}]`, p] as const),
 ];
-/** What an old shape in the text is, and the field that shows it. */
-const sayFix = (f: Finding): string =>
-  f.field === "rules"
-    ? `names ${f.found} — add "rules": [{"linter": "${String(f.rule?.linter)}", "id": "${String(f.rule?.id)}"}], and the card shows what the rule does`
-    : f.field === "unit"
-      ? `carries a source line (${repr(f.found)}) — put the line in "unit": {"id", "text", "mark", "part", "of"} with "mark" the requirement's words in it, and the card shows the line with them marked`
-      : `carries two readings (${repr(f.found)}) — put them in "readings": {"a", "b"}, and the card shows one row each`;
-/**
- * The text of an item or a practice item in a shape the card has a field for (#373): a rule named
- * without its `rules` entry, a source line without `unit`, two readings without `readings`. Every
- * one is listed, so a page built the old way hears all of it in one run.
- */
-function checkOldShapes(cfg: Config): void {
-  const lines = cardsOf(cfg, true).flatMap(([at, card]) =>
-    oldShapes(
-      TEXT_FIELDS.flatMap((f) => {
-        const text = card[f];
-        return text === undefined ? [] : [[f, text] as const];
-      }),
-      {
-        rules: card.rules ?? [],
-        unit: card.unit !== undefined,
-        readings: card.readings !== undefined,
-      },
-    ).map((f) => `  ${at}.${f.in} ${sayFix(f)}`),
-  );
-  if (lines.length)
-    fail(
-      `${String(lines.length)} old card shape(s) in the text:\n${lines.join("\n")}`,
-    );
-}
 function checkItemFields(cfg: Config): void {
   const sids: string[] = [];
   cfg.items.forEach((item, n) => {
@@ -962,10 +985,11 @@ function keyOf(
 export function prepareBuild(configPath: string, outDir: string) {
   const cfg = readJson(configPath);
   assertConfig(cfg);
+  // Once its `kind` is known to be one, the fields that kind needs on every card.
+  checkValue(cfg, configSchema(cfg.kind), "");
   checkConfig(cfg);
   checkItemFields(cfg);
   checkUnits(cfg);
-  checkOldShapes(cfg);
   checkNoSourceShown(cfg);
   const described = describeRules(cfg, dirname(configPath));
   mkdirSync(outDir, { recursive: true });

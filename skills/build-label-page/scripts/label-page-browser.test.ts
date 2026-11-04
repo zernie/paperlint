@@ -4,8 +4,13 @@
  * cannot show: focus, typing, and a page that is left without the box ever losing focus.
  */
 import assert from "node:assert/strict";
-import { chromium, type Locator, type Page } from "playwright-core";
-import { test } from "vitest";
+import {
+  type Browser,
+  chromium,
+  type Locator,
+  type Page,
+} from "playwright-core";
+import { afterAll, test } from "vitest";
 import { z } from "zod";
 import { chromiumPath } from "../../../test/chromium.ts";
 import {
@@ -66,6 +71,20 @@ async function reasonStored(page: Page, text: string): Promise<void> {
   assert.equal(await storedReason(page), text);
 }
 
+/**
+ * One Chromium for the whole file, each test in a context of its own (`newPage` opens one): a launch
+ * per test cost about 5 s apiece on the macOS runner, and the file's wall time grew with every test.
+ */
+let launched: Browser | undefined;
+const sharedBrowser = async (): Promise<Browser> =>
+  (launched ??= await chromium.launch({
+    executablePath: chromiumPath(),
+    args: ["--no-sandbox"],
+  }));
+afterAll(async () => {
+  await launched?.close();
+});
+
 /** A browser test launches Chromium and types: far above vitest's 5 s default on a slow runner. */
 const BROWSER_TEST_MS = 60_000;
 
@@ -76,12 +95,9 @@ async function onApprovalPage(
   filter: "all" | "next" = "all",
 ): Promise<void> {
   const { page: html } = build(setup(name, approval()));
-  const browser = await chromium.launch({
-    executablePath: chromiumPath(),
-    args: ["--no-sandbox"],
-  });
+  const browser = await sharedBrowser();
+  const page = await browser.newPage();
   try {
-    const page = await browser.newPage();
     await page.addInitScript(STORE(PRACTICE_DONE, echoMs));
     await page.goto("about:blank");
     await page.setContent(html, { waitUntil: "domcontentloaded" });
@@ -90,7 +106,7 @@ async function onApprovalPage(
     await page.getByRole("button", { name: /Drop/ }).first().click();
     await steps(page);
   } finally {
-    await browser.close();
+    await page.context().close();
   }
 }
 
@@ -163,12 +179,9 @@ test(
   "a Keep needs no reason and writes none: the page stays quiet",
   async () => {
     const { page: html } = build(setup("browser-keep", approval()));
-    const browser = await chromium.launch({
-      executablePath: chromiumPath(),
-      args: ["--no-sandbox"],
-    });
+    const browser = await sharedBrowser();
+    const page = await browser.newPage();
     try {
-      const page = await browser.newPage();
       await page.addInitScript(STORE(PRACTICE_DONE, 20));
       await page.goto("about:blank");
       await page.setContent(html, { waitUntil: "domcontentloaded" });
@@ -180,7 +193,7 @@ test(
         [{}],
       );
     } finally {
-      await browser.close();
+      await page.context().close();
     }
   },
   BROWSER_TEST_MS,
@@ -226,14 +239,10 @@ test(
     const { page: html } = build(
       setup("browser-layout", approval({ items: [WITNESS] })),
     );
-    const browser = await chromium.launch({
-      executablePath: chromiumPath(),
-      args: ["--no-sandbox"],
-    });
+    const page = await (
+      await sharedBrowser()
+    ).newPage({ viewport: { width: 400, height: 900 } });
     try {
-      const page = await browser.newPage({
-        viewport: { width: 400, height: 900 },
-      });
       await page.addInitScript(STORE(PRACTICE_DONE, 20));
       await page.setContent(html, { waitUntil: "domcontentloaded" });
       const card = page.locator("article.item").last();
@@ -266,7 +275,7 @@ test(
         400,
       );
     } finally {
-      await browser.close();
+      await page.context().close();
     }
   },
   BROWSER_TEST_MS,

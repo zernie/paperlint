@@ -42,14 +42,18 @@ length.
   `code`, `context`, `rules`, `unit`, `readings`, `file`. Nothing else: the allow-list is fixed in
   the generator, and a field outside it is taken out of the item, not added to the list to make a
   build pass.
-- **What the text may not carry.** The build refuses, listing every card, a `title`, `body` or
-  `context` that names a linter rule (`rule: ruff \`TID251\``, `eslint \`no-console\``) missing
-from the card's `rules`, carries a source line (`From the line: «…»`, `requirement 1 of 2`,
-`CLAUDE.md:25`) without `unit`, or two readings (`reading A: … · reading B: …`) without
-`readings`. Each of those fields shows its content the way the card was fixed to (the rule with
-its description, the line with the requirement marked, one row per reading); the same text in a
-string shows none of it. A rule id is recognised only after a word that says it is one (rule,
-ruff, eslint), and a line only in an instruction file (`.md`, `.mdc`, `.txt`, `.cursorrules`…).
+- **`kind`** (required): what the page asks, and so which card fields every item and practice card
+  must carry. A card without one fails the schema, naming the field and why the kind needs it:
+
+  | kind       | the labeller decides                                 | required on every card                             |
+  | ---------- | ---------------------------------------------------- | -------------------------------------------------- |
+  | `approval` | keep or drop a drawn requirement                     | `unit` (the line, the requirement marked), `rules` |
+  | `witness`  | why two readings of a requirement disagree on a file | `rules`, `readings`, `file`                        |
+  | `labels`   | a gold label, a blind review                         | nothing beyond the item                            |
+
+  Nothing reads `context`: it stays free text. A rule, a line or two readings written there show
+  none of what their fields show, so on an `approval` or `witness` page they go in the fields.
+
 - **`rules`**: `[{linter, id}]` (`linter` is `eslint` or `ruff`) on an item read as a linter rule.
   The card's "Rule" row shows "ruff `TID253` (flake8-tidy-imports): Checks for module-level
   imports that should instead be imported lazily…", taken at build time from the linter itself:
@@ -106,7 +110,8 @@ drop, the drop carrying `ask_why`.
 }
 ```
 
-The page leaves `familiarity` out: the author is judging drawn units, not repositories they have
+The page sets `"kind": "approval"`, so every card carries its `unit` and `rules`, and leaves
+`familiarity` out: the author is judging drawn units, not repositories they have
 seen, so no per-group "how well do you know it" question is asked. Only a page that sets
 `"familiarity": true` asks it (and a `familiarity_question` without it is refused).
 

@@ -12,6 +12,7 @@ import {
   APPROVAL_PRACTICE,
   DONE_PRACTICE,
   Exported,
+  approvalCard,
   ITEMS,
   PRACTICE,
   QUESTIONS,
@@ -254,6 +255,7 @@ function expectRefused(leaf: Leaf): void {
 
 const DOCUMENTED_FIELDS = [
   "study",
+  "kind",
   "title",
   "intro",
   "seed",
@@ -1467,62 +1469,94 @@ test("🔴 the same line in two places is two lines: four items, two ids, it bui
   assert.ok(!page.includes("a.md:3"), "the line's id is private");
 });
 
-test("🔴 a page built the old way is refused, every card named with the field to add; the same page with the fields builds", () => {
-  const old = {
-    rule: "From the line: «- Use structlog» — a/b · CLAUDE.md line 25 · rule: ruff `TID251`",
-    readings:
-      "a/b · CLAUDE.md:7 · reading A: tests included · reading B: tests excluded",
+/** A witness card: an approval card's line and rule, plus the two readings and the file. */
+const witnessCard = <T extends { readonly body: string }>(c: T, n: number) => ({
+  ...approvalCard(c, n),
+  readings: { a: "on", b: "off" },
+  file: "`src/a.ts`: B flags it",
+});
+const witnessPage = (
+  items: readonly Record<string, unknown>[] = ITEMS.map(witnessCard),
+) =>
+  approval({
+    kind: "witness",
+    practice: APPROVAL_PRACTICE.map(witnessCard),
+    items,
+  });
+
+/** Pages that miss their kind or a field it needs, each with its refusal. */
+function kindRefusals(): readonly (readonly [
+  string,
+  Record<string, unknown>,
+  string,
+])[] {
+  const plain = { items: ITEMS, practice: APPROVAL_PRACTICE };
+  const rulesOnly = {
+    items: ITEMS.map((c, n) => ({ ...c, rules: approvalCard(c, n).rules })),
+    practice: APPROVAL_PRACTICE.map((c, n) => ({
+      ...c,
+      rules: approvalCard(c, n).rules,
+    })),
   };
-  const planted = approval({
-    practice: APPROVAL_PRACTICE.map((p, n) =>
-      n === 0 ? { ...p, context: "rule eslint `no-console`" } : p,
-    ),
-    items: ITEMS.map((i, n) =>
-      n === 1
-        ? { ...i, context: old.rule }
-        : n === 2
-          ? { ...i, context: old.readings }
-          : i,
-    ),
-  });
-  const dir = setup("old-shapes", planted);
-  const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
-  assert.equal(r.status, 1, r.out);
-  // Guards: the whole refusal, every finding in one run, item and source id and the field to add.
-  assert.equal(
-    r.out,
+  return [
+    // the shape pages were built in until now: no kind, the line and the rule in free text
     [
-      "REFUSED: 5 old card shape(s) in the text:",
-      `  items[1] (case-1001).context names ruff \`TID251\` — add "rules": [{"linter": "ruff", "id": "TID251"}], and the card shows what the rule does`,
-      `  items[1] (case-1001).context carries a source line ('From the line') — put the line in "unit": {"id", "text", "mark", "part", "of"} with "mark" the requirement's words in it, and the card shows the line with them marked`,
-      `  items[2] (case-1002).context carries a source line ('CLAUDE.md:7') — put the line in "unit": {"id", "text", "mark", "part", "of"} with "mark" the requirement's words in it, and the card shows the line with them marked`,
-      `  items[2] (case-1002).context carries two readings ('reading A') — put them in "readings": {"a", "b"}, and the card shows one row each`,
-      `  practice[0].context names eslint \`no-console\` — add "rules": [{"linter": "eslint", "id": "no-console"}], and the card shows what the rule does`,
-      "",
-    ].join("\n"),
+      "kind-missing",
+      approval({ ...plain, kind: undefined }),
+      "kind: is required and missing — one of approval, witness, labels",
+    ],
+    [
+      "kind-unknown",
+      approval({ kind: "audit" }),
+      "kind: 'audit' must be one of approval, witness, labels",
+    ],
+    [
+      "approval-no-rules",
+      approval(plain),
+      "practice[0].rules: is required and missing — an approval card shows the rule read for it, with the linter's own description",
+    ],
+    [
+      "approval-no-unit",
+      approval(rulesOnly),
+      "practice[0].unit: is required and missing — an approval card shows the line its requirement was drawn from, the requirement marked",
+    ],
+    [
+      "witness-no-readings",
+      approval({ kind: "witness" }),
+      "practice[0].readings: is required and missing — a witness card shows the two readings, one row each",
+    ],
+    [
+      "witness-no-file",
+      witnessPage(
+        ITEMS.map((c, n) => ({ ...witnessCard(c, n), file: undefined })),
+      ),
+      "items[0].file: is required and missing — a witness card shows the file the readings disagree on, on its own row",
+    ],
+  ];
+}
+
+test("🔴 a page without its kind, or a card without its kind's fields, fails the schema naming the field", () => {
+  const refused = kindRefusals();
+  // Guards: the whole refusal, the field and why the page's kind needs it.
+  assert.deepEqual(
+    refused.map(([name, cfg]) => {
+      const dir = setup(name, cfg);
+      return run(["build", join(dir, "items.json"), join(dir, "out")]);
+    }),
+    refused.map(([, , message]) => ({
+      status: 1,
+      out: `REFUSED: ${message}\n`,
+    })),
   );
-  // The same cards with their fields: the readings card, and the practice card with its rule.
-  const unit = { id: "x", text: "- tests", mark: "tests", part: 1, of: 1 };
-  const readings = { a: "tests included", b: "tests excluded" };
-  const named = { context: "rule eslint `no-console`" };
-  const fixed = approval({
-    practice: APPROVAL_PRACTICE.map((p, n) =>
-      n === 0
-        ? { ...p, ...named, rules: [{ linter: "eslint", id: "no-console" }] }
-        : p,
-    ),
-    items: ITEMS.map((i, n) =>
-      n === 2 ? { ...i, context: old.readings, unit, readings } : i,
-    ),
-  });
-  const { page } = build(setup("old-shapes-fixed", fixed));
+});
+
+test("a page of each kind with its fields builds; a practice card shows its rule like a real one", () => {
+  const witness = build(setup("witness-ok", witnessPage()));
+  assert.ok(witness.page.includes('"readings": {"a": "on", "b": "off"}'));
   assert.ok(
-    page.includes(
+    build(setup("approval-ok", approval())).page.includes(
       '"rules": [{"linter": "eslint", "id": "no-console", "description": "Disallow the use of `console`"}]',
     ),
-    "the practice card carries the linter's description",
   );
-  assert.ok(
-    page.includes('"readings": {"a": "tests included", "b": "tests excluded"}'),
-  );
+  assert.equal(build(setup("labels-ok", config())).key.seed, 7);
 });

@@ -94,6 +94,7 @@ export const config = (
   over: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
   study: "demo-gold",
+  kind: "labels",
   title: "Label these",
   seed: 7,
   groups: { python: "Python", go: "Go", rust: "Rust" },
@@ -354,12 +355,30 @@ export const APPROVAL_PRACTICE = [
   },
 ];
 
+/** What an approval card needs (its kind's fields): the line it came from, marked, and its rule. */
+export const approvalCard = <T extends { readonly body: string }>(
+  card: T,
+  n: number,
+) => ({
+  unit: {
+    id: `line-${String(n)}`,
+    text: card.body,
+    mark: card.body.split(" ")[0] ?? "",
+    part: 1,
+    of: 1,
+  },
+  rules: [{ linter: "eslint", id: "no-console" }],
+  ...card,
+});
+
 export const approval = (
   over: Record<string, unknown> = {},
 ): Record<string, unknown> =>
   config({
+    kind: "approval",
     questions: APPROVAL_Q,
-    practice: APPROVAL_PRACTICE,
+    practice: APPROVAL_PRACTICE.map(approvalCard),
+    items: ITEMS.map(approvalCard),
     familiarity: undefined, // left out: an approval page asks none
     ...over,
   });
