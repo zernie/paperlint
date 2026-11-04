@@ -82,8 +82,8 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   background: var(--good); margin-right: 8px; vertical-align: middle; }
 .status.missing { color: var(--mark); }
 .status.failed { color: var(--bad); }
-/* The witness card (#380): the code with its line numbers and the caught line lit, the rule as its docs
-   explain it, and the settings folded away. A long text shows three lines and a «more». */
+/* The content blocks (#380): a code excerpt with its line numbers and the marked line lit, references,
+   lists and tables folded away. A long text shows three lines and a «more». */
 a { color: var(--accent); }
 summary { cursor: pointer; color: var(--accent); min-height: 44px; display: flex; align-items: center; gap: 8px; }
 .situation { color: var(--strong); font-weight: 500; }
@@ -318,9 +318,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     return n;
   }
-  // `withExamples`: the practice shows each answer's example on its button (on a witness card, said to be
-  // about other code, since its question names this code); the real items keep the buttons short, the
-  // examples stay on the first screen.
+  // `withExamples`: the practice shows each answer's example on its button, after `labels.practice_example`;
+  // the real items keep the buttons short, the examples stay on the first screen.
   // A code block shows what a labeller would otherwise count by eye: leading and trailing whitespace as
   // faint marks (a space as a middle dot, a tab as an arrow) and each line's length in characters.
   function visible(ws) { return ws.replace(/ /g, "\u00b7").replace(/\t/g, "\u2192"); }
@@ -343,7 +342,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       var b = el("button", "");
       if (o.icon) b.appendChild(el("span", "icon", o.icon));
       b.appendChild(el("span", "label", o.label));
-      if (withExamples && o.example) b.appendChild(rich("span", "ex", (withExamples === "other code" ? "Example of this answer, about other code: " : "") + o.example));
+      if (withExamples && o.example) b.appendChild(rich("span", "ex", DATA.labels.practice_example + o.example));
       b.type = "button";
       b.setAttribute("aria-pressed", String(current === o.value));
       b.disabled = disabled;
@@ -378,8 +377,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   function itemCard(item, off) {
     var card = el("article", "item");
-    // A witness card counts in words; another card shows its id, for a labeller who reports it.
-    card.appendChild(el("div", "id", (item.situation ? "Card " : item.id + " · ") + (DATA.items.indexOf(item) + 1) + " of " + DATA.items.length));
+    card.appendChild(el("div", "id", fill(DATA.labels.place, { id: item.id, n: DATA.items.indexOf(item) + 1, total: DATA.items.length })));
     evidence(card, item);
     var a = answersOf(item.id);
     askOne(card, a, state.editing[item.id], function (q, v) {
@@ -409,8 +407,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     var saved = state.answers[item.id] && state.answers[item.id].savedAt;
     card.appendChild(statusLine(item.id, missingFor(item.id), saved));
-    witnessMore(card, item);
-    if (item.details) card.appendChild(settings(item));
+    blocksBelow(card, item);
     return card;
   }
   // A labelled row: a short word, then what it labels.
@@ -468,118 +465,105 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     pre.textContent = text;
     return pre;
   }
-  // The example file: its name (a link when there is one), its lines numbered, the caught line lit, and
-  // the linter's own message. Which setting caught it is in the settings, not here.
-  function exampleBlock(ex) {
+  // `{name}` in a page label, from `vars`.
+  function fill(text, vars) {
+    return String(text).replace(/\{(\w+)\}/g, function (m, k) { return k in vars ? String(vars[k]) : m; });
+  }
+  // A code excerpt: its file (a link when there is one), its lines numbered, the marked line with a
+  // gutter marker and a label besides its background, and the caption under it.
+  function excerptBlock(ex) {
     var box = el("div", "rulebox");
-    var name = el("p");
-    name.appendChild(ex.url ? link(ex.file, ex.url) : el("code", "", ex.file));
-    box.appendChild(name);
+    if (ex.file) {
+      var name = el("p");
+      name.appendChild(ex.url ? link(ex.file, ex.url) : el("code", "", ex.file));
+      box.appendChild(name);
+    }
     var pre = el("pre", "numbered");
     ex.lines.forEach(function (l) {
       var line = el("div", "line" + (l.mark ? " hit" : ""));
       line.appendChild(el("span", "g", l.mark ? "\u25b6" : ""));
       line.appendChild(el("span", "n", String(l.n)));
       var code = line.appendChild(el("span", "", l.text));
-      if (l.mark) code.appendChild(el("span", "this", "\u25c0 this line"));
+      if (l.mark) code.appendChild(el("span", "this", ex.mark_label || "\u25c0 this line"));
       pre.appendChild(line);
     });
     box.appendChild(pre);
-    box.appendChild(rich("p", "said", "The linter says: " + ex.message));
+    if (ex.caption) box.appendChild(rich("p", "said", ex.caption));
     return box;
   }
-  // A rule as its docs explain it: what it does, why, a flagged and an allowed example, the docs link.
-  function ruleBlock(r) {
+  // A reference entry: its title, then each field (a paragraph, a code block on a labelled row, or a
+  // quiet note), then its link.
+  function referenceBlock(r) {
     var box = el("div", "rulebox");
-    var x = r.explanation;
-    box.appendChild(rich("p", "", r.linter + " `" + r.id + "`" + (x ? "" : (r.family ? " (" + r.family + ")" : "") + ": " + r.description)));
-    if (!x) return box;
-    if (x.source === "none") box.appendChild(el("p", "muted", "No official explanation for this rule."));
-    else box.appendChild(clamp(rich("p", "", (x.source === "config message" ? "The config's own message: " : "") + x.what), x.what));
-    if (x.why) box.appendChild(clamp(rich("p", "", "Why: " + x.why), x.why));
-    if (x.example_bad || x.example_good) {
-      box.appendChild(el("p", "muted", "The flagged/allowed examples are the docs' own, with the docs' own settings, not this project's."));
-    }
-    [["Flagged", x.example_bad], ["Allowed", x.example_good]].forEach(function (e) {
-      if (e[1]) box.appendChild(row(e[0], clamp(plainCode(e[1]), e[1])));
+    box.appendChild(rich("p", "", r.title));
+    r.fields.forEach(function (f) {
+      if (f.style === "note") box.appendChild(el("p", "muted", f.text));
+      else if (f.style === "code") box.appendChild(row(f.label || "", clamp(plainCode(f.text), f.text)));
+      else box.appendChild(clamp(rich("p", "", (f.label ? f.label + ": " : "") + f.text), f.text));
     });
-    if (x.url) box.appendChild(el("p")).appendChild(link("Rule docs", x.url));
+    if (r.url) box.appendChild(el("p")).appendChild(link(r.url_label || r.url, r.url));
     return box;
   }
-  function moreLike(m) {
+  function folded(summary) {
     var d = el("details");
-    d.appendChild(el("summary", "", m.count + " more file(s) with the same situation"));
+    d.appendChild(el("summary", "", summary));
+    return d;
+  }
+  function references(x) {
+    var d = folded(x.summary);
+    x.entries.forEach(function (r) { d.appendChild(row(r.label || "", referenceBlock(r))); });
+    return d;
+  }
+  function moreList(m) {
+    var d = folded(m.summary);
     var ul = el("ul");
-    m.files.forEach(function (f) { ul.appendChild(el("li")).appendChild(el("code", "", f)); });
-    if (m.count > m.files.length) ul.appendChild(el("li", "muted", "and " + (m.count - m.files.length) + " more"));
+    m.items.forEach(function (f) { ul.appendChild(rich("li", "", f)); });
+    if (m.rest) ul.appendChild(el("li", "muted", m.rest));
     d.appendChild(ul);
     return d;
   }
-  var KEY_LABEL = { files: "Checks files", ignores: "Leaves out", rule: "Rule" };
-  // Each glob or option on its own row: which settings have it, the raw value, a plain reading, and
-  // whether it matches the example file. Differences first, what both share last.
-  function settings(item) {
-    var d = el("details");
-    d.appendChild(el("summary", "", "Settings behind this card"));
-    var by = item.example.caught_by === "a" ? ["A", "B"] : ["B", "A"];
-    d.appendChild(el("p", "muted", "Setting " + by[0] + " flags the example line; setting " + by[1] + " passes it."));
-    function same(r, s) { return r.key === s.key && r.raw === s.raw; }
-    function onlyIn(xs, ys) { return xs.filter(function (r) { return !ys.some(function (s) { return same(r, s); }); }); }
-    var rows = onlyIn(item.details.a, item.details.b).map(function (r) { return [r, "A only"]; })
-      .concat(onlyIn(item.details.b, item.details.a).map(function (r) { return [r, "B only"]; }))
-      .concat(item.details.a.filter(function (r) { return item.details.b.some(function (s) { return same(r, s); }); })
-        .map(function (r) { return [r, "A and B"]; }));
-    rows.forEach(function (x) {
-      var r = x[0], s = el("div", "setting");
-      s.appendChild(el("span", "lbl", x[1] + " · " + (KEY_LABEL[r.key] || "Option " + r.key.replace(/^option:/, ""))));
-      s.appendChild(el("p")).appendChild(el("code", "", r.raw));
-      s.appendChild(rich("p", "", r.plain));
-      if (r.matches_example === true) s.appendChild(el("p", "match yes", "✓ matches this file"));
-      if (r.matches_example === false) s.appendChild(el("p", "match no", "✗ does not match this file"));
+  // A folded table: its note, then each row in the order given: label, value as code, plain words, mark.
+  function table(t) {
+    var d = folded(t.summary);
+    if (t.note) d.appendChild(el("p", "muted", t.note));
+    t.rows.forEach(function (r) {
+      var s = el("div", "setting");
+      s.appendChild(el("span", "lbl", r.label));
+      s.appendChild(el("p")).appendChild(el("code", "", r.value));
+      if (r.plain) s.appendChild(rich("p", "", r.plain));
+      if (r.mark) s.appendChild(el("p", "match " + r.mark.tone, r.mark.text));
       d.appendChild(s);
     });
     return d;
   }
-  // The witness card's face (#380), above its question: the requirement, the situation, the example file
-  // with its marked line and the linter's message. The question comes right after it (round-3 feedback:
-  // a question a screen away from its code could mean any code block on the card).
-  function witnessFace(card, item) {
-    card.appendChild(row("Requirement", rich("p", "body", item.body)));
-    if (item.repeat && item.repeat.of > 1) {
-      card.appendChild(el("p", "muted", "Card " + item.repeat.index + " of " + item.repeat.of + " for this requirement"));
-    }
-    if (item.unit) card.appendChild(row("Where this requirement comes from (the project's rules file)", markedLine(item.unit)));
-    card.appendChild(situated("p", "situation", item.situation.summary, item.situation.line));
-    card.appendChild(exampleBlock(item.example));
-  }
-  // Below the question and its answers: the rule as its docs explain it, folded, then the files like it.
-  function witnessMore(card, item) {
-    if (!item.situation) return;
-    var rules = item.rules || [];
-    if (rules.length) {
-      var d = card.appendChild(el("details"));
-      d.appendChild(el("summary", "", rules.length > 1 ? "What the linter rules do (official docs)" : "What the linter rule does (official docs)"));
-      rules.forEach(function (r) { d.appendChild(row("Rule", ruleBlock(r))); });
-    }
-    if (item.more_like_this && item.more_like_this.count > 0) card.appendChild(moreLike(item.more_like_this));
-    if (item.context) card.appendChild(rich("p", "muted", item.context));
+  // Below the question and its answers: the references, the list of more like it and the table, each
+  // folded, so the question sits right under the code it names.
+  function blocksBelow(card, item) {
+    if (item.references) card.appendChild(references(item.references));
+    if (item.more) card.appendChild(moreList(item.more));
+    if (item.table) card.appendChild(table(item.table));
   }
   // What a card shows above its question, one labelled row per field (an item and a practice item alike).
   function evidence(card, item) {
-    if (item.situation) { witnessFace(card, item); return; }
     if (item.title) card.appendChild(rich("h3", "", item.title));
-    card.appendChild(rich("p", "body", item.body));
+    var body = rich("p", "body", item.body);
+    card.appendChild(DATA.labels.body ? row(DATA.labels.body, body) : body);
+    if (item.repeat && item.repeat.of > 1) card.appendChild(el("p", "muted", fill(DATA.labels.repeat, item.repeat)));
     if (item.code) card.appendChild(codeBlock(item.code));
-    if (item.unit) card.appendChild(row(item.unit.of > 1 ? "Line · part " + item.unit.part + " of " + item.unit.of : "Line",
+    if (item.unit) card.appendChild(row(DATA.labels.line + (item.unit.of > 1 ? " · part " + item.unit.part + " of " + item.unit.of : ""),
       markedLine(item.unit)));
     // A rule the item names, with what it does in the linter's own words (looked up at build time).
-    (item.rules || []).forEach(function (r) { card.appendChild(row("Rule", ruleBlock(r))); });
+    (item.rules || []).forEach(function (r) {
+      card.appendChild(row("Rule", rich("p", "", r.linter + " `" + r.id + "`" + (r.family ? " (" + r.family + ")" : "") + ": " + r.description)));
+    });
     if (item.readings) {
       card.appendChild(row("Reading A", rich("p", "", item.readings.a), "reading a"));
       card.appendChild(row("Reading B", rich("p", "", item.readings.b), "reading b"));
     }
     if (item.file) card.appendChild(row("File", rich("p", "", item.file)));
     if (item.context) card.appendChild(rich("p", "muted", item.context));
+    if (item.situation) card.appendChild(situated("p", "situation", item.situation.summary, item.situation.line));
+    if (item.excerpt) card.appendChild(excerptBlock(item.excerpt));
   }
   function labelOf(q, v) {
     var o = q.options.filter(function (x) { return x.value === v; })[0];
@@ -587,7 +571,6 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   // One question per screen: the answered ones stay as a line (with "Change"), and only one question
   // is asked: the one being changed, else the first unanswered.
-  // A witness card asks its situation's question in the words of the page's one question's answers.
   function askOne(card, a, editing, onPick, onChange, off, withExamples, situation) {
     var open = DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
     var asked = DATA.questions.filter(function (q) { return q.id === editing; })[0] || open[0];
@@ -605,7 +588,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     if (!asked) return;
     var ask = el("div", "ask");
-    ask.appendChild(situation ? situated("p", "q", situation.question, situation.line) : rich("p", "q", asked.text));
+    // A card's situation asks the page's first question in its own words; the others keep theirs.
+    ask.appendChild(situation && asked === DATA.questions[0] ? situated("p", "q", situation.question, situation.line) : rich("p", "q", asked.text));
     ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples));
     card.appendChild(ask);
   }
@@ -636,15 +620,14 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     card.appendChild(el("div", "id", "Practice " + p.id));
     evidence(card, p);
     var a = practiceAnswers(p.id);
-    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, p.situation ? "other code" : true, p.situation);
+    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true, p.situation);
     if (practiceAnswered(p)) {
       var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
       card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",
         (practiceMatched(p) ? "Matched. " : "Not matched. Expected: " + expected + ". ") + p.why));
     }
     card.appendChild(statusLine("practice:" + p.id, [], null));
-    witnessMore(card, p);
-    if (p.details) card.appendChild(settings(p));
+    blocksBelow(card, p);
     return card;
   }
   function practiceBlock(off) {

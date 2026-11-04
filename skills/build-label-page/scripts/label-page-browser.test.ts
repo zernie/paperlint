@@ -322,7 +322,7 @@ test(
 const WITNESS_FIXTURE = join(
   import.meta.dirname,
   "fixtures",
-  "witness-items.json",
+  "linter-config-witness-items.json",
 );
 /** The generic witness page, every practice card answered as expected, at phone width. */
 async function onWitnessPage(

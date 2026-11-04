@@ -1,10 +1,13 @@
 {
   "study": "demo-witness",
-  "kind": "witness",
+  "preset": "linter-config-witness",
+  "kind": "labels",
   "title": "Witness cards",
   "intro": "Each card shows one requirement, one piece of real code and one question about that code. The linter settings behind the card are under «Settings behind this card»; you do not need them to answer.",
   "seed": 11,
-  "groups": { "all": "Witness cards" },
+  "groups": {
+    "all": "Witness cards"
+  },
   "questions": [
     {
       "id": "witness",
@@ -43,23 +46,48 @@
     {
       "body": "Functions take at most 3 parameters",
       "situation": {
-        "kind": "construct",
         "summary": "One setting allows up to 5 parameters, the other up to 3.",
         "question": "Does «Functions take at most 3 parameters» forbid {line}?"
       },
       "example": {
         "file": "src/orders/create.ts",
         "lines": [
-          { "n": 11, "text": "", "mark": false },
-          { "n": 12, "text": "export function createOrder(id, items, user, coupon) {", "mark": true },
-          { "n": 13, "text": "  return { id, items, user, coupon };", "mark": false }
+          {
+            "n": 11,
+            "text": "",
+            "mark": false
+          },
+          {
+            "n": 12,
+            "text": "export function createOrder(id, items, user, coupon) {",
+            "mark": true
+          },
+          {
+            "n": 13,
+            "text": "  return { id, items, user, coupon };",
+            "mark": false
+          }
         ],
         "message": "Function 'createOrder' has too many parameters (4). Maximum allowed is 3.",
         "caught_by": "a"
       },
       "details": {
-        "a": [{ "key": "option:max", "raw": "3", "plain": "at most 3 parameters", "matches_example": true }],
-        "b": [{ "key": "option:max", "raw": "5", "plain": "at most 5 parameters", "matches_example": false }]
+        "a": [
+          {
+            "key": "option:max",
+            "raw": "3",
+            "plain": "at most 3 parameters",
+            "matches_example": true
+          }
+        ],
+        "b": [
+          {
+            "key": "option:max",
+            "raw": "5",
+            "plain": "at most 5 parameters",
+            "matches_example": false
+          }
+        ]
       },
       "rules": [
         {
@@ -74,55 +102,120 @@
           }
         }
       ],
-      "expected": { "witness": "covers" },
+      "expected": {
+        "witness": "covers"
+      },
       "why": "The words fix the number 3, and the marked line has 4 parameters."
     },
     {
       "body": "Use `===`, never `==`",
       "situation": {
-        "kind": "construct",
         "summary": "One setting allows `== null`, the other forbids every `==`.",
         "question": "Does «Use `===`, never `==`» forbid {line}?"
       },
       "example": {
         "file": "src/cache/lookup.ts",
         "lines": [
-          { "n": 41, "text": "  const entry = store.get(key);", "mark": false },
-          { "n": 42, "text": "  if (entry == null) return undefined;", "mark": true }
+          {
+            "n": 41,
+            "text": "  const entry = store.get(key);",
+            "mark": false
+          },
+          {
+            "n": 42,
+            "text": "  if (entry == null) return undefined;",
+            "mark": true
+          }
         ],
         "message": "Expected '===' and instead saw '=='.",
         "caught_by": "b"
       },
       "details": {
-        "a": [{ "key": "option:null", "raw": "\"ignore\"", "plain": "allows `== null` and `!= null`", "matches_example": false }],
-        "b": [{ "key": "rule", "raw": "\"always\"", "plain": "every `==` and `!=`", "matches_example": true }]
+        "a": [
+          {
+            "key": "option:null",
+            "raw": "\"ignore\"",
+            "plain": "allows `== null` and `!= null`",
+            "matches_example": false
+          }
+        ],
+        "b": [
+          {
+            "key": "rule",
+            "raw": "\"always\"",
+            "plain": "every `==` and `!=`",
+            "matches_example": true
+          }
+        ]
       },
-      "rules": [{ "linter": "eslint", "id": "eqeqeq", "explanation": { "source": "none" } }],
-      "expected": { "witness": "covers" },
+      "rules": [
+        {
+          "linter": "eslint",
+          "id": "eqeqeq",
+          "explanation": {
+            "source": "none"
+          }
+        }
+      ],
+      "expected": {
+        "witness": "covers"
+      },
       "why": "«never `==`» names no exception, so `== null` is forbidden too."
     },
     {
       "body": "No `console` calls in shipped code",
       "situation": {
-        "kind": "scope",
         "summary": "One setting checks test files, the other leaves them out.",
         "question": "Should this requirement apply to test files?"
       },
       "example": {
         "file": "test/report.test.ts",
-        "lines": [{ "n": 7, "text": "  console.log(result);", "mark": true }],
+        "lines": [
+          {
+            "n": 7,
+            "text": "  console.log(result);",
+            "mark": true
+          }
+        ],
         "message": "Unexpected console statement.",
         "caught_by": "a"
       },
       "details": {
-        "a": [{ "key": "files", "raw": "**/*.ts", "plain": "every TypeScript file", "matches_example": true }],
+        "a": [
+          {
+            "key": "files",
+            "raw": "**/*.ts",
+            "plain": "every TypeScript file",
+            "matches_example": true
+          }
+        ],
         "b": [
-          { "key": "files", "raw": "**/*.ts", "plain": "every TypeScript file", "matches_example": true },
-          { "key": "ignores", "raw": "test/**", "plain": "except the files under test/", "matches_example": true }
+          {
+            "key": "files",
+            "raw": "**/*.ts",
+            "plain": "every TypeScript file",
+            "matches_example": true
+          },
+          {
+            "key": "ignores",
+            "raw": "test/**",
+            "plain": "except the files under test/",
+            "matches_example": true
+          }
         ]
       },
-      "rules": [{ "linter": "eslint", "id": "no-console", "explanation": { "source": "none" } }],
-      "expected": { "witness": "excludes" },
+      "rules": [
+        {
+          "linter": "eslint",
+          "id": "no-console",
+          "explanation": {
+            "source": "none"
+          }
+        }
+      ],
+      "expected": {
+        "witness": "excludes"
+      },
       "why": "Test files are not shipped, so the words do not reach them."
     }
   ],
@@ -132,7 +225,6 @@
       "group": "all",
       "body": "Never log with `print`; use the `logging` module",
       "situation": {
-        "kind": "scope",
         "summary": "One setting checks the scripts/ folder, the other leaves it out.",
         "question": "Should this requirement apply to the scripts/ folder?"
       },
@@ -140,20 +232,55 @@
         "file": "scripts/seed_db.py",
         "url": "https://example.com/demo-shop/blob/0000000/scripts/seed_db.py#L18",
         "lines": [
-          { "n": 16, "text": "for row in rows:", "mark": false },
-          { "n": 17, "text": "    db.insert(row)", "mark": false },
-          { "n": 18, "text": "print(f\"seeded {len(rows)} rows\")", "mark": true }
+          {
+            "n": 16,
+            "text": "for row in rows:",
+            "mark": false
+          },
+          {
+            "n": 17,
+            "text": "    db.insert(row)",
+            "mark": false
+          },
+          {
+            "n": 18,
+            "text": "print(f\"seeded {len(rows)} rows\")",
+            "mark": true
+          }
         ],
         "message": "`print` found",
         "caught_by": "b"
       },
-      "more_like_this": { "count": 3, "files": ["scripts/migrate.py", "scripts/backfill_prices.py"] },
+      "more_like_this": {
+        "count": 3,
+        "files": [
+          "scripts/migrate.py",
+          "scripts/backfill_prices.py"
+        ]
+      },
       "details": {
         "a": [
-          { "key": "rule", "raw": "T201", "plain": "flags every call to `print`", "matches_example": null },
-          { "key": "ignores", "raw": "scripts/**", "plain": "except the files under scripts/", "matches_example": true }
+          {
+            "key": "rule",
+            "raw": "T201",
+            "plain": "flags every call to `print`",
+            "matches_example": null
+          },
+          {
+            "key": "ignores",
+            "raw": "scripts/**",
+            "plain": "except the files under scripts/",
+            "matches_example": true
+          }
         ],
-        "b": [{ "key": "rule", "raw": "T201", "plain": "flags every call to `print`", "matches_example": null }]
+        "b": [
+          {
+            "key": "rule",
+            "raw": "T201",
+            "plain": "flags every call to `print`",
+            "matches_example": null
+          }
+        ]
       },
       "rules": [
         {
@@ -169,64 +296,140 @@
           }
         }
       ],
-      "repeat": { "group": "req-logging", "index": 1, "of": 2 }
+      "repeat": {
+        "group": "req-logging",
+        "index": 1,
+        "of": 2
+      }
     },
     {
       "source_id": "req-logging:debug-flag",
       "group": "all",
       "body": "Never log with `print`; use the `logging` module",
       "situation": {
-        "kind": "construct",
         "summary": "One setting allows `print` behind a debug flag, the other forbids every `print`.",
         "question": "Does «Never log with `print`; use the `logging` module» forbid {line}?"
       },
       "example": {
         "file": "shop/cart.py",
         "lines": [
-          { "n": 30, "text": "    if DEBUG:", "mark": false },
-          { "n": 31, "text": "        print(\"cart\", cart.id, cart.total)", "mark": true }
+          {
+            "n": 30,
+            "text": "    if DEBUG:",
+            "mark": false
+          },
+          {
+            "n": 31,
+            "text": "        print(\"cart\", cart.id, cart.total)",
+            "mark": true
+          }
         ],
         "message": "`print` found",
         "caught_by": "a"
       },
       "details": {
-        "a": [{ "key": "rule", "raw": "T201", "plain": "flags every call to `print`", "matches_example": null }],
+        "a": [
+          {
+            "key": "rule",
+            "raw": "T201",
+            "plain": "flags every call to `print`",
+            "matches_example": null
+          }
+        ],
         "b": [
-          { "key": "rule", "raw": "T201", "plain": "flags every call to `print`", "matches_example": null },
-          { "key": "option:allow-debug", "raw": "true", "plain": "allows `print` inside `if DEBUG:`", "matches_example": true }
+          {
+            "key": "rule",
+            "raw": "T201",
+            "plain": "flags every call to `print`",
+            "matches_example": null
+          },
+          {
+            "key": "option:allow-debug",
+            "raw": "true",
+            "plain": "allows `print` inside `if DEBUG:`",
+            "matches_example": true
+          }
         ]
       },
-      "rules": [{ "linter": "ruff", "id": "T201", "explanation": { "source": "none" } }],
-      "repeat": { "group": "req-logging", "index": 2, "of": 2 }
+      "rules": [
+        {
+          "linter": "ruff",
+          "id": "T201",
+          "explanation": {
+            "source": "none"
+          }
+        }
+      ],
+      "repeat": {
+        "group": "req-logging",
+        "index": 2,
+        "of": 2
+      }
     },
     {
       "source_id": "req-imports:barrel",
       "group": "all",
       "body": "Import from a package's public entry point, never from its internals",
       "situation": {
-        "kind": "construct",
         "summary": "One setting forbids any path below a package's folder, the other only paths into src/internal/.",
         "question": "Does «Import from a package's public entry point, never from its internals» forbid {line}?"
       },
       "example": {
         "file": "apps/web/src/checkout/total.ts",
         "lines": [
-          { "n": 1, "text": "import { money } from \"@demo/format\";", "mark": false },
-          { "n": 2, "text": "import { round } from \"@demo/format/src/round\";", "mark": true },
-          { "n": 3, "text": "", "mark": false }
+          {
+            "n": 1,
+            "text": "import { money } from \"@demo/format\";",
+            "mark": false
+          },
+          {
+            "n": 2,
+            "text": "import { round } from \"@demo/format/src/round\";",
+            "mark": true
+          },
+          {
+            "n": 3,
+            "text": "",
+            "mark": false
+          }
         ],
         "message": "'@demo/format/src/round' import is restricted from being used by a pattern. Import from the package's entry point.",
         "caught_by": "a"
       },
-      "more_like_this": { "count": 1, "files": ["apps/admin/src/report/sum.ts"] },
+      "more_like_this": {
+        "count": 1,
+        "files": [
+          "apps/admin/src/report/sum.ts"
+        ]
+      },
       "details": {
         "a": [
-          { "key": "option:patterns", "raw": "[{\"group\": [\"@demo/*/*\"], \"message\": \"Import from the package's entry point.\"}]", "plain": "forbids any import path one or more folders below a `@demo/` package", "matches_example": true },
-          { "key": "files", "raw": "apps/**/*.ts", "plain": "the TypeScript files under apps/", "matches_example": true }
+          {
+            "key": "option:patterns",
+            "raw": "[{\"group\": [\"@demo/*/*\"], \"message\": \"Import from the package's entry point.\"}]",
+            "plain": "forbids any import path one or more folders below a `@demo/` package",
+            "matches_example": true
+          },
+          {
+            "key": "files",
+            "raw": "apps/**/*.ts",
+            "plain": "the TypeScript files under apps/",
+            "matches_example": true
+          }
         ],
         "b": [
-          { "key": "option:patterns", "raw": "[{\"group\": [\"@demo/*/src/internal/**\"]}]", "plain": "forbids only import paths into a package's src/internal/ folder", "matches_example": false },
-          { "key": "files", "raw": "apps/**/*.ts", "plain": "the TypeScript files under apps/", "matches_example": true }
+          {
+            "key": "option:patterns",
+            "raw": "[{\"group\": [\"@demo/*/src/internal/**\"]}]",
+            "plain": "forbids only import paths into a package's src/internal/ folder",
+            "matches_example": false
+          },
+          {
+            "key": "files",
+            "raw": "apps/**/*.ts",
+            "plain": "the TypeScript files under apps/",
+            "matches_example": true
+          }
         ]
       },
       "rules": [

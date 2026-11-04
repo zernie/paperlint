@@ -1,0 +1,214 @@
+{
+  "study": "demo-review",
+  "kind": "labels",
+  "title": "Review comments",
+  "intro": "Each card shows one guideline, one changed line and one question about that line.",
+  "seed": 5,
+  "groups": { "all": "Review comments" },
+  "labels": {
+    "place": "Comment {n} of {total}",
+    "body": "Guideline",
+    "repeat": "Comment {index} of {of} on this guideline",
+    "practice_example": "Another case: "
+  },
+  "questions": [
+    {
+      "id": "applies",
+      "text": "Does the guideline cover this line?",
+      "short": "covered?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes",
+          "icon": "✅",
+          "example": "«No string-built SQL» and an f-string query"
+        },
+        {
+          "value": "no",
+          "label": "No",
+          "icon": "🚫",
+          "example": "«No string-built SQL» and a log message"
+        },
+        {
+          "value": "unclear",
+          "label": "Unclear",
+          "icon": "↔️",
+          "example": "«Short functions» and a 40-line function",
+          "ask_why": "What makes it unclear?"
+        }
+      ]
+    }
+  ],
+  "practice": [
+    {
+      "body": "Every query is parameterised",
+      "situation": {
+        "summary": "One reviewer asked for a change at {line}; the other approved it.",
+        "question": "Does «Every query is parameterised» cover {line}?"
+      },
+      "excerpt": {
+        "file": "app/orders.py",
+        "lines": [
+          { "n": 41, "text": "def total(order_id):", "mark": false },
+          {
+            "n": 42,
+            "text": "    sql = f\"SELECT * FROM o WHERE id={order_id}\"",
+            "mark": true
+          }
+        ],
+        "caption": "Reviewer A wrote: build this query with parameters."
+      },
+      "expected": { "applies": "yes" },
+      "why": "The value goes into the query text."
+    },
+    {
+      "body": "Every query is parameterised",
+      "situation": {
+        "summary": "One reviewer flagged {line}; the other did not.",
+        "question": "Does «Every query is parameterised» cover {line}?"
+      },
+      "excerpt": {
+        "file": "app/log.py",
+        "lines": [
+          {
+            "n": 7,
+            "text": "log.info(f\"order {order_id} paid\")",
+            "mark": true
+          }
+        ]
+      },
+      "expected": { "applies": "no" },
+      "why": "A log line is not a query."
+    },
+    {
+      "body": "Functions stay short",
+      "situation": {
+        "summary": "One reviewer asked to split the function; the other did not.",
+        "question": "Does «Functions stay short» cover this function?"
+      },
+      "excerpt": {
+        "file": "app/cart.py",
+        "lines": [
+          { "n": 1, "text": "def checkout(cart):", "mark": true },
+          { "n": 2, "text": "    ...", "mark": false }
+        ],
+        "caption": "The function is 40 lines long."
+      },
+      "expected": { "applies": "unclear" },
+      "why": "«Short» has no number."
+    }
+  ],
+  "items": [
+    {
+      "source_id": "review-sql-1",
+      "group": "all",
+      "body": "Every query is parameterised",
+      "repeat": { "group": "guide-sql", "index": 1, "of": 2 },
+      "situation": {
+        "summary": "Reviewer A asked for a change at {line}; reviewer B approved it.",
+        "question": "Does «Every query is parameterised» cover {line}?"
+      },
+      "excerpt": {
+        "file": "app/report.py",
+        "url": "https://example.com/shop/blob/0000000/app/report.py#L12",
+        "lines": [
+          { "n": 11, "text": "def monthly(month):", "mark": false },
+          {
+            "n": 12,
+            "text": "    rows = db.raw(\"SELECT * FROM sales WHERE m=\" + month)",
+            "mark": true
+          },
+          { "n": 13, "text": "", "mark": false },
+          { "n": 14, "text": "    return rows", "mark": false }
+        ],
+        "caption": "Reviewer A wrote: concatenated SQL.",
+        "mark_label": "◀ the line in question"
+      },
+      "references": {
+        "summary": "What the guideline says",
+        "entries": [
+          {
+            "label": "Guideline",
+            "title": "Security guide `SQL-1`",
+            "fields": [
+              { "text": "Build every query with parameters, never by joining strings." },
+              {
+                "label": "Why",
+                "text": "A query built from strings lets input become part of the query, and a value a user typed can then change what the query does: read other rows, change data, or drop a table. Parameters keep data and query apart in every driver the shop uses."
+              },
+              { "style": "note", "text": "The examples below are the guide's own." },
+              {
+                "label": "Not like this",
+                "style": "code",
+                "text": "db.raw(\"SELECT * FROM t WHERE id=\" + id)"
+              },
+              {
+                "label": "Like this",
+                "style": "code",
+                "text": "db.raw(\"SELECT * FROM t WHERE id=%s\", [id])"
+              }
+            ],
+            "url": "https://example.com/guide#sql-1",
+            "url_label": "Security guide"
+          }
+        ]
+      },
+      "more": {
+        "summary": "3 more lines like this",
+        "items": ["`app/export.py`", "`app/admin.py`"],
+        "rest": "and 1 more"
+      },
+      "table": {
+        "summary": "What each reviewer wrote",
+        "note": "Reviewer A asked for the change; reviewer B approved.",
+        "rows": [
+          {
+            "label": "A only · Comment",
+            "value": "use parameters",
+            "plain": "asks for a parameterised query",
+            "mark": { "tone": "yes", "text": "✓ about this line" }
+          },
+          {
+            "label": "B only · Approval",
+            "value": "LGTM",
+            "mark": { "tone": "no", "text": "✗ says nothing about this line" }
+          }
+        ]
+      }
+    },
+    {
+      "source_id": "review-sql-2",
+      "group": "all",
+      "body": "Every query is parameterised",
+      "repeat": { "group": "guide-sql", "index": 2, "of": 2 },
+      "situation": {
+        "summary": "Only one reviewer commented on {line}.",
+        "question": "Does «Every query is parameterised» cover {line}?"
+      },
+      "excerpt": {
+        "file": "app/search.py",
+        "lines": [
+          {
+            "n": 30,
+            "text": "    q = `SELECT * FROM items WHERE name LIKE '${term}'`",
+            "mark": true
+          }
+        ]
+      }
+    },
+    {
+      "source_id": "review-short-1",
+      "group": "all",
+      "body": "Functions stay short",
+      "situation": {
+        "summary": "One reviewer asked to split the function, the other did not.",
+        "question": "Does «Functions stay short» cover this function?"
+      },
+      "excerpt": {
+        "lines": [
+          { "n": 1, "text": "def import_orders(path):", "mark": true }
+        ]
+      }
+    }
+  ]
+}

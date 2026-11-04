@@ -13,6 +13,7 @@ import {
   type Described as RuleText,
   type RuleRef,
 } from "./rule-descriptions.ts";
+import { applyPreset } from "./label-page-presets.ts";
 
 // ── refusals and output ───────────────────────────────────────────────────────────────────────
 export class Refusal extends Error {
@@ -83,6 +84,11 @@ const writeJson = (path: string, value: unknown): void => {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 };
 const JSON_VALUE = z.json();
+/** The config with its named preset applied (label-page-presets.ts), refused by path. */
+const withPreset = (raw: Json): Json => {
+  const r = applyPreset(raw);
+  return r.ok ? JSON_VALUE.parse(r.value) : fail(r.message);
+};
 const readJson = (path: string): Json => {
   try {
     return JSON_VALUE.parse(JSON.parse(readFileSync(path, "utf8")));
@@ -108,13 +114,14 @@ const RULES_FIELD = "rules";
 const UNIT_FIELD = "unit";
 // Two readings of one requirement, shown as rows A and B (#374).
 const READINGS_FIELD = "readings";
-// The witness card (#380): one situation in code, the example file with the caught line marked, the
-// files like it, the settings behind the card, and where the card sits among its requirement's cards.
-const WITNESS_FIELDS = [
+// Content blocks (#380): generic, on any kind. Every label and sentence a block shows comes from
+// items.json (or a preset, label-page-presets.ts); the page knows only the block's shape.
+const BLOCK_FIELDS = [
   "situation",
-  "example",
-  "more_like_this",
-  "details",
+  "excerpt",
+  "references",
+  "more",
+  "table",
   "repeat",
 ] as const;
 const ALLOWED_FIELDS: readonly string[] = [
@@ -122,7 +129,7 @@ const ALLOWED_FIELDS: readonly string[] = [
   RULES_FIELD,
   UNIT_FIELD,
   READINGS_FIELD,
-  ...WITNESS_FIELDS,
+  ...BLOCK_FIELDS,
   ...PRIVATE_FIELDS,
 ];
 
@@ -164,7 +171,7 @@ type SchemaNode = (
   | { kind: "string"; required: boolean; pattern?: string }
   | { kind: "text"; required: boolean }
   | { kind: "integer"; required: boolean }
-  | { kind: "boolean"; required: boolean; nullable?: boolean }
+  | { kind: "boolean"; required: boolean }
   | { kind: "array"; required: boolean; min: number; items: SchemaNode }
   | {
       kind: "map";
@@ -196,10 +203,10 @@ const integer = (required = true): SchemaNode => ({
   kind: "integer",
   required,
 });
-const boolean = (required = true, nullable = false): SchemaNode =>
-  nullable
-    ? { kind: "boolean", required, nullable }
-    : { kind: "boolean", required };
+const boolean = (required = true): SchemaNode => ({
+  kind: "boolean",
+  required,
+});
 const array = (items: SchemaNode, required = true, min = 0): SchemaNode => ({
   kind: "array",
   required,
@@ -228,44 +235,16 @@ const obj = (
 const LINK = string(false, "https?://\\S+", "an http(s) link");
 const optional = (fields: Readonly<Record<string, SchemaNode>>): SchemaNode =>
   obj(fields, true, false);
-// A rule as the linter's own docs explain it, taken by the consumer from the source it names.
-const EXPLANATION_SOURCES = [
-  "ruff rule",
-  "eslint docs",
-  "plugin docs",
-  "config message",
-  "none",
-];
-const EXPLANATION = optional({
-  source: string(
-    true,
-    EXPLANATION_SOURCES.join("|"),
-    `one of ${EXPLANATION_SOURCES.join(", ")}`,
-  ),
-  what: string(false),
-  why: string(false),
-  example_bad: string(false),
-  example_good: string(false),
-  url: LINK,
-});
-// One glob or option of a reading: its raw value, a plain reading made by a fixed template, and
-// whether it matches the example file (null: the row does not decide that).
-const SETTING = obj({
-  key: string(
-    true,
-    "files|ignores|rule|option:\\S+",
-    "files, ignores, rule or option:<name>",
-  ),
-  raw: string(),
-  plain: string(),
-  matches_example: boolean(false, true),
+const TEXT_FIELD = obj({
+  label: string(false),
+  text: string(),
+  style: string(false, "code|note", "code or note"),
 });
 const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
   [RULES_FIELD]: array(
     obj({
       linter: string(true, "eslint|ruff", "eslint or ruff"),
       id: string(),
-      explanation: EXPLANATION,
     }),
     false,
     1,
@@ -284,24 +263,50 @@ const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
   ),
   [READINGS_FIELD]: obj({ a: string(), b: string() }, true, false),
   file: string(false),
-  situation: optional({
-    kind: string(true, "scope|construct", "scope or construct"),
-    summary: string(),
-    question: string(),
-  }),
-  example: optional({
-    file: string(),
+  situation: optional({ summary: string(), question: string() }),
+  excerpt: optional({
+    file: string(false),
     url: LINK,
     lines: array(obj({ n: integer(), text: text(), mark: boolean() }), true, 1),
-    message: string(),
-    caught_by: string(true, "a|b", "a or b"),
+    caption: string(false),
+    mark_label: string(false),
   }),
-  more_like_this: optional({ count: integer(), files: array(string()) }),
-  details: optional({
-    a: array(SETTING, true, 1),
-    b: array(SETTING, true, 1),
+  references: optional({
+    summary: string(),
+    entries: array(
+      obj({
+        label: string(false),
+        title: string(),
+        fields: array(TEXT_FIELD, true, 1),
+        url: LINK,
+        url_label: string(false),
+      }),
+      true,
+      1,
+    ),
   }),
-  // `group` (the study's requirement id) is never shown: only the card's place among its cards.
+  more: optional({
+    summary: string(),
+    items: array(string(), true, 1),
+    rest: string(false),
+  }),
+  table: optional({
+    summary: string(),
+    note: string(false),
+    rows: array(
+      obj({
+        label: string(),
+        value: string(),
+        plain: string(false),
+        mark: optional({
+          tone: string(true, "yes|no", "yes or no"),
+          text: string(),
+        }),
+      }),
+      true,
+      1,
+    ),
+  }),
   repeat: optional({ group: string(), index: integer(), of: integer() }),
 };
 /**
@@ -310,8 +315,6 @@ const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
  * schema with the field named instead of shipping the old card.
  */
 type Kind = "approval" | "witness" | "labels";
-const WITNESS_WHY =
-  "a witness card asks about one situation in code (`situation`, `example`, `details`); items made for the earlier card, with only `readings` and `file`, are not built: make them again in this shape";
 const KINDS: Readonly<Record<Kind, Readonly<Record<string, string>>>> = {
   // keep or drop a drawn requirement: the line it came from, marked, and the rule read for it
   approval: {
@@ -320,10 +323,13 @@ const KINDS: Readonly<Record<Kind, Readonly<Record<string, string>>>> = {
     [RULES_FIELD]:
       "an approval card shows the rule read for it, with the linter's own description",
   },
-  // one situation in code where two readings of one requirement split (#380)
-  witness: Object.fromEntries(
-    ["situation", "example", "details"].map((f) => [f, WITNESS_WHY]),
-  ),
+  // why two readings of one requirement disagree on a file
+  witness: {
+    [RULES_FIELD]:
+      "a witness card shows the rule both readings configure, with the linter's description",
+    [READINGS_FIELD]: "a witness card shows the two readings, one row each",
+    file: "a witness card shows the file the readings disagree on, on its own row",
+  },
   // gold labels, a blind review: the card is the item, nothing more is required
   labels: {},
 };
@@ -398,6 +404,14 @@ const configSchema = (kind: Kind): SchemaNode =>
     questions: array(QUESTION_SCHEMA, true, 1),
     practice: array(practiceSchema(kind), true, MIN_PRACTICE),
     practice_round: integer(false),
+    // Page-level words the blocks use (references/closed-choice-generator.md §«Content blocks»).
+    labels: optional({
+      place: string(false),
+      body: string(false),
+      line: string(false),
+      repeat: string(false),
+      practice_example: string(false),
+    }),
     items: array(itemSchema(kind), true, 1),
   });
 /** The declared schema (`schema` prints it): every field, those a kind requires left optional. */
@@ -475,9 +489,8 @@ function checkObject(
     );
   }
 }
-/** A boolean, or null where the schema lets it say "unknown". */
-function checkBoolean(value: Json, nullable: boolean, where: string): void {
-  if (typeof value !== "boolean" && !(nullable && value === null))
+function checkBoolean(value: Json, where: string): void {
+  if (typeof value !== "boolean")
     fail(`${where}: must be true or false, got ${repr(value)}`);
 }
 /** A string that may be empty (a blank line of code), or an integer. */
@@ -506,7 +519,7 @@ function checkValue(value: Json, node: SchemaNode, path: string): void {
       checkScalar(value, node.kind, where);
       break;
     case "boolean":
-      checkBoolean(value, node.nullable === true, where);
+      checkBoolean(value, where);
       break;
     case "array":
       checkArray(value, node, path, where);
@@ -540,46 +553,50 @@ interface Unit {
   readonly part: number;
   readonly of: number;
 }
-interface Explanation {
-  readonly source: string;
-  readonly what?: string;
-  readonly why?: string;
-  readonly example_bad?: string;
-  readonly example_good?: string;
-  readonly url?: string;
+interface TextField {
+  readonly label?: string;
+  readonly text: string;
+  readonly style?: string;
 }
-type CardRule = RuleRef & { readonly explanation?: Explanation };
-interface Setting {
-  readonly key: string;
-  readonly raw: string;
-  readonly plain: string;
-  readonly matches_example?: boolean | null;
+interface CodeLine {
+  readonly n: number;
+  readonly text: string;
+  readonly mark: boolean;
 }
-/** The witness card's own fields (#380), each optional unless the page's kind needs it. */
-interface WitnessFields {
-  readonly situation?: {
-    readonly kind: string;
-    readonly summary: string;
-    readonly question: string;
-  };
-  readonly example?: {
-    readonly file: string;
+/** The content blocks (#380), each optional on any kind. */
+interface Blocks {
+  readonly situation?: { readonly summary: string; readonly question: string };
+  readonly excerpt?: {
+    readonly file?: string;
     readonly url?: string;
-    readonly lines: readonly {
-      readonly n: number;
-      readonly text: string;
-      readonly mark: boolean;
+    readonly lines: readonly CodeLine[];
+    readonly caption?: string;
+    readonly mark_label?: string;
+  };
+  readonly references?: {
+    readonly summary: string;
+    readonly entries: readonly {
+      readonly label?: string;
+      readonly title: string;
+      readonly fields: readonly TextField[];
+      readonly url?: string;
+      readonly url_label?: string;
     }[];
-    readonly message: string;
-    readonly caught_by: string;
   };
-  readonly more_like_this?: {
-    readonly count: number;
-    readonly files: readonly string[];
+  readonly more?: {
+    readonly summary: string;
+    readonly items: readonly string[];
+    readonly rest?: string;
   };
-  readonly details?: {
-    readonly a: readonly Setting[];
-    readonly b: readonly Setting[];
+  readonly table?: {
+    readonly summary: string;
+    readonly note?: string;
+    readonly rows: readonly {
+      readonly label: string;
+      readonly value: string;
+      readonly plain?: string;
+      readonly mark?: { readonly tone: string; readonly text: string };
+    }[];
   };
   readonly repeat?: {
     readonly group: string;
@@ -590,9 +607,9 @@ interface WitnessFields {
 /** What a card shows, on an item and on a practice item alike. */
 type Card = {
   readonly [F in (typeof PAGE_FIELDS)[number]]?: string;
-} & WitnessFields & {
+} & Blocks & {
     readonly body: string;
-    readonly rules?: readonly CardRule[];
+    readonly rules?: readonly RuleRef[];
     readonly unit?: Unit;
     readonly readings?: { readonly a: string; readonly b: string };
   };
@@ -614,6 +631,7 @@ interface Config {
   readonly questions: readonly Question[];
   readonly practice: readonly Practice[];
   readonly practice_round?: number;
+  readonly labels?: Readonly<Record<string, string>>;
   readonly items: readonly Item[];
 }
 /** The config is typed by passing CONFIG_SCHEMA: `checkValue` refuses (throws) on any departure. */
@@ -727,10 +745,6 @@ function checkPractice(cfg: Config): void {
 }
 function checkConfig(cfg: Config): void {
   checkGroups(cfg);
-  if (cfg.kind === "witness" && cfg.questions.length !== 1)
-    fail(
-      `questions: a witness page asks one question, each card's \`situation.question\` being its text; this one has ${String(cfg.questions.length)}`,
-    );
   if (!asksFamiliarity(cfg) && cfg.familiarity_question !== undefined) {
     fail(
       `familiarity_question: ${repr(cfg.familiarity_question)} is never asked, because \`familiarity\` is not true — remove it, or set "familiarity": true`,
@@ -821,74 +835,40 @@ function checkUnits(cfg: Config): void {
   }
 }
 /**
- * A situation's sentence or question may name the marked line as `{line}`: the build writes «line N»
- * and the line's code there, so the question sits next to the code it is about (round-3 feedback).
+ * A situation's sentence or question may name the excerpt's marked line as `{line}`: the page writes
+ * «line N: » and the line's code there, so a question sits next to the code it is about.
  */
 const LINE_TOKEN = "{line}";
 const SITUATION_TEXTS = ["summary", "question"] as const;
-/**
- * The line `{line}` stands for: the example's marked line, its number and its code without the indent
- * (checkCardShape: one exists when the token is used). The page writes «line N: » and the code as code
- * in place of the token, so a code line holding a backtick reads as it is.
- */
+/** The line `{line}` stands for: the first marked line, its number and its code without the indent. */
 const lineOf = (card: Card) =>
-  card.example?.lines
+  card.excerpt?.lines
     .filter((l) => l.mark)
     .map((l) => ({ n: l.n, text: l.text.trim() }))[0];
+const usesLine = (card: Card): boolean =>
+  SITUATION_TEXTS.some((f) => card.situation?.[f].includes(LINE_TOKEN));
 /**
- * A card with a situation or settings is drawn as a witness card, around its example file; `{line}` in
- * a situation needs a marked line to stand for; «N more» counts at least the files it lists.
+ * What the block schema cannot say: an excerpt marks a line, `{line}` has a marked line to stand for,
+ * and a repeat sits inside its count.
  */
-function checkCardShape(at: string, card: Card): void {
-  const needs = (["situation", "details"] as const).find(
-    (f) => card[f] !== undefined,
-  );
-  if (needs !== undefined && card.example === undefined)
-    fail(
-      `${at}.example: is required with \`${needs}\` — the card shows its example file under the ${needs}; add the example, or remove \`${needs}\``,
-    );
-  const token = SITUATION_TEXTS.find((f) =>
-    card.situation?.[f].includes(LINE_TOKEN),
-  );
-  if (token !== undefined && !card.example?.lines.some((l) => l.mark))
-    fail(
-      `${at}.situation.${token}: \`${LINE_TOKEN}\` names the marked line, and the example has no marked line — mark the line the linter caught (\`mark: true\`), or write the ${token} without \`${LINE_TOKEN}\``,
-    );
-  const more = card.more_like_this;
-  if (more !== undefined && more.files.length > more.count)
-    fail(
-      `${at}.more_like_this.count: ${String(more.count)} is fewer than the ${String(more.files.length)} files it lists — the count is every file like it, the list may be shorter`,
-    );
-}
-/**
- * What the witness schema cannot say: the caught line is marked, a rule's explanation says what the
- * rule does unless its source has none, a repeat sits inside its count, and on a witness page every
- * rule carries its explanation.
- */
-function checkWitness(cfg: Config): void {
+function checkBlocks(cfg: Config): void {
   cardsOf(cfg).forEach(([at, card]) => {
-    checkCardShape(at, card);
-    if (card.example !== undefined && !card.example.lines.some((l) => l.mark))
+    if (card.excerpt !== undefined && !card.excerpt.lines.some((l) => l.mark))
       fail(
-        `${at}.example.lines: no line is marked — mark the line the linter caught (\`mark: true\`)`,
+        `${at}.excerpt.lines: no line is marked — mark the line the card is about (\`mark: true\`)`,
+      );
+    const token = SITUATION_TEXTS.find((f) =>
+      card.situation?.[f].includes(LINE_TOKEN),
+    );
+    if (token !== undefined && card.excerpt === undefined)
+      fail(
+        `${at}.situation.${token}: \`${LINE_TOKEN}\` names the excerpt's marked line, and the card has no \`excerpt\` — add it, or write the ${token} without \`${LINE_TOKEN}\``,
       );
     const r = card.repeat;
     if (r !== undefined && (r.index < 1 || r.index > r.of))
       fail(
         `${at}.repeat.index: ${String(r.index)} is not between 1 and ${String(r.of)}`,
       );
-    (card.rules ?? []).forEach((rule, k) => {
-      const where = `${at}.rules[${String(k)}].explanation`;
-      const x = rule.explanation;
-      if (x === undefined && cfg.kind === "witness")
-        fail(
-          `${where}: is required on a witness card — the linter's own explanation of the rule, or \`source: "none"\` when it has none`,
-        );
-      if (x !== undefined && x.source !== "none" && x.what === undefined)
-        fail(
-          `${where}.what: is required unless \`source\` is 'none' — what the rule does, in its source's words`,
-        );
-    });
   });
 }
 /** Every card of the config, items then practice, by path. */
@@ -929,7 +909,7 @@ const stringsIn = (v: unknown): readonly string[] =>
         : [];
 /**
  * Every text of an item the labeller sees, by field: each string the page shows (the fields as
- * `shownFields` passes them, so a repeat without its group), and every rule with its explanation.
+ * `shownFields` passes them, so a repeat without its group), and every rule it names.
  */
 const visibleTexts = (item: Item): readonly (readonly [string, string])[] =>
   Object.entries({
@@ -1019,20 +999,15 @@ function assignIds(
 }
 
 // ── a build, short of the page ──────────────────────────────────────────────────────────────────
-/** A card's situation as the page shows it: `{line}` written out. */
+/** A card's situation as the page shows it, with the line `{line}` stands for. */
 const situationShown = (item: Card) =>
   item.situation === undefined
     ? {}
     : {
         situation: {
-          kind: item.situation.kind,
           summary: item.situation.summary,
           question: item.situation.question,
-          ...(SITUATION_TEXTS.some((f) =>
-            item.situation?.[f].includes(LINE_TOKEN),
-          )
-            ? { line: lineOf(item) }
-            : {}),
+          ...(usesLine(item) ? { line: lineOf(item) } : {}),
         },
       };
 const shownFields = (item: Card): Readonly<Record<string, unknown>> => ({
@@ -1054,7 +1029,7 @@ const shownFields = (item: Card): Readonly<Record<string, unknown>> => ({
       }),
   ...(item.readings === undefined ? {} : { [READINGS_FIELD]: item.readings }),
   ...Object.fromEntries(
-    WITNESS_FIELDS.filter((f) => f !== "repeat" && f !== "situation").flatMap(
+    BLOCK_FIELDS.filter((f) => f !== "repeat" && f !== "situation").flatMap(
       (f) => (item[f] === undefined ? [] : [[f, item[f]]]),
     ),
   ),
@@ -1070,10 +1045,8 @@ const ruleKey = (r: RuleRef): string => `${r.linter} ${r.id}`;
 function describeRules(cfg: Config, fromDir: string): Described {
   return new Map(
     cardsOf(cfg).flatMap(([at, card]) =>
-      // A rule that carries its explanation was read from its source by the consumer.
       (card.rules ?? []).flatMap(
         (r, k): readonly (readonly [string, RuleText])[] => {
-          if (r.explanation !== undefined) return [];
           const text = describeRule(r, fromDir);
           return text === undefined
             ? fail(
@@ -1092,9 +1065,7 @@ const rulesShown = (card: Card, described: Described) =>
         [RULES_FIELD]: card.rules.map((r) => ({
           linter: r.linter,
           id: r.id,
-          ...(r.explanation === undefined
-            ? described.get(ruleKey(r))
-            : { explanation: r.explanation }),
+          ...described.get(ruleKey(r)),
         })),
       };
 
@@ -1122,6 +1093,13 @@ const practiceShown = (cfg: Config, described: Described) =>
     ...shownFields(p),
     ...rulesShown(p, described),
   }));
+/** The page's own words where `labels` leaves one out (references/closed-choice-generator.md). */
+const DEFAULT_LABELS: Readonly<Record<string, string>> = {
+  place: "{id} · {n} of {total}",
+  line: "Line",
+  repeat: "Card {index} of {of}",
+  practice_example: "",
+};
 /** What a page shows: the questions, the practice and the items, blind, with their neutral ids. */
 function payloadOf(
   cfg: Config,
@@ -1134,6 +1112,7 @@ function payloadOf(
   return {
     title: cfg.title,
     intro: cfg.intro ?? "",
+    labels: { ...DEFAULT_LABELS, ...cfg.labels },
     groups: used.map((g) => ({ id: g, label: String(cfg.groups[g]) })),
     familiarity_question: asksFamiliarity(cfg)
       ? (cfg.familiarity_question ?? "How well do you know {group}?")
@@ -1223,14 +1202,14 @@ function keyOf(
  * returns what the page shows. A page written by hand can take its blindness and its key from here.
  */
 export function prepareBuild(configPath: string, outDir: string) {
-  const cfg = readJson(configPath);
+  const cfg = withPreset(readJson(configPath));
   assertConfig(cfg);
   // Once its `kind` is known to be one, the fields that kind needs on every card.
   checkValue(cfg, configSchema(cfg.kind), "");
   checkConfig(cfg);
   checkItemFields(cfg);
   checkUnits(cfg);
-  checkWitness(cfg);
+  checkBlocks(cfg);
   checkNoSourceShown(cfg);
   const described = describeRules(cfg, dirname(configPath));
   mkdirSync(outDir, { recursive: true });

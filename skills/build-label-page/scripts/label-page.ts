@@ -65,10 +65,13 @@
  *                                           unit: optional; the line an item is drawn from, the
  *                                           requirement marked in it; id (never shown) tells two
  *                                           places with the same words apart. kind approval requires
- *                                           unit and rules; kind witness situation, example and
- *                                           details, one question, and an `explanation` on each
- *                                           rule (references/closed-choice-generator.md, and
- *                                           scripts/fixtures/witness-items.json for a whole page).
+ *                                           unit and rules; kind witness rules, readings and file.
+ *                                           Content blocks (situation, excerpt, references, more,
+ *                                           table, repeat) and page `labels`: optional on any kind
+ *                                           (references/closed-choice-generator.md, and
+ *                                           scripts/fixtures/blocks-items.json for a whole page);
+ *                                           "preset": "<name>" maps a preset's own card fields onto
+ *                                           them (scripts/label-page-presets.ts).
  *   }
  *
  * TypeScript, compiled beside itself to `label-page.js` by `npm run build`: a consumer runs the skill

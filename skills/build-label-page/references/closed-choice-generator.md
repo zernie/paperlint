@@ -22,7 +22,8 @@ Rules 2 to 5, 7 and the page half of 8 of [`checklist.md`](checklist.md): a filt
 scrolling, complete-item counting, neutral ids in a seeded order, the leak guard (an item field
 outside the allow-list stops the build), save on click with a time, the store-unavailable banner,
 the "How to answer" screen (folded into a toggle once the practice is done), the practice before
-the real items, one question per screen, each card's place ("G007 · 7 of 20"), the card just
+the real items, one question per screen, each card's place (`labels.place`, by default
+"G007 · 7 of 20"), the card just
 answered kept under "Next unanswered" until the next answer (so a mis-tap can be changed), and a
 closing line once every item is complete. Its look:
 one dark palette, one column, answer buttons as full-width rows with space between them, an optional
@@ -48,11 +49,11 @@ length.
 - **`kind`** (required): what the page asks, and so which card fields every item and practice card
   must carry. A card without one fails the schema, naming the field and why the kind needs it:
 
-  | kind       | the labeller decides                           | required on every card                             |
-  | ---------- | ---------------------------------------------- | -------------------------------------------------- |
-  | `approval` | keep or drop a drawn requirement               | `unit` (the line, the requirement marked), `rules` |
-  | `witness`  | one situation in code where two readings split | `situation`, `example`, `details` (below)          |
-  | `labels`   | a gold label, a blind review                   | nothing beyond the item                            |
+  | kind       | the labeller decides                                 | required on every card                             |
+  | ---------- | ---------------------------------------------------- | -------------------------------------------------- |
+  | `approval` | keep or drop a drawn requirement                     | `unit` (the line, the requirement marked), `rules` |
+  | `witness`  | why two readings of a requirement disagree on a file | `rules`, `readings`, `file`                        |
+  | `labels`   | a gold label, a blind review                         | nothing beyond the item                            |
 
   Nothing reads `context`: it stays free text. A rule, a line or two readings written there show
   none of what their fields show, so on an `approval` or `witness` page they go in the fields.
@@ -85,34 +86,123 @@ length.
   while typing keeps the box and its focus. An answer stored without its reason (by an older page,
   or merged from chat) still counts as incomplete, on the page and in the export.
 
-## The witness card
+## Content blocks
 
-A witness page asks about code, never about configs: one card per situation (one requirement ×
-one reason its readings split), and one question, whose text each card replaces with its own
-`situation.question`. A page with two questions is refused. Items made for the earlier card (only
-`readings` and `file`) are refused, naming `situation`.
+Any card may carry these blocks, on any `kind`, and each one is optional. The page knows only the shape of each block. Every label and sentence on it comes from `items.json`, so a code review, a prose check or a configuration study each write their own words. A practice card carries the same blocks as the real cards it rehearses. `scripts/fixtures/blocks-items.json` is a whole page of them: a code review, with no preset.
 
-- **`situation`**: `{kind, summary, question}`. `kind` is `scope` (the readings check different
-  files, named by the file category) or `construct` (they forbid different code, named by the
-  construct); `summary` is one plain sentence.
-- **`example`**: `{file, url, lines, message, caught_by}`. `lines` are `{n, text, mark}`, the
-  caught line marked and 2 or 3 lines of context (`text` may be empty); at least one line is
-  marked. `message` is the linter's own, shown under the code; `caught_by` (`a` or `b`) is shown
-  only in the settings. `url` (optional) makes the file name a link.
-- **`more_like_this`** (optional): `{count, files}`, shown as «N more like it», folded; `files`
-  may list fewer than `count`.
-- **`details`**: `{a, b}`, each a list of `{key, raw, plain, matches_example}`: one row per glob or
-  option (`key` is `files`, `ignores`, `rule` or `option:<name>`), the raw value, its plain reading
-  by a fixed template, and whether it matches the example file (`true`, `false`, or `null` when
-  the row does not decide that). Folded under «Settings behind this card»; a row in both lists
-  (same `key` and `raw`) is shown once as «A and B», after the differences.
-- **`repeat`** (optional): `{group, index, of}`; «Card i of n for this requirement» when `of` is
-  more than 1. `group` never reaches the page.
-- **`rules[].explanation`**, required on every rule of a witness card and allowed on any card:
-  `{source, what, why, example_bad, example_good, url}`, the rule as its own docs explain it.
-  `source` is `ruff rule`, `eslint docs`, `plugin docs`, `config message` or `none`; `what` is
-  required unless it is `none`, and `none` shows «No official explanation for this rule». A rule
-  with an explanation is not looked up in the linter. Long text shows three lines and a «more».
+```jsonc
+{
+  "situation": {
+    "summary": "Reviewer A asked for a change at {line}; reviewer B approved it.",
+    "question": "Does «Every query is parameterised» cover {line}?",
+  },
+  "excerpt": {
+    "file": "app/report.py", // optional; with `url`, the name is a link
+    "url": "https://example.com/app/report.py#L12", // optional
+    "lines": [
+      { "n": 11, "text": "def monthly(month):", "mark": false },
+      {
+        "n": 12,
+        "text": "    rows = db.raw(\"SELECT … m=\" + month)",
+        "mark": true,
+      },
+    ],
+    "caption": "Reviewer A wrote: concatenated SQL.", // optional, under the code
+    "mark_label": "◀ the line in question", // optional; default «◀ this line»
+  },
+  "references": {
+    "summary": "What the guideline says", // the folded block's toggle
+    "entries": [
+      {
+        "label": "Guideline", // optional row label
+        "title": "Security guide `SQL-1`",
+        "fields": [
+          { "text": "Build every query with parameters." },
+          { "label": "Why", "text": "Input becomes part of the query." }, // «Why: …»
+          {
+            "style": "note",
+            "text": "The examples below are the guide's own.",
+          },
+          {
+            "label": "Not like this",
+            "style": "code",
+            "text": "db.raw(\"… id=\" + id)",
+          },
+        ],
+        "url": "https://example.com/guide#sql-1", // optional
+        "url_label": "Security guide", // optional; the link text
+      },
+    ],
+  },
+  "more": {
+    "summary": "3 more lines like this",
+    "items": ["`app/export.py`", "`app/admin.py`"],
+    "rest": "and 1 more", // optional, after the items
+  },
+  "table": {
+    "summary": "What each reviewer wrote",
+    "note": "Reviewer A asked for the change; reviewer B approved.", // optional
+    "rows": [
+      {
+        "label": "A only · Comment",
+        "value": "use parameters", // shown as code
+        "plain": "asks for a parameterised query", // optional
+        "mark": { "tone": "yes", "text": "✓ about this line" }, // optional; tone yes or no
+      },
+    ],
+  },
+  "repeat": { "group": "guide-sql", "index": 1, "of": 2 }, // `group` never reaches the page
+}
+```
+
+- **Order on the card.** The card shows, in this order:
+  1. its place (`labels.place`);
+  2. the body, on a `labels.body` row when that label is set;
+  3. the repeat sentence;
+  4. the older fields (`code`, `unit`, `rules`, `readings`, `file`, `context`);
+  5. the situation's summary;
+  6. the excerpt;
+  7. **the question and its answers**;
+  8. `references`, `more` and `table`, each folded and closed.
+
+  The question therefore sits right under the code it names.
+
+- **`situation`**: `{summary, question}`.
+  - `summary` is one sentence above the excerpt.
+  - `question` replaces the text of the page's first question on this card. Other questions keep their own text.
+  - In either text, `{line}` stands for the excerpt's first marked line. The page writes «line N: », then the line's code as code, without its indent. A code line holding a backtick reads as it is.
+  - `{line}` on a card without an `excerpt` is refused by path.
+- **`excerpt`**: at least one line is marked (`mark: true`). The marked line gets a `▶` in the gutter and `mark_label` after its code, and keeps its background, so it reads as marked even without its colour. A line's `text` may be empty, for a blank line.
+- **`references.entries[].fields`**:
+  - A field without `style` is a paragraph («label: text» when it has a label). A long one shows three lines and a «more».
+  - `style: "code"` is a code block on a `label` row.
+  - `style: "note"` is a quiet line.
+- **`table.rows`**: shown in the order given. Each row shows its `label`, then `value` as code, `plain` under it, and `mark` last.
+- **`repeat`**: shows the sentence `labels.repeat` when `of` is more than 1. `index` must lie between 1 and `of`.
+- **`labels`** sits at page level, and every key in it is optional:
+
+  | key                | what it is                                             | default                 |
+  | ------------------ | ------------------------------------------------------ | ----------------------- |
+  | `place`            | the card's place                                       | `{id} · {n} of {total}` |
+  | `body`             | a row label for the body                               | none                    |
+  | `line`             | the label of the `unit` row                            | `Line`                  |
+  | `repeat`           | the repeat sentence                                    | `Card {index} of {of}`  |
+  | `practice_example` | text before each answer's example on a practice button | empty                   |
+
+- The leak guard reads every string these blocks render, one string at a time.
+
+### Presets: named words for a narrow use
+
+A preset is opt-in. An items file names it with `"preset": "<name>"`. The preset maps its own compact card fields onto the blocks above and supplies `labels`. The file's own `labels` override the preset's. The page and the core know nothing of any preset: each one lives in `scripts/label-page-presets.ts`.
+
+- **`linter-config-witness`** is narrow: two linter configs of one requirement disagree on a line of code. The blocks underneath are generic.
+  - **Input fields on a card:**
+    - `example: {file, url?, lines, message, caught_by}`, which becomes the excerpt, with the caption «The linter says: …».
+    - `rules: [{linter, id, explanation}]`, whose explanation has `source` (`ruff rule`, `eslint docs`, `plugin docs`, `config message` or `none`), plus `what`, `why`, `example_bad`, `example_good` and `url`. These become the references, folded under «What the linter rule does (official docs)».
+    - `more_like_this: {count, files}`, which becomes the list «N more file(s) with the same situation».
+    - `details: {a, b}`: rows of `{key, raw, plain, matches_example}`. They become the table «Settings behind this card», with «A only / B only / A and B» rows.
+  - **Its labels**: «Card {n} of {total}», «Requirement», «Card {index} of {of} for this requirement», and «Example of this answer, about other code: ».
+  - `scripts/fixtures/linter-config-witness-items.json` is a whole page of it.
 
 ## The approval page
 
