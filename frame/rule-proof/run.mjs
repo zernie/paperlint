@@ -3,16 +3,22 @@
 // prove each reading on its planted pair, and list the repository files each proved reading flags.
 //
 //   node frame/rule-proof/run.mjs <inputs.json> <out-dir> [--only <index>]
+//   node frame/rule-proof/run.mjs --matrix <inputs.json>     the plan job's matrix: [{ index, node }]
 //
-// inputs.json: [{ id, repo, sha, linter, rule, readings: [{ key, reading, pair }] }]
+// inputs.json: [{ id, repo, sha, linter, rule, node?, node_why?, readings: [{ key, reading, pair }] }]
+//   node: the Node major the item's job runs on (default 22), set when the repository's `engines` excludes 22.
 //   reading: an EslintReading or RuffReading without the version-dependent parts, which are filled here:
 //            ESLint `parser` (the repository's own TypeScript parser, when installed); Ruff plugin settings
 //            under `lint` from Ruff 0.2 on, at the top level before.
 // One JSON file per repository in <out-dir>; nothing from the repository is executed except its linter and the
-// plugins its own lockfile installs. Every outcome is written, including "not installed" and "not run".
-import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+// plugins its own lockfile installs (a .pnpmfile is ignored). Every outcome is written, including "not installed"
+// and "not run". How the linter is installed — as-designed, lockfile-pinned or date-matched — is `install.path`, and
+// the as-designed failure, when there was one, is kept in `install.as_designed` (see installFor below).
+import { execFileSync, spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { globSync } from "glob";
+import yaml from "js-yaml";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
 const [inputsPath, outDir, ...rest] = process.argv.slice(2);
@@ -88,6 +94,14 @@ export function finish(reading, pinned, adjustments) {
     ? { ...reading, parser: "@typescript-eslint/parser" } : reading;
 }
 
+// As-designed: a plugin is installed when the repository's own install put it in node_modules (after expose).
+export function asDesignedPlugins(reading, dir) {
+  const name = reading.linter === "eslint" ? pluginOf(reading.rule) : null;
+  if (!name) return [];
+  const pkg = readJson(path.join(dir, "node_modules", name, "package.json"));
+  return [{ name, version: pkg?.version ?? null, error: pkg ? null : "not in the repository's own install" }];
+}
+
 // Ruff with no pin: the latest release uploaded to PyPI before the commit (DESIGN.md §9.8), not a pre-release.
 export function dateMatched(releases, commitIso) {
   const at = Date.parse(commitIso);
@@ -103,6 +117,267 @@ async function ruffReleases() {
   return (await r.json()).releases;
 }
 
+// ---- Install paths: what happens when the repository's own install leaves no linter ------------------------------
+// 1. as-designed: vigiles installs the repository's own pinned linter from its root lockfile (the frozen rule; for
+//    Ruff with no exact pin, or a pre-commit rev that is a commit sha and so no pin, the release current at the
+//    commit's date).
+// 2. lockfile-pinned (a runner gap, not a design change): the root install left no ESLint, or there is no root
+//    lockfile, or it failed, but a package of the repository declares ESLint and a lockfile of the repository pins
+//    it: those exact versions (ESLint, the TypeScript parser, each plugin a reading names that the same lockfile
+//    pins) are installed at the root.
+// 3. date-matched (a declared deviation from the as-designed rule): ESLint, and each plugin a reading names, at the release
+//    current at the commit's date; the TypeScript parser too when the repository has a tsconfig.json or a reading
+//    names a typescript-eslint rule.
+// Paths 2 and 3 set the repository's root package.json, lockfiles, .npmrc and node_modules aside (outside the
+// repository, so nothing set aside is linted) and install a manifest of their own with npm, scripts off.
+const NODE_LOCKS = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"];
+const ASIDE = ["package.json", ...NODE_LOCKS, ".npmrc", ".yarnrc", ".yarnrc.yml", ".pnpmfile.cjs", ".pnpmfile.mjs",
+  "pnpm-workspace.yaml", "bunfig.toml"];
+const STABLE = /^\d+\.\d+\.\d+$/;
+const cmpV = (a, b) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; };
+const DEP_KEYS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
+const TS_PARSER = "@typescript-eslint/parser";
+
+// npm: the highest release (no pre-release) published on or before the commit.
+export function npmDateMatched(time, commitIso) {
+  const at = Date.parse(commitIso);
+  const ok = Object.entries(time ?? {}).filter(([v, t]) => STABLE.test(v) && Date.parse(t) <= at).map(([v]) => v);
+  return ok.length ? ok.sort(cmpV).at(-1) : null;
+}
+
+const readJson = (p) => { try { return JSON.parse(readFileSync(p, "utf8")); } catch { return null; } };
+const declares = (pkg, name) => DEP_KEYS.map((k) => pkg?.[k]?.[name]).find((v) => typeof v === "string") ?? null;
+
+// Every package.json of the repository (node_modules aside) that declares ESLint, and how many files sit under it.
+export function repoEslint(dir) {
+  const pjs = globSync("**/package.json", { cwd: dir, ignore: ["**/node_modules/**", "**/.git/**"], posix: true }).sort();
+  const declared = pjs.filter((p) => declares(readJson(path.join(dir, p)), "eslint") !== null);
+  return { declared, package_jsons: pjs.length };
+}
+
+// The version a lockfile pins for `name` as the package at `pkgDir` (relative to the lockfile's folder) resolves it.
+export function lockedVersion(lockPath, text, pkgDir, name) {
+  const base = path.basename(lockPath);
+  const clean = (v) => (typeof v === "string" ? v.replace(/\(.*$/, "").replace(/_.*$/, "") : null);
+  if (base === "package-lock.json" || base === "npm-shrinkwrap.json") {
+    const j = JSON.parse(text);
+    const at = pkgDir === "." ? "" : `${pkgDir}/`;
+    const v = j.packages?.[`${at}node_modules/${name}`]?.version ?? j.packages?.[`node_modules/${name}`]?.version ?? j.dependencies?.[name]?.version;
+    return STABLE.test(v ?? "") ? v : null;
+  }
+  if (base === "pnpm-lock.yaml") {
+    const j = yaml.load(text) ?? {};
+    const imp = j.importers?.[pkgDir] ?? (pkgDir === "." ? j : null);
+    const e = DEP_KEYS.map((k) => imp?.[k]?.[name]).find((x) => x !== undefined);
+    const v = clean(typeof e === "object" && e !== null ? e.version : e);
+    if (STABLE.test(v ?? "")) return v;
+    const keys = Object.keys(j.packages ?? {}).map((k) => k.replace(/^\//, "")).filter((k) => k.startsWith(`${name}@`) || k.startsWith(`${name}/`));
+    const vs = keys.map((k) => clean(k.slice(name.length + 1))).filter((x) => STABLE.test(x ?? ""));
+    return vs.length ? vs.sort(cmpV).at(-1) : null;
+  }
+  if (base === "yarn.lock") {
+    const blocks = text.split(/\n\s*\n/);
+    const vs = blocks.filter((b) => {
+      const head = b.split("\n").find((l) => l.trim() && !l.startsWith("#")) ?? "";
+      return head.split(",").some((h) => h.trim().replace(/^"/, "").startsWith(`${name}@`));
+    }).map((b) => /\n\s+version:?\s+"?([^"\s]+)"?/.exec(b)?.[1]).filter((x) => STABLE.test(x ?? ""));
+    return vs.length ? vs.sort(cmpV).at(-1) : null;
+  }
+  return null;
+}
+
+// The package that declares ESLint with most files under it (ties: the shorter path, then by name), and the lockfile
+// nearest above it that pins ESLint for it.
+export function lockfilePin(dir, declared) {
+  const files = globSync("**/*", { cwd: dir, ignore: ["**/node_modules/**", "**/.git/**"], nodir: true, posix: true, dot: true });
+  const under = (d) => (d === "." ? files.length : files.filter((f) => f.startsWith(`${d}/`)).length);
+  const cands = declared.map((p) => path.posix.dirname(p))
+    .map((d) => ({ dir: d, files: under(d) }))
+    .sort((a, b) => b.files - a.files || a.dir.split("/").length - b.dir.split("/").length || a.dir.localeCompare(b.dir));
+  for (const c of cands) {
+    const ups = c.dir === "." ? ["."] : c.dir.split("/").map((_, i, a) => a.slice(0, a.length - i).join("/")).concat(".");
+    for (const up of ups) {
+      for (const lock of NODE_LOCKS) {
+        const lp = up === "." ? lock : `${up}/${lock}`;
+        if (!existsSync(path.join(dir, lp)) || lock === "bun.lockb" || lock === "bun.lock") continue;
+        const rel = up === "." ? c.dir : path.posix.relative(up, c.dir) || ".";
+        const text = readFileSync(path.join(dir, lp), "utf8");
+        let v = null;
+        try { v = lockedVersion(lp, text, rel, "eslint"); } catch { v = null; }
+        if (v) return { package: c.dir, files: c.files, lockfile: lp, importer: rel, eslint: v, text,
+          candidates: cands.map((x) => `${x.dir} (${x.files} files)`) };
+      }
+    }
+  }
+  return { package: null, candidates: cands.map((x) => `${x.dir} (${x.files} files)`) };
+}
+
+const tailOf = (t) => (t ?? "").trim().split("\n").slice(-6).join("\n").slice(0, 600);
+
+// Set the repository's root install files aside, outside the repository; remove its node_modules.
+function setAside(dir, asideDir) {
+  mkdirSync(asideDir, { recursive: true });
+  const moved = ASIDE.filter((f) => existsSync(path.join(dir, f)));
+  for (const f of moved) renameSync(path.join(dir, f), path.join(asideDir, f));
+  rmSync(path.join(dir, "node_modules"), { recursive: true, force: true });
+  return moved;
+}
+
+// A manifest of ESLint and its companions at fixed versions, then each plugin added on its own so one that cannot
+// install (not on npm, no release by the date, a resolve error) costs only the readings that name it.
+function npmManifest(dir, deps, base, plugins) {
+  const write = (dev) => writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "rule-proof-install", private: true, devDependencies: dev }, null, 1) + "\n");
+  const lock = (dev, legacy) => { write(dev); return deps.npm(["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", ...(legacy ? ["--legacy-peer-deps"] : [])], dir); };
+  const r0 = lock(base, false);
+  if (r0.code !== 0) return { error: `npm install --package-lock-only exited ${r0.code}: ${tailOf(r0.stderr)}` };
+  let dev = { ...base }, legacy = false;
+  const out = {};
+  for (const [name, p] of Object.entries(plugins)) {
+    if (p.version === null) { out[name] = p; continue; }
+    const next = { ...dev, [name]: p.version };
+    const r = lock(next, legacy);
+    if (r.code === 0) { dev = next; out[name] = { ...p, error: null }; continue; }
+    if (!legacy && /ERESOLVE/.test(r.stderr ?? "")) {
+      const r2 = lock(next, true);
+      if (r2.code === 0) { dev = next; legacy = true; out[name] = { ...p, error: null, peer_conflict: true }; continue; }
+    }
+    out[name] = { ...p, version: null, error: `npm could not add ${name}@${p.version}: ${tailOf(r.stderr)}` };
+  }
+  const rf = lock(dev, legacy);
+  if (rf.code !== 0) return { error: `final lock exited ${rf.code}: ${tailOf(rf.stderr)}` };
+  if (legacy) writeFileSync(path.join(dir, ".npmrc"), "legacy-peer-deps=true\n");
+  return { plugins: out, legacy_peer_deps: legacy, manifest: dev };
+}
+
+const pluginNames = (readings) => [...new Set(readings.map((r) => pluginOf(r.reading.rule)).filter(Boolean))].sort();
+const wantsTs = (dir, readings) => existsSync(path.join(dir, "tsconfig.json")) || readings.some((r) => r.reading.rule.startsWith("@typescript-eslint/"));
+
+async function dateMatchedVersions(names, commitIso, deps) {
+  const out = {};
+  for (const name of names) {
+    const doc = await deps.registry(name);
+    if (doc === null) { out[name] = { version: null, error: `${name} is not on the npm registry` }; continue; }
+    const v = npmDateMatched(doc.time, commitIso);
+    out[name] = v ? { version: v, error: null } : { version: null, error: `${name} has no release on or before ${commitIso}` };
+  }
+  return out;
+}
+
+// Per reading: each plugin its rule names, the version installed, or why none was.
+export function readingPlugins(reading, install) {
+  const name = reading.linter === "eslint" ? pluginOf(reading.rule) : null;
+  if (!name) return [];
+  const p = install.plugins?.[name];
+  if (p) return [{ name, version: p.version, error: p.error ?? null }];
+  return [{ name, version: null, error: install.path === "as-designed" ? "not in the repository's own install" : "not asked" }];
+}
+
+// ESLint install on our own manifest (paths 2 and 3), then vigiles' own install of it.
+async function ownManifest(item, dir, deps, pathName, versions, plugins, extra) {
+  const aside = setAside(dir, deps.asideDir);
+  const m = npmManifest(dir, deps, versions, plugins);
+  const record = { path: pathName, aside, versions, plugins: m.plugins ?? plugins, legacy_peer_deps: m.legacy_peer_deps ?? false, ...extra };
+  if (m.error) return { installed: { kind: "not-installed", stage: "install", reason: m.error }, record };
+  const installed = deps.install("eslint", dir);
+  return { installed, record };
+}
+
+export async function installFor(item, dir, deps) {
+  const adjustments = new Set();
+  let installed = deps.install(item.linter, dir);
+  const record = { path: "as-designed" };
+  if (installed.kind === "installed") {
+    return { installed, install: { ...record, kind: "installed", version: installed.linter.version, plugins: {}, adjustments: [...adjustments] } };
+  }
+  const asDesigned = installed;
+  if (item.linter === "ruff") {
+    let pinNotRelease = false;
+    if (installed.stage === "install") {
+      const pc = path.join(dir, ".pre-commit-config.yaml");
+      const rev = existsSync(pc) ? (yaml.load(readFileSync(pc, "utf8"))?.repos ?? []).find((r) => String(r.repo ?? "").endsWith("/ruff-pre-commit"))?.rev : undefined;
+      pinNotRelease = typeof rev === "string" && !STABLE.test(rev.replace(/^v/, "")) && installed.reason.includes(rev);
+      if (pinNotRelease) adjustments.add("pre-commit-rev-not-a-release");
+    }
+    if (installed.stage === "no-pin" || pinNotRelease) {
+      const commitIso = deps.commitIso(dir);
+      const version = dateMatched(await deps.ruffReleases(), commitIso);
+      if (version) {
+        writeFileSync(path.join(dir, "requirements-date-matched-ruff.txt"), `ruff==${version}\n`);
+        adjustments.add("date-matched-version");
+        installed = deps.install(item.linter, dir);
+        const out = { ...record, as_designed: asDesigned, date_matched: { commit: commitIso, ruff: version }, adjustments: [...adjustments] };
+        return { installed, install: installed.kind === "installed" ? { ...out, kind: "installed", version: installed.linter.version } : { ...out, ...installed } };
+      }
+    }
+    return { installed, install: { ...record, ...installed, adjustments: [...adjustments] } };
+  }
+  // ESLint: the as-designed install failed (no lockfile, no ESLint in node_modules, install error).
+  const repo = repoEslint(dir);
+  const names = pluginNames(item.readings);
+  const commitIso = deps.commitIso(dir);
+  const pin = repo.declared.length ? lockfilePin(dir, repo.declared) : { package: null, candidates: [] };
+  const done = (r) => {
+    const install = { ...r.record, as_designed: asDesigned, repo_eslint: repo, commit: commitIso, adjustments: [...adjustments] };
+    return { installed: r.installed, install: r.installed.kind === "installed" ? { ...install, kind: "installed", version: r.installed.linter.version } : { ...install, ...r.installed } };
+  };
+  if (pin.package !== null) {
+    const versions = { eslint: pin.eslint };
+    const v = (n) => { try { return lockedVersion(pin.lockfile, pin.text, pin.importer, n); } catch { return null; } };
+    if (wantsTs(dir, item.readings) && v(TS_PARSER)) { versions[TS_PARSER] = v(TS_PARSER); if (v("typescript")) versions.typescript = v("typescript"); }
+    const plugins = Object.fromEntries(names.map((n) => [n, v(n) ? { version: v(n), error: null } : { version: null, error: `${n} is not pinned by ${pin.lockfile}` }]));
+    const r = await ownManifest(item, dir, deps, "lockfile-pinned", versions, plugins,
+      { lockfile_pinned: { package: pin.package, lockfile: pin.lockfile, candidates: pin.candidates } });
+    if (r.installed.kind === "installed") return done(r);
+    adjustments.add("lockfile-pinned-failed");
+    record.lockfile_pinned_attempt = { ...r.record, ...r.installed };
+    // the next path starts from the repository as it was: put the set-aside files back
+    for (const f of ASIDE) rmSync(path.join(dir, f), { force: true });
+    for (const f of r.record.aside) renameSync(path.join(deps.asideDir, f), path.join(dir, f));
+    rmSync(path.join(dir, "node_modules"), { recursive: true, force: true });
+  }
+  const want = ["eslint", ...(wantsTs(dir, item.readings) ? [TS_PARSER, "typescript"] : [])];
+  const base = await dateMatchedVersions(want, commitIso, deps);
+  if (base.eslint.version === null) return done({ installed: { kind: "not-installed", stage: "install", reason: base.eslint.error }, record: { path: "date-matched", versions: {} } });
+  const versions = Object.fromEntries(Object.entries(base).filter(([, x]) => x.version).map(([n, x]) => [n, x.version]));
+  const plugins = await dateMatchedVersions(names, commitIso, deps);
+  const r = await ownManifest(item, dir, deps, "date-matched", versions, plugins, {});
+  r.record = { ...record, ...r.record, path: "date-matched" };
+  return done(r);
+}
+
+// The plan job's matrix: one entry per item; Node 22 unless the item names another (from the repository's engines).
+export const matrixOf = (items) => items.map((it, index) => ({ index, node: String(it.node ?? "22") }));
+
+// The machine's side of installFor: vigiles' install, the registries, npm, git.
+function realDeps(dir) {
+  const env = { npm_config_cache: path.join(cacheDir, "npm"), npm_config_update_notifier: "false", HOME: path.join(cacheDir, "home") };
+  return {
+    install: (linter, d) => rp.install(linter, d, { cacheDir }),
+    registry: async (name) => {
+      const r = await fetch(`https://registry.npmjs.org/${name.replace("/", "%2F")}`);
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error(`registry ${name}: HTTP ${r.status}`);
+      return r.json();
+    },
+    ruffReleases,
+    npm: (args, cwd) => {
+      const r = spawnSync("npm", args, { cwd, env: { ...process.env, ...env }, encoding: "utf8", timeout: 300_000 });
+      return { code: r.status ?? 1, stderr: `${r.stderr ?? ""}${r.error ? String(r.error) : ""}` };
+    },
+    commitIso: (d) => git(d, "log", "-1", "--format=%cI").trim(),
+    asideDir: path.join(work, "aside"),
+  };
+}
+
+// A repository's .pnpmfile runs code at install even with scripts off (one measured repository cloned a submodule in its
+// updateConfig hook and timed out). pnpm is told to ignore it; the adjustment is recorded.
+function pnpmfileEnv(dir) {
+  const has = [".pnpmfile.cjs", ".pnpmfile.mjs"].some((f) => existsSync(path.join(dir, f)));
+  if (has) { process.env.npm_config_ignore_pnpmfile = "true"; process.env.pnpm_config_ignore_pnpmfile = "true"; }
+  else { delete process.env.npm_config_ignore_pnpmfile; delete process.env.pnpm_config_ignore_pnpmfile; }
+  return has;
+}
+
 async function runOne(item) {
   const dir = path.join(work, "repo");
   const t0 = Date.now();
@@ -113,29 +388,29 @@ async function runOne(item) {
   } catch (e) {
     return { ...result, clone: { kind: "failed", reason: String(e.stderr ?? e.message).slice(0, 500) } };
   }
-  let installed = rp.install(item.linter, dir, { cacheDir });
-  if (installed.kind !== "installed" && item.linter === "ruff" && installed.stage === "no-pin") {
-    const commitIso = git(dir, "log", "-1", "--format=%cI").trim();
-    const version = dateMatched(await ruffReleases(), commitIso);
-    result.as_designed_install = installed;
-    if (version) {
-      writeFileSync(path.join(dir, "requirements-date-matched-ruff.txt"), `ruff==${version}\n`);
-      adjustments.add("date-matched-version");
-      result.date_matched = { commit: commitIso, ruff: version };
-      installed = rp.install(item.linter, dir, { cacheDir });
-    }
-  }
-  if (installed.kind !== "installed") return { ...result, install: installed, adjustments: [...adjustments], seconds: (Date.now() - t0) / 1000 };
+  if (pnpmfileEnv(dir)) adjustments.add("pnpmfile-ignored");
+  if (item.node) result.node = { asked: String(item.node), ran: process.version, why: item.node_why ?? null };
+  const deps = realDeps(dir);
+  rmSync(deps.asideDir, { recursive: true, force: true });
+  const { installed, install } = await installFor(item, dir, deps);
+  for (const a of install.adjustments ?? []) adjustments.add(a);
+  if (install.as_designed) result.as_designed_install = install.as_designed;
+  if (install.date_matched) result.date_matched = install.date_matched;
+  result.install = install;
+  if (installed.kind !== "installed") return { ...result, adjustments: [...adjustments], seconds: (Date.now() - t0) / 1000 };
   const pinned = installed.linter;
-  result.install = { kind: "installed", version: pinned.version };
   const fulls = [];
   result.readings = item.readings.map(({ key, reading, pair }) => {
     const full = finish(reading, pinned, adjustments);
     fulls.push(full);
+    const plugins = install.path === "as-designed" ? asDesignedPlugins(full, pinned.dir) : readingPlugins(full, install);
+    const missing = plugins.find((p) => p.version === null);
+    // On our own manifest a plugin that did not install is the reading's own failure kind, never a silent drop.
+    if (missing && install.path !== "as-designed") return { key, reading: full, plugins, proof: { kind: "plugin-not-installed", plugin: missing.name, reason: missing.error } };
     const proof = rp.prove(pinned, full, pair);
-    if (proof.kind !== "proved") return { key, reading: full, proof };
+    if (proof.kind !== "proved") return { key, reading: full, plugins, proof };
     const flagged = rp.flagged(proof.reading);
-    return { key, reading: full, proof: { kind: "proved" }, flagged };
+    return { key, reading: full, plugins, proof: { kind: "proved" }, flagged };
   });
   if (item.cross) {
     // Cross-example check: each proved reading A on every other proved reading B's planted violation, judged with
@@ -154,7 +429,9 @@ async function runOne(item) {
   return result;
 }
 
-if (inputsPath) {
+if (inputsPath === "--matrix") {
+  console.log(JSON.stringify(matrixOf(JSON.parse(readFileSync(outDir, "utf8")))));
+} else if (inputsPath) {
   mkdirSync(cacheDir, { recursive: true });
   mkdirSync(outDir, { recursive: true });
   const items = JSON.parse(readFileSync(inputsPath, "utf8"));

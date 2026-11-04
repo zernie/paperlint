@@ -17,13 +17,22 @@ jobs:
     permissions:
       contents: read
     outputs:
-      indices: ${{ steps.list.outputs.indices }}
+      matrix: ${{ steps.list.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: install the runner (vigiles only, no install scripts)
+        working-directory: frame/rule-proof
+        run: npm install --ignore-scripts --no-audit --no-fund
+      # The runner's own selftests gate the run: no repository is run on a runner whose install paths are red.
+      - name: runner selftests
+        run: node frame/rule-proof/run.selftest.mjs && node frame/rule-proof/install.selftest.mjs
       - id: list
-        run: echo "indices=$(node -e 'const a=require(`./frame/rule-proof/inputs.json`);console.log(JSON.stringify(a.map((_,i)=>i)))')" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(node frame/rule-proof/run.mjs --matrix frame/rule-proof/inputs.json)" >> "$GITHUB_OUTPUT"
   run:
     needs: plan
     runs-on: ubuntu-latest
@@ -34,14 +43,16 @@ jobs:
       fail-fast: false
       max-parallel: 10
       matrix:
-        index: ${{ fromJSON(needs.plan.outputs.indices) }}
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      # Node 22, or the version an item names because its repository's `engines` excludes 22 (a measured case: yarn refused
+      # an install under 22 for a package that asks for >=20 <21).
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node }}
       - uses: astral-sh/setup-uv@v6
       - name: corepack for pnpm and yarn lockfiles
         run: corepack enable

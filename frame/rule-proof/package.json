@@ -3,6 +3,8 @@
   "type": "module",
   "description": "Runner for linter readings on real repositories (vigiles experimental_ruleProof); used by .github/workflows/rule-proof-run.yml only",
   "dependencies": {
+    "glob": "13.0.6",
+    "js-yaml": "4.3.2",
     "vigiles": "41.1.0"
   }
 }
