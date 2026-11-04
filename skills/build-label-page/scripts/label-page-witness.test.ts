@@ -214,7 +214,7 @@ test("🔴 `{line}` in a situation becomes «line N» and the marked line's code
     shown
       .replace(/\n/g, "")
       .includes(
-        'Does «Never log with print; use the logging module» forbid line 31 (print("cart", cart.id, cart.total))?',
+        'Does «Never log with print; use the logging module» forbid line 31: print("cart", cart.id, cart.total)?',
       ),
   );
   assert.match(
@@ -232,14 +232,17 @@ const inOrder = (text: string, parts: readonly string[]): readonly string[] => {
   );
 };
 
-test("🔴 a witness card reads top to bottom: requirement, situation, the code with its marked line labelled, the linter's message, the question and its answers, then the rule's docs folded, N more like it, and the settings", async () => {
+test("🔴 a witness card reads top to bottom: requirement, situation, the code with its marked line labelled, the linter's message, the question and its answers, then the rule's docs folded, N more files with the same situation, and the settings", async () => {
   const { page, key } = build(setup("witness-face", witness()));
   const shown = await showPage(page, {}, {}, PRACTICE_DONE);
   const id = Object.entries(key.ids).find(
     ([, v]) => v.source_id === "req-logging:tests",
   )?.[0];
   assert.ok(id !== undefined);
-  const card = shown.slice(shown.indexOf(`\n${id} ·`));
+  // A witness card counts in words: «Card N of 3», N its place in id order.
+  const card = shown.slice(
+    shown.indexOf(`\nCard ${String(Number(id.slice(1)))} of 3`),
+  );
   // Guards: every part in place; an empty list means nothing is missing or out of order.
   assert.deepEqual(
     inOrder(card, [
@@ -250,19 +253,19 @@ test("🔴 a witness card reads top to bottom: requirement, situation, the code 
       "scripts/seed_db.py",
       "18",
       'print(f"seeded {len(rows)} rows")',
-      "← this line",
+      "◀ this line",
       "The linter says:",
       "Should this requirement apply to the scripts/ folder?",
       "Unclear: the wording could be read either way",
       "I can't judge (tell me why)",
-      "What the rule does (official docs)",
+      "What the linter rule does (official docs)",
       "Checks for",
       "Why:",
-      "The rule docs' own examples, with the docs' own settings, not this project's",
+      "The flagged/allowed examples are the docs' own, with the docs' own settings, not this project's.",
       "Flagged",
       "Allowed",
       "Rule docs",
-      "3 more like it",
+      "3 more file(s) with the same situation",
       "scripts/backfill_prices.py",
       "and 1 more",
       "Settings behind this card",

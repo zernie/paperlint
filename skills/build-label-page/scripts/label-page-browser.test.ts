@@ -355,11 +355,13 @@ test(
   "🔴 at phone width a witness card labels the caught line in its numbered code, asks its question right under that code, folds the rule docs and the settings, opens a long text on «more», and nothing pushes the page sideways",
   async () => {
     await onWitnessPage("browser-witness", async (page) => {
+      // Measure after the store's practice answers arrived: before them the practice cards sit above.
+      await page.locator("summary", { hasText: "How to answer" }).waitFor();
       const card = page.locator("article.item", { hasText: "seed_db.py" });
       // The marked line reads as marked without colour: a gutter marker and a label.
       assert.equal(
         await card.locator("pre.numbered .hit").textContent(),
-        '▶18print(f"seeded {len(rows)} rows")← this line',
+        '▶18print(f"seeded {len(rows)} rows")◀ this line',
       );
       // Guards: the rule docs, the files like it and the settings are folded.
       assert.deepEqual(
@@ -372,7 +374,7 @@ test(
       // The question sits right under the code it is about: only the linter's message between them,
       // and the rule's docs start below the answers.
       const docsSummary = card.locator("summary", {
-        hasText: "What the rule does (official docs)",
+        hasText: "What the linter rule does (official docs)",
       });
       const code = await card.locator("pre.numbered").boundingBox();
       const said = await card
@@ -381,7 +383,10 @@ test(
       const ask = await card.locator(".ask").boundingBox();
       const docs = await docsSummary.boundingBox();
       assert.ok(code && said && ask && docs);
-      assert.ok(said.y > code.y + code.height && ask.y > said.y + said.height);
+      assert.ok(
+        said.y > code.y + code.height && ask.y > said.y + said.height,
+        JSON.stringify({ code, said, ask }),
+      );
       assert.ok(
         ask.y - (said.y + said.height) < 40,
         `gap ${String(ask.y - (said.y + said.height))}`,
@@ -406,7 +411,7 @@ test(
 );
 
 test(
-  "🔴 a witness practice card's answer buttons carry no example line: the examples stay in «How to answer»",
+  "🔴 a witness practice card's answer buttons say their example is about other code",
   async () => {
     await onWitnessPage(
       "browser-witness-buttons",
@@ -417,9 +422,14 @@ test(
             await practice.locator(".id").textContent(),
             await practice.locator(".opts button").count(),
             await practice.locator(".opts .ex").count(),
-            await page.locator(".examples .example").count(),
+            await practice.locator(".opts .ex").first().textContent(),
           ],
-          ["Practice P1", 4, 0, 4],
+          [
+            "Practice P1",
+            4,
+            4,
+            "Example of this answer, about other code: «Use ===» and the line a == b: yes, the requirement forbids it",
+          ],
         );
       },
       false,

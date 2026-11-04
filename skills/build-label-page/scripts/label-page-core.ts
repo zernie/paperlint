@@ -826,11 +826,11 @@ function checkUnits(cfg: Config): void {
  */
 const LINE_TOKEN = "{line}";
 const SITUATION_TEXTS = ["summary", "question"] as const;
-/** `{line}` → «line N (`code`)», N and code of the example's marked line (checkWitness: one exists). */
+/** `{line}` → «line N: `code`», N and code of the example's marked line (checkWitness: one exists). */
 const withLine = (card: Card, text: string): string =>
   text.replaceAll(LINE_TOKEN, () => {
     const line = card.example?.lines.find((l) => l.mark);
-    return `line ${String(line?.n)} (\`${String(line?.text.trim())}\`)`;
+    return `line ${String(line?.n)}: \`${String(line?.text.trim())}\``;
   });
 /** `{line}` in a situation needs a marked line to stand for. */
 function checkLineToken(at: string, card: Card): void {

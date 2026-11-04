@@ -305,8 +305,9 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     return n;
   }
-  // `withExamples`: a practice card that is not a witness card shows each answer's example on its button;
-  // real items and witness cards keep the buttons short, the examples stay in «How to answer».
+  // `withExamples`: the practice shows each answer's example on its button (on a witness card, said to be
+  // about other code, since its question names this code); the real items keep the buttons short, the
+  // examples stay on the first screen.
   // A code block shows what a labeller would otherwise count by eye: leading and trailing whitespace as
   // faint marks (a space as a middle dot, a tab as an arrow) and each line's length in characters.
   function visible(ws) { return ws.replace(/ /g, "\u00b7").replace(/\t/g, "\u2192"); }
@@ -329,7 +330,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       var b = el("button", "");
       if (o.icon) b.appendChild(el("span", "icon", o.icon));
       b.appendChild(el("span", "label", o.label));
-      if (withExamples && o.example) b.appendChild(rich("span", "ex", o.example));
+      if (withExamples && o.example) b.appendChild(rich("span", "ex", (withExamples === "other code" ? "Example of this answer, about other code: " : "") + o.example));
       b.type = "button";
       b.setAttribute("aria-pressed", String(current === o.value));
       b.disabled = disabled;
@@ -364,7 +365,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   function itemCard(item, off) {
     var card = el("article", "item");
-    card.appendChild(el("div", "id", item.id + " · " + (DATA.items.indexOf(item) + 1) + " of " + DATA.items.length));
+    // A witness card counts in words; another card shows its id, for a labeller who reports it.
+    card.appendChild(el("div", "id", (item.situation ? "Card " : item.id + " · ") + (DATA.items.indexOf(item) + 1) + " of " + DATA.items.length));
     evidence(card, item);
     var a = answersOf(item.id);
     askOne(card, a, state.editing[item.id], function (q, v) {
@@ -453,7 +455,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       line.appendChild(el("span", "g", l.mark ? "\u25b6" : ""));
       line.appendChild(el("span", "n", String(l.n)));
       var code = line.appendChild(el("span", "", l.text));
-      if (l.mark) code.appendChild(el("span", "this", "\u2190 this line"));
+      if (l.mark) code.appendChild(el("span", "this", "\u25c0 this line"));
       pre.appendChild(line);
     });
     box.appendChild(pre);
@@ -470,7 +472,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     else box.appendChild(clamp(rich("p", "", (x.source === "config message" ? "The config's own message: " : "") + x.what), x.what));
     if (x.why) box.appendChild(clamp(rich("p", "", "Why: " + x.why), x.why));
     if (x.example_bad || x.example_good) {
-      box.appendChild(el("p", "muted", "The rule docs' own examples, with the docs' own settings, not this project's:"));
+      box.appendChild(el("p", "muted", "The flagged/allowed examples are the docs' own, with the docs' own settings, not this project's."));
     }
     [["Flagged", x.example_bad], ["Allowed", x.example_good]].forEach(function (e) {
       if (e[1]) box.appendChild(row(e[0], clamp(plainCode(e[1]), e[1])));
@@ -480,7 +482,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   function moreLike(m) {
     var d = el("details");
-    d.appendChild(el("summary", "", m.count + " more like it"));
+    d.appendChild(el("summary", "", m.count + " more file(s) with the same situation"));
     var ul = el("ul");
     m.files.forEach(function (f) { ul.appendChild(el("li")).appendChild(el("code", "", f)); });
     if (m.count > m.files.length) ul.appendChild(el("li", "muted", "and " + (m.count - m.files.length) + " more"));
@@ -520,7 +522,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     if (item.repeat && item.repeat.of > 1) {
       card.appendChild(el("p", "muted", "Card " + item.repeat.index + " of " + item.repeat.of + " for this requirement"));
     }
-    if (item.unit) card.appendChild(row("Line", markedLine(item.unit)));
+    if (item.unit) card.appendChild(row("Where this requirement comes from (the project's rules file)", markedLine(item.unit)));
     card.appendChild(rich("p", "situation", item.situation.summary));
     card.appendChild(exampleBlock(item.example));
   }
@@ -530,7 +532,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     var rules = item.rules || [];
     if (rules.length) {
       var d = card.appendChild(el("details"));
-      d.appendChild(el("summary", "", rules.length > 1 ? "What the rules do (official docs)" : "What the rule does (official docs)"));
+      d.appendChild(el("summary", "", rules.length > 1 ? "What the linter rules do (official docs)" : "What the linter rule does (official docs)"));
       rules.forEach(function (r) { d.appendChild(row("Rule", ruleBlock(r))); });
     }
     if (item.more_like_this && item.more_like_this.count > 0) card.appendChild(moreLike(item.more_like_this));
@@ -608,8 +610,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     card.appendChild(el("div", "id", "Practice " + p.id));
     evidence(card, p);
     var a = practiceAnswers(p.id);
-    // A witness card's buttons stay plain: its question names the line, the examples are in «How to answer».
-    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, !p.situation, p.situation);
+    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, p.situation ? "other code" : true, p.situation);
     if (practiceAnswered(p)) {
       var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
       card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",
