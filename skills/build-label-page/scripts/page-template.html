@@ -94,7 +94,8 @@ pre.numbered .hit { background: var(--mark-bg); }
 pre.numbered .hit .n { color: var(--mark); font-weight: 700; }
 .rulebox { display: flex; flex-direction: column; gap: 8px; }
 .clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-pre.clamped { display: block; max-height: 4.6em; }
+/* The clamp cuts at the padding box, so a code block's bottom padding is a border: no fourth line peeks in. */
+pre.clamped { padding-bottom: 0; border-bottom: 10px solid var(--surface); box-shadow: 0 1px 0 var(--line); }
 button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); padding: 0 4px; align-self: flex-start; }
 .setting { display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid var(--line); }
 .match.yes { color: var(--good); }
@@ -460,7 +461,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     box.appendChild(rich("p", "", r.linter + " `" + r.id + "`" + (x ? "" : (r.family ? " (" + r.family + ")" : "") + ": " + r.description)));
     if (!x) return box;
     if (x.source === "none") box.appendChild(el("p", "muted", "No official explanation for this rule."));
-    else box.appendChild(clamp(rich("p", "", x.what), x.what));
+    else box.appendChild(clamp(rich("p", "", (x.source === "config message" ? "The config's own message: " : "") + x.what), x.what));
     if (x.why) box.appendChild(clamp(rich("p", "", "Why: " + x.why), x.why));
     [["Flagged", x.example_bad], ["Allowed", x.example_good]].forEach(function (e) {
       if (e[1]) box.appendChild(row(e[0], clamp(plainCode(e[1]), e[1])));
