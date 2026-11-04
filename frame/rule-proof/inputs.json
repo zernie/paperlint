@@ -1,25 +1,28 @@
 [
  {
-  "id": "DA09",
-  "repo": "meilisearch/strapi-plugin-meilisearch",
-  "sha": "3b2322808a465fb497ee37cfe1a22e25157d063f",
+  "id": "DA02-35a5af",
+  "repo": "operaton/operaton",
+  "sha": "ccea9712f28a73b380829621fa6c2fb6540685f1",
   "linter": "eslint",
-  "rule": "id-denylist",
+  "rule": "no-tabs",
   "cross": true,
   "readings": [
    {
-    "key": "anthropic-s1",
+    "key": "google-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "id-denylist",
-     "options": [
-      "entry",
-      "entries"
-     ],
+     "rule": "no-tabs",
+     "options": [],
      "scope": {
       "files": [
-       "server/src/**/*.js",
-       "tests/integrations/**/*.js"
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -31,12 +34,61 @@
     },
     "pair": {
      "bad": {
-      "path": "server/src/p3s109-pair/bad.js",
-      "text": "function indexDocuments(client, entries) {\n  const index = client.index('movies');\n  return index.addDocuments(entries);\n}\n\nmodule.exports = { indexDocuments };\n"
+      "path": "p3s109-pair/bad.js",
+      "text": "function add(a, b) {\n\treturn a + b;\n}\n\nmodule.exports = add;\n"
      },
      "good": {
-      "path": "server/src/p3s109-pair/good.js",
-      "text": "function indexDocuments(client, documents) {\n  const index = client.index('movies');\n  return index.addDocuments(documents);\n}\n\nmodule.exports = { indexDocuments };\n"
+      "path": "p3s109-pair/good.js",
+      "text": "function add(a, b) {\n  return a + b;\n}\n\nmodule.exports = add;\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "DA02-7f113a",
+  "repo": "operaton/operaton",
+  "sha": "ccea9712f28a73b380829621fa6c2fb6540685f1",
+  "linter": "eslint",
+  "rule": "indent",
+  "cross": true,
+  "readings": [
+   {
+    "key": "anthropic-s1",
+    "reading": {
+     "linter": "eslint",
+     "rule": "indent",
+     "options": [
+      2
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.mjs",
+       "**/*.ts",
+       "**/*.jsx",
+       "**/*.tsx"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "**/node_modules/**",
+       "**/target/**",
+       "**/dist/**",
+       "**/*.min.js"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.js",
+      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.js",
+      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
      }
     }
    },
@@ -44,32 +96,38 @@
     "key": "anthropic-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "id-denylist",
+     "rule": "indent",
      "options": [
-      "entry",
-      "entries"
+      2
      ],
      "scope": {
       "files": [
-       "server/src/**/*.js",
-       "tests/integrations/**/*.js"
+       "**/*.js",
+       "**/*.mjs",
+       "**/*.ts",
+       "**/*.jsx",
+       "**/*.tsx"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "**/node_modules/**",
+       "**/target/**",
+       "**/dist/**",
+       "**/*.min.js"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "server/src/p3s109-pair/bad.js",
-      "text": "function indexDocuments(client, documents) {\n  const index = client.index('movies');\n  const entry = documents[0];\n  return index.addDocuments([entry]);\n}\n\nmodule.exports = { indexDocuments };\n"
+      "path": "p3s109-pair/bad.js",
+      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
      },
      "good": {
-      "path": "server/src/p3s109-pair/good.js",
-      "text": "function indexDocuments(client, documents) {\n  const index = client.index('movies');\n  const document = documents[0];\n  return index.addDocuments([document]);\n}\n\nmodule.exports = { indexDocuments };\n"
+      "path": "p3s109-pair/good.js",
+      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
      }
     }
    },
@@ -77,20 +135,14 @@
     "key": "deepseek-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "id-denylist",
+     "rule": "indent",
      "options": [
-      "entry"
+      2
      ],
      "scope": {
       "files": [
        "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
+       "**/*.mjs"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -103,11 +155,11 @@
     "pair": {
      "bad": {
       "path": "p3s109-pair/bad.js",
-      "text": "async function addDocuments(index, documents) {\n  for (const entry of documents) {\n    await index.addDocuments([entry]);\n  }\n}\n\nmodule.exports = { addDocuments };\n"
+      "text": "function greet(name) {\n    const message = 'Hello, ' + name;\n    return message;\n}\n\nmodule.exports = greet;\n"
      },
      "good": {
       "path": "p3s109-pair/good.js",
-      "text": "async function addDocuments(index, documents) {\n  for (const document of documents) {\n    await index.addDocuments([document]);\n  }\n}\n\nmodule.exports = { addDocuments };\n"
+      "text": "function greet(name) {\n  const message = 'Hello, ' + name;\n  return message;\n}\n\nmodule.exports = greet;\n"
      }
     }
    },
@@ -115,16 +167,9 @@
     "key": "deepseek-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-syntax",
+     "rule": "indent",
      "options": [
-      {
-       "selector": "Identifier[name='entry']",
-       "message": "Do not use 'entry' to refer to a Meilisearch document. Use 'document' instead."
-      },
-      {
-       "selector": "Literal[value=/\\bentry\\b/]",
-       "message": "Do not use the word 'entry' to refer to a Meilisearch document in string literals. Use 'document' instead."
-      }
+      2
      ],
      "scope": {
       "files": [
@@ -147,12 +192,12 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "interface Doc {\n  id: number;\n  title: string;\n}\n\nexport function indexAll(docs: Doc[]): string[] {\n  const ids: string[] = [];\n  for (const entry of docs) {\n    ids.push(`doc-${entry.id}`);\n  }\n  return ids;\n}\n"
+      "path": "p3s109-pair/bad.js",
+      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
      },
      "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "interface Doc {\n  id: number;\n  title: string;\n}\n\nexport function indexAll(docs: Doc[]): string[] {\n  const ids: string[] = [];\n  for (const document of docs) {\n    ids.push(`doc-${document.id}`);\n  }\n  return ids;\n}\n"
+      "path": "p3s109-pair/good.js",
+      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
      }
     }
    },
@@ -160,12 +205,9 @@
     "key": "google-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "id-denylist",
+     "rule": "indent",
      "options": [
-      "entry",
-      "entries",
-      "Entry",
-      "Entries"
+      2
      ],
      "scope": {
       "files": [
@@ -189,11 +231,11 @@
     "pair": {
      "bad": {
       "path": "p3s109-pair/bad.js",
-      "text": "export function getIds(documents) {\n  return documents.map((entry) => entry.id);\n}\n"
+      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
      },
      "good": {
       "path": "p3s109-pair/good.js",
-      "text": "export function getIds(documents) {\n  return documents.map((doc) => doc.id);\n}\n"
+      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
      }
     }
    },
@@ -201,12 +243,9 @@
     "key": "google-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "id-denylist",
+     "rule": "indent",
      "options": [
-      "entry",
-      "entries",
-      "Entry",
-      "Entries"
+      2
      ],
      "scope": {
       "files": [
@@ -230,17 +269,56 @@
     "pair": {
      "bad": {
       "path": "p3s109-pair/bad.js",
-      "text": "export async function addBook(index) {\n  const entry = { id: 1, title: 'Moby Dick' };\n  return index.addDocuments([entry]);\n}\n"
+      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
      },
      "good": {
       "path": "p3s109-pair/good.js",
-      "text": "export async function addBook(index) {\n  const doc = { id: 1, title: 'Moby Dick' };\n  return index.addDocuments([doc]);\n}\n"
+      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
      }
     }
    }
-  ],
-  "node": "20",
-  "node_why": "engines.node '>=20 <21'"
+  ]
+ },
+ {
+  "id": "DA11-2948e8",
+  "repo": "openmdao/dymos",
+  "sha": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+  "linter": "ruff",
+  "rule": "D415",
+  "cross": true,
+  "readings": [
+   {
+    "key": "deepseek-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "D415",
+     "settings": {
+      "pydocstyle.convention": "numpy"
+     },
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.py",
+      "text": "def add(a, b):\n    \"\"\"Add two numbers\n\n    Parameters\n    ----------\n    a : int\n        First number.\n    b : int\n        Second number.\n\n    Returns\n    -------\n    int\n        The sum.\n    \"\"\"\n    return a + b\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.py",
+      "text": "def add(a, b):\n    \"\"\"Add two numbers.\n\n    Parameters\n    ----------\n    a : int\n        First number.\n    b : int\n        Second number.\n\n    Returns\n    -------\n    int\n        The sum.\n    \"\"\"\n    return a + b\n"
+     }
+    }
+   }
+  ]
  },
  {
   "id": "DA15",
@@ -496,9 +574,9 @@
   ]
  },
  {
-  "id": "DA18",
-  "repo": "wundergraph/cosmo",
-  "sha": "034ef2e66db2e01776b83f910f9fcbcafc4625fc",
+  "id": "DA17",
+  "repo": "auth0/auth0-angular",
+  "sha": "a16b48539a4f0cfdf1e72927f8f324cb83306c14",
   "linter": "eslint",
   "rule": "no-restricted-syntax",
   "cross": true,
@@ -510,40 +588,32 @@
      "rule": "no-restricted-syntax",
      "options": [
       {
-       "selector": "NewExpression[callee.name='URLSearchParams']",
-       "message": "Use buildUrl from @/lib/build-url instead of URLSearchParams."
-      },
-      {
-       "selector": "TemplateElement[value.raw=/[?][a-zA-Z_]+=$/]",
-       "message": "Use buildUrl from @/lib/build-url instead of concatenating query strings in template literals."
-      },
-      {
-       "selector": "BinaryExpression[operator='+'] > Literal[value=/[?][a-zA-Z_]+=$/]",
-       "message": "Use buildUrl from @/lib/build-url instead of string concatenation to build URLs."
+       "selector": "NewExpression[callee.name='Auth0Client']",
+       "message": "Do not construct a new Auth0Client. Reuse the injected instance from Auth0ClientService (this.auth0Client)."
       }
      ],
      "scope": {
       "files": [
-       "studio/src/**/*.ts",
-       "studio/src/**/*.tsx"
+       "projects/auth0-angular/src/**/*.ts"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
        "**/build/**",
-       "studio/src/lib/build-url.ts"
+       "projects/auth0-angular/src/**/*.spec.ts",
+       "projects/auth0-angular/src/lib/auth.client.ts"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "studio/src/p3s109-pair/bad.ts",
-      "text": "export function searchUrl(term: string): string {\n  const params = new URLSearchParams({ q: term });\n  return `/search?${params.toString()}`;\n}\n"
+      "path": "projects/auth0-angular/src/p3s109-pair/bad.ts",
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenReader {\n  private client: Auth0Client;\n\n  constructor() {\n    this.client = new Auth0Client({\n      domain: 'example.auth0.com',\n      clientId: 'abc123',\n    });\n  }\n\n  getToken() {\n    return this.client.getTokenSilently();\n  }\n}\n"
      },
      "good": {
-      "path": "studio/src/p3s109-pair/good.ts",
-      "text": "import { buildUrl } from \"@/lib/build-url\";\n\nexport function searchUrl(term: string): string {\n  return buildUrl(\"/search\", { q: term });\n}\n"
+      "path": "projects/auth0-angular/src/p3s109-pair/good.ts",
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenReader {\n  constructor(private client: Auth0Client) {}\n\n  getToken() {\n    return this.client.getTokenSilently();\n  }\n}\n"
      }
     }
    },
@@ -554,41 +624,32 @@
      "rule": "no-restricted-syntax",
      "options": [
       {
-       "selector": "NewExpression[callee.name='URLSearchParams']",
-       "message": "Build URLs with buildUrl from '@/lib/build-url' instead of URLSearchParams."
-      },
-      {
-       "selector": "BinaryExpression[operator='+'] > Literal[value=/[?&][a-zA-Z_-]+=$/]",
-       "message": "Build URLs with buildUrl from '@/lib/build-url' instead of string concatenation."
-      },
-      {
-       "selector": "TemplateElement[value.raw=/[?&][a-zA-Z_-]+=$/]",
-       "message": "Build URLs with buildUrl from '@/lib/build-url' instead of interpolating query strings."
+       "selector": "NewExpression[callee.name='Auth0Client']",
+       "message": "Do not construct a new Auth0Client; reuse the instance injected via Auth0ClientService."
       }
      ],
      "scope": {
       "files": [
-       "studio/src/**/*.ts",
-       "studio/src/**/*.tsx"
+       "projects/auth0-angular/src/**/*.ts"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
        "**/build/**",
-       "studio/src/lib/build-url.ts",
-       "studio/src/lib/build-url.test.ts"
+       "projects/auth0-angular/src/**/*.spec.ts",
+       "projects/auth0-angular/src/lib/auth.client.ts"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "studio/src/p3s109-pair/bad.ts",
-      "text": "export function searchUrl(query: string): string {\n  const params = new URLSearchParams({ q: query });\n  return '/api/search?' + params.toString();\n}\n"
+      "path": "projects/auth0-angular/src/p3s109-pair/bad.ts",
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenService {\n  private client: Auth0Client;\n\n  constructor() {\n    this.client = new Auth0Client({\n      domain: 'example.auth0.com',\n      clientId: 'abc123',\n    });\n  }\n\n  getToken() {\n    return this.client.getTokenSilently();\n  }\n}\n"
      },
      "good": {
-      "path": "studio/src/p3s109-pair/good.ts",
-      "text": "import { buildUrl } from '@/lib/build-url';\n\nexport function searchUrl(query: string): string {\n  return buildUrl('/api/search', { q: query });\n}\n"
+      "path": "projects/auth0-angular/src/p3s109-pair/good.ts",
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenService {\n  private client: Auth0Client;\n\n  constructor(client: Auth0Client) {\n    this.client = client;\n  }\n\n  getToken() {\n    return this.client.getTokenSilently();\n  }\n}\n"
      }
     }
    },
@@ -596,33 +657,31 @@
     "key": "deepseek-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-globals",
+     "rule": "no-restricted-syntax",
      "options": [
-      {
-       "name": "URLSearchParams",
-       "message": "Use buildUrl from @/lib/build-url instead of URLSearchParams"
-      }
+      "NewExpression[callee.name=\"Auth0Client\"]"
      ],
      "scope": {
       "files": [
-       "**/*.{ts,tsx,js,jsx}"
+       "projects/**/*.ts"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "**/*.spec.ts"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "export function searchUrl(query: string, page: number): string {\n  const params = new URLSearchParams({ q: query, page: String(page) });\n  return `/search?${params.toString()}`;\n}\n"
+      "path": "projects/p3s109-pair/bad.ts",
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport function createClient(): Auth0Client {\n  return new Auth0Client({\n    domain: 'example.auth0.com',\n    clientId: 'abc123',\n  });\n}\n"
      },
      "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "import { buildUrl } from \"@/lib/build-url\";\n\nexport function searchUrl(query: string, page: number): string {\n  return buildUrl(\"/search\", { q: query, page });\n}\n"
+      "path": "projects/p3s109-pair/good.ts",
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport function createClient(client: Auth0Client): Auth0Client {\n  return client;\n}\n"
      }
     }
    },
@@ -630,18 +689,16 @@
     "key": "deepseek-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "local/use-build-url",
-     "options": [],
+     "rule": "no-restricted-syntax",
+     "options": [
+      {
+       "selector": "NewExpression[callee.name='Auth0Client']",
+       "message": "Do not construct a new Auth0Client instance. Use the existing instance from Auth0ClientService."
+      }
+     ],
      "scope": {
       "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
+       "projects/**/*.ts"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -653,12 +710,12 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "export function userSearchUrl(query: string, page: number): string {\n  const params = new URLSearchParams({ q: query, page: String(page) });\n  return '/api/users?' + params.toString();\n}\n"
+      "path": "projects/p3s109-pair/bad.ts",
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class LoginButton {\n  private client = new Auth0Client({\n    domain: 'example.auth0.com',\n    clientId: 'abc123',\n  });\n\n  login(): Promise<void> {\n    return this.client.loginWithRedirect();\n  }\n}\n"
      },
      "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "import { buildUrl } from '@/lib/build-url';\n\nexport function userSearchUrl(query: string, page: number): string {\n  return buildUrl('/api/users', { q: query, page });\n}\n"
+      "path": "projects/p3s109-pair/good.ts",
+      "text": "import { Auth0ClientService } from './auth0-client.service';\n\nexport class LoginButton {\n  private client = Auth0ClientService.instance;\n\n  login(): Promise<void> {\n    return this.client.loginWithRedirect();\n  }\n}\n"
      }
     }
    },
@@ -666,40 +723,40 @@
     "key": "google-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-globals",
+     "rule": "no-restricted-syntax",
      "options": [
       {
-       "name": "URLSearchParams",
-       "message": "Build URLs with `buildUrl` from `@/lib/build-url`, not string concatenation or `URLSearchParams`."
+       "selector": "NewExpression[callee.name='Auth0Client']",
+       "message": "Never construct a new Auth0Client instance; reuse the existing instance injected via Auth0ClientService."
+      },
+      {
+       "selector": "CallExpression[callee.object.name='Auth0ClientFactory'][callee.property.name='createClient']",
+       "message": "Never call the factory per request; reuse the existing Auth0Client instance."
       }
      ],
      "scope": {
       "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
+       "projects/**/*.ts"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "projects/auth0-angular/src/lib/auth.client.ts",
+       "projects/auth0-angular/src/lib/auth.module.ts",
+       "projects/auth0-angular/src/lib/provide.ts"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "export function searchUrl(query: string, page: number): string {\n  const params = new URLSearchParams({ q: query, page: String(page) });\n  return `/search?${params.toString()}`;\n}\n"
+      "path": "projects/p3s109-pair/bad.ts",
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenService {\n  async getToken(): Promise<string> {\n    const client = new Auth0Client({\n      domain: 'example.auth0.com',\n      clientId: 'abc123',\n    });\n    return client.getTokenSilently();\n  }\n}\n"
      },
      "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "import { buildUrl } from '@/lib/build-url';\n\nexport function searchUrl(query: string, page: number): string {\n  return buildUrl('/search', { q: query, page });\n}\n"
+      "path": "projects/p3s109-pair/good.ts",
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenService {\n  constructor(private readonly client: Auth0Client) {}\n\n  async getToken(): Promise<string> {\n    return this.client.getTokenSilently();\n  }\n}\n"
      }
     }
    },
@@ -707,11 +764,11 @@
     "key": "google-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-globals",
+     "rule": "no-restricted-syntax",
      "options": [
       {
-       "name": "URLSearchParams",
-       "message": "Build URLs with buildUrl from @/lib/build-url, not string concatenation or URLSearchParams."
+       "selector": "NewExpression[callee.name='Auth0Client']",
+       "message": "Never construct a new Auth0Client instance. Reuse the existing Auth0Client instance injected via Auth0ClientService."
       }
      ],
      "scope": {
@@ -736,78 +793,302 @@
     "pair": {
      "bad": {
       "path": "p3s109-pair/bad.ts",
-      "text": "export function searchUrl(query: string, page: number): string {\n  const params = new URLSearchParams({ q: query, page: String(page) });\n  return `/search?${params.toString()}`;\n}\n"
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class SessionService {\n  private client: Auth0Client;\n\n  constructor() {\n    this.client = new Auth0Client({\n      domain: 'example.auth0.com',\n      clientId: 'abc123',\n    });\n  }\n\n  async getToken(): Promise<string> {\n    return this.client.getTokenSilently();\n  }\n}\n"
      },
      "good": {
       "path": "p3s109-pair/good.ts",
-      "text": "import { buildUrl } from \"@/lib/build-url\";\n\nexport function searchUrl(query: string, page: number): string {\n  return buildUrl(\"/search\", { q: query, page });\n}\n"
+      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class SessionService {\n  private client: Auth0Client;\n\n  constructor(client: Auth0Client) {\n    this.client = client;\n  }\n\n  async getToken(): Promise<string> {\n    return this.client.getTokenSilently();\n  }\n}\n"
      }
     }
    }
   ]
  },
  {
-  "id": "DA19-ea4ea8",
-  "repo": "veegres/ivory",
-  "sha": "5cdec39776bb68e58eff8927d4df1b333278304f",
+  "id": "DA20-502b61",
+  "repo": "jmetal/jmetalpy",
+  "sha": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
+  "linter": "ruff",
+  "rule": "PT009",
+  "cross": true,
+  "readings": [
+   {
+    "key": "anthropic-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "PT009",
+     "settings": {},
+     "scope": {
+      "files": [
+       "tests/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "tests/p3s109-pair/test_bad.py",
+      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
+     },
+     "good": {
+      "path": "tests/p3s109-pair/test_good.py",
+      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        assert 1 + 1 == 2\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "PT009",
+     "settings": {},
+     "scope": {
+      "files": [
+       "tests/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "tests/p3s109-pair/test_bad.py",
+      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
+     },
+     "good": {
+      "path": "tests/p3s109-pair/test_good.py",
+      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        assert 1 + 1 == 2\n"
+     }
+    }
+   },
+   {
+    "key": "google-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "PT009",
+     "settings": {},
+     "scope": {
+      "files": [
+       "tests/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "tests/p3s109-pair/test_bad.py",
+      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
+     },
+     "good": {
+      "path": "tests/p3s109-pair/test_good.py",
+      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        assert 1 + 1 == 2\n"
+     }
+    }
+   },
+   {
+    "key": "google-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "PT009",
+     "settings": {},
+     "scope": {
+      "files": [
+       "tests/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "tests/p3s109-pair/test_bad.py",
+      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
+     },
+     "good": {
+      "path": "tests/p3s109-pair/test_good.py",
+      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        assert 1 + 1 == 2\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "DA20-a534d0",
+  "repo": "jmetal/jmetalpy",
+  "sha": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
+  "linter": "ruff",
+  "rule": "TID251",
+  "cross": true,
+  "readings": [
+   {
+    "key": "anthropic-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "TID251",
+     "settings": {
+      "flake8-tidy-imports.banned-api": {
+       "unittest.TestCase": {
+        "msg": "Use pytest for tests (plain functions or `class Test<Subject>:`), not unittest.TestCase"
+       }
+      }
+     },
+     "scope": {
+      "files": [
+       "tests/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "tests/p3s109-pair/test_bad.py",
+      "text": "import unittest\n\n\ndef add(a, b):\n    return a + b\n\n\nclass TestAdd(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(add(1, 2), 3)\n"
+     },
+     "good": {
+      "path": "tests/p3s109-pair/test_good.py",
+      "text": "def add(a, b):\n    return a + b\n\n\nclass TestAdd:\n    def test_add(self):\n        assert add(1, 2) == 3\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "TID251",
+     "settings": {
+      "flake8-tidy-imports.banned-api": {
+       "unittest": {
+        "msg": "Use pytest for tests"
+       }
+      }
+     },
+     "scope": {
+      "files": [
+       "tests/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "tests/p3s109-pair/test_bad.py",
+      "text": "import unittest\n\n\nclass TestAdd(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
+     },
+     "good": {
+      "path": "tests/p3s109-pair/test_good.py",
+      "text": "def test_add():\n    assert 1 + 1 == 2\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "DA20-e1f582",
+  "repo": "jmetal/jmetalpy",
+  "sha": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
+  "linter": "ruff",
+  "rule": "PT006",
+  "cross": true,
+  "readings": [
+   {
+    "key": "deepseek-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "PT006",
+     "settings": {},
+     "scope": {
+      "files": [
+       "tests/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "tests/p3s109-pair/test_bad.py",
+      "text": "import pytest\n\n\n@pytest.mark.parametrize(\"a, b\", [(1, 2), (3, 4)])\ndef test_add(a, b):\n    assert a + 1 == b\n"
+     },
+     "good": {
+      "path": "tests/p3s109-pair/test_good.py",
+      "text": "import pytest\n\n\n@pytest.mark.parametrize((\"a\", \"b\"), [(1, 2), (3, 4)])\ndef test_add(a, b):\n    assert a + 1 == b\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "DA25",
+  "repo": "tui-cs/Terminal.Gui",
+  "sha": "925cca7b47596af47fd8bf7ae52b7fabf171c4d4",
   "linter": "eslint",
-  "rule": "no-restricted-syntax",
+  "rule": "padding-line-between-statements",
   "cross": true,
   "readings": [
    {
     "key": "anthropic-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-syntax",
+     "rule": "padding-line-between-statements",
      "options": [
       {
-       "selector": "LogicalExpression[operator='??'][left.name=/keeperPort/i][right.name=/dbPort/i]",
-       "message": "Do not derive the keeper port from the database port; every port must be stated."
-      },
-      {
-       "selector": "LogicalExpression[operator='??'][left.property.name=/keeperPort/i][right.property.name=/dbPort/i]",
-       "message": "Do not derive the keeper port from the database port; every port must be stated."
-      },
-      {
-       "selector": "LogicalExpression[right.value=22][left.name=/ssh/i]",
-       "message": "No ssh-22 fallback; the ssh port is mandatory."
-      },
-      {
-       "selector": "LogicalExpression[right.value=22][left.property.name=/ssh/i]",
-       "message": "No ssh-22 fallback; the ssh port is mandatory."
-      },
-      {
-       "selector": "Identifier[name='withKeeperPort']",
-       "message": "No withKeeperPort form mode; a deploy states every port."
-      },
-      {
-       "selector": "JSXIdentifier[name='withKeeperPort']",
-       "message": "No withKeeperPort form mode; a deploy states every port."
+       "blankLine": "always",
+       "prev": "block-like",
+       "next": "*"
       }
      ],
      "scope": {
       "files": [
-       "app/**/*.ts",
-       "app/**/*.tsx"
+       "docfx/**/*.js"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
        "**/build/**",
-       "app/**/*.test.ts",
-       "app/**/*.test.tsx"
+       "docfx/**/*.min.js"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "app/p3s109-pair/bad.ts",
-      "text": "export interface NodeConfig {\n  dbPort: number;\n  keeperPort?: number;\n}\n\nexport function resolveKeeperPort(config: NodeConfig): number {\n  return config.keeperPort ?? config.dbPort;\n}\n"
+      "path": "docfx/p3s109-pair/bad.js",
+      "text": "function check(items) {\n  if (items.length === 0) {\n    return null;\n  }\n  const first = items[0];\n  return first;\n}\n\nmodule.exports = check;\n"
      },
      "good": {
-      "path": "app/p3s109-pair/good.ts",
-      "text": "export interface NodeConfig {\n  dbPort: number;\n  keeperPort: number;\n}\n\nexport function resolveKeeperPort(config: NodeConfig): number {\n  return config.keeperPort;\n}\n"
+      "path": "docfx/p3s109-pair/good.js",
+      "text": "function check(items) {\n  if (items.length === 0) {\n    return null;\n  }\n\n  const first = items[0];\n  return first;\n}\n\nmodule.exports = check;\n"
      }
     }
    },
@@ -815,50 +1096,40 @@
     "key": "anthropic-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-syntax",
+     "rule": "padding-line-between-statements",
      "options": [
       {
-       "selector": "LogicalExpression[operator='??'][left.name=/Port$/][right.name=/Port$/]",
-       "message": "Ports are never derived from one another (no keeperPort ?? dbPort)."
+       "blankLine": "always",
+       "prev": "*",
+       "next": "return"
       },
       {
-       "selector": "LogicalExpression[operator='||'][left.name=/Port$/][right.name=/Port$/]",
-       "message": "Ports are never derived from one another."
-      },
-      {
-       "selector": "LogicalExpression[right.value=22]",
-       "message": "No ssh-22 fallback: the ssh port must be stated explicitly."
-      },
-      {
-       "selector": "Identifier[name='withKeeperPort']",
-       "message": "No withKeeperPort form mode: every port is mandatory."
-      },
-      {
-       "selector": "Identifier[name='NodeInputFormat']",
-       "message": "No NodeInputFormat mirroring one port into another."
+       "blankLine": "always",
+       "prev": "block-like",
+       "next": "*"
       }
      ],
      "scope": {
       "files": [
-       "app/**/*.ts",
-       "app/**/*.tsx"
+       "docfx/**/*.js"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "**/*.min.js"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "app/p3s109-pair/bad.ts",
-      "text": "export function resolveKeeperPort(keeperPort: number | undefined, dbPort: number): number {\n  return keeperPort ?? dbPort;\n}\n"
+      "path": "docfx/p3s109-pair/bad.js",
+      "text": "function check(items) {\n  for (const item of items) {\n    if (item.invalid) {\n      throw new Error('invalid');\n    }\n  }\n  const total = items.length;\n\n  return total;\n}\n\nmodule.exports = check;\n"
      },
      "good": {
-      "path": "app/p3s109-pair/good.ts",
-      "text": "export function resolveKeeperPort(keeperPort: number | undefined): number {\n  if (keeperPort === undefined) {\n    throw new Error('keeperPort is required');\n  }\n  return keeperPort;\n}\n"
+      "path": "docfx/p3s109-pair/good.js",
+      "text": "function check(items) {\n  for (const item of items) {\n    if (item.invalid) {\n      throw new Error('invalid');\n    }\n  }\n\n  const total = items.length;\n\n  return total;\n}\n\nmodule.exports = check;\n"
      }
     }
    },
@@ -866,25 +1137,17 @@
     "key": "deepseek-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-syntax",
+     "rule": "padding-line-between-statements",
      "options": [
       {
-       "selector": "LogicalExpression[operator='??'][left.name='sshPort'][right.value=22]",
-       "message": "No ssh-22 fallback allowed. SSH port must be explicitly provided."
-      },
-      {
-       "selector": "LogicalExpression[operator='??'][left.name='keeperPort'][right.name='dbPort']",
-       "message": "No keeperPort ?? dbPort. Each port must be independently stated."
-      },
-      {
-       "selector": "Literal[value='withKeeperPort']",
-       "message": "The 'withKeeperPort' form mode is banned. Use explicit per-port inputs."
+       "blankLine": "always",
+       "prev": "block-like",
+       "next": "*"
       }
      ],
      "scope": {
       "files": [
-       "app/**/*.ts",
-       "app/**/*.tsx"
+       "**/*.js"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -896,12 +1159,187 @@
     },
     "pair": {
      "bad": {
-      "path": "app/p3s109-pair/bad.ts",
-      "text": "export interface NodeConfig {\n  sshPort?: number;\n  dbPort: number;\n}\n\nexport function resolveSshPort(config: NodeConfig): number {\n  const port = config.sshPort ?? 22;\n  return port;\n}\n\nexport function describe(sshPort: number | undefined): string {\n  const effective = sshPort ?? 22;\n  return `ssh on ${effective}`;\n}\n"
+      "path": "p3s109-pair/bad.js",
+      "text": "function check(items) {\n  let count = 0;\n  for (const item of items) {\n    if (item) {\n      count += 1;\n    }\n  }\n  return count;\n}\n\nmodule.exports = check;\n"
      },
      "good": {
-      "path": "app/p3s109-pair/good.ts",
-      "text": "export interface NodeConfig {\n  sshPort?: number;\n  dbPort: number;\n}\n\nexport function resolveSshPort(config: NodeConfig): number {\n  if (config.sshPort === undefined) {\n    throw new Error('sshPort is required');\n  }\n  return config.sshPort;\n}\n\nexport function describe(sshPort: number | undefined): string {\n  if (sshPort === undefined) {\n    throw new Error('sshPort is required');\n  }\n  return `ssh on ${sshPort}`;\n}\n"
+      "path": "p3s109-pair/good.js",
+      "text": "function check(items) {\n  let count = 0;\n  for (const item of items) {\n    if (item) {\n      count += 1;\n    }\n  }\n\n  return count;\n}\n\nmodule.exports = check;\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s2",
+    "reading": {
+     "linter": "eslint",
+     "rule": "padding-line-between-statements",
+     "options": [
+      {
+       "blankLine": "always",
+       "prev": "block-like",
+       "next": "*"
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.js",
+      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n  return total;\n}\n\nmodule.exports = { check };\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.js",
+      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n\n  return total;\n}\n\nmodule.exports = { check };\n"
+     }
+    }
+   },
+   {
+    "key": "google-s1",
+    "reading": {
+     "linter": "eslint",
+     "rule": "padding-line-between-statements",
+     "options": [
+      {
+       "blankLine": "always",
+       "prev": "block-like",
+       "next": "*"
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.js",
+      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n  return total;\n}\n\nmodule.exports = check;\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.js",
+      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n\n  return total;\n}\n\nmodule.exports = check;\n"
+     }
+    }
+   },
+   {
+    "key": "google-s2",
+    "reading": {
+     "linter": "eslint",
+     "rule": "padding-line-between-statements",
+     "options": [
+      {
+       "blankLine": "always",
+       "prev": "block-like",
+       "next": "*"
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.js",
+      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n  return total;\n}\n\nmodule.exports = { check };\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.js",
+      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n\n  return total;\n}\n\nmodule.exports = { check };\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "DB19",
+  "repo": "hoornet/vega",
+  "sha": "dfae0c4b6c31b5201a07afb282fea809b9a63ba9",
+  "linter": "eslint",
+  "rule": "better-tailwindcss/no-restricted-classes",
+  "cross": true,
+  "readings": [
+   {
+    "key": "deepseek-s1",
+    "reading": {
+     "linter": "eslint",
+     "rule": "no-restricted-syntax",
+     "options": [
+      {
+       "selector": "JSXOpeningElement:has(JSXAttribute[name.name=\"role\"][value.value=\"dialog\"]):not(:has(JSXAttribute[name.name=\"className\"]:matches([value.value=/bg-bg-raised/])))",
+       "message": "Dialog elements must use `bg-bg-raised` class for the raised surface."
+      },
+      {
+       "selector": "JSXOpeningElement:has(JSXAttribute[name.name=\"aria-modal\"][value.value=\"true\"]):not(:has(JSXAttribute[name.name=\"className\"]:matches([value.value=/bg-bg-raised/])))",
+       "message": "Modal elements must use `bg-bg-raised` class for the raised surface (dialog requirement)."
+      }
+     ],
+     "scope": {
+      "files": [
+       "src/**/*.tsx"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "**/*.test.tsx"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "src/p3s109-pair/bad.tsx",
+      "text": "export function ConfirmDialog() {\n  return (\n    <div role=\"dialog\" className=\"p-4 rounded shadow\">\n      <h2>Confirm</h2>\n      <button>OK</button>\n    </div>\n  );\n}\n"
+     },
+     "good": {
+      "path": "src/p3s109-pair/good.tsx",
+      "text": "export function ConfirmDialog() {\n  return (\n    <div role=\"dialog\" className=\"p-4 rounded shadow bg-bg-raised\">\n      <h2>Confirm</h2>\n      <button>OK</button>\n    </div>\n  );\n}\n"
      }
     }
    },
@@ -911,33 +1349,32 @@
      "linter": "eslint",
      "rule": "no-restricted-syntax",
      "options": [
-      "LogicalExpression[operator=\"??\"][right.value=22] > Identifier.left[name=\"sshPort\"]",
-      "LogicalExpression[operator=\"||\"][right.value=22] > Identifier.left[name=\"sshPort\"]",
-      "LogicalExpression[operator=\"??\"]:has(Identifier.left[name=\"keeperPort\"]):has(Identifier.right[name=\"dbPort\"])",
-      "LogicalExpression[operator=\"||\"]:has(Identifier.left[name=\"keeperPort\"]):has(Identifier.right[name=\"dbPort\"])",
-      "Identifier[name=\"withKeeperPort\"]"
+      {
+       "selector": "JSXOpeningElement[name.name='Dialog']:not([attributes.name='className'][attributes.value.value*='bg-bg-raised'])",
+       "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface."
+      }
      ],
      "scope": {
       "files": [
-       "app/**/*.ts",
-       "app/**/*.tsx"
+       "src/**/*.tsx"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "src/**/*.test.tsx"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "app/p3s109-pair/bad.ts",
-      "text": "export function resolveKeeperPort(config: { keeperPort?: number; dbPort: number }): number {\n  const { keeperPort, dbPort } = config;\n  return keeperPort ?? dbPort;\n}\n"
+      "path": "src/p3s109-pair/bad.tsx",
+      "text": "import { Dialog } from \"./ui\";\n\nexport function Confirm({ open }: { open: boolean }) {\n  return (\n    <Dialog open={open}>\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n"
      },
      "good": {
-      "path": "app/p3s109-pair/good.ts",
-      "text": "export function resolveKeeperPort(config: { keeperPort?: number; dbPort: number }): number {\n  const { keeperPort } = config;\n  if (keeperPort === undefined) {\n    throw new Error('keeperPort is required');\n  }\n  return keeperPort;\n}\n"
+      "path": "src/p3s109-pair/good.tsx",
+      "text": "import { Panel } from \"./ui\";\n\nexport function Confirm({ open }: { open: boolean }) {\n  return (\n    <Panel open={open} className=\"bg-bg-raised\">\n      <p>Are you sure?</p>\n    </Panel>\n  );\n}\n"
      }
     }
    },
@@ -949,22 +1386,13 @@
      "options": [
       "error",
       {
-       "selector": "LogicalExpression[operator='??'][left.name='keeperPort'][right.name='dbPort']",
-       "message": "No keeperPort ?? dbPort fallback allowed."
-      },
-      {
-       "selector": "LogicalExpression[operator='??'][left.name='sshPort'][right.value=22]",
-       "message": "No ssh-22 fallback allowed."
-      },
-      {
-       "selector": "Identifier[name='withKeeperPort']",
-       "message": "No withKeeperPort form mode allowed."
+       "selector": "JSXOpeningElement[name.name=/^[Dd]ialog$/]:not(:has(JSXAttribute[name.name='className'] Literal[value=/bg-bg-raised/]))",
+       "message": "Dialog is a raised surface using bg-bg-raised."
       }
      ],
      "scope": {
       "files": [
-       "app/**/*.ts",
-       "app/**/*.tsx"
+       "src/**/*.tsx"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -976,12 +1404,12 @@
     },
     "pair": {
      "bad": {
-      "path": "app/p3s109-pair/bad.ts",
-      "text": "interface NodeConfig {\n  dbPort: number;\n  keeperPort?: number;\n}\n\nexport function resolveKeeperPort(config: NodeConfig): number {\n  const keeperPort = config.keeperPort;\n  const dbPort = config.dbPort;\n  return keeperPort ?? dbPort;\n}\n"
+      "path": "src/p3s109-pair/bad.tsx",
+      "text": "export function Confirm() {\n  return (\n    <Dialog className=\"p-4 rounded\">\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n"
      },
      "good": {
-      "path": "app/p3s109-pair/good.ts",
-      "text": "interface NodeConfig {\n  dbPort: number;\n  keeperPort?: number;\n}\n\nexport function resolveKeeperPort(config: NodeConfig): number {\n  const keeperPort = config.keeperPort;\n  if (keeperPort === undefined) {\n    throw new Error('keeperPort is required');\n  }\n  return keeperPort;\n}\n"
+      "path": "src/p3s109-pair/good.tsx",
+      "text": "export function Confirm() {\n  return (\n    <Dialog className=\"bg-bg-raised p-4 rounded\">\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n"
      }
     }
    },
@@ -992,22 +1420,13 @@
      "rule": "no-restricted-syntax",
      "options": [
       {
-       "selector": "LogicalExpression[operator='??'][left.name='keeperPort'][right.name='dbPort']",
-       "message": "No keeperPort ?? dbPort fallback is allowed."
-      },
-      {
-       "selector": "Identifier[name='withKeeperPort']",
-       "message": "No withKeeperPort form mode allowed."
-      },
-      {
-       "selector": "Identifier[name='NodeInputFormat']",
-       "message": "No NodeInputFormat mirroring ports allowed."
+       "selector": "JSXOpeningElement[name.name='Dialog'] JSXAttribute[name.name='className'] Literal[value=/(^| )bg-bg( |$)/]",
+       "message": "Dialog is a raised surface using `bg-bg-raised`, not `bg-bg`"
       }
      ],
      "scope": {
       "files": [
-       "app/**/*.ts",
-       "app/**/*.tsx"
+       "src/**/*.tsx"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -1019,1166 +1438,121 @@
     },
     "pair": {
      "bad": {
-      "path": "app/p3s109-pair/bad.ts",
-      "text": "export function resolveKeeperPort(keeperPort: number | undefined, dbPort: number): number {\n  return keeperPort ?? dbPort;\n}\n"
+      "path": "src/p3s109-pair/bad.tsx",
+      "text": "export function Confirm() {\n  return (\n    <Dialog className=\"bg-bg p-4 rounded\">\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n\nfunction Dialog(props: { className?: string; children?: React.ReactNode }) {\n  return <div className={props.className}>{props.children}</div>;\n}\n"
      },
      "good": {
-      "path": "app/p3s109-pair/good.ts",
-      "text": "export function resolveKeeperPort(keeperPort: number | undefined): number {\n  if (keeperPort === undefined) {\n    throw new Error('keeperPort is required');\n  }\n  return keeperPort;\n}\n"
+      "path": "src/p3s109-pair/good.tsx",
+      "text": "export function Confirm() {\n  return (\n    <Dialog className=\"bg-bg-raised p-4 rounded\">\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n\nfunction Dialog(props: { className?: string; children?: React.ReactNode }) {\n  return <div className={props.className}>{props.children}</div>;\n}\n"
      }
     }
    }
   ]
  },
  {
-  "id": "DA26-05ad8d",
-  "repo": "anobaka/Bakabase",
-  "sha": "31dd33b4fddc4f4247c3a250c4b2f5329369d047",
-  "linter": "eslint",
-  "rule": "no-restricted-properties",
-  "cross": true,
-  "readings": [
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-properties",
-     "options": [
-      {
-       "property": "focus"
-      }
-     ],
-     "scope": {
-      "files": [
-       "features/data-sync/map/**/*"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "features/data-sync/map/p3s109-pair/bad.ts",
-      "text": "export function openSearch(input: HTMLInputElement): void {\n  input.style.display = 'block';\n  input.focus();\n}\n"
-     },
-     "good": {
-      "path": "features/data-sync/map/p3s109-pair/good.ts",
-      "text": "export function openSearch(input: HTMLInputElement): void {\n  input.style.display = 'block';\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-properties",
-     "options": [
-      {
-       "property": "focus"
-      }
-     ],
-     "scope": {
-      "files": [
-       "features/data-sync/map/**/*.ts",
-       "features/data-sync/map/**/*.tsx",
-       "features/data-sync/map/**/*.js",
-       "features/data-sync/map/**/*.jsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "features/data-sync/map/p3s109-pair/bad.ts",
-      "text": "export function openPanel(el: HTMLElement): void {\n  el.classList.add('open');\n  el.focus();\n}\n"
-     },
-     "good": {
-      "path": "features/data-sync/map/p3s109-pair/good.ts",
-      "text": "export function openPanel(el: HTMLElement): void {\n  el.classList.add('open');\n  el.scrollIntoView();\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DCA1-2e5d86",
-  "repo": "rpact-com/rpact",
-  "sha": "6a44c3488e6aee8d33b31de9e67bbd70fc0d153e",
-  "linter": "eslint",
-  "rule": "check-file/folder-naming-convention",
+  "id": "DB21",
+  "repo": "BuildWithHussain/forms_pro",
+  "sha": "17199d6b61b55becd19d19a6426d748632a7a0c4",
+  "linter": "ruff",
+  "rule": "TID251",
   "cross": true,
   "readings": [
    {
     "key": "anthropic-s1",
     "reading": {
-     "linter": "eslint",
-     "rule": "check-file/folder-naming-convention",
-     "options": [
-      {
-       "rpact-org_website/vignettes/*/*": "SNAKE_CASE"
+     "linter": "ruff",
+     "rule": "TID251",
+     "settings": {
+      "flake8-tidy-imports.banned-api": {
+       "frappe.new_doc": {
+        "msg": "Do not use frappe.new_doc in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot)."
+       },
+       "frappe.get_doc": {
+        "msg": "Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot)."
+       }
       }
-     ],
-     "scope": {
-      "files": [
-       "rpact-org_website/vignettes/**"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "rpact-org_website/vignettes/p3s109-pair/bad.ts",
-      "text": "export const vignette = {\n  path: 'rpact-org_website/vignettes/design_basics/SampleSizeCalculation/index.ts',\n  title: 'Sample size calculation',\n};\n"
      },
-     "good": {
-      "path": "rpact-org_website/vignettes/p3s109-pair/good.ts",
-      "text": "export const vignette = {\n  path: 'rpact-org_website/vignettes/design_basics/sample_size_calculation/index.ts',\n  title: 'Sample size calculation',\n};\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "check-file/folder-naming-convention",
-     "options": [
-      {
-       "rpact-org_website/vignettes/*/*": "SNAKE_CASE"
-      }
-     ],
      "scope": {
       "files": [
-       "rpact-org_website/vignettes/**/*"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "rpact-org_website/vignettes/p3s109-pair/bad.ts",
-      "text": "// rpact-org_website/vignettes/designs/SampleSizeVignette/index.ts\nexport const vignette = {\n  title: 'Sample Size Vignette',\n  topic: 'designs',\n};\n"
-     },
-     "good": {
-      "path": "rpact-org_website/vignettes/p3s109-pair/good.ts",
-      "text": "// rpact-org_website/vignettes/designs/sample_size_vignette/index.ts\nexport const vignette = {\n  title: 'Sample Size Vignette',\n  topic: 'designs',\n};\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "check-file/folder-naming-convention",
-     "options": [
-      {
-       "target": "vignettes/*/",
-       "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "// vignettes/MyVignette/index.ts\nexport const title: string = 'My vignette';\nexport function render(): string {\n  return title;\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "// vignettes/my_vignette/index.ts\nexport const title: string = 'My vignette';\nexport function render(): string {\n  return title;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "check-file/folder-naming-convention",
-     "options": [
-      {
-       "match": "^[a-z0-9]+(_[a-z0-9]+)*$",
-       "message": "Vignette directory must be named in snake_case"
-      }
-     ],
-     "scope": {
-      "files": [
-       "vignettes/**"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "vignettes/p3s109-pair/bad.ts",
-      "text": "export const vignette = {\n  directory: 'vignettes/topic/MyVignette',\n  title: 'My Vignette',\n};\n"
-     },
-     "good": {
-      "path": "vignettes/p3s109-pair/good.ts",
-      "text": "export const vignette = {\n  directory: 'vignettes/topic/my_vignette',\n  title: 'My Vignette',\n};\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "check-file/folder-naming-convention",
-     "options": [
-      {
-       "vignettes/*/*/": "SNAKE_CASE"
-      }
-     ],
-     "scope": {
-      "files": [
-       "vignettes/**/*"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "vignettes/p3s109-pair/bad.ts",
-      "text": "import { render } from \"../MyVignette/render\";\n\nexport const vignette = {\n  topic: \"sorting\",\n  directory: \"vignettes/sorting/BubbleSort/\",\n  run: render,\n};\n"
-     },
-     "good": {
-      "path": "vignettes/p3s109-pair/good.ts",
-      "text": "import { render } from \"../bubble_sort/render\";\n\nexport const vignette = {\n  topic: \"sorting\",\n  directory: \"vignettes/sorting/bubble_sort/\",\n  run: render,\n};\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DCA3-70eafa",
-  "repo": "midnightntwrk/midnight-js",
-  "sha": "610b93b62edd1f7b430182ae7e1d8f753c590928",
-  "linter": "eslint",
-  "rule": "@eslint-community/eslint-comments/no-use",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "@eslint-community/eslint-comments/no-use",
-     "options": [
-      {
-       "allow": []
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "// eslint-disable-next-line no-console\nconsole.log('starting');\n\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "export function add(a: number, b: number): number {\n  return a + b;\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DCA3-284df9",
-  "repo": "midnightntwrk/midnight-js",
-  "sha": "610b93b62edd1f7b430182ae7e1d8f753c590928",
-  "linter": "eslint",
-  "rule": "eslint-comments/no-disable",
-  "cross": true,
-  "readings": [
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "eslint-comments/no-disable",
-     "options": [],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "export function parse(input: string): number {\n  // eslint-disable-next-line no-console\n  console.log(input);\n  return Number(input);\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "export function parse(input: string): number {\n  return Number(input);\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DCA3-2be4c3",
-  "repo": "midnightntwrk/midnight-js",
-  "sha": "610b93b62edd1f7b430182ae7e1d8f753c590928",
-  "linter": "eslint",
-  "rule": "eslint-comments/no-use",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "eslint-comments/no-use",
-     "options": [
-      {
-       "allow": []
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "// eslint-disable-next-line no-console\nconsole.log('starting');\n\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "console.info('starting');\n\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "eslint-comments/no-use",
-     "options": [],
-     "scope": {
-      "files": [
-       "packages/**/*.{ts,mjs,js}",
-       "consumer-e2e/**/*.{ts,mjs,js}",
-       "build-tools/**/*.{ts,mjs,js}",
-       "scripts/**/*.{ts,js}",
-       ".github/scripts/**/*.{js,mjs}"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "packages/p3s109-pair/bad.ts",
-      "text": "export function log(message: string): void {\n  // eslint-disable-next-line no-console\n  console.log(message);\n}\n"
-     },
-     "good": {
-      "path": "packages/p3s109-pair/good.ts",
-      "text": "export function log(message: string, sink: (m: string) => void): void {\n  sink(message);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "eslint-comments/no-use",
-     "options": [
-      {
-       "allow": []
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "// eslint-disable-next-line no-console\nconsole.log('starting');\n\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "console.info('starting');\n\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "eslint-comments/no-use",
-     "options": [],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "export function parse(input: string): number {\n  // eslint-disable-next-line no-console\n  console.log(input);\n  return Number(input);\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "export function parse(input: string): number {\n  return Number(input);\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DB02",
-  "repo": "jhaizhou-ops/pinrule",
-  "sha": "2aa78c30c73c8d562db2a39730c1a8e12a5d5293",
-  "linter": "eslint",
-  "rule": "no-restricted-imports",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "paths": [
-        {
-         "name": "openai",
-         "message": "Do not introduce LLM dependencies"
-        },
-        {
-         "name": "@anthropic-ai/sdk",
-         "message": "Do not introduce LLM dependencies"
-        },
-        {
-         "name": "@google/generative-ai",
-         "message": "Do not introduce LLM dependencies"
-        },
-        {
-         "name": "langchain",
-         "message": "Do not introduce LLM dependencies"
-        },
-        {
-         "name": "ollama",
-         "message": "Do not introduce LLM dependencies"
-        },
-        {
-         "name": "cohere-ai",
-         "message": "Do not introduce LLM dependencies"
-        },
-        {
-         "name": "@mistralai/mistralai",
-         "message": "Do not introduce LLM dependencies"
-        },
-        {
-         "name": "ai",
-         "message": "Do not introduce LLM dependencies"
-        }
-       ],
-       "patterns": [
-        {
-         "group": [
-          "@langchain/*",
-          "@ai-sdk/*",
-          "openai/*",
-          "@anthropic-ai/*"
-         ],
-         "message": "Do not introduce LLM dependencies"
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "import OpenAI from 'openai';\n\nconst client = new OpenAI({ apiKey: process.env.API_KEY });\n\nexport async function summarize(text: string): Promise<string> {\n  const res = await client.chat.completions.create({\n    model: 'gpt-4o',\n    messages: [{ role: 'user', content: `Summarize: ${text}` }],\n  });\n  return res.choices[0].message.content ?? '';\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "export async function summarize(text: string): Promise<string> {\n  const sentences = text.split('.');\n  return sentences.slice(0, 2).join('.').trim();\n}\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "paths": [
-        {
-         "name": "openai",
-         "message": "Do not introduce LLM dependencies."
-        },
-        {
-         "name": "@anthropic-ai/sdk",
-         "message": "Do not introduce LLM dependencies."
-        },
-        {
-         "name": "@google/generative-ai",
-         "message": "Do not introduce LLM dependencies."
-        },
-        {
-         "name": "langchain",
-         "message": "Do not introduce LLM dependencies."
-        },
-        {
-         "name": "ollama",
-         "message": "Do not introduce LLM dependencies."
-        },
-        {
-         "name": "ai",
-         "message": "Do not introduce LLM dependencies."
-        }
-       ],
-       "patterns": [
-        {
-         "group": [
-          "@langchain/*",
-          "@ai-sdk/*",
-          "openai/*",
-          "@anthropic-ai/*",
-          "@google/genai*",
-          "llamaindex*",
-          "@huggingface/*"
-         ],
-         "message": "Do not introduce LLM dependencies."
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "import OpenAI from \"openai\";\n\nconst client = new OpenAI({ apiKey: process.env.API_KEY });\n\nexport async function summarize(text: string): Promise<string> {\n  const res = await client.chat.completions.create({\n    model: \"gpt-4o\",\n    messages: [{ role: \"user\", content: `Summarize: ${text}` }],\n  });\n  return res.choices[0]?.message?.content ?? \"\";\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "import { createHash } from \"crypto\";\n\nexport function summarize(text: string): string {\n  const digest = createHash(\"sha256\").update(text).digest(\"hex\");\n  return text.slice(0, 80) + \" [\" + digest.slice(0, 8) + \"]\";\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      "openai",
-      "anthropic",
-      "langchain",
-      "cohere",
-      "huggingface",
-      "llama",
-      "chatgpt",
-      "gpt4all",
-      "tiktoken"
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "import OpenAI from \"openai\";\n\nconst client = new OpenAI({ apiKey: process.env.API_KEY });\n\nexport async function summarize(text: string): Promise<string> {\n  const res = await client.chat.completions.create({\n    model: \"gpt-4\",\n    messages: [{ role: \"user\", content: text }],\n  });\n  return res.choices[0].message.content ?? \"\";\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "export async function summarize(text: string): Promise<string> {\n  const sentences = text.split(/(?<=[.!?])\\s+/);\n  return sentences.slice(0, 2).join(\" \");\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "paths": [
-        {
-         "name": "openai",
-         "message": "Do not introduce LLM dependencies."
-        },
-        {
-         "name": "@anthropic-ai/sdk",
-         "message": "Do not introduce LLM dependencies."
-        },
-        {
-         "name": "google-generative-ai",
-         "message": "Do not introduce LLM dependencies."
-        },
-        {
-         "name": "cohere-ai",
-         "message": "Do not introduce LLM dependencies."
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "import OpenAI from 'openai';\n\nexport function createClient(apiKey: string) {\n  return new OpenAI({ apiKey });\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "import { createHash } from 'node:crypto';\n\nexport function createClient(apiKey: string) {\n  return createHash('sha256').update(apiKey).digest('hex');\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "paths": [
-        "openai",
-        "@anthropic-ai/sdk",
-        "langchain",
-        "llamaindex"
-       ],
-       "patterns": [
-        "langchain-*",
-        "@langchain/*"
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "import OpenAI from 'openai';\n\nconst client = new OpenAI({ apiKey: process.env.API_KEY });\n\nexport async function summarize(text: string): Promise<string> {\n  const res = await client.chat.completions.create({\n    model: 'gpt-4o',\n    messages: [{ role: 'user', content: `Summarize: ${text}` }],\n  });\n  return res.choices[0].message.content ?? '';\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "export async function summarize(text: string): Promise<string> {\n  const res = await fetch('https://internal.example.com/summarize', {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({ text }),\n  });\n  const data = (await res.json()) as { summary: string };\n  return data.summary;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "paths": [
-        "openai",
-        "anthropic",
-        "langchain",
-        "@google/generative-ai",
-        "llamaindex"
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "import OpenAI from \"openai\";\n\nconst client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });\n\nexport async function summarize(text: string): Promise<string> {\n  const res = await client.chat.completions.create({\n    model: \"gpt-4o\",\n    messages: [{ role: \"user\", content: `Summarize: ${text}` }],\n  });\n  return res.choices[0]?.message?.content ?? \"\";\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "import { readFileSync } from \"node:fs\";\n\nconst cache = new Map<string, string>();\n\nexport function summarize(text: string): string {\n  const hit = cache.get(text);\n  if (hit !== undefined) {\n    return hit;\n  }\n  const summary = text.split(\".\")[0] ?? \"\";\n  cache.set(text, summary);\n  return summary;\n}\n\nexport function load(path: string): string {\n  return readFileSync(path, \"utf8\");\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DB03",
-  "repo": "qteasytier/qt-easy-tier",
-  "sha": "6a8e660fde2e3a11962bfc33592c27bb09dd96a2",
-  "linter": "eslint",
-  "rule": "import/no-restricted-paths",
-  "cross": true,
-  "readings": [
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/no-restricted-paths",
-     "options": [
-      {
-       "zones": [
-        {
-         "target": "src/dde_tray_plugin/**",
-         "from": "src/core/**",
-         "message": "Tray plugin must not call app-core services."
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "src/dde_tray_plugin/**"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/dde_tray_plugin/p3s109-pair/bad.ts",
-      "text": "import { getAppService } from '../core/app_service';\n\nexport function startTray(): string {\n  const service = getAppService();\n  return service.status();\n}\n"
-     },
-     "good": {
-      "path": "src/dde_tray_plugin/p3s109-pair/good.ts",
-      "text": "import { getConfig } from 'qtet_config';\n\nexport function startTray(): string {\n  const config = getConfig();\n  return config.status;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "patterns": [
-        "src/core/**",
-        "src/app/**",
-        "src/platform/**",
-        "src/system_tray/**",
-        "src/log/**"
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "src/dde_tray_plugin/**/*"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/dde_tray_plugin/p3s109-pair/bad.ts",
-      "text": "import { Config } from 'src/core/config';\n\nexport function trayTitle(config: Config): string {\n  return config.title;\n}\n"
-     },
-     "good": {
-      "path": "src/dde_tray_plugin/p3s109-pair/good.ts",
-      "text": "import { Config } from 'qtet_config';\n\nexport function trayTitle(config: Config): string {\n  return config.title;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "patterns": [
-        {
-         "group": [
-          "**/src/core/**",
-          "**/src/app/**"
-         ],
-         "message": "Tray plugin must not call app-core services; link config/repository/daemon services directly."
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "src/dde_tray_plugin/**"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/dde_tray_plugin/p3s109-pair/bad.ts",
-      "text": "import { AppCore } from '../core/app_service';\nimport { loadConfig } from '../../src/core/config';\n\nexport function startTray(): void {\n  const core = new AppCore();\n  core.run(loadConfig());\n}\n"
-     },
-     "good": {
-      "path": "src/dde_tray_plugin/p3s109-pair/good.ts",
-      "text": "import { loadConfig } from '../services/qtet_config';\nimport { SqliteRepository } from '../services/qtet_sqlite_repository';\n\nexport function startTray(): void {\n  const repo = new SqliteRepository();\n  repo.open(loadConfig());\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "patterns": [
-        {
-         "group": [
-          "**/src/app/**",
-          "**/src/core/**"
-         ],
-         "message": "Tray plugin must not call app-core services; link config/sqlite_repository/daemon_service directly"
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "src/dde_tray_plugin/**"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/dde_tray_plugin/p3s109-pair/bad.ts",
-      "text": "import { DaemonService } from '../core/daemon_service';\n\nexport function startTray(): void {\n  const service = new DaemonService();\n  service.start();\n}\n"
-     },
-     "good": {
-      "path": "src/dde_tray_plugin/p3s109-pair/good.ts",
-      "text": "import { DaemonService } from './daemon_service';\n\nexport function startTray(): void {\n  const service = new DaemonService();\n  service.start();\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DB06",
-  "repo": "storybookjs/mcp",
-  "sha": "4589b69a081272508be2b00220f38b9d6ee488de",
-  "linter": "eslint",
-  "rule": "jest/no-restricted-matchers",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "vitest/no-restricted-matchers",
-     "options": [
-      {
-       "toMatchSnapshot": "Use toMatchInlineSnapshot for response validation instead of external snapshots."
-      }
-     ],
-     "scope": {
-      "files": [
-       "packages/**/*.test.ts",
-       "apps/**/*.test.ts"
+       "forms_pro/**/test_*.py",
+       "forms_pro/tests/**/*.py"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
        "**/build/**",
-       "**/node_modules/**"
+       "forms_pro/tests/factories/**"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "packages/p3s109-pair/bad.test.ts",
-      "text": "import { describe, expect, it } from 'vitest'\nimport { getUser } from './api'\n\ndescribe('getUser', () => {\n  it('returns the user payload', async () => {\n    const response = await getUser(1)\n    expect(response).toMatchSnapshot()\n  })\n})\n"
+      "path": "forms_pro/p3s109-pair/test_bad.py",
+      "text": "import frappe\n\n\ndef test_form_creation():\n    doc = frappe.new_doc(\"Form\")\n    doc.title = \"Contact\"\n    doc.insert()\n    assert doc.name\n"
      },
      "good": {
-      "path": "packages/p3s109-pair/good.test.ts",
-      "text": "import { describe, expect, it } from 'vitest'\nimport { getUser } from './api'\n\ndescribe('getUser', () => {\n  it('returns the user payload', async () => {\n    const response = await getUser(1)\n    expect(response).toMatchInlineSnapshot()\n  })\n})\n"
+      "path": "forms_pro/p3s109-pair/test_good.py",
+      "text": "import frappe\n\nfrom forms_pro.tests.factories import FormFactory\n\n\ndef test_form_creation():\n    doc = FormFactory.create(title=\"Contact\")\n    assert doc.name\n"
      }
     }
    },
    {
     "key": "anthropic-s2",
     "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "CallExpression[callee.property.name='toMatchSnapshot']",
-       "message": "Use toMatchInlineSnapshot for response validation instead of external snapshot files."
+     "linter": "ruff",
+     "rule": "TID251",
+     "settings": {
+      "flake8-tidy-imports.banned-api": {
+       "frappe.new_doc": {
+        "msg": "Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests"
+       },
+       "frappe.get_doc": {
+        "msg": "Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/"
+       }
       }
-     ],
+     },
      "scope": {
       "files": [
-       "packages/addon-mcp/**/*.test.ts",
-       "packages/mcp/**/*.test.ts",
-       "apps/internal-storybook/tests/**/*.test.ts"
+       "forms_pro/**/test_*.py",
+       "forms_pro/tests/**/*.py"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "forms_pro/tests/factories/**"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "packages/addon-mcp/p3s109-pair/bad.test.ts",
-      "text": "import { describe, it, expect } from 'vitest';\nimport { handleRequest } from './handler';\n\ndescribe('handleRequest', () => {\n  it('returns the tool list', async () => {\n    const response = await handleRequest({ method: 'tools/list' });\n    expect(response).toMatchSnapshot();\n  });\n});\n"
+      "path": "forms_pro/p3s109-pair/test_bad.py",
+      "text": "import frappe\n\n\ndef test_form_is_created():\n    doc = frappe.new_doc(\"Form\")\n    doc.title = \"Contact\"\n    doc.insert()\n    assert doc.name\n"
      },
      "good": {
-      "path": "packages/addon-mcp/p3s109-pair/good.test.ts",
-      "text": "import { describe, it, expect } from 'vitest';\nimport { handleRequest } from './handler';\n\ndescribe('handleRequest', () => {\n  it('returns the tool list', async () => {\n    const response = await handleRequest({ method: 'tools/list' });\n    expect(response).toMatchInlineSnapshot();\n  });\n});\n"
+      "path": "forms_pro/p3s109-pair/test_good.py",
+      "text": "import frappe\n\nfrom forms_pro.tests.factories.form import make_form\n\n\ndef test_form_is_created():\n    doc = make_form(title=\"Contact\")\n    assert doc.name\n"
      }
     }
    },
    {
     "key": "deepseek-s1",
     "reading": {
-     "linter": "eslint",
-     "rule": "vitest/prefer-inline-snapshots",
-     "options": [],
+     "linter": "ruff",
+     "rule": "TID251",
+     "settings": {
+      "flake8-tidy-imports.banned-api": {
+       "frappe": {
+        "msg": "Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/"
+       }
+      }
+     },
      "scope": {
       "files": [
-       "**/*.test.*",
-       "**/*.spec.*",
-       "**/tests/**"
+       "forms_pro/**/test_*.py",
+       "forms_pro/tests/**/*.py"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -2190,25 +1564,34 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.test.ts",
-      "text": "import { expect, it } from 'vitest'\nimport { getUser } from './api'\n\nit('returns the user response', async () => {\n  const response = await getUser(1)\n\n  expect(response).toMatchSnapshot()\n})\n"
+      "path": "forms_pro/p3s109-pair/test_bad.py",
+      "text": "import frappe\n\n\ndef test_form_is_created():\n    doc = frappe.new_doc(\"Form\")\n    doc.title = \"Survey\"\n    doc.insert()\n    assert doc.name\n"
      },
      "good": {
-      "path": "p3s109-pair/good.test.ts",
-      "text": "import { expect, it } from 'vitest'\nimport { getUser } from './api'\n\nit('returns the user response', async () => {\n  const response = await getUser(1)\n\n  expect(response).toMatchInlineSnapshot()\n})\n"
+      "path": "forms_pro/p3s109-pair/test_good.py",
+      "text": "from forms_pro.tests.factories.form import make_form\n\n\ndef test_form_is_created():\n    doc = make_form(title=\"Survey\")\n    assert doc.name\n"
      }
     }
    },
    {
     "key": "deepseek-s2",
     "reading": {
-     "linter": "eslint",
-     "rule": "jest/prefer-inline-snapshots",
-     "options": [],
+     "linter": "ruff",
+     "rule": "TID251",
+     "settings": {
+      "flake8-tidy-imports.banned-api": {
+       "frappe.new_doc": {
+        "msg": "Do not use frappe.new_doc in tests; use factories from forms_pro/tests/factories"
+       },
+       "frappe.get_doc": {
+        "msg": "Do not use frappe.get_doc in tests; use factories"
+       }
+      }
+     },
      "scope": {
       "files": [
-       "**/*.test.*",
-       "**/*.stories.*"
+       "forms_pro/**/test_*.py",
+       "forms_pro/tests/**/*.py"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -2220,70 +1603,74 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.test.js",
-      "text": "describe('api response', () => {\n  it('returns the user payload', () => {\n    const response = { status: 200, body: { id: 1, name: 'Ada' } };\n\n    expect(response).toMatchSnapshot();\n  });\n});\n"
+      "path": "forms_pro/p3s109-pair/test_bad.py",
+      "text": "import frappe\n\n\ndef test_form_created():\n    doc = frappe.new_doc(\"Form\")\n    doc.title = \"Contact\"\n    doc.insert()\n    assert doc.name\n"
      },
      "good": {
-      "path": "p3s109-pair/good.test.js",
-      "text": "describe('api response', () => {\n  it('returns the user payload', () => {\n    const response = { status: 200, body: { id: 1, name: 'Ada' } };\n\n    expect(response).toMatchInlineSnapshot();\n  });\n});\n"
+      "path": "forms_pro/p3s109-pair/test_good.py",
+      "text": "import frappe\n\nfrom forms_pro.tests.factories import make_form\n\n\ndef test_form_created():\n    doc = make_form(title=\"Contact\")\n    assert doc.name\n"
      }
     }
    },
    {
     "key": "google-s1",
     "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "CallExpression[callee.property.name='toMatchSnapshot']",
-       "message": "Use inline snapshots (toMatchInlineSnapshot) for response validation in tests"
+     "linter": "ruff",
+     "rule": "TID251",
+     "settings": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "frappe.new_doc": {
+         "msg": "Do not use frappe.new_doc in tests; build documents via factories."
+        },
+        "frappe.get_doc": {
+         "msg": "Avoid using frappe.get_doc(...).insert() in tests; build documents via factories."
+        }
+       }
       }
-     ],
+     },
      "scope": {
       "files": [
-       "**/*.test.ts",
-       "**/*.test.tsx",
-       "**/*.test.js",
-       "**/*.test.jsx",
-       "**/tests/**/*.ts"
+       "**/test_*.py"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "forms_pro/tests/factories/**/*.py"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.test.ts",
-      "text": "import { describe, it, expect } from 'vitest';\n\nasync function fetchUser() {\n  return { id: 1, name: 'Ada' };\n}\n\ndescribe('fetchUser', () => {\n  it('returns the user payload', async () => {\n    const response = await fetchUser();\n    expect(response).toMatchSnapshot();\n  });\n});\n"
+      "path": "p3s109-pair/test_bad.py",
+      "text": "import frappe\n\n\ndef test_creates_todo():\n    doc = frappe.new_doc(\"ToDo\")\n    doc.description = \"write tests\"\n    doc.insert()\n    assert doc.name\n"
      },
      "good": {
-      "path": "p3s109-pair/good.test.ts",
-      "text": "import { describe, it, expect } from 'vitest';\n\nasync function fetchUser() {\n  return { id: 1, name: 'Ada' };\n}\n\ndescribe('fetchUser', () => {\n  it('returns the user payload', async () => {\n    const response = await fetchUser();\n    expect(response).toMatchInlineSnapshot(`\n      {\n        \"id\": 1,\n        \"name\": \"Ada\",\n      }\n    `);\n  });\n});\n"
+      "path": "p3s109-pair/test_good.py",
+      "text": "import frappe\n\nfrom forms_pro.tests.factories.todo import make_todo\n\n\ndef test_creates_todo():\n    doc = make_todo(description=\"write tests\")\n    assert doc.name\n"
      }
     }
    },
    {
     "key": "google-s2",
     "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-properties",
-     "options": [
-      {
-       "property": "toMatchSnapshot",
-       "message": "Use inline snapshots (toMatchInlineSnapshot) for response validation in tests"
+     "linter": "ruff",
+     "rule": "TID251",
+     "settings": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "frappe.new_doc": {
+         "msg": "Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests."
+        }
+       }
       }
-     ],
+     },
      "scope": {
       "files": [
-       "**/*.test.ts",
-       "**/*.test.tsx",
-       "**/*.test.js",
-       "**/*.test.mjs"
+       "**/test_*.py",
+       "**/tests/**/*.py"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -2295,59 +1682,59 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.test.ts",
-      "text": "import { describe, it, expect } from 'vitest';\n\nasync function fetchUser(id: number) {\n  return { status: 200, body: { id, name: 'Ada' } };\n}\n\ndescribe('fetchUser', () => {\n  it('returns the user response', async () => {\n    const response = await fetchUser(1);\n    expect(response).toMatchSnapshot();\n  });\n});\n"
+      "path": "p3s109-pair/test_bad.py",
+      "text": "import frappe\nfrom frappe.tests.utils import FrappeTestCase\n\n\nclass TestForm(FrappeTestCase):\n    def test_create_form(self):\n        doc = frappe.new_doc(\"Form\")\n        doc.title = \"Sample\"\n        doc.insert()\n        self.assertTrue(doc.name)\n"
      },
      "good": {
-      "path": "p3s109-pair/good.test.ts",
-      "text": "import { describe, it, expect } from 'vitest';\n\nasync function fetchUser(id: number) {\n  return { status: 200, body: { id, name: 'Ada' } };\n}\n\ndescribe('fetchUser', () => {\n  it('returns the user response', async () => {\n    const response = await fetchUser(1);\n    expect(response).toMatchInlineSnapshot(`\n      {\n        \"body\": {\n          \"id\": 1,\n          \"name\": \"Ada\",\n        },\n        \"status\": 200,\n      }\n    `);\n  });\n});\n"
+      "path": "p3s109-pair/test_good.py",
+      "text": "import frappe\nfrom frappe.tests.utils import FrappeTestCase\n\nfrom forms_pro.tests.factories import make_form\n\n\nclass TestForm(FrappeTestCase):\n    def test_create_form(self):\n        doc = make_form(title=\"Sample\")\n        self.assertTrue(doc.name)\n"
      }
     }
    }
   ]
  },
  {
-  "id": "DB18",
-  "repo": "sabbirba/preconnect",
-  "sha": "d776e736b70a30082b62945a72f8e2906dabd0b8",
+  "id": "DB30",
+  "repo": "longsizhuo/holocard",
+  "sha": "62ba2ebbacdbb0a2927817817ba0f3f9564146b7",
   "linter": "eslint",
-  "rule": "check-file/filename-naming-convention",
+  "rule": "import/extensions",
   "cross": true,
   "readings": [
    {
     "key": "anthropic-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "check-file/filename-naming-convention",
+     "rule": "import/extensions",
      "options": [
-      {
-       "**/*.{js,mjs,cjs,ts}": "SNAKE_CASE"
-      },
-      {
-       "ignoreMiddleExtensions": true
-      }
+      "never"
      ],
      "scope": {
       "files": [
-       "web/**/*.js",
-       "tool/**/*.js"
+       "src/**/*.ts",
+       "server/**/*.ts",
+       "web/**/*.ts",
+       "config/**/*.ts",
+       "scripts/**/*.ts",
+       "vite.config.ts"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "**/*.d.ts"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "web/p3s109-pair/bad.js",
-      "text": "export function parseUserName(rawInput) {\n  return rawInput.trim().toLowerCase();\n}\n"
+      "path": "src/p3s109-pair/bad.ts",
+      "text": "import { helper } from './utils.js';\n\nexport function run(): string {\n  return helper('x');\n}\n"
      },
      "good": {
-      "path": "web/p3s109-pair/good.js",
-      "text": "export function parse_user_name(rawInput) {\n  return rawInput.trim().toLowerCase();\n}\n"
+      "path": "src/p3s109-pair/good.ts",
+      "text": "import { helper } from './utils';\n\nexport function run(): string {\n  return helper('x');\n}\n"
      }
     }
    },
@@ -2355,36 +1742,36 @@
     "key": "anthropic-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "check-file/filename-naming-convention",
+     "rule": "import/extensions",
      "options": [
-      {
-       "**/*.{js,mjs,cjs}": "SNAKE_CASE"
-      },
-      {
-       "ignoreMiddleExtensions": true
-      }
+      "never"
      ],
      "scope": {
       "files": [
-       "web/**/*.js",
-       "tool/**/*.js"
+       "src/**/*.ts",
+       "server/**/*.ts",
+       "web/**/*.ts",
+       "config/**/*.ts",
+       "scripts/**/*.ts",
+       "vite.config.ts"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "**/*.d.ts"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "web/p3s109-pair/bad.js",
-      "text": "const userName = 'a';\nexport function getUserName() {\n  return userName;\n}\n"
+      "path": "src/p3s109-pair/bad.ts",
+      "text": "import { helper } from './helper.js';\n\nexport function run(input: string): string {\n  return helper(input);\n}\n"
      },
      "good": {
-      "path": "web/p3s109-pair/good.js",
-      "text": "const user_name = 'a';\nexport function get_user_name() {\n  return user_name;\n}\n"
+      "path": "src/p3s109-pair/good.ts",
+      "text": "import { helper } from './helper';\n\nexport function run(input: string): string {\n  return helper(input);\n}\n"
      }
     }
    },
@@ -2392,13 +1779,18 @@
     "key": "deepseek-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "filenames/match-regex",
+     "rule": "import/extensions",
      "options": [
-      "^[a-z][a-z0-9]*(_[a-z][a-z0-9]*)?(\\.[a-zA-Z0-9]+)?$"
+      "never"
      ],
      "scope": {
       "files": [
-       "**/*"
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -2411,11 +1803,11 @@
     "pair": {
      "bad": {
       "path": "p3s109-pair/bad.js",
-      "text": "export const MyHelper = (value) => value * 2;\n"
+      "text": "import { helper } from './utils.js';\n\nexport function run(value) {\n  return helper(value);\n}\n"
      },
      "good": {
       "path": "p3s109-pair/good.js",
-      "text": "export const my_helper = (value) => value * 2;\n"
+      "text": "import { helper } from './utils';\n\nexport function run(value) {\n  return helper(value);\n}\n"
      }
     }
    },
@@ -2423,756 +1815,9 @@
     "key": "deepseek-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "unicorn/filename-case",
+     "rule": "import/extensions",
      "options": [
-      {
-       "case": "snakeCase"
-      }
-     ],
-     "scope": {
-      "files": [
-       "web/**/*.js",
-       "tool/**/*.js"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "web/p3s109-pair/bad.js",
-      "text": "export function formatUserName(user) {\n  return `${user.first} ${user.last}`;\n}\n"
-     },
-     "good": {
-      "path": "web/p3s109-pair/good.js",
-      "text": "export function format_user_name(user) {\n  return `${user.first} ${user.last}`;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "unicorn/filename-case",
-     "options": [
-      {
-       "case": "snakeCase"
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "export const userProfileCard = (name: string): string => {\n  return `Profile: ${name}`;\n};\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "export const user_profile_card = (name: string): string => {\n  return `Profile: ${name}`;\n};\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "unicorn/filename-case",
-     "options": [
-      {
-       "case": "snakeCase"
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "export const userProfileName = 'guest';\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "export const user_profile_name = 'guest';\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DB20",
-  "repo": "cloudflare/realtimekit-web-examples",
-  "sha": "91cc0609912e2dafcaaa2a5ddb2ba8b851ebbd6b",
-  "linter": "eslint",
-  "rule": "import/no-relative-packages",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "patterns": [
-        {
-         "group": [
-          "**/examples/**"
-         ],
-         "message": "Examples must be self-contained; do not import from another example."
-        },
-        {
-         "regex": "^(\\.\\./){3,}",
-         "message": "Do not reach outside this example with deep relative imports; examples must be self-contained."
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "react-examples/examples/**/*.{ts,tsx,js,jsx}",
-       "angular-examples/examples/**/*.{ts,js}",
-       "html-examples/examples/**/*.js",
-       "recording-sdk-app-examples/**/*.{ts,tsx,js,jsx}"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "react-examples/examples/p3s109-pair/bad.ts",
-      "text": "import { formatDate } from '../other-example/examples/shared/format';\n\nexport function render(date: Date): string {\n  return formatDate(date);\n}\n"
-     },
-     "good": {
-      "path": "react-examples/examples/p3s109-pair/good.ts",
-      "text": "import { formatDate } from './format';\n\nexport function render(date: Date): string {\n  return formatDate(date);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "patterns": [
-        {
-         "group": [
-          "**/examples/**",
-          "**/examples"
-         ],
-         "message": "Examples must be self-contained: do not import from another example."
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "react-examples/examples/**/*.{ts,tsx,js,jsx}",
-       "angular-examples/examples/**/*.{ts,js}",
-       "html-examples/examples/**/*.js",
-       "recording-sdk-app-examples/**/src/**/*.{ts,tsx,js,jsx}"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/node_modules/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "react-examples/examples/p3s109-pair/bad.ts",
-      "text": "import { formatDuration } from '../../examples/timer/format';\n\nexport function describeTimer(ms: number): string {\n  return 'Elapsed: ' + formatDuration(ms);\n}\n"
-     },
-     "good": {
-      "path": "react-examples/examples/p3s109-pair/good.ts",
-      "text": "import { formatDuration } from './format';\n\nexport function describeTimer(ms: number): string {\n  return 'Elapsed: ' + formatDuration(ms);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/no-relative-packages",
-     "options": [],
-     "scope": {
-      "files": [
-       "react-examples/examples/**/*.{ts,tsx,js,jsx}",
-       "angular-examples/examples/**/*.ts",
-       "html-examples/examples/**/*.js",
-       "recording-sdk-app-examples/angular-examples/**/*.ts",
-       "recording-sdk-app-examples/react-examples/**/*.{ts,tsx,js,jsx}"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "react-examples/examples/p3s109-pair/bad.ts",
-      "text": "import { formatDate } from '../other-example/src/helpers';\n\nexport function render(date: Date): string {\n  return formatDate(date);\n}\n"
-     },
-     "good": {
-      "path": "react-examples/examples/p3s109-pair/good.ts",
-      "text": "import { formatDate } from './helpers';\n\nexport function render(date: Date): string {\n  return formatDate(date);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/no-relative-parent-imports",
-     "options": [],
-     "scope": {
-      "files": [
-       "angular-examples/examples/*/src/**/*.ts",
-       "angular-examples/examples/*/src/**/*.ts",
-       "angular-examples/examples/*/src/**/*.tsx",
-       "react-examples/examples/*/src/**/*.ts",
-       "react-examples/examples/*/src/**/*.tsx",
-       "html-examples/examples/**/*.js",
-       "recording-sdk-app-examples/angular-examples/*/src/**/*.ts",
-       "recording-sdk-app-examples/react-examples/*/src/**/*.ts",
-       "recording-sdk-app-examples/react-examples/*/src/**/*.tsx",
-       "demo-app/app/**/*.ts",
-       "demo-app/app/**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "demo-app/app/p3s109-pair/bad.ts",
-      "text": "import { sharedConfig } from '../../other-example/src/config';\n\nexport function getTitle(): string {\n  return sharedConfig.title;\n}\n"
-     },
-     "good": {
-      "path": "demo-app/app/p3s109-pair/good.ts",
-      "text": "import { localConfig } from './config';\n\nexport function getTitle(): string {\n  return localConfig.title;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/no-relative-packages",
-     "options": [],
-     "scope": {
-      "files": [
-       "angular-examples/examples/**/*.ts",
-       "react-examples/examples/**/*.{ts,tsx}",
-       "recording-sdk-app-examples/**/*.ts",
-       "recording-sdk-app-examples/**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "angular-examples/examples/p3s109-pair/bad.ts",
-      "text": "import { createClient } from '../../other-example/src/client';\n\nexport function start(): void {\n  const client = createClient();\n  console.log(client);\n}\n"
-     },
-     "good": {
-      "path": "angular-examples/examples/p3s109-pair/good.ts",
-      "text": "import { createClient } from './client';\n\nexport function start(): void {\n  const client = createClient();\n  console.log(client);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/no-relative-packages",
-     "options": [],
-     "scope": {
-      "files": [
-       "angular-examples/examples/**/*.ts",
-       "html-examples/examples/**/*.js",
-       "react-examples/examples/**/*.ts",
-       "react-examples/examples/**/*.tsx",
-       "recording-sdk-app-examples/**/*.ts",
-       "recording-sdk-app-examples/**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "angular-examples/examples/p3s109-pair/bad.ts",
-      "text": "import { formatDate } from '../../other-example/src/format';\n\nexport function showToday(): string {\n  return formatDate(new Date());\n}\n"
-     },
-     "good": {
-      "path": "angular-examples/examples/p3s109-pair/good.ts",
-      "text": "import { formatDate } from 'other-example';\n\nexport function showToday(): string {\n  return formatDate(new Date());\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DB24",
-  "repo": "dimileeh/agent-workspace-fabric",
-  "sha": "284b783b5a080841dc8e6d69ce8af2248cf51fc0",
-  "linter": "eslint",
-  "rule": "no-restricted-syntax",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "AssignmentExpression[left.type='MemberExpression'][left.object.name='workspace'][left.property.name='status']",
-       "message": "Do not assign workspace.status directly; route state transitions through WorkspaceStateMachine.assert_transition(from, to)."
-      }
-     ],
-     "scope": {
-      "files": [
-       "apps/console/**/*.ts",
-       "apps/console/**/*.tsx",
-       "apps/console/**/*.mjs"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "apps/console/**/*.test.mjs",
-       "apps/console/tests/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "apps/console/p3s109-pair/bad.ts",
-      "text": "interface Workspace {\n  id: string;\n  status: string;\n}\n\nexport function suspendWorkspace(workspace: Workspace): void {\n  workspace.status = 'suspended';\n}\n"
-     },
-     "good": {
-      "path": "apps/console/p3s109-pair/good.ts",
-      "text": "interface Workspace {\n  id: string;\n  status: string;\n}\n\ndeclare const WorkspaceStateMachine: {\n  assert_transition(from: string, to: string): string;\n};\n\nexport function suspendWorkspace(workspace: Workspace): Workspace {\n  const next = WorkspaceStateMachine.assert_transition(workspace.status, 'suspended');\n  return { ...workspace, status: next };\n}\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "AssignmentExpression[left.type='MemberExpression'][left.object.name='workspace'][left.property.name='status']",
-       "message": "Do not assign workspace.status directly; route state transitions through WorkspaceStateMachine.assert_transition(from, to)."
-      }
-     ],
-     "scope": {
-      "files": [
-       "apps/console/**/*.{ts,tsx,js,jsx,mjs}"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "apps/console/tests/**",
-       "apps/console/**/*.test.mjs",
-       "apps/console/**/*.test.ts"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "apps/console/p3s109-pair/bad.ts",
-      "text": "interface Workspace {\n  id: string;\n  status: string;\n}\n\nexport function suspend(workspace: Workspace): void {\n  workspace.status = 'suspended';\n}\n"
-     },
-     "good": {
-      "path": "apps/console/p3s109-pair/good.ts",
-      "text": "interface Workspace {\n  id: string;\n  status: string;\n}\n\ndeclare const WorkspaceStateMachine: {\n  assert_transition(from: string, to: string): string;\n};\n\nexport function suspend(workspace: Workspace): Workspace {\n  const next = WorkspaceStateMachine.assert_transition(workspace.status, 'suspended');\n  return { ...workspace, status: next };\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "AssignmentExpression > MemberExpression[object.name=\"workspace\"][property.name=\"status\"]",
-       "message": "Direct assignment to workspace.status is forbidden; use WorkspaceStateMachine.assert_transition(from, to)."
-      }
-     ],
-     "scope": {
-      "files": [
-       "apps/console/**/*.ts",
-       "apps/console/**/*.tsx",
-       "apps/console/**/*.mjs"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "apps/console/p3s109-pair/bad.ts",
-      "text": "interface Workspace {\n  id: string;\n  status: string;\n}\n\nexport function suspend(workspace: Workspace): void {\n  workspace.status = \"suspended\";\n}\n"
-     },
-     "good": {
-      "path": "apps/console/p3s109-pair/good.ts",
-      "text": "interface Workspace {\n  id: string;\n  status: string;\n}\n\ndeclare const WorkspaceStateMachine: {\n  assert_transition(from: string, to: string): void;\n};\n\nexport function suspend(workspace: Workspace): Workspace {\n  WorkspaceStateMachine.assert_transition(workspace.status, \"suspended\");\n  return { ...workspace, status: \"suspended\" };\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      "AssignmentExpression[operator='='] > MemberExpression.left[object.name='workspace'][property.name='status']"
-     ],
-     "scope": {
-      "files": [
-       "apps/console/**/*.ts",
-       "apps/console/**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "apps/console/p3s109-pair/bad.ts",
-      "text": "interface Workspace {\n  id: string;\n  status: string;\n}\n\nexport function suspend(workspace: Workspace): void {\n  workspace.status = 'suspended';\n}\n"
-     },
-     "good": {
-      "path": "apps/console/p3s109-pair/good.ts",
-      "text": "interface Workspace {\n  id: string;\n  status: string;\n}\n\nexport function suspend(workspace: Workspace): Workspace {\n  return { ...workspace, status: 'suspended' };\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "AssignmentExpression[left.object.name='workspace'][left.property.name='status']",
-       "message": "State transitions must route through WorkspaceStateMachine.assert_transition(from, to). Direct assignment is a bug."
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "interface Workspace {\n  status: string;\n}\n\nexport function archive(workspace: Workspace): void {\n  workspace.status = 'archived';\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "interface Workspace {\n  status: string;\n}\n\ndeclare const WorkspaceStateMachine: {\n  assert_transition(from: string, to: string): string;\n};\n\nexport function archive(workspace: Workspace): Workspace {\n  const next = WorkspaceStateMachine.assert_transition(workspace.status, 'archived');\n  return { ...workspace, status: next };\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "AssignmentExpression[left.type='MemberExpression'][left.object.name='workspace'][left.property.name='status']",
-       "message": "State transitions must route through WorkspaceStateMachine.assert_transition(from, to). Direct workspace.status assignment is a bug."
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "import { WorkspaceStateMachine } from './state-machine';\n\ninterface Workspace {\n  status: string;\n}\n\nexport function archive(workspace: Workspace): void {\n  workspace.status = 'archived';\n}\n\nexport function describe(workspace: Workspace): string {\n  return WorkspaceStateMachine.describe(workspace.status);\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "import { WorkspaceStateMachine } from './state-machine';\n\ninterface Workspace {\n  status: string;\n}\n\nexport function archive(workspace: Workspace): Workspace {\n  WorkspaceStateMachine.assert_transition(workspace.status, 'archived');\n  return { ...workspace, status: 'archived' };\n}\n\nexport function describe(workspace: Workspace): string {\n  return WorkspaceStateMachine.describe(workspace.status);\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DCB1-7eed36",
-  "repo": "clearcotelabs/clearcote-browser",
-  "sha": "1aee88cbaa8d5ffbd6e91b37492e145aea9a75d5",
-  "linter": "eslint",
-  "rule": "no-restricted-imports",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "paths": [
-        {
-         "name": "puppeteer-extra-plugin-stealth",
-         "message": "Do not add stealth plugins; they patch values from JavaScript and conflict with the engine persona."
-        },
-        {
-         "name": "playwright-stealth",
-         "message": "Do not add stealth plugins; they patch values from JavaScript and conflict with the engine persona."
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "sdk/node/**/*.ts",
-       "sdk/node/**/*.js",
-       "sdk/node/**/*.mjs",
-       "sdk/scripts/**/*.mjs",
-       "mcp/npm/**/*.js",
-       "tools/**/*.js",
-       "scripts/**/*.cjs"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/node_modules/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "sdk/node/p3s109-pair/bad.ts",
-      "text": "import puppeteer from 'puppeteer';\nimport StealthPlugin from 'puppeteer-extra-plugin-stealth';\n\nexport async function launch() {\n  const stealth = StealthPlugin();\n  const browser = await puppeteer.launch({ headless: true });\n  return { browser, stealth };\n}\n"
-     },
-     "good": {
-      "path": "sdk/node/p3s109-pair/good.ts",
-      "text": "import puppeteer from 'puppeteer';\n\nexport async function launch() {\n  const browser = await puppeteer.launch({ headless: true });\n  return { browser };\n}\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "paths": [
-        {
-         "name": "puppeteer-extra-plugin-stealth",
-         "message": "Do not add stealth plugins; they patch values from JavaScript and conflict with the engine persona."
-        },
-        {
-         "name": "playwright-stealth",
-         "message": "Do not add stealth plugins; they patch values from JavaScript and conflict with the engine persona."
-        }
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "sdk/node/**/*.ts",
-       "sdk/scripts/**/*.mjs",
-       "mcp/npm/**/*.js",
-       "scripts/**/*.cjs",
-       "tools/**/*.js"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "sdk/node/node_modules/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "sdk/node/p3s109-pair/bad.ts",
-      "text": "import StealthPlugin from 'puppeteer-extra-plugin-stealth';\nimport puppeteer from 'puppeteer-extra';\n\npuppeteer.use(StealthPlugin());\n\nexport async function launch() {\n  const browser = await puppeteer.launch({ headless: true });\n  return browser;\n}\n"
-     },
-     "good": {
-      "path": "sdk/node/p3s109-pair/good.ts",
-      "text": "import puppeteer from 'puppeteer-extra';\n\nexport async function launch() {\n  const browser = await puppeteer.launch({ headless: true });\n  return browser;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "paths": [
-        "puppeteer-extra-plugin-stealth",
-        "playwright-stealth"
-       ]
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.ts",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.jsx",
-       "**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "import puppeteer from 'puppeteer-extra';\nimport StealthPlugin from 'puppeteer-extra-plugin-stealth';\n\npuppeteer.use(StealthPlugin());\n\nexport async function launch() {\n  const browser = await puppeteer.launch({ headless: true });\n  const page = await browser.newPage();\n  await page.goto('https://example.com');\n  return { browser, page };\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "import puppeteer from 'puppeteer-extra';\n\nexport async function launch() {\n  const browser = await puppeteer.launch({ headless: true });\n  const page = await browser.newPage();\n  await page.goto('https://example.com');\n  return { browser, page };\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-imports",
-     "options": [
-      {
-       "paths": [
-        {
-         "name": "puppeteer-extra-plugin-stealth",
-         "message": "Do not add stealth plugins. They conflict with the persona set in the engine."
-        },
-        {
-         "name": "playwright-stealth",
-         "message": "Do not add stealth plugins. They conflict with the persona set in the engine."
-        }
-       ]
-      }
+      "never"
      ],
      "scope": {
       "files": [
@@ -3196,26 +1841,21 @@
     "pair": {
      "bad": {
       "path": "p3s109-pair/bad.js",
-      "text": "import puppeteer from 'puppeteer-extra';\nimport StealthPlugin from 'puppeteer-extra-plugin-stealth';\n\npuppeteer.use(StealthPlugin());\n\nexport async function launch() {\n  const browser = await puppeteer.launch({ headless: true });\n  const page = await browser.newPage();\n  await page.goto('https://example.com');\n  return { browser, page };\n}\n"
+      "text": "import helper from './helper.js';\n\nexport function run(value) {\n  return helper(value);\n}\n"
      },
      "good": {
       "path": "p3s109-pair/good.js",
-      "text": "import puppeteer from 'puppeteer-extra';\n\nexport async function launch() {\n  const browser = await puppeteer.launch({ headless: true });\n  const page = await browser.newPage();\n  await page.goto('https://example.com');\n  return { browser, page };\n}\n"
+      "text": "import helper from './helper';\n\nexport function run(value) {\n  return helper(value);\n}\n"
      }
     }
    },
    {
-    "key": "google-s2",
+    "key": "google-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-imports",
+     "rule": "import/extensions",
      "options": [
-      {
-       "paths": [
-        "puppeteer-extra-plugin-stealth",
-        "playwright-stealth"
-       ]
-      }
+      "never"
      ],
      "scope": {
       "files": [
@@ -3239,11 +1879,305 @@
     "pair": {
      "bad": {
       "path": "p3s109-pair/bad.js",
-      "text": "import puppeteer from 'puppeteer-extra';\nimport StealthPlugin from 'puppeteer-extra-plugin-stealth';\n\npuppeteer.use(StealthPlugin());\n\nexport async function launch() {\n  const browser = await puppeteer.launch({ headless: true });\n  const page = await browser.newPage();\n  await page.goto('https://example.com');\n  return { browser, page };\n}\n"
+      "text": "import helper from './helper.js';\n\nexport function run(value) {\n  return helper(value);\n}\n"
      },
      "good": {
       "path": "p3s109-pair/good.js",
-      "text": "import puppeteer from 'puppeteer-extra';\n\nexport async function launch() {\n  const browser = await puppeteer.launch({ headless: true });\n  const page = await browser.newPage();\n  await page.goto('https://example.com');\n  return { browser, page };\n}\n"
+      "text": "import helper from './helper';\n\nexport function run(value) {\n  return helper(value);\n}\n"
+     }
+    }
+   },
+   {
+    "key": "google-s2",
+    "reading": {
+     "linter": "eslint",
+     "rule": "import/extensions",
+     "options": [
+      "never"
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.js",
+      "text": "import { helper } from './utils.js';\n\nexport function run(value) {\n  return helper(value) + 1;\n}\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.js",
+      "text": "import { helper } from './utils';\n\nexport function run(value) {\n  return helper(value) + 1;\n}\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "DCB3-cdacab",
+  "repo": "Atlas3DSS/Character-Creation",
+  "sha": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
+  "linter": "ruff",
+  "rule": "ANN202",
+  "cross": true,
+  "readings": [
+   {
+    "key": "anthropic-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN202",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "archive/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.py",
+      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef compute(value: int) -> int:\n    return _helper(value) + 1\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.py",
+      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef compute(value: int) -> int:\n    return _helper(value) + 1\n"
+     }
+    }
+   },
+   {
+    "key": "anthropic-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN202",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "archive/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.py",
+      "text": "def _double(value: int):\n    return value * 2\n\n\ndef quadruple(value: int) -> int:\n    return _double(_double(value))\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.py",
+      "text": "def _double(value: int) -> int:\n    return value * 2\n\n\ndef quadruple(value: int) -> int:\n    return _double(_double(value))\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN202",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.py",
+      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef run() -> int:\n    return _helper(3)\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.py",
+      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef run() -> int:\n    return _helper(3)\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN202",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.py",
+      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef run() -> int:\n    return _helper(4)\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.py",
+      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef run() -> int:\n    return _helper(4)\n"
+     }
+    }
+   },
+   {
+    "key": "google-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN202",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py",
+       "**/*.pyi"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.py",
+      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef run(value: int) -> int:\n    return _helper(value)\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.py",
+      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef run(value: int) -> int:\n    return _helper(value)\n"
+     }
+    }
+   },
+   {
+    "key": "google-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN202",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.py",
+      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef compute(values: list[int]) -> list[int]:\n    return [_helper(v) for v in values]\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.py",
+      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef compute(values: list[int]) -> list[int]:\n    return [_helper(v) for v in values]\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "DCB3-d595b5",
+  "repo": "Atlas3DSS/Character-Creation",
+  "sha": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
+  "linter": "ruff",
+  "rule": "ANN003",
+  "cross": true,
+  "readings": [
+   {
+    "key": "anthropic-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN003",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "archive/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.py",
+      "text": "def build_config(name: str, **options) -> dict:\n    config = {\"name\": name}\n    config.update(options)\n    return config\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.py",
+      "text": "def build_config(name: str, **options: str) -> dict:\n    config = {\"name\": name}\n    config.update(options)\n    return config\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN003",
+     "settings": {},
+     "scope": {
+      "files": [
+       "**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "p3s109-pair/bad.py",
+      "text": "def build_config(name: str, **options) -> dict:\n    config = {\"name\": name}\n    config.update(options)\n    return config\n"
+     },
+     "good": {
+      "path": "p3s109-pair/good.py",
+      "text": "def build_config(name: str, **options: str) -> dict:\n    config = {\"name\": name}\n    config.update(options)\n    return config\n"
      }
     }
    }
