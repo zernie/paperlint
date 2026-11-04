@@ -550,7 +550,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     card.appendChild(DATA.labels.body ? row(DATA.labels.body, body) : body);
     if (item.repeat && item.repeat.of > 1) card.appendChild(el("p", "muted", fill(DATA.labels.repeat, item.repeat)));
     if (item.code) card.appendChild(codeBlock(item.code));
-    if (item.unit) card.appendChild(row(DATA.labels.line + (item.unit.of > 1 ? " · part " + item.unit.part + " of " + item.unit.of : ""),
+    if (item.unit) card.appendChild(row(item.unit.of > 1 ? fill(DATA.labels.line_part, { line: DATA.labels.line, part: item.unit.part, of: item.unit.of }) : DATA.labels.line,
       markedLine(item.unit)));
     // A rule the item names, with what it does in the linter's own words (looked up at build time).
     (item.rules || []).forEach(function (r) {

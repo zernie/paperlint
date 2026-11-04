@@ -307,3 +307,29 @@ test("🔴 once the practice is done, «How to answer» folds into a toggle; wit
     /All 3 items are complete\. Tell the agent you are done; you can still change any answer\./,
   );
 });
+
+test("🔴 `labels.line_part` names a unit row whose line holds several requirements", async () => {
+  const unit = {
+    id: "u1",
+    text: "Short functions; no globals.",
+    mark: "Short functions",
+    part: 1,
+    of: 2,
+  };
+  const cfg = firstItem((i) => ({ ...i, unit }));
+  const own = await flat(
+    { ...cfg, labels: { line: "Source", line_part: "{line} ({part}/{of})" } },
+    "blocks-line-part",
+  );
+  const plain = await flat(
+    Object.fromEntries(Object.entries(cfg).filter(([k]) => k !== "labels")),
+    "blocks-line-part-default",
+  );
+  assert.deepEqual(
+    [
+      own.shown.includes("Source (1/2)"),
+      plain.shown.includes("Line · part 1 of 2"),
+    ],
+    [true, true],
+  );
+});

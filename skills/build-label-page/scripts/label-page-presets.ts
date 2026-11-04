@@ -72,6 +72,7 @@ const LINTER_LABELS = {
   place: "Card {n} of {total}",
   body: "Requirement",
   line: "Where this requirement comes from (the project's rules file)",
+  line_part: "Where this requirement comes from (the project's rules file)",
   repeat: "Card {index} of {of} for this requirement",
   practice_example: "Example of this answer, about other code: ",
 };

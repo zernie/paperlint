@@ -139,6 +139,7 @@ const FULL: DocObject = (() => {
         place: "C",
         body: "B",
         line: "L",
+        line_part: "{line} {part}/{of}",
         repeat: "R",
         practice_example: "P",
       },

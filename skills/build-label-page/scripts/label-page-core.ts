@@ -409,6 +409,7 @@ const configSchema = (kind: Kind): SchemaNode =>
       place: string(false),
       body: string(false),
       line: string(false),
+      line_part: string(false),
       repeat: string(false),
       practice_example: string(false),
     }),
@@ -1097,6 +1098,7 @@ const practiceShown = (cfg: Config, described: Described) =>
 const DEFAULT_LABELS: Readonly<Record<string, string>> = {
   place: "{id} · {n} of {total}",
   line: "Line",
+  line_part: "{line} · part {part} of {of}",
   repeat: "Card {index} of {of}",
   practice_example: "",
 };

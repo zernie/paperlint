@@ -181,13 +181,14 @@ Any card may carry these blocks, on any `kind`, and each one is optional. The pa
 - **`repeat`**: shows the sentence `labels.repeat` when `of` is more than 1. `index` must lie between 1 and `of`.
 - **`labels`** sits at page level, and every key in it is optional:
 
-  | key                | what it is                                             | default                 |
-  | ------------------ | ------------------------------------------------------ | ----------------------- |
-  | `place`            | the card's place                                       | `{id} · {n} of {total}` |
-  | `body`             | a row label for the body                               | none                    |
-  | `line`             | the label of the `unit` row                            | `Line`                  |
-  | `repeat`           | the repeat sentence                                    | `Card {index} of {of}`  |
-  | `practice_example` | text before each answer's example on a practice button | empty                   |
+  | key                | what it is                                                      | default                        |
+  | ------------------ | --------------------------------------------------------------- | ------------------------------ |
+  | `place`            | the card's place                                                | `{id} · {n} of {total}`        |
+  | `body`             | a row label for the body                                        | none                           |
+  | `line`             | the label of the `unit` row                                     | `Line`                         |
+  | `line_part`        | the `unit` row's label when the line holds several requirements | `{line} · part {part} of {of}` |
+  | `repeat`           | the repeat sentence                                             | `Card {index} of {of}`         |
+  | `practice_example` | text before each answer's example on a practice button          | empty                          |
 
 - The leak guard reads every string these blocks render, one string at a time.
 
