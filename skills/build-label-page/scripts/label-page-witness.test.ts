@@ -15,6 +15,7 @@ import {
   approval,
   approvalCard,
   build,
+  openLive,
   run,
   setup,
   showPage,
@@ -216,4 +217,32 @@ test("a rule with no official explanation says so; a card that is not repeated s
   assert.equal(shown.split("for this requirement").length - 1, 2);
   // Guards: a value matched with no answer either way shows no mark at all.
   assert.match(shown, /✗ does not match this file/);
+});
+
+test("🔴 once the practice is done, «How to answer» folds into a toggle; with every card answered the page says so and what to do next", async () => {
+  const { page, key } = build(setup("witness-howto", witness()));
+  const folded = async (practice: Record<string, unknown>) => {
+    const { app } = await openLive(page, { answers: {}, groups: {}, practice });
+    return app
+      .all()
+      .filter((n) => n.tag === "details")
+      .map((n) => n.children[0]?.textContent);
+  };
+  assert.ok(!(await folded({})).includes("📖 How to answer"));
+  assert.ok((await folded(PRACTICE_DONE)).includes("📖 How to answer"));
+  const all = Object.fromEntries(
+    Object.keys(key.ids).map((id) => [
+      id,
+      { answers: { witness: "open" }, source: "page" },
+    ]),
+  );
+  const { app } = await openLive(page, {
+    answers: all,
+    groups: {},
+    practice: PRACTICE_DONE,
+  });
+  assert.match(
+    app.textContent,
+    /All 3 items are complete\. Tell the agent you are done; you can still change any answer\./,
+  );
 });

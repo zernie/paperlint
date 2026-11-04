@@ -10,6 +10,8 @@ import {
   type Locator,
   type Page,
 } from "playwright-core";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterAll, test } from "vitest";
 import { z } from "zod";
 import { chromiumPath } from "../../../test/chromium.ts";
@@ -306,6 +308,108 @@ test(
     } finally {
       await page.context().close();
     }
+  },
+  BROWSER_TEST_MS,
+);
+
+const WITNESS_FIXTURE = join(
+  import.meta.dirname,
+  "fixtures",
+  "witness-items.json",
+);
+/** The generic witness page, every practice card answered as expected, at phone width. */
+async function onWitnessPage(
+  name: string,
+  steps: (page: Page) => Promise<void>,
+): Promise<void> {
+  const cfg = z
+    .object({
+      practice: z.array(
+        z.object({ expected: z.record(z.string(), z.string()) }).loose(),
+      ),
+    })
+    .loose()
+    .parse(JSON.parse(readFileSync(WITNESS_FIXTURE, "utf8")));
+  const done = Object.fromEntries(
+    cfg.practice.map((p, n) => [
+      `r1-P${String(n + 1)}`,
+      { answers: p.expected, source: "page" },
+    ]),
+  );
+  const { page: html } = build(setup(name, cfg));
+  const page = await (
+    await sharedBrowser()
+  ).newPage({ viewport: { width: 400, height: 900 } });
+  try {
+    await page.addInitScript(STORE(done, 20));
+    await page.goto("about:blank");
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    await steps(page);
+  } finally {
+    await page.context().close();
+  }
+}
+
+test(
+  "🔴 at phone width a witness card lights the caught line in its numbered code, keeps its settings folded, opens a long text on «more», and nothing pushes the page sideways",
+  async () => {
+    await onWitnessPage("browser-witness", async (page) => {
+      const card = page.locator("article.item", { hasText: "seed_db.py" });
+      assert.equal(
+        await card.locator("pre.numbered .hit").textContent(),
+        '18print(f"seeded {len(rows)} rows")',
+      );
+      // Guards: the settings are folded, and the question sits below the code.
+      assert.deepEqual(
+        await card
+          .locator("details")
+          .evaluateAll((els) => els.map((e) => (e as HTMLDetailsElement).open)),
+        [false, false],
+      );
+      const code = await card.locator("pre.numbered").boundingBox();
+      const ask = await card.locator(".ask").boundingBox();
+      assert.ok(code && ask && ask.y > code.y + code.height);
+      const why = card.locator(".clamped", { hasText: "Why:" });
+      const folded = (await why.boundingBox())?.height ?? 0;
+      await card.getByRole("button", { name: "more" }).first().click();
+      const opened = await card.locator("p", { hasText: "Why:" }).boundingBox();
+      assert.ok(
+        opened && opened.height > folded,
+        `${String(folded)} → ${String(opened?.height)}`,
+      );
+      assert.equal(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+        400,
+      );
+    });
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "🔴 under 'Next unanswered' the card just answered stays, with Change, until the next card is answered",
+  async () => {
+    await onWitnessPage("browser-witness-next", async (page) => {
+      await page.getByRole("button", { name: "Next unanswered" }).click();
+      const cards = page.locator("article.item");
+      assert.equal(await cards.count(), 3);
+      await cards
+        .nth(0)
+        .getByRole("button", { name: /words cover it/ })
+        .click();
+      await page.waitForTimeout(100);
+      assert.equal(await cards.count(), 3, "the answered card is still there");
+      assert.equal(
+        await cards.nth(0).getByRole("button", { name: "Change" }).count(),
+        1,
+      );
+      await cards
+        .nth(1)
+        .getByRole("button", { name: /words cover it/ })
+        .click();
+      await page.waitForTimeout(100);
+      assert.equal(await cards.count(), 2, "the first one has gone");
+    });
   },
   BROWSER_TEST_MS,
 );
