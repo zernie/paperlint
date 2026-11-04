@@ -151,6 +151,28 @@ check(JSON.stringify(optionsSchema([{ enum: ["a"] }], 9)) === JSON.stringify({ t
 check(JSON.stringify(optionsSchema(undefined, 9)) === JSON.stringify({ type: "array", minItems: 0, maxItems: 0 }) && optionsSchema(undefined, 8) === null && optionsSchema(false, 9) === null, "no schema: no options from ESLint 9, unvalidated before; false: unvalidated");
 check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) === JSON.stringify({ pkg: "@eslint-community/eslint-plugin-eslint-comments", name: "no-use" }) && pluginPart("quotes") === null && pluginPart("@typescript-eslint/x").pkg === "@typescript-eslint/eslint-plugin", "pluginPart");
 
+// 9. A TypeScript release newer than the parser's peer range (measured: typescript 7.0.2 against
+//    @typescript-eslint/parser 8.72.1, npm ERESOLVE): TypeScript is left to npm's peer resolution, and said so.
+{
+  const dir = repo({ "package.json": "{}", "package-lock.json": "{}", "tsconfig.json": "{}" });
+  const { deps } = fakes({ registryDocs: { ...docs, "@typescript-eslint/parser": { time: { "8.72.1": T("2024-04-01") } },
+    typescript: { time: { "7.0.2": T("2024-04-02") } } } });
+  const npm = deps.npm;
+  deps.npm = (args, cwd) => {
+    const pkg = JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf8"));
+    if (pkg.devDependencies.typescript === "7.0.2" && !args.includes("--legacy-peer-deps"))
+      return { code: 1, stderr: "npm error code ERESOLVE\nnpm error Fix the upstream dependency conflict, or retry this command with --force or --legacy-peer-deps" };
+    const r = npm(args, cwd);
+    const lock = JSON.parse(readFileSync(path.join(cwd, "package-lock.json"), "utf8"));
+    lock.packages["node_modules/typescript"] = { version: "6.0.3" };
+    writeFileSync(path.join(cwd, "package-lock.json"), JSON.stringify(lock));
+    return r;
+  };
+  const r = await installFor({ id: "DX03", linter: "eslint", readings: [reading("anthropic-s1", "no-tabs")] }, dir, deps);
+  check(r.installed.kind === "installed" && r.install.path === "date-matched", `TypeScript peer conflict: ${JSON.stringify(r.install).slice(0, 300)}`);
+  check(r.install.versions?.typescript === "6.0.3" && r.install.typescript_peer_resolved === true, `TypeScript from the parser's peer range, recorded: ${JSON.stringify(r.install.versions)}`);
+}
+
 // 5. The plan job's matrix: one entry per item, Node 22 unless the item names another (from the repository's engines).
 check(JSON.stringify(matrixOf([{ id: "a" }, { id: "b", node: "20" }])) === JSON.stringify([{ index: 0, node: "22" }, { index: 1, node: "20" }]), "matrixOf");
 check(JSON.stringify(repoEslint(repo({ "package.json": "{}", "a/package.json": JSON.stringify({ devDependencies: { eslint: "8" } }) })).declared) === JSON.stringify(["a/package.json"]), "repoEslint finds a sub-package");

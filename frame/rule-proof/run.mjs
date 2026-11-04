@@ -225,10 +225,21 @@ function setAside(dir, asideDir) {
 
 // A manifest of ESLint and its companions at fixed versions, then each plugin added on its own so one that cannot
 // install (not on npm, no release by the date, a resolve error) costs only the readings that name it.
+const ERESOLVE = /ERESOLVE|--legacy-peer-deps/;
 function npmManifest(dir, deps, base, plugins) {
   const write = (dev) => writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "rule-proof-install", private: true, devDependencies: dev }, null, 1) + "\n");
   const lock = (dev, legacy) => { write(dev); return deps.npm(["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", ...(legacy ? ["--legacy-peer-deps"] : [])], dir); };
-  const r0 = lock(base, false);
+  let r0 = lock(base, false);
+  let tsPeer = false;
+  // TypeScript current at the date may be newer than the TypeScript parser's peer range (measured: typescript 7.0.2
+  // against @typescript-eslint/parser 8.72.1). It is then left to npm, which installs the newest TypeScript the
+  // parser's peer range admits; the version is read back from the lockfile and the record says so.
+  if (r0.code !== 0 && ERESOLVE.test(r0.stderr ?? "") && base.typescript) {
+    const { typescript: _drop, ...rest } = base;
+    base = rest;
+    r0 = lock(base, false);
+    tsPeer = r0.code === 0;
+  }
   if (r0.code !== 0) return { error: `npm install --package-lock-only exited ${r0.code}: ${tailOf(r0.stderr)}` };
   let dev = { ...base }, legacy = false;
   const out = {};
@@ -237,7 +248,7 @@ function npmManifest(dir, deps, base, plugins) {
     const next = { ...dev, [name]: p.version };
     const r = lock(next, legacy);
     if (r.code === 0) { dev = next; out[name] = { ...p, error: null }; continue; }
-    if (!legacy && /ERESOLVE/.test(r.stderr ?? "")) {
+    if (!legacy && ERESOLVE.test(r.stderr ?? "")) {
       const r2 = lock(next, true);
       if (r2.code === 0) { dev = next; legacy = true; out[name] = { ...p, error: null, peer_conflict: true }; continue; }
     }
@@ -246,7 +257,8 @@ function npmManifest(dir, deps, base, plugins) {
   const rf = lock(dev, legacy);
   if (rf.code !== 0) return { error: `final lock exited ${rf.code}: ${tailOf(rf.stderr)}` };
   if (legacy) writeFileSync(path.join(dir, ".npmrc"), "legacy-peer-deps=true\n");
-  return { plugins: out, legacy_peer_deps: legacy, manifest: dev };
+  const peerTs = tsPeer ? readJson(path.join(dir, "package-lock.json"))?.packages?.["node_modules/typescript"]?.version ?? null : undefined;
+  return { plugins: out, legacy_peer_deps: legacy, manifest: dev, ...(tsPeer ? { typescript_peer_resolved: peerTs } : {}) };
 }
 
 const pluginNames = (readings) => [...new Set(readings.map((r) => pluginOf(r.reading.rule)).filter(Boolean))].sort();
@@ -276,7 +288,9 @@ export function readingPlugins(reading, install) {
 async function ownManifest(item, dir, deps, pathName, versions, plugins, extra) {
   const aside = setAside(dir, deps.asideDir);
   const m = npmManifest(dir, deps, versions, plugins);
-  const record = { path: pathName, aside, versions, plugins: m.plugins ?? plugins, legacy_peer_deps: m.legacy_peer_deps ?? false, ...extra };
+  const vs = m.typescript_peer_resolved === undefined ? versions : { ...versions, typescript: m.typescript_peer_resolved };
+  const record = { path: pathName, aside, versions: vs, plugins: m.plugins ?? plugins, legacy_peer_deps: m.legacy_peer_deps ?? false,
+    ...(m.typescript_peer_resolved === undefined ? {} : { typescript_peer_resolved: true }), ...extra };
   if (m.error) return { installed: { kind: "not-installed", stage: "install", reason: m.error }, record };
   const installed = deps.install("eslint", dir);
   return { installed, record };
