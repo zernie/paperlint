@@ -21,7 +21,7 @@
   "versions": {
    "eslint": "10.13.0",
    "@typescript-eslint/parser": "8.72.1",
-   "typescript": "7.0.2"
+   "typescript": "6.0.3"
   },
   "plugins": {
    "@typescript-eslint/eslint-plugin": {
@@ -30,6 +30,7 @@
    }
   },
   "legacy_peer_deps": false,
+  "typescript_peer_resolved": true,
   "as_designed": {
    "kind": "not-installed",
    "stage": "no-linter",
@@ -41,10 +42,326 @@
   },
   "commit": "2026-10-28T13:45:00+08:00",
   "adjustments": [],
-  "kind": "not-installed",
-  "stage": "install",
-  "reason": "npm install --package-lock-only exited 1: npm error to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_26_06_169Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_26_06_169Z-debug-0.log"
+  "kind": "installed",
+  "version": "10.13.0"
  },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "TSEnumDeclaration",
+      "message": "Do not use TS enum; use a const object (`as const`) with a ValueOf-derived type instead."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.d.ts",
+      "**/node_modules/**",
+      "**/dist/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 6333,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "TSEnumDeclaration",
+      "message": "Do not use TS enum; use a const object enum (`as const` object + `ValueOf` derived type)."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.d.ts",
+      "**/node_modules/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 6333,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-restricted-syntax",
+    "options": [
+     {
+      "selector": "TSEnumDeclaration",
+      "message": "Use const object enums (as const object + ValueOf derived type) instead of TS enum."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "@typescript-eslint/eslint-plugin",
+     "version": "8.72.1",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at FlatConfigArray.getConfig (/home/runner/work/_temp/rule-proof-work/repo/node_modules/@eslint/config-array/dist/cjs/index.cjs:1429:15)\n    at /home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:627:27\n    at Array.map (<anonymous>)\n    at lintFilesWithoutMultithreading (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:625:13)\n    at ESLint.lintFiles (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:1071:20)"
+   },
+   "diagnosis": {
+    "plugin": "@typescript-eslint/eslint-plugin",
+    "plugin_loaded": true,
+    "rule_known": false,
+    "options_valid": null,
+    "schema": null,
+    "errors": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-restricted-syntax",
+    "options": [
+     {
+      "selector": "TSEnumDeclaration",
+      "message": "Use const object enums (`as const` object + `ValueOf` derived type) instead of TS enum."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "@typescript-eslint/eslint-plugin",
+     "version": "8.72.1",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at FlatConfigArray.getConfig (/home/runner/work/_temp/rule-proof-work/repo/node_modules/@eslint/config-array/dist/cjs/index.cjs:1429:15)\n    at /home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:627:27\n    at Array.map (<anonymous>)\n    at lintFilesWithoutMultithreading (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:625:13)\n    at ESLint.lintFiles (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:1071:20)"
+   },
+   "diagnosis": {
+    "plugin": "@typescript-eslint/eslint-plugin",
+    "plugin_loaded": true,
+    "rule_known": false,
+    "options_valid": null,
+    "schema": null,
+    "errors": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "TSEnumDeclaration",
+      "message": "Use const object enums (`as const` object + `ValueOf` derived type) instead of TS enum"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 6335,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "TSEnumDeclaration",
+      "message": "Use const object enums (`as const` object + `ValueOf` derived type) instead of TS enum"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 6357,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 13.519
+ "seconds": 277.777
 }

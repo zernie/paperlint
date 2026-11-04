@@ -25,7 +25,7 @@
   "versions": {
    "eslint": "10.12.0",
    "@typescript-eslint/parser": "8.71.0",
-   "typescript": "7.0.2"
+   "typescript": "6.0.3"
   },
   "plugins": {
    "@typescript-eslint/eslint-plugin": {
@@ -34,6 +34,7 @@
    }
   },
   "legacy_peer_deps": false,
+  "typescript_peer_resolved": true,
   "as_designed": {
    "kind": "not-installed",
    "stage": "no-linter",
@@ -45,10 +46,60 @@
   },
   "commit": "2026-10-04T13:53:39+04:00",
   "adjustments": [],
-  "kind": "not-installed",
-  "stage": "install",
-  "reason": "npm install --package-lock-only exited 1: npm error Fix the upstream dependency conflict, or retry this command with --force or --legacy-peer-deps to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_51_266Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_51_266Z-debug-0.log"
+  "kind": "installed",
+  "version": "10.12.0"
  },
+ "readings": [
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/id-denylist",
+    "options": [
+     "AGENT_IDS"
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "packages/**/*.ts",
+      "packages/**/*.tsx",
+      "packages/**/*.js",
+      "scripts/**/*.ts",
+      "scripts/**/*.js"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "@typescript-eslint/eslint-plugin",
+     "version": "8.71.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at FlatConfigArray.getConfig (/home/runner/work/_temp/rule-proof-work/repo/node_modules/@eslint/config-array/dist/cjs/index.cjs:1429:15)\n    at /home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:627:27\n    at Array.map (<anonymous>)\n    at lintFilesWithoutMultithreading (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:625:13)\n    at ESLint.lintFiles (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint.js:1071:20)"
+   },
+   "diagnosis": {
+    "plugin": "@typescript-eslint/eslint-plugin",
+    "plugin_loaded": true,
+    "rule_known": false,
+    "options_valid": null,
+    "schema": null,
+    "errors": []
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 8.912
+ "seconds": 12.625
 }

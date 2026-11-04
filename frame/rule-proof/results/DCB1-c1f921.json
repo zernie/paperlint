@@ -16,7 +16,7 @@
   "versions": {
    "eslint": "10.14.0",
    "@typescript-eslint/parser": "8.72.1",
-   "typescript": "7.0.2"
+   "typescript": "6.0.3"
   },
   "plugins": {
    "@typescript-eslint/eslint-plugin": {
@@ -25,6 +25,7 @@
    }
   },
   "legacy_peer_deps": false,
+  "typescript_peer_resolved": true,
   "as_designed": {
    "kind": "not-installed",
    "stage": "no-lockfile",
@@ -36,10 +37,69 @@
   },
   "commit": "2026-11-02T17:10:47+01:00",
   "adjustments": [],
-  "kind": "not-installed",
-  "stage": "install",
-  "reason": "npm install --package-lock-only exited 1: npm error to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_28_12_338Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_28_12_338Z-debug-0.log"
+  "kind": "installed",
+  "version": "10.14.0"
  },
+ "readings": [
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-restricted-imports",
+    "options": [
+     {
+      "paths": [
+       {
+        "name": "puppeteer-extra-plugin-stealth",
+        "message": "Stealth plugins must not be added."
+       },
+       {
+        "name": "playwright-stealth",
+        "message": "Stealth plugins must not be added."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "@typescript-eslint/eslint-plugin",
+     "version": "8.72.1",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 184,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 3.752
+ "seconds": 14.06
 }

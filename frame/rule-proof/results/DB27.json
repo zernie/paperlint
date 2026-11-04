@@ -21,10 +21,11 @@
   "versions": {
    "eslint": "10.14.0",
    "@typescript-eslint/parser": "8.72.1",
-   "typescript": "7.0.2"
+   "typescript": "6.0.3"
   },
   "plugins": {},
   "legacy_peer_deps": false,
+  "typescript_peer_resolved": true,
   "as_designed": {
    "kind": "not-installed",
    "stage": "no-linter",
@@ -36,12 +37,265 @@
   },
   "commit": "2026-11-03T13:07:46-08:00",
   "adjustments": [],
-  "kind": "not-installed",
-  "stage": "install",
-  "reason": "npm install --package-lock-only exited 1: npm error to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_28_45_057Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_28_45_057Z-debug-0.log"
+  "kind": "installed",
+  "version": "10.14.0"
  },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.name='Resource'] > ObjectExpression > Property[key.name='bind'], CallExpression[callee.callee.name='Resource'] > ObjectExpression > Property[key.name='bind']",
+      "message": "No resource-level `bind`. Define the Resource as plain `Resource<T>(\"Cloud.Type\")` with no `bind:` field."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/node_modules/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 18099,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.name='Resource'] > ObjectExpression > Property[key.name='bind'], NewExpression[callee.name='Resource'] > ObjectExpression > Property[key.name='bind']",
+      "message": "Resource definition must not have a `bind` field; use plain `Resource<T>(\"Cloud.Type\")`"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 18099,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "CallExpression[callee.name='Resource'] > arguments:nth-child(2) > ObjectExpression > Property[key.name='bind'], NewExpression[callee.name='Resource'] > arguments:nth-child(2) > ObjectExpression > Property[key.name='bind']"
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.name='Resource'] Property[key.name='bind']",
+      "message": "Resource definition must not have a `bind:` field"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 18246,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.name='Resource'] Property[key.name='bind']",
+      "message": "Resource definition must not have a `bind:` field; use plain `Resource<T>('Cloud.Type')`"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 18246,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [
   "pnpmfile-ignored"
  ],
- "seconds": 49.114
+ "seconds": 569.065
 }

@@ -19,15 +19,17 @@
   "versions": {
    "eslint": "10.13.0",
    "@typescript-eslint/parser": "8.72.0",
-   "typescript": "7.0.2"
+   "typescript": null
   },
   "plugins": {
    "eslint-plugin-import": {
     "version": "2.32.0",
-    "error": null
+    "error": null,
+    "peer_conflict": true
    }
   },
-  "legacy_peer_deps": false,
+  "legacy_peer_deps": true,
+  "typescript_peer_resolved": true,
   "as_designed": {
    "kind": "not-installed",
    "stage": "no-linter",
@@ -39,10 +41,302 @@
   },
   "commit": "2026-10-26T01:17:10+08:00",
   "adjustments": [],
-  "kind": "not-installed",
-  "stage": "install",
-  "reason": "npm install --package-lock-only exited 1: npm error to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_28_16_251Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_28_16_251Z-debug-0.log"
+  "kind": "installed",
+  "version": "10.13.0"
  },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/extensions",
+    "options": [
+     "never"
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "server/**/*.ts",
+      "web/**/*.ts",
+      "config/**/*.ts",
+      "scripts/**/*.ts",
+      "vite.config.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.d.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": "2.32.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at Module.require (node:internal/modules/cjs/loader:1527:12)\n    at require (node:internal/modules/helpers:147:16)\n    at Object.<anonymous> (/home/runner/work/_temp/rule-proof-work/repo/node_modules/@typescript-eslint/parser/dist/index.js:37:25)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Object..js (node:internal/modules/cjs/loader:1913:10)"
+   },
+   "diagnosis": {
+    "plugin": "eslint-plugin-import",
+    "plugin_loaded": true,
+    "rule_known": true,
+    "options_valid": true,
+    "schema": "present",
+    "errors": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/extensions",
+    "options": [
+     "never"
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "server/**/*.ts",
+      "web/**/*.ts",
+      "config/**/*.ts",
+      "scripts/**/*.ts",
+      "vite.config.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.d.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": "2.32.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at Module.require (node:internal/modules/cjs/loader:1527:12)\n    at require (node:internal/modules/helpers:147:16)\n    at Object.<anonymous> (/home/runner/work/_temp/rule-proof-work/repo/node_modules/@typescript-eslint/parser/dist/index.js:37:25)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Object..js (node:internal/modules/cjs/loader:1913:10)"
+   },
+   "diagnosis": {
+    "plugin": "eslint-plugin-import",
+    "plugin_loaded": true,
+    "rule_known": true,
+    "options_valid": true,
+    "schema": "present",
+    "errors": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/extensions",
+    "options": [
+     "never"
+    ],
+    "scope": {
+     "files": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": "2.32.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at Module.require (node:internal/modules/cjs/loader:1527:12)\n    at require (node:internal/modules/helpers:147:16)\n    at Object.<anonymous> (/home/runner/work/_temp/rule-proof-work/repo/node_modules/@typescript-eslint/parser/dist/index.js:37:25)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Object..js (node:internal/modules/cjs/loader:1913:10)"
+   },
+   "diagnosis": {
+    "plugin": "eslint-plugin-import",
+    "plugin_loaded": true,
+    "rule_known": true,
+    "options_valid": true,
+    "schema": "present",
+    "errors": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/extensions",
+    "options": [
+     "never"
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": "2.32.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at Module.require (node:internal/modules/cjs/loader:1527:12)\n    at require (node:internal/modules/helpers:147:16)\n    at Object.<anonymous> (/home/runner/work/_temp/rule-proof-work/repo/node_modules/@typescript-eslint/parser/dist/index.js:37:25)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Object..js (node:internal/modules/cjs/loader:1913:10)"
+   },
+   "diagnosis": {
+    "plugin": "eslint-plugin-import",
+    "plugin_loaded": true,
+    "rule_known": true,
+    "options_valid": true,
+    "schema": "present",
+    "errors": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/extensions",
+    "options": [
+     "never"
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": "2.32.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at Module.require (node:internal/modules/cjs/loader:1527:12)\n    at require (node:internal/modules/helpers:147:16)\n    at Object.<anonymous> (/home/runner/work/_temp/rule-proof-work/repo/node_modules/@typescript-eslint/parser/dist/index.js:37:25)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Object..js (node:internal/modules/cjs/loader:1913:10)"
+   },
+   "diagnosis": {
+    "plugin": "eslint-plugin-import",
+    "plugin_loaded": true,
+    "rule_known": true,
+    "options_valid": true,
+    "schema": "present",
+    "errors": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "import/extensions",
+    "options": [
+     "never"
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [
+    {
+     "name": "eslint-plugin-import",
+     "version": "2.32.0",
+     "error": null
+    }
+   ],
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at Module.require (node:internal/modules/cjs/loader:1527:12)\n    at require (node:internal/modules/helpers:147:16)\n    at Object.<anonymous> (/home/runner/work/_temp/rule-proof-work/repo/node_modules/@typescript-eslint/parser/dist/index.js:37:25)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Object..js (node:internal/modules/cjs/loader:1913:10)"
+   },
+   "diagnosis": {
+    "plugin": "eslint-plugin-import",
+    "plugin_loaded": true,
+    "rule_known": true,
+    "options_valid": true,
+    "schema": "present",
+    "errors": []
+   }
+  }
+ ],
+ "cross": [],
  "adjustments": [],
- "seconds": 8.56
+ "seconds": 19.05
 }

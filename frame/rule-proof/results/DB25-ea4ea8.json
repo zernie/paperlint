@@ -25,10 +25,11 @@
   "versions": {
    "eslint": "10.12.0",
    "@typescript-eslint/parser": "8.71.0",
-   "typescript": "7.0.2"
+   "typescript": "6.0.3"
   },
   "plugins": {},
   "legacy_peer_deps": false,
+  "typescript_peer_resolved": true,
   "as_designed": {
    "kind": "not-installed",
    "stage": "no-linter",
@@ -40,10 +41,273 @@
   },
   "commit": "2026-10-04T13:53:39+04:00",
   "adjustments": [],
-  "kind": "not-installed",
-  "stage": "install",
-  "reason": "npm install --package-lock-only exited 1: npm error Fix the upstream dependency conflict, or retry this command with --force or --legacy-peer-deps to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_50_202Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_50_202Z-debug-0.log"
+  "kind": "installed",
+  "version": "10.12.0"
  },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "Property[key.name='supportingHarnesses'] Identifier[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS."
+     },
+     {
+      "selector": "JSXAttribute[name.name='supportingHarnesses'] Identifier[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS."
+     },
+     {
+      "selector": "CallExpression[callee.name='supportingHarnesses'] Identifier[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "packages/web/src/**/*.ts",
+      "packages/web/src/**/*.tsx",
+      "packages/control-plane/src/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 272,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.name='supportingHarnesses'] Identifier[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS."
+     },
+     {
+      "selector": "CallExpression[callee.property.name='supportingHarnesses'] Identifier[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS."
+     },
+     {
+      "selector": "Property[key.name='supportingHarnesses'] > Identifier.value[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS."
+     }
+    ],
+    "scope": {
+     "files": [
+      "packages/web/src/**/*.ts",
+      "packages/web/src/**/*.tsx",
+      "src/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 243,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "Property[key.name='supportingHarnesses'] Identifier[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS"
+     },
+     {
+      "selector": "AssignmentExpression[left.property.name='supportingHarnesses'] Identifier[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 380,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "Property[key.name='supportingHarnesses'] Identifier[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS"
+     },
+     {
+      "selector": "AssignmentExpression[left.property.name='supportingHarnesses'] Identifier[name='AGENT_IDS']",
+      "message": "supportingHarnesses takes the listing, never AGENT_IDS"
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 380,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 6.859
+ "seconds": 52.009
 }

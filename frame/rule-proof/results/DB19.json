@@ -19,10 +19,11 @@
   "versions": {
    "eslint": "10.14.0",
    "@typescript-eslint/parser": "8.72.1",
-   "typescript": "7.0.2"
+   "typescript": "6.0.3"
   },
   "plugins": {},
   "legacy_peer_deps": false,
+  "typescript_peer_resolved": true,
   "as_designed": {
    "kind": "not-installed",
    "stage": "no-linter",
@@ -34,10 +35,263 @@
   },
   "commit": "2026-10-31T21:51:31+01:00",
   "adjustments": [],
-  "kind": "not-installed",
-  "stage": "install",
-  "reason": "npm install --package-lock-only exited 1: npm error to accept an incorrect (and potentially broken) dependency resolution.\nnpm error\nnpm error\nnpm error For a full report see:\nnpm error /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_37_276Z-eresolve-report.txt\nnpm error A complete log of this run can be found in: /home/runner/work/_temp/rule-proof-work/cache/npm/_logs/2026-11-04T10_27_37_276Z-debug-0.log"
+  "kind": "installed",
+  "version": "10.14.0"
  },
+ "readings": [
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "JSXOpeningElement:has(JSXAttribute[name.name=\"role\"][value.value=\"dialog\"]):not(:has(JSXAttribute[name.name=\"className\"]:matches([value.value=/bg-bg-raised/])))",
+      "message": "Dialog elements must use `bg-bg-raised` class for the raised surface."
+     },
+     {
+      "selector": "JSXOpeningElement:has(JSXAttribute[name.name=\"aria-modal\"][value.value=\"true\"]):not(:has(JSXAttribute[name.name=\"className\"]:matches([value.value=/bg-bg-raised/])))",
+      "message": "Modal elements must use `bg-bg-raised` class for the raised surface (dialog requirement)."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.test.tsx"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 82,
+    "flagged": [
+     "src/components/shared/Dialog.tsx",
+     "src/components/shared/ImageLightbox.tsx",
+     "src/components/shared/SignupOverlay.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "JSXOpeningElement[name.name='Dialog']:not([attributes.name='className'][attributes.value.value*='bg-bg-raised'])",
+      "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/**/*.test.tsx"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 82,
+    "flagged": [
+     "src/components/article/ArticleEditor.tsx",
+     "src/components/dm/NewMessageDialog.tsx",
+     "src/components/feed/QuoteModal.tsx",
+     "src/components/shared/BackupDialog.tsx",
+     "src/components/shared/HelpModal.tsx",
+     "src/components/shared/LoginModal.tsx",
+     "src/components/zap/ZapModal.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "error",
+     {
+      "selector": "JSXOpeningElement[name.name=/^[Dd]ialog$/]:not(:has(JSXAttribute[name.name='className'] Literal[value=/bg-bg-raised/]))",
+      "message": "Dialog is a raised surface using bg-bg-raised."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 144,
+    "flagged": [
+     "src/components/article/ArticleEditor.tsx",
+     "src/components/dm/NewMessageDialog.tsx",
+     "src/components/feed/QuoteModal.tsx",
+     "src/components/shared/BackupDialog.tsx",
+     "src/components/shared/Dialog.test.tsx",
+     "src/components/shared/HelpModal.tsx",
+     "src/components/shared/ImageLightbox.test.tsx",
+     "src/components/shared/LoginModal.tsx",
+     "src/components/shared/SignupOverlay.test.tsx",
+     "src/components/zap/ZapModal.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "JSXOpeningElement[name.name='Dialog'] JSXAttribute[name.name='className'] Literal[value=/(^| )bg-bg( |$)/]",
+      "message": "Dialog is a raised surface using `bg-bg-raised`, not `bg-bg`"
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "plugins": [],
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 144,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  }
+ ],
  "adjustments": [],
- "seconds": 5.825
+ "seconds": 19.681
 }
