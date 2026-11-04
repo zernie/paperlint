@@ -97,6 +97,8 @@ export const config = (
   title: "Label these",
   seed: 7,
   groups: { python: "Python", go: "Go", rust: "Rust" },
+  // A gold-label study filters on how well the labeller knows each group: it asks, explicitly.
+  familiarity: true,
   questions: QUESTIONS,
   practice: PRACTICE,
   items: ITEMS,
@@ -355,7 +357,12 @@ export const APPROVAL_PRACTICE = [
 export const approval = (
   over: Record<string, unknown> = {},
 ): Record<string, unknown> =>
-  config({ questions: APPROVAL_Q, practice: APPROVAL_PRACTICE, ...over });
+  config({
+    questions: APPROVAL_Q,
+    practice: APPROVAL_PRACTICE,
+    familiarity: undefined, // left out: an approval page asks none
+    ...over,
+  });
 
 /**
  * The built page against a stand-in store holding `docs` (collection → id → document); `resend` sends

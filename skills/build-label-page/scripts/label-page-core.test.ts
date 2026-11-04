@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { test } from "vitest";
 import { z } from "zod";
 import {
+  APPROVAL_PRACTICE,
   DONE_PRACTICE,
   Exported,
   ITEMS,
@@ -62,6 +63,16 @@ interface DocObject {
 const isObject = (v: Doc | undefined): v is DocObject =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
+/** Every optional field of a card, for an item and a practice item alike. */
+const CARD = {
+  title: "T",
+  code: "c = 1",
+  context: "ctx",
+  file: "`src/a.ts`",
+  rules: [{ linter: "eslint", id: "no-console" }],
+  unit: { id: "L0", text: "One line.", mark: "One", part: 1, of: 1 },
+  readings: { a: "on", b: "off" },
+};
 /** A config with EVERY optional field present, so every schema path has a value to spoil. */
 const FULL: DocObject = (() => {
   const doc = Doc.parse(
@@ -80,18 +91,8 @@ const FULL: DocObject = (() => {
       labeller_knows: ["python", "go", "rust"],
       familiarity: true,
       familiarity_question: "How well do you know {group}?",
-      items: ITEMS.map((i, n) =>
-        n === 0
-          ? {
-              ...i,
-              title: "T",
-              code: "c = 1",
-              context: "ctx",
-              rules: [{ linter: "eslint", id: "no-console" }],
-              unit: { id: "L0", text: "One line.", part: 1, of: 1 },
-            }
-          : i,
-      ),
+      practice: PRACTICE.map((p, n) => (n === 0 ? { ...p, ...CARD } : p)),
+      items: ITEMS.map((i, n) => (n === 0 ? { ...i, ...CARD } : i)),
     }),
   );
   assert.ok(isObject(doc));
@@ -235,9 +236,17 @@ function expectRefused(leaf: Leaf): void {
     assert.doesNotMatch(r.out, /Traceback/, `${what}\n${r.out}`);
   });
   if (!leaf.node.required && !leaf.member) {
+    const absent = spoil(leaf.path, undefined);
+    // familiarity_question asks nothing unless familiarity is on: the two leave together.
     const r = tryBuild(
       `schema-${leaf.path.replace(/\W/g, "_")}-absent`,
-      spoil(leaf.path, undefined),
+      leaf.path === "familiarity"
+        ? Object.fromEntries(
+            Object.entries(absent).filter(
+              ([k]) => k !== "familiarity_question",
+            ),
+          )
+        : absent,
     );
     assert.equal(r.status, 0, `${leaf.path} is optional: ${r.out}`);
   }
@@ -1257,19 +1266,42 @@ test("🔴 familiarity off with a familiarity_question is a contradiction the bu
   assert.notEqual(r.status, 0);
   assert.match(
     r.out,
-    /REFUSED: familiarity_question: .*`familiarity` is false/,
+    /REFUSED: familiarity_question: .*`familiarity` is not true/,
   );
 });
 
-test("familiarity left out: every group is still asked (rule 5), and a missing one is reported", () => {
-  const dir = setup("familiarity-default", approval());
-  const { key } = build(dir);
-  assert.deepEqual(key.allowed.familiarity, ["well", "somewhat", "not_really"]);
+test('🔴 familiarity left out asks no group, approval page or not; a page asks it only with `"familiarity": true`', () => {
+  // Guards: the default is off for every page (#373), so an approval page built the old way asks nothing.
+  for (const [name, cfg] of [
+    ["fam-default-approval", approval()],
+    ["fam-default-gold", config({ familiarity: undefined })],
+  ] as const) {
+    assert.deepEqual(build(setup(name, cfg)).key.allowed.familiarity, []);
+  }
+  const asks = setup("fam-on", config());
+  assert.deepEqual(build(asks).key.allowed.familiarity, [
+    "well",
+    "somewhat",
+    "not_really",
+  ]);
   writeFileSync(
-    join(dir, "dump.json"),
+    join(asks, "dump.json"),
     JSON.stringify({ answers: {}, groups: {} }),
   );
-  assert.match(exportAt(dir).out, /group python: no familiarity answer/);
+  assert.match(exportAt(asks).out, /group python: no familiarity answer/);
+  const r = run([
+    "build",
+    join(
+      setup(
+        "fam-question-alone",
+        config({ familiarity: undefined, familiarity_question: "How well?" }),
+      ),
+      "items.json",
+    ),
+    join(WORK, "fam-question-alone-out"),
+  ]);
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /REFUSED: familiarity_question: .*is not true/);
 });
 
 /** Items 0 and 3 (both Rust) as the two requirements of one line. */
@@ -1280,7 +1312,13 @@ const withUnit = (
   config({
     items: ITEMS.map((item, n) => {
       const u = parts.find(([at]) => at === n);
-      return u === undefined ? item : { ...item, unit: u[1] };
+      // the first word of the line is marked unless the case says otherwise
+      return u === undefined
+        ? item
+        : {
+            ...item,
+            unit: { mark: String(u[1]["text"]).split(" ")[0], ...u[1] },
+          };
     }),
   });
 
@@ -1291,9 +1329,11 @@ const UNIT_REFUSALS: readonly (readonly [
   string,
 ])[] = [
   [
-    "unit-missing-part",
-    withUnit([[0, { id: "L1", text: LINE, part: 1, of: 2 }]]),
-    `items[0].unit: part 2 of 2 of line 'L1' is not among the items`,
+    "unit-mark-not-in-line",
+    withUnit([
+      [0, { id: "L1", text: LINE, mark: "JavaScript only", part: 1, of: 2 }],
+    ]),
+    "items[0].unit.mark: 'JavaScript only' is not in the line 'TypeScript only (no JavaScript); top-level await is allowed.' — mark the requirement with the line's own words",
   ],
   [
     "unit-part-twice",
@@ -1333,19 +1373,37 @@ const UNIT_REFUSALS: readonly (readonly [
     "items[3].unit.text: 'Another line.', but items[0] of line 'L1' says",
   ],
   [
-    "unit-halves-of-two-occurrences",
-    withUnit([
-      [0, { id: "L1", text: LINE, part: 1, of: 2 }],
-      [3, { id: "L2", text: LINE, part: 2, of: 2 }],
-    ]),
-    "items[0].unit: part 2 of 2 of line 'L1' is not among the items",
-  ],
-  [
     "unit-leaks-source",
     withUnit([[0, { id: "L1", text: "as in case-1003", part: 1, of: 1 }]]),
     "the source id 'case-1003' appears in the visible `unit` of item case-1000",
   ],
 ];
+
+test("🔴 a drawn sample holds one requirement of a line that has two: it builds, the drawn part marked", () => {
+  // Guards: a unit with `of` above the parts present is a drawn part, not a lost one (#373, 5 of 9 cards).
+  const { page } = build(
+    setup(
+      "unit-drawn-part",
+      withUnit([
+        [
+          0,
+          {
+            id: "L1",
+            text: LINE,
+            mark: "top-level await is allowed",
+            part: 2,
+            of: 2,
+          },
+        ],
+      ]),
+    ),
+  );
+  assert.ok(
+    page.includes(
+      `"unit": {"text": "${LINE}", "mark": "top-level await is allowed", "part": 2, "of": 2}`,
+    ),
+  );
+});
 
 test("🔴 a line with several requirements: build refuses a unit whose parts do not add up, naming the item", () => {
   for (const [name, cfg, message] of UNIT_REFUSALS) {
@@ -1375,7 +1433,12 @@ test("a line whose every requirement is an item builds, and each item carries it
       items: z.array(
         z.object({
           unit: z
-            .object({ text: z.string(), part: z.number(), of: z.number() })
+            .object({
+              text: z.string(),
+              mark: z.string(),
+              part: z.number(),
+              of: z.number(),
+            })
             .optional(),
         }),
       ),
@@ -1385,8 +1448,8 @@ test("a line whose every requirement is an item builds, and each item carries it
     .sort((a, b) => a.part - b.part);
   // what the page carries: the part and the line, never the line's private id
   assert.deepEqual(units, [
-    { text: LINE, part: 1, of: 2 },
-    { text: LINE, part: 2, of: 2 },
+    { text: LINE, mark: "TypeScript", part: 1, of: 2 },
+    { text: LINE, mark: "TypeScript", part: 2, of: 2 },
   ]);
 });
 
@@ -1402,4 +1465,64 @@ test("🔴 the same line in two places is two lines: four items, two ids, it bui
   );
   const { page } = build(dir);
   assert.ok(!page.includes("a.md:3"), "the line's id is private");
+});
+
+test("🔴 a page built the old way is refused, every card named with the field to add; the same page with the fields builds", () => {
+  const old = {
+    rule: "From the line: «- Use structlog» — a/b · CLAUDE.md line 25 · rule: ruff `TID251`",
+    readings:
+      "a/b · CLAUDE.md:7 · reading A: tests included · reading B: tests excluded",
+  };
+  const planted = approval({
+    practice: APPROVAL_PRACTICE.map((p, n) =>
+      n === 0 ? { ...p, context: "rule eslint `no-console`" } : p,
+    ),
+    items: ITEMS.map((i, n) =>
+      n === 1
+        ? { ...i, context: old.rule }
+        : n === 2
+          ? { ...i, context: old.readings }
+          : i,
+    ),
+  });
+  const dir = setup("old-shapes", planted);
+  const r = run(["build", join(dir, "items.json"), join(dir, "out")]);
+  assert.equal(r.status, 1, r.out);
+  // Guards: the whole refusal, every finding in one run, item and source id and the field to add.
+  assert.equal(
+    r.out,
+    [
+      "REFUSED: 5 old card shape(s) in the text:",
+      `  items[1] (case-1001).context names ruff \`TID251\` — add "rules": [{"linter": "ruff", "id": "TID251"}], and the card shows what the rule does`,
+      `  items[1] (case-1001).context carries a source line ('From the line') — put the line in "unit": {"id", "text", "mark", "part", "of"} with "mark" the requirement's words in it, and the card shows the line with them marked`,
+      `  items[2] (case-1002).context carries a source line ('CLAUDE.md:7') — put the line in "unit": {"id", "text", "mark", "part", "of"} with "mark" the requirement's words in it, and the card shows the line with them marked`,
+      `  items[2] (case-1002).context carries two readings ('reading A') — put them in "readings": {"a", "b"}, and the card shows one row each`,
+      `  practice[0].context names eslint \`no-console\` — add "rules": [{"linter": "eslint", "id": "no-console"}], and the card shows what the rule does`,
+      "",
+    ].join("\n"),
+  );
+  // The same cards with their fields: the readings card, and the practice card with its rule.
+  const unit = { id: "x", text: "- tests", mark: "tests", part: 1, of: 1 };
+  const readings = { a: "tests included", b: "tests excluded" };
+  const named = { context: "rule eslint `no-console`" };
+  const fixed = approval({
+    practice: APPROVAL_PRACTICE.map((p, n) =>
+      n === 0
+        ? { ...p, ...named, rules: [{ linter: "eslint", id: "no-console" }] }
+        : p,
+    ),
+    items: ITEMS.map((i, n) =>
+      n === 2 ? { ...i, context: old.readings, unit, readings } : i,
+    ),
+  });
+  const { page } = build(setup("old-shapes-fixed", fixed));
+  assert.ok(
+    page.includes(
+      '"rules": [{"linter": "eslint", "id": "no-console", "description": "Disallow the use of `console`"}]',
+    ),
+    "the practice card carries the linter's description",
+  );
+  assert.ok(
+    page.includes('"readings": {"a": "tests included", "b": "tests excluded"}'),
+  );
 });

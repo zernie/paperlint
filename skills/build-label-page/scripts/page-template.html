@@ -19,7 +19,7 @@
 html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans);
   font-size: 16px; line-height: 1.6; }
 main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column;
-  gap: var(--gap-section); }
+  gap: var(--gap-section); overflow-wrap: anywhere; }
 main > * + section, main > section + * { border-top: 1px solid var(--line); padding-top: var(--gap-section); }
 header.top { display: flex; flex-direction: column; gap: 8px; }
 h1 { font-size: 1.5rem; line-height: 1.3; margin: 0; color: var(--strong); font-weight: 700; }
@@ -28,8 +28,15 @@ p { margin: 0; max-width: var(--measure); }
 .muted { color: var(--muted); }
 .id { font-family: var(--mono); color: var(--muted); }
 section { display: flex; flex-direction: column; gap: var(--gap-item); }
-.item { display: flex; flex-direction: column; gap: 12px; padding-top: var(--gap-item);
+.item { display: flex; flex-direction: column; gap: 20px; padding-top: var(--gap-item);
   border-top: 1px solid var(--line); }
+/* The evidence of a card: one labelled row per field, the label a short word above its content. The two
+   readings sit in the same place on every card: A on a solid accent rule, B on a dashed one. */
+.row { display: flex; flex-direction: column; gap: 4px; }
+.lbl { color: var(--muted); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.reading { border-left: 3px solid var(--accent); padding-left: 12px; }
+.reading.b { border-left: 3px dashed var(--text); }
+mark { background: transparent; color: var(--mark); font-weight: 500; }
 .item:first-of-type { border-top: 0; padding-top: 0; }
 .ask { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
   display: flex; flex-direction: column; gap: 12px; }
@@ -308,19 +315,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     var done = itemDone(item.id);
     var card = el("article", "item");
     card.appendChild(el("div", "id", item.id));
-    if (item.title) card.appendChild(rich("h3", "", item.title));
-    card.appendChild(rich("p", "body", item.body));
-    if (item.code) card.appendChild(codeBlock(item.code));
-    if (item.context) card.appendChild(rich("p", "muted", item.context));
-    // A rule the item names, with what it does in the linter's own words (looked up at build time).
-    (item.rules || []).forEach(function (r) {
-      card.appendChild(rich("p", "muted", "Rule " + r.linter + " " + r.id + ": " + r.description));
-    });
-    // One requirement of a line that holds several: which one, and the whole line it came from.
-    if (item.unit) {
-      card.appendChild(el("p", "muted", "From the line (requirement " + item.unit.part + " of " + item.unit.of + "):"));
-      card.appendChild(rich("p", "quote", item.unit.text));
-    }
+    evidence(card, item);
     var a = answersOf(item.id);
     askOne(card, a, state.editing[item.id], function (q, v) {
       delete state.editing[item.id];
@@ -350,6 +345,40 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     var saved = state.answers[item.id] && state.answers[item.id].savedAt;
     card.appendChild(statusLine(item.id, missingFor(item.id), saved));
     return card;
+  }
+  // A labelled row: a short word, then what it labels.
+  function row(label, content, cls) {
+    var r = el("div", "row" + (cls ? " " + cls : ""));
+    r.appendChild(el("span", "lbl", label));
+    r.appendChild(content);
+    return r;
+  }
+  // The source line with the requirement marked in it, in the line's own words.
+  function markedLine(u) {
+    var p = el("p", "quote"), at = u.text.indexOf(u.mark);
+    p.appendChild(rich("span", "", u.text.slice(0, at)));
+    p.appendChild(rich("mark", "", u.mark));
+    p.appendChild(rich("span", "", u.text.slice(at + u.mark.length)));
+    return p;
+  }
+  // What a card shows above its question, one labelled row per field (an item and a practice item alike).
+  function evidence(card, item) {
+    if (item.title) card.appendChild(rich("h3", "", item.title));
+    card.appendChild(rich("p", "body", item.body));
+    if (item.code) card.appendChild(codeBlock(item.code));
+    if (item.unit) card.appendChild(row(item.unit.of > 1 ? "Line · part " + item.unit.part + " of " + item.unit.of : "Line",
+      markedLine(item.unit)));
+    // A rule the item names, with what it does in the linter's own words (looked up at build time).
+    (item.rules || []).forEach(function (r) {
+      card.appendChild(row("Rule", rich("p", "", r.linter + " `" + r.id + "`" + (r.family ? " (" + r.family + ")" : "") +
+        ": " + r.description)));
+    });
+    if (item.readings) {
+      card.appendChild(row("Reading A", rich("p", "", item.readings.a), "reading a"));
+      card.appendChild(row("Reading B", rich("p", "", item.readings.b), "reading b"));
+    }
+    if (item.file) card.appendChild(row("File", rich("p", "", item.file)));
+    if (item.context) card.appendChild(rich("p", "muted", item.context));
   }
   function labelOf(q, v) {
     var o = q.options.filter(function (x) { return x.value === v; })[0];
@@ -397,10 +426,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   function practiceCard(p, off) {
     var card = el("article", "item");
     card.appendChild(el("div", "id", "Practice " + p.id));
-    if (p.title) card.appendChild(rich("h3", "", p.title));
-    card.appendChild(rich("p", "body", p.body));
-    if (p.code) card.appendChild(codeBlock(p.code));
-    if (p.context) card.appendChild(rich("p", "muted", p.context));
+    evidence(card, p);
     var a = practiceAnswers(p.id);
     askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true);
     if (practiceAnswered(p)) {

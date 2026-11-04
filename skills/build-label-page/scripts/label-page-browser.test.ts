@@ -4,7 +4,7 @@
  * cannot show: focus, typing, and a page that is left without the box ever losing focus.
  */
 import assert from "node:assert/strict";
-import { chromium, type Page } from "playwright-core";
+import { chromium, type Locator, type Page } from "playwright-core";
 import { test } from "vitest";
 import { z } from "zod";
 import { chromiumPath } from "../../../test/chromium.ts";
@@ -178,6 +178,92 @@ test(
       assert.deepEqual(
         (await writes(page)).map((w) => w.reasons),
         [{}],
+      );
+    } finally {
+      await browser.close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
+
+/** A two-reading card with a long URL and compact JSON: what pushed the page sideways on a phone. */
+const URL_LONG = `https://github.com/a/b/blob/${"0".repeat(40)}/src/a/long/path/to/witness.ts`;
+const WITNESS = {
+  source_id: "s1",
+  group: "python",
+  body: "Warn for unused variables, except those prefixed with `_`",
+  unit: {
+    id: "L",
+    text: "Warn for unused variables",
+    mark: "unused",
+    part: 1,
+    of: 1,
+  },
+  rules: [{ linter: "eslint", id: "no-console" }],
+  readings: {
+    a: `[{"argsIgnorePattern":"^_","varsIgnorePattern":"^_","caughtErrors":"all"}]`,
+    b: "[]",
+  },
+  file: URL_LONG,
+  context: URL_LONG,
+};
+
+/** Where the line, the rule, reading A, reading B and the question sit on a card, top to bottom. */
+const blocksOf = async (card: Locator) =>
+  Promise.all(
+    [
+      ".quote",
+      ".row:has(.lbl:text-is('Rule'))",
+      ".reading.a",
+      ".reading.b",
+      ".ask",
+    ].map(async (sel) => card.locator(sel).first().boundingBox()),
+  );
+
+test(
+  "🔴 at phone width the card reads by position: line, rule, reading A above reading B, then the question; nothing pushes the page sideways",
+  async () => {
+    const { page: html } = build(
+      setup("browser-layout", approval({ items: [WITNESS] })),
+    );
+    const browser = await chromium.launch({
+      executablePath: chromiumPath(),
+      args: ["--no-sandbox"],
+    });
+    try {
+      const page = await browser.newPage({
+        viewport: { width: 400, height: 900 },
+      });
+      await page.addInitScript(STORE(PRACTICE_DONE, 20));
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      const card = page.locator("article.item").last();
+      const boxes = await blocksOf(card);
+      const [line, rule, a, b, ask] = boxes;
+      assert.ok(line && rule && a && b && ask, "every block is on the card");
+      // Guards: each block below the one before, A and B in one column, a gap before the question.
+      assert.deepEqual(
+        boxes
+          .slice(1)
+          .map(
+            (x, i) =>
+              (x?.y ?? 0) >= (boxes[i]?.y ?? 0) + (boxes[i]?.height ?? 0),
+          ),
+        [true, true, true, true],
+      );
+      assert.equal(a.x, b.x);
+      assert.ok(ask.y - (b.y + b.height) >= 16, "space before the question");
+      assert.deepEqual(
+        await card
+          .locator(".reading")
+          .evaluateAll((els) =>
+            els.map((e) => getComputedStyle(e).borderLeftStyle),
+          ),
+        ["solid", "dashed"],
+      );
+      // Guards: a long URL or compact JSON wraps; the page itself never scrolls sideways.
+      assert.equal(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+        400,
       );
     } finally {
       await browser.close();

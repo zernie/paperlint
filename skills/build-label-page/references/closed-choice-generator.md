@@ -33,24 +33,41 @@ length.
   required `example`: a real case of the study, in a line, that takes that answer. `icon` (an
   emoji) is optional. Two labels that read the same, or two equal values, stop the build.
 - **`practice`**: 3 or more real cases whose answer you are sure of, each with `expected` (one answer
-  per question) and a one-line `why`. Never an item that is also on the page to be labelled.
+  per question) and a one-line `why`. Never an item that is also on the page to be labelled. A
+  practice card carries the same fields as the real cards it rehearses (`rules`, `unit`,
+  `readings`, `file`).
 - **`practice_round`**: raise it after rewording a question; the practice reopens and the answers of
   the earlier round are kept but not counted.
 - **`items`**: `source_id` (the study's own, never shown), `group`, `body`, and optionally `title`,
-  `code`, `context`, `rules`, `unit`. Nothing else: the allow-list is fixed in the generator, and a field outside it
-  is taken out of the item, not added to the list to make a build pass.
+  `code`, `context`, `rules`, `unit`, `readings`, `file`. Nothing else: the allow-list is fixed in
+  the generator, and a field outside it is taken out of the item, not added to the list to make a
+  build pass.
+- **What the text may not carry.** The build refuses, listing every card, a `title`, `body` or
+  `context` that names a linter rule (`rule: ruff \`TID251\``, `eslint \`no-console\``) missing
+from the card's `rules`, carries a source line (`From the line: «…»`, `requirement 1 of 2`,
+`CLAUDE.md:25`) without `unit`, or two readings (`reading A: … · reading B: …`) without
+`readings`. Each of those fields shows its content the way the card was fixed to (the rule with
+its description, the line with the requirement marked, one row per reading); the same text in a
+string shows none of it. A rule id is recognised only after a word that says it is one (rule,
+ruff, eslint), and a line only in an instruction file (`.md`, `.mdc`, `.txt`, `.cursorrules`…).
 - **`rules`**: `[{linter, id}]` (`linter` is `eslint` or `ruff`) on an item read as a linter rule.
-  The card shows "Rule ruff TID253: Checks for module-level imports that should instead be imported
-  lazily…", the description taken at build time from the linter itself: `ruff rule <id>`'s "What it
-  does" paragraph, or the ESLint rule's `meta.docs.description` from the ESLint and plugins
-  installed where `items.json` is. The build refuses a rule the linter cannot describe; a
+  The card's "Rule" row shows "ruff `TID253` (flake8-tidy-imports): Checks for module-level
+  imports that should instead be imported lazily…", taken at build time from the linter itself:
+  `ruff rule <id>`'s "What it does" paragraph and family, or the ESLint rule's
+  `meta.docs.description` from the ESLint and plugins installed where `items.json` is (a plugin
+  rule's own name may hold a slash: `n/no-unsupported-features/node-builtins`). The build refuses a rule the linter cannot describe; a
   description is never typed into `items.json`.
-- **`unit`**: `{id, text, part, of}` on an item that is one requirement of a line holding several
-  ("TypeScript only (no JavaScript); top-level await is allowed" is two). Each requirement is its
-  own item with its own question, and its card shows "From the line (requirement 1 of 2):" and the
-  whole line beneath, so the labeller judges one requirement at a time and sees where it came from.
-  The build refuses a line whose parts do not add up (one missing, repeated, a different `of`, or
-  split across groups), naming the item. `id` names one occurrence of the line (a file and line
+- **`unit`**: `{id, text, mark, part, of}` on an item drawn from a source line: the whole line,
+  the requirement's own words in it (`mark`, shown highlighted), and which requirement of the line
+  it is ("TypeScript only (no JavaScript); top-level await is allowed" is two). The card's "Line"
+  row shows the line with the mark, and "part 1 of 2" when the line holds several. A drawn sample
+  may hold one part of a line and not the others; the build refuses a `mark` that is not in the
+  line, and parts of one line that disagree (another text or `of`, a part repeated, split across
+  groups), naming the item.
+- **`readings`**: `{a, b}` on an item that compares two readings of one requirement: two rows,
+  "Reading A" on a solid accent rule and "Reading B" on a dashed one, in the same place on every
+  card. **`file`**: the witness file (a path, a link, what each reading did with it), on its own
+  "File" row. `id` names one occurrence of the line (a file and line
   number, say) and is never shown: two files holding the same words are two lines, each judged in
   full. Splitting the line is the study's job, before the page.
 - **`seed`**: fixes the order. Rebuilding with the same seed keeps every id, and a new item gets the
@@ -89,9 +106,9 @@ drop, the drop carrying `ask_why`.
 }
 ```
 
-The page sets `"familiarity": false`: the author is judging drawn units, not repositories they
-have seen, so the per-group "how well do you know it" question is left out (and a
-`familiarity_question` beside it is refused).
+The page leaves `familiarity` out: the author is judging drawn units, not repositories they have
+seen, so no per-group "how well do you know it" question is asked. Only a page that sets
+`"familiarity": true` asks it (and a `familiarity_question` without it is refused).
 
 The items are the drawn units verbatim, in a language the author reads. Units in other languages
 are taken out before the draw, as a population rule the study's `plan.json` states ("English-language
