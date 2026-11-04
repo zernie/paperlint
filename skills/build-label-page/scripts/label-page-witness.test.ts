@@ -174,6 +174,44 @@ const REFUSED: readonly (readonly [string, Record<string, unknown>, string])[] =
       "practice[1].example: is required with `details` — the card shows its example file under the details; add the example, or remove `details`",
     ],
     [
+      "witness-source-after-newline",
+      firstItem((i) => ({
+        ...i,
+        rules: [
+          {
+            ...firstRule,
+            explanation: {
+              source: "ruff rule",
+              what: "Checks for print.",
+              example_bad: "print(1)\nreq-logging:tests",
+            },
+          },
+        ],
+      })),
+      "the source id 'req-logging:tests' appears in the visible `rules` of item req-logging:tests. Take it out of the text (or use source ids that are not natural words).",
+    ],
+    [
+      "witness-source-after-tab-in-a-line",
+      firstItem((i) => ({
+        ...i,
+        example: {
+          ...firstExample,
+          lines: firstExample.lines.map((l) =>
+            l["mark"] === true ? { ...l, text: "\treq-logging:tests" } : l,
+          ),
+        },
+      })),
+      "the source id 'req-logging:tests' appears in the visible `example` of item req-logging:tests. Take it out of the text (or use source ids that are not natural words).",
+    ],
+    [
+      "witness-more-count",
+      firstItem((i) => ({
+        ...i,
+        more_like_this: { count: 1, files: ["a.py", "b.py"] },
+      })),
+      "items[0].more_like_this.count: 1 is fewer than the 2 files it lists — the count is every file like it, the list may be shorter",
+    ],
+    [
       "witness-repeat-range",
       firstItem((i) => ({ ...i, repeat: { group: "g", index: 3, of: 2 } })),
       "items[0].repeat.index: 3 is not between 1 and 2",
@@ -197,7 +235,7 @@ const REFUSED: readonly (readonly [string, Record<string, unknown>, string])[] =
     ],
   ];
 
-test("🔴 a witness page refuses old items, an unmarked example, a rule without its explanation, `{line}` with no marked line, a source id in a rule's explanation, `situation` or `details` without an example, a repeat out of range and a second question", () => {
+test("🔴 a witness page refuses old items, an unmarked example, a rule without its explanation, `{line}` with no marked line, a source id in a rule's explanation or after a newline or tab, `situation` or `details` without an example, a «more» count below its list, a repeat out of range and a second question", () => {
   assert.deepEqual(
     REFUSED.map(([name, cfg]) => {
       const dir = setup(name, cfg);
@@ -253,6 +291,39 @@ test("🔴 `{line}` in a situation becomes «line N» and the marked line's code
     /Should this requirement apply to the scripts\/ folder\?/,
   );
   assert.ok(!shown.includes("{line}"));
+});
+
+test("🔴 `{line}` writes a marked line that holds a backtick as it is", async () => {
+  const { page } = build(
+    setup(
+      "witness-line-backtick",
+      firstItem((i) => ({
+        ...i,
+        situation: {
+          kind: "construct",
+          summary: "One setting reports {line} below.",
+          question: "Does it forbid {line}?",
+        },
+        example: {
+          ...firstExample,
+          lines: firstExample.lines.map((l) =>
+            l["mark"] === true ? { ...l, text: "    log(`seeded ${n}`)" } : l,
+          ),
+        },
+      })),
+    ),
+  );
+  const shown = (await showPage(page, {}, {}, PRACTICE_DONE)).replace(
+    /\n/g,
+    "",
+  );
+  assert.deepEqual(
+    [
+      "One setting reports line 18: log(`seeded ${n}`) below.",
+      "Does it forbid line 18: log(`seeded ${n}`)?",
+    ].filter((t) => !shown.includes(t)),
+    [],
+  );
 });
 
 /** `text` with every given part present, in this order. */

@@ -232,10 +232,13 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   // the store keeps what it had, so an export never meets an answer without the reason it needs. Every
   // write leaves out each such answer, not only the one just picked: on a page of several questions the
   // next answer would otherwise carry the waiting one into the store without its reason.
+  // A stored answer to a question this page no longer asks (removed or renamed between builds) is kept
+  // as it was and never checked: the page has no question to check it against.
   function resolved(answers, reasons) {
     var out = {};
     Object.keys(answers).forEach(function (q) {
-      if (!(needsWhy(questionOf(q), answers[q]) && !(reasons[q] || "").trim())) out[q] = answers[q];
+      var asked = questionOf(q);
+      if (!(asked && needsWhy(asked, answers[q]) && !(reasons[q] || "").trim())) out[q] = answers[q];
     });
     return out;
   }
@@ -425,6 +428,19 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     p.appendChild(rich("span", "", u.text.slice(at + u.mark.length)));
     return p;
   }
+  // A situation's text with each `{line}` written out: «line N: » and the marked line's code as code
+  // (the build passes `line` whenever the text holds the token).
+  function situated(tag, cls, text, line) {
+    var n = el(tag, cls);
+    String(text).split("{line}").forEach(function (part, i) {
+      if (i) {
+        n.appendChild(el("span", "", "line " + line.n + ": "));
+        n.appendChild(el("code", "", line.text));
+      }
+      if (part) n.appendChild(rich("span", "", part));
+    });
+    return n;
+  }
   // A long text shows its first three lines and a «more» that opens the rest.
   function clamp(node, text) {
     if (String(text).length < 200 && String(text).split("\n").length <= 3) return node;
@@ -533,7 +549,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       card.appendChild(el("p", "muted", "Card " + item.repeat.index + " of " + item.repeat.of + " for this requirement"));
     }
     if (item.unit) card.appendChild(row("Where this requirement comes from (the project's rules file)", markedLine(item.unit)));
-    card.appendChild(rich("p", "situation", item.situation.summary));
+    card.appendChild(situated("p", "situation", item.situation.summary, item.situation.line));
     card.appendChild(exampleBlock(item.example));
   }
   // Below the question and its answers: the rule as its docs explain it, folded, then the files like it.
@@ -589,7 +605,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     if (!asked) return;
     var ask = el("div", "ask");
-    ask.appendChild(rich("p", "q", situation ? situation.question : asked.text));
+    ask.appendChild(situation ? situated("p", "q", situation.question, situation.line) : rich("p", "q", asked.text));
     ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples));
     card.appendChild(ask);
   }

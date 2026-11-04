@@ -826,17 +826,20 @@ function checkUnits(cfg: Config): void {
  */
 const LINE_TOKEN = "{line}";
 const SITUATION_TEXTS = ["summary", "question"] as const;
-/** `{line}` → «line N: `code`», N and code of the example's marked line (checkWitness: one exists). */
-const withLine = (card: Card, text: string): string =>
-  text.replaceAll(LINE_TOKEN, () => {
-    const line = card.example?.lines.find((l) => l.mark);
-    return `line ${String(line?.n)}: \`${String(line?.text.trim())}\``;
-  });
+/**
+ * The line `{line}` stands for: the example's marked line, its number and its code without the indent
+ * (checkCardShape: one exists when the token is used). The page writes «line N: » and the code as code
+ * in place of the token, so a code line holding a backtick reads as it is.
+ */
+const lineOf = (card: Card) =>
+  card.example?.lines
+    .filter((l) => l.mark)
+    .map((l) => ({ n: l.n, text: l.text.trim() }))[0];
 /**
  * A card with a situation or settings is drawn as a witness card, around its example file; `{line}` in
- * a situation needs a marked line to stand for.
+ * a situation needs a marked line to stand for; «N more» counts at least the files it lists.
  */
-function checkLineToken(at: string, card: Card): void {
+function checkCardShape(at: string, card: Card): void {
   const needs = (["situation", "details"] as const).find(
     (f) => card[f] !== undefined,
   );
@@ -851,6 +854,11 @@ function checkLineToken(at: string, card: Card): void {
     fail(
       `${at}.situation.${token}: \`${LINE_TOKEN}\` names the marked line, and the example has no marked line — mark the line the linter caught (\`mark: true\`), or write the ${token} without \`${LINE_TOKEN}\``,
     );
+  const more = card.more_like_this;
+  if (more !== undefined && more.files.length > more.count)
+    fail(
+      `${at}.more_like_this.count: ${String(more.count)} is fewer than the ${String(more.files.length)} files it lists — the count is every file like it, the list may be shorter`,
+    );
 }
 /**
  * What the witness schema cannot say: the caught line is marked, a rule's explanation says what the
@@ -859,7 +867,7 @@ function checkLineToken(at: string, card: Card): void {
  */
 function checkWitness(cfg: Config): void {
   cardsOf(cfg).forEach(([at, card]) => {
-    checkLineToken(at, card);
+    checkCardShape(at, card);
     if (card.example !== undefined && !card.example.lines.some((l) => l.mark))
       fail(
         `${at}.example.lines: no line is marked — mark the line the linter caught (\`mark: true\`)`,
@@ -910,22 +918,24 @@ function checkItemFields(cfg: Config): void {
       );
   });
 }
-/** Every text of an item the labeller sees, by field: the page fields and the line of a unit. */
-// The witness fields as the page shows them (a repeat without its group), and every rule with the
-// explanation its card renders.
-const visibleTexts = (item: Item): readonly (readonly [string, string])[] => {
-  const shown = shownFields(item);
-  return [
-    ...PAGE_FIELDS.map((f): readonly [string, string] => [f, item[f] ?? ""]),
-    [UNIT_FIELD, item.unit?.text ?? ""],
-    [READINGS_FIELD, `${item.readings?.a ?? ""} ${item.readings?.b ?? ""}`],
-    ...WITNESS_FIELDS.map((f): readonly [string, string] => [
-      f,
-      JSON.stringify(shown[f] ?? ""),
-    ]),
-    [RULES_FIELD, JSON.stringify(item.rules ?? "")],
-  ];
-};
+/** Every string inside a value: each is tested on its own, as the page renders it, never a serialisation. */
+const stringsIn = (v: unknown): readonly string[] =>
+  typeof v === "string"
+    ? [v]
+    : Array.isArray(v)
+      ? v.flatMap(stringsIn)
+      : typeof v === "object" && v !== null
+        ? Object.values(v).flatMap(stringsIn)
+        : [];
+/**
+ * Every text of an item the labeller sees, by field: each string the page shows (the fields as
+ * `shownFields` passes them, so a repeat without its group), and every rule with its explanation.
+ */
+const visibleTexts = (item: Item): readonly (readonly [string, string])[] =>
+  Object.entries({
+    ...shownFields(item),
+    [RULES_FIELD]: item.rules ?? [],
+  }).flatMap(([f, v]) => stringsIn(v).map((t) => [f, t] as const));
 const escapeRegExp = (s: string): string =>
   s.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&");
 /**
@@ -1016,8 +1026,13 @@ const situationShown = (item: Card) =>
     : {
         situation: {
           kind: item.situation.kind,
-          summary: withLine(item, item.situation.summary),
-          question: withLine(item, item.situation.question),
+          summary: item.situation.summary,
+          question: item.situation.question,
+          ...(SITUATION_TEXTS.some((f) =>
+            item.situation?.[f].includes(LINE_TOKEN),
+          )
+            ? { line: lineOf(item) }
+            : {}),
         },
       };
 const shownFields = (item: Card): Readonly<Record<string, unknown>> => ({

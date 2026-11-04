@@ -26,10 +26,14 @@ import {
 } from "../../../test/label-page-kit.ts";
 
 /** A store that keeps every write and echoes it back as a snapshot after `echoMs`. */
-const STORE = (practice: Record<string, unknown>, echoMs: number): string => `
+const STORE = (
+  practice: Record<string, unknown>,
+  echoMs: number,
+  answers: Record<string, unknown> = {},
+): string => `
   window.__writes = [];
   (function () {
-    var docs = { answers: {}, groups: {}, practice: ${JSON.stringify(practice)} };
+    var docs = { answers: ${JSON.stringify(answers)}, groups: {}, practice: ${JSON.stringify(practice)} };
     var subs = {};
     function snap(n) {
       (subs[n] || []).forEach(function (cb) {
@@ -514,6 +518,34 @@ test(
         answers: { label: "no", boundary: "clear" },
         reasons: { label: "the output is out of order" },
       });
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "🔴 a stored answer to a question the page no longer asks does not stop the next answer from saving",
+  async () => {
+    const { page: html } = build(setup("browser-stale-question", approval()));
+    const page = await (await sharedBrowser()).newPage();
+    try {
+      await page.addInitScript(
+        STORE(PRACTICE_DONE, 20, {
+          G001: { answers: { renamed: "x" }, source: "page" },
+        }),
+      );
+      await page.goto("about:blank");
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      const card = page.locator("article.item").filter({ hasText: "G001" });
+      await card.getByRole("button", { name: /Keep/ }).click();
+      await page.waitForTimeout(100);
+      // Guards: the answer is written, and the stored answer it does not know is kept as it was.
+      assert.deepEqual(
+        (await writes(page)).map((w) => w["answers"]),
+        [{ renamed: "x", keep: "keep" }],
+      );
     } finally {
       await page.context().close();
     }
