@@ -52,7 +52,7 @@ function fakes({ registryDocs = {}, ruff = {} } = {}) {
         calls.npm.push(args.join(" "));
         const pkg = JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf8"));
         const bad = Object.keys(pkg.devDependencies).find((n) => n === "eslint-plugin-conflicts");
-        if (bad && !args.includes("--legacy-peer-deps")) return { code: 1, stderr: "npm error code ERESOLVE\nnpm error ERESOLVE unable to resolve dependency tree" };
+        if (bad && !args.includes("--legacy-peer-deps")) return { code: 1, stdout: JSON.stringify({ error: { code: "ERESOLVE", summary: "unable to resolve dependency tree" } }), stderr: "npm error see the log" };
         writeFileSync(path.join(cwd, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, packages: { "": pkg } }));
         return { code: 0, stderr: "" };
       },
@@ -161,7 +161,7 @@ check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) ===
   deps.npm = (args, cwd) => {
     const pkg = JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf8"));
     if (pkg.devDependencies.typescript === "7.0.2" && !args.includes("--legacy-peer-deps"))
-      return { code: 1, stderr: "npm error code ERESOLVE\nnpm error Fix the upstream dependency conflict, or retry this command with --force or --legacy-peer-deps" };
+      return { code: 1, stdout: JSON.stringify({ error: { code: "ERESOLVE" } }), stderr: "npm error see the log" };
     const r = npm(args, cwd);
     const lock = JSON.parse(readFileSync(path.join(cwd, "package-lock.json"), "utf8"));
     lock.packages["node_modules/typescript"] = { version: "6.0.3" };
@@ -171,6 +171,35 @@ check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) ===
   const r = await installFor({ id: "DX03", linter: "eslint", readings: [reading("anthropic-s1", "no-tabs")] }, dir, deps);
   check(r.installed.kind === "installed" && r.install.path === "date-matched", `TypeScript peer conflict: ${JSON.stringify(r.install).slice(0, 300)}`);
   check(r.install.versions?.typescript === "6.0.3" && r.install.typescript_peer_resolved === true, `TypeScript from the parser's peer range, recorded: ${JSON.stringify(r.install.versions)}`);
+}
+
+// 10. npm's error is decided by the code in its --json output, never by words in its stderr.
+{
+  const dir = repo({ "package.json": "{}", "package-lock.json": "{}", "tsconfig.json": "{}" });
+  const { deps } = fakes({ registryDocs: { ...docs, "@typescript-eslint/parser": { time: { "8.72.1": T("2024-04-01") } },
+    typescript: { time: { "7.0.2": T("2024-04-02") } } } });
+  const seen = [];
+  deps.npm = (args, cwd) => {
+    seen.push(args.includes("--json"));
+    return { code: 1, stdout: JSON.stringify({ error: { code: "E404", summary: "Not found" } }), stderr: "ERESOLVE --legacy-peer-deps" };
+  };
+  const r = await installFor({ id: "DX04", linter: "eslint", readings: [reading("anthropic-s1", "no-tabs")] }, dir, deps);
+  check(seen.length === 1 && seen.every(Boolean), `one npm call, with --json, and no retry on an E404 whose stderr names ERESOLVE: ${seen}`);
+  check(/E404/.test(r.install.reason ?? "") && r.install.npm_error_code === "E404", `the parsed code is recorded: ${JSON.stringify(r.install).slice(0, 200)}`);
+}
+
+// 11. The sha-rev rule reads files, not the failure's words: with another pin file at the root (which the kit reads
+//     first) the failure is left as it is.
+{
+  const dir = repo({ ".pre-commit-config.yaml": "repos:\n  - repo: https://github.com/astral-sh/ruff-pre-commit\n    rev: f12be1ebaa5351c1fc76472de98db2c3446c8253\n", "requirements-dev.txt": "ruff==0.0.0\n" });
+  const { deps } = fakes({ ruff: { "0.4.1": [{ upload_time_iso_8601: T("2024-04-01") }] } });
+  const inst = deps.install;
+  deps.install = (l, d) => (existsSync(path.join(d, "requirements-date-matched-ruff.txt")) ? inst(l, d) : { kind: "not-installed", stage: "install", reason: "uvx exited 1: something else" });
+  const r = await installFor({ id: "DR2", linter: "ruff", readings: [] }, dir, deps);
+  check(r.installed.kind === "not-installed" && !(r.install.adjustments ?? []).includes("pre-commit-rev-not-a-release"), `another pin file at the root: the sha rev is not what failed: ${JSON.stringify(r.install)}`);
+  const dir2 = repo({ ".pre-commit-config.yaml": "repos:\n  - repo: https://github.com/astral-sh/ruff-pre-commit\n    rev: f12be1ebaa5351c1fc76472de98db2c3446c8253\n" });
+  const r2 = await installFor({ id: "DR3", linter: "ruff", readings: [] }, dir2, deps);
+  check(r2.installed.kind === "installed" && (r2.install.adjustments ?? []).includes("pre-commit-rev-not-a-release"), "the pre-commit rev is the only pin file: the no-pin rule applies whatever the failure says");
 }
 
 // 5. The plan job's matrix: one entry per item, Node 22 unless the item names another (from the repository's engines).

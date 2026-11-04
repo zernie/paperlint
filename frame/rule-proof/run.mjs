@@ -18,6 +18,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { globSync } from "glob";
+import toml from "@iarna/toml";
 import yaml from "js-yaml";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
@@ -225,22 +226,27 @@ function setAside(dir, asideDir) {
 
 // A manifest of ESLint and its companions at fixed versions, then each plugin added on its own so one that cannot
 // install (not on npm, no release by the date, a resolve error) costs only the readings that name it.
-const ERESOLVE = /ERESOLVE|--legacy-peer-deps/;
+// npm's error code from its --json output ({"error": {"code": "ERESOLVE", …}}); the stderr text is kept only in
+// the record, never matched.
+export function npmErrorCode(r) {
+  try { return JSON.parse(r.stdout ?? "")?.error?.code ?? null; } catch { return null; }
+}
+const npmFailure = (what, r) => `${what} exited ${r.code} (${npmErrorCode(r) ?? "no error code"}): ${tailOf(r.stderr)}`;
 function npmManifest(dir, deps, base, plugins) {
   const write = (dev) => writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "rule-proof-install", private: true, devDependencies: dev }, null, 1) + "\n");
-  const lock = (dev, legacy) => { write(dev); return deps.npm(["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", ...(legacy ? ["--legacy-peer-deps"] : [])], dir); };
+  const lock = (dev, legacy) => { write(dev); return deps.npm(["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", "--json", ...(legacy ? ["--legacy-peer-deps"] : [])], dir); };
   let r0 = lock(base, false);
   let tsPeer = false;
   // TypeScript current at the date may be newer than the TypeScript parser's peer range (measured: typescript 7.0.2
   // against @typescript-eslint/parser 8.72.1). It is then left to npm, which installs the newest TypeScript the
   // parser's peer range admits; the version is read back from the lockfile and the record says so.
-  if (r0.code !== 0 && ERESOLVE.test(r0.stderr ?? "") && base.typescript) {
+  if (r0.code !== 0 && npmErrorCode(r0) === "ERESOLVE" && base.typescript) {
     const { typescript: _drop, ...rest } = base;
     base = rest;
     r0 = lock(base, false);
     tsPeer = r0.code === 0;
   }
-  if (r0.code !== 0) return { error: `npm install --package-lock-only exited ${r0.code}: ${tailOf(r0.stderr)}` };
+  if (r0.code !== 0) return { error: npmFailure("npm install --package-lock-only", r0), npm_error_code: npmErrorCode(r0) };
   let dev = { ...base }, legacy = false;
   const out = {};
   for (const [name, p] of Object.entries(plugins)) {
@@ -248,14 +254,14 @@ function npmManifest(dir, deps, base, plugins) {
     const next = { ...dev, [name]: p.version };
     const r = lock(next, legacy);
     if (r.code === 0) { dev = next; out[name] = { ...p, error: null }; continue; }
-    if (!legacy && ERESOLVE.test(r.stderr ?? "")) {
+    if (!legacy && npmErrorCode(r) === "ERESOLVE") {
       const r2 = lock(next, true);
       if (r2.code === 0) { dev = next; legacy = true; out[name] = { ...p, error: null, peer_conflict: true }; continue; }
     }
-    out[name] = { ...p, version: null, error: `npm could not add ${name}@${p.version}: ${tailOf(r.stderr)}` };
+    out[name] = { ...p, version: null, error: npmFailure(`npm could not add ${name}@${p.version}:`, r), npm_error_code: npmErrorCode(r) };
   }
   const rf = lock(dev, legacy);
-  if (rf.code !== 0) return { error: `final lock exited ${rf.code}: ${tailOf(rf.stderr)}` };
+  if (rf.code !== 0) return { error: npmFailure("final lock", rf), npm_error_code: npmErrorCode(rf) };
   if (legacy) writeFileSync(path.join(dir, ".npmrc"), "legacy-peer-deps=true\n");
   const peerTs = tsPeer ? readJson(path.join(dir, "package-lock.json"))?.packages?.["node_modules/typescript"]?.version ?? null : undefined;
   return { plugins: out, legacy_peer_deps: legacy, manifest: dev, ...(tsPeer ? { typescript_peer_resolved: peerTs } : {}) };
@@ -291,9 +297,28 @@ async function ownManifest(item, dir, deps, pathName, versions, plugins, extra) 
   const vs = m.typescript_peer_resolved === undefined ? versions : { ...versions, typescript: m.typescript_peer_resolved };
   const record = { path: pathName, aside, versions: vs, plugins: m.plugins ?? plugins, legacy_peer_deps: m.legacy_peer_deps ?? false,
     ...(m.typescript_peer_resolved === undefined ? {} : { typescript_peer_resolved: true }), ...extra };
-  if (m.error) return { installed: { kind: "not-installed", stage: "install", reason: m.error }, record };
+  if (m.error) return { installed: { kind: "not-installed", stage: "install", reason: m.error }, record: { ...record, npm_error_code: m.npm_error_code } };
   const installed = deps.install("eslint", dir);
   return { installed, record };
+}
+
+// Whether a root file the Ruff kit reads before .pre-commit-config.yaml pins Ruff exactly: a lockfile naming ruff, a
+// requirements file or pyproject.toml with a `ruff==` requirement (each parsed: TOML, requirement lines).
+const exactRuff = (req) => /^ruff\s*===?\s*[\w.]+$/i.test(String(req).split(";")[0].trim());
+export function otherRuffPin(dir) {
+  const has = (f) => existsSync(path.join(dir, f));
+  const read = (f) => readFileSync(path.join(dir, f), "utf8");
+  for (const lock of ["uv.lock", "poetry.lock", "pdm.lock"]) {
+    if (!has(lock)) continue;
+    try { if ((toml.parse(read(lock)).package ?? []).some((p) => p.name === "ruff")) return true; } catch { /* unreadable: no pin from it */ }
+  }
+  const reqs = globSync("requirements*.txt", { cwd: dir, posix: true });
+  if (reqs.some((f) => read(f).split("\n").map((l) => l.split("#")[0].trim()).some(exactRuff))) return true;
+  if (has("pyproject.toml")) {
+    const strings = (v) => (typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : []);
+    try { if (strings(toml.parse(read("pyproject.toml"))).some(exactRuff)) return true; } catch { /* unreadable: no pin */ }
+  }
+  return false;
 }
 
 export async function installFor(item, dir, deps) {
@@ -309,7 +334,7 @@ export async function installFor(item, dir, deps) {
     if (installed.stage === "install") {
       const pc = path.join(dir, ".pre-commit-config.yaml");
       const rev = existsSync(pc) ? (yaml.load(readFileSync(pc, "utf8"))?.repos ?? []).find((r) => String(r.repo ?? "").endsWith("/ruff-pre-commit"))?.rev : undefined;
-      pinNotRelease = typeof rev === "string" && !STABLE.test(rev.replace(/^v/, "")) && installed.reason.includes(rev);
+      pinNotRelease = typeof rev === "string" && !STABLE.test(rev.replace(/^v/, "")) && !otherRuffPin(dir);
       if (pinNotRelease) adjustments.add("pre-commit-rev-not-a-release");
     }
     if (installed.stage === "no-pin" || pinNotRelease) {
@@ -395,7 +420,7 @@ function realDeps(dir) {
     ruffReleases,
     npm: (args, cwd) => {
       const r = spawnSync("npm", args, { cwd, env: { ...process.env, ...env }, encoding: "utf8", timeout: 300_000 });
-      return { code: r.status ?? 1, stderr: `${r.stderr ?? ""}${r.error ? String(r.error) : ""}` };
+      return { code: r.status ?? 1, stdout: r.stdout ?? "", stderr: `${r.stderr ?? ""}${r.error ? String(r.error) : ""}` };
     },
     commitIso: (d) => git(d, "log", "-1", "--format=%cI").trim(),
     asideDir: path.join(work, "aside"),
