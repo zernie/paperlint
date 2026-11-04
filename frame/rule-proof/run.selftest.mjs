@@ -170,5 +170,43 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
   if (!wf.includes("run.mjs --plan frame/rule-proof/inputs.json") || !wf.includes("--items ${{ matrix.items }}") || wf.includes("--only")) fail.push("the workflow plans batches and runs each with --items");
 }
 
+// ---- One run never reads another run's results: a folder per run, checked at commit --------------------------------
+{
+  const { closeRun, isDone, runDirOf } = await import("./run-batch.mjs");
+  const out = mkdtempSync(path.join(tmpdir(), "rp-runs-"));
+  if (runDirOf(out, "41852334655-1") !== path.join(out, "41852334655-1")) fail.push("the run's folder is <out>/<run id>-<attempt>");
+  for (const bad of ["", "..", "../x", "a/b", ".hidden", "x y"]) {
+    try { runDirOf(out, bad); fail.push(`run key ${JSON.stringify(bad)} is refused`); } catch { /* refused */ }
+  }
+  const itemA = { id: "A1", repo: "o/a", sha: "a".repeat(40), linter: "eslint", rule: "no-tabs", readings: [] };
+  const itemB = { id: "B1", repo: "o/b", sha: "b".repeat(40), linter: "eslint", rule: "no-tabs", readings: [] };
+  // An earlier run's result, in its own folder and in the flat layout of runs before run folders: neither is "done"
+  // for this run, so the item runs again here.
+  const earlier = runDirOf(out, "100-1"), now = runDirOf(out, "200-1");
+  mkdirSync(earlier, { recursive: true });
+  writeResult(earlier, "A1", { id: "A1", runner: { run: "100-1" } });
+  writeResult(out, "A1", { id: "A1" });
+  if (isDone(now, "A1")) fail.push("another run's result (its folder, or the flat layout) is never this run's");
+  mkdirSync(now, { recursive: true });
+  const okA = { ...itemA, checked_out: itemA.sha, runner: { run: "200-1" }, install: { outcome: "not-installed" } };
+  writeResult(now, "A1", okA);
+  if (!isDone(now, "A1")) fail.push("a result in this run's own folder is done (a batch that restarts skips it)");
+  const c1 = closeRun([itemA, itemB], now, "200-1");
+  if (!same(c1, { errors: [], missing: ["B1"] })) fail.push(`close: A1 is this run's, B1 has no result: ${JSON.stringify(c1)}`);
+  // A result that names another run, another commit, or an item not in inputs.json, and a file of no known kind: refused.
+  writeResult(now, "B1", { ...itemB, checked_out: itemB.sha, runner: { run: "100-1" } });
+  writeFileSync(path.join(now, "note.txt"), "x");
+  writeResult(now, "Z9", { id: "Z9", runner: { run: "200-1" } });
+  const c2 = closeRun([itemA, itemB], now, "200-1");
+  if (!same(c2.errors.map((e) => e.split(":")[0]).sort(), ["B1.json.gz", "Z9.json.gz", "note.txt"]) || c2.missing.length) fail.push(`close refuses another run's result, an unknown item and a stray file: ${JSON.stringify(c2)}`);
+  writeResult(now, "B1", { ...itemB, sha: "c".repeat(40), checked_out: "c".repeat(40), runner: { run: "200-1" } });
+  if (!closeRun([itemA, itemB], now, "200-1").errors.some((e) => e.startsWith("B1.json.gz: sha"))) fail.push("close refuses a result measured on another commit than inputs.json names");
+  // The workflow keys the folder by run id and attempt, uploads only that folder, and commits only that folder.
+  const wf = readFileSync(new URL("../../.github/workflows/rule-proof-run.yml", import.meta.url), "utf8");
+  const key = "${{ github.run_id }}-${{ github.run_attempt }}";
+  if (!wf.includes(`--run ${key}`) || !wf.includes(`path: results/${key}`) || !wf.includes(`path: frame/rule-proof/results/${key}`)
+    || !wf.includes(`git add "frame/rule-proof/results/${key}"`) || !wf.includes(`test ! -e "frame/rule-proof/results/${key}"`) || !wf.includes("run-batch.mjs --close")) fail.push("the workflow writes, uploads, checks and commits one run's folder");
+}
+
 if (fail.length) { console.log("FAIL:\n  " + fail.join("\n  ")); process.exit(1); }
 console.log("ok: batches (at most 256 jobs for any size, one Node version each), cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, every finding, long lines kept to 20,000 characters with length and sha256), the linter\'s version and resolved config, on a real ESLint run");

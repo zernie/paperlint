@@ -2,7 +2,8 @@
 // inputs.json, clone it at its recorded commit, install its own pinned linter (lockfile, no install scripts),
 // prove each reading on its planted pair, and list the repository files each proved reading flags.
 //
-//   node frame/rule-proof/run.mjs <inputs.json> <out-dir> --items <i,j,k>   the items of one batch, in order
+//   node frame/rule-proof/run.mjs <inputs.json> <out-dir> --run <run key> --items <i,j,k>   one batch's items, in order;
+//     results go to <out-dir>/<run key>/ (the Actions run id and attempt), and only a result there marks an item done
 //   node frame/rule-proof/run.mjs --plan <inputs.json>     the plan job's matrix: [{ batch, node, items }] (run-batch.mjs)
 //
 // inputs.json: [{ id, repo, sha, linter, rule, node?, node_why?, readings: [{ key, reading, pair }] }]
@@ -17,7 +18,6 @@
 // closed list, the tool's exit and error code, free-text detail no code reads).
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { gunzipSync, gzipSync } from "node:zlib";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -29,7 +29,7 @@ import yaml from "js-yaml";
 import semver from "semver";
 import { z } from "zod";
 import { findingsSchema, installSchema, pairCheckSchema } from "./install-schema.mjs";
-import { itemsArg, planOf } from "./run-batch.mjs";
+import { isDone, itemsArg, planOf, readResult, runDirOf, writeResult } from "./run-batch.mjs";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
 // The Ruff kit's own reading of a repository's pin files, and the helper every kit reads its linter's JSON report
@@ -124,7 +124,7 @@ const stable = (v) => typeof v === "string" && semver.valid(v) === v && semver.p
 const byVersion = (a, b) => semver.compare(a, b);
 
 // The date-matched release of a commit (D10), by the package managers' own date flags: npm install --before <time>
-// and uv pip compile --exclude-newer <time> (P3-S109 RUN-STATUS §8: npm matched the hand-built pick on 19 of 20
+// and uv pip compile --exclude-newer <time> (measured: npm matched the hand-built pick on 19 of 20
 // (package, date) pairs, the 20th a peer resolution; uv on 6 of 6 Ruff dates). The time is the commit's committer date
 // as a UTC instant.
 export const utcInstant = (iso) => new Date(iso).toISOString();
@@ -591,16 +591,8 @@ export function fileFindings(findings, read, cap) {
   }));
 }
 
-// A result file: <id>.json.gz, the JSON gzipped; readers also take a plain .json (earlier runs).
-export function writeResult(dir, id, result) {
-  const file = path.join(dir, `${id}.json.gz`);
-  writeFileSync(file, gzipSync(JSON.stringify(result, null, 1) + "\n"));
-  return file;
-}
-export function readResult(file) {
-  const raw = readFileSync(file);
-  return JSON.parse((file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8"));
-}
+// A result file: <id>.json.gz in the run's own folder (run-batch.mjs).
+export { readResult, writeResult };
 
 // The arguments that make the linter print what it resolved for one file, with the kit's own config (`call` is the kit's
 // invocation: its configPath). ESLint: --print-config (JSON). Ruff: --show-settings (Rust debug text, kept as printed).
@@ -734,11 +726,12 @@ function pnpmfileEnv(dir) {
   return has;
 }
 
-async function runOne(item) {
+async function runOne(item, runner) {
   const dir = path.join(work, "repo");
   const t0 = Date.now();
   const adjustments = new Set();
-  const result = { id: item.id, repo: item.repo, sha: item.sha, linter: item.linter, rule: item.rule };
+  // what was measured: the repository and commit inputs.json names, and the commit the clone actually checked out
+  const result = { id: item.id, repo: item.repo, sha: item.sha, checked_out: null, linter: item.linter, rule: item.rule, runner };
   try {
     result.checked_out = clone(item.repo, item.sha, dir);
   } catch (e) {
@@ -791,16 +784,20 @@ async function runOne(item) {
 if (inputsPath === "--plan") {
   console.log(JSON.stringify(planOf(JSON.parse(readFileSync(outDir, "utf8")))));
 } else if (inputsPath) {
-  mkdirSync(cacheDir, { recursive: true });
-  mkdirSync(outDir, { recursive: true });
+  const usage = "run.mjs <inputs.json> <out-dir> --run <run key> --items <i,j,k>";
+  const flag = (name) => { const at = rest.indexOf(name); if (at < 0 || rest[at + 1] === undefined) throw new Error(usage); return rest[at + 1]; };
+  const runKey = flag("--run");
+  const runDir = runDirOf(outDir, runKey);
   const items = JSON.parse(readFileSync(inputsPath, "utf8"));
-  if (rest[0] !== "--items") throw new Error("run.mjs <inputs.json> <out-dir> --items <i,j,k>");
-  for (const i of itemsArg(rest[1], items.length)) {
+  const indices = itemsArg(flag("--items"), items.length);
+  mkdirSync(cacheDir, { recursive: true });
+  mkdirSync(runDir, { recursive: true });
+  for (const i of indices) {
     const item = items[i];
-    if (existsSync(path.join(outDir, `${item.id}.json.gz`)) || existsSync(path.join(outDir, `${item.id}.json`))) { console.log(`skip ${item.id} (done)`); continue; }
-    const r = await runOne(item);
+    if (isDone(runDir, item.id)) { console.log(`skip ${item.id} (done in this run)`); continue; }
+    const r = await runOne(item, { run: runKey });
     installSchema.parse(r.install); // a result whose install record is not the declared shape is not written
-    writeResult(outDir, item.id, r);
+    writeResult(runDir, item.id, r);
     const proved = (r.readings ?? []).filter((x) => x.proof.kind === "proved").length;
     console.log(`${item.id} ${item.repo}: install ${r.install.outcome} ${r.install.path ?? r.install.attempts.at(-1).failure?.cause} ${r.install.version ?? ""}, ` +
       `proved ${proved}/${item.readings.length}, ${r.seconds ?? "-"} s`);

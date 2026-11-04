@@ -63,12 +63,13 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: run one batch of inputs.json
         timeout-minutes: 145
-        run: node frame/rule-proof/run.mjs frame/rule-proof/inputs.json results --items ${{ matrix.items }}
+        run: node frame/rule-proof/run.mjs frame/rule-proof/inputs.json results --run ${{ github.run_id }}-${{ github.run_attempt }} --items ${{ matrix.items }}
+      # Only this run's folder is uploaded, so nothing a batch writes elsewhere reaches the commit.
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: rule-proof-result-${{ matrix.batch }}
-          path: results
+          path: results/${{ github.run_id }}-${{ github.run_attempt }}
           if-no-files-found: warn
   commit:
     needs: run
@@ -79,15 +80,26 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      # A run's results go into a folder of their own, keyed by run id and attempt; an earlier run's folder is never
+      # written into.
+      - name: this run's folder is new
+        run: test ! -e "frame/rule-proof/results/${{ github.run_id }}-${{ github.run_attempt }}"
       - uses: actions/download-artifact@v4
         with:
           pattern: rule-proof-result-*
           merge-multiple: true
-          path: frame/rule-proof/results
+          path: frame/rule-proof/results/${{ github.run_id }}-${{ github.run_attempt }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Node's own modules only (nothing installed in the job that holds the write token): every file is a result of an
+      # item of inputs.json, naming this run and the commit inputs.json gives; anything else stops the commit.
+      - name: check the run's folder
+        run: node frame/rule-proof/run-batch.mjs --close frame/rule-proof/inputs.json "frame/rule-proof/results/${{ github.run_id }}-${{ github.run_attempt }}" "${{ github.run_id }}-${{ github.run_attempt }}"
       - name: commit the results back to this branch
         run: |
           git config user.name "rule-proof"
           git config user.email "actions@users.noreply.github.com"
-          git add frame/rule-proof/results
-          git commit -m "rule proof: results (run ${{ github.run_id }})" || echo "nothing to commit"
+          git add "frame/rule-proof/results/${{ github.run_id }}-${{ github.run_attempt }}"
+          git commit -m "rule proof: results (run ${{ github.run_id }}-${{ github.run_attempt }})" || echo "nothing to commit"
           git push origin "HEAD:${{ github.ref_name }}"

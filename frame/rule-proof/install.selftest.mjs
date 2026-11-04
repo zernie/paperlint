@@ -367,7 +367,7 @@ const jsPair = { bad: { path: "p/bad.js", text: "x\n" }, good: { path: "p/good.j
 }
 
 // 20. A plugin whose ESLint peer excludes the newest ESLint at the date: npm picks the newest ESLint the plugin admits
-//     (measured, P3-S109 RUN-STATUS §8.2: 2024-06-01, eslint 8.57.0 with eslint-plugin-import 2.29.1); no
+//     (measured: 2024-06-01, eslint 8.57.0 with eslint-plugin-import 2.29.1); no
 //     --legacy-peer-deps.
 {
   const dir = repo({ "README.md": "x\n" });
