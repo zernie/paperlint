@@ -10,7 +10,9 @@
   "path": "date-matched",
   "version": "10.4.0",
   "versions": {
-   "eslint": "10.4.0"
+   "eslint": "10.4.0",
+   "@typescript-eslint/parser": "8.59.4",
+   "typescript": "6.0.3"
   },
   "plugins": {},
   "attempts": [
@@ -34,6 +36,9 @@
    "package_jsons": 0
   },
   "commit": "2026-05-19T19:23:22+08:00",
+  "ts_parser_asked": [
+   "typescript-pair"
+  ],
   "aside": [],
   "legacy_peer_deps": false
  },
@@ -109,13 +114,19 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -184,13 +195,19 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -226,13 +243,19 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -279,13 +302,19 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -324,13 +353,19 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -366,17 +401,174 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   }
  ],
- "cross": [],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 4.02
+ "seconds": 20.702
 }

@@ -11,6 +11,8 @@
   "version": "10.13.0",
   "versions": {
    "eslint": "10.13.0",
+   "@typescript-eslint/parser": "8.72.0",
+   "typescript": "6.0.3",
    "eslint-plugin-import": "2.32.0"
   },
   "plugins": {
@@ -35,6 +37,10 @@
     "outcome": "installed",
     "resolved": [
      {
+      "cause": "peer-conflict-typescript",
+      "by": "typescript left to the parser's peer range"
+     },
+     {
       "cause": "peer-conflict-other",
       "by": "--legacy-peer-deps for eslint-plugin-import"
      }
@@ -47,8 +53,12 @@
    "package_jsons": 0
   },
   "commit": "2026-10-23T12:36:02+08:00",
+  "ts_parser_asked": [
+   "typescript-pair"
+  ],
   "aside": [],
-  "legacy_peer_deps": true
+  "legacy_peer_deps": true,
+  "typescript_peer_resolved": true
  },
  "readings": [
   {
@@ -77,7 +87,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -90,6 +101,24 @@
     "kind": "not-run",
     "stage": "pair-ignored",
     "reason": "src/dde_tray_plugin/p3s109-pair/bad.ts: the linter ignored the planted file"
+   },
+   "pair_check": {
+    "stage": "pair-ignored",
+    "cause": "pair-unconfigured",
+    "pair_ts": true,
+    "parser": "@typescript-eslint/parser",
+    "eslint": {
+     "version": "10.13.0",
+     "bad": {
+      "files_only": false,
+      "full": false
+     },
+     "good": {
+      "files_only": false,
+      "full": false
+     },
+     "errors": []
+    }
    }
   },
   {
@@ -118,13 +147,32 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
     "kind": "not-run",
     "stage": "pair-ignored",
     "reason": "src/dde_tray_plugin/p3s109-pair/bad.ts: the linter ignored the planted file"
+   },
+   "pair_check": {
+    "stage": "pair-ignored",
+    "cause": "pair-unconfigured",
+    "pair_ts": true,
+    "parser": "@typescript-eslint/parser",
+    "eslint": {
+     "version": "10.13.0",
+     "bad": {
+      "files_only": false,
+      "full": false
+     },
+     "good": {
+      "files_only": false,
+      "full": false
+     },
+     "errors": []
+    }
    }
   },
   {
@@ -155,13 +203,32 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
     "kind": "not-run",
     "stage": "pair-ignored",
     "reason": "src/dde_tray_plugin/p3s109-pair/bad.ts: the linter ignored the planted file"
+   },
+   "pair_check": {
+    "stage": "pair-ignored",
+    "cause": "pair-unconfigured",
+    "pair_ts": true,
+    "parser": "@typescript-eslint/parser",
+    "eslint": {
+     "version": "10.13.0",
+     "bad": {
+      "files_only": false,
+      "full": false
+     },
+     "good": {
+      "files_only": false,
+      "full": false
+     },
+     "errors": []
+    }
    }
   },
   {
@@ -192,17 +259,36 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
     "kind": "not-run",
     "stage": "pair-ignored",
     "reason": "src/dde_tray_plugin/p3s109-pair/bad.ts: the linter ignored the planted file"
+   },
+   "pair_check": {
+    "stage": "pair-ignored",
+    "cause": "pair-unconfigured",
+    "pair_ts": true,
+    "parser": "@typescript-eslint/parser",
+    "eslint": {
+     "version": "10.13.0",
+     "bad": {
+      "files_only": false,
+      "full": false
+     },
+     "good": {
+      "files_only": false,
+      "full": false
+     },
+     "errors": []
+    }
    }
   }
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 6.29
+ "seconds": 11.312
 }

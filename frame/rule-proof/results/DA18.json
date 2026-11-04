@@ -10,7 +10,9 @@
   "path": "lockfile-pinned",
   "version": "8.57.1",
   "versions": {
-   "eslint": "8.57.1"
+   "eslint": "8.57.1",
+   "@typescript-eslint/parser": "5.62.0",
+   "typescript": "6.0.3"
   },
   "plugins": {
    "eslint-plugin-local": {
@@ -50,6 +52,9 @@
    "package_jsons": 24
   },
   "commit": "2026-11-02T12:22:33+01:00",
+  "ts_parser_asked": [
+   "typescript-pair"
+  ],
   "aside": [
    "package.json",
    "pnpm-lock.yaml",
@@ -105,13 +110,39 @@
       "**/build/**",
       "studio/src/lib/build-url.ts"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "studio/src/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 375,
+    "flagged": [
+     "studio/src/components/analytics/constructAnalyticsTableQueryState.ts",
+     "studio/src/components/app-provider.tsx",
+     "studio/src/components/checks/graph-pruning-issues-table.tsx",
+     "studio/src/components/checks/lint-issues-table.tsx",
+     "studio/src/components/checks/operations.tsx",
+     "studio/src/components/checks/proposal-matches-table.tsx",
+     "studio/src/components/checks/subgraph-check-extension.tsx",
+     "studio/src/components/layout/analytics/gtm-script.tsx",
+     "studio/src/components/layout/dashboard-layout.tsx",
+     "studio/src/components/onboarding/step-3.tsx",
+     "studio/src/components/subgraphs-table.tsx",
+     "studio/src/hooks/use-onboarding-navigation.ts",
+     "studio/src/lib/playground-url-state-decoding.ts",
+     "studio/src/pages/[organizationSlug]/[namespace]/graph/[slug]/clients.tsx",
+     "studio/src/pages/[organizationSlug]/[namespace]/graph/[slug]/overrides.tsx",
+     "studio/src/pages/[organizationSlug]/index.tsx",
+     "studio/src/pages/account/join.tsx",
+     "studio/src/pages/login.tsx",
+     "studio/src/pages/signup.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -146,13 +177,40 @@
       "studio/src/lib/build-url.ts",
       "studio/src/lib/build-url.test.ts"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "studio/src/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 375,
+    "flagged": [
+     "studio/src/components/analytics/constructAnalyticsTableQueryState.ts",
+     "studio/src/components/app-provider.tsx",
+     "studio/src/components/checks/graph-pruning-issues-table.tsx",
+     "studio/src/components/checks/lint-issues-table.tsx",
+     "studio/src/components/checks/operations.tsx",
+     "studio/src/components/checks/proposal-matches-table.tsx",
+     "studio/src/components/checks/subgraph-check-extension.tsx",
+     "studio/src/components/layout/analytics/gtm-script.tsx",
+     "studio/src/components/layout/dashboard-layout.tsx",
+     "studio/src/components/onboarding/step-3.tsx",
+     "studio/src/components/subgraphs-table.tsx",
+     "studio/src/hooks/use-onboarding-navigation.ts",
+     "studio/src/lib/playground-url-state-decoding.ts",
+     "studio/src/pages/[organizationSlug]/[namespace]/graph/[slug]/clients.tsx",
+     "studio/src/pages/[organizationSlug]/[namespace]/graph/[slug]/overrides.tsx",
+     "studio/src/pages/[organizationSlug]/index.tsx",
+     "studio/src/pages/[organizationSlug]/integrations.tsx",
+     "studio/src/pages/account/join.tsx",
+     "studio/src/pages/login.tsx",
+     "studio/src/pages/signup.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -176,13 +234,32 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1393,
+    "flagged": [
+     "cli/src/commands/auth/utils.ts",
+     "client-tests/mcp-ts/src/__tests__/McpOAuthScopes.test.ts",
+     "controlplane/src/core/auth-utils.ts",
+     "controlplane/src/core/clickhouse/client/ClickHouseClient.ts",
+     "controlplane/test/initialize-cosmo-user.test.ts",
+     "studio/src/components/app-provider.tsx",
+     "studio/src/hooks/use-onboarding-navigation.ts",
+     "studio/src/lib/playground-url-state-decoding.ts",
+     "studio/src/pages/[organizationSlug]/index.tsx",
+     "studio/src/pages/account/join.tsx",
+     "studio/src/pages/login.tsx",
+     "studio/src/pages/signup.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -208,7 +285,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -252,13 +330,32 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1398,
+    "flagged": [
+     "cli/src/commands/auth/utils.ts",
+     "client-tests/mcp-ts/src/__tests__/McpOAuthScopes.test.ts",
+     "controlplane/src/core/auth-utils.ts",
+     "controlplane/src/core/clickhouse/client/ClickHouseClient.ts",
+     "controlplane/test/initialize-cosmo-user.test.ts",
+     "studio/src/components/app-provider.tsx",
+     "studio/src/hooks/use-onboarding-navigation.ts",
+     "studio/src/lib/playground-url-state-decoding.ts",
+     "studio/src/pages/[organizationSlug]/index.tsx",
+     "studio/src/pages/account/join.tsx",
+     "studio/src/pages/login.tsx",
+     "studio/src/pages/signup.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -289,17 +386,149 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1398,
+    "flagged": [
+     "cli/src/commands/auth/utils.ts",
+     "client-tests/mcp-ts/src/__tests__/McpOAuthScopes.test.ts",
+     "controlplane/src/core/auth-utils.ts",
+     "controlplane/src/core/clickhouse/client/ClickHouseClient.ts",
+     "controlplane/test/initialize-cosmo-user.test.ts",
+     "studio/src/components/app-provider.tsx",
+     "studio/src/hooks/use-onboarding-navigation.ts",
+     "studio/src/lib/playground-url-state-decoding.ts",
+     "studio/src/pages/[organizationSlug]/index.tsx",
+     "studio/src/pages/account/join.tsx",
+     "studio/src/pages/login.tsx",
+     "studio/src/pages/signup.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
    }
   }
  ],
- "cross": [],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 30.298
+ "seconds": 120.004
 }

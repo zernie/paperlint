@@ -10,7 +10,9 @@
   "path": "lockfile-pinned",
   "version": "9.39.5",
   "versions": {
-   "eslint": "9.39.5"
+   "eslint": "9.39.5",
+   "@typescript-eslint/parser": "8.59.0",
+   "typescript": "6.0.3"
   },
   "plugins": {},
   "attempts": [
@@ -36,6 +38,9 @@
    "package_jsons": 2
   },
   "commit": "2026-11-01T02:12:14+04:00",
+  "ts_parser_asked": [
+   "typescript-pair"
+  ],
   "aside": [],
   "legacy_peer_deps": false,
   "lockfile_pinned": {
@@ -72,13 +77,19 @@
       "apps/console/**/*.test.mjs",
       "apps/console/tests/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "apps/console/p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 86,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -105,13 +116,19 @@
       "apps/console/**/*.test.mjs",
       "apps/console/**/*.test.ts"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "apps/console/p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 85,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -137,13 +154,19 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "apps/console/p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 147,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -165,13 +188,19 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "apps/console/p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 107,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -202,13 +231,19 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 154,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -239,17 +274,190 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 154,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   }
  ],
- "cross": [],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 6.479
+ "seconds": 38.886
 }

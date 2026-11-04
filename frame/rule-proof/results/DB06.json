@@ -49,6 +49,10 @@
    "package_jsons": 62
   },
   "commit": "2026-09-07T16:28:14+02:00",
+  "ts_parser_asked": [
+   "root-tsconfig",
+   "typescript-pair"
+  ],
   "aside": [
    "package.json",
    "pnpm-lock.yaml",
@@ -363,6 +367,13 @@
     "kind": "not-run",
     "stage": "parse",
     "reason": "p3s109-pair/bad.test.ts: Parsing error: Unexpected token :"
+   },
+   "pair_check": {
+    "stage": "parse",
+    "cause": "no-ts-parser-in-install",
+    "pair_ts": true,
+    "parser": null,
+    "eslint": null
    }
   }
  ],
@@ -381,5 +392,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 19.542
+ "seconds": 21.271
 }

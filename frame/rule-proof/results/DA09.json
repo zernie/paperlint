@@ -231,6 +231,13 @@
     "kind": "not-run",
     "stage": "parse",
     "reason": "p3s109-pair/bad.ts: Parsing error: The keyword 'interface' is reserved"
+   },
+   "pair_check": {
+    "stage": "parse",
+    "cause": "no-ts-parser-in-install",
+    "pair_ts": true,
+    "parser": null,
+    "eslint": null
    }
   },
   {
@@ -505,5 +512,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 95.878
+ "seconds": 70.339
 }

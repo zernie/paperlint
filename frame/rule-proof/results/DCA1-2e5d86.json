@@ -11,6 +11,8 @@
   "version": "10.14.0",
   "versions": {
    "eslint": "10.14.0",
+   "@typescript-eslint/parser": "8.72.1",
+   "typescript": "6.0.3",
    "eslint-plugin-check-file": "3.3.2"
   },
   "plugins": {
@@ -31,7 +33,13 @@
    },
    {
     "path": "date-matched",
-    "outcome": "installed"
+    "outcome": "installed",
+    "resolved": [
+     {
+      "cause": "peer-conflict-typescript",
+      "by": "typescript left to the parser's peer range"
+     }
+    ]
    }
   ],
   "adjustments": [],
@@ -40,8 +48,12 @@
    "package_jsons": 0
   },
   "commit": "2026-11-02T15:57:12+01:00",
+  "ts_parser_asked": [
+   "typescript-pair"
+  ],
   "aside": [],
-  "legacy_peer_deps": false
+  "legacy_peer_deps": false,
+  "typescript_peer_resolved": true
  },
  "readings": [
   {
@@ -64,7 +76,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -77,6 +90,24 @@
     "kind": "not-run",
     "stage": "pair-ignored",
     "reason": "rpact-org_website/vignettes/p3s109-pair/bad.ts: the linter ignored the planted file"
+   },
+   "pair_check": {
+    "stage": "pair-ignored",
+    "cause": "pair-unconfigured",
+    "pair_ts": true,
+    "parser": "@typescript-eslint/parser",
+    "eslint": {
+     "version": "10.14.0",
+     "bad": {
+      "files_only": false,
+      "full": false
+     },
+     "good": {
+      "files_only": false,
+      "full": false
+     },
+     "errors": []
+    }
    }
   },
   {
@@ -99,7 +130,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -112,6 +144,24 @@
     "kind": "not-run",
     "stage": "pair-ignored",
     "reason": "rpact-org_website/vignettes/p3s109-pair/bad.ts: the linter ignored the planted file"
+   },
+   "pair_check": {
+    "stage": "pair-ignored",
+    "cause": "pair-unconfigured",
+    "pair_ts": true,
+    "parser": "@typescript-eslint/parser",
+    "eslint": {
+     "version": "10.14.0",
+     "bad": {
+      "files_only": false,
+      "full": false
+     },
+     "good": {
+      "files_only": false,
+      "full": false
+     },
+     "errors": []
+    }
    }
   },
   {
@@ -142,7 +192,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -152,9 +203,9 @@
     }
    ],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "not-proved",
+    "badHits": 1,
+    "goodHits": 1
    }
   },
   {
@@ -178,7 +229,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -191,6 +243,24 @@
     "kind": "not-run",
     "stage": "pair-ignored",
     "reason": "vignettes/p3s109-pair/bad.ts: the linter ignored the planted file"
+   },
+   "pair_check": {
+    "stage": "pair-ignored",
+    "cause": "pair-unconfigured",
+    "pair_ts": true,
+    "parser": "@typescript-eslint/parser",
+    "eslint": {
+     "version": "10.14.0",
+     "bad": {
+      "files_only": false,
+      "full": false
+     },
+     "good": {
+      "files_only": false,
+      "full": false
+     },
+     "errors": []
+    }
    }
   },
   {
@@ -213,7 +283,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -226,10 +297,28 @@
     "kind": "not-run",
     "stage": "pair-ignored",
     "reason": "vignettes/p3s109-pair/bad.ts: the linter ignored the planted file"
+   },
+   "pair_check": {
+    "stage": "pair-ignored",
+    "cause": "pair-unconfigured",
+    "pair_ts": true,
+    "parser": "@typescript-eslint/parser",
+    "eslint": {
+     "version": "10.14.0",
+     "bad": {
+      "files_only": false,
+      "full": false
+     },
+     "good": {
+      "files_only": false,
+      "full": false
+     },
+     "errors": []
+    }
    }
   }
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 5.154
+ "seconds": 11.51
 }

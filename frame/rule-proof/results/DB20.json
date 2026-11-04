@@ -10,7 +10,9 @@
   "path": "lockfile-pinned",
   "version": "9.39.4",
   "versions": {
-   "eslint": "9.39.4"
+   "eslint": "9.39.4",
+   "@typescript-eslint/parser": "8.61.1",
+   "typescript": "5.9.2"
   },
   "plugins": {
    "eslint-plugin-import": {
@@ -45,6 +47,9 @@
    "package_jsons": 36
   },
   "commit": "2026-10-19T16:13:28+05:30",
+  "ts_parser_asked": [
+   "typescript-pair"
+  ],
   "aside": [
    "package.json",
    "pnpm-lock.yaml",
@@ -97,13 +102,19 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "react-examples/examples/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 277,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -138,13 +149,19 @@
       "**/build/**",
       "**/node_modules/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "react-examples/examples/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 267,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   },
   {
@@ -167,7 +184,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -209,7 +227,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -244,7 +263,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -281,7 +301,8 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [
     {
@@ -298,7 +319,18 @@
    }
   }
  ],
- "cross": [],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  }
+ ],
  "adjustments": [],
- "seconds": 13.842
+ "seconds": 21.201
 }

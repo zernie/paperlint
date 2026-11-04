@@ -10,7 +10,9 @@
   "path": "lockfile-pinned",
   "version": "9.39.4",
   "versions": {
-   "eslint": "9.39.4"
+   "eslint": "9.39.4",
+   "@typescript-eslint/parser": "8.58.2",
+   "typescript": "5.6.3"
   },
   "plugins": {},
   "attempts": [
@@ -36,6 +38,9 @@
    "package_jsons": 3
   },
   "commit": "2026-10-23T15:57:29+08:00",
+  "ts_parser_asked": [
+   "typescript-pair"
+  ],
   "aside": [],
   "legacy_peer_deps": false,
   "lockfile_pinned": {
@@ -67,13 +72,32 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
     "kind": "not-run",
     "stage": "pair-ignored",
     "reason": "features/data-sync/map/p3s109-pair/bad.ts: the linter ignored the planted file"
+   },
+   "pair_check": {
+    "stage": "pair-ignored",
+    "cause": "pair-unconfigured",
+    "pair_ts": true,
+    "parser": "@typescript-eslint/parser",
+    "eslint": {
+     "version": "9.39.4",
+     "bad": {
+      "files_only": false,
+      "full": false
+     },
+     "good": {
+      "files_only": false,
+      "full": false
+     },
+     "errors": []
+    }
    }
   },
   {
@@ -99,17 +123,23 @@
       "**/dist/**",
       "**/build/**"
      ]
-    }
+    },
+    "parser": "@typescript-eslint/parser"
    },
    "plugins": [],
    "proof": {
-    "kind": "not-run",
-    "stage": "parse",
-    "reason": "features/data-sync/map/p3s109-pair/bad.ts: Parsing error: Unexpected token :"
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
    }
   }
  ],
  "cross": [],
  "adjustments": [],
- "seconds": 6.587
+ "seconds": 9.204
 }
