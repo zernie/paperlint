@@ -1,12 +1,13 @@
 // Selftest of run.mjs's pure parts: node frame/rule-proof/run.selftest.mjs (exit 1 on a defect).
 import { createHash } from "node:crypto";
+import { gzipSync } from "node:zlib";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { findingsSchema, jsonSchema } from "./install-schema.mjs";
-import { FINDINGS_CAP, configArgs, contextOf, crossPlan, fileFindings, findingsOf, parseFindings, pluginOf, ruffSettings, utcInstant } from "./run.mjs";
+import { FINDINGS_CAP, configArgs, contextOf, crossPlan, fileFindings, findingsOf, linesOf, parseFindings, pluginOf, readResult, ruffSettings, utcInstant, writeResult } from "./run.mjs";
 
 const fail = [];
 const plan = crossPlan([{ proved: true, pair: {} }, { proved: false, pair: {} }, { proved: true, pair: {} }, { proved: true, pair: null }]);
@@ -64,15 +65,47 @@ const ff = fileFindings([...seven, { path: "src/z.js", line: 1, column: 2, ruleI
   (p) => (p === "src/a.js" ? text : "only\n"), { ...FINDINGS_CAP, context: 1 });
 if (ff["src/a.js"]?.total !== 7 || ff["src/a.js"]?.capped !== false || ff["src/a.js"]?.items.map((x) => x.line).join() !== "3,4,5,6,7,8,9")
   fail.push(`seven findings: all seven kept by line, total 7, never capped: ${JSON.stringify(ff["src/a.js"])}`);
-if (!same(ff["src/z.js"], { total: 1, capped: false, items: [{ line: 1, column: 2, ruleId: "no-tabs", message: "m", lines: [{ n: 1, text: "only", mark: true }] }] }))
-  fail.push(`one finding: not capped, its source line marked: ${JSON.stringify(ff["src/z.js"])}`);
-if (!same(fileFindings([{ path: "gone.js", line: 1, column: 1, ruleId: "x", message: "m" }], () => null, FINDINGS_CAP)["gone.js"].items[0].lines, []))
-  fail.push("a file that cannot be read gives no source lines, not a crash");
+if (!same(ff["src/z.js"], { total: 1, capped: false, lines: { 1: { text: "only" } }, items: [{ line: 1, column: 2, ruleId: "no-tabs", message: "m", context: [1, 1] }] }))
+  fail.push(`one finding (format 3): its source line stored once in the file's lines map, the finding points at it: ${JSON.stringify(ff["src/z.js"])}`);
+if (!same(linesOf(ff["src/z.js"], ff["src/z.js"].items[0]), [{ n: 1, text: "only", mark: true }])) fail.push(`a context range resolves to the marked lines: ${JSON.stringify(linesOf(ff["src/z.js"], ff["src/z.js"].items[0]))}`);
+const gone = fileFindings([{ path: "gone.js", line: 1, column: 1, ruleId: "x", message: "m" }], () => null, FINDINGS_CAP)["gone.js"];
+if (!same(linesOf(gone, gone.items[0]), []) || Object.keys(gone.lines).length !== 0 || "context" in gone.items[0]) fail.push("a file that cannot be read gives no source lines and no context, not a crash");
+
+// Format 3 stores each source line once per file. 20 findings on one 521,454-character line (and its neighbours):
+// the line is in the record once (first 20,000 characters, length, sha256), and every finding's context resolves to
+// the very lines format 2 copied into it.
+const bigLine = "m".repeat(521_000) + "END" + "z".repeat(451);
+const bigText = ["a", "b", "c", bigLine, "e", "f", "g", "h"].join("\n") + "\n";
+const twenty = Array.from({ length: 20 }, (_, i) => ({ path: "dist/b.js", line: 4, column: i + 1, ruleId: "no-tabs", message: `m${i}` }));
+const big = fileFindings(twenty, () => bigText, FINDINGS_CAP)["dist/b.js"];
+if (big.total !== 20 || big.items.length !== 20) fail.push(`20 findings on one line all kept: ${big.total}/${big.items.length}`);
+if (JSON.stringify(big).split("mmmmmmmmmm").length - 1 !== 2000 || Object.keys(big.lines).join() !== "1,2,3,4,5,6,7") fail.push(`the huge line is stored once (2,000 ten-character runs = 20,000 characters), lines 1-7 once each: ${Object.keys(big.lines)} ${JSON.stringify(big).length} bytes`);
+if (big.lines[4].text.length !== 20_000 || big.lines[4].cut !== 521_454 || big.lines[4].sha256 !== sha(bigLine) || "cut" in big.lines[3]) fail.push(`the line keeps 20,000 characters, its length and sha256; short lines carry neither: ${JSON.stringify({ ...big.lines[4], text: big.lines[4].text.length })}`);
+if (!big.items.every((f) => same(f.context, [1, 7]))) fail.push(`context ranges are line numbers: ${JSON.stringify(big.items[0])}`);
+if (JSON.stringify(big).length > 40_000) fail.push(`20 findings on a 521,454-character line weigh ${JSON.stringify(big).length} bytes`);
+for (const f of [big.items[0], big.items[19]]) {
+  if (!same(linesOf(big, f), contextOf(bigText, 4, FINDINGS_CAP.context, FINDINGS_CAP.line_chars))) fail.push("a context range resolves to the same lines format 2 copied into the finding");
+}
+const many7 = fileFindings([{ path: "x.js", line: 2, column: 1, ruleId: "r", message: "m" }, { path: "x.js", line: 9, column: 1, ruleId: "r", message: "m" }], () => text, FINDINGS_CAP)["x.js"];
+if (many7.items.some((f) => !same(linesOf(many7, f), contextOf(text, f.line, FINDINGS_CAP.context, FINDINGS_CAP.line_chars)))) fail.push("format 3 resolves to contextOf's lines at the top and bottom edges");
+
+// The result file is gzipped; a reader takes .json.gz and the older plain .json alike.
+const rdir = mkdtempSync(path.join(tmpdir(), "rp-res-"));
+const sample = { id: "X1", n: [1, 2, 3], s: "é" };
+const gz = writeResult(rdir, "X1", sample);
+if (!gz.endsWith("X1.json.gz") || !same(readResult(gz), sample)) fail.push(`a result is written as <id>.json.gz and read back whole: ${gz}`);
+writeFileSync(path.join(rdir, "Y1.json"), JSON.stringify(sample));
+if (!same(readResult(path.join(rdir, "Y1.json")), sample)) fail.push("a plain .json result of an earlier run is read too");
+if (readFileSync(gz).subarray(0, 2).toString("hex") !== "1f8b" || gzipSync("").length === 0) fail.push("the file is real gzip");
 
 // The record a result carries is declared once and is in the emitted schema.
-const rec = { cap: FINDINGS_CAP, files: ff };
+const rec = { format: 3, cap: FINDINGS_CAP, files: ff };
 if (!findingsSchema.safeParse(rec).success) fail.push(`the findings record parses under findingsSchema: ${JSON.stringify(findingsSchema.safeParse(rec).error?.issues)}`);
-if (findingsSchema.safeParse({ cap: FINDINGS_CAP, files: { "a.js": { total: 1, capped: false, items: [{ line: "4" }] } } }).success) fail.push("a finding without its fields is refused");
+if (findingsSchema.safeParse({ cap: FINDINGS_CAP, files: { "a.js": { total: 1, capped: false, lines: {}, items: [{ line: "4" }] } } }).success) fail.push("a finding without its fields is refused");
+if (findingsSchema.safeParse({ format: 3, cap: FINDINGS_CAP, files: { "a.js": { total: 1, capped: false, lines: { 1: { text: "x" } }, items: [{ line: 1, column: 1, ruleId: "r", message: "m", context: [1, 2] }] } } }).success) fail.push("a context that names a line the file's map does not hold is refused");
+// Format 2 (a copy of the lines in every finding) and format 1 results still parse.
+const f2 = { format: 2, cap: { per_file: null, context: 3, line_chars: 20_000 }, files: { "a.js": { total: 1, capped: false, items: [{ line: 1, column: 1, ruleId: "x", message: "m", lines: [{ n: 1, text: "ab", mark: true, cut: 900, sha256: "a".repeat(64) }] }] } } };
+if (!findingsSchema.safeParse(f2).success) fail.push(`a format 2 result still parses: ${JSON.stringify(findingsSchema.safeParse(f2).error?.issues)}`);
 // A result file written under the old limit (5 per file, 400 characters, `capped` true) still parses.
 const legacy = { cap: { per_file: 5, context: 3, line_chars: 400 }, files: { "a.js": { total: 9, capped: true, items: [{ line: 1, column: 1, ruleId: "x", message: "m", lines: [{ n: 1, text: "ab", mark: true, cut: 900 }] }] } } };
 if (!findingsSchema.safeParse(legacy).success) fail.push(`a result written under the old cap still parses: ${JSON.stringify(findingsSchema.safeParse(legacy).error?.issues)}`);
@@ -105,7 +138,7 @@ const many = findingsOf(pinned, reading, ["src/many.js"]).files["src/many.js"];
 if (many?.total !== 7 || many.items.length !== 7 || many.capped !== false) fail.push(`real ESLint: seven findings in a file, seven kept: ${JSON.stringify({ total: many?.total, kept: many?.items.length })}`);
 const bad = got.files?.["src/bad.js"];
 if (!bad || bad.total !== 1 || bad.items[0].line !== 3 || bad.items[0].column !== 1 || bad.items[0].ruleId !== "no-tabs"
-  || !bad.items[0].lines.find((l) => l.mark && l.text === "\tconsole.log(a);")) fail.push(`real ESLint: the tab at line 3, column 1, marked: ${JSON.stringify(got)}`);
+  || !linesOf(bad, bad.items[0]).find((l) => l.mark && l.text === "\tconsole.log(a);")) fail.push(`real ESLint: the tab at line 3, column 1, marked: ${JSON.stringify(got)}`);
 if (got.files?.["src/good.js"] !== undefined || got.files?.["src/other.js"] !== undefined) fail.push(`real ESLint: no finding for the clean file or an unlisted one: ${JSON.stringify(Object.keys(got.files ?? {}))}`);
 if (!findingsSchema.safeParse(got).success) fail.push(`the real record parses: ${JSON.stringify(findingsSchema.safeParse(got).error?.issues)}`);
 const broken = findingsOf({ ...pinned, run: { ...pinned.run, command: [process.execPath, "-e", "process.exit(2)", "--"] } }, reading, ["src/bad.js"]);

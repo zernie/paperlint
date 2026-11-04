@@ -17,6 +17,7 @@
 // closed list, the tool's exit and error code, free-text detail no code reads).
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { gunzipSync, gzipSync } from "node:zlib";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -535,31 +536,70 @@ export function parseFindings(linter, stdout, dir, rule) {
     .map((m) => ({ path: toRelative(dir, f.filePath), line: m.line, column: m.column ?? 0, ruleId: m.ruleId, message: m.message }))) };
 }
 
-// The source lines around `line` (1-based): line ± n, clipped at the file's edges; a line longer than `max` characters
-// is cut: `cut` holds its length, `sha256` the hash of the whole line (a minified bundle is one line of megabytes).
-export function contextOf(text, line, n, max) {
+// A source line as stored: its text up to `max` characters; a longer line also holds `cut` (its full length) and `sha256`
+// (the hash of the whole line), since a minified bundle is one line of megabytes.
+const lineEntry = (t, max) => ({ text: t.length > max ? t.slice(0, max) : t, ...(t.length > max ? { cut: t.length, sha256: createHash("sha256").update(t).digest("hex") } : {}) });
+const splitLines = (text) => {
   const lines = text.split("\n").map((l) => (l.endsWith("\r") ? l.slice(0, -1) : l));
-  const last = lines.at(-1) === "" ? lines.length - 1 : lines.length;
+  return { lines, last: lines.at(-1) === "" ? lines.length - 1 : lines.length };
+};
+
+// The source lines around `line` (1-based): line ± n, clipped at the file's edges, each as lineEntry stores it.
+// (Format 2 copied this into every finding; format 3 keeps it as `context` over a per-file map, and linesOf gives it back.)
+export function contextOf(text, line, n, max) {
+  const { lines, last } = splitLines(text);
   const from = Math.max(1, line - n), to = Math.min(last, line + n);
   return Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => {
-    const k = from + i, t = lines[k - 1];
-    return { n: k, text: t.length > max ? t.slice(0, max) : t, mark: k === line, ...(t.length > max ? { cut: t.length, sha256: createHash("sha256").update(t).digest("hex") } : {}) };
+    const k = from + i, { text: t, ...rest } = lineEntry(lines[k - 1], max);
+    return { n: k, text: t, mark: k === line, ...rest };
   });
 }
 
-// Findings grouped per file: sorted by line, then column; all kept with their source lines (`capped` stays in the record
-// for readers of older results and is always false).
-// read(path) -> the file's text, or null when it cannot be read (then no source lines).
+// A finding's source lines, back from the file's map: its `context` [from, to] resolved against `file.lines`, the
+// finding's own line marked. Same shape contextOf gives (and format 1/2 stored in the finding: its `lines`).
+export function linesOf(file, finding) {
+  if (finding.lines) return finding.lines;
+  if (!finding.context) return [];
+  const [from, to] = finding.context;
+  return Array.from({ length: to - from + 1 }, (_, i) => {
+    const { text, ...rest } = file.lines[String(from + i)];
+    return { n: from + i, text, mark: from + i === finding.line, ...rest };
+  });
+}
+
+// Findings grouped per file (format 3): all kept, sorted by line then column. The file's source lines that any finding's
+// context touches are stored ONCE in `lines` ({"<n>": lineEntry}); a finding holds `context` [from, to] (line numbers).
+// `capped` stays in the record for readers of older results and is always false.
+// read(path) -> the file's text, or null when it cannot be read (then no lines and no context).
 export function fileFindings(findings, read, cap) {
   // (no Object.groupBy: an item may run on Node 18 or 20)
   const byFile = {};
   for (const f of findings) (byFile[f.path] ??= []).push(f);
   return Object.fromEntries(Object.entries(byFile).sort(([a], [b]) => a.localeCompare(b)).map(([p, fs]) => {
     const text = read(p);
-    const items = [...fs].sort((a, b) => a.line - b.line || a.column - b.column)
-      .map(({ path: _p, ...f }) => ({ ...f, lines: text === null ? [] : contextOf(text, f.line, cap.context, cap.line_chars) }));
-    return [p, { total: fs.length, capped: false, items }];
+    const src = text === null ? null : splitLines(text);
+    const needed = new Set();
+    const items = [...fs].sort((a, b) => a.line - b.line || a.column - b.column).map(({ path: _p, ...f }) => {
+      if (src === null) return f;
+      const from = Math.max(1, f.line - cap.context), to = Math.min(src.last, f.line + cap.context);
+      if (to < from) return f;
+      for (let k = from; k <= to; k++) needed.add(k);
+      return { ...f, context: [from, to] };
+    });
+    const lines = Object.fromEntries([...needed].sort((a, b) => a - b).map((k) => [String(k), lineEntry(src.lines[k - 1], cap.line_chars)]));
+    return [p, { total: fs.length, capped: false, lines, items }];
   }));
+}
+
+// A result file: <id>.json.gz, the JSON gzipped; readers also take a plain .json (earlier runs).
+export function writeResult(dir, id, result) {
+  const file = path.join(dir, `${id}.json.gz`);
+  writeFileSync(file, gzipSync(JSON.stringify(result, null, 1) + "\n"));
+  return file;
+}
+export function readResult(file) {
+  const raw = readFileSync(file);
+  return JSON.parse((file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8"));
 }
 
 // The arguments that make the linter print what it resolved for one file, with the kit's own config (`call` is the kit's
@@ -614,7 +654,7 @@ export function findingsOf(pinned, reading, files, cap = FINDINGS_CAP, version =
   const read = (p) => { try { return readFileSync(path.join(pinned.dir, p), "utf8"); } catch { return null; } };
   const files_ = fileFindings(runs.flatMap((x) => x.findings ?? []), read, cap);
   const record = files.length ? linterRecord(pinned, reading, files[0], version, env) : {};
-  return findingsSchema.parse({ format: 2, cap, files: files_, ...record, ...(error ? { error } : {}) });
+  return findingsSchema.parse({ format: 3, cap, files: files_, ...record, ...(error ? { error } : {}) });
 }
 
 // The plan job's matrix: one entry per item; Node 22 unless the item names another (from the repository's engines).
@@ -759,11 +799,10 @@ if (inputsPath === "--matrix") {
   const items = JSON.parse(readFileSync(inputsPath, "utf8"));
   for (const [i, item] of items.entries()) {
     if (only !== null && i !== only) continue;
-    const out = path.join(outDir, `${item.id}.json`);
-    if (existsSync(out)) { console.log(`skip ${item.id} (done)`); continue; }
+    if (existsSync(path.join(outDir, `${item.id}.json.gz`)) || existsSync(path.join(outDir, `${item.id}.json`))) { console.log(`skip ${item.id} (done)`); continue; }
     const r = await runOne(item);
     installSchema.parse(r.install); // a result whose install record is not the declared shape is not written
-    writeFileSync(out, JSON.stringify(r, null, 1) + "\n");
+    writeResult(outDir, item.id, r);
     const proved = (r.readings ?? []).filter((x) => x.proof.kind === "proved").length;
     console.log(`${item.id} ${item.repo}: install ${r.install.outcome} ${r.install.path ?? r.install.attempts.at(-1).failure?.cause} ${r.install.version ?? ""}, ` +
       `proved ${proved}/${item.readings.length}, ${r.seconds ?? "-"} s`);

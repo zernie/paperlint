@@ -93,21 +93,36 @@ export const pairCheckSchema = z.strictObject({
 });
 
 // A proved reading's `findings` in a result (beside `flagged`): where each flagged file is flagged, read from the
-// linter's own JSON report (ESLint --format json, Ruff --output-format json). Format 2 (`format: 2`; absent = format 1,
-// older results stay readable): EVERY finding per file, sorted by line and column; `total` is their count and `capped`
-// is kept only for older results (always false). Each finding has the source lines around it (the marked line ±
-// `cap.context`); a line longer than `cap.line_chars` keeps its first `line_chars` characters, `cut` is its full length
-// and `sha256` the hash of the whole line. `cap.per_file` is null (no limit); format 1 had 5 and 400 characters.
+// linter's own JSON report (ESLint --format json, Ruff --output-format json). Every format still parses.
+//   format 3 (`format: 3`): EVERY finding per file, sorted by line and column, `total` their count, `capped` always
+//     false. The file's source lines that any finding touches are stored ONCE in the file's `lines` ({"<n>": {text, cut?,
+//     sha256?}}); a finding holds `context` [from, to] (line numbers; the marked line is the finding's own `line`) and no
+//     copy of the text. A line longer than `cap.line_chars` keeps its first `line_chars` characters, `cut` its full length
+//     and `sha256` the hash of the whole line. `cap.per_file` is null (no limit).
+//   format 2 (`format: 2`): the same, but each finding carried a copy of its lines (`lines`: [{n, text, mark, cut?, sha256?}]).
+//   format 1 (no `format`): at most 5 findings per file (`capped` true when cut), lines of at most 400 characters.
 // `linter`: its name, the version installed, and what `--version` printed. `config`: what the linter printed as the
 // config it resolved for `file` (ESLint --print-config, Ruff check --show-settings), verbatim in `text`; `error` when
 // that call failed. `error` at the top: the extra lint call gave no report (the files stay flagged; only their places
 // are missing).
+const lineEntry = z.strictObject({ text: z.string(), cut: z.number().int().optional(), sha256: z.string().regex(/^[0-9a-f]{64}$/).optional() });
 const sourceLine = z.strictObject({ n: z.number().int().positive(), text: z.string(), mark: z.boolean(), cut: z.number().int().optional(), sha256: z.string().regex(/^[0-9a-f]{64}$/).optional() });
-const finding = z.strictObject({ line: z.number().int(), column: z.number().int(), ruleId: z.string(), message: z.string(), lines: z.array(sourceLine) });
+const where = { line: z.number().int(), column: z.number().int(), ruleId: z.string(), message: z.string() };
+const findingCopy = z.strictObject({ ...where, lines: z.array(sourceLine) }); // formats 1 and 2
+const findingRef = z.strictObject({ ...where, context: z.tuple([z.number().int().positive(), z.number().int().positive()]).optional() }); // format 3
+const fileCopy = z.strictObject({ total: z.number().int().positive(), capped: z.boolean(), items: z.array(findingCopy) });
+const fileOnce = z.strictObject({ total: z.number().int().positive(), capped: z.boolean(), lines: z.record(z.string().regex(/^[1-9][0-9]*$/), lineEntry), items: z.array(findingRef) })
+  .superRefine((f, ctx) => {
+    for (const [i, it] of f.items.entries()) {
+      if (!it.context) continue;
+      const [from, to] = it.context;
+      if (to < from || Array.from({ length: to - from + 1 }, (_, k) => String(from + k)).some((k) => f.lines[k] === undefined)) ctx.addIssue({ code: "custom", message: `items[${i}].context names a line the file's lines map does not hold` });
+    }
+  });
 export const findingsSchema = z.strictObject({
-  format: z.literal(2).optional(),
+  format: z.union([z.literal(2), z.literal(3)]).optional(),
   cap: z.strictObject({ per_file: z.number().int().positive().nullable(), context: z.number().int().nonnegative(), line_chars: z.number().int().positive() }),
-  files: z.record(z.string(), z.strictObject({ total: z.number().int().positive(), capped: z.boolean(), items: z.array(finding) })),
+  files: z.record(z.string(), z.union([fileOnce, fileCopy])),
   linter: z.strictObject({ name: z.string(), version: z.string().nullable(), reported: z.string().nullable() }).optional(),
   config: z.strictObject({ file: z.string(), exit: z.number().int().nullable(), text: z.string(), error: z.string().optional() }).optional(),
   error: z.string().optional(),
