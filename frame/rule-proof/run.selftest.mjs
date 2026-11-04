@@ -144,5 +144,31 @@ if (!findingsSchema.safeParse(got).success) fail.push(`the real record parses: $
 const broken = findingsOf({ ...pinned, run: { ...pinned.run, command: [process.execPath, "-e", "process.exit(2)", "--"] } }, reading, ["src/bad.js"]);
 if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) fail.push(`a linter that exits outside its report codes gives an error, not empty findings: ${JSON.stringify(broken)}`);
 
+// ---- The plan: batches of items, never more matrix jobs than GitHub runs in one workflow run ------------------------
+{
+  const { planOf, MAX_JOBS, BATCH_ITEMS } = await import("./run-batch.mjs");
+  const indicesOf = (plan) => plan.flatMap((b) => b.items.split(",").map(Number));
+  const covers = (plan, n) => same(indicesOf(plan).sort((a, b) => a - b), Array.from({ length: n }, (_, i) => i));
+  // 340 items (the next study's size): one job per item would be 340 jobs, over GitHub's 256.
+  const items340 = Array.from({ length: 340 }, (_, i) => ({ id: `I${i}`, ...(i % 100 === 7 ? { node: "20" } : {}) }));
+  const p340 = planOf(items340);
+  if (p340.length > MAX_JOBS || MAX_JOBS !== 256) fail.push(`340 items plan into at most 256 jobs: ${p340.length}`);
+  if (!covers(p340, 340)) fail.push("every item is in exactly one batch");
+  if (p340.some((b) => b.items.split(",").length > BATCH_ITEMS)) fail.push(`no batch holds more than ${BATCH_ITEMS} items at this size`);
+  if (p340.some((b) => b.items.split(",").some((i) => String(items340[Number(i)].node ?? "22") !== b.node))) fail.push("a batch holds items of one Node version only");
+  if (!same(p340.map((b) => b.batch), p340.map((_, i) => i))) fail.push("batches are numbered 0..n-1");
+  if (p340.filter((b) => b.node === "20").length !== 1 || p340.length !== 15) fail.push(`340 items: 14 batches on Node 22 and 1 on Node 20: ${p340.length} ${JSON.stringify(p340.map((b) => b.node))}`);
+  const sizes = p340.filter((b) => b.node === "22").map((b) => b.items.split(",").length);
+  if (Math.max(...sizes) - Math.min(...sizes) > 1) fail.push(`batches of one Node version differ by at most one item: ${sizes}`);
+  // Any size: 100,000 items still fit in 256 jobs (batches grow instead).
+  const pBig = planOf(Array.from({ length: 100_000 }, (_, i) => ({ id: `I${i}`, node: String(18 + 2 * (i % 4)) })));
+  if (pBig.length > MAX_JOBS || !covers(pBig, 100_000)) fail.push(`100,000 items in at most 256 jobs, each once: ${pBig.length}`);
+  if (!same(planOf([{ id: "a" }, { id: "b", node: "20" }, { id: "c" }]), [{ batch: 0, node: "20", items: "1" }, { batch: 1, node: "22", items: "0,2" }])) fail.push(`small plan: ${JSON.stringify(planOf([{ id: "a" }, { id: "b", node: "20" }, { id: "c" }]))}`);
+  if (!same(planOf([]), [])) fail.push("no items, no jobs");
+  // The workflow reads the plan from `run.mjs --plan` and runs each batch with `--items`.
+  const wf = readFileSync(new URL("../../.github/workflows/rule-proof-run.yml", import.meta.url), "utf8");
+  if (!wf.includes("run.mjs --plan frame/rule-proof/inputs.json") || !wf.includes("--items ${{ matrix.items }}") || wf.includes("--only")) fail.push("the workflow plans batches and runs each with --items");
+}
+
 if (fail.length) { console.log("FAIL:\n  " + fail.join("\n  ")); process.exit(1); }
-console.log("ok: cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, every finding, long lines kept to 20,000 characters with length and sha256), the linter\'s version and resolved config, on a real ESLint run");
+console.log("ok: batches (at most 256 jobs for any size, one Node version each), cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, every finding, long lines kept to 20,000 characters with length and sha256), the linter\'s version and resolved config, on a real ESLint run");

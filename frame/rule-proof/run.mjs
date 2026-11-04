@@ -2,8 +2,8 @@
 // inputs.json, clone it at its recorded commit, install its own pinned linter (lockfile, no install scripts),
 // prove each reading on its planted pair, and list the repository files each proved reading flags.
 //
-//   node frame/rule-proof/run.mjs <inputs.json> <out-dir> [--only <index>]
-//   node frame/rule-proof/run.mjs --matrix <inputs.json>     the plan job's matrix: [{ index, node }]
+//   node frame/rule-proof/run.mjs <inputs.json> <out-dir> --items <i,j,k>   the items of one batch, in order
+//   node frame/rule-proof/run.mjs --plan <inputs.json>     the plan job's matrix: [{ batch, node, items }] (run-batch.mjs)
 //
 // inputs.json: [{ id, repo, sha, linter, rule, node?, node_why?, readings: [{ key, reading, pair }] }]
 //   node: the Node major the item's job runs on (default 22), set when the repository's `engines` excludes 22.
@@ -29,6 +29,7 @@ import yaml from "js-yaml";
 import semver from "semver";
 import { z } from "zod";
 import { findingsSchema, installSchema, pairCheckSchema } from "./install-schema.mjs";
+import { itemsArg, planOf } from "./run-batch.mjs";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
 // The Ruff kit's own reading of a repository's pin files, and the helper every kit reads its linter's JSON report
@@ -39,7 +40,6 @@ const { ruffPin } = createRequire(import.meta.url)(path.join(ruleProofDir, "kits
 const { jsonArray, toRelative } = createRequire(import.meta.url)(path.join(ruleProofDir, "report.js"));
 
 const [inputsPath, outDir, ...rest] = process.argv.slice(2);
-const only = rest[0] === "--only" ? Number(rest[1]) : null;
 const work = path.resolve(process.env.RUNNER_TEMP ?? "/tmp", "rule-proof-work");
 const cacheDir = path.join(work, "cache");
 
@@ -657,9 +657,6 @@ export function findingsOf(pinned, reading, files, cap = FINDINGS_CAP, version =
   return findingsSchema.parse({ format: 3, cap, files: files_, ...record, ...(error ? { error } : {}) });
 }
 
-// The plan job's matrix: one entry per item; Node 22 unless the item names another (from the repository's engines).
-export const matrixOf = (items) => items.map((it, index) => ({ index, node: String(it.node ?? "22") }));
-
 // Why a config did not load, asked of the installed tools (diagnose.mjs; Ruff: `ruff rule <code>`'s exit status).
 // Only for a reading whose proof stopped at config-load; its answer sits beside the linter's message.
 const DIAGNOSE = path.join(path.dirname(new URL(import.meta.url).pathname), "diagnose.mjs");
@@ -791,14 +788,15 @@ async function runOne(item) {
   return result;
 }
 
-if (inputsPath === "--matrix") {
-  console.log(JSON.stringify(matrixOf(JSON.parse(readFileSync(outDir, "utf8")))));
+if (inputsPath === "--plan") {
+  console.log(JSON.stringify(planOf(JSON.parse(readFileSync(outDir, "utf8")))));
 } else if (inputsPath) {
   mkdirSync(cacheDir, { recursive: true });
   mkdirSync(outDir, { recursive: true });
   const items = JSON.parse(readFileSync(inputsPath, "utf8"));
-  for (const [i, item] of items.entries()) {
-    if (only !== null && i !== only) continue;
+  if (rest[0] !== "--items") throw new Error("run.mjs <inputs.json> <out-dir> --items <i,j,k>");
+  for (const i of itemsArg(rest[1], items.length)) {
+    const item = items[i];
     if (existsSync(path.join(outDir, `${item.id}.json.gz`)) || existsSync(path.join(outDir, `${item.id}.json`))) { console.log(`skip ${item.id} (done)`); continue; }
     const r = await runOne(item);
     installSchema.parse(r.install); // a result whose install record is not the declared shape is not written

@@ -1,5 +1,7 @@
 # Linter readings run on real repositories (vigiles experimental_ruleProof), triggered only by a push of
-# frame/rule-proof/inputs.json to ci/rule-proof-run. One job per repository, in parallel. The run jobs execute other
+# frame/rule-proof/inputs.json to ci/rule-proof-run. The items run in batches, one matrix job per batch (run-batch.mjs
+# planOf): GitHub runs at most 256 matrix jobs in a run and bills each job rounded up to the minute, so one job per item
+# failed past 256 items and paid a full minute for an item of a few seconds. The run jobs execute other
 # repositories' linters and plugins, so they hold no write token and keep no git credentials; only the commit job,
 # which runs nothing from those repositories, may push.
 name: rule proof run
@@ -32,11 +34,11 @@ jobs:
       - name: runner selftests
         run: node frame/rule-proof/run.selftest.mjs && node frame/rule-proof/install.selftest.mjs
       - id: list
-        run: echo "matrix=$(node frame/rule-proof/run.mjs --matrix frame/rule-proof/inputs.json)" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(node frame/rule-proof/run.mjs --plan frame/rule-proof/inputs.json)" >> "$GITHUB_OUTPUT"
   run:
     needs: plan
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 150
     permissions:
       contents: read
     strategy:
@@ -59,13 +61,13 @@ jobs:
       - name: install the runner (vigiles only, no install scripts)
         working-directory: frame/rule-proof
         run: npm install --ignore-scripts --no-audit --no-fund
-      - name: run one repository of inputs.json
-        timeout-minutes: 40
-        run: node frame/rule-proof/run.mjs frame/rule-proof/inputs.json results --only ${{ matrix.index }}
+      - name: run one batch of inputs.json
+        timeout-minutes: 145
+        run: node frame/rule-proof/run.mjs frame/rule-proof/inputs.json results --items ${{ matrix.items }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rule-proof-result-${{ matrix.index }}
+          name: rule-proof-result-${{ matrix.batch }}
           path: results
           if-no-files-found: warn
   commit:

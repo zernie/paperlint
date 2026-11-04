@@ -10,7 +10,7 @@ import { installSchema, jsonSchema, pairCheckSchema } from "./install-schema.mjs
 import semver from "semver";
 import * as runner from "./run.mjs";
 
-const { installFor: installForReal, lockedVersion, matrixOf, needsTsParser, otherRuffPin, pairCauseOf, pairCheck, readingPlugins, repoEslint } = runner;
+const { installFor: installForReal, lockedVersion, needsTsParser, otherRuffPin, pairCauseOf, pairCheck, readingPlugins, repoEslint } = runner;
 
 const fail = [];
 const seenInstalls = [];
@@ -416,9 +416,8 @@ const jsPair = { bad: { path: "p/bad.js", text: "x\n" }, good: { path: "p/good.j
   check(JSON.stringify(committed.$defs?.pair_check) === JSON.stringify(jsonSchema().$defs?.pair_check) && committed.$defs?.pair_check?.properties?.cause, "the pair check is in the emitted schema");
 }
 
-// 5. The plan job's matrix: one entry per item, Node 22 unless the item names another (from the repository's engines).
-check(JSON.stringify(matrixOf([{ id: "a" }, { id: "b", node: "20" }])) === JSON.stringify([{ index: 0, node: "22" }, { index: 1, node: "20" }]), "matrixOf");
+// 5. The repository's own ESLint declarations.
 check(JSON.stringify(repoEslint(repo({ "package.json": "{}", "a/package.json": JSON.stringify({ devDependencies: { eslint: "8" } }) })).declared) === JSON.stringify(["a/package.json"]), "repoEslint finds a sub-package");
 
 if (fail.length) { console.log("FAIL:\n  " + fail.join("\n  ")); process.exit(1); }
-console.log("ok: date-matched by npm --before and uv --exclude-newer at the commit time, versions read back from npm's lockfile and uv's pylock.toml, ESLint the newest a plugin's peer admits, no --legacy-peer-deps on that path, TypeScript from the parser's peer range; no-lockfile fixture -> date-matched with plugins recorded per reading, an unknown plugin an error, an unresolvable peer a plugin-not-installed; lockfile fixture -> as-designed, nothing fetched; no ESLint of its own -> date-matched, marked; Ruff sha rev -> no-pin rule; matrix Node per item; a .ts pair asks for the TypeScript parser (lockfile-pinned, date-matched); the Ruff pin is the kit's own answer; yarn v1 and Berry by their parsers; why a pair did not run, from structure and ESLint's config matching");
+console.log("ok: date-matched by npm --before and uv --exclude-newer at the commit time, versions read back from npm's lockfile and uv's pylock.toml, ESLint the newest a plugin's peer admits, no --legacy-peer-deps on that path, TypeScript from the parser's peer range; no-lockfile fixture -> date-matched with plugins recorded per reading, an unknown plugin an error, an unresolvable peer a plugin-not-installed; lockfile fixture -> as-designed, nothing fetched; no ESLint of its own -> date-matched, marked; Ruff sha rev -> no-pin rule; a .ts pair asks for the TypeScript parser (lockfile-pinned, date-matched); the Ruff pin is the kit's own answer; yarn v1 and Berry by their parsers; why a pair did not run, from structure and ESLint's config matching");
