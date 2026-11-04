@@ -139,6 +139,22 @@ test("🔴 a page naming the preset shows its words on the generic blocks: the l
   );
 });
 
+test("a card naming two rules folds their docs under one plural heading", async () => {
+  const two = firstItem((i) => ({
+    ...i,
+    rules: [firstRule, { ...firstRule, id: "T203" }],
+  }));
+  const { page } = build(setup("preset-two-rules", two));
+  const shown = await showPage(page, {}, {}, PRACTICE_DONE);
+  assert.deepEqual(
+    [
+      shown.includes("What the linter rules do (official docs)"),
+      shown.includes("T203"),
+    ],
+    [true, true],
+  );
+});
+
 test("🔴 the items file's own labels override the preset's", async () => {
   const { page } = build(
     setup(

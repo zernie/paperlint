@@ -200,14 +200,18 @@ const PRESETS: Readonly<
   },
 };
 
-/** The first problem zod found, as the build's refusals read: the path, then what is wrong. */
-const firstIssue = (where: string, e: z.ZodError): string => {
-  const issue = e.issues[0];
-  const path = (issue?.path ?? [])
-    .map((p) => (typeof p === "number" ? `[${String(p)}]` : `.${String(p)}`))
-    .join("");
-  return `${where}${path}: ${String(issue?.message)}`;
-};
+/** Each problem zod found, as the build's refusals read: the path, then what is wrong. */
+const issuesOf = (where: string, e: z.ZodError): string =>
+  e.issues
+    .map(
+      (issue) =>
+        `${where}${issue.path
+          .map((p) =>
+            typeof p === "number" ? `[${String(p)}]` : `.${String(p)}`,
+          )
+          .join("")}: ${issue.message}`,
+    )
+    .join("; ");
 
 /** Every card through the preset, practice first, each refused by its path. */
 const mapCards = (
@@ -222,7 +226,7 @@ const mapCards = (
     const r = preset.schema.safeParse(c);
     return r.success
       ? { ok: true, value: preset.card(r.data) }
-      : { ok: false, message: firstIssue(at, r.error) };
+      : { ok: false, message: issuesOf(at, r.error) };
   });
 /** The config with its preset applied; a config without `preset` comes back as it was. */
 export function applyPreset(raw: unknown): Preset {
@@ -238,7 +242,9 @@ export function applyPreset(raw: unknown): Preset {
   const cards = mapCards(preset, practice, items);
   const bad = cards.find((c) => !c.ok);
   if (bad !== undefined) return bad;
-  const made = cards.flatMap((c) => (c.ok ? [c.value] : []));
+  const made = cards
+    .filter((c): c is Extract<Preset, { ok: true }> => c.ok)
+    .map((c) => c.value);
   return {
     ok: true,
     value: {
