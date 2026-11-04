@@ -229,7 +229,25 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     return db && state.loaded.answers && state.loaded.groups && state.loaded.practice && state.store === "ok";
   }
   // An answer that asks why is not written while its reason is empty (#380): it waits on the page, and
-  // the store keeps what it had, so an export never meets an answer without the reason it needs.
+  // the store keeps what it had, so an export never meets an answer without the reason it needs. Every
+  // write leaves out each such answer, not only the one just picked: on a page of several questions the
+  // next answer would otherwise carry the waiting one into the store without its reason.
+  function resolved(answers, reasons) {
+    var out = {};
+    Object.keys(answers).forEach(function (q) {
+      if (!(needsWhy(questionOf(q), answers[q]) && !(reasons[q] || "").trim())) out[q] = answers[q];
+    });
+    return out;
+  }
+  function keep(id, next, reasons) {
+    var ready = resolved(next, reasons);
+    if (Object.keys(ready).length < Object.keys(next).length) state.pending[id] = next;
+    else delete state.pending[id];
+    delete state.refusedWhy[id];
+    state.mine[id] = ready;
+    write(id, "answers", id, { answers: ready, reasons: reasons, savedAt: new Date().toISOString(), source: "page" });
+    render();
+  }
   function answer(id, qid, value) {
     if (!canWrite()) return;
     var next = Object.assign({}, answersOf(id));
@@ -242,13 +260,9 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       render();
       return;
     }
-    delete state.pending[id];
-    delete state.refusedWhy[id];
     var reasons = Object.assign({}, reasonsOf(id));
     if (why.trim()) reasons[qid] = why;
-    state.mine[id] = next;
-    write(id, "answers", id, { answers: next, reasons: reasons, savedAt: new Date().toISOString(), source: "page" });
-    render();
+    keep(id, next, reasons);
   }
   // A reason saves when the labeller leaves the box (the text equivalent of a tap); an empty one is refused.
   function setReason(id, qid, text) {
@@ -261,14 +275,10 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       render();
       return;
     }
-    delete state.pending[id];
-    delete state.refusedWhy[id];
     var why = Object.assign({}, reasonsOf(id));
     why[qid] = text;
     state.mineWhy[id] = why;
-    state.mine[id] = Object.assign({}, a);
-    write(id, "answers", id, { answers: a, reasons: why, savedAt: new Date().toISOString(), source: "page" });
-    render();
+    keep(id, Object.assign({}, a), why);
   }
   // The first answer to a practice question is the one scored: it cannot be changed afterwards.
   function answerPractice(pid, qid, value) {
@@ -459,7 +469,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       pre.appendChild(line);
     });
     box.appendChild(pre);
-    box.appendChild(rich("p", "", "The linter says: " + ex.message));
+    box.appendChild(rich("p", "said", "The linter says: " + ex.message));
     return box;
   }
   // A rule as its docs explain it: what it does, why, a flagged and an allowed example, the docs link.
@@ -720,7 +730,9 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     fill.style.width = (total ? (100 * done / total) : 0) + "%";
     bar.appendChild(fill);
     progress.appendChild(bar);
-    if (total && done === total && state.filter === "all") {
+    // Done means every item AND every group's familiarity, as «Next unanswered» counts it.
+    var rated = DATA.groups.every(function (g) { return familiarity(g.id) !== undefined; });
+    if (total && done === total && rated && state.filter === "all") {
       progress.appendChild(el("p", "status saved", "All " + total + " items are complete. Tell the agent you are " +
         "done; you can still change any answer."));
     }

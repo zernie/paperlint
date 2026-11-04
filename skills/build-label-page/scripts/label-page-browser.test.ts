@@ -17,8 +17,11 @@ import { z } from "zod";
 import { chromiumPath } from "../../../test/chromium.ts";
 import {
   APPROVAL_PRACTICE,
+  PRACTICE,
+  QUESTIONS,
   approval,
   build,
+  config,
   setup,
 } from "../../../test/label-page-kit.ts";
 
@@ -351,6 +354,22 @@ async function onWitnessPage(
   }
 }
 
+/** The code, the linter's message, the question, the rule docs' toggle: one read of the laid-out card,
+ * so a re-render between reads cannot mix two layouts. */
+const LAYOUT_OF = ["pre.numbered", "p.said", ".ask", "details > summary"];
+const Layout = z.array(z.object({ top: z.number(), bottom: z.number() }));
+const layout = async (card: Locator) =>
+  Layout.parse(
+    await card.evaluate(
+      (e, sels) =>
+        sels.map((s) => {
+          const r = e.querySelector(s)?.getBoundingClientRect();
+          return { top: r?.top ?? NaN, bottom: r?.bottom ?? NaN };
+        }),
+      LAYOUT_OF,
+    ),
+  );
+
 test(
   "🔴 at phone width a witness card labels the caught line in its numbered code, asks its question right under that code, folds the rule docs and the settings, opens a long text on «more», and nothing pushes the page sideways",
   async () => {
@@ -376,22 +395,15 @@ test(
       const docsSummary = card.locator("summary", {
         hasText: "What the linter rule does (official docs)",
       });
-      const code = await card.locator("pre.numbered").boundingBox();
-      const said = await card
-        .locator("p", { hasText: "The linter says:" })
-        .boundingBox();
-      const ask = await card.locator(".ask").boundingBox();
-      const docs = await docsSummary.boundingBox();
-      assert.ok(code && said && ask && docs);
+      const box = await layout(card);
+      const [code, said, ask, docs] = box;
+      assert.ok(code && said && ask && docs, JSON.stringify(box));
       assert.ok(
-        said.y > code.y + code.height && ask.y > said.y + said.height,
-        JSON.stringify({ code, said, ask }),
+        said.top >= code.bottom && ask.top >= said.bottom,
+        JSON.stringify(box),
       );
-      assert.ok(
-        ask.y - (said.y + said.height) < 40,
-        `gap ${String(ask.y - (said.y + said.height))}`,
-      );
-      assert.ok(docs.y > ask.y + ask.height);
+      assert.ok(ask.top - said.bottom < 40, JSON.stringify(box));
+      assert.ok(docs.top >= ask.bottom, JSON.stringify(box));
       await docsSummary.click();
       const why = card.locator(".clamped", { hasText: "Why:" });
       const folded = (await why.boundingBox())?.height ?? 0;
@@ -456,6 +468,55 @@ test(
       await page.waitForTimeout(100);
       assert.equal(await cards.count(), 2, "the first one has gone");
     });
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "🔴 on a page of two questions, an answer still waiting for its reason is in no write, even when the next question is answered",
+  async () => {
+    const [label, boundary] = QUESTIONS;
+    assert.ok(label !== undefined && boundary !== undefined);
+    const withWhy = {
+      ...label,
+      options: label.options.map((o) =>
+        o.value === "no" ? { ...o, ask_why: "Why not?" } : o,
+      ),
+    };
+    const { page: html } = build(
+      setup("browser-pending-two", config({ questions: [withWhy, boundary] })),
+    );
+    const done = Object.fromEntries(
+      PRACTICE.map((p, n) => [
+        `r1-P${String(n + 1)}`,
+        { answers: p.expected, source: "page" },
+      ]),
+    );
+    const page = await (await sharedBrowser()).newPage();
+    try {
+      await page.addInitScript(STORE(done, 20));
+      await page.goto("about:blank");
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      const card = page.locator("article.item").filter({ hasText: "G001" });
+      await card.getByRole("button", { name: "No", exact: true }).click();
+      await card.getByRole("button", { name: "Clear-cut" }).click();
+      await page.waitForTimeout(100);
+      // Guards: the reasonless «no» never reaches the store; the answer without a reason does.
+      assert.deepEqual(
+        (await writes(page)).map((w) => w["answers"]),
+        [{ boundary: "clear" }],
+      );
+      await card.locator("textarea").fill("the output is out of order");
+      await card.locator("textarea").blur();
+      await page.waitForTimeout(100);
+      assert.deepEqual((await writes(page)).at(-1), {
+        ...(await writes(page)).at(-1),
+        answers: { label: "no", boundary: "clear" },
+        reasons: { label: "the output is out of order" },
+      });
+    } finally {
+      await page.context().close();
+    }
   },
   BROWSER_TEST_MS,
 );

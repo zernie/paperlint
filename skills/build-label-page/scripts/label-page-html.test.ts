@@ -482,3 +482,25 @@ test("🔴 familiarity off: no group asks how well it is known, and a group is d
   assert.doesNotMatch(shown, /how well you know it/);
   assert.match(shown, /Nothing left/, shown);
 });
+
+test("🔴 «All items are complete» waits for every group's familiarity too, as «Next unanswered» does", async () => {
+  const { page, key } = build(setup("all-done-groups", config()));
+  const answers = Object.fromEntries(
+    Object.keys(key.ids).map((id) => [
+      id,
+      { answers: { label: "yes", boundary: "clear" }, source: "page" },
+    ]),
+  );
+  const said = async (groups: Record<string, unknown>) =>
+    /All 12 items are complete/.test(
+      (await openLive(page, { answers, groups, practice: DONE_PRACTICE })).app
+        .textContent,
+    );
+  const rated = Object.fromEntries(
+    ["python", "go", "rust"].map((g) => [
+      g,
+      { familiarity: "well", source: "page" },
+    ]),
+  );
+  assert.deepEqual([await said({}), await said(rated)], [false, true]);
+});

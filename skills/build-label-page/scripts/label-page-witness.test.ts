@@ -143,6 +143,37 @@ const REFUSED: readonly (readonly [string, Record<string, unknown>, string])[] =
       "the source id 'req-logging:tests' appears in the visible `rules` of item req-logging:tests. Take it out of the text (or use source ids that are not natural words).",
     ],
     [
+      "approval-situation-no-example",
+      approval({
+        items: ITEMS.map((c, n) =>
+          n === 0
+            ? {
+                ...approvalCard(c, n),
+                situation: { kind: "scope", summary: "s", question: "q?" },
+              }
+            : approvalCard(c, n),
+        ),
+      }),
+      "items[0].example: is required with `situation` — the card shows its example file under the situation; add the example, or remove `situation`",
+    ],
+    [
+      "approval-details-no-example",
+      approval({
+        practice: APPROVAL_PRACTICE.map((c, n) =>
+          n === 1
+            ? {
+                ...approvalCard(c, n),
+                details: {
+                  a: [{ key: "rule", raw: "r", plain: "r" }],
+                  b: [{ key: "rule", raw: "r", plain: "r" }],
+                },
+              }
+            : approvalCard(c, n),
+        ),
+      }),
+      "practice[1].example: is required with `details` — the card shows its example file under the details; add the example, or remove `details`",
+    ],
+    [
       "witness-repeat-range",
       firstItem((i) => ({ ...i, repeat: { group: "g", index: 3, of: 2 } })),
       "items[0].repeat.index: 3 is not between 1 and 2",
@@ -166,7 +197,7 @@ const REFUSED: readonly (readonly [string, Record<string, unknown>, string])[] =
     ],
   ];
 
-test("🔴 a witness page refuses old items, an unmarked example, a rule without its explanation, `{line}` with no marked line, a source id in a rule's explanation, a repeat out of range and a second question", () => {
+test("🔴 a witness page refuses old items, an unmarked example, a rule without its explanation, `{line}` with no marked line, a source id in a rule's explanation, `situation` or `details` without an example, a repeat out of range and a second question", () => {
   assert.deepEqual(
     REFUSED.map(([name, cfg]) => {
       const dir = setup(name, cfg);

@@ -235,6 +235,20 @@ const WRONG_TYPES: Readonly<Record<SchemaNode["kind"], readonly Doc[]>> = {
   object: [null, "x", ["x"], 1],
 };
 
+/** `doc` with the given fields of the object at `path` left out. */
+function withoutFields(
+  doc: DocObject,
+  path: string,
+  fields: readonly string[],
+): DocObject {
+  const out = fields.reduce<Doc>(
+    (d, f) => put(d, stepsOf(`${path}.${f}`), undefined),
+    doc,
+  );
+  assert.ok(isObject(out));
+  return out;
+}
+
 /** Build `doc`; the exit status and output. */
 function tryBuild(name: string, doc: DocObject): ReturnType<typeof run> {
   const dir = setup(name, doc);
@@ -281,7 +295,9 @@ function expectRefused(leaf: Leaf): void {
   });
   if (!leaf.node.required && !leaf.member) {
     const absent = spoil(leaf.path, undefined);
-    // familiarity_question asks nothing unless familiarity is on: the two leave together.
+    // familiarity_question asks nothing unless familiarity is on: the two leave together. A card's
+    // situation and settings are drawn around its example: the three leave together.
+    const card = /^(.*)\.example$/.exec(leaf.path)?.[1];
     const r = tryBuild(
       `schema-${leaf.path.replace(/\W/g, "_")}-absent`,
       leaf.path === "familiarity"
@@ -290,7 +306,9 @@ function expectRefused(leaf: Leaf): void {
               ([k]) => k !== "familiarity_question",
             ),
           )
-        : absent,
+        : card === undefined
+          ? absent
+          : withoutFields(absent, card, ["situation", "details"]),
     );
     assert.equal(r.status, 0, `${leaf.path} is optional: ${r.out}`);
   }

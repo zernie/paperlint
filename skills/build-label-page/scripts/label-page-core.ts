@@ -832,8 +832,18 @@ const withLine = (card: Card, text: string): string =>
     const line = card.example?.lines.find((l) => l.mark);
     return `line ${String(line?.n)}: \`${String(line?.text.trim())}\``;
   });
-/** `{line}` in a situation needs a marked line to stand for. */
+/**
+ * A card with a situation or settings is drawn as a witness card, around its example file; `{line}` in
+ * a situation needs a marked line to stand for.
+ */
 function checkLineToken(at: string, card: Card): void {
+  const needs = (["situation", "details"] as const).find(
+    (f) => card[f] !== undefined,
+  );
+  if (needs !== undefined && card.example === undefined)
+    fail(
+      `${at}.example: is required with \`${needs}\` — the card shows its example file under the ${needs}; add the example, or remove \`${needs}\``,
+    );
   const token = SITUATION_TEXTS.find((f) =>
     card.situation?.[f].includes(LINE_TOKEN),
   );
