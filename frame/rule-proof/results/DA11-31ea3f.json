@@ -1,0 +1,58 @@
+{
+ "id": "DA11-31ea3f",
+ "repo": "openmdao/dymos",
+ "sha": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "linter": "ruff",
+ "rule": "D416",
+ "checked_out": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-30T11:41:39-04:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "D416",
+    "settings": {
+     "lint": {
+      "pydocstyle": {
+       "convention": "numpy"
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  }
+ ],
+ "cross": [],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 1.452
+}

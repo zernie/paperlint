@@ -1,0 +1,15 @@
+{
+ "id": "DB27",
+ "repo": "alchemy-run/alchemy-effect",
+ "sha": "36b33d529efbbfaeb2367af726c8a583ec182dd1",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "36b33d529efbbfaeb2367af726c8a583ec182dd1",
+ "install": {
+  "kind": "not-installed",
+  "stage": "install",
+  "reason": "corepack exited 1: Submodule 'distilled' (https://github.com/alchemy-run/distilled.git) registered for path 'submodules/distilled'\nCloning into '/home/runner/work/_temp/rule-proof-work/repo/submodules/distilled'...\nError:   × running updateConfig hook from /home/runner/work/_temp/rule-proof-work/\n  │ repo/.pnpmfile.mjs\n  ╰─▶ pnpmfile hook 'updateConfig' timed out after 30 seconds"
+ },
+ "adjustments": [],
+ "seconds": 88.669
+}

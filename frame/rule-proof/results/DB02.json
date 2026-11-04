@@ -1,0 +1,15 @@
+{
+ "id": "DB02",
+ "repo": "jhaizhou-ops/pinrule",
+ "sha": "2aa78c30c73c8d562db2a39730c1a8e12a5d5293",
+ "linter": "eslint",
+ "rule": "no-restricted-imports",
+ "checked_out": "2aa78c30c73c8d562db2a39730c1a8e12a5d5293",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 0.7
+}

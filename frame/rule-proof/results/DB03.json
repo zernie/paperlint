@@ -1,0 +1,15 @@
+{
+ "id": "DB03",
+ "repo": "qteasytier/qt-easy-tier",
+ "sha": "6a8e660fde2e3a11962bfc33592c27bb09dd96a2",
+ "linter": "eslint",
+ "rule": "import/no-restricted-paths",
+ "checked_out": "6a8e660fde2e3a11962bfc33592c27bb09dd96a2",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 0.792
+}

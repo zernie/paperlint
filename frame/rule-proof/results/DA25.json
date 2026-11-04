@@ -1,0 +1,15 @@
+{
+ "id": "DA25",
+ "repo": "tui-cs/Terminal.Gui",
+ "sha": "925cca7b47596af47fd8bf7ae52b7fabf171c4d4",
+ "linter": "eslint",
+ "rule": "padding-line-between-statements",
+ "checked_out": "925cca7b47596af47fd8bf7ae52b7fabf171c4d4",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 2.004
+}

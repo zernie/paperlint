@@ -1,0 +1,15 @@
+{
+ "id": "DB01",
+ "repo": "codervisor/leanspec",
+ "sha": "ee122d6fe4bdf3c22f2507e2944f5a213ddcf7a6",
+ "linter": "eslint",
+ "rule": "import/no-default-export",
+ "checked_out": "ee122d6fe4bdf3c22f2507e2944f5a213ddcf7a6",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 7.037
+}

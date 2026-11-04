@@ -1,0 +1,15 @@
+{
+ "id": "DB09",
+ "repo": "Real1tyy/Nexus-Properties",
+ "sha": "6cd3d0f39f38c1e5915afe9f8436de56195a14f9",
+ "linter": "eslint",
+ "rule": "class-methods-use-this",
+ "checked_out": "6cd3d0f39f38c1e5915afe9f8436de56195a14f9",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 9.097
+}

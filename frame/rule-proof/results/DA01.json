@@ -1,0 +1,336 @@
+{
+ "id": "DA01",
+ "repo": "nolabs-ai/AgentUp",
+ "sha": "19b5711f10b26f965eafd1d0a99da450dbc2e053",
+ "linter": "ruff",
+ "rule": "TID251",
+ "checked_out": "19b5711f10b26f965eafd1d0a99da450dbc2e053",
+ "install": {
+  "kind": "installed",
+  "version": "0.13.2"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "logging": {
+         "msg": "Use structlog for logging instead of the stdlib logging module."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "src/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/agent/config/logging.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 142,
+    "flagged": [
+     "src/agent/api/request_logging.py",
+     "src/agent/cli/commands/plugin_info.py",
+     "src/agent/cli/main.py",
+     "src/agent/config/settings.py",
+     "src/agent/utils/mcp_demo_weather_server.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "logging": {
+         "msg": "Use structlog for logging instead of the stdlib logging module."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "src/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/agent/config/logging.py",
+      "src/agent/api/request_logging.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 141,
+    "flagged": [
+     "src/agent/cli/commands/plugin_info.py",
+     "src/agent/cli/main.py",
+     "src/agent/config/settings.py",
+     "src/agent/utils/mcp_demo_weather_server.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "I251",
+    "settings": {
+     "banned-modules": [
+      "logging"
+     ]
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "error: invalid value 'I251' for '--select <RULE_CODE>'\n\nFor more information, try '--help'."
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "banned-api": {
+      "logging": "Use structlog for logging instead."
+     }
+    },
+    "scope": {
+     "files": [
+      "src/**/*.py",
+      "tests/**/*.py",
+      "scripts/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "  Cause: TOML parse error at line 1, column 1\n  |\n1 | [banned-api]\n  | ^\nunknown field `banned-api`"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "logging": {
+         "msg": "Use structlog for logging"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 208,
+    "flagged": [
+     "scripts/mcp/weather_server.py",
+     "scripts/placeholder_orchestrator.py",
+     "scripts/release.py",
+     "src/agent/api/request_logging.py",
+     "src/agent/cli/commands/plugin_info.py",
+     "src/agent/cli/main.py",
+     "src/agent/config/logging.py",
+     "src/agent/config/settings.py",
+     "src/agent/utils/mcp_demo_weather_server.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "logging": {
+         "msg": "Use structlog for logging"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 208,
+    "flagged": [
+     "scripts/mcp/weather_server.py",
+     "scripts/placeholder_orchestrator.py",
+     "scripts/release.py",
+     "src/agent/api/request_logging.py",
+     "src/agent/cli/commands/plugin_info.py",
+     "src/agent/cli/main.py",
+     "src/agent/config/logging.py",
+     "src/agent/config/settings.py",
+     "src/agent/utils/mcp_demo_weather_server.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [],
+ "seconds": 2.452
+}

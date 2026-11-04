@@ -1,0 +1,15 @@
+{
+ "id": "DA14",
+ "repo": "JetBrains/youtrackdb",
+ "sha": "13363fe12cdaea173dd213a7ee310e6c54e7ac94",
+ "linter": "eslint",
+ "rule": "curly",
+ "checked_out": "13363fe12cdaea173dd213a7ee310e6c54e7ac94",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 11.294
+}

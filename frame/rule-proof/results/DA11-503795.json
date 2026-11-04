@@ -1,0 +1,209 @@
+{
+ "id": "DA11-503795",
+ "repo": "openmdao/dymos",
+ "sha": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "linter": "ruff",
+ "rule": "D107",
+ "checked_out": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-30T11:41:39-04:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "D107",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 435,
+    "flagged": [
+     "dymos/examples/racecar/Track.py",
+     "dymos/examples/vanderpol/vanderpol_ode.py",
+     "dymos/grid_refinement/hp_adaptive/hp_adaptive.py",
+     "dymos/grid_refinement/ph_adaptive/ph_adaptive.py",
+     "dymos/phase/analytic_phase.py",
+     "dymos/phase/options.py",
+     "dymos/phase/phase.py",
+     "dymos/phase/simulation_phase.py",
+     "dymos/trajectory/options.py",
+     "dymos/trajectory/phase_linkage_comp.py",
+     "dymos/trajectory/trajectory.py",
+     "dymos/transcriptions/analytic/analytic.py",
+     "dymos/transcriptions/common/continuity_comp.py",
+     "dymos/transcriptions/common/control_comp.py",
+     "dymos/transcriptions/common/time_comp.py",
+     "dymos/transcriptions/common/timeseries_output_comp.py",
+     "dymos/transcriptions/explicit_shooting/barycentric_control_interp_comp.py",
+     "dymos/transcriptions/explicit_shooting/cubic_spline_control_interp_comp.py",
+     "dymos/transcriptions/explicit_shooting/explicit_shooting_continuity_comp.py",
+     "dymos/transcriptions/explicit_shooting/explicit_shooting.py",
+     "dymos/transcriptions/explicit_shooting/ode_evaluation_group.py",
+     "dymos/transcriptions/explicit_shooting/ode_integration_comp.py",
+     "dymos/transcriptions/explicit_shooting/state_rate_collector_comp.py",
+     "dymos/transcriptions/explicit_shooting/tau_comp.py",
+     "dymos/transcriptions/explicit_shooting/vandermonde_control_interp_comp.py",
+     "dymos/transcriptions/grid_data.py",
+     "dymos/transcriptions/picard_shooting/birkhoff_picard_iter_group.py",
+     "dymos/transcriptions/picard_shooting/birkhoff_picard_update_comp.py",
+     "dymos/transcriptions/picard_shooting/multiple_shooting_iter_group.py",
+     "dymos/transcriptions/picard_shooting/multiple_shooting_update_comp.py",
+     "dymos/transcriptions/picard_shooting/picard_shooting.py",
+     "dymos/transcriptions/pseudospectral/birkhoff.py",
+     "dymos/transcriptions/pseudospectral/components/birkhoff_boundary_group.py",
+     "dymos/transcriptions/pseudospectral/components/birkhoff_defect_comp.py",
+     "dymos/transcriptions/pseudospectral/components/birkhoff_iter_group.py",
+     "dymos/transcriptions/pseudospectral/components/collocation_comp.py",
+     "dymos/transcriptions/pseudospectral/components/control_endpoint_defect_comp.py",
+     "dymos/transcriptions/pseudospectral/components/gauss_lobatto_interleave_comp.py",
+     "dymos/transcriptions/pseudospectral/components/radau_boundary_group.py",
+     "dymos/transcriptions/pseudospectral/components/radau_defect_comp.py",
+     "dymos/transcriptions/pseudospectral/components/radau_iter_group.py",
+     "dymos/transcriptions/pseudospectral/components/state_independents.py",
+     "dymos/transcriptions/pseudospectral/components/state_interp_comp.py",
+     "dymos/transcriptions/pseudospectral/components/time_duration_comp.py",
+     "dymos/transcriptions/pseudospectral/gauss_lobatto.py",
+     "dymos/transcriptions/pseudospectral/pseudospectral_base.py",
+     "dymos/transcriptions/pseudospectral/radau_pseudospectral.py",
+     "dymos/transcriptions/transcription_base.py",
+     "dymos/utils/interpolate.py",
+     "dymos/utils/misc.py",
+     "dymos/utils/ode_utils.py",
+     "dymos/utils/testing_utils.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "D107",
+    "settings": {
+     "lint": {
+      "pydocstyle": {
+       "convention": "numpy"
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 435,
+    "flagged": [
+     "dymos/examples/racecar/Track.py",
+     "dymos/examples/vanderpol/vanderpol_ode.py",
+     "dymos/grid_refinement/hp_adaptive/hp_adaptive.py",
+     "dymos/grid_refinement/ph_adaptive/ph_adaptive.py",
+     "dymos/phase/analytic_phase.py",
+     "dymos/phase/options.py",
+     "dymos/phase/phase.py",
+     "dymos/phase/simulation_phase.py",
+     "dymos/trajectory/options.py",
+     "dymos/trajectory/phase_linkage_comp.py",
+     "dymos/trajectory/trajectory.py",
+     "dymos/transcriptions/analytic/analytic.py",
+     "dymos/transcriptions/common/continuity_comp.py",
+     "dymos/transcriptions/common/control_comp.py",
+     "dymos/transcriptions/common/time_comp.py",
+     "dymos/transcriptions/common/timeseries_output_comp.py",
+     "dymos/transcriptions/explicit_shooting/barycentric_control_interp_comp.py",
+     "dymos/transcriptions/explicit_shooting/cubic_spline_control_interp_comp.py",
+     "dymos/transcriptions/explicit_shooting/explicit_shooting_continuity_comp.py",
+     "dymos/transcriptions/explicit_shooting/explicit_shooting.py",
+     "dymos/transcriptions/explicit_shooting/ode_evaluation_group.py",
+     "dymos/transcriptions/explicit_shooting/ode_integration_comp.py",
+     "dymos/transcriptions/explicit_shooting/state_rate_collector_comp.py",
+     "dymos/transcriptions/explicit_shooting/tau_comp.py",
+     "dymos/transcriptions/explicit_shooting/vandermonde_control_interp_comp.py",
+     "dymos/transcriptions/grid_data.py",
+     "dymos/transcriptions/picard_shooting/birkhoff_picard_iter_group.py",
+     "dymos/transcriptions/picard_shooting/birkhoff_picard_update_comp.py",
+     "dymos/transcriptions/picard_shooting/multiple_shooting_iter_group.py",
+     "dymos/transcriptions/picard_shooting/multiple_shooting_update_comp.py",
+     "dymos/transcriptions/picard_shooting/picard_shooting.py",
+     "dymos/transcriptions/pseudospectral/birkhoff.py",
+     "dymos/transcriptions/pseudospectral/components/birkhoff_boundary_group.py",
+     "dymos/transcriptions/pseudospectral/components/birkhoff_defect_comp.py",
+     "dymos/transcriptions/pseudospectral/components/birkhoff_iter_group.py",
+     "dymos/transcriptions/pseudospectral/components/collocation_comp.py",
+     "dymos/transcriptions/pseudospectral/components/control_endpoint_defect_comp.py",
+     "dymos/transcriptions/pseudospectral/components/gauss_lobatto_interleave_comp.py",
+     "dymos/transcriptions/pseudospectral/components/radau_boundary_group.py",
+     "dymos/transcriptions/pseudospectral/components/radau_defect_comp.py",
+     "dymos/transcriptions/pseudospectral/components/radau_iter_group.py",
+     "dymos/transcriptions/pseudospectral/components/state_independents.py",
+     "dymos/transcriptions/pseudospectral/components/state_interp_comp.py",
+     "dymos/transcriptions/pseudospectral/components/time_duration_comp.py",
+     "dymos/transcriptions/pseudospectral/gauss_lobatto.py",
+     "dymos/transcriptions/pseudospectral/pseudospectral_base.py",
+     "dymos/transcriptions/pseudospectral/radau_pseudospectral.py",
+     "dymos/transcriptions/transcription_base.py",
+     "dymos/utils/interpolate.py",
+     "dymos/utils/misc.py",
+     "dymos/utils/ode_utils.py",
+     "dymos/utils/testing_utils.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 1.591
+}

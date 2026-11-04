@@ -1,0 +1,15 @@
+{
+ "id": "DB20",
+ "repo": "cloudflare/realtimekit-web-examples",
+ "sha": "91cc0609912e2dafcaaa2a5ddb2ba8b851ebbd6b",
+ "linter": "eslint",
+ "rule": "import/no-relative-packages",
+ "checked_out": "91cc0609912e2dafcaaa2a5ddb2ba8b851ebbd6b",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 5.232
+}

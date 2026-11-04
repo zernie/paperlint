@@ -1,0 +1,15 @@
+{
+ "id": "DA09",
+ "repo": "meilisearch/strapi-plugin-meilisearch",
+ "sha": "3b2322808a465fb497ee37cfe1a22e25157d063f",
+ "linter": "eslint",
+ "rule": "id-denylist",
+ "checked_out": "3b2322808a465fb497ee37cfe1a22e25157d063f",
+ "install": {
+  "kind": "not-installed",
+  "stage": "install",
+  "reason": "corepack exited 1: error strapi-plugin-meilisearch@0.16.6: The engine \"node\" is incompatible with this module. Expected version \">=20 <21\". Got \"22.23.4\"\nerror Found incompatible module."
+ },
+ "adjustments": [],
+ "seconds": 0.982
+}

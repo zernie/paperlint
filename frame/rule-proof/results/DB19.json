@@ -1,0 +1,15 @@
+{
+ "id": "DB19",
+ "repo": "hoornet/vega",
+ "sha": "dfae0c4b6c31b5201a07afb282fea809b9a63ba9",
+ "linter": "eslint",
+ "rule": "better-tailwindcss/no-restricted-classes",
+ "checked_out": "dfae0c4b6c31b5201a07afb282fea809b9a63ba9",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 4.127
+}

@@ -1,0 +1,478 @@
+{
+ "id": "DA04",
+ "repo": "the-blue-alliance/the-blue-alliance",
+ "sha": "7c315e22c5fea26fc4553ef0e823912f9fcd29ec",
+ "linter": "ruff",
+ "rule": "TID251",
+ "checked_out": "7c315e22c5fea26fc4553ef0e823912f9fcd29ec",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-11-03T19:02:36Z",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "google.appengine.ext.ndb.put_multi": {
+         "msg": "Use a manipulator (createOrUpdate) for database writes instead of ndb.put_multi"
+        },
+        "google.appengine.ext.ndb.put_multi_async": {
+         "msg": "Use a manipulator (createOrUpdate) for database writes instead of ndb.put_multi_async"
+        },
+        "google.appengine.ext.ndb.delete_multi": {
+         "msg": "Use a manipulator (delete) for database writes instead of ndb.delete_multi"
+        },
+        "google.appengine.ext.ndb.delete_multi_async": {
+         "msg": "Use a manipulator (delete) for database writes instead of ndb.delete_multi_async"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "src/backend/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/backend/common/manipulators/**",
+      "**/tests/**",
+      "**/*_test.py",
+      "**/conftest.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 547,
+    "flagged": [
+     "src/backend/api/handlers/client_api.py",
+     "src/backend/api/handlers/trusted.py",
+     "src/backend/common/helpers/account_deletion.py",
+     "src/backend/common/helpers/mytba_helper.py",
+     "src/backend/common/models/cached_query_result.py",
+     "src/backend/common/queries/cached_query_orphans.py",
+     "src/backend/common/queries/database_query.py",
+     "src/backend/common/queries/mobile_client_query.py",
+     "src/backend/tasks_cpu/handlers/typeahead.py",
+     "src/backend/tasks_io/handlers/tasks.py",
+     "src/backend/web/handlers/admin/cache.py",
+     "src/backend/web/handlers/admin/mobile_clients.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "google.appengine.ext.ndb.put_multi": {
+         "msg": "Use a manipulator (createOrUpdate) for all database writes instead of ndb.put_multi"
+        },
+        "google.appengine.ext.ndb.put_multi_async": {
+         "msg": "Use a manipulator (createOrUpdate) for all database writes instead of ndb.put_multi_async"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "src/backend/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/backend/common/manipulators/**",
+      "src/backend/**/tests/**",
+      "src/backend/**/*_test.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 551,
+    "flagged": [
+     "src/backend/api/handlers/trusted.py",
+     "src/backend/common/helpers/account_deletion.py",
+     "src/backend/tasks_cpu/handlers/typeahead.py",
+     "src/backend/tasks_io/handlers/tasks.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "banned-api": {
+      "ndb.put_multi": "Use manipulators for all database writes",
+      "ndb.put": "Use manipulators for all database writes"
+     }
+    },
+    "scope": {
+     "files": [
+      "src/**/*.py",
+      "old_py2/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/manipulators/**",
+      "**/manipulator_base.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "  Cause: TOML parse error at line 1, column 1\n  |\n1 | [banned-api]\n  | ^\nunknown field `banned-api`"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "I251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "ndb.put": {
+         "msg": "Use manipulators for all database writes"
+        },
+        "ndb.put_multi": {
+         "msg": "Use manipulators for all database writes"
+        },
+        "db.put": {
+         "msg": "Use manipulators for all database writes"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "old_py2/**/*.py",
+      "src/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "ruff failed\n  Cause: Unknown rule selector `I251` in `select` from the CLI"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "google.cloud.ndb.put_multi": {
+         "msg": "Use manipulators for all database writes"
+        },
+        "google.cloud.ndb.delete_multi": {
+         "msg": "Use manipulators for all database writes"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*manipulator*.py",
+      "**/manipulators/**/*.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1327,
+    "flagged": [],
+    "parseErrors": [
+     "old_py2/admin_main.py",
+     "old_py2/compile_jinja2_templates.py",
+     "old_py2/controllers/advanced_search_controller.py",
+     "old_py2/controllers/datafeed_controller.py",
+     "old_py2/controllers/district_controller.py",
+     "old_py2/controllers/event_controller.py",
+     "old_py2/controllers/main_controller.py",
+     "old_py2/deploy.py",
+     "old_py2/ops/linter.py",
+     "old_py2/pavement.py",
+     "old_py2/run_tests.py",
+     "old_py2/tests/test_api_cache_clearer.py",
+     "old_py2/tests/test_apiv2_district_controller.py",
+     "old_py2/tests/test_apiv2_event_controller.py",
+     "old_py2/tests/test_apiv2_team_controller.py",
+     "old_py2/tests/test_event_controller.py",
+     "old_py2/tests/test_match_controller.py",
+     "old_py2/tests/test_math_event_team_update.py",
+     "old_py2/tests/test_short_routes.py",
+     "old_py2/tests/test_team_controller.py"
+    ],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "google.appengine.ext.ndb.put_multi": {
+         "msg": "Use manipulators for all database writes"
+        },
+        "google.appengine.ext.ndb.delete_multi": {
+         "msg": "Use manipulators for all database writes"
+        },
+        "google.appengine.ext.ndb.put_multi_async": {
+         "msg": "Use manipulators for all database writes"
+        },
+        "google.appengine.ext.ndb.delete_multi_async": {
+         "msg": "Use manipulators for all database writes"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1585,
+    "flagged": [
+     "old_py2/clientapi/clientapi_service.py",
+     "old_py2/controllers/admin/admin_cron_controller.py",
+     "old_py2/controllers/admin/admin_team_media_mod.py",
+     "old_py2/database/database_query.py",
+     "old_py2/helpers/event_simulator.py",
+     "old_py2/helpers/manipulator_base.py",
+     "old_py2/helpers/push_helper.py",
+     "old_py2/mobile_main.py",
+     "old_py2/tests/test_event_group_by_week.py",
+     "src/backend/api/handlers/client_api.py",
+     "src/backend/api/handlers/tests/delete_all_event_matches_test.py",
+     "src/backend/api/handlers/tests/delete_event_matches_test.py",
+     "src/backend/api/handlers/tests/update_event_matches_test.py",
+     "src/backend/api/handlers/tests/update_teams_test.py",
+     "src/backend/api/handlers/trusted.py",
+     "src/backend/common/helpers/account_deletion.py",
+     "src/backend/common/helpers/mytba_helper.py",
+     "src/backend/common/manipulators/manipulator_base.py",
+     "src/backend/common/models/cached_query_result.py",
+     "src/backend/common/queries/cached_query_orphans.py",
+     "src/backend/common/queries/database_query.py",
+     "src/backend/common/queries/mobile_client_query.py",
+     "src/backend/common/queries/tests/cached_query_orphans_test.py",
+     "src/backend/common/queries/tests/database_query_test.py",
+     "src/backend/common/queries/tests/district_events_query_test.py",
+     "src/backend/common/queries/tests/district_teams_query_test.py",
+     "src/backend/common/queries/tests/event_divisions_query_test.py",
+     "src/backend/common/queries/tests/event_event_teams_query_test.py",
+     "src/backend/common/queries/tests/event_list_query_test.py",
+     "src/backend/common/queries/tests/event_matches_query_test.py",
+     "src/backend/common/queries/tests/event_teams_query_test.py",
+     "src/backend/common/queries/tests/team_event_matches_query_test.py",
+     "src/backend/common/queries/tests/team_events_query_test.py",
+     "src/backend/common/queries/tests/team_list_query_test.py",
+     "src/backend/common/queries/tests/team_list_year_query_test.py",
+     "src/backend/common/queries/tests/team_participation_query_test.py",
+     "src/backend/common/queries/tests/team_year_matches_query_test.py",
+     "src/backend/common/tests/event_simulator.py",
+     "src/backend/conftest.py",
+     "src/backend/tasks_cpu/handlers/typeahead.py",
+     "src/backend/tasks_io/handlers/tasks.py",
+     "src/backend/tests/json_data_importer.py",
+     "src/backend/web/handlers/admin/cache.py",
+     "src/backend/web/handlers/admin/mobile_clients.py",
+     "src/backend/web/handlers/admin/tests/users_test.py",
+     "src/backend/web/handlers/tests/district_detail_test.py",
+     "src/backend/web/handlers/tests/helpers.py",
+     "src/backend/web/handlers/tests/team_list_test.py"
+    ],
+    "parseErrors": [
+     "old_py2/admin_main.py",
+     "old_py2/compile_jinja2_templates.py",
+     "old_py2/controllers/advanced_search_controller.py",
+     "old_py2/controllers/datafeed_controller.py",
+     "old_py2/controllers/district_controller.py",
+     "old_py2/controllers/event_controller.py",
+     "old_py2/controllers/main_controller.py",
+     "old_py2/deploy.py",
+     "old_py2/ops/linter.py",
+     "old_py2/pavement.py",
+     "old_py2/run_tests.py",
+     "old_py2/tests/test_api_cache_clearer.py",
+     "old_py2/tests/test_apiv2_district_controller.py",
+     "old_py2/tests/test_apiv2_event_controller.py",
+     "old_py2/tests/test_apiv2_team_controller.py",
+     "old_py2/tests/test_event_controller.py",
+     "old_py2/tests/test_match_controller.py",
+     "old_py2/tests/test_math_event_team_update.py",
+     "old_py2/tests/test_short_routes.py",
+     "old_py2/tests/test_team_controller.py",
+     "stubs/google/appengine/ext/ndb/query.pyi"
+    ],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 4.214
+}

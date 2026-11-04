@@ -1,0 +1,348 @@
+{
+ "id": "DB10",
+ "repo": "yousufwaqar/playwright-automation-framework",
+ "sha": "cf3dcaa399a83cc952e37912238a800ed163e2b0",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "cf3dcaa399a83cc952e37912238a800ed163e2b0",
+ "install": {
+  "kind": "installed",
+  "version": "10.4.1"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "Literal[value=/^Bearer\\s+(?!\\$\\{)/]",
+      "message": "Do not hardcode Bearer tokens in API/security tests; authenticate with `Bearer ${process.env.API_TOKEN || \"mock-jwt-token-12345\"}`."
+     },
+     {
+      "selector": "TemplateLiteral[quasis.0.value.raw=/^Bearer\\s*$/]:not(:has(MemberExpression[object.object.name='process'][object.property.name='env'][property.name='API_TOKEN']))",
+      "message": "Bearer template must use process.env.API_TOKEN with the mock-jwt-token-12345 fallback."
+     }
+    ],
+    "scope": {
+     "files": [
+      "tests/api/**/*.ts",
+      "tests/security/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 2,
+    "flagged": [
+     "tests/api/api-contract.spec.ts",
+     "tests/security/api-security.spec.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "Literal[value=/^Bearer\\s+(?!\\$\\{)/]",
+      "message": "Do not hardcode Bearer tokens in API/security tests; authenticate with `Bearer ${process.env.API_TOKEN || \"mock-jwt-token-12345\"}`."
+     },
+     {
+      "selector": "TemplateLiteral[quasis.0.value.raw=/^Bearer\\s/]:not(:has(MemberExpression[object.object.name='process'][object.property.name='env'][property.name='API_TOKEN']))",
+      "message": "Bearer template literals in API/security tests must use process.env.API_TOKEN with the mock-jwt-token-12345 fallback."
+     }
+    ],
+    "scope": {
+     "files": [
+      "tests/api/**/*.ts",
+      "tests/security/**/*.ts",
+      "tests/external/api/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 3,
+    "flagged": [
+     "tests/api/api-contract.spec.ts",
+     "tests/security/api-security.spec.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "Literal[value=/Bearer /i]",
+      "message": "Use `Bearer ${process.env.API_TOKEN || \"mock-jwt-token-12345\"}` for authentication, not a hardcoded token."
+     }
+    ],
+    "scope": {
+     "files": [
+      "tests/api/**/*",
+      "tests/security/**/*"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 0,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": [
+     "tests/api/api-contract.spec.ts",
+     "tests/security/api-security.spec.ts"
+    ]
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "error",
+     {
+      "selector": "TemplateLiteral:has(TemplateElement[value.raw=/^Bearer /]):not(:has(MemberExpression[object.name='process'][property.name='env']))",
+      "message": "API/security tests must authenticate with `Bearer ${process.env.API_TOKEN || 'mock-jwt-token-12345'}`."
+     }
+    ],
+    "scope": {
+     "files": [
+      "tests/api/**/*.ts",
+      "tests/external/api/**/*.ts",
+      "tests/security/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 3,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "error",
+     {
+      "selector": "Literal[value='Bearer mock-jwt-token-12345']",
+      "message": "API/security tests must authenticate with `Bearer ${process.env.API_TOKEN || 'mock-jwt-token-12345'}`, never a single magic string."
+     }
+    ],
+    "scope": {
+     "files": [
+      "tests/api/**/*.ts",
+      "tests/external/api/**/*.ts",
+      "tests/security/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 3,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "tests/api/p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "tests/api/p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "not-run",
+   "stage": "pair-ignored",
+   "reason": "tests/api/p3s109-pair/bad.ts: the linter ignored the planted file"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "not-run",
+   "stage": "pair-ignored",
+   "reason": "tests/api/p3s109-pair/bad.ts: the linter ignored the planted file"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-ignored",
+   "reason": "tests/api/p3s109-pair/bad.ts: the linter ignored the planted file"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-ignored",
+   "reason": "tests/api/p3s109-pair/bad.ts: the linter ignored the planted file"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "tests/api/p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "tests/api/p3s109-pair/bad.js is not in the reading's scope"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  }
+ ],
+ "adjustments": [],
+ "seconds": 12.034
+}

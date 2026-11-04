@@ -1,0 +1,15 @@
+{
+ "id": "DB25-ea4ea8",
+ "repo": "rends-east/reemoat",
+ "sha": "6cd6f7779acf411be16c803239e53b43f77f80e0",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "6cd6f7779acf411be16c803239e53b43f77f80e0",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 6.001
+}

@@ -1,0 +1,556 @@
+{
+ "id": "DB08",
+ "repo": "brian-a-au/cja_auto_sdr",
+ "sha": "74e36f6485f20b4c44500c467aca2ec299879235",
+ "linter": "ruff",
+ "rule": "E501",
+ "checked_out": "74e36f6485f20b4c44500c467aca2ec299879235",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-11-02T11:07:55-08:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "E501",
+    "settings": {
+     "line-length": 120
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 314,
+    "flagged": [
+     "scripts/create_sample_outputs.py",
+     "scripts/dependabot_review.py",
+     "scripts/update_test_counts.py",
+     "src/cja_auto_sdr/api/client.py",
+     "src/cja_auto_sdr/api/resilience.py",
+     "src/cja_auto_sdr/cli/commands/stats.py",
+     "src/cja_auto_sdr/cli/execution.py",
+     "src/cja_auto_sdr/cli/interactive.py",
+     "src/cja_auto_sdr/cli/parser.py",
+     "src/cja_auto_sdr/core/profiles.py",
+     "src/cja_auto_sdr/diff/cli.py",
+     "src/cja_auto_sdr/diff/commands.py",
+     "src/cja_auto_sdr/generator.py",
+     "src/cja_auto_sdr/inventory/derived_fields.py",
+     "src/cja_auto_sdr/org/analyzer.py",
+     "src/cja_auto_sdr/org/writers/common.py",
+     "src/cja_auto_sdr/org/writers/console.py",
+     "src/cja_auto_sdr/org/writers/html.py",
+     "src/cja_auto_sdr/org/writers/markdown.py",
+     "src/cja_auto_sdr/output/diff/common.py",
+     "src/cja_auto_sdr/output/diff/console.py",
+     "src/cja_auto_sdr/output/diff/grouped.py",
+     "src/cja_auto_sdr/output/diff/html.py",
+     "src/cja_auto_sdr/output/diff/markdown.py",
+     "src/cja_auto_sdr/output/diff/pr_comment.py",
+     "src/cja_auto_sdr/output/run_summary.py",
+     "src/cja_auto_sdr/pipeline/batch.py",
+     "tests/test_calculated_metrics_inventory.py",
+     "tests/test_cli.py",
+     "tests/test_quality_policy_and_run_summary.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "E501",
+    "settings": {
+     "line-length": 120
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 314,
+    "flagged": [
+     "scripts/create_sample_outputs.py",
+     "scripts/dependabot_review.py",
+     "scripts/update_test_counts.py",
+     "src/cja_auto_sdr/api/client.py",
+     "src/cja_auto_sdr/api/resilience.py",
+     "src/cja_auto_sdr/cli/commands/stats.py",
+     "src/cja_auto_sdr/cli/execution.py",
+     "src/cja_auto_sdr/cli/interactive.py",
+     "src/cja_auto_sdr/cli/parser.py",
+     "src/cja_auto_sdr/core/profiles.py",
+     "src/cja_auto_sdr/diff/cli.py",
+     "src/cja_auto_sdr/diff/commands.py",
+     "src/cja_auto_sdr/generator.py",
+     "src/cja_auto_sdr/inventory/derived_fields.py",
+     "src/cja_auto_sdr/org/analyzer.py",
+     "src/cja_auto_sdr/org/writers/common.py",
+     "src/cja_auto_sdr/org/writers/console.py",
+     "src/cja_auto_sdr/org/writers/html.py",
+     "src/cja_auto_sdr/org/writers/markdown.py",
+     "src/cja_auto_sdr/output/diff/common.py",
+     "src/cja_auto_sdr/output/diff/console.py",
+     "src/cja_auto_sdr/output/diff/grouped.py",
+     "src/cja_auto_sdr/output/diff/html.py",
+     "src/cja_auto_sdr/output/diff/markdown.py",
+     "src/cja_auto_sdr/output/diff/pr_comment.py",
+     "src/cja_auto_sdr/output/run_summary.py",
+     "src/cja_auto_sdr/pipeline/batch.py",
+     "tests/test_calculated_metrics_inventory.py",
+     "tests/test_cli.py",
+     "tests/test_quality_policy_and_run_summary.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "E501",
+    "settings": {
+     "line-length": 120
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 314,
+    "flagged": [
+     "scripts/create_sample_outputs.py",
+     "scripts/dependabot_review.py",
+     "scripts/update_test_counts.py",
+     "src/cja_auto_sdr/api/client.py",
+     "src/cja_auto_sdr/api/resilience.py",
+     "src/cja_auto_sdr/cli/commands/stats.py",
+     "src/cja_auto_sdr/cli/execution.py",
+     "src/cja_auto_sdr/cli/interactive.py",
+     "src/cja_auto_sdr/cli/parser.py",
+     "src/cja_auto_sdr/core/profiles.py",
+     "src/cja_auto_sdr/diff/cli.py",
+     "src/cja_auto_sdr/diff/commands.py",
+     "src/cja_auto_sdr/generator.py",
+     "src/cja_auto_sdr/inventory/derived_fields.py",
+     "src/cja_auto_sdr/org/analyzer.py",
+     "src/cja_auto_sdr/org/writers/common.py",
+     "src/cja_auto_sdr/org/writers/console.py",
+     "src/cja_auto_sdr/org/writers/html.py",
+     "src/cja_auto_sdr/org/writers/markdown.py",
+     "src/cja_auto_sdr/output/diff/common.py",
+     "src/cja_auto_sdr/output/diff/console.py",
+     "src/cja_auto_sdr/output/diff/grouped.py",
+     "src/cja_auto_sdr/output/diff/html.py",
+     "src/cja_auto_sdr/output/diff/markdown.py",
+     "src/cja_auto_sdr/output/diff/pr_comment.py",
+     "src/cja_auto_sdr/output/run_summary.py",
+     "src/cja_auto_sdr/pipeline/batch.py",
+     "tests/test_calculated_metrics_inventory.py",
+     "tests/test_cli.py",
+     "tests/test_quality_policy_and_run_summary.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "E501",
+    "settings": {
+     "line-length": 120
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 314,
+    "flagged": [
+     "scripts/create_sample_outputs.py",
+     "scripts/dependabot_review.py",
+     "scripts/update_test_counts.py",
+     "src/cja_auto_sdr/api/client.py",
+     "src/cja_auto_sdr/api/resilience.py",
+     "src/cja_auto_sdr/cli/commands/stats.py",
+     "src/cja_auto_sdr/cli/execution.py",
+     "src/cja_auto_sdr/cli/interactive.py",
+     "src/cja_auto_sdr/cli/parser.py",
+     "src/cja_auto_sdr/core/profiles.py",
+     "src/cja_auto_sdr/diff/cli.py",
+     "src/cja_auto_sdr/diff/commands.py",
+     "src/cja_auto_sdr/generator.py",
+     "src/cja_auto_sdr/inventory/derived_fields.py",
+     "src/cja_auto_sdr/org/analyzer.py",
+     "src/cja_auto_sdr/org/writers/common.py",
+     "src/cja_auto_sdr/org/writers/console.py",
+     "src/cja_auto_sdr/org/writers/html.py",
+     "src/cja_auto_sdr/org/writers/markdown.py",
+     "src/cja_auto_sdr/output/diff/common.py",
+     "src/cja_auto_sdr/output/diff/console.py",
+     "src/cja_auto_sdr/output/diff/grouped.py",
+     "src/cja_auto_sdr/output/diff/html.py",
+     "src/cja_auto_sdr/output/diff/markdown.py",
+     "src/cja_auto_sdr/output/diff/pr_comment.py",
+     "src/cja_auto_sdr/output/run_summary.py",
+     "src/cja_auto_sdr/pipeline/batch.py",
+     "tests/test_calculated_metrics_inventory.py",
+     "tests/test_cli.py",
+     "tests/test_quality_policy_and_run_summary.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "E501",
+    "settings": {
+     "line-length": 120
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 314,
+    "flagged": [
+     "scripts/create_sample_outputs.py",
+     "scripts/dependabot_review.py",
+     "scripts/update_test_counts.py",
+     "src/cja_auto_sdr/api/client.py",
+     "src/cja_auto_sdr/api/resilience.py",
+     "src/cja_auto_sdr/cli/commands/stats.py",
+     "src/cja_auto_sdr/cli/execution.py",
+     "src/cja_auto_sdr/cli/interactive.py",
+     "src/cja_auto_sdr/cli/parser.py",
+     "src/cja_auto_sdr/core/profiles.py",
+     "src/cja_auto_sdr/diff/cli.py",
+     "src/cja_auto_sdr/diff/commands.py",
+     "src/cja_auto_sdr/generator.py",
+     "src/cja_auto_sdr/inventory/derived_fields.py",
+     "src/cja_auto_sdr/org/analyzer.py",
+     "src/cja_auto_sdr/org/writers/common.py",
+     "src/cja_auto_sdr/org/writers/console.py",
+     "src/cja_auto_sdr/org/writers/html.py",
+     "src/cja_auto_sdr/org/writers/markdown.py",
+     "src/cja_auto_sdr/output/diff/common.py",
+     "src/cja_auto_sdr/output/diff/console.py",
+     "src/cja_auto_sdr/output/diff/grouped.py",
+     "src/cja_auto_sdr/output/diff/html.py",
+     "src/cja_auto_sdr/output/diff/markdown.py",
+     "src/cja_auto_sdr/output/diff/pr_comment.py",
+     "src/cja_auto_sdr/output/run_summary.py",
+     "src/cja_auto_sdr/pipeline/batch.py",
+     "tests/test_calculated_metrics_inventory.py",
+     "tests/test_cli.py",
+     "tests/test_quality_policy_and_run_summary.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "E501",
+    "settings": {
+     "line-length": 120
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 314,
+    "flagged": [
+     "scripts/create_sample_outputs.py",
+     "scripts/dependabot_review.py",
+     "scripts/update_test_counts.py",
+     "src/cja_auto_sdr/api/client.py",
+     "src/cja_auto_sdr/api/resilience.py",
+     "src/cja_auto_sdr/cli/commands/stats.py",
+     "src/cja_auto_sdr/cli/execution.py",
+     "src/cja_auto_sdr/cli/interactive.py",
+     "src/cja_auto_sdr/cli/parser.py",
+     "src/cja_auto_sdr/core/profiles.py",
+     "src/cja_auto_sdr/diff/cli.py",
+     "src/cja_auto_sdr/diff/commands.py",
+     "src/cja_auto_sdr/generator.py",
+     "src/cja_auto_sdr/inventory/derived_fields.py",
+     "src/cja_auto_sdr/org/analyzer.py",
+     "src/cja_auto_sdr/org/writers/common.py",
+     "src/cja_auto_sdr/org/writers/console.py",
+     "src/cja_auto_sdr/org/writers/html.py",
+     "src/cja_auto_sdr/org/writers/markdown.py",
+     "src/cja_auto_sdr/output/diff/common.py",
+     "src/cja_auto_sdr/output/diff/console.py",
+     "src/cja_auto_sdr/output/diff/grouped.py",
+     "src/cja_auto_sdr/output/diff/html.py",
+     "src/cja_auto_sdr/output/diff/markdown.py",
+     "src/cja_auto_sdr/output/diff/pr_comment.py",
+     "src/cja_auto_sdr/output/run_summary.py",
+     "src/cja_auto_sdr/pipeline/batch.py",
+     "tests/test_calculated_metrics_inventory.py",
+     "tests/test_cli.py",
+     "tests/test_quality_policy_and_run_summary.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 3.404
+}

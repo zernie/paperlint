@@ -1,0 +1,525 @@
+{
+ "id": "DA10",
+ "repo": "nicoespeon/abracadabra",
+ "sha": "faf553f673bc1beef43a4efc2354bcfdecf7440c",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "faf553f673bc1beef43a4efc2354bcfdecf7440c",
+ "install": {
+  "kind": "installed",
+  "version": "10.11.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.property.name=/^(test|match|matchAll|exec|replace|replaceAll|search)$/] > Literal.arguments[regex]",
+      "message": "Use Babel AST types (t.isFunctionDeclaration(), etc.) instead of regex patterns for code analysis."
+     },
+     {
+      "selector": "CallExpression[callee.property.name=/^(match|matchAll|replace|replaceAll|search)$/] > Literal.arguments[regex]",
+      "message": "Use Babel AST types instead of regex patterns for code analysis."
+     },
+     {
+      "selector": "CallExpression[callee.property.name='test'][callee.object.type='Literal'][callee.object.regex]",
+      "message": "Use Babel AST types instead of regex patterns for code analysis."
+     },
+     {
+      "selector": "CallExpression[callee.property.name='exec'][callee.object.type='Literal'][callee.object.regex]",
+      "message": "Use Babel AST types instead of regex patterns for code analysis."
+     },
+     {
+      "selector": "NewExpression[callee.name='RegExp']",
+      "message": "Use Babel AST types instead of RegExp for code analysis."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/ast/**/*.ts",
+      "src/refactorings/**/*.ts",
+      "src/highlights/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.test.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 119,
+    "flagged": [
+     "src/ast/export-default-workaround.ts",
+     "src/ast/transformation.ts",
+     "src/refactorings/convert-comment-to-jsdoc/convert-comment-to-jsdoc.ts",
+     "src/refactorings/convert-to-template-literal/convert-to-template-literal.ts",
+     "src/refactorings/extract/extract-type/extract-type.ts",
+     "src/refactorings/extract/extract-variable/variable.ts",
+     "src/refactorings/flip-if-else/flip-if-else.ts",
+     "src/refactorings/inline/inline-variable/find-inlinable-code.ts",
+     "src/refactorings/invert-boolean-logic/invert-boolean-logic.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.property.name=/^(test|match|matchAll|exec|replace|replaceAll|search)$/] > Literal.arguments[regex]",
+      "message": "Use AST/Babel types (e.g. t.isFunctionDeclaration()) instead of regex patterns for code analysis."
+     },
+     {
+      "selector": "CallExpression[callee.property.name=/^(test|exec)$/][callee.object.regex]",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis."
+     },
+     {
+      "selector": "CallExpression[callee.property.name=/^(match|matchAll|replace|replaceAll|search|split)$/] > Literal.arguments[regex]",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/ast/**/*.ts",
+      "src/refactorings/**/*.ts",
+      "src/highlights/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.test.ts",
+      "src/refactorings/extract/changeCase.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 118,
+    "flagged": [
+     "src/ast/export-default-workaround.ts",
+     "src/ast/transformation.ts",
+     "src/refactorings/convert-comment-to-jsdoc/convert-comment-to-jsdoc.ts",
+     "src/refactorings/convert-to-template-literal/convert-to-template-literal.ts",
+     "src/refactorings/extract/extract-type/extract-type.ts",
+     "src/refactorings/extract/extract-variable/variable.ts",
+     "src/refactorings/flip-if-else/flip-if-else.ts",
+     "src/refactorings/inline/inline-variable/find-inlinable-code.ts",
+     "src/refactorings/invert-boolean-logic/invert-boolean-logic.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "RegExpLiteral",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis"
+     },
+     {
+      "selector": "NewExpression[callee.name='RegExp']",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis"
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/ast/**/*.ts",
+      "src/refactorings/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/**/*.test.ts",
+      "src/**/*.contract.test.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 112,
+    "flagged": [
+     "src/ast/transformation.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "Literal[regex]",
+     "NewExpression[callee.name='RegExp']",
+     "CallExpression[callee.name='RegExp']"
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/**/*.test.ts",
+      "src/playground/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 143,
+    "flagged": [
+     "src/ast/export-default-workaround.ts",
+     "src/ast/transformation.ts",
+     "src/editor/adapters/vue-and-svelte-vscode-editor.ts",
+     "src/editor/path.ts",
+     "src/refactorings/convert-comment-to-jsdoc/convert-comment-to-jsdoc.ts",
+     "src/refactorings/convert-to-template-literal/convert-to-template-literal.ts",
+     "src/refactorings/extract/changeCase.ts",
+     "src/refactorings/extract/extract-type/extract-type.ts",
+     "src/refactorings/extract/extract-variable/variable.ts",
+     "src/refactorings/flip-if-else/flip-if-else.ts",
+     "src/refactorings/inline/inline-variable/find-inlinable-code.ts",
+     "src/refactorings/invert-boolean-logic/invert-boolean-logic.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "Literal[regex]",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis"
+     },
+     {
+      "selector": "NewExpression[callee.name='RegExp']",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis"
+     },
+     {
+      "selector": "CallExpression[callee.name='RegExp']",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis"
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/**/*.test.ts",
+      "src/test/**/*.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 147,
+    "flagged": [
+     "src/ast/export-default-workaround.ts",
+     "src/ast/transformation.ts",
+     "src/editor/adapters/vue-and-svelte-vscode-editor.ts",
+     "src/editor/path.ts",
+     "src/refactorings/convert-comment-to-jsdoc/convert-comment-to-jsdoc.ts",
+     "src/refactorings/convert-to-template-literal/convert-to-template-literal.ts",
+     "src/refactorings/extract/changeCase.ts",
+     "src/refactorings/extract/extract-type/extract-type.ts",
+     "src/refactorings/extract/extract-variable/variable.ts",
+     "src/refactorings/flip-if-else/flip-if-else.ts",
+     "src/refactorings/inline/inline-variable/find-inlinable-code.ts",
+     "src/refactorings/invert-boolean-logic/invert-boolean-logic.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "error",
+     {
+      "selector": "Literal[regex]",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis."
+     },
+     {
+      "selector": "NewExpression[callee.name='RegExp']",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis."
+     },
+     {
+      "selector": "CallExpression[callee.name='RegExp']",
+      "message": "Use AST/Babel types instead of regex patterns for code analysis."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "src/**/*.js",
+      "src/**/*.jsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 228,
+    "flagged": [
+     "src/ast/export-default-workaround.ts",
+     "src/ast/transformation.ts",
+     "src/editor/adapters/vue-and-svelte-vscode-editor.ts",
+     "src/editor/path.ts",
+     "src/refactorings/convert-comment-to-jsdoc/convert-comment-to-jsdoc.ts",
+     "src/refactorings/convert-to-template-literal/convert-to-template-literal.ts",
+     "src/refactorings/extract/changeCase.ts",
+     "src/refactorings/extract/extract-type/extract-type.ts",
+     "src/refactorings/extract/extract-variable/variable.ts",
+     "src/refactorings/flip-if-else/flip-if-else.ts",
+     "src/refactorings/inline/inline-variable/find-inlinable-code.ts",
+     "src/refactorings/invert-boolean-logic/invert-boolean-logic.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [],
+ "seconds": 37.155
+}

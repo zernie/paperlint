@@ -1,0 +1,15 @@
+{
+ "id": "DB06",
+ "repo": "storybookjs/mcp",
+ "sha": "4589b69a081272508be2b00220f38b9d6ee488de",
+ "linter": "eslint",
+ "rule": "jest/no-restricted-matchers",
+ "checked_out": "4589b69a081272508be2b00220f38b9d6ee488de",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 10.854
+}

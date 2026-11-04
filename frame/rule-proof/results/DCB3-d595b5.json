@@ -1,0 +1,183 @@
+{
+ "id": "DCB3-d595b5",
+ "repo": "Atlas3DSS/Character-Creation",
+ "sha": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
+ "linter": "ruff",
+ "rule": "ANN003",
+ "checked_out": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-27T16:16:35-07:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN003",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "archive/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 420,
+    "flagged": [
+     "activation-search/persona_label_qualify.py",
+     "activation-search/persona_overnight_map.py",
+     "activation-search/persona_probe.py",
+     "persona/persona_baseline_schedule.py",
+     "persona/persona_batch_capture.py",
+     "persona/persona_batch_probe.py",
+     "persona/persona_corpus.py",
+     "persona/persona_hillclimb.py",
+     "persona/persona_identity_hub.py",
+     "persona/persona_identity_supervisor.py",
+     "persona/persona_literature_batch.py",
+     "persona/persona_literature_embedding_lease.py",
+     "persona/persona_lyra_worker.py",
+     "persona/persona_neighbors.py",
+     "persona/persona_neuron_atlas.py",
+     "persona/persona_phantom_run.py",
+     "persona/persona_planner.py",
+     "persona/persona_preset_followon.py",
+     "persona/persona_probe.py",
+     "persona/persona_sweep.py",
+     "scripts/experiments/personality/personality_sweep_v2.py",
+     "scripts/experiments/personality/train_qwen35_pair_lora_sft.py",
+     "tests/test_persona_adaptive_loop.py",
+     "tests/test_persona_batch_dispatch.py",
+     "tests/test_persona_coactivity_refresh.py",
+     "tests/test_persona_coherence_eval.py",
+     "tests/test_persona_coverage.py",
+     "tests/test_persona_hillclimb.py",
+     "tests/test_persona_job_fleet.py",
+     "tests/test_persona_jobs.py",
+     "tests/test_persona_literary_eval.py",
+     "tests/test_persona_literature_embedding_lease.py",
+     "tests/test_persona_lyra_job.py",
+     "tests/test_persona_personality_release.py",
+     "tests/test_persona_phantom_train.py",
+     "tests/test_persona_preset_overnight.py",
+     "tests/test_persona_probe_search.py",
+     "tests/test_persona_prompt_browser.py",
+     "tests/test_persona_reasoning_sweep.py",
+     "tests/test_persona_sculptor.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN003",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 533,
+    "flagged": [
+     "activation-search/persona_label_qualify.py",
+     "activation-search/persona_overnight_map.py",
+     "activation-search/persona_probe.py",
+     "archive/phase2_gptoss_20b/gptoss_field_steering.py",
+     "archive/scripts/train_skippy_grpo_v3.py",
+     "archive/scripts/train_skippy_grpo.py",
+     "persona/persona_baseline_schedule.py",
+     "persona/persona_batch_capture.py",
+     "persona/persona_batch_probe.py",
+     "persona/persona_corpus.py",
+     "persona/persona_hillclimb.py",
+     "persona/persona_identity_hub.py",
+     "persona/persona_identity_supervisor.py",
+     "persona/persona_literature_batch.py",
+     "persona/persona_literature_embedding_lease.py",
+     "persona/persona_lyra_worker.py",
+     "persona/persona_neighbors.py",
+     "persona/persona_neuron_atlas.py",
+     "persona/persona_phantom_run.py",
+     "persona/persona_planner.py",
+     "persona/persona_preset_followon.py",
+     "persona/persona_probe.py",
+     "persona/persona_sweep.py",
+     "scripts/experiments/personality/personality_sweep_v2.py",
+     "scripts/experiments/personality/train_qwen35_pair_lora_sft.py",
+     "tests/test_persona_adaptive_loop.py",
+     "tests/test_persona_batch_dispatch.py",
+     "tests/test_persona_coactivity_refresh.py",
+     "tests/test_persona_coherence_eval.py",
+     "tests/test_persona_coverage.py",
+     "tests/test_persona_hillclimb.py",
+     "tests/test_persona_job_fleet.py",
+     "tests/test_persona_jobs.py",
+     "tests/test_persona_literary_eval.py",
+     "tests/test_persona_literature_embedding_lease.py",
+     "tests/test_persona_lyra_job.py",
+     "tests/test_persona_personality_release.py",
+     "tests/test_persona_phantom_train.py",
+     "tests/test_persona_preset_overnight.py",
+     "tests/test_persona_probe_search.py",
+     "tests/test_persona_prompt_browser.py",
+     "tests/test_persona_reasoning_sweep.py",
+     "tests/test_persona_sculptor.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 3.748
+}

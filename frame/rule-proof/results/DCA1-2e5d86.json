@@ -1,0 +1,15 @@
+{
+ "id": "DCA1-2e5d86",
+ "repo": "rpact-com/rpact",
+ "sha": "6a44c3488e6aee8d33b31de9e67bbd70fc0d153e",
+ "linter": "eslint",
+ "rule": "check-file/folder-naming-convention",
+ "checked_out": "6a44c3488e6aee8d33b31de9e67bbd70fc0d153e",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 0.799
+}

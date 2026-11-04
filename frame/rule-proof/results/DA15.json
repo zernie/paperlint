@@ -1,0 +1,15 @@
+{
+ "id": "DA15",
+ "repo": "Team-Commonly/commonly",
+ "sha": "d437e1b8b8ca0dee4a21fea33e587eb75aafc2dd",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "d437e1b8b8ca0dee4a21fea33e587eb75aafc2dd",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 5.374
+}

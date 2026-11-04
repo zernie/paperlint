@@ -1,0 +1,149 @@
+{
+ "id": "DA11-e2a5cc",
+ "repo": "openmdao/dymos",
+ "sha": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "linter": "ruff",
+ "rule": "D103",
+ "checked_out": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-30T11:41:39-04:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "D103",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 435,
+    "flagged": [
+     "dymos/examples/aircraft_steady_flight/test/test_ex_aircraft_steady_flight.py",
+     "dymos/examples/balanced_field/test/test_balanced_field_func_comp.py",
+     "dymos/examples/brachistochrone/test/test_brachistochrone_subprob_reports.py",
+     "dymos/examples/brachistochrone/test/test_tandem_phases.py",
+     "dymos/examples/double_integrator/test/test_double_integrator_breakwell.py",
+     "dymos/examples/double_integrator/test/test_double_integrator_timeseries_units.py",
+     "dymos/examples/double_integrator/test/test_double_integrator.py",
+     "dymos/examples/flying_robot/test/test_flying_robot.py",
+     "dymos/examples/goddard_rocket_problem/test/test_goddard_rocket_problem.py",
+     "dymos/examples/low_thrust_spiral/test/test_low_thrust_spiral.py",
+     "dymos/examples/min_time_climb/test/test_ex_min_time_climb.py",
+     "dymos/examples/min_time_climb/test/test_min_time_climb_simulate_failure.py",
+     "dymos/examples/min_time_climb/test/test_refine_with_shaped_parameter.py",
+     "dymos/examples/water_rocket/test/test_water_rocket.py",
+     "dymos/phase/test/test_add_parameter_types.py",
+     "dymos/phase/test/test_timeseries.py",
+     "dymos/test/test_load_case.py",
+     "dymos/trajectory/test/test_t_initial_bounds.py",
+     "dymos/trajectory/test/test_trajectory_parameters.py",
+     "dymos/transcriptions/common/test/test_control_interp_comp.py",
+     "dymos/transcriptions/pseudospectral/components/test/test_state_interp_comp.py",
+     "dymos/transcriptions/pseudospectral/test/test_ps_base.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "D103",
+    "settings": {
+     "lint": {
+      "pydocstyle": {
+       "convention": "numpy"
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 435,
+    "flagged": [
+     "dymos/examples/aircraft_steady_flight/test/test_ex_aircraft_steady_flight.py",
+     "dymos/examples/balanced_field/test/test_balanced_field_func_comp.py",
+     "dymos/examples/brachistochrone/test/test_brachistochrone_subprob_reports.py",
+     "dymos/examples/brachistochrone/test/test_tandem_phases.py",
+     "dymos/examples/double_integrator/test/test_double_integrator_breakwell.py",
+     "dymos/examples/double_integrator/test/test_double_integrator_timeseries_units.py",
+     "dymos/examples/double_integrator/test/test_double_integrator.py",
+     "dymos/examples/flying_robot/test/test_flying_robot.py",
+     "dymos/examples/goddard_rocket_problem/test/test_goddard_rocket_problem.py",
+     "dymos/examples/low_thrust_spiral/test/test_low_thrust_spiral.py",
+     "dymos/examples/min_time_climb/test/test_ex_min_time_climb.py",
+     "dymos/examples/min_time_climb/test/test_min_time_climb_simulate_failure.py",
+     "dymos/examples/min_time_climb/test/test_refine_with_shaped_parameter.py",
+     "dymos/examples/water_rocket/test/test_water_rocket.py",
+     "dymos/phase/test/test_add_parameter_types.py",
+     "dymos/phase/test/test_timeseries.py",
+     "dymos/test/test_load_case.py",
+     "dymos/trajectory/test/test_t_initial_bounds.py",
+     "dymos/trajectory/test/test_trajectory_parameters.py",
+     "dymos/transcriptions/common/test/test_control_interp_comp.py",
+     "dymos/transcriptions/pseudospectral/components/test/test_state_interp_comp.py",
+     "dymos/transcriptions/pseudospectral/test/test_ps_base.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 1.544
+}

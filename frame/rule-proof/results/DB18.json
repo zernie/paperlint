@@ -1,0 +1,15 @@
+{
+ "id": "DB18",
+ "repo": "sabbirba/preconnect",
+ "sha": "d776e736b70a30082b62945a72f8e2906dabd0b8",
+ "linter": "eslint",
+ "rule": "check-file/filename-naming-convention",
+ "checked_out": "d776e736b70a30082b62945a72f8e2906dabd0b8",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 0.932
+}

@@ -1,0 +1,62 @@
+{
+ "id": "DCB3-37a722",
+ "repo": "Atlas3DSS/Character-Creation",
+ "sha": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
+ "linter": "ruff",
+ "rule": "ANN206",
+ "checked_out": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-27T16:16:35-07:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN206",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "archive/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 420,
+    "flagged": [
+     "activation_capture.py",
+     "activation-search/activation_capture.py",
+     "tests/test_persona_literature_nlp.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 2.192
+}

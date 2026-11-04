@@ -1,0 +1,115 @@
+{
+ "id": "DA11-8d3b9d",
+ "repo": "openmdao/dymos",
+ "sha": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "linter": "ruff",
+ "rule": "D204",
+ "checked_out": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-30T11:41:39-04:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "D204",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 435,
+    "flagged": [
+     "dymos/examples/cannonball/test/test_cannonball_implicit_duration.py",
+     "dymos/examples/ssto/test/test_simulate_root_trajectory.py",
+     "dymos/transcriptions/explicit_shooting/test/test_explicit_shooting.py",
+     "dymos/transcriptions/pseudospectral/components/test/test_birkhoff_collocation_defect.py",
+     "dymos/transcriptions/pseudospectral/test/test_ps_base.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "D204",
+    "settings": {
+     "lint": {
+      "pydocstyle": {
+       "convention": "numpy"
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 435,
+    "flagged": [
+     "dymos/examples/cannonball/test/test_cannonball_implicit_duration.py",
+     "dymos/examples/ssto/test/test_simulate_root_trajectory.py",
+     "dymos/transcriptions/explicit_shooting/test/test_explicit_shooting.py",
+     "dymos/transcriptions/pseudospectral/components/test/test_birkhoff_collocation_defect.py",
+     "dymos/transcriptions/pseudospectral/test/test_ps_base.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 1.862
+}

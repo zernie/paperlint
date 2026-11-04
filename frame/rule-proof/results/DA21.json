@@ -1,0 +1,15 @@
+{
+ "id": "DA21",
+ "repo": "scikit-build/scikit-build",
+ "sha": "971b7a375524024c92adf70177a0fa88092d1399",
+ "linter": "ruff",
+ "rule": "I002",
+ "checked_out": "971b7a375524024c92adf70177a0fa88092d1399",
+ "install": {
+  "kind": "not-installed",
+  "stage": "install",
+  "reason": "uvx exited 1: error: Failed to resolve tool requirement\n  cause: Distribution not found at: file:///home/runner/work/_temp/rule-proof-work/repo/f12be1ebaa5351c1fc76472de98db2c3446c8253"
+ },
+ "adjustments": [],
+ "seconds": 0.563
+}

@@ -1,0 +1,171 @@
+{
+ "id": "DA11-6b1a12",
+ "repo": "openmdao/dymos",
+ "sha": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "linter": "ruff",
+ "rule": "D210",
+ "checked_out": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-30T11:41:39-04:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "D210",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 435,
+    "flagged": [
+     "benchmark/benchmark_brachistochrone.py",
+     "benchmark/benchmark_racecar.py",
+     "dymos/examples/aircraft_steady_flight/aero/aero_coef_comp.py",
+     "dymos/examples/aircraft_steady_flight/aero/interpND_aero_coef_comp.py",
+     "dymos/examples/aircraft_steady_flight/dynamic_pressure_comp.py",
+     "dymos/examples/aircraft_steady_flight/mass_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/fuel_burn_rate_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/max_thrust_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/throttle_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/thrust_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/tsfc_comp.py",
+     "dymos/examples/aircraft_steady_flight/steady_flight_path_angle_comp.py",
+     "dymos/examples/aircraft_steady_flight/true_airspeed_comp.py",
+     "dymos/examples/brachistochrone/test/test_brachistochrone_static_gravity.py",
+     "dymos/examples/cannonball/test/test_cannonball_matrix_state.py",
+     "dymos/examples/cannonball/test/test_connect_control_to_parameter.py",
+     "dymos/examples/cannonball/test/test_load_case_missing_phase.py",
+     "dymos/examples/cannonball/test/test_phase_linkage_compliance.py",
+     "dymos/examples/cannonball/test/test_traj_param_static_and_dynamic.py",
+     "dymos/examples/min_time_climb/aero/cd0_comp.py",
+     "dymos/examples/min_time_climb/aero/cla_comp.py",
+     "dymos/examples/min_time_climb/aero/kappa_comp.py",
+     "dymos/examples/min_time_climb/aero/mach_comp.py",
+     "dymos/examples/min_time_climb/prop/max_thrust_comp.py",
+     "dymos/examples/min_time_climb/prop/mdot_comp.py",
+     "dymos/examples/min_time_climb/prop/thrust_comp.py",
+     "dymos/examples/min_time_climb/test/test_ex_min_time_climb.py",
+     "dymos/examples/ssto/test/test_linear_tangent_traj_params.py",
+     "dymos/examples/water_rocket/water_engine_comp.py",
+     "dymos/grid_refinement/test/test_error_estimation.py",
+     "dymos/phase/phase.py",
+     "dymos/visualization/linkage/report.py",
+     "dymos/visualization/linkage/test/linkage_report_ui_test.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "D210",
+    "settings": {
+     "lint": {
+      "pydocstyle": {
+       "convention": "numpy"
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 435,
+    "flagged": [
+     "benchmark/benchmark_brachistochrone.py",
+     "benchmark/benchmark_racecar.py",
+     "dymos/examples/aircraft_steady_flight/aero/aero_coef_comp.py",
+     "dymos/examples/aircraft_steady_flight/aero/interpND_aero_coef_comp.py",
+     "dymos/examples/aircraft_steady_flight/dynamic_pressure_comp.py",
+     "dymos/examples/aircraft_steady_flight/mass_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/fuel_burn_rate_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/max_thrust_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/throttle_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/thrust_comp.py",
+     "dymos/examples/aircraft_steady_flight/propulsion/tsfc_comp.py",
+     "dymos/examples/aircraft_steady_flight/steady_flight_path_angle_comp.py",
+     "dymos/examples/aircraft_steady_flight/true_airspeed_comp.py",
+     "dymos/examples/brachistochrone/test/test_brachistochrone_static_gravity.py",
+     "dymos/examples/cannonball/test/test_cannonball_matrix_state.py",
+     "dymos/examples/cannonball/test/test_connect_control_to_parameter.py",
+     "dymos/examples/cannonball/test/test_load_case_missing_phase.py",
+     "dymos/examples/cannonball/test/test_phase_linkage_compliance.py",
+     "dymos/examples/cannonball/test/test_traj_param_static_and_dynamic.py",
+     "dymos/examples/min_time_climb/aero/cd0_comp.py",
+     "dymos/examples/min_time_climb/aero/cla_comp.py",
+     "dymos/examples/min_time_climb/aero/kappa_comp.py",
+     "dymos/examples/min_time_climb/aero/mach_comp.py",
+     "dymos/examples/min_time_climb/prop/max_thrust_comp.py",
+     "dymos/examples/min_time_climb/prop/mdot_comp.py",
+     "dymos/examples/min_time_climb/prop/thrust_comp.py",
+     "dymos/examples/min_time_climb/test/test_ex_min_time_climb.py",
+     "dymos/examples/ssto/test/test_linear_tangent_traj_params.py",
+     "dymos/examples/water_rocket/water_engine_comp.py",
+     "dymos/grid_refinement/test/test_error_estimation.py",
+     "dymos/phase/phase.py",
+     "dymos/visualization/linkage/report.py",
+     "dymos/visualization/linkage/test/linkage_report_ui_test.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 1.876
+}

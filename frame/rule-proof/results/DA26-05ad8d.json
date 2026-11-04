@@ -1,0 +1,15 @@
+{
+ "id": "DA26-05ad8d",
+ "repo": "anobaka/Bakabase",
+ "sha": "31dd33b4fddc4f4247c3a250c4b2f5329369d047",
+ "linter": "eslint",
+ "rule": "no-restricted-properties",
+ "checked_out": "31dd33b4fddc4f4247c3a250c4b2f5329369d047",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 2.548
+}

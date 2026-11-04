@@ -1,0 +1,57 @@
+{
+ "id": "DA20-744592",
+ "repo": "jmetal/jmetalpy",
+ "sha": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
+ "linter": "ruff",
+ "rule": "PT001",
+ "checked_out": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-20T21:22:45+02:00",
+  "ruff": "0.17.1"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.1"
+ },
+ "readings": [
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "PT001",
+    "settings": {},
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 94,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 1.978
+}

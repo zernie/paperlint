@@ -1,0 +1,15 @@
+{
+ "id": "DB24",
+ "repo": "dimileeh/agent-workspace-fabric",
+ "sha": "284b783b5a080841dc8e6d69ce8af2248cf51fc0",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "284b783b5a080841dc8e6d69ce8af2248cf51fc0",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 2.465
+}

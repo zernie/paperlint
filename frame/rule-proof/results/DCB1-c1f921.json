@@ -1,0 +1,15 @@
+{
+ "id": "DCB1-c1f921",
+ "repo": "clearcotelabs/clearcote-browser",
+ "sha": "1aee88cbaa8d5ffbd6e91b37492e145aea9a75d5",
+ "linter": "eslint",
+ "rule": "@typescript-eslint/no-restricted-imports",
+ "checked_out": "1aee88cbaa8d5ffbd6e91b37492e145aea9a75d5",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 1.09
+}

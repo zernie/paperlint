@@ -1,0 +1,483 @@
+{
+ "id": "DB21",
+ "repo": "BuildWithHussain/forms_pro",
+ "sha": "17199d6b61b55becd19d19a6426d748632a7a0c4",
+ "linter": "ruff",
+ "rule": "TID251",
+ "checked_out": "17199d6b61b55becd19d19a6426d748632a7a0c4",
+ "install": {
+  "kind": "installed",
+  "version": "0.8.1"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "frappe.new_doc": {
+         "msg": "Do not use frappe.new_doc in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot)."
+        },
+        "frappe.get_doc": {
+         "msg": "Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot)."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "forms_pro/**/test_*.py",
+      "forms_pro/tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "forms_pro/tests/factories/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 16,
+    "flagged": [
+     "forms_pro/api/team/test_invitations.py",
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py",
+     "forms_pro/forms_pro/doctype/form/test_form.py",
+     "forms_pro/tests/test_page_break.py",
+     "forms_pro/utils/test_form_generator.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "frappe.new_doc": {
+         "msg": "Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests"
+        },
+        "frappe.get_doc": {
+         "msg": "Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "forms_pro/**/test_*.py",
+      "forms_pro/tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "forms_pro/tests/factories/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 16,
+    "flagged": [
+     "forms_pro/api/team/test_invitations.py",
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py",
+     "forms_pro/forms_pro/doctype/form/test_form.py",
+     "forms_pro/tests/test_page_break.py",
+     "forms_pro/utils/test_form_generator.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "frappe": {
+         "msg": "Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "forms_pro/**/test_*.py",
+      "forms_pro/tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 22,
+    "flagged": [
+     "forms_pro/api/export/test_export.py",
+     "forms_pro/api/form/test_form.py",
+     "forms_pro/api/submission/test_submission_validation.py",
+     "forms_pro/api/submission/test_submission.py",
+     "forms_pro/api/team/test_invitations.py",
+     "forms_pro/api/team/test_team.py",
+     "forms_pro/api/user/test_user.py",
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py",
+     "forms_pro/forms_pro/doctype/form/test_form.py",
+     "forms_pro/forms_pro/doctype/fp_team_member/test_fp_team_member.py",
+     "forms_pro/forms_pro/doctype/fp_team/test_fp_team.py",
+     "forms_pro/tests/factories/linked_form_doctype_factory.py",
+     "forms_pro/tests/factories/user_factory.py",
+     "forms_pro/tests/factories/user_invitation_factory.py",
+     "forms_pro/tests/test_page_break.py",
+     "forms_pro/tests/test_roles.py",
+     "forms_pro/utils/test_form_generator.py",
+     "forms_pro/utils/test_permissions.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "frappe.new_doc": {
+         "msg": "Do not use frappe.new_doc in tests; use factories from forms_pro/tests/factories"
+        },
+        "frappe.get_doc": {
+         "msg": "Do not use frappe.get_doc in tests; use factories"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "forms_pro/**/test_*.py",
+      "forms_pro/tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 22,
+    "flagged": [
+     "forms_pro/api/team/test_invitations.py",
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py",
+     "forms_pro/forms_pro/doctype/form/test_form.py",
+     "forms_pro/tests/test_page_break.py",
+     "forms_pro/utils/test_form_generator.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "frappe.new_doc": {
+         "msg": "Do not use frappe.new_doc in tests; build documents via factories."
+        },
+        "frappe.get_doc": {
+         "msg": "Avoid using frappe.get_doc(...).insert() in tests; build documents via factories."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/test_*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "forms_pro/tests/factories/**/*.py"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 15,
+    "flagged": [
+     "forms_pro/api/team/test_invitations.py",
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py",
+     "forms_pro/forms_pro/doctype/form/test_form.py",
+     "forms_pro/tests/test_page_break.py",
+     "forms_pro/utils/test_form_generator.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "frappe.new_doc": {
+         "msg": "Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/test_*.py",
+      "**/tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 22,
+    "flagged": [
+     "forms_pro/utils/test_form_generator.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/test_bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/test_bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/test_bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/test_bad.py is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/test_bad.py is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/test_bad.py is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/test_bad.py is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/test_bad.py is not in the reading's scope"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [],
+ "seconds": 2.197
+}

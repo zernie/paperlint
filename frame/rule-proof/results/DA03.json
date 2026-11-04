@@ -1,0 +1,166 @@
+{
+ "id": "DA03",
+ "repo": "Eg0r0k/TypeMore_front",
+ "sha": "56d5c592f2b79dcafa73c8b61d46e1591aa51cf8",
+ "linter": "eslint",
+ "rule": "check-file/filename-naming-convention",
+ "checked_out": "56d5c592f2b79dcafa73c8b61d46e1591aa51cf8",
+ "install": {
+  "kind": "installed",
+  "version": "10.7.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "check-file/filename-naming-convention",
+    "options": [
+     {
+      "src/__tests__/**/*.ts": "*.test"
+     },
+     {
+      "ignoreMiddleExtensions": false
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/__tests__/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/__tests__/fixtures/**",
+      "src/__tests__/perf/**",
+      "src/__tests__/helpers/element-size.ts",
+      "src/__tests__/helpers/ime.ts",
+      "src/__tests__/helpers/until.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at defaultResolve (node:internal/modules/esm/resolve:989:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:747:20)\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:724:38)\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)\n    at ModuleJob._link (node:internal/modules/esm/module_job:182:49)"
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "filenames/match-regex",
+    "options": [
+     "^[a-z][a-z0-9_\\-]*\\.test\\.ts$"
+    ],
+    "scope": {
+     "files": [
+      "src/__tests__/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at defaultResolve (node:internal/modules/esm/resolve:989:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:747:20)\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:724:38)\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)\n    at ModuleJob._link (node:internal/modules/esm/module_job:182:49)"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "filenames/match-regex",
+    "options": [
+     "^(?!.*\\.spec\\.).*\\.test\\.ts$"
+    ],
+    "scope": {
+     "files": [
+      "src/__tests__/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at defaultResolve (node:internal/modules/esm/resolve:989:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:747:20)\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:724:38)\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)\n    at ModuleJob._link (node:internal/modules/esm/module_job:182:49)"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "check-file/filename-blocklist",
+    "options": [
+     {
+      "**/*.spec.*": "Use .test.ts extension instead"
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/__tests__/**"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at defaultResolve (node:internal/modules/esm/resolve:989:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:747:20)\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:724:38)\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)\n    at ModuleJob._link (node:internal/modules/esm/module_job:182:49)"
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "filenames/match-regex",
+    "options": [
+     "^[^.]+(\\.test)?$"
+    ],
+    "scope": {
+     "files": [
+      "src/__tests__/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at defaultResolve (node:internal/modules/esm/resolve:989:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:747:20)\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:724:38)\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)\n    at ModuleJob._link (node:internal/modules/esm/module_job:182:49)"
+   }
+  }
+ ],
+ "cross": [],
+ "adjustments": [
+  "pnpm-exposed"
+ ],
+ "seconds": 8.334
+}

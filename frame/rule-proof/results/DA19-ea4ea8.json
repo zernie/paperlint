@@ -1,0 +1,15 @@
+{
+ "id": "DA19-ea4ea8",
+ "repo": "veegres/ivory",
+ "sha": "5cdec39776bb68e58eff8927d4df1b333278304f",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "5cdec39776bb68e58eff8927d4df1b333278304f",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 0.563
+}

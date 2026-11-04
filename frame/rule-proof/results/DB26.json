@@ -1,0 +1,15 @@
+{
+ "id": "DB26",
+ "repo": "in-the-loop-labs/pair-review",
+ "sha": "0d7958e2eb1eef6db1e865de595d79ecf2e5fb7c",
+ "linter": "eslint",
+ "rule": "no-restricted-imports",
+ "checked_out": "0d7958e2eb1eef6db1e865de595d79ecf2e5fb7c",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 6.47
+}

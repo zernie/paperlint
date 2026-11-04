@@ -1,0 +1,15 @@
+{
+ "id": "DA18",
+ "repo": "wundergraph/cosmo",
+ "sha": "034ef2e66db2e01776b83f910f9fcbcafc4625fc",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "034ef2e66db2e01776b83f910f9fcbcafc4625fc",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-linter",
+  "reason": "the install left no node_modules/eslint: the repository does not depend on it"
+ },
+ "adjustments": [],
+ "seconds": 23.766
+}

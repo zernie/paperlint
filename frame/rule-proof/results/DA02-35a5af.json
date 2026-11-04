@@ -1,0 +1,15 @@
+{
+ "id": "DA02-35a5af",
+ "repo": "operaton/operaton",
+ "sha": "ccea9712f28a73b380829621fa6c2fb6540685f1",
+ "linter": "eslint",
+ "rule": "no-tabs",
+ "checked_out": "ccea9712f28a73b380829621fa6c2fb6540685f1",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 4.311
+}

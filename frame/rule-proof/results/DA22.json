@@ -1,0 +1,15 @@
+{
+ "id": "DA22",
+ "repo": "alicevision/meshroom",
+ "sha": "67785d883bf32a12212dc063c2b47da44356634b",
+ "linter": "eslint",
+ "rule": "camelcase",
+ "checked_out": "67785d883bf32a12212dc063c2b47da44356634b",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 0.907
+}

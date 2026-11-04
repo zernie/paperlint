@@ -1,0 +1,430 @@
+{
+ "id": "DA17",
+ "repo": "auth0/auth0-angular",
+ "sha": "a16b48539a4f0cfdf1e72927f8f324cb83306c14",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "a16b48539a4f0cfdf1e72927f8f324cb83306c14",
+ "install": {
+  "kind": "installed",
+  "version": "8.57.1"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "NewExpression[callee.name='Auth0Client']",
+      "message": "Do not construct a new Auth0Client. Reuse the injected instance from Auth0ClientService (this.auth0Client)."
+     }
+    ],
+    "scope": {
+     "files": [
+      "projects/auth0-angular/src/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "projects/auth0-angular/src/**/*.spec.ts",
+      "projects/auth0-angular/src/lib/auth.client.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 13,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "NewExpression[callee.name='Auth0Client']",
+      "message": "Do not construct a new Auth0Client; reuse the instance injected via Auth0ClientService."
+     }
+    ],
+    "scope": {
+     "files": [
+      "projects/auth0-angular/src/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "projects/auth0-angular/src/**/*.spec.ts",
+      "projects/auth0-angular/src/lib/auth.client.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 13,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "NewExpression[callee.name=\"Auth0Client\"]"
+    ],
+    "scope": {
+     "files": [
+      "projects/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.spec.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 29,
+    "flagged": [
+     "projects/auth0-angular/src/lib/auth.client.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "NewExpression[callee.name='Auth0Client']",
+      "message": "Do not construct a new Auth0Client instance. Use the existing instance from Auth0ClientService."
+     }
+    ],
+    "scope": {
+     "files": [
+      "projects/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 37,
+    "flagged": [
+     "projects/auth0-angular/src/lib/auth.client.ts",
+     "projects/auth0-angular/src/lib/auth.interceptor.spec.ts",
+     "projects/auth0-angular/src/lib/auth.service.spec.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "NewExpression[callee.name='Auth0Client']",
+      "message": "Never construct a new Auth0Client instance; reuse the existing instance injected via Auth0ClientService."
+     },
+     {
+      "selector": "CallExpression[callee.object.name='Auth0ClientFactory'][callee.property.name='createClient']",
+      "message": "Never call the factory per request; reuse the existing Auth0Client instance."
+     }
+    ],
+    "scope": {
+     "files": [
+      "projects/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "projects/auth0-angular/src/lib/auth.client.ts",
+      "projects/auth0-angular/src/lib/auth.module.ts",
+      "projects/auth0-angular/src/lib/provide.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 34,
+    "flagged": [
+     "projects/auth0-angular/src/lib/auth.client.spec.ts",
+     "projects/auth0-angular/src/lib/auth.interceptor.spec.ts",
+     "projects/auth0-angular/src/lib/auth.service.spec.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "NewExpression[callee.name='Auth0Client']",
+      "message": "Never construct a new Auth0Client instance. Reuse the existing Auth0Client instance injected via Auth0ClientService."
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 52,
+    "flagged": [
+     "projects/auth0-angular/src/lib/auth.client.ts",
+     "projects/auth0-angular/src/lib/auth.interceptor.spec.ts",
+     "projects/auth0-angular/src/lib/auth.service.spec.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "projects/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "projects/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "projects/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "projects/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "projects/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "projects/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [],
+ "seconds": 51.252
+}

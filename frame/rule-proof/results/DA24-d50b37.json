@@ -1,0 +1,173 @@
+{
+ "id": "DA24-d50b37",
+ "repo": "devitocodes/devito_book",
+ "sha": "34acdb47cee4c6bd03f9bc1e219d2b26536a71d0",
+ "linter": "ruff",
+ "rule": "W391",
+ "checked_out": "34acdb47cee4c6bd03f9bc1e219d2b26536a71d0",
+ "install": {
+  "kind": "installed",
+  "version": "0.14.14"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "W391",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "W391",
+    "settings": {
+     "preview": true
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 109,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "W391",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "W391",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "pair-outside-scope",
+    "reason": "p3s109-pair/bad.py is not in the reading's scope"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "W391",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "W391",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-proved",
+    "badHits": 0,
+    "goodHits": 0
+   }
+  }
+ ],
+ "cross": [],
+ "adjustments": [],
+ "seconds": 2.096
+}

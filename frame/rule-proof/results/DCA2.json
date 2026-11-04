@@ -1,0 +1,472 @@
+{
+ "id": "DCA2",
+ "repo": "ozankaraali/QiTV",
+ "sha": "9e252c795276897cedd7ae81e5de2d135bdb540b",
+ "linter": "ruff",
+ "rule": "T201",
+ "checked_out": "9e252c795276897cedd7ae81e5de2d135bdb540b",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-11-03T22:51:01+01:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "T201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 499,
+    "flagged": [
+     "scripts/bench_epg.py",
+     "scripts/bench_mixed.py",
+     "scripts/draw_dmg_background.py",
+     "scripts/fetch_captions_runtime.py",
+     "scripts/film_check.py",
+     "scripts/i18n_extract.py",
+     "scripts/make_dmg.py",
+     "scripts/qitv_control.py",
+     "scripts/remote_page_check.py",
+     "scripts/replay_capture.py",
+     "scripts/run_tests.py",
+     "services/remote/page_id.py",
+     "tests/dock_fixtures.py",
+     "tests/test_film_relay_vlc.py",
+     "tests/test_fmp4.py",
+     "tests/test_gc_guard.py",
+     "tests/test_playback_session.py",
+     "tests/test_thread_cleanup.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "T201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 499,
+    "flagged": [
+     "scripts/bench_epg.py",
+     "scripts/bench_mixed.py",
+     "scripts/draw_dmg_background.py",
+     "scripts/fetch_captions_runtime.py",
+     "scripts/film_check.py",
+     "scripts/i18n_extract.py",
+     "scripts/make_dmg.py",
+     "scripts/qitv_control.py",
+     "scripts/remote_page_check.py",
+     "scripts/replay_capture.py",
+     "scripts/run_tests.py",
+     "services/remote/page_id.py",
+     "tests/dock_fixtures.py",
+     "tests/test_film_relay_vlc.py",
+     "tests/test_fmp4.py",
+     "tests/test_gc_guard.py",
+     "tests/test_playback_session.py",
+     "tests/test_thread_cleanup.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "T201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 499,
+    "flagged": [
+     "scripts/bench_epg.py",
+     "scripts/bench_mixed.py",
+     "scripts/draw_dmg_background.py",
+     "scripts/fetch_captions_runtime.py",
+     "scripts/film_check.py",
+     "scripts/i18n_extract.py",
+     "scripts/make_dmg.py",
+     "scripts/qitv_control.py",
+     "scripts/remote_page_check.py",
+     "scripts/replay_capture.py",
+     "scripts/run_tests.py",
+     "services/remote/page_id.py",
+     "tests/dock_fixtures.py",
+     "tests/test_film_relay_vlc.py",
+     "tests/test_fmp4.py",
+     "tests/test_gc_guard.py",
+     "tests/test_playback_session.py",
+     "tests/test_thread_cleanup.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "T201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 499,
+    "flagged": [
+     "scripts/bench_epg.py",
+     "scripts/bench_mixed.py",
+     "scripts/draw_dmg_background.py",
+     "scripts/fetch_captions_runtime.py",
+     "scripts/film_check.py",
+     "scripts/i18n_extract.py",
+     "scripts/make_dmg.py",
+     "scripts/qitv_control.py",
+     "scripts/remote_page_check.py",
+     "scripts/replay_capture.py",
+     "scripts/run_tests.py",
+     "services/remote/page_id.py",
+     "tests/dock_fixtures.py",
+     "tests/test_film_relay_vlc.py",
+     "tests/test_fmp4.py",
+     "tests/test_gc_guard.py",
+     "tests/test_playback_session.py",
+     "tests/test_thread_cleanup.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "T201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 499,
+    "flagged": [
+     "scripts/bench_epg.py",
+     "scripts/bench_mixed.py",
+     "scripts/draw_dmg_background.py",
+     "scripts/fetch_captions_runtime.py",
+     "scripts/film_check.py",
+     "scripts/i18n_extract.py",
+     "scripts/make_dmg.py",
+     "scripts/qitv_control.py",
+     "scripts/remote_page_check.py",
+     "scripts/replay_capture.py",
+     "scripts/run_tests.py",
+     "services/remote/page_id.py",
+     "tests/dock_fixtures.py",
+     "tests/test_film_relay_vlc.py",
+     "tests/test_fmp4.py",
+     "tests/test_gc_guard.py",
+     "tests/test_playback_session.py",
+     "tests/test_thread_cleanup.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "T201",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 499,
+    "flagged": [
+     "scripts/bench_epg.py",
+     "scripts/bench_mixed.py",
+     "scripts/draw_dmg_background.py",
+     "scripts/fetch_captions_runtime.py",
+     "scripts/film_check.py",
+     "scripts/i18n_extract.py",
+     "scripts/make_dmg.py",
+     "scripts/qitv_control.py",
+     "scripts/remote_page_check.py",
+     "scripts/replay_capture.py",
+     "scripts/run_tests.py",
+     "services/remote/page_id.py",
+     "tests/dock_fixtures.py",
+     "tests/test_film_relay_vlc.py",
+     "tests/test_fmp4.py",
+     "tests/test_gc_guard.py",
+     "tests/test_playback_session.py",
+     "tests/test_thread_cleanup.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 5.299
+}

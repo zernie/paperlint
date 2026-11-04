@@ -1,0 +1,353 @@
+{
+ "id": "DA28",
+ "repo": "telefonica/mistica-web",
+ "sha": "e51336a1a1c0202940bb7374297ddaa24b124ed2",
+ "linter": "eslint",
+ "rule": "no-restricted-imports",
+ "checked_out": "e51336a1a1c0202940bb7374297ddaa24b124ed2",
+ "install": {
+  "kind": "installed",
+  "version": "8.57.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       {
+        "group": [
+         "**/sprinkles.css"
+        ],
+        "message": "Never import sprinkles.css in .tsx files. Use it only from .css.ts files."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 2894,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       {
+        "group": [
+         "**/sprinkles.css"
+        ],
+        "message": "Never import sprinkles.css in .tsx files; use .css.ts files instead."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 2894,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       {
+        "group": [
+         "**/sprinkles.css"
+        ]
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 2894,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     "error",
+     {
+      "patterns": [
+       {
+        "group": [
+         "**/sprinkles.css"
+        ]
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at Array.forEach (<anonymous>)\n    at findFiles (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/eslint-helpers.js:493:11)\n    at async FlatESLint.lintFiles (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/flat-eslint.js:775:27)\n    at async Object.execute (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/cli.js:421:23)\n    at async main (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/bin/eslint.js:152:22)"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       "**/sprinkles.css"
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 2894,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "patterns": [
+       {
+        "group": [
+         "**/sprinkles.css"
+        ],
+        "message": "NEVER import `**/sprinkles.css` in `.tsx` files"
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 2894,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [],
+ "seconds": 184.111
+}

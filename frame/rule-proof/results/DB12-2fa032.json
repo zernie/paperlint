@@ -1,0 +1,15 @@
+{
+ "id": "DB12-2fa032",
+ "repo": "oneprolabs/sourcelens",
+ "sha": "9df711ad6b7f50fcb45d34a59b6c62c1db5bcdc4",
+ "linter": "eslint",
+ "rule": "no-unused-vars",
+ "checked_out": "9df711ad6b7f50fcb45d34a59b6c62c1db5bcdc4",
+ "install": {
+  "kind": "not-installed",
+  "stage": "no-lockfile",
+  "reason": "no lockfile: the linter version would not be the repository's"
+ },
+ "adjustments": [],
+ "seconds": 0.856
+}

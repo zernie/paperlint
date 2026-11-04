@@ -1,0 +1,166 @@
+{
+ "id": "DCB3-547918",
+ "repo": "Atlas3DSS/Character-Creation",
+ "sha": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
+ "linter": "ruff",
+ "rule": "ANN002",
+ "checked_out": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-27T16:16:35-07:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN002",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "archive/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 420,
+    "flagged": [
+     "activation-search/persona_lease.py",
+     "activation-search/persona_probe.py",
+     "persona/persona_adaptive_loop.py",
+     "persona/persona_batch_capture.py",
+     "persona/persona_lease.py",
+     "persona/persona_literature_embeddings.py",
+     "persona/persona_lyra_worker.py",
+     "persona/persona_phantom_run.py",
+     "persona/persona_probe.py",
+     "scripts/experiments/personality/personality_sweep_v2.py",
+     "scripts/experiments/personality/train_qwen35_pair_lora_sft.py",
+     "tests/test_persona_adaptive_loop.py",
+     "tests/test_persona_batch_dispatch.py",
+     "tests/test_persona_batch_stream.py",
+     "tests/test_persona_contrastive_publication.py",
+     "tests/test_persona_explorer.py",
+     "tests/test_persona_hillclimb.py",
+     "tests/test_persona_job_fleet.py",
+     "tests/test_persona_jobs.py",
+     "tests/test_persona_kv.py",
+     "tests/test_persona_literature_embedding_lease.py",
+     "tests/test_persona_lyra_job.py",
+     "tests/test_persona_personality_release.py",
+     "tests/test_persona_personality_sweep.py",
+     "tests/test_persona_phantom_qualify.py",
+     "tests/test_persona_phantom_run.py",
+     "tests/test_persona_phantom_train.py",
+     "tests/test_persona_propagation.py",
+     "tests/test_persona_reasoning_sweep.py",
+     "tests/test_persona_sculptor_evaluated.py",
+     "tests/test_persona_sculptor_evidence.py",
+     "tests/test_persona_sculptor.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "ANN002",
+    "settings": {},
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 533,
+    "flagged": [
+     "activation-search/persona_lease.py",
+     "activation-search/persona_probe.py",
+     "archive/phase3_qwen8b_analysis/qwen_causal_ablation.py",
+     "archive/scripts/ablate_identity_heads.py",
+     "persona/persona_adaptive_loop.py",
+     "persona/persona_batch_capture.py",
+     "persona/persona_lease.py",
+     "persona/persona_literature_embeddings.py",
+     "persona/persona_lyra_worker.py",
+     "persona/persona_phantom_run.py",
+     "persona/persona_probe.py",
+     "scripts/experiments/personality/personality_sweep_v2.py",
+     "scripts/experiments/personality/train_qwen35_pair_lora_sft.py",
+     "tests/test_persona_adaptive_loop.py",
+     "tests/test_persona_batch_dispatch.py",
+     "tests/test_persona_batch_stream.py",
+     "tests/test_persona_contrastive_publication.py",
+     "tests/test_persona_explorer.py",
+     "tests/test_persona_hillclimb.py",
+     "tests/test_persona_job_fleet.py",
+     "tests/test_persona_jobs.py",
+     "tests/test_persona_kv.py",
+     "tests/test_persona_literature_embedding_lease.py",
+     "tests/test_persona_lyra_job.py",
+     "tests/test_persona_personality_release.py",
+     "tests/test_persona_personality_sweep.py",
+     "tests/test_persona_phantom_qualify.py",
+     "tests/test_persona_phantom_run.py",
+     "tests/test_persona_phantom_train.py",
+     "tests/test_persona_propagation.py",
+     "tests/test_persona_reasoning_sweep.py",
+     "tests/test_persona_sculptor_evaluated.py",
+     "tests/test_persona_sculptor_evidence.py",
+     "tests/test_persona_sculptor.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 3.509
+}

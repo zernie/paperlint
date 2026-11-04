@@ -1,0 +1,329 @@
+{
+ "id": "DA20-502b61",
+ "repo": "jmetal/jmetalpy",
+ "sha": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
+ "linter": "ruff",
+ "rule": "PT009",
+ "checked_out": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-20T21:22:45+02:00",
+  "ruff": "0.17.1"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.1"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "PT009",
+    "settings": {},
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 94,
+    "flagged": [
+     "tests/core/test_observable.py",
+     "tests/core/test_problem.py",
+     "tests/core/test_quality_indicator.py",
+     "tests/problem/multiobjective/test_constrained.py",
+     "tests/problem/multiobjective/test_dtlz.py",
+     "tests/problem/multiobjective/test_lz09.py",
+     "tests/problem/multiobjective/test_misc.py",
+     "tests/problem/multiobjective/test_rwa.py",
+     "tests/problem/multiobjective/test_zcat.py",
+     "tests/problem/multiobjective/test_zdt.py",
+     "tests/problem/singleobjective/test_knapsack.py",
+     "tests/problem/singleobjective/test_unconstrained.py",
+     "tests/util/test_aggregation_function.py",
+     "tests/util/test_archive.py",
+     "tests/util/test_comparator.py",
+     "tests/util/test_constraint_handling.py",
+     "tests/util/test_density_estimator.py",
+     "tests/util/test_distance_based_archive.py",
+     "tests/util/test_distance_based_selection_equivalence.py",
+     "tests/util/test_distance_metrics.py",
+     "tests/util/test_distance.py",
+     "tests/util/test_evaluator.py",
+     "tests/util/test_generator.py",
+     "tests/util/test_neighborhood.py",
+     "tests/util/test_normalization.py",
+     "tests/util/test_point.py",
+     "tests/util/test_quality_indicator_cli.py",
+     "tests/util/test_ranking.py",
+     "tests/util/test_replacement.py",
+     "tests/util/test_sequential_evaluator_with_archive.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "PT009",
+    "settings": {},
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 94,
+    "flagged": [
+     "tests/core/test_observable.py",
+     "tests/core/test_problem.py",
+     "tests/core/test_quality_indicator.py",
+     "tests/problem/multiobjective/test_constrained.py",
+     "tests/problem/multiobjective/test_dtlz.py",
+     "tests/problem/multiobjective/test_lz09.py",
+     "tests/problem/multiobjective/test_misc.py",
+     "tests/problem/multiobjective/test_rwa.py",
+     "tests/problem/multiobjective/test_zcat.py",
+     "tests/problem/multiobjective/test_zdt.py",
+     "tests/problem/singleobjective/test_knapsack.py",
+     "tests/problem/singleobjective/test_unconstrained.py",
+     "tests/util/test_aggregation_function.py",
+     "tests/util/test_archive.py",
+     "tests/util/test_comparator.py",
+     "tests/util/test_constraint_handling.py",
+     "tests/util/test_density_estimator.py",
+     "tests/util/test_distance_based_archive.py",
+     "tests/util/test_distance_based_selection_equivalence.py",
+     "tests/util/test_distance_metrics.py",
+     "tests/util/test_distance.py",
+     "tests/util/test_evaluator.py",
+     "tests/util/test_generator.py",
+     "tests/util/test_neighborhood.py",
+     "tests/util/test_normalization.py",
+     "tests/util/test_point.py",
+     "tests/util/test_quality_indicator_cli.py",
+     "tests/util/test_ranking.py",
+     "tests/util/test_replacement.py",
+     "tests/util/test_sequential_evaluator_with_archive.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "PT009",
+    "settings": {},
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 94,
+    "flagged": [
+     "tests/core/test_observable.py",
+     "tests/core/test_problem.py",
+     "tests/core/test_quality_indicator.py",
+     "tests/problem/multiobjective/test_constrained.py",
+     "tests/problem/multiobjective/test_dtlz.py",
+     "tests/problem/multiobjective/test_lz09.py",
+     "tests/problem/multiobjective/test_misc.py",
+     "tests/problem/multiobjective/test_rwa.py",
+     "tests/problem/multiobjective/test_zcat.py",
+     "tests/problem/multiobjective/test_zdt.py",
+     "tests/problem/singleobjective/test_knapsack.py",
+     "tests/problem/singleobjective/test_unconstrained.py",
+     "tests/util/test_aggregation_function.py",
+     "tests/util/test_archive.py",
+     "tests/util/test_comparator.py",
+     "tests/util/test_constraint_handling.py",
+     "tests/util/test_density_estimator.py",
+     "tests/util/test_distance_based_archive.py",
+     "tests/util/test_distance_based_selection_equivalence.py",
+     "tests/util/test_distance_metrics.py",
+     "tests/util/test_distance.py",
+     "tests/util/test_evaluator.py",
+     "tests/util/test_generator.py",
+     "tests/util/test_neighborhood.py",
+     "tests/util/test_normalization.py",
+     "tests/util/test_point.py",
+     "tests/util/test_quality_indicator_cli.py",
+     "tests/util/test_ranking.py",
+     "tests/util/test_replacement.py",
+     "tests/util/test_sequential_evaluator_with_archive.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "PT009",
+    "settings": {},
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 94,
+    "flagged": [
+     "tests/core/test_observable.py",
+     "tests/core/test_problem.py",
+     "tests/core/test_quality_indicator.py",
+     "tests/problem/multiobjective/test_constrained.py",
+     "tests/problem/multiobjective/test_dtlz.py",
+     "tests/problem/multiobjective/test_lz09.py",
+     "tests/problem/multiobjective/test_misc.py",
+     "tests/problem/multiobjective/test_rwa.py",
+     "tests/problem/multiobjective/test_zcat.py",
+     "tests/problem/multiobjective/test_zdt.py",
+     "tests/problem/singleobjective/test_knapsack.py",
+     "tests/problem/singleobjective/test_unconstrained.py",
+     "tests/util/test_aggregation_function.py",
+     "tests/util/test_archive.py",
+     "tests/util/test_comparator.py",
+     "tests/util/test_constraint_handling.py",
+     "tests/util/test_density_estimator.py",
+     "tests/util/test_distance_based_archive.py",
+     "tests/util/test_distance_based_selection_equivalence.py",
+     "tests/util/test_distance_metrics.py",
+     "tests/util/test_distance.py",
+     "tests/util/test_evaluator.py",
+     "tests/util/test_generator.py",
+     "tests/util/test_neighborhood.py",
+     "tests/util/test_normalization.py",
+     "tests/util/test_point.py",
+     "tests/util/test_quality_indicator_cli.py",
+     "tests/util/test_ranking.py",
+     "tests/util/test_replacement.py",
+     "tests/util/test_sequential_evaluator_with_archive.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 2.406
+}

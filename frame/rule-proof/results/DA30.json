@@ -1,0 +1,436 @@
+{
+ "id": "DA30",
+ "repo": "ecency/vision-mobile",
+ "sha": "a2711a42ea7117dc267b5d77cbad7b6486543765",
+ "linter": "eslint",
+ "rule": "no-restricted-syntax",
+ "checked_out": "a2711a42ea7117dc267b5d77cbad7b6486543765",
+ "install": {
+  "kind": "installed",
+  "version": "8.57.1"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.object.name='SheetManager'][callee.property.name='show'][arguments.0.object.name!='SheetNames']",
+      "message": "Show action sheets via SheetManager.show(SheetNames.X, { payload }) using a SheetNames member as the first argument."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1267,
+    "flagged": [
+     "src/components/chatGroupSheets/chatReactorsSheet.tsx",
+     "src/components/postsList/container/postsListContainer.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.object.name='SheetManager'][callee.property.name='show'][arguments.0.object.name!='SheetNames']",
+      "message": "Show action sheets via SheetManager.show(SheetNames.X, { payload }) using a SheetNames constant."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1267,
+    "flagged": [
+     "src/components/chatGroupSheets/chatReactorsSheet.tsx",
+     "src/components/postsList/container/postsListContainer.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "paths": [
+       {
+        "name": "react-native-actions-sheet",
+        "importNames": [
+         "ActionSheet"
+        ],
+        "message": "Use SheetManager.show(SheetNames.X, {payload}) to show action sheets."
+       }
+      ]
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.{ts,tsx,js,jsx}"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1267,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-imports",
+    "options": [
+     {
+      "paths": [
+       "react-native-actions-sheet"
+      ],
+      "names": [
+       "ActionSheet"
+      ],
+      "message": "Use SheetManager.show(SheetNames.<name>, {payload}) instead."
+     },
+     {
+      "paths": [
+       "react-native-actions-sheet"
+      ],
+      "names": [
+       "default"
+      ],
+      "message": "Use SheetManager.show(SheetNames.<name>, {payload}) instead."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "    at /home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/flat-eslint.js:812:40\n    at Array.map (<anonymous>)\n    at FlatESLint.lintFiles (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/eslint/flat-eslint.js:810:23)\n    at async Object.execute (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/lib/cli.js:421:23)\n    at async main (/home/runner/work/_temp/rule-proof-work/repo/node_modules/eslint/bin/eslint.js:152:22)"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     {
+      "selector": "CallExpression[callee.object.name='ActionSheetIOS'][callee.property.name='showActionSheetWithOptions']",
+      "message": "Show action sheets via SheetManager.show(SheetNames.X, {payload}) from anywhere"
+     },
+     {
+      "selector": "CallExpression[callee.object.name='ActionSheet'][callee.property.name='show']",
+      "message": "Show action sheets via SheetManager.show(SheetNames.X, {payload}) from anywhere"
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1267,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "no-restricted-syntax",
+    "options": [
+     "error",
+     {
+      "selector": "JSXOpeningElement[name.name='ActionSheet']",
+      "message": "Show action sheets via SheetManager.show(SheetNames.X, {payload}) from anywhere instead of rendering <ActionSheet> directly."
+     }
+    ],
+    "scope": {
+     "files": [
+      "src/**/*.tsx"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/navigation/sheets.tsx"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 426,
+    "flagged": [
+     "src/components/accountsBottomSheet/view/accountsBottomSheetView.tsx",
+     "src/components/actionModal/view/actionModalView.tsx",
+     "src/components/aiAssistModal/aiAssistModal.tsx",
+     "src/components/atoms/optionsModal/container/optionsModalContainer.tsx",
+     "src/components/authUpgradeSheet/authUpgradeSheet.tsx",
+     "src/components/balanceAnalyticsSheet/balanceAnalyticsSheet.tsx",
+     "src/components/chatChannelOptionsSheet/container/chatChannelOptionsSheet.tsx",
+     "src/components/chatGroupSheets/chatNewGroupSheet.tsx",
+     "src/components/chatGroupSheets/chatReactorsSheet.tsx",
+     "src/components/chatGroupSheets/chatRenameGroupSheet.tsx",
+     "src/components/chatOptionsSheet/container/chatOptionsSheet.tsx",
+     "src/components/commentsModal/container/commentsModal.tsx",
+     "src/components/communityManageSheet/communityManageSheet.tsx",
+     "src/components/communityRoleEditSheet/communityRoleEditSheet.tsx",
+     "src/components/composeTranslateModal/composeTranslateModal.tsx",
+     "src/components/crossPostModal/container/crossPostModal.tsx",
+     "src/components/customiseFiltersModal/customiseFiltersModal.tsx",
+     "src/components/dictationModal/dictationModal.tsx",
+     "src/components/emojiPickerSheet/container/emojiPickerSheet.tsx",
+     "src/components/hiveAuthBroadcastSheet/hiveAuthBroadcastSheet.tsx",
+     "src/components/hiveAuthModal/container/hiveAuthModal.tsx",
+     "src/components/modNotesSheet/modNotesSheet.tsx",
+     "src/components/newsletterDigestSheet/newsletterDigestSheet.tsx",
+     "src/components/organisms/postStatsModal/container/postStatsModal.tsx",
+     "src/components/organisms/quickProfileModal/container/quickProfileModal.tsx",
+     "src/components/post-translation-modal/postTranslationModal.tsx",
+     "src/components/postingAuthoritySheet/postingAuthoritySheet.tsx",
+     "src/components/postOptionsModal/container/postOptionsModal.tsx",
+     "src/components/qrModal/qrModalView.tsx",
+     "src/components/quickPostModal/quickPostModal.tsx",
+     "src/components/receiveQrSheet/receiveQrSheet.tsx",
+     "src/components/searchFiltersSheet/searchFiltersSheet.tsx",
+     "src/components/shareIntentSheet/shareIntentSheet.tsx",
+     "src/components/tipping/tippingDialog/tippingDialog.tsx",
+     "src/components/transferFavoritesSheet/transferFavoritesSheet.tsx",
+     "src/components/walletHistoryFiltersSheet/walletHistoryFiltersSheet.tsx",
+     "src/components/wavesTagPickerModal/wavesTagPickerModal.tsx",
+     "src/screens/dappBrowser/components/signConfirmSheet.tsx",
+     "src/screens/editor/children/thumbSelectionModal.tsx"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "not-proved",
+   "badHits": 0,
+   "goodHits": 0
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "src/p3s109-pair/bad.ts is not in the reading's scope"
+  }
+ ],
+ "adjustments": [],
+ "seconds": 101.811
+}

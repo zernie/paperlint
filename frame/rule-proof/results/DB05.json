@@ -1,0 +1,470 @@
+{
+ "id": "DB05",
+ "repo": "orq-ai/evaluatorq",
+ "sha": "2134872fc39b2d8ad7ab60d00c66e912f5145ebb",
+ "linter": "ruff",
+ "rule": "TID251",
+ "checked_out": "2134872fc39b2d8ad7ab60d00c66e912f5145ebb",
+ "as_designed_install": {
+  "kind": "not-installed",
+  "stage": "no-pin",
+  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+ },
+ "date_matched": {
+  "commit": "2026-10-30T12:28:40+01:00",
+  "ruff": "0.17.3"
+ },
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "logging": {
+         "msg": "Use loguru (`from loguru import logger`) instead of stdlib logging."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "src/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 363,
+    "flagged": [
+     "src/evaluatorq/common/llm_call.py",
+     "src/evaluatorq/common/responses.py",
+     "src/evaluatorq/common/structured_output.py",
+     "src/evaluatorq/dashboard/launch.py",
+     "src/evaluatorq/integrations/crewai_integration/target.py",
+     "src/evaluatorq/integrations/langchain_integration/convert.py",
+     "src/evaluatorq/integrations/langgraph_integration/target.py",
+     "src/evaluatorq/integrations/pydantic_ai_integration/target.py",
+     "src/evaluatorq/redteam/adaptive/orchestrator.py",
+     "src/evaluatorq/redteam/cli.py",
+     "src/evaluatorq/simulation/__init__.py",
+     "src/evaluatorq/simulation/agents/base.py",
+     "src/evaluatorq/simulation/agents/judge.py",
+     "src/evaluatorq/simulation/api.py",
+     "src/evaluatorq/simulation/cli.py",
+     "src/evaluatorq/simulation/generators/datapoint_generator.py",
+     "src/evaluatorq/simulation/generators/first_message_generator.py",
+     "src/evaluatorq/simulation/generators/persona_generator.py",
+     "src/evaluatorq/simulation/generators/scenario_generator.py",
+     "src/evaluatorq/simulation/runner/simulation.py",
+     "src/evaluatorq/simulation/traces.py",
+     "src/evaluatorq/simulation/utils/dataset_export.py",
+     "src/evaluatorq/simulation/utils/run_store.py",
+     "src/evaluatorq/simulation/wrap_agent.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "logging": {
+         "msg": "Use loguru (`from loguru import logger`) instead of stdlib logging."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "src/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 363,
+    "flagged": [
+     "src/evaluatorq/common/llm_call.py",
+     "src/evaluatorq/common/responses.py",
+     "src/evaluatorq/common/structured_output.py",
+     "src/evaluatorq/dashboard/launch.py",
+     "src/evaluatorq/integrations/crewai_integration/target.py",
+     "src/evaluatorq/integrations/langchain_integration/convert.py",
+     "src/evaluatorq/integrations/langgraph_integration/target.py",
+     "src/evaluatorq/integrations/pydantic_ai_integration/target.py",
+     "src/evaluatorq/redteam/adaptive/orchestrator.py",
+     "src/evaluatorq/redteam/cli.py",
+     "src/evaluatorq/simulation/__init__.py",
+     "src/evaluatorq/simulation/agents/base.py",
+     "src/evaluatorq/simulation/agents/judge.py",
+     "src/evaluatorq/simulation/api.py",
+     "src/evaluatorq/simulation/cli.py",
+     "src/evaluatorq/simulation/generators/datapoint_generator.py",
+     "src/evaluatorq/simulation/generators/first_message_generator.py",
+     "src/evaluatorq/simulation/generators/persona_generator.py",
+     "src/evaluatorq/simulation/generators/scenario_generator.py",
+     "src/evaluatorq/simulation/runner/simulation.py",
+     "src/evaluatorq/simulation/traces.py",
+     "src/evaluatorq/simulation/utils/dataset_export.py",
+     "src/evaluatorq/simulation/utils/run_store.py",
+     "src/evaluatorq/simulation/wrap_agent.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "banned-api": {
+      "logging": {
+       "msg": "Use loguru for logging. Do not use stdlib logging."
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "  Cause: TOML parse error at line 1, column 1\n  |\n1 | [banned-api.logging]\n  | ^\nunknown field `banned-api`"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "banned-api": {
+      "logging": {
+       "msg": "Use loguru for logging instead of stdlib logging."
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "  Cause: TOML parse error at line 1, column 1\n  |\n1 | [banned-api.logging]\n  | ^\nunknown field `banned-api`"
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "logging": {
+         "msg": "Use loguru for logging everywhere"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1024,
+    "flagged": [
+     "examples/agent_simulation/orq_agent_tailscale_openai.py",
+     "src/evaluatorq/common/llm_call.py",
+     "src/evaluatorq/common/responses.py",
+     "src/evaluatorq/common/structured_output.py",
+     "src/evaluatorq/dashboard/launch.py",
+     "src/evaluatorq/integrations/crewai_integration/target.py",
+     "src/evaluatorq/integrations/langchain_integration/convert.py",
+     "src/evaluatorq/integrations/langgraph_integration/target.py",
+     "src/evaluatorq/integrations/pydantic_ai_integration/target.py",
+     "src/evaluatorq/redteam/adaptive/orchestrator.py",
+     "src/evaluatorq/redteam/cli.py",
+     "src/evaluatorq/simulation/__init__.py",
+     "src/evaluatorq/simulation/agents/base.py",
+     "src/evaluatorq/simulation/agents/judge.py",
+     "src/evaluatorq/simulation/api.py",
+     "src/evaluatorq/simulation/cli.py",
+     "src/evaluatorq/simulation/generators/datapoint_generator.py",
+     "src/evaluatorq/simulation/generators/first_message_generator.py",
+     "src/evaluatorq/simulation/generators/persona_generator.py",
+     "src/evaluatorq/simulation/generators/scenario_generator.py",
+     "src/evaluatorq/simulation/runner/simulation.py",
+     "src/evaluatorq/simulation/traces.py",
+     "src/evaluatorq/simulation/utils/dataset_export.py",
+     "src/evaluatorq/simulation/utils/run_store.py",
+     "src/evaluatorq/simulation/wrap_agent.py",
+     "tests/common/test_async_utils.py",
+     "tests/common/test_judge_classify.py",
+     "tests/common/test_model_catalogue.py",
+     "tests/common/test_structured_output_usage.py",
+     "tests/conftest.py",
+     "tests/contracts/test_agent_response_orq_tool_calls.py",
+     "tests/dashboard/test_launch.py",
+     "tests/integrations/test_langchain_convert.py",
+     "tests/openresponses/test_tool_records.py",
+     "tests/redteam/test_delivery_method_registry.py",
+     "tests/redteam/test_dynamic_error_schema.py",
+     "tests/redteam/test_reasoning_effort_preflight.py",
+     "tests/redteam/test_truncate_for_span.py",
+     "tests/simulation/runner/test_transcript_tool_calls.py",
+     "tests/simulation/test_attach_recommendations.py",
+     "tests/simulation/test_cli.py",
+     "tests/simulation/test_first_message_generator_errors.py",
+     "tests/simulation/test_hooks.py",
+     "tests/simulation/test_max_tokens_resolution.py",
+     "tests/simulation/test_structured_output.py",
+     "tests/simulation/test_traces_input.py",
+     "tests/test_global_fixtures.py",
+     "tests/test_llm_jury_classify.py",
+     "tests/unit/test_langgraph_target.py",
+     "tests/unit/test_redteam_targets.py",
+     "tests/unit/test_trace_input.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "logging": {
+         "msg": "Use loguru for logging everywhere (not stdlib logging)"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "**/*.py",
+      "**/*.pyi"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 1024,
+    "flagged": [
+     "examples/agent_simulation/orq_agent_tailscale_openai.py",
+     "src/evaluatorq/common/llm_call.py",
+     "src/evaluatorq/common/responses.py",
+     "src/evaluatorq/common/structured_output.py",
+     "src/evaluatorq/dashboard/launch.py",
+     "src/evaluatorq/integrations/crewai_integration/target.py",
+     "src/evaluatorq/integrations/langchain_integration/convert.py",
+     "src/evaluatorq/integrations/langgraph_integration/target.py",
+     "src/evaluatorq/integrations/pydantic_ai_integration/target.py",
+     "src/evaluatorq/redteam/adaptive/orchestrator.py",
+     "src/evaluatorq/redteam/cli.py",
+     "src/evaluatorq/simulation/__init__.py",
+     "src/evaluatorq/simulation/agents/base.py",
+     "src/evaluatorq/simulation/agents/judge.py",
+     "src/evaluatorq/simulation/api.py",
+     "src/evaluatorq/simulation/cli.py",
+     "src/evaluatorq/simulation/generators/datapoint_generator.py",
+     "src/evaluatorq/simulation/generators/first_message_generator.py",
+     "src/evaluatorq/simulation/generators/persona_generator.py",
+     "src/evaluatorq/simulation/generators/scenario_generator.py",
+     "src/evaluatorq/simulation/runner/simulation.py",
+     "src/evaluatorq/simulation/traces.py",
+     "src/evaluatorq/simulation/utils/dataset_export.py",
+     "src/evaluatorq/simulation/utils/run_store.py",
+     "src/evaluatorq/simulation/wrap_agent.py",
+     "tests/common/test_async_utils.py",
+     "tests/common/test_judge_classify.py",
+     "tests/common/test_model_catalogue.py",
+     "tests/common/test_structured_output_usage.py",
+     "tests/conftest.py",
+     "tests/contracts/test_agent_response_orq_tool_calls.py",
+     "tests/dashboard/test_launch.py",
+     "tests/integrations/test_langchain_convert.py",
+     "tests/openresponses/test_tool_records.py",
+     "tests/redteam/test_delivery_method_registry.py",
+     "tests/redteam/test_dynamic_error_schema.py",
+     "tests/redteam/test_reasoning_effort_preflight.py",
+     "tests/redteam/test_truncate_for_span.py",
+     "tests/simulation/runner/test_transcript_tool_calls.py",
+     "tests/simulation/test_attach_recommendations.py",
+     "tests/simulation/test_cli.py",
+     "tests/simulation/test_first_message_generator_errors.py",
+     "tests/simulation/test_hooks.py",
+     "tests/simulation/test_max_tokens_resolution.py",
+     "tests/simulation/test_structured_output.py",
+     "tests/simulation/test_traces_input.py",
+     "tests/test_global_fixtures.py",
+     "tests/test_llm_jury_classify.py",
+     "tests/unit/test_langgraph_target.py",
+     "tests/unit/test_redteam_targets.py",
+     "tests/unit/test_trace_input.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.py is not in the reading's scope"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [
+  "date-matched-version"
+ ],
+ "seconds": 5.199
+}

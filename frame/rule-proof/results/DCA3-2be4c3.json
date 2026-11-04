@@ -1,0 +1,15 @@
+{
+ "id": "DCA3-2be4c3",
+ "repo": "midnightntwrk/midnight-js",
+ "sha": "610b93b62edd1f7b430182ae7e1d8f753c590928",
+ "linter": "eslint",
+ "rule": "eslint-comments/no-use",
+ "checked_out": "610b93b62edd1f7b430182ae7e1d8f753c590928",
+ "install": {
+  "kind": "not-installed",
+  "stage": "install",
+  "reason": "corepack exited 1: "
+ },
+ "adjustments": [],
+ "seconds": 23.839
+}

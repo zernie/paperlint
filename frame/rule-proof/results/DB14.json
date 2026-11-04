@@ -1,0 +1,414 @@
+{
+ "id": "DB14",
+ "repo": "cameroncooke/mcpli",
+ "sha": "069e82d1d51c5de2af2d2f3ceb1d557773c0c14a",
+ "linter": "eslint",
+ "rule": "@typescript-eslint/no-explicit-any",
+ "checked_out": "069e82d1d51c5de2af2d2f3ceb1d557773c0c14a",
+ "install": {
+  "kind": "installed",
+  "version": "9.34.0"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-explicit-any",
+    "options": [],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "tests/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "src/types/**/*.d.ts"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 25,
+    "flagged": [
+     "tests/unit/daemon-client-aborted-signal.test.ts",
+     "tests/unit/daemon-client-connect-retry.test.ts",
+     "tests/unit/daemon-client-ipc-timeout.test.ts",
+     "tests/unit/daemon-client-midflight-cancel.test.ts",
+     "tests/unit/safety.test.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-explicit-any",
+    "options": [],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "tests/**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 26,
+    "flagged": [
+     "tests/unit/daemon-client-aborted-signal.test.ts",
+     "tests/unit/daemon-client-connect-retry.test.ts",
+     "tests/unit/daemon-client-ipc-timeout.test.ts",
+     "tests/unit/daemon-client-midflight-cancel.test.ts",
+     "tests/unit/safety.test.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-explicit-any",
+    "options": [],
+    "scope": {
+     "files": [
+      "src/**/*.ts",
+      "tests/**/*.ts",
+      "*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 28,
+    "flagged": [
+     "tests/unit/daemon-client-aborted-signal.test.ts",
+     "tests/unit/daemon-client-connect-retry.test.ts",
+     "tests/unit/daemon-client-ipc-timeout.test.ts",
+     "tests/unit/daemon-client-midflight-cancel.test.ts",
+     "tests/unit/safety.test.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-explicit-any",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 28,
+    "flagged": [
+     "tests/unit/daemon-client-aborted-signal.test.ts",
+     "tests/unit/daemon-client-connect-retry.test.ts",
+     "tests/unit/daemon-client-ipc-timeout.test.ts",
+     "tests/unit/daemon-client-midflight-cancel.test.ts",
+     "tests/unit/safety.test.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-explicit-any",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 34,
+    "flagged": [
+     "tests/unit/daemon-client-aborted-signal.test.ts",
+     "tests/unit/daemon-client-connect-retry.test.ts",
+     "tests/unit/daemon-client-ipc-timeout.test.ts",
+     "tests/unit/daemon-client-midflight-cancel.test.ts",
+     "tests/unit/safety.test.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "eslint",
+    "rule": "@typescript-eslint/no-explicit-any",
+    "options": [],
+    "scope": {
+     "files": [
+      "**/*.ts"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    },
+    "parser": "@typescript-eslint/parser"
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 28,
+    "flagged": [
+     "tests/unit/daemon-client-aborted-signal.test.ts",
+     "tests/unit/daemon-client-connect-retry.test.ts",
+     "tests/unit/daemon-client-ipc-timeout.test.ts",
+     "tests/unit/daemon-client-midflight-cancel.test.ts",
+     "tests/unit/safety.test.ts"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "deepseek-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s1",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s1",
+   "b": "google-s2",
+   "kind": "not-run",
+   "stage": "pair-outside-scope",
+   "reason": "p3s109-pair/bad.ts is not in the reading's scope"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [],
+ "seconds": 33.949
+}

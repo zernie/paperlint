@@ -1,0 +1,448 @@
+{
+ "id": "DA06",
+ "repo": "hyundai-kia-connect/hyundai_kia_connect_api",
+ "sha": "b952510a0eb65247b3c9e2dd384298996a895de2",
+ "linter": "ruff",
+ "rule": "TID251",
+ "checked_out": "b952510a0eb65247b3c9e2dd384298996a895de2",
+ "install": {
+  "kind": "installed",
+  "version": "0.17.3"
+ },
+ "readings": [
+  {
+   "key": "anthropic-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "requests.get": {
+         "msg": "Tests must not call the live API; use fixtures/mocks."
+        },
+        "requests.post": {
+         "msg": "Tests must not call the live API; use fixtures/mocks."
+        },
+        "requests.put": {
+         "msg": "Tests must not call the live API; use fixtures/mocks."
+        },
+        "requests.delete": {
+         "msg": "Tests must not call the live API; use fixtures/mocks."
+        },
+        "requests.request": {
+         "msg": "Tests must not call the live API; use fixtures/mocks."
+        },
+        "urllib.request.urlopen": {
+         "msg": "Tests must not call the live API; use fixtures/mocks."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 95,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "anthropic-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "requests.get": {
+         "msg": "Tests must not call the live API; use fixtures or mocks."
+        },
+        "requests.post": {
+         "msg": "Tests must not call the live API; use fixtures or mocks."
+        },
+        "requests.put": {
+         "msg": "Tests must not call the live API; use fixtures or mocks."
+        },
+        "requests.patch": {
+         "msg": "Tests must not call the live API; use fixtures or mocks."
+        },
+        "requests.delete": {
+         "msg": "Tests must not call the live API; use fixtures or mocks."
+        },
+        "requests.head": {
+         "msg": "Tests must not call the live API; use fixtures or mocks."
+        },
+        "requests.request": {
+         "msg": "Tests must not call the live API; use fixtures or mocks."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 95,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "deepseek-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "I900",
+    "settings": {
+     "banned-modules": {
+      "requests": "Never call the live API in tests",
+      "urllib.request": "Never call the live API in tests"
+     }
+    },
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "not-run",
+    "stage": "config-load",
+    "reason": "  Cause: TOML parse error at line 1, column 1\n  |\n1 | [banned-modules]\n  | ^\nunknown field `banned-modules`"
+   }
+  },
+  {
+   "key": "deepseek-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "requests.get": {
+         "msg": "Never call the live API in tests"
+        },
+        "requests.post": {
+         "msg": "Never call the live API in tests"
+        },
+        "requests.put": {
+         "msg": "Never call the live API in tests"
+        },
+        "requests.patch": {
+         "msg": "Never call the live API in tests"
+        },
+        "requests.delete": {
+         "msg": "Never call the live API in tests"
+        },
+        "requests.head": {
+         "msg": "Never call the live API in tests"
+        },
+        "requests.options": {
+         "msg": "Never call the live API in tests"
+        },
+        "requests.request": {
+         "msg": "Never call the live API in tests"
+        },
+        "urllib.request.urlopen": {
+         "msg": "Never call the live API in tests"
+        },
+        "http.client.HTTPConnection": {
+         "msg": "Never call the live API in tests"
+        },
+        "http.client.HTTPSConnection": {
+         "msg": "Never call the live API in tests"
+        },
+        "httpx.get": {
+         "msg": "Never call the live API in tests"
+        },
+        "httpx.post": {
+         "msg": "Never call the live API in tests"
+        },
+        "httpx.request": {
+         "msg": "Never call the live API in tests"
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 95,
+    "flagged": [],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s1",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "requests": {
+         "msg": "Never call the live API in tests."
+        },
+        "urllib.request": {
+         "msg": "Never call the live API in tests."
+        },
+        "urllib3": {
+         "msg": "Never call the live API in tests."
+        },
+        "httpx": {
+         "msg": "Never call the live API in tests."
+        },
+        "aiohttp": {
+         "msg": "Never call the live API in tests."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 95,
+    "flagged": [
+     "tests/test_api_impl_session.py",
+     "tests/test_ca_cloudflare_tls.py",
+     "tests/test_ca_retry_session.py",
+     "tests/test_usa_cipher_adapter_tls.py",
+     "tests/test_usa_kia_adapter_tls.py",
+     "tests/test_vehicle_commands.py",
+     "tests/test_vehicle_list_snapshots.py",
+     "tests/test_vehicle_update_snapshots.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  },
+  {
+   "key": "google-s2",
+   "reading": {
+    "linter": "ruff",
+    "rule": "TID251",
+    "settings": {
+     "lint": {
+      "flake8-tidy-imports": {
+       "banned-api": {
+        "requests": {
+         "msg": "Do not make live API calls in tests; use fixtures or mocking."
+        },
+        "urllib.request": {
+         "msg": "Do not make live API calls in tests; use fixtures or mocking."
+        },
+        "http.client": {
+         "msg": "Do not make live API calls in tests; use fixtures or mocking."
+        }
+       }
+      }
+     }
+    },
+    "scope": {
+     "files": [
+      "tests/**/*.py"
+     ],
+     "ignores": [
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/dist/**",
+      "**/build/**"
+     ]
+    }
+   },
+   "proof": {
+    "kind": "proved"
+   },
+   "flagged": {
+    "kind": "ran",
+    "linted": 95,
+    "flagged": [
+     "tests/test_api_impl_session.py",
+     "tests/test_ca_cloudflare_tls.py",
+     "tests/test_ca_retry_session.py",
+     "tests/test_vehicle_commands.py",
+     "tests/test_vehicle_list_snapshots.py",
+     "tests/test_vehicle_update_snapshots.py"
+    ],
+    "parseErrors": [],
+    "ignored": []
+   }
+  }
+ ],
+ "cross": [
+  {
+   "a": "anthropic-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "anthropic-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "deepseek-s2",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s1",
+   "b": "google-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s1",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "anthropic-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "deepseek-s2",
+   "kind": "proved"
+  },
+  {
+   "a": "google-s2",
+   "b": "google-s1",
+   "kind": "proved"
+  }
+ ],
+ "adjustments": [],
+ "seconds": 1.941
+}
