@@ -12,14 +12,17 @@
 //            under `lint` from Ruff 0.2 on, at the top level before.
 // One JSON file per repository in <out-dir>; nothing from the repository is executed except its linter and the
 // plugins its own lockfile installs (a .pnpmfile is ignored). Every outcome is written, including "not installed"
-// and "not run". How the linter is installed — as-designed, lockfile-pinned or date-matched — is `install.path`, and
-// the as-designed failure, when there was one, is kept in `install.as_designed` (see installFor below).
+// and "not run". `install` has the shape install-schema.mjs declares: its outcome, the path that installed
+// (as-designed, lockfile-pinned, date-matched), and every attempt in order with its failure (stage, cause from a
+// closed list, the tool's exit and error code, free-text detail no code reads).
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { globSync } from "glob";
 import toml from "@iarna/toml";
 import yaml from "js-yaml";
+import semver from "semver";
+import { installSchema } from "./install-schema.mjs";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
 const [inputsPath, outDir, ...rest] = process.argv.slice(2);
@@ -224,29 +227,44 @@ function setAside(dir, asideDir) {
   return moved;
 }
 
-// A manifest of ESLint and its companions at fixed versions, then each plugin added on its own so one that cannot
-// install (not on npm, no release by the date, a resolve error) costs only the readings that name it.
-// npm's error code from its --json output ({"error": {"code": "ERESOLVE", …}}); the stderr text is kept only in
-// the record, never matched.
+// npm runs with --json: its error code is read from {"error": {"code": …}} on stdout; stderr is only `detail`.
 export function npmErrorCode(r) {
   try { return JSON.parse(r.stdout ?? "")?.error?.code ?? null; } catch { return null; }
 }
-const npmFailure = (what, r) => `${what} exited ${r.code} (${npmErrorCode(r) ?? "no error code"}): ${tailOf(r.stderr)}`;
+const NETWORK = new Set(["ENOTFOUND", "ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "ECONNREFUSED"]);
+// A failed npm call as a failure record: the cause from the exit and the parsed code alone.
+export function npmFailureOf(cmd, r, { tsResolved = false } = {}) {
+  const code = npmErrorCode(r);
+  const cause = r.timedOut ? "timeout" : code === "ERESOLVE" ? (tsResolved ? "peer-conflict-typescript" : "peer-conflict-other")
+    : code === "E404" || code === "ETARGET" ? "package-not-found" : NETWORK.has(code) ? "registry-or-network" : "unknown";
+  return { stage: cause === "package-not-found" || cause === "registry-or-network" ? "fetch" : cause === "timeout" ? "fetch" : "resolve",
+    cause, tool: { cmd, exit: r.code ?? null, code }, detail: tailOf(r.stderr) };
+}
+
+// A manifest of ESLint and its companions at fixed versions, then each plugin added on its own so one that cannot
+// install (not on npm, no release by the date, a resolve error) costs only the readings that name it.
 function npmManifest(dir, deps, base, plugins) {
   const write = (dev) => writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "rule-proof-install", private: true, devDependencies: dev }, null, 1) + "\n");
-  const lock = (dev, legacy) => { write(dev); return deps.npm(["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", "--json", ...(legacy ? ["--legacy-peer-deps"] : [])], dir); };
+  const args = (legacy) => ["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", "--json", ...(legacy ? ["--legacy-peer-deps"] : [])];
+  const lock = (dev, legacy) => { write(dev); return deps.npm(args(legacy), dir); };
+  const cmd = (legacy) => `npm ${args(legacy).join(" ")}`;
+  const resolved = [];
   let r0 = lock(base, false);
-  let tsPeer = false;
   // TypeScript current at the date may be newer than the TypeScript parser's peer range (measured: typescript 7.0.2
-  // against @typescript-eslint/parser 8.72.1). It is then left to npm, which installs the newest TypeScript the
-  // parser's peer range admits; the version is read back from the lockfile and the record says so.
+  // against @typescript-eslint/parser 8.72.1, ERESOLVE). It is then left to npm, which installs the newest TypeScript
+  // the parser's peer range admits; the version is read back from the lockfile and the record says so.
   if (r0.code !== 0 && npmErrorCode(r0) === "ERESOLVE" && base.typescript) {
     const { typescript: _drop, ...rest } = base;
-    base = rest;
-    r0 = lock(base, false);
-    tsPeer = r0.code === 0;
+    const r1 = lock(rest, false);
+    if (r1.code === 0) {
+      // the TypeScript npm chose is pinned from here on, so a later --legacy-peer-deps (which skips peers) keeps it
+      const ts = readJson(path.join(dir, "package-lock.json"))?.packages?.["node_modules/typescript"]?.version;
+      base = ts ? { ...rest, typescript: ts } : rest;
+      r0 = ts ? lock(base, false) : r1;
+      resolved.push({ cause: "peer-conflict-typescript", by: "typescript left to the parser's peer range" });
+    }
   }
-  if (r0.code !== 0) return { error: npmFailure("npm install --package-lock-only", r0), npm_error_code: npmErrorCode(r0) };
+  if (r0.code !== 0) return { failure: npmFailureOf(cmd(false), r0) };
   let dev = { ...base }, legacy = false;
   const out = {};
   for (const [name, p] of Object.entries(plugins)) {
@@ -256,15 +274,19 @@ function npmManifest(dir, deps, base, plugins) {
     if (r.code === 0) { dev = next; out[name] = { ...p, error: null }; continue; }
     if (!legacy && npmErrorCode(r) === "ERESOLVE") {
       const r2 = lock(next, true);
-      if (r2.code === 0) { dev = next; legacy = true; out[name] = { ...p, error: null, peer_conflict: true }; continue; }
+      if (r2.code === 0) {
+        dev = next; legacy = true; out[name] = { ...p, error: null, peer_conflict: true };
+        resolved.push({ cause: "peer-conflict-other", by: `--legacy-peer-deps for ${name}` });
+        continue;
+      }
     }
-    out[name] = { ...p, version: null, error: npmFailure(`npm could not add ${name}@${p.version}:`, r), npm_error_code: npmErrorCode(r) };
+    const f = npmFailureOf(cmd(legacy), r);
+    out[name] = { version: null, error: `npm could not add ${name}@${p.version}`, cause: f.cause };
   }
   const rf = lock(dev, legacy);
-  if (rf.code !== 0) return { error: npmFailure("final lock", rf), npm_error_code: npmErrorCode(rf) };
+  if (rf.code !== 0) return { failure: npmFailureOf(cmd(legacy), rf) };
   if (legacy) writeFileSync(path.join(dir, ".npmrc"), "legacy-peer-deps=true\n");
-  const peerTs = tsPeer ? readJson(path.join(dir, "package-lock.json"))?.packages?.["node_modules/typescript"]?.version ?? null : undefined;
-  return { plugins: out, legacy_peer_deps: legacy, manifest: dev, ...(tsPeer ? { typescript_peer_resolved: peerTs } : {}) };
+  return { plugins: out, legacy, versions: dev, resolved, tsResolved: resolved.some((x) => x.cause === "peer-conflict-typescript") };
 }
 
 const pluginNames = (readings) => [...new Set(readings.map((r) => pluginOf(r.reading.rule)).filter(Boolean))].sort();
@@ -273,10 +295,11 @@ const wantsTs = (dir, readings) => existsSync(path.join(dir, "tsconfig.json")) |
 async function dateMatchedVersions(names, commitIso, deps) {
   const out = {};
   for (const name of names) {
-    const doc = await deps.registry(name);
-    if (doc === null) { out[name] = { version: null, error: `${name} is not on the npm registry` }; continue; }
+    let doc;
+    try { doc = await deps.registry(name); } catch { out[name] = { version: null, error: `the registry did not answer for ${name}`, cause: "registry-or-network" }; continue; }
+    if (doc === null) { out[name] = { version: null, error: `${name} is not on the npm registry`, cause: "package-not-found" }; continue; }
     const v = npmDateMatched(doc.time, commitIso);
-    out[name] = v ? { version: v, error: null } : { version: null, error: `${name} has no release on or before ${commitIso}` };
+    out[name] = v ? { version: v, error: null } : { version: null, error: `${name} has no release on or before ${commitIso}`, cause: "package-not-found" };
   }
   return out;
 }
@@ -286,20 +309,8 @@ export function readingPlugins(reading, install) {
   const name = reading.linter === "eslint" ? pluginOf(reading.rule) : null;
   if (!name) return [];
   const p = install.plugins?.[name];
-  if (p) return [{ name, version: p.version, error: p.error ?? null }];
+  if (p) return [{ name, version: p.version, error: p.error ?? null, ...(p.cause ? { cause: p.cause } : {}) }];
   return [{ name, version: null, error: install.path === "as-designed" ? "not in the repository's own install" : "not asked" }];
-}
-
-// ESLint install on our own manifest (paths 2 and 3), then vigiles' own install of it.
-async function ownManifest(item, dir, deps, pathName, versions, plugins, extra) {
-  const aside = setAside(dir, deps.asideDir);
-  const m = npmManifest(dir, deps, versions, plugins);
-  const vs = m.typescript_peer_resolved === undefined ? versions : { ...versions, typescript: m.typescript_peer_resolved };
-  const record = { path: pathName, aside, versions: vs, plugins: m.plugins ?? plugins, legacy_peer_deps: m.legacy_peer_deps ?? false,
-    ...(m.typescript_peer_resolved === undefined ? {} : { typescript_peer_resolved: true }), ...extra };
-  if (m.error) return { installed: { kind: "not-installed", stage: "install", reason: m.error }, record: { ...record, npm_error_code: m.npm_error_code } };
-  const installed = deps.install("eslint", dir);
-  return { installed, record };
 }
 
 // Whether a root file the Ruff kit reads before .pre-commit-config.yaml pins Ruff exactly: a lockfile naming ruff, a
@@ -321,54 +332,103 @@ export function otherRuffPin(dir) {
   return false;
 }
 
+const preCommitRuffRev = (dir) => {
+  const pc = path.join(dir, ".pre-commit-config.yaml");
+  try { return existsSync(pc) ? (yaml.load(readFileSync(pc, "utf8"))?.repos ?? []).find((r) => String(r.repo ?? "").endsWith("/ruff-pre-commit"))?.rev : undefined; } catch { return undefined; }
+};
+
+// Why vigiles' as-designed install did not install, from its stage and the repository's files — never its message.
+export function asDesignedFailure(installed, dir, linter, nodeVersion = process.versions.node) {
+  const detail = String(installed.reason ?? "").slice(0, 600);
+  if (installed.stage === "timeout") return { stage: "fetch", cause: "timeout", detail };
+  if (installed.stage === "no-lockfile") return { stage: "detect", cause: "no-lockfile", detail };
+  if (installed.stage === "no-pin") return { stage: "detect", cause: "no-pin", detail };
+  if (installed.stage === "no-linter") {
+    const { declared } = repoEslint(dir);
+    const cause = declared.length === 0 ? "no-linter-dependency" : declared.every((p) => p !== "package.json") ? "linter-in-subpackage" : "unknown";
+    return { stage: "detect", cause, detail };
+  }
+  // stage "install": the install command did not exit 0
+  if (linter === "ruff") {
+    const rev = preCommitRuffRev(dir);
+    const cause = typeof rev === "string" && !STABLE.test(rev.replace(/^v/, "")) && !otherRuffPin(dir) ? "tool-resolve" : "unknown";
+    return { stage: "resolve", cause, detail };
+  }
+  const range = readJson(path.join(dir, "package.json"))?.engines?.node;
+  if (typeof range === "string" && semver.validRange(range) && !semver.satisfies(nodeVersion, range)) return { stage: "resolve", cause: "node-engine", detail };
+  if ([".pnpmfile.cjs", ".pnpmfile.mjs"].some((f) => existsSync(path.join(dir, f))) && existsSync(path.join(dir, ".gitmodules"))) return { stage: "fetch", cause: "submodule", detail };
+  return { stage: "fetch", cause: "unknown", detail };
+}
+
+// ESLint on our own manifest (paths 2 and 3), then vigiles' own install of it. -> { installed, attempt, record }
+async function ownManifest(dir, deps, pathName, versions, plugins) {
+  const aside = setAside(dir, deps.asideDir);
+  const m = npmManifest(dir, deps, versions, plugins);
+  const record = { aside, versions: m.versions ?? versions, plugins: m.plugins ?? plugins, legacy_peer_deps: m.legacy ?? false,
+    ...(m.tsResolved ? { typescript_peer_resolved: true } : {}) };
+  const res = m.resolved?.length ? { resolved: m.resolved } : {};
+  if (m.failure) return { installed: { kind: "not-installed" }, attempt: { path: pathName, outcome: "not-installed", failure: m.failure, ...res }, record };
+  const installed = deps.install("eslint", dir);
+  if (installed.kind === "installed") return { installed, attempt: { path: pathName, outcome: "installed", ...res }, record };
+  const f = installed.stage === "timeout" ? { stage: "fetch", cause: "timeout" } : { stage: "fetch", cause: "unknown" };
+  return { installed, attempt: { path: pathName, outcome: "not-installed", failure: { ...f, detail: String(installed.reason ?? "").slice(0, 600) }, ...res }, record };
+}
+
+// The install of one item: attempts in order (as-designed, then lockfile-pinned, then date-matched for ESLint),
+// each with its outcome and, when it failed, a failure record. -> { installed, install } (install-schema.mjs)
 export async function installFor(item, dir, deps) {
   const adjustments = new Set();
+  const attempts = [];
+  const shape = (installed, extra = {}) => ({
+    installed,
+    install: {
+      outcome: installed.kind === "installed" ? "installed" : "not-installed",
+      path: installed.kind === "installed" ? attempts.at(-1).path : null,
+      version: installed.kind === "installed" ? installed.linter.version : null,
+      versions: {}, plugins: {}, attempts, adjustments: [...adjustments], ...extra,
+    },
+  });
   let installed = deps.install(item.linter, dir);
-  const record = { path: "as-designed" };
-  if (installed.kind === "installed") {
-    return { installed, install: { ...record, kind: "installed", version: installed.linter.version, plugins: {}, adjustments: [...adjustments] } };
-  }
-  const asDesigned = installed;
+  if (installed.kind === "installed") { attempts.push({ path: "as-designed", outcome: "installed" }); return shape(installed); }
+  const first = asDesignedFailure(installed, dir, item.linter, deps.nodeVersion);
+  attempts.push({ path: "as-designed", outcome: "not-installed", failure: first });
   if (item.linter === "ruff") {
-    let pinNotRelease = false;
-    if (installed.stage === "install") {
-      const pc = path.join(dir, ".pre-commit-config.yaml");
-      const rev = existsSync(pc) ? (yaml.load(readFileSync(pc, "utf8"))?.repos ?? []).find((r) => String(r.repo ?? "").endsWith("/ruff-pre-commit"))?.rev : undefined;
-      pinNotRelease = typeof rev === "string" && !STABLE.test(rev.replace(/^v/, "")) && !otherRuffPin(dir);
-      if (pinNotRelease) adjustments.add("pre-commit-rev-not-a-release");
-    }
-    if (installed.stage === "no-pin" || pinNotRelease) {
+    // The frozen rule: no exact pin (a pre-commit rev that is not a release is none) -> the release current at the date.
+    if (first.cause === "no-pin" || first.cause === "tool-resolve") {
+      if (first.cause === "tool-resolve") adjustments.add("pre-commit-rev-not-a-release");
       const commitIso = deps.commitIso(dir);
-      const version = dateMatched(await deps.ruffReleases(), commitIso);
+      let releases = null;
+      try { releases = await deps.ruffReleases(); } catch { releases = null; }
+      const version = releases ? dateMatched(releases, commitIso) : null;
       if (version) {
         writeFileSync(path.join(dir, "requirements-date-matched-ruff.txt"), `ruff==${version}\n`);
         adjustments.add("date-matched-version");
         installed = deps.install(item.linter, dir);
-        const out = { ...record, as_designed: asDesigned, date_matched: { commit: commitIso, ruff: version }, adjustments: [...adjustments] };
-        return { installed, install: installed.kind === "installed" ? { ...out, kind: "installed", version: installed.linter.version } : { ...out, ...installed } };
+        attempts.push(installed.kind === "installed" ? { path: "as-designed", outcome: "installed", rule: "ruff-date-matched" }
+          : { path: "as-designed", outcome: "not-installed", rule: "ruff-date-matched", failure: { stage: "fetch", cause: installed.stage === "timeout" ? "timeout" : "unknown", detail: String(installed.reason ?? "").slice(0, 600) } });
+        return shape(installed, { date_matched: { commit: commitIso, ruff: version } });
       }
+      attempts.push({ path: "as-designed", outcome: "not-installed", rule: "ruff-date-matched",
+        failure: { stage: "fetch", cause: releases ? "package-not-found" : "registry-or-network", detail: "no Ruff release on or before the commit's date" } });
     }
-    return { installed, install: { ...record, ...installed, adjustments: [...adjustments] } };
+    return shape(installed);
   }
-  // ESLint: the as-designed install failed (no lockfile, no ESLint in node_modules, install error).
+  // ESLint: the as-designed install did not install.
   const repo = repoEslint(dir);
   const names = pluginNames(item.readings);
   const commitIso = deps.commitIso(dir);
   const pin = repo.declared.length ? lockfilePin(dir, repo.declared) : { package: null, candidates: [] };
-  const done = (r) => {
-    const install = { ...r.record, as_designed: asDesigned, repo_eslint: repo, commit: commitIso, adjustments: [...adjustments] };
-    return { installed: r.installed, install: r.installed.kind === "installed" ? { ...install, kind: "installed", version: r.installed.linter.version } : { ...install, ...r.installed } };
-  };
+  const common = { repo_eslint: repo, commit: commitIso };
   if (pin.package !== null) {
     const versions = { eslint: pin.eslint };
     const v = (n) => { try { return lockedVersion(pin.lockfile, pin.text, pin.importer, n); } catch { return null; } };
     if (wantsTs(dir, item.readings) && v(TS_PARSER)) { versions[TS_PARSER] = v(TS_PARSER); if (v("typescript")) versions.typescript = v("typescript"); }
-    const plugins = Object.fromEntries(names.map((n) => [n, v(n) ? { version: v(n), error: null } : { version: null, error: `${n} is not pinned by ${pin.lockfile}` }]));
-    const r = await ownManifest(item, dir, deps, "lockfile-pinned", versions, plugins,
-      { lockfile_pinned: { package: pin.package, lockfile: pin.lockfile, candidates: pin.candidates } });
-    if (r.installed.kind === "installed") return done(r);
+    const plugins = Object.fromEntries(names.map((n) => [n, v(n) ? { version: v(n), error: null } : { version: null, error: `${n} is not pinned by ${pin.lockfile}`, cause: "package-not-found" }]));
+    const r = await ownManifest(dir, deps, "lockfile-pinned", versions, plugins);
+    attempts.push(r.attempt);
+    const lp = { lockfile_pinned: { package: pin.package, lockfile: pin.lockfile, candidates: pin.candidates } };
+    if (r.installed.kind === "installed") return shape(r.installed, { ...common, ...r.record, ...lp });
     adjustments.add("lockfile-pinned-failed");
-    record.lockfile_pinned_attempt = { ...r.record, ...r.installed };
     // the next path starts from the repository as it was: put the set-aside files back
     for (const f of ASIDE) rmSync(path.join(dir, f), { force: true });
     for (const f of r.record.aside) renameSync(path.join(deps.asideDir, f), path.join(dir, f));
@@ -376,12 +436,15 @@ export async function installFor(item, dir, deps) {
   }
   const want = ["eslint", ...(wantsTs(dir, item.readings) ? [TS_PARSER, "typescript"] : [])];
   const base = await dateMatchedVersions(want, commitIso, deps);
-  if (base.eslint.version === null) return done({ installed: { kind: "not-installed", stage: "install", reason: base.eslint.error }, record: { path: "date-matched", versions: {} } });
+  if (base.eslint.version === null) {
+    attempts.push({ path: "date-matched", outcome: "not-installed", failure: { stage: "fetch", cause: base.eslint.cause, detail: base.eslint.error } });
+    return shape({ kind: "not-installed" }, common);
+  }
   const versions = Object.fromEntries(Object.entries(base).filter(([, x]) => x.version).map(([n, x]) => [n, x.version]));
   const plugins = await dateMatchedVersions(names, commitIso, deps);
-  const r = await ownManifest(item, dir, deps, "date-matched", versions, plugins, {});
-  r.record = { ...record, ...r.record, path: "date-matched" };
-  return done(r);
+  const r = await ownManifest(dir, deps, "date-matched", versions, plugins);
+  attempts.push(r.attempt);
+  return shape(r.installed, { ...common, ...r.record });
 }
 
 // The plan job's matrix: one entry per item; Node 22 unless the item names another (from the repository's engines).
@@ -444,7 +507,9 @@ async function runOne(item) {
   try {
     result.checked_out = clone(item.repo, item.sha, dir);
   } catch (e) {
-    return { ...result, clone: { kind: "failed", reason: String(e.stderr ?? e.message).slice(0, 500) } };
+    return { ...result, install: { outcome: "not-installed", path: null, version: null, versions: {}, plugins: {}, adjustments: [],
+      attempts: [{ path: "as-designed", outcome: "not-installed", failure: { stage: "clone", cause: e.code === "ETIMEDOUT" ? "timeout" : "unknown",
+        tool: { cmd: "git fetch", exit: typeof e.status === "number" ? e.status : null, code: e.code ?? null }, detail: String(e.stderr ?? e.message).slice(0, 500) } }] } };
   }
   if (pnpmfileEnv(dir)) adjustments.add("pnpmfile-ignored");
   if (item.node) result.node = { asked: String(item.node), ran: process.version, why: item.node_why ?? null };
@@ -452,9 +517,7 @@ async function runOne(item) {
   rmSync(deps.asideDir, { recursive: true, force: true });
   const { installed, install } = await installFor(item, dir, deps);
   for (const a of install.adjustments ?? []) adjustments.add(a);
-  if (install.as_designed) result.as_designed_install = install.as_designed;
-  if (install.date_matched) result.date_matched = install.date_matched;
-  result.install = install;
+  result.install = { ...install, adjustments: [...adjustments] };
   if (installed.kind !== "installed") return { ...result, adjustments: [...adjustments], seconds: (Date.now() - t0) / 1000 };
   const pinned = installed.linter;
   const fulls = [];
@@ -499,9 +562,10 @@ if (inputsPath === "--matrix") {
     const out = path.join(outDir, `${item.id}.json`);
     if (existsSync(out)) { console.log(`skip ${item.id} (done)`); continue; }
     const r = await runOne(item);
+    installSchema.parse(r.install); // a result whose install record is not the declared shape is not written
     writeFileSync(out, JSON.stringify(r, null, 1) + "\n");
     const proved = (r.readings ?? []).filter((x) => x.proof.kind === "proved").length;
-    console.log(`${item.id} ${item.repo}: install ${r.install?.kind ?? r.clone?.kind} ${r.install?.version ?? ""}, ` +
+    console.log(`${item.id} ${item.repo}: install ${r.install.outcome} ${r.install.path ?? r.install.attempts.at(-1).failure?.cause} ${r.install.version ?? ""}, ` +
       `proved ${proved}/${item.readings.length}, ${r.seconds ?? "-"} s`);
   }
 }

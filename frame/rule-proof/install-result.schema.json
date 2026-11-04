@@ -1,0 +1,327 @@
+{
+ "$comment": "generated from install-schema.mjs; do not edit",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "type": "object",
+ "properties": {
+  "outcome": {
+   "type": "string",
+   "enum": [
+    "installed",
+    "not-installed"
+   ]
+  },
+  "path": {
+   "anyOf": [
+    {
+     "type": "string",
+     "enum": [
+      "as-designed",
+      "lockfile-pinned",
+      "date-matched"
+     ]
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "version": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "versions": {
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "plugins": {
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "type": "object",
+    "properties": {
+     "version": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "error": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "cause": {
+      "type": "string",
+      "enum": [
+       "no-lockfile",
+       "no-pin",
+       "no-linter-dependency",
+       "linter-in-subpackage",
+       "node-engine",
+       "submodule",
+       "peer-conflict-typescript",
+       "peer-conflict-other",
+       "package-not-found",
+       "tool-resolve",
+       "registry-or-network",
+       "timeout",
+       "unknown"
+      ]
+     },
+     "peer_conflict": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "version",
+     "error"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "attempts": {
+   "minItems": 1,
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "enum": [
+       "as-designed",
+       "lockfile-pinned",
+       "date-matched"
+      ]
+     },
+     "outcome": {
+      "type": "string",
+      "enum": [
+       "installed",
+       "not-installed"
+      ]
+     },
+     "rule": {
+      "type": "string",
+      "enum": [
+       "ruff-date-matched"
+      ]
+     },
+     "failure": {
+      "type": "object",
+      "properties": {
+       "stage": {
+        "type": "string",
+        "enum": [
+         "clone",
+         "detect",
+         "resolve",
+         "fetch",
+         "load"
+        ]
+       },
+       "cause": {
+        "type": "string",
+        "enum": [
+         "no-lockfile",
+         "no-pin",
+         "no-linter-dependency",
+         "linter-in-subpackage",
+         "node-engine",
+         "submodule",
+         "peer-conflict-typescript",
+         "peer-conflict-other",
+         "package-not-found",
+         "tool-resolve",
+         "registry-or-network",
+         "timeout",
+         "unknown"
+        ]
+       },
+       "tool": {
+        "type": "object",
+        "properties": {
+         "cmd": {
+          "type": "string"
+         },
+         "exit": {
+          "anyOf": [
+           {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+           },
+           {
+            "type": "null"
+           }
+          ]
+         },
+         "code": {
+          "type": [
+           "string",
+           "null"
+          ]
+         }
+        },
+        "required": [
+         "cmd",
+         "exit",
+         "code"
+        ],
+        "additionalProperties": false
+       },
+       "detail": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "stage",
+       "cause",
+       "detail"
+      ],
+      "additionalProperties": false
+     },
+     "resolved": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "cause": {
+         "type": "string",
+         "enum": [
+          "no-lockfile",
+          "no-pin",
+          "no-linter-dependency",
+          "linter-in-subpackage",
+          "node-engine",
+          "submodule",
+          "peer-conflict-typescript",
+          "peer-conflict-other",
+          "package-not-found",
+          "tool-resolve",
+          "registry-or-network",
+          "timeout",
+          "unknown"
+         ]
+        },
+        "by": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "cause",
+        "by"
+       ],
+       "additionalProperties": false
+      }
+     }
+    },
+    "required": [
+     "path",
+     "outcome"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "adjustments": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "commit": {
+   "type": "string"
+  },
+  "repo_eslint": {
+   "type": "object",
+   "properties": {
+    "declared": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "package_jsons": {
+     "type": "integer",
+     "minimum": -9007199254740991,
+     "maximum": 9007199254740991
+    }
+   },
+   "required": [
+    "declared",
+    "package_jsons"
+   ],
+   "additionalProperties": false
+  },
+  "lockfile_pinned": {
+   "type": "object",
+   "properties": {
+    "package": {
+     "type": "string"
+    },
+    "lockfile": {
+     "type": "string"
+    },
+    "candidates": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   },
+   "required": [
+    "package",
+    "lockfile",
+    "candidates"
+   ],
+   "additionalProperties": false
+  },
+  "date_matched": {
+   "type": "object",
+   "properties": {
+    "commit": {
+     "type": "string"
+    },
+    "ruff": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "commit",
+    "ruff"
+   ],
+   "additionalProperties": false
+  },
+  "aside": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "legacy_peer_deps": {
+   "type": "boolean"
+  },
+  "typescript_peer_resolved": {
+   "type": "boolean"
+  }
+ },
+ "required": [
+  "outcome",
+  "path",
+  "version",
+  "versions",
+  "plugins",
+  "attempts",
+  "adjustments"
+ ],
+ "additionalProperties": false
+}

@@ -5,9 +5,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { optionsSchema, pluginPart } from "./diagnose.mjs";
-import { installFor, lockedVersion, matrixOf, npmDateMatched, readingPlugins, repoEslint } from "./run.mjs";
+import { installSchema, jsonSchema } from "./install-schema.mjs";
+import { installFor as installForReal, lockedVersion, matrixOf, npmDateMatched, readingPlugins, repoEslint } from "./run.mjs";
 
 const fail = [];
+const seenInstalls = [];
+const installFor = async (...a) => { const r = await installForReal(...a); seenInstalls.push(r.install); return r; };
 const check = (ok, what) => { if (!ok) fail.push(what); };
 const T = (d) => `${d}T00:00:00.000Z`;
 
@@ -76,7 +79,7 @@ const docs = { eslint: { time }, "eslint-plugin-check-file": { time: { "2.6.0": 
   const r = await installFor(item, dir, deps);
   check(r.installed.kind === "installed", `no-lockfile fixture: installed ${JSON.stringify(r.installed)}`);
   check(r.install.path === "date-matched", `no-lockfile fixture: path ${r.install.path}, want date-matched`);
-  check(r.install.as_designed?.stage === "no-lockfile", "the as-designed failure is kept with its stage");
+  check(r.install.attempts[0].failure?.cause === "no-lockfile" && r.install.attempts[0].failure?.stage === "detect", "the as-designed failure is attempt 0, with its stage and cause");
   check(r.install.versions?.eslint === "9.0.0", `ESLint current at the commit's date: ${JSON.stringify(r.install.versions)}`);
   check(r.install.repo_eslint?.declared?.[0] === "package.json", "the repository's own ESLint declarations are recorded");
   const p = r.install.plugins ?? {};
@@ -106,7 +109,7 @@ const docs = { eslint: { time }, "eslint-plugin-check-file": { time: { "2.6.0": 
   const dir = repo({ "package.json": JSON.stringify({ name: "x" }), "package-lock.json": "{}", "web/package.json": "{}" });
   const { deps } = fakes({ registryDocs: docs });
   const r = await installFor({ ...item, readings: [reading("anthropic-s1", "no-tabs")] }, dir, deps);
-  check(r.install.as_designed?.stage === "no-linter" && r.install.path === "date-matched", `no-linter fixture: ${JSON.stringify(r.install)}`);
+  check(r.install.attempts[0].failure?.cause === "no-linter-dependency" && r.install.path === "date-matched", `no-linter fixture: ${JSON.stringify(r.install)}`);
   check(r.install.repo_eslint?.declared?.length === 0, "the repository declares no ESLint anywhere");
 }
 
@@ -132,7 +135,7 @@ const docs = { eslint: { time }, "eslint-plugin-check-file": { time: { "2.6.0": 
   check(r.install.versions?.eslint === "9.2.0" && r.install.lockfile_pinned?.package === "frontend" && r.install.lockfile_pinned?.lockfile === "frontend/package-lock.json", `the sub-package's own pin: ${JSON.stringify(r.install.versions)} ${JSON.stringify(r.install.lockfile_pinned)}`);
   check(r.install.plugins?.["eslint-plugin-react"]?.version === "7.34.1", "a plugin the same lockfile pins, at that version");
   check(r.install.plugins?.["eslint-plugin-import"]?.version === null && /not pinned/.test(r.install.plugins?.["eslint-plugin-import"]?.error ?? ""), "a plugin the lockfile does not pin is an error on that path, not a date-matched install");
-  check(r.install.as_designed?.stage === "no-lockfile" && calls.registry.length === 0, "nothing asked of the registry on the lockfile-pinned path");
+  check(r.install.attempts[0].failure?.cause === "no-lockfile" && calls.registry.length === 0, "nothing asked of the registry on the lockfile-pinned path");
 }
 
 // 7. Lockfile formats: pnpm importers (v9, with a peer suffix), yarn v1 and Berry blocks.
@@ -171,6 +174,7 @@ check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) ===
   const r = await installFor({ id: "DX03", linter: "eslint", readings: [reading("anthropic-s1", "no-tabs")] }, dir, deps);
   check(r.installed.kind === "installed" && r.install.path === "date-matched", `TypeScript peer conflict: ${JSON.stringify(r.install).slice(0, 300)}`);
   check(r.install.versions?.typescript === "6.0.3" && r.install.typescript_peer_resolved === true, `TypeScript from the parser's peer range, recorded: ${JSON.stringify(r.install.versions)}`);
+  check(r.install.attempts.at(-1).resolved?.[0]?.cause === "peer-conflict-typescript", "the attempt says which conflict it resolved");
 }
 
 // 10. npm's error is decided by the code in its --json output, never by words in its stderr.
@@ -185,7 +189,7 @@ check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) ===
   };
   const r = await installFor({ id: "DX04", linter: "eslint", readings: [reading("anthropic-s1", "no-tabs")] }, dir, deps);
   check(seen.length === 1 && seen.every(Boolean), `one npm call, with --json, and no retry on an E404 whose stderr names ERESOLVE: ${seen}`);
-  check(/E404/.test(r.install.reason ?? "") && r.install.npm_error_code === "E404", `the parsed code is recorded: ${JSON.stringify(r.install).slice(0, 200)}`);
+  check(r.install.attempts.at(-1).failure?.tool?.code === "E404" && r.install.attempts.at(-1).failure?.cause === "package-not-found", `the parsed code decides the cause: ${JSON.stringify(r.install.attempts).slice(0, 300)}`);
 }
 
 // 11. The sha-rev rule reads files, not the failure's words: with another pin file at the root (which the kit reads
@@ -200,6 +204,42 @@ check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) ===
   const dir2 = repo({ ".pre-commit-config.yaml": "repos:\n  - repo: https://github.com/astral-sh/ruff-pre-commit\n    rev: f12be1ebaa5351c1fc76472de98db2c3446c8253\n" });
   const r2 = await installFor({ id: "DR3", linter: "ruff", readings: [] }, dir2, deps);
   check(r2.installed.kind === "installed" && (r2.install.adjustments ?? []).includes("pre-commit-rev-not-a-release"), "the pre-commit rev is the only pin file: the no-pin rule applies whatever the failure says");
+}
+
+// 13. A TypeScript peer conflict and then a plugin that needs --legacy-peer-deps (measured on two items): legacy mode
+//     installs no peers, so the TypeScript npm chose is pinned explicitly and survives.
+{
+  const dir = repo({ "package.json": "{}", "package-lock.json": "{}", "tsconfig.json": "{}" });
+  const { deps } = fakes({ registryDocs: { ...docs, "@typescript-eslint/parser": { time: { "8.70.0": T("2024-04-01") } },
+    typescript: { time: { "7.0.2": T("2024-04-02") } } } });
+  const npm = deps.npm;
+  deps.npm = (args, cwd) => {
+    const pkg = JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf8"));
+    if (pkg.devDependencies.typescript === "7.0.2") return { code: 1, stdout: JSON.stringify({ error: { code: "ERESOLVE" } }), stderr: "" };
+    const r = npm(args, cwd);
+    if (r.code !== 0) return r;
+    const lock = JSON.parse(readFileSync(path.join(cwd, "package-lock.json"), "utf8"));
+    const legacy = args.includes("--legacy-peer-deps");
+    if (!legacy || pkg.devDependencies.typescript) lock.packages["node_modules/typescript"] = { version: pkg.devDependencies.typescript ?? "6.0.3" };
+    writeFileSync(path.join(cwd, "package-lock.json"), JSON.stringify(lock));
+    return r;
+  };
+  const r = await installFor({ id: "DX05", linter: "eslint", readings: [reading("anthropic-s1", "conflicts/y")] }, dir, deps);
+  check(r.install.legacy_peer_deps === true && r.install.versions?.typescript === "6.0.3", `TypeScript kept explicit under --legacy-peer-deps: ${JSON.stringify(r.install.versions)}`);
+  check(JSON.stringify(r.install.attempts.at(-1).resolved?.map((x) => x.cause)) === JSON.stringify(["peer-conflict-typescript", "peer-conflict-other"]), `both conflicts recorded: ${JSON.stringify(r.install.attempts.at(-1).resolved)}`);
+}
+
+// 12. Every install record any fixture above produced has the declared shape, and the committed JSON Schema is the
+//     one install-schema.mjs generates.
+{
+  const committed = JSON.parse(readFileSync(new URL("./install-result.schema.json", import.meta.url), "utf8"));
+  check(JSON.stringify(committed) === JSON.stringify(jsonSchema()), "install-result.schema.json is generated from install-schema.mjs (node install-schema.mjs --write)");
+  for (const [i, r] of seenInstalls.entries()) {
+    const v = installSchema.safeParse(r);
+    check(v.success, `install record ${i} has the declared shape: ${v.success ? "" : JSON.stringify(v.error.issues).slice(0, 300)}`);
+  }
+  check(!installSchema.safeParse({ ...seenInstalls[0], attempts: [{ path: "as-designed", outcome: "not-installed", failure: { stage: "detect", cause: "no-lock", detail: "" } }] }).success, "a cause outside the closed list is refused");
+  check(seenInstalls.length >= 8, `records checked: ${seenInstalls.length}`);
 }
 
 // 5. The plan job's matrix: one entry per item, Node 22 unless the item names another (from the repository's engines).
