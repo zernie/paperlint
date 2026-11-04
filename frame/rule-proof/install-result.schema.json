@@ -312,6 +312,17 @@
   },
   "typescript_peer_resolved": {
    "type": "boolean"
+  },
+  "ts_parser_asked": {
+   "type": "array",
+   "items": {
+    "type": "string",
+    "enum": [
+     "root-tsconfig",
+     "typescript-eslint-rule",
+     "typescript-pair"
+    ]
+   }
   }
  },
  "required": [
@@ -323,5 +334,123 @@
   "attempts",
   "adjustments"
  ],
- "additionalProperties": false
+ "additionalProperties": false,
+ "$defs": {
+  "pair_check": {
+   "type": "object",
+   "properties": {
+    "stage": {
+     "type": "string",
+     "enum": [
+      "parse",
+      "pair-ignored"
+     ]
+    },
+    "cause": {
+     "type": "string",
+     "enum": [
+      "no-ts-parser-in-install",
+      "parse-other",
+      "pair-unconfigured",
+      "pair-in-ignores",
+      "unknown"
+     ]
+    },
+    "pair_ts": {
+     "type": "boolean"
+    },
+    "parser": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "eslint": {
+     "anyOf": [
+      {
+       "type": "object",
+       "properties": {
+        "version": {
+         "type": [
+          "string",
+          "null"
+         ]
+        },
+        "bad": {
+         "anyOf": [
+          {
+           "type": "object",
+           "properties": {
+            "files_only": {
+             "type": "boolean"
+            },
+            "full": {
+             "type": "boolean"
+            }
+           },
+           "required": [
+            "files_only",
+            "full"
+           ],
+           "additionalProperties": false
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "good": {
+         "anyOf": [
+          {
+           "type": "object",
+           "properties": {
+            "files_only": {
+             "type": "boolean"
+            },
+            "full": {
+             "type": "boolean"
+            }
+           },
+           "required": [
+            "files_only",
+            "full"
+           ],
+           "additionalProperties": false
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "errors": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       },
+       "required": [
+        "version",
+        "bad",
+        "good",
+        "errors"
+       ],
+       "additionalProperties": false
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "stage",
+    "cause",
+    "pair_ts",
+    "parser",
+    "eslint"
+   ],
+   "additionalProperties": false
+  }
+ }
 }

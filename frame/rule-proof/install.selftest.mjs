@@ -1,12 +1,13 @@
 // Selftest of run.mjs's install paths on planted repository fixtures, offline: the registry, npm and the linter
 // install are fakes, so nothing is fetched and nothing from a fixture runs.
 //   node frame/rule-proof/install.selftest.mjs   (exit 1 on a defect)
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { optionsSchema, pluginPart } from "./diagnose.mjs";
-import { installSchema, jsonSchema } from "./install-schema.mjs";
-import { installFor as installForReal, lockedVersion, matrixOf, npmDateMatched, readingPlugins, repoEslint } from "./run.mjs";
+import { installSchema, jsonSchema, pairCheckSchema } from "./install-schema.mjs";
+import { installFor as installForReal, lockedVersion, matrixOf, needsTsParser, npmDateMatched, otherRuffPin, pairCauseOf, pairCheck, readingPlugins, repoEslint } from "./run.mjs";
 
 const fail = [];
 const seenInstalls = [];
@@ -229,6 +230,85 @@ check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) ===
   check(JSON.stringify(r.install.attempts.at(-1).resolved?.map((x) => x.cause)) === JSON.stringify(["peer-conflict-typescript", "peer-conflict-other"]), `both conflicts recorded: ${JSON.stringify(r.install.attempts.at(-1).resolved)}`);
 }
 
+// 14. A planted pair that is TypeScript asks for the TypeScript parser, whatever sits at the root (measured, D14: 32
+//     sub-readings stopped at «Parsing error» because only a root tsconfig.json or a typescript-eslint rule asked for
+//     it). On the lockfile-pinned path the parser and TypeScript come from the same lockfile as ESLint.
+const tsPair = (dirName = "src") => ({ bad: { path: `${dirName}/p/bad.ts`, text: "interface A { x: number }\n" }, good: { path: `${dirName}/p/good.ts`, text: "const a = 1;\n" } });
+const jsPair = { bad: { path: "p/bad.js", text: "x\n" }, good: { path: "p/good.js", text: "y\n" } };
+{
+  const lock = { lockfileVersion: 3, packages: { "": {}, "node_modules/eslint": { version: "9.2.0" },
+    "node_modules/@typescript-eslint/parser": { version: "8.1.0" }, "node_modules/typescript": { version: "5.4.5" } } };
+  const dir = repo({ "web/package.json": JSON.stringify({ devDependencies: { eslint: "^9", "@typescript-eslint/parser": "^8", typescript: "^5" } }),
+    "web/package-lock.json": JSON.stringify(lock), "web/src/a.ts": "x\n", "web/tsconfig.json": "{}" });
+  const { deps } = fakes({ registryDocs: docs });
+  const r = await installFor({ id: "DX14", linter: "eslint", readings: [{ ...reading("anthropic-s1", "no-console"), pair: tsPair("web") }] }, dir, deps);
+  check(r.install.path === "lockfile-pinned" && r.install.versions?.["@typescript-eslint/parser"] === "8.1.0" && r.install.versions?.typescript === "5.4.5",
+    `a .ts pair with no root tsconfig.json: the lockfile's own parser and TypeScript: ${JSON.stringify(r.install.versions)}`);
+  check(JSON.stringify(r.install.ts_parser_asked) === JSON.stringify(["typescript-pair"]), `why the parser was asked is recorded: ${JSON.stringify(r.install.ts_parser_asked)}`);
+  const js = await installFor({ id: "DX14b", linter: "eslint", readings: [{ ...reading("anthropic-s1", "no-console"), pair: jsPair }] }, dir, fakes({ registryDocs: docs }).deps);
+  check(!js.install.versions?.["@typescript-eslint/parser"] && js.install.ts_parser_asked === undefined, `a .js pair asks for no parser: ${JSON.stringify(js.install.versions)}`);
+}
+
+// 15. The same on the date-matched path: no tsconfig.json anywhere, a .ts pair.
+{
+  const dir = repo({ "README.md": "x\n", "app/x.ts": "x\n" });
+  const { deps, calls } = fakes({ registryDocs: { ...docs, "@typescript-eslint/parser": { time: { "8.1.0": T("2024-04-01") } }, typescript: { time: { "5.4.5": T("2024-04-02") } } } });
+  const r = await installFor({ id: "DX15", linter: "eslint", readings: [{ ...reading("google-s1", "no-console"), pair: tsPair("app") }] }, dir, deps);
+  check(r.install.path === "date-matched" && r.install.versions?.["@typescript-eslint/parser"] === "8.1.0" && r.install.versions?.typescript === "5.4.5",
+    `date-matched, .ts pair: parser and TypeScript at the date: ${JSON.stringify(r.install.versions)}`);
+  check(calls.registry.includes("@typescript-eslint/parser"), "the registry was asked for the parser");
+}
+
+// 16. Whether another root file pins Ruff is the Ruff kit's own answer (vigiles' ruffPin, which the install reads),
+//     not a second reading of the requirement line: a requirement with an environment marker is no exact pin to the
+//     kit, so the pre-commit sha rev is what the install used and failed on.
+{
+  const dir = repo({ ".pre-commit-config.yaml": "repos:\n  - repo: https://github.com/astral-sh/ruff-pre-commit\n    rev: f12be1ebaa5351c1fc76472de98db2c3446c8253\n",
+    "requirements-dev.txt": 'ruff==0.3.0 ; python_version >= "3.8"\n' });
+  const { deps } = fakes({ ruff: { "0.4.1": [{ upload_time_iso_8601: T("2024-04-01") }] } });
+  const r = await installFor({ id: "DR4", linter: "ruff", readings: [] }, dir, deps);
+  check(r.install.attempts[0].failure?.cause === "tool-resolve" && r.installed.kind === "installed",
+    `a marker requirement is no pin to the kit: the sha rev decides (tool-resolve): ${JSON.stringify(r.install.attempts)}`);
+  check(otherRuffPin(repo({ "requirements.txt": "ruff==0.4.1\n" })) === true && otherRuffPin(repo({ "pyproject.toml": '[project]\noptional-dependencies = { dev = ["ruff>=0.4"] }\n' })) === false
+    && otherRuffPin(repo({ "uv.lock": 'version = 1\n[[package]]\nname = "ruff"\nversion = "0.4.1"\n' })) === true, "the kit's pin: exact requirement yes, a range no, a lockfile entry yes");
+}
+
+// 17. yarn.lock read by its own parsers: v1 by @yarnpkg/lockfile, Berry (YAML with __metadata) by js-yaml; a key
+//     holds several descriptors, a scoped name keeps its leading «@».
+{
+  const y1 = '# yarn lockfile v1\n\n\n"@typescript-eslint/parser@^8.0.0", "@typescript-eslint/parser@^8.1.0":\n  version "8.1.0"\n  resolved "x"\n\neslint-plugin-x@^1:\n  version "1.0.0"\n\neslint@^8.0.0, eslint@^8.57.0:\n  version "8.57.0"\n  resolved "x"\n';
+  check(lockedVersion("yarn.lock", y1, ".", "@typescript-eslint/parser") === "8.1.0" && lockedVersion("yarn.lock", y1, ".", "eslint") === "8.57.0", "yarn v1: scoped and plain names");
+  const berry = '__metadata:\n  version: 8\n  cacheKey: 10c0\n\n"@typescript-eslint/parser@npm:^8.0.0, @typescript-eslint/parser@npm:^8.2.0":\n  version: 8.2.0\n  resolution: "@typescript-eslint/parser@npm:8.2.0"\n\n"eslint@npm:^9.0.0":\n  version: 9.1.1\n  resolution: "eslint@npm:9.1.1"\n\n"eslint-config-x@workspace:packages/x":\n  version: 0.0.0-use.local\n';
+  check(lockedVersion("yarn.lock", berry, ".", "@typescript-eslint/parser") === "8.2.0" && lockedVersion("yarn.lock", berry, ".", "eslint") === "9.1.1" && lockedVersion("yarn.lock", berry, ".", "eslint-config-x") === null,
+    "yarn Berry: several descriptors in one key, a workspace version is no release");
+  let threw = false;
+  try { lockedVersion("yarn.lock", "eslint@^8:\n  version \"8\n", ".", "eslint"); } catch { threw = true; }
+  check(threw, "a yarn.lock neither parser reads is an error, not a guess (the caller records no pin)");
+}
+
+// 18. Why a planted pair did not run, from structure: the pair's file type and whether the reading has a parser
+//     (stage parse); ESLint's own config matching asked of the installed ESLint (stage pair-ignored).
+{
+  check(pairCauseOf("parse", { pair_ts: true, parser: null, eslint: null }) === "no-ts-parser-in-install", "a .ts pair, no parser: no-ts-parser-in-install");
+  check(pairCauseOf("parse", { pair_ts: true, parser: "@typescript-eslint/parser", eslint: null }) === "parse-other", "a parser was there: parse-other");
+  check(pairCauseOf("pair-ignored", { pair_ts: true, parser: null, eslint: null }) === "unknown", "no answer from ESLint: unknown");
+  const eslintDir = path.dirname(createRequire(import.meta.url).resolve("eslint/package.json"));
+  const fixture = () => { const d = repo({ "README.md": "x\n" }); mkdirSync(path.join(d, "node_modules"), { recursive: true }); symlinkSync(eslintDir, path.join(d, "node_modules", "eslint"), "dir"); return d; };
+  const pinned = { dir: fixture(), version: "10.14.0" };
+  const ask = (files, ignores, pair) => pairCheck(pinned, { linter: "eslint", rule: "no-console", options: [], scope: { files, ignores } }, pair, { kind: "not-run", stage: "pair-ignored" });
+  const dirOnly = ask(["app/**"], [], tsPair("app"));
+  check(dirOnly.cause === "pair-unconfigured" && dirOnly.eslint?.bad?.files_only === false, `a directory-only pattern takes no .ts file (ESLint's own answer): ${JSON.stringify(dirOnly)}`);
+  const ignored = ask(["app/**/*.ts"], ["app/p/**"], tsPair("app"));
+  check(ignored.cause === "pair-in-ignores" && ignored.eslint?.bad?.files_only === true && ignored.eslint?.bad?.full === false, `files take it, ignores drop it: ${JSON.stringify(ignored)}`);
+  const parse = pairCheck(pinned, { linter: "eslint", rule: "no-console", options: [], scope: { files: ["app/**/*.ts"], ignores: [] } }, tsPair("app"), { kind: "not-run", stage: "parse" });
+  check(parse.cause === "no-ts-parser-in-install" && parse.eslint === null, `parse: decided without running anything: ${JSON.stringify(parse)}`);
+  for (const pc of [dirOnly, ignored, parse]) { const v = pairCheckSchema.safeParse(pc); check(v.success, `pair check has the declared shape: ${v.success ? "" : JSON.stringify(v.error.issues).slice(0, 300)}`); }
+  check(!pairCheckSchema.safeParse({ ...parse, cause: "guessed" }).success, "a pair cause outside the closed list is refused");
+  check(needsTsParser(repo({ "README.md": "x\n" }), [{ reading: { rule: "no-console" }, pair: tsPair() }]).join() === "typescript-pair"
+    && needsTsParser(repo({ "tsconfig.json": "{}" }), [{ reading: { rule: "@typescript-eslint/no-explicit-any" }, pair: jsPair }]).join() === "root-tsconfig,typescript-eslint-rule"
+    && needsTsParser(repo({ "README.md": "x\n" }), [{ reading: { rule: "no-console" }, pair: jsPair }]).length === 0, "needsTsParser: what asked for the parser");
+}
+
 // 12. Every install record any fixture above produced has the declared shape, and the committed JSON Schema is the
 //     one install-schema.mjs generates.
 {
@@ -239,7 +319,8 @@ check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) ===
     check(v.success, `install record ${i} has the declared shape: ${v.success ? "" : JSON.stringify(v.error.issues).slice(0, 300)}`);
   }
   check(!installSchema.safeParse({ ...seenInstalls[0], attempts: [{ path: "as-designed", outcome: "not-installed", failure: { stage: "detect", cause: "no-lock", detail: "" } }] }).success, "a cause outside the closed list is refused");
-  check(seenInstalls.length >= 8, `records checked: ${seenInstalls.length}`);
+  check(seenInstalls.length >= 12, `records checked: ${seenInstalls.length}`);
+  check(JSON.stringify(committed.$defs?.pair_check) === JSON.stringify(jsonSchema().$defs?.pair_check) && committed.$defs?.pair_check?.properties?.cause, "the pair check is in the emitted schema");
 }
 
 // 5. The plan job's matrix: one entry per item, Node 22 unless the item names another (from the repository's engines).
@@ -247,4 +328,4 @@ check(JSON.stringify(matrixOf([{ id: "a" }, { id: "b", node: "20" }])) === JSON.
 check(JSON.stringify(repoEslint(repo({ "package.json": "{}", "a/package.json": JSON.stringify({ devDependencies: { eslint: "8" } }) })).declared) === JSON.stringify(["a/package.json"]), "repoEslint finds a sub-package");
 
 if (fail.length) { console.log("FAIL:\n  " + fail.join("\n  ")); process.exit(1); }
-console.log("ok: npm date-matched versions; no-lockfile fixture -> date-matched with plugins recorded per reading, an unknown plugin an error, a peer conflict marked; lockfile fixture -> as-designed, nothing fetched; no ESLint of its own -> date-matched, marked; Ruff sha rev -> no-pin rule; matrix Node per item");
+console.log("ok: npm date-matched versions; no-lockfile fixture -> date-matched with plugins recorded per reading, an unknown plugin an error, a peer conflict marked; lockfile fixture -> as-designed, nothing fetched; no ESLint of its own -> date-matched, marked; Ruff sha rev -> no-pin rule; matrix Node per item; a .ts pair asks for the TypeScript parser (lockfile-pinned, date-matched); the Ruff pin is the kit's own answer; yarn v1 and Berry by their parsers; why a pair did not run, from structure and ESLint's config matching");

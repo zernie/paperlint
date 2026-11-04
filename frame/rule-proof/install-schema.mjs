@@ -24,6 +24,16 @@ export const CAUSES = [
   "unknown", // none of the structured signals decides it
 ];
 export const STAGES = ["clone", "detect", "resolve", "fetch", "load"];
+// Why an installed reading's planted pair did not run (vigiles' proof stage «parse» or «pair-ignored»), decided only
+// from structure: the pair's file extension, whether the reading has a parser, and ESLint's own config matching.
+export const PAIR_CAUSES = [
+  "no-ts-parser-in-install", // parse: the pair is a TypeScript file and the install holds no @typescript-eslint/parser
+  "parse-other", // parse: a parser for the file's type was there, or the file is not TypeScript
+  "pair-unconfigured", // pair-ignored: ESLint gives the file no config from the setting's `files` alone (e.g. only
+  //                      `dir/**` patterns, which do not make ESLint lint a .ts file)
+  "pair-in-ignores", // pair-ignored: the setting's `files` give it a config, its `ignores` take it away
+  "unknown", // none of the above decides it (no answer from ESLint, a Ruff pair)
+];
 export const PATHS = ["as-designed", "lockfile-pinned", "date-matched"];
 
 const failure = z.strictObject({
@@ -60,6 +70,7 @@ export const installSchema = z.strictObject({
   aside: z.array(z.string()).optional(),
   legacy_peer_deps: z.boolean().optional(),
   typescript_peer_resolved: z.boolean().optional(),
+  ts_parser_asked: z.array(z.enum(["root-tsconfig", "typescript-eslint-rule", "typescript-pair"])).optional(),
 }).superRefine((v, ctx) => {
   const last = v.attempts.at(-1);
   if (last.outcome !== v.outcome) ctx.addIssue({ code: "custom", message: "outcome is the last attempt's" });
@@ -67,7 +78,22 @@ export const installSchema = z.strictObject({
   for (const a of v.attempts) if ((a.outcome === "not-installed") !== (a.failure !== undefined)) ctx.addIssue({ code: "custom", message: "an attempt has a failure exactly when it did not install" });
 });
 
-export const jsonSchema = () => ({ $comment: "generated from install-schema.mjs; do not edit", ...z.toJSONSchema(installSchema, { io: "input" }) });
+const fileConfig = z.strictObject({ files_only: z.boolean(), full: z.boolean() }).nullable();
+// A reading's `pair_check` in a result (beside `proof`), when its proof stopped at «parse» or «pair-ignored».
+export const pairCheckSchema = z.strictObject({
+  stage: z.enum(["parse", "pair-ignored"]),
+  cause: z.enum(PAIR_CAUSES),
+  pair_ts: z.boolean(),
+  parser: z.string().nullable(),
+  eslint: z.strictObject({ version: z.string().nullable(), bad: fileConfig, good: fileConfig, errors: z.array(z.string()) }).nullable(),
+});
+
+// The install record's schema at the top level (what a reader validates `install` against); the pair check under
+// $defs.pair_check.
+export const jsonSchema = () => {
+  const { $schema: _s, ...pairCheck } = z.toJSONSchema(pairCheckSchema, { io: "input" });
+  return { $comment: "generated from install-schema.mjs; do not edit", ...z.toJSONSchema(installSchema, { io: "input" }), $defs: { pair_check: pairCheck } };
+};
 
 if (process.argv[2] === "--write") {
   writeFileSync(new URL("./install-result.schema.json", import.meta.url), JSON.stringify(jsonSchema(), null, 1) + "\n");

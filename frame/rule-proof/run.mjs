@@ -17,13 +17,20 @@
 // closed list, the tool's exit and error code, free-text detail no code reads).
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { globSync } from "glob";
 import toml from "@iarna/toml";
+import yarnLockV1 from "@yarnpkg/lockfile";
 import yaml from "js-yaml";
 import semver from "semver";
-import { installSchema } from "./install-schema.mjs";
+import { installSchema, pairCheckSchema } from "./install-schema.mjs";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
+
+// The Ruff kit's own reading of a repository's pin files (vigiles, the same version the runner installs). Its module is
+// not in vigiles' export map, so it is required by its path inside the installed package.
+const { ruffPin } = createRequire(import.meta.url)(path.join(path.dirname(fileURLToPath(import.meta.resolve("vigiles/rule-proof"))), "..", "core", "rule-proof", "kits", "ruff.js"));
 
 const [inputsPath, outDir, ...rest] = process.argv.slice(2);
 const only = rest[0] === "--only" ? Number(rest[1]) : null;
@@ -88,11 +95,11 @@ export function crossPlan(readings) {
   return ok.flatMap((i) => ok.filter((j) => j !== i).map((j) => [i, j]));
 }
 
-export function finish(reading, pinned, adjustments) {
+export function finish(reading, pinned, adjustments, pair = null) {
   if (reading.linter === "ruff") return { ...reading, settings: ruffSettings(reading.settings, pinned.version) };
   const plugin = pluginOf(reading.rule);
   if (plugin && expose(pinned.dir, plugin)) adjustments.add("pnpm-exposed");
-  const ts = reading.rule.startsWith("@typescript-eslint/") || existsSync(path.join(pinned.dir, "tsconfig.json"));
+  const ts = needsTsParser(pinned.dir, [{ reading, pair }]).length > 0;
   if (ts && expose(pinned.dir, "@typescript-eslint/parser")) adjustments.add("pnpm-exposed");
   return existsSync(path.join(pinned.dir, "node_modules", "@typescript-eslint/parser", "package.json"))
     ? { ...reading, parser: "@typescript-eslint/parser" } : reading;
@@ -106,14 +113,17 @@ export function asDesignedPlugins(reading, dir) {
   return [{ name, version: pkg?.version ?? null, error: pkg ? null : "not in the repository's own install" }];
 }
 
+// A release: a version semver reads as itself (MAJOR.MINOR.PATCH, nothing before or after) with no pre-release part.
+const stable = (v) => typeof v === "string" && semver.valid(v) === v && semver.prerelease(v) === null;
+const byVersion = (a, b) => semver.compare(a, b);
+
 // Ruff with no pin: the latest release uploaded to PyPI before the commit (DESIGN.md §9.8), not a pre-release.
 export function dateMatched(releases, commitIso) {
   const at = Date.parse(commitIso);
   const ok = Object.entries(releases)
-    .filter(([v, files]) => /^\d+\.\d+\.\d+$/.test(v) && files.length > 0 && Math.min(...files.map((f) => Date.parse(f.upload_time_iso_8601))) <= at)
-    .map(([v]) => v.split(".").map(Number));
-  ok.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
-  return ok.length ? ok.at(-1).join(".") : null;
+    .filter(([v, files]) => stable(v) && files.length > 0 && Math.min(...files.map((f) => Date.parse(f.upload_time_iso_8601))) <= at)
+    .map(([v]) => v);
+  return ok.length ? ok.sort(byVersion).at(-1) : null;
 }
 
 async function ruffReleases() {
@@ -137,16 +147,14 @@ async function ruffReleases() {
 const NODE_LOCKS = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"];
 const ASIDE = ["package.json", ...NODE_LOCKS, ".npmrc", ".yarnrc", ".yarnrc.yml", ".pnpmfile.cjs", ".pnpmfile.mjs",
   "pnpm-workspace.yaml", "bunfig.toml"];
-const STABLE = /^\d+\.\d+\.\d+$/;
-const cmpV = (a, b) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; };
 const DEP_KEYS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 const TS_PARSER = "@typescript-eslint/parser";
 
 // npm: the highest release (no pre-release) published on or before the commit.
 export function npmDateMatched(time, commitIso) {
   const at = Date.parse(commitIso);
-  const ok = Object.entries(time ?? {}).filter(([v, t]) => STABLE.test(v) && Date.parse(t) <= at).map(([v]) => v);
-  return ok.length ? ok.sort(cmpV).at(-1) : null;
+  const ok = Object.entries(time ?? {}).filter(([v, t]) => stable(v) && Date.parse(t) <= at).map(([v]) => v);
+  return ok.length ? ok.sort(byVersion).at(-1) : null;
 }
 
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, "utf8")); } catch { return null; } };
@@ -167,27 +175,43 @@ export function lockedVersion(lockPath, text, pkgDir, name) {
     const j = JSON.parse(text);
     const at = pkgDir === "." ? "" : `${pkgDir}/`;
     const v = j.packages?.[`${at}node_modules/${name}`]?.version ?? j.packages?.[`node_modules/${name}`]?.version ?? j.dependencies?.[name]?.version;
-    return STABLE.test(v ?? "") ? v : null;
+    return stable(v) ? v : null;
   }
   if (base === "pnpm-lock.yaml") {
     const j = yaml.load(text) ?? {};
     const imp = j.importers?.[pkgDir] ?? (pkgDir === "." ? j : null);
     const e = DEP_KEYS.map((k) => imp?.[k]?.[name]).find((x) => x !== undefined);
     const v = clean(typeof e === "object" && e !== null ? e.version : e);
-    if (STABLE.test(v ?? "")) return v;
+    if (stable(v)) return v;
     const keys = Object.keys(j.packages ?? {}).map((k) => k.replace(/^\//, "")).filter((k) => k.startsWith(`${name}@`) || k.startsWith(`${name}/`));
-    const vs = keys.map((k) => clean(k.slice(name.length + 1))).filter((x) => STABLE.test(x ?? ""));
-    return vs.length ? vs.sort(cmpV).at(-1) : null;
+    const vs = keys.map((k) => clean(k.slice(name.length + 1))).filter(stable);
+    return vs.length ? vs.sort(byVersion).at(-1) : null;
   }
   if (base === "yarn.lock") {
-    const blocks = text.split(/\n\s*\n/);
-    const vs = blocks.filter((b) => {
-      const head = b.split("\n").find((l) => l.trim() && !l.startsWith("#")) ?? "";
-      return head.split(",").some((h) => h.trim().replace(/^"/, "").startsWith(`${name}@`));
-    }).map((b) => /\n\s+version:?\s+"?([^"\s]+)"?/.exec(b)?.[1]).filter((x) => STABLE.test(x ?? ""));
-    return vs.length ? vs.sort(cmpV).at(-1) : null;
+    const vs = Object.entries(yarnEntries(text)).filter(([key]) => key.split(",").some((d) => descriptorName(d) === name))
+      .map(([, e]) => e?.version).filter(stable);
+    return vs.length ? vs.sort(byVersion).at(-1) : null;
   }
   return null;
+}
+
+// A yarn.lock's entries, each parsed by its format's own parser: Berry is YAML whose top level holds `__metadata`;
+// v1 is yarn's own grammar (@yarnpkg/lockfile). Keys are descriptors, several joined by ", " in one key. Throws when
+// neither reads it.
+export function yarnEntries(text) {
+  let doc = null;
+  try { doc = yaml.load(text); } catch { doc = null; }
+  if (doc && typeof doc === "object" && "__metadata" in doc) { const { __metadata: _m, ...entries } = doc; return entries; }
+  const v1 = yarnLockV1.parse(text);
+  if (v1.type !== "success") throw new Error(`yarn.lock v1: ${v1.type}`);
+  return v1.object;
+}
+
+// A descriptor's package name: everything before the «@» that opens its range (a scoped name starts with «@»).
+export function descriptorName(descriptor) {
+  const d = descriptor.trim();
+  const at = d.indexOf("@", d.startsWith("@") ? 1 : 0);
+  return at < 0 ? d : d.slice(0, at);
 }
 
 // The package that declares ESLint with most files under it (ties: the shorter path, then by name), and the lockfile
@@ -290,7 +314,21 @@ function npmManifest(dir, deps, base, plugins) {
 }
 
 const pluginNames = (readings) => [...new Set(readings.map((r) => pluginOf(r.reading.rule)).filter(Boolean))].sort();
-const wantsTs = (dir, readings) => existsSync(path.join(dir, "tsconfig.json")) || readings.some((r) => r.reading.rule.startsWith("@typescript-eslint/"));
+
+// A file ESLint needs the TypeScript parser for, by its extension.
+const TS_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts"]);
+export const isTsFile = (p) => typeof p === "string" && TS_EXTENSIONS.has(path.extname(p));
+const pairIsTs = (pair) => Boolean(pair) && [pair.bad?.path, pair.good?.path].some(isTsFile);
+// What asks for the TypeScript parser, in order: a root tsconfig.json, a reading whose rule is typescript-eslint's, a
+// planted pair that is a TypeScript file. Empty: no parser is installed. (D14: the planted pair was not asked, and 32
+// sub-readings whose pair is .ts stopped at «Parsing error» in repositories with no root tsconfig.json.)
+export function needsTsParser(dir, readings) {
+  return [
+    ...(existsSync(path.join(dir, "tsconfig.json")) ? ["root-tsconfig"] : []),
+    ...(readings.some((r) => pluginOf(r.reading.rule) === "@typescript-eslint/eslint-plugin") ? ["typescript-eslint-rule"] : []),
+    ...(readings.some((r) => pairIsTs(r.pair)) ? ["typescript-pair"] : []),
+  ];
+}
 
 async function dateMatchedVersions(names, commitIso, deps) {
   const out = {};
@@ -313,23 +351,13 @@ export function readingPlugins(reading, install) {
   return [{ name, version: null, error: install.path === "as-designed" ? "not in the repository's own install" : "not asked" }];
 }
 
-// Whether a root file the Ruff kit reads before .pre-commit-config.yaml pins Ruff exactly: a lockfile naming ruff, a
-// requirements file or pyproject.toml with a `ruff==` requirement (each parsed: TOML, requirement lines).
-const exactRuff = (req) => /^ruff\s*===?\s*[\w.]+$/i.test(String(req).split(";")[0].trim());
+// Whether a root file other than .pre-commit-config.yaml pins Ruff, as the Ruff kit itself reads it: the kit's own
+// ruffPin over the repository's root files (its lockfiles, requirements*.txt, pyproject.toml), the pre-commit file
+// left out. The kit reads those before the pre-commit rev, so a pin there is what the install used.
 export function otherRuffPin(dir) {
-  const has = (f) => existsSync(path.join(dir, f));
-  const read = (f) => readFileSync(path.join(dir, f), "utf8");
-  for (const lock of ["uv.lock", "poetry.lock", "pdm.lock"]) {
-    if (!has(lock)) continue;
-    try { if ((toml.parse(read(lock)).package ?? []).some((p) => p.name === "ruff")) return true; } catch { /* unreadable: no pin from it */ }
-  }
-  const reqs = globSync("requirements*.txt", { cwd: dir, posix: true });
-  if (reqs.some((f) => read(f).split("\n").map((l) => l.split("#")[0].trim()).some(exactRuff))) return true;
-  if (has("pyproject.toml")) {
-    const strings = (v) => (typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : []);
-    try { if (strings(toml.parse(read("pyproject.toml"))).some(exactRuff)) return true; } catch { /* unreadable: no pin */ }
-  }
-  return false;
+  const names = ["uv.lock", "poetry.lock", "pdm.lock", "pyproject.toml", ...globSync("requirements*.txt", { cwd: dir, posix: true })];
+  const files = Object.fromEntries(names.filter((f) => existsSync(path.join(dir, f))).map((f) => [f, readFileSync(path.join(dir, f), "utf8")]));
+  return ruffPin(files) !== null;
 }
 
 const preCommitRuffRev = (dir) => {
@@ -351,7 +379,7 @@ export function asDesignedFailure(installed, dir, linter, nodeVersion = process.
   // stage "install": the install command did not exit 0
   if (linter === "ruff") {
     const rev = preCommitRuffRev(dir);
-    const cause = typeof rev === "string" && !STABLE.test(rev.replace(/^v/, "")) && !otherRuffPin(dir) ? "tool-resolve" : "unknown";
+    const cause = typeof rev === "string" && !stable(semver.clean(rev) ?? "") && !otherRuffPin(dir) ? "tool-resolve" : "unknown";
     return { stage: "resolve", cause, detail };
   }
   const range = readJson(path.join(dir, "package.json"))?.engines?.node;
@@ -418,11 +446,12 @@ export async function installFor(item, dir, deps) {
   const names = pluginNames(item.readings);
   const commitIso = deps.commitIso(dir);
   const pin = repo.declared.length ? lockfilePin(dir, repo.declared) : { package: null, candidates: [] };
-  const common = { repo_eslint: repo, commit: commitIso };
+  const tsAsked = needsTsParser(dir, item.readings);
+  const common = { repo_eslint: repo, commit: commitIso, ...(tsAsked.length ? { ts_parser_asked: tsAsked } : {}) };
   if (pin.package !== null) {
     const versions = { eslint: pin.eslint };
     const v = (n) => { try { return lockedVersion(pin.lockfile, pin.text, pin.importer, n); } catch { return null; } };
-    if (wantsTs(dir, item.readings) && v(TS_PARSER)) { versions[TS_PARSER] = v(TS_PARSER); if (v("typescript")) versions.typescript = v("typescript"); }
+    if (tsAsked.length && v(TS_PARSER)) { versions[TS_PARSER] = v(TS_PARSER); if (v("typescript")) versions.typescript = v("typescript"); }
     const plugins = Object.fromEntries(names.map((n) => [n, v(n) ? { version: v(n), error: null } : { version: null, error: `${n} is not pinned by ${pin.lockfile}`, cause: "package-not-found" }]));
     const r = await ownManifest(dir, deps, "lockfile-pinned", versions, plugins);
     attempts.push(r.attempt);
@@ -434,7 +463,7 @@ export async function installFor(item, dir, deps) {
     for (const f of r.record.aside) renameSync(path.join(deps.asideDir, f), path.join(dir, f));
     rmSync(path.join(dir, "node_modules"), { recursive: true, force: true });
   }
-  const want = ["eslint", ...(wantsTs(dir, item.readings) ? [TS_PARSER, "typescript"] : [])];
+  const want = ["eslint", ...(tsAsked.length ? [TS_PARSER, "typescript"] : [])];
   const base = await dateMatchedVersions(want, commitIso, deps);
   if (base.eslint.version === null) {
     attempts.push({ path: "date-matched", outcome: "not-installed", failure: { stage: "fetch", cause: base.eslint.cause, detail: base.eslint.error } });
@@ -466,6 +495,36 @@ export function diagnose(pinned, reading) {
     const r = spawnSync(process.execPath, [at, JSON.stringify(reading)], { cwd: pinned.dir, encoding: "utf8", timeout: 120_000 });
     const line = (r.stdout ?? "").trim().split("\n").at(-1);
     try { return JSON.parse(line); } catch { return { errors: [`diagnose exited ${r.status}: ${tailOf(r.stderr)}`] }; }
+  } finally { rmSync(at, { force: true }); }
+}
+
+// Why a planted pair did not run (proof stage «parse» or «pair-ignored»), from structure (install-schema.mjs
+// PAIR_CAUSES): for «parse», the pair's file type and whether the reading has a parser; for «pair-ignored», ESLint's
+// own config matching, asked of the installed ESLint for the setting's `files` alone and for `files` with `ignores`.
+export function pairCauseOf(stage, { pair_ts: ts, parser, eslint }) {
+  if (stage === "parse") return ts && !parser ? "no-ts-parser-in-install" : "parse-other";
+  if (stage !== "pair-ignored" || !eslint) return "unknown";
+  const off = [eslint.bad, eslint.good].find((f) => f && (f.files_only === false || f.full === false));
+  if (!off) return "unknown";
+  return off.files_only === false ? "pair-unconfigured" : "pair-in-ignores";
+}
+
+export function pairCheck(pinned, reading, pair, proof) {
+  const base = { stage: proof.stage, pair_ts: pairIsTs(pair), parser: reading.parser ?? null };
+  const eslint = proof.stage === "pair-ignored" && reading.linter !== "ruff" ? diagnosePair(pinned, reading, pair) : null;
+  return pairCheckSchema.parse({ ...base, eslint, cause: pairCauseOf(proof.stage, { ...base, eslint }) });
+}
+
+// ESLint's own answer on the pair's two files: does the setting's `files` give it a config (files_only), and does
+// the whole setting, its ignores in their global block as vigiles writes them (full)?
+function diagnosePair(pinned, reading, pair) {
+  const at = path.join(pinned.dir, ".rule-proof-diagnose.mjs");
+  writeFileSync(at, readFileSync(DIAGNOSE, "utf8"));
+  try {
+    const r = spawnSync(process.execPath, [at, "--pair", JSON.stringify({ scope: reading.scope, bad: pair.bad.path, good: pair.good.path })],
+      { cwd: pinned.dir, encoding: "utf8", timeout: 120_000 });
+    const line = (r.stdout ?? "").trim().split("\n").at(-1);
+    try { return JSON.parse(line); } catch { return { version: null, bad: null, good: null, errors: [`diagnose exited ${r.status}: ${tailOf(r.stderr)}`] }; }
   } finally { rmSync(at, { force: true }); }
 }
 
@@ -522,7 +581,7 @@ async function runOne(item) {
   const pinned = installed.linter;
   const fulls = [];
   result.readings = item.readings.map(({ key, reading, pair }) => {
-    const full = finish(reading, pinned, adjustments);
+    const full = finish(reading, pinned, adjustments, pair);
     fulls.push(full);
     const plugins = install.path === "as-designed" ? asDesignedPlugins(full, pinned.dir) : readingPlugins(full, install);
     const missing = plugins.find((p) => p.version === null);
@@ -530,6 +589,7 @@ async function runOne(item) {
     if (missing && install.path !== "as-designed") return { key, reading: full, plugins, proof: { kind: "plugin-not-installed", plugin: missing.name, reason: missing.error } };
     const proof = rp.prove(pinned, full, pair);
     if (proof.kind === "not-run" && proof.stage === "config-load") return { key, reading: full, plugins, proof, diagnosis: diagnose(pinned, full) };
+    if (proof.kind === "not-run" && (proof.stage === "parse" || proof.stage === "pair-ignored")) return { key, reading: full, plugins, proof, pair_check: pairCheck(pinned, full, pair, proof) };
     if (proof.kind !== "proved") return { key, reading: full, plugins, proof };
     const flagged = rp.flagged(proof.reading);
     return { key, reading: full, plugins, proof: { kind: "proved" }, flagged };

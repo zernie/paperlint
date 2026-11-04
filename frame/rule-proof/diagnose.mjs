@@ -4,6 +4,10 @@
 // and run there as its own process, so a plugin resolves from the repository's node_modules as the config's import
 // would; it imports the plugin, which is the repository's code, so it runs only where the runner runs.
 //   node <repo>/.rule-proof-diagnose.mjs '<reading json>'   prints one JSON line
+//   node <repo>/.rule-proof-diagnose.mjs --pair '{"scope":…,"bad":…,"good":…}'   why ESLint gave a planted file no
+//     config: for each file, does the setting's `files` alone give it one (files_only), and does the whole setting,
+//     its `ignores` as a global block the way vigiles writes it (full)? Asked of the repository's own ESLint
+//     (calculateConfigForFile), whose answer is its own glob semantics, not ours.
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -77,4 +81,27 @@ async function main(reading) {
   console.log(JSON.stringify(out));
 }
 
-if (process.argv[2]) await main(JSON.parse(process.argv[2]));
+async function flatEslint() {
+  const mod = req("eslint");
+  if (typeof mod.loadESLint === "function") return mod.loadESLint({ useFlatConfig: true });
+  return req("eslint/use-at-your-own-risk").FlatESLint;
+}
+
+export async function pairConfigs(ESLint, cwd, { scope, bad, good }) {
+  const has = async (overrideConfig, file) =>
+    (await new ESLint({ cwd, overrideConfigFile: true, overrideConfig }).calculateConfigForFile(path.join(cwd, file))) !== undefined;
+  const one = async (file) => ({ files_only: await has([{ files: scope.files }], file), full: await has([{ ignores: scope.ignores }, { files: scope.files }], file) });
+  return { bad: await one(bad), good: await one(good) };
+}
+
+async function pairMain(ask) {
+  const out = { version: null, bad: null, good: null, errors: [] };
+  try {
+    out.version = req("eslint/package.json").version;
+    Object.assign(out, await pairConfigs(await flatEslint(), process.cwd(), ask));
+  } catch (e) { out.errors.push(`eslint: ${String(e?.message ?? e).split("\n")[0].slice(0, 300)}`); }
+  console.log(JSON.stringify(out));
+}
+
+if (process.argv[2] === "--pair") await pairMain(JSON.parse(process.argv[3]));
+else if (process.argv[2]) await main(JSON.parse(process.argv[2]));

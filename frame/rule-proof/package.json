@@ -1,9 +1,11 @@
 {
   "private": true,
   "type": "module",
-  "description": "Runner for linter readings on real repositories (vigiles experimental_ruleProof); used by .github/workflows/rule-proof-run.yml only",
+  "description": "Runner for linter readings on real repositories (vigiles experimental_ruleProof); used by .github/workflows/rule-proof-run.yml only. eslint is here only for the selftest of the pair diagnosis; a repository's own ESLint runs from its own node_modules",
   "dependencies": {
     "@iarna/toml": "2.2.5",
+    "@yarnpkg/lockfile": "1.1.0",
+    "eslint": "10.14.0",
     "glob": "13.0.6",
     "js-yaml": "4.3.2",
     "semver": "7.7.2",
