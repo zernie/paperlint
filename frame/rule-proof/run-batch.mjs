@@ -5,10 +5,11 @@
 // item cannot run past 256 items, and paid a minute (plus about 20 s of setup) for an item that took 2 s. So the items are
 // split into batches, one matrix job each: items of one Node version per batch, at most BATCH_ITEMS items in a batch
 // while that keeps the run within MAX_JOBS jobs, and larger batches beyond that, so a run of any size plans.
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
 
 export const MAX_JOBS = 256;
@@ -77,6 +78,36 @@ export function readResult(file) {
   return JSON.parse((file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8"));
 }
 export const isDone = (runDir, id) => existsSync(resultPath(runDir, id));
+
+// ---- What the work dir held, kept next to the result -------------------------------------------------------------------
+// The work dir is deleted after each item. What the item's own commit cannot give back is kept in <id>.kept.json.gz:
+// the manifest and the lockfile npm resolved on our own install paths, .npmrc, uv's resolution for a date-matched Ruff,
+// and the config each reading wrote. A file the repository holds unchanged at its commit (its own lockfile, as
+// designed) is recorded by size and sha256 only: git holds it.
+// entries: [{ kind: lockfile | manifest | config, path, key?, in_repo, store, buf }] -> the result's `kept`:
+//   { file: "<id>.kept.json.gz" | null, entries: [{ kind, path, key?, in_repo, stored, bytes, sha256 }] }
+export const keptPath = (dir, id) => path.join(dir, `${checkedId(id)}.kept.json.gz`);
+export function writeKept(dir, id, entries) {
+  const stored = entries.filter((e) => e.store);
+  const record = entries.map(({ kind, path: p, key, in_repo, store, buf }) => ({ kind, path: p, ...(key === undefined ? {} : { key }), in_repo, stored: store, bytes: buf.length, sha256: sha256(buf) }));
+  if (!stored.length) { rmSync(keptPath(dir, id), { force: true }); return { file: null, entries: record }; }
+  const file = keptPath(dir, id), tmp = `${file}.tmp`;
+  writeFileSync(tmp, gzipSync(JSON.stringify({ id, files: stored.map(({ kind, path: p, key, buf }) => ({ kind, path: p, ...(key === undefined ? {} : { key }), text: buf.toString("utf8") })) }) + "\n"));
+  renameSync(tmp, file);
+  return { file: path.basename(file), entries: record };
+}
+export const readKept = (file) => JSON.parse(gunzipSync(readFileSync(file)).toString("utf8"));
+
+// The runner itself: the commit of the code that ran (git, where this module is; `dirty` when tracked files there
+// differ from it), the Actions run id and attempt (null outside Actions, never invented), and the batch.
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+export function runnerRecord(env, key, batch) {
+  const gitHere = (...args) => { try { return execFileSync("git", ["-C", HERE, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { return null; } };
+  const runId = env.GITHUB_RUN_ID ?? null, attempt = env.GITHUB_RUN_ATTEMPT ?? null;
+  if (runId !== null && key !== `${runId}-${attempt}`) throw new Error(`run key ${key} is not this Actions run's ${runId}-${attempt}`);
+  const status = gitHere("status", "--porcelain", "--untracked-files=no", "--", ".");
+  return { run: key, repo: env.GITHUB_REPOSITORY ?? null, sha: gitHere("rev-parse", "HEAD"), dirty: status === null ? null : status !== "", run_id: runId, run_attempt: attempt, batch };
+}
 
 // ---- One batch: each item in a worker process, stopped by the runner before the job's own timeout ----------------------
 // A job killed at its `timeout-minutes` uploads nothing of the item it was on. So every item runs in a worker process
@@ -177,24 +208,39 @@ export async function runBatch({ items, indices, runDir, runner, argv, itemSecon
 
 // The commit job's check of one run's folder before anything is committed: every file is a result of an item of
 // inputs.json (<id>.json.gz), and every result names this run and the repository and commit inputs.json gives for its
-// item. -> { errors: ["<file>: why"], missing: [ids with no result] }
+// item, and every sidecar (<id>.kept.json.gz) holds what its result records. -> { errors: ["<file>: why"], missing: [ids] }
 export function closeRun(items, runDir, key) {
   const byId = new Map(items.map((it) => [it.id, it]));
   const files = existsSync(runDir) ? readdirSync(runDir).sort() : [];
-  const errors = files.flatMap((f) => {
+  const results = new Map();
+  const errors = files.filter((f) => !f.endsWith(".kept.json.gz")).flatMap((f) => {
     const id = f.endsWith(".json.gz") ? f.slice(0, -".json.gz".length) : null;
     if (id === null || !byId.has(id)) return [`${f}: not a result of an item of inputs.json`];
     let r;
     try { r = readResult(path.join(runDir, f)); } catch (e) { return [`${f}: unreadable (${e.message})`]; }
+    results.set(id, r);
     const it = byId.get(id);
     return [
+      ...keptErrors(f, r, runDir),
       ...(r.runner?.run === key ? [] : [`${f}: run ${JSON.stringify(r.runner?.run)}, not ${key}`]),
       ...(r.id === id ? [] : [`${f}: id ${JSON.stringify(r.id)}`]),
       ...(r.repo === it.repo ? [] : [`${f}: repo ${JSON.stringify(r.repo)}, inputs.json names ${it.repo}`]),
       ...(r.sha === it.sha && (r.checked_out == null || r.checked_out === it.sha) ? [] : [`${f}: sha ${JSON.stringify(r.checked_out ?? r.sha)}, inputs.json names ${it.sha}`]),
     ];
   });
-  return { errors, missing: items.map((it) => it.id).filter((id) => !files.includes(`${id}.json.gz`)) };
+  // a sidecar is kept only beside the result that names it
+  const orphans = files.filter((f) => f.endsWith(".kept.json.gz") && results.get(f.slice(0, -".kept.json.gz".length))?.kept?.file !== f)
+    .map((f) => `${f}: no result of this run names it`);
+  return { errors: [...errors, ...orphans], missing: items.map((it) => it.id).filter((id) => !files.includes(`${id}.json.gz`)) };
+}
+// A result's sidecar: there when the result names it, and every stored text with the sha256 the result records.
+function keptErrors(f, r, runDir) {
+  if (!r.kept?.file) return [];
+  let side;
+  try { side = readKept(path.join(runDir, r.kept.file)); } catch (e) { return [`${f}: kept ${r.kept.file} unreadable (${e.message})`]; }
+  const want = r.kept.entries.filter((e) => e.stored);
+  const ok = side.files.length === want.length && want.every((e, i) => side.files[i].path === e.path && sha256(Buffer.from(side.files[i].text, "utf8")) === e.sha256);
+  return ok ? [] : [`${f}: kept ${r.kept.file} does not hold the files the result records`];
 }
 
 //   node run-batch.mjs --close <inputs.json> <run folder> <run key>   exit 1 when the folder holds anything else

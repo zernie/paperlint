@@ -29,7 +29,7 @@ import yaml from "js-yaml";
 import semver from "semver";
 import { z } from "zod";
 import { findingsSchema, installSchema, pairCheckSchema } from "./install-schema.mjs";
-import { itemsArg, planOf, readResult, runBatch, runDirOf, writePartial, writeResult } from "./run-batch.mjs";
+import { itemsArg, planOf, readResult, runBatch, runDirOf, runnerRecord, writeKept, writePartial, writeResult } from "./run-batch.mjs";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
 // The Ruff kit's own reading of a repository's pin files, and the helper every kit reads its linter's JSON report
@@ -138,7 +138,7 @@ export function uvRuffAt(deps, at) {
   if (r.code === 0) {
     try { version = (toml.parse(r.stdout).packages ?? []).find((p) => p.name === "ruff")?.version ?? null; } catch { version = null; }
   }
-  if (r.code === 0 && stable(version)) return { version };
+  if (r.code === 0 && stable(version)) return { version, pylock: r.stdout };
   return { failure: { stage: "resolve", cause: r.timedOut ? "timeout" : "unknown", tool: { cmd, exit: r.code ?? null, code: null }, detail: tailOf(r.stderr) } };
 }
 
@@ -471,7 +471,8 @@ export async function installFor(item, dir, deps) {
         installed = deps.install(item.linter, dir);
         attempts.push(installed.kind === "installed" ? { path: "as-designed", outcome: "installed", rule: "ruff-date-matched" }
           : { path: "as-designed", outcome: "not-installed", rule: "ruff-date-matched", failure: { stage: "fetch", cause: installed.stage === "timeout" ? "timeout" : "unknown", detail: String(installed.reason ?? "").slice(0, 600) } });
-        return shape(installed, { date_matched: { commit: commitIso, ruff: u.version }, ...by });
+        return { ...shape(installed, { date_matched: { commit: commitIso, ruff: u.version }, ...by }),
+          generated: [{ kind: "lockfile", path: "pylock.toml (uv pip compile, date-matched)", in_repo: false, store: true, buf: Buffer.from(u.pylock) }] };
       }
       attempts.push({ path: "as-designed", outcome: "not-installed", rule: "ruff-date-matched", failure: u.failure });
       return shape(installed, by);
@@ -698,6 +699,33 @@ function diagnosePair(pinned, reading, pair) {
   } finally { rmSync(at, { force: true }); }
 }
 
+// ---- What is kept when the work dir is deleted (run-batch.mjs writeKept) ------------------------------------------------
+// The files at the install root after the install: each Node lockfile, and our own package.json, .npmrc and Ruff pin
+// file. One the repository holds unchanged at its commit (git ls-files, git diff HEAD) is in_repo and only hashed; the
+// repository's own package.json and .npmrc are not listed at all.
+const KEEP_FILES = [...NODE_LOCKS, "package.json", ".npmrc", "requirements-date-matched-ruff.txt"];
+const gitUnchanged = (dir, f) => spawnSync("git", ["ls-files", "--error-unmatch", "--", f], { cwd: dir, stdio: "ignore" }).status === 0
+  && spawnSync("git", ["diff", "--quiet", "HEAD", "--", f], { cwd: dir, stdio: "ignore" }).status === 0;
+export function installFiles(dir) {
+  return KEEP_FILES.filter((f) => existsSync(path.join(dir, f))).flatMap((f) => {
+    const inRepo = gitUnchanged(dir, f);
+    const kind = NODE_LOCKS.includes(f) ? "lockfile" : "manifest";
+    if (inRepo && kind === "manifest") return [];
+    // bun.lockb is binary: hashed, never stored as text
+    return [{ kind, path: f, in_repo: inRepo, store: !inRepo && f !== "bun.lockb", buf: readFileSync(path.join(dir, f)) }];
+  });
+}
+// The config file a reading's lint call writes: the kit's own text for that reading (the same function vigiles calls
+// before each lint of it, and the text depends on the reading alone).
+export function configEntry(pinned, key, reading) {
+  const call = pinned.run.kit.invocation(reading, [], { dir: pinned.dir, cacheDir: pinned.run.options.cacheDir });
+  return { kind: "config", path: path.relative(pinned.dir, call.configPath), key, in_repo: false, store: true, buf: Buffer.from(call.configText, "utf8") };
+}
+// A reading's proof wrote its config unless it stopped before the lint: its pair outside the scope or its paths taken,
+// or (on our own install) its plugin not installed.
+const BEFORE_LINT = new Set(["pair-outside-scope", "pair-path-taken", "scratch-path-taken"]);
+const wroteConfig = (row) => row.proof.kind !== "plugin-not-installed" && !(row.proof.kind === "not-run" && BEFORE_LINT.has(row.proof.stage));
+
 // The machine's side of installFor: vigiles' install, the registries, npm, git.
 function realDeps(dir) {
   const env = { npm_config_cache: path.join(cacheDir, "npm"), npm_config_update_notifier: "false", HOME: path.join(cacheDir, "home") };
@@ -728,12 +756,15 @@ function pnpmfileEnv(dir) {
 
 // One item. save(phase, result) records the progress after each phase (run-batch.mjs writePartial), so the runner that
 // stops the item at its limit keeps what it reached.
-async function runOne(item, runner, save = () => {}) {
+async function runOne(item, runner, save = () => {}, runDir = null) {
   const dir = path.join(work, "repo");
   const t0 = Date.now();
   const adjustments = new Set();
   // what was measured: the repository and commit inputs.json names, and the commit the clone actually checked out
   const result = { id: item.id, repo: item.repo, sha: item.sha, checked_out: null, linter: item.linter, rule: item.rule, runner };
+  const keep = [];
+  const kept = (entries) => { keep.push(...entries); if (runDir) result.kept = writeKept(runDir, item.id, keep); };
+  if (runDir) result.kept = { file: null, entries: [] };
   save("clone", result);
   try {
     result.checked_out = clone(item.repo, item.sha, dir);
@@ -747,9 +778,10 @@ async function runOne(item, runner, save = () => {}) {
   save("install", result);
   const deps = realDeps(dir);
   rmSync(deps.asideDir, { recursive: true, force: true });
-  const { installed, install } = await installFor(item, dir, deps);
+  const { installed, install, generated = [] } = await installFor(item, dir, deps);
   for (const a of install.adjustments ?? []) adjustments.add(a);
   result.install = { ...install, adjustments: [...adjustments] };
+  kept([...installFiles(dir), ...generated]);
   if (installed.kind !== "installed") return { ...result, adjustments: [...adjustments], seconds: (Date.now() - t0) / 1000 };
   const pinned = installed.linter;
   const fulls = [];
@@ -770,7 +802,12 @@ async function runOne(item, runner, save = () => {}) {
     const findings = flagged.kind === "ran" && flagged.flagged.length ? findingsOf(proof.reading.pinned, proof.reading.reading, flagged.flagged, FINDINGS_CAP, pinned.version) : undefined;
     return { key, reading: full, plugins, proof: { kind: "proved" }, flagged, ...(findings ? { findings } : {}) };
   };
-  for (const r of item.readings) { result.readings.push(readingOf(r)); save("readings", result); }
+  for (const r of item.readings) {
+    const row = readingOf(r);
+    result.readings.push(row);
+    if (wroteConfig(row)) kept([configEntry(pinned, row.key, row.reading)]);
+    save("readings", result);
+  }
   if (item.cross) {
     save("cross", result);
     // Cross-example check: each proved reading A on every other proved reading B's planted violation, judged with
@@ -805,13 +842,13 @@ if (isMain && inputsPath === "--plan") {
   const item = JSON.parse(readFileSync(inputs, "utf8"))[Number(index)];
   mkdirSync(cacheDir, { recursive: true });
   const t0 = Date.now();
-  const r = await runOne(item, JSON.parse(runnerJson), (phase, result) => writePartial(runDir, item.id, phase, result));
+  const r = await runOne(item, JSON.parse(runnerJson), (phase, result) => writePartial(runDir, item.id, phase, result), runDir);
   r.ended = { outcome: "finished", cause: null, phase: "done", seconds: (Date.now() - t0) / 1000, limit_seconds: Number(limit) };
   installSchema.parse(r.install); // a result whose install record is not the declared shape is not written by the worker
   writeResult(runDir, item.id, r);
   console.log(summary(r, item.readings.length));
 } else if (isMain && inputsPath) {
-  const usage = "run.mjs <inputs.json> <out-dir> --run <run key> --items <i,j,k> [--item-seconds N] [--deadline-seconds N]";
+  const usage = "run.mjs <inputs.json> <out-dir> --run <run key> --items <i,j,k> [--batch N] [--item-seconds N] [--deadline-seconds N]";
   const flag = (name, dflt) => { const at = rest.indexOf(name); if (at >= 0 && rest[at + 1] !== undefined) return rest[at + 1]; if (dflt !== undefined) return dflt; throw new Error(usage); };
   const started = Date.now();
   const runKey = flag("--run");
@@ -821,7 +858,9 @@ if (isMain && inputsPath === "--plan") {
   const itemSeconds = Number(flag("--item-seconds", String(ITEM_SECONDS)));
   const deadlineSeconds = Number(flag("--deadline-seconds", String(24 * 3600)));
   if (!(itemSeconds > 0 && deadlineSeconds > 0)) throw new Error(usage);
-  const runner = { run: runKey };
+  const batch = flag("--batch", "") === "" ? null : Number(flag("--batch"));
+  const runner = runnerRecord(process.env, runKey, batch);
+  console.log(`runner ${JSON.stringify(runner)}`);
   const self = fileURLToPath(import.meta.url);
   const { mismatched } = await runBatch({ items, indices, runDir, runner, itemSeconds, deadlineAt: started + deadlineSeconds * 1000,
     argv: (_item, limit, rn, index) => [process.execPath, self, "--worker", path.resolve(inputsPath), runDir, String(index), String(limit), JSON.stringify(rn)],

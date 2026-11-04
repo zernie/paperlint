@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -275,9 +275,11 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
   // run.mjs itself, past its deadline: every item of the batch gets its result, no worker started (so no network).
   const inputs4 = path.join(scratch, "inputs.json");
   writeFileSync(inputs4, JSON.stringify([mk("R1", "x"), mk("R2", "x")]));
-  const cli = spawnSync(process.execPath, [fileURLToPath(new URL("./run.mjs", import.meta.url)), inputs4, path.join(scratch, "out"), "--run", "400-1", "--items", "0,1", "--deadline-seconds", "1"], { encoding: "utf8" });
+  const cli = spawnSync(process.execPath, [fileURLToPath(new URL("./run.mjs", import.meta.url)), inputs4, path.join(scratch, "out"), "--run", "400-1", "--items", "0,1", "--deadline-seconds", "1"],
+    // outside Actions, also when this selftest runs inside a workflow (whose run id is not this key)
+    { encoding: "utf8", env: Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("GITHUB_RUN"))) });
   const r4 = ["R1", "R2"].map((id) => { try { return readResult(path.join(scratch, "out", "400-1", `${id}.json.gz`)); } catch { return null; } });
-  if (cli.status !== 0 || r4.some((r) => r?.ended?.phase !== "not-started" || r.runner?.run !== "400-1")) fail.push(`run.mjs past its deadline writes a not-started result per item: exit ${cli.status} ${cli.stderr.slice(-300)} ${JSON.stringify(r4.map((r) => r?.ended))}`);
+  if (cli.status !== 0 || r4.some((r) => r?.ended?.phase !== "not-started" || r.runner?.run !== "400-1" || !/^[0-9a-f]{40}$/.test(r.runner?.sha ?? ""))) fail.push(`run.mjs past its deadline writes a not-started result per item: exit ${cli.status} ${cli.stderr.slice(-300)} ${JSON.stringify(r4.map((r) => r?.ended))}`);
   // The workflow: the runner's deadline comes before the step's timeout, which comes before the job's.
   const wf = readFileSync(new URL("../../.github/workflows/rule-proof-run.yml", import.meta.url), "utf8");
   const runJob = wf.slice(wf.indexOf("\n  run:"), wf.indexOf("\n  commit:"));
@@ -286,5 +288,66 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
   if (!(deadline > 0 && itemS > 0 && itemS < deadline && deadline + 120 <= step * 60 && step < job)) fail.push(`item limit < deadline < step timeout < job timeout: ${itemS} ${deadline} ${step} ${job}`);
 }
 
+// ---- What the deleted work dir held: the lockfile npm resolved, the config each reading wrote; who ran it -----------
+{
+  const { closeRun, readKept, runnerRecord, runDirOf, writeKept } = await import("./run-batch.mjs");
+  const { configEntry, installFiles } = await import("./run.mjs");
+  const scratch = mkdtempSync(path.join(tmpdir(), "rp-kept-"));
+  const repoDir = path.join(scratch, "repo");
+  mkdirSync(repoDir);
+  const gitIn = (...args) => spawnSync("git", ["-C", repoDir, ...args], { encoding: "utf8" });
+  gitIn("init", "-q"); gitIn("config", "user.email", "t@t"); gitIn("config", "user.name", "t");
+  writeFileSync(path.join(repoDir, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+  writeFileSync(path.join(repoDir, "package.json"), "{}\n");
+  gitIn("add", "."); gitIn("commit", "-q", "-m", "x");
+  // As designed: the repository's own lockfile, unchanged at its commit, is recorded by hash only (git holds it).
+  const own = installFiles(repoDir);
+  if (!same(own.map(({ buf: _b, ...e }) => e), [{ kind: "lockfile", path: "pnpm-lock.yaml", in_repo: true, store: false }])) fail.push(`the repository's own lockfile: by hash, not stored; its package.json not at all: ${JSON.stringify(own)}`);
+  // Our own manifest (lockfile-pinned, date-matched): package.json, the package-lock.json npm resolved, .npmrc, all stored.
+  writeFileSync(path.join(repoDir, "package.json"), '{"devDependencies":{"eslint":"9.1.0"}}\n');
+  writeFileSync(path.join(repoDir, "package-lock.json"), '{"lockfileVersion":3,"packages":{"node_modules/eslint":{"version":"9.1.0"}}}\n');
+  writeFileSync(path.join(repoDir, ".npmrc"), "legacy-peer-deps=true\n");
+  const ours = installFiles(repoDir);
+  if (!same(ours.map(({ buf: _b, ...e }) => e), [
+    { kind: "lockfile", path: "package-lock.json", in_repo: false, store: true }, { kind: "lockfile", path: "pnpm-lock.yaml", in_repo: true, store: false },
+    { kind: "manifest", path: "package.json", in_repo: false, store: true }, { kind: "manifest", path: ".npmrc", in_repo: false, store: true }])) fail.push(`our manifest and the lockfile npm resolved are stored: ${JSON.stringify(ours.map(({ buf: _b, ...e }) => e))}`);
+  // The config a reading wrote: the kit's own text for that reading.
+  const kits = path.join(path.dirname(fileURLToPath(import.meta.resolve("vigiles/rule-proof"))), "..", "core", "rule-proof", "kits");
+  const { eslintKit: kit } = createRequire(import.meta.url)(path.join(kits, "eslint.js"));
+  const rd = { linter: "eslint", rule: "no-tabs", options: [], scope: { files: ["**/*.js"], ignores: ["dist/**"] } };
+  const cfg = configEntry({ dir: repoDir, run: { kit, options: { cacheDir: path.join(scratch, "c") } } }, "k1", rd);
+  if (cfg.kind !== "config" || cfg.key !== "k1" || cfg.path !== ".vigiles-rule-proof.config.mjs" || cfg.buf.toString() !== kit.invocation(rd, [], { dir: repoDir }).configText || !cfg.buf.toString().includes('"no-tabs"')) fail.push(`a reading's config is the kit's text for it: ${JSON.stringify({ ...cfg, buf: cfg.buf?.toString().slice(0, 120) })}`);
+  // Written gzipped next to the result; the result holds each file's bytes and sha256, the sidecar the text.
+  const runDir = runDirOf(scratch, "500-1");
+  mkdirSync(runDir);
+  const kept = writeKept(runDir, "K1", [...ours, cfg]);
+  if (kept.file !== "K1.kept.json.gz" || kept.entries.length !== 5 || kept.entries.some((e) => typeof e.bytes !== "number" || !/^[0-9a-f]{64}$/.test(e.sha256) || "buf" in e)) fail.push(`the result's kept record: ${JSON.stringify(kept)}`);
+  const side = readKept(path.join(runDir, kept.file));
+  if (!same(side.files.map((f) => f.path), ["package-lock.json", "package.json", ".npmrc", ".vigiles-rule-proof.config.mjs"]) || side.files[0].text !== readFileSync(path.join(repoDir, "package-lock.json"), "utf8")
+    || readFileSync(path.join(runDir, kept.file)).subarray(0, 2).toString("hex") !== "1f8b") fail.push(`the sidecar (gzip) holds the stored texts whole: ${JSON.stringify(side).slice(0, 300)}`);
+  if (kept.entries.find((e) => e.path === "package-lock.json").sha256 !== sha(readFileSync(path.join(repoDir, "package-lock.json")))) fail.push("an entry's sha256 is the file's");
+  if (!same(writeKept(runDir, "K2", []), { file: null, entries: [] }) || existsSync(path.join(runDir, "K2.kept.json.gz"))) fail.push("nothing to keep: no sidecar");
+  // The runner itself: its own commit (git, where the module is), the Actions run id and attempt, the batch.
+  const head = spawnSync("git", ["-C", path.dirname(fileURLToPath(import.meta.url)), "rev-parse", "HEAD"], { encoding: "utf8" }).stdout.trim();
+  const env = { GITHUB_REPOSITORY: "o/r", GITHUB_RUN_ID: "41852334655", GITHUB_RUN_ATTEMPT: "2" };
+  const rr = runnerRecord(env, "41852334655-2", 3);
+  if (!same(rr, { run: "41852334655-2", repo: "o/r", sha: head, dirty: rr.dirty, run_id: "41852334655", run_attempt: "2", batch: 3 }) || !/^[0-9a-f]{40}$/.test(head) || typeof rr.dirty !== "boolean") fail.push(`the runner record: ${JSON.stringify(rr)} (HEAD ${head})`);
+  try { runnerRecord(env, "41852334655-1", 0); fail.push("a run key that is not the Actions run id and attempt is refused"); } catch { /* refused */ }
+  if (runnerRecord({}, "local-1", null).run_id !== null) fail.push("outside Actions the run id is null, not invented");
+  // The commit job's check reads the sidecar: a stored file whose text no longer has its recorded sha256 is refused,
+  // and so is a sidecar no result names.
+  const item = { id: "K1", repo: "o/k", sha: "e".repeat(40) };
+  writeResult(runDir, "K1", { ...item, checked_out: item.sha, runner: { run: "500-1" }, kept });
+  rmSync(path.join(runDir, "K2.json.gz"), { force: true });
+  if (!same(closeRun([item], runDir, "500-1").errors, [])) fail.push(`a result with its sidecar passes: ${JSON.stringify(closeRun([item], runDir, "500-1"))}`);
+  writeKept(runDir, "K1", [{ ...ours[0], buf: Buffer.from("changed") }]);
+  writeFileSync(path.join(runDir, "Q1.kept.json.gz"), gzipSync("{}"));
+  const errs = closeRun([item, { id: "Q1", repo: "o/q", sha: "f".repeat(40) }], runDir, "500-1").errors;
+  if (!errs.some((e) => e.startsWith("K1.json.gz: kept")) || !errs.some((e) => e.startsWith("Q1.kept.json.gz"))) fail.push(`close refuses a sidecar that does not match its result, and one without a result: ${JSON.stringify(errs)}`);
+  // The workflow passes the batch, so a result says which job measured it.
+  const wf = readFileSync(new URL("../../.github/workflows/rule-proof-run.yml", import.meta.url), "utf8");
+  if (!wf.includes("--batch ${{ matrix.batch }}")) fail.push("the workflow passes the batch number");
+}
+
 if (fail.length) { console.log("FAIL:\n  " + fail.join("\n  ")); process.exit(1); }
-console.log("ok: batches (at most 256 jobs for any size, one Node version each), one folder per run checked at commit, each item stopped at its limit with a timeout result (its process group killed), cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, every finding, long lines kept to 20,000 characters with length and sha256), the linter\'s version and resolved config, on a real ESLint run");
+console.log("ok: batches (at most 256 jobs for any size, one Node version each), one folder per run checked at commit, each item stopped at its limit with a timeout result (its process group killed), the resolved lockfile and each reading\'s config kept gzipped beside the result with the runner\'s commit and run, cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, every finding, long lines kept to 20,000 characters with length and sha256), the linter\'s version and resolved config, on a real ESLint run");
