@@ -5,7 +5,9 @@
 // item cannot run past 256 items, and paid a minute (plus about 20 s of setup) for an item that took 2 s. So the items are
 // split into batches, one matrix job each: items of one Node version per batch, at most BATCH_ITEMS items in a batch
 // while that keeps the run within MAX_JOBS jobs, and larger batches beyond that, so a run of any size plans.
-import { existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
 
@@ -75,6 +77,103 @@ export function readResult(file) {
   return JSON.parse((file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8"));
 }
 export const isDone = (runDir, id) => existsSync(resultPath(runDir, id));
+
+// ---- One batch: each item in a worker process, stopped by the runner before the job's own timeout ----------------------
+// A job killed at its `timeout-minutes` uploads nothing of the item it was on. So every item runs in a worker process
+// (run.mjs --worker) of its own process group, which the runner kills at the item's limit: the smaller of the item limit
+// and what is left before the run step's deadline. The runner then writes the item's result itself: what the worker had
+// reached (its progress file, written after each phase), and `ended` saying it stopped at the limit. An item the
+// deadline leaves no time for is not started, and gets a result saying so; a worker that exits without a result gets
+// one saying it crashed. Every item of a batch leaves a result file.
+//   ended: { outcome: finished | timeout | crashed, cause: null | "timeout" | "unknown", phase, seconds, limit_seconds, detail? }
+//   phase: where the item was: not-started, clone, install, readings, cross, done.
+export const PHASES = ["not-started", "clone", "install", "readings", "cross", "done"];
+const partialPath = (runDir, id) => path.join(runDir, ".partial", `${checkedId(id)}.json`);
+// The worker's progress: the result so far, after each phase (the runner reads it when it stops the item).
+export function writePartial(runDir, id, phase, result) {
+  const file = partialPath(runDir, id), tmp = `${file}.tmp`;
+  mkdirSync(path.dirname(file), { recursive: true });
+  writeFileSync(tmp, JSON.stringify({ phase, result }));
+  renameSync(tmp, file);
+}
+const readPartial = (runDir, id) => { try { return JSON.parse(readFileSync(partialPath(runDir, id), "utf8")); } catch { return null; } };
+
+// The install stage a stopped item's install record names: the phase it was in (not-started, clone, or install when the
+// runner cannot see which step of the install it was on).
+const STAGE_OF = { "not-started": "not-started", clone: "clone" };
+export function stoppedResult(item, partial, ended, runner) {
+  const base = { id: item.id, repo: item.repo, sha: item.sha, checked_out: null, linter: item.linter, rule: item.rule, ...(partial?.result ?? {}), runner };
+  const install = base.install ?? { outcome: "not-installed", path: null, version: null, versions: {}, plugins: {}, adjustments: [],
+    attempts: [{ path: "as-designed", outcome: "not-installed", failure: { stage: STAGE_OF[ended.phase] ?? "install", cause: ended.cause, detail: ended.detail } }] };
+  return { ...base, install, ended, seconds: ended.seconds };
+}
+
+// Run argv as its own process group; at `ms` kill the whole group. Also kills what the group left behind after a normal
+// exit (a daemon an item's code started must not outlive its item). -> { code, signal, timedOut, stderr }
+export function spawnWithLimit(argv, ms) {
+  return new Promise((resolve) => {
+    const child = spawn(argv[0], argv.slice(1), { detached: true, stdio: ["ignore", "inherit", "pipe"] });
+    let stderr = "", timedOut = false;
+    child.stderr.on("data", (d) => { process.stderr.write(d); stderr = (stderr + d).slice(-4000); });
+    const killGroup = () => { try { process.kill(-child.pid, "SIGKILL"); } catch { /* the group is gone */ } };
+    const timer = setTimeout(() => { timedOut = true; killGroup(); }, ms);
+    child.on("error", (e) => { clearTimeout(timer); resolve({ code: null, signal: null, timedOut, stderr: String(e) }); });
+    child.on("exit", (code, signal) => { clearTimeout(timer); killGroup(); child.stderr.destroy(); resolve({ code, signal, timedOut, stderr }); });
+  });
+}
+
+export const sha256 = (buf) => createHash("sha256").update(buf).digest("hex");
+const tail = (t) => String(t ?? "").trim().split("\n").slice(-6).join("\n").slice(0, 600);
+
+// items: inputs.json; indices: this batch's; argv(item, limitSeconds, runner, index): the worker's command; deadlineAt: epoch
+// ms by which the batch must be done; validate(result) throws on a result not to be written as is.
+// -> { results: [{ id, file, sha256, ended }], mismatched: [result files changed after the runner recorded them] }
+export async function runBatch({ items, indices, runDir, runner, argv, itemSeconds, deadlineAt, validate = () => {}, minSeconds = 30, log = console.log }) {
+  mkdirSync(runDir, { recursive: true });
+  const results = [];
+  const write = (item, partial, ended) => {
+    const withPartial = stoppedResult(item, partial, ended, runner);
+    let r = withPartial;
+    try { validate(r); } catch { r = stoppedResult(item, { result: { ...partial?.result, install: undefined } }, ended, runner); validate(r); }
+    return writeResult(runDir, item.id, r);
+  };
+  for (const index of indices) {
+    const item = items[index];
+    if (isDone(runDir, item.id)) { log(`skip ${item.id} (done in this run)`); }
+    else {
+      const left = Math.floor((deadlineAt - Date.now()) / 1000);
+      const limit = Math.min(itemSeconds, left);
+      if (left < minSeconds) {
+        write(item, null, { outcome: "timeout", cause: "timeout", phase: "not-started", seconds: 0, limit_seconds: Math.max(0, left),
+          detail: `not started: ${Math.max(0, left)} s were left before the run step's deadline, under the ${minSeconds} s an item is given at least` });
+      } else {
+        const t0 = Date.now();
+        const r = await spawnWithLimit(argv(item, limit, runner, index), limit * 1000);
+        const seconds = (Date.now() - t0) / 1000;
+        const partial = readPartial(runDir, item.id);
+        const phase = partial?.phase ?? "not-started";
+        if (r.timedOut) {
+          write(item, partial, { outcome: "timeout", cause: "timeout", phase, seconds, limit_seconds: limit,
+            detail: `the runner stopped the item at its limit of ${limit} s, in phase ${phase}` });
+        } else if (!isDone(runDir, item.id)) {
+          write(item, partial, { outcome: "crashed", cause: "unknown", phase, seconds, limit_seconds: limit,
+            detail: `the worker exited ${r.code ?? r.signal} (exit ${r.code ?? "none"}) without a result: ${tail(r.stderr)}` });
+        }
+      }
+    }
+    const file = resultPath(runDir, item.id);
+    const r = readResult(file);
+    results.push({ id: item.id, file: path.basename(file), sha256: sha256(readFileSync(file)), ended: r.ended ?? null });
+    log(`${item.id} ${results.at(-1).ended?.outcome ?? "?"} sha256 ${results.at(-1).sha256}`);
+  }
+  rmSync(path.join(runDir, ".partial"), { recursive: true, force: true });
+  for (const f of readdirSync(runDir).filter((f) => f.endsWith(".tmp"))) rmSync(path.join(runDir, f), { force: true });
+  // The sha256 each result had when the runner recorded it is in the job's log; a later item of the batch (its code runs
+  // as the same user) changing an earlier result is reported here.
+  const mismatched = results.filter((x) => { try { return sha256(readFileSync(path.join(runDir, x.file))) !== x.sha256; } catch { return true; } }).map((x) => x.file);
+  for (const f of mismatched) log(`CHANGED after it was written: ${f}`);
+  return { results, mismatched };
+}
 
 // The commit job's check of one run's folder before anything is committed: every file is a result of an item of
 // inputs.json (<id>.json.gz), and every result names this run and the repository and commit inputs.json gives for its

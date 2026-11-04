@@ -29,7 +29,7 @@ import yaml from "js-yaml";
 import semver from "semver";
 import { z } from "zod";
 import { findingsSchema, installSchema, pairCheckSchema } from "./install-schema.mjs";
-import { isDone, itemsArg, planOf, readResult, runDirOf, writeResult } from "./run-batch.mjs";
+import { itemsArg, planOf, readResult, runBatch, runDirOf, writePartial, writeResult } from "./run-batch.mjs";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
 // The Ruff kit's own reading of a repository's pin files, and the helper every kit reads its linter's JSON report
@@ -726,12 +726,15 @@ function pnpmfileEnv(dir) {
   return has;
 }
 
-async function runOne(item, runner) {
+// One item. save(phase, result) records the progress after each phase (run-batch.mjs writePartial), so the runner that
+// stops the item at its limit keeps what it reached.
+async function runOne(item, runner, save = () => {}) {
   const dir = path.join(work, "repo");
   const t0 = Date.now();
   const adjustments = new Set();
   // what was measured: the repository and commit inputs.json names, and the commit the clone actually checked out
   const result = { id: item.id, repo: item.repo, sha: item.sha, checked_out: null, linter: item.linter, rule: item.rule, runner };
+  save("clone", result);
   try {
     result.checked_out = clone(item.repo, item.sha, dir);
   } catch (e) {
@@ -741,6 +744,7 @@ async function runOne(item, runner) {
   }
   if (pnpmfileEnv(dir)) adjustments.add("pnpmfile-ignored");
   if (item.node) result.node = { asked: String(item.node), ran: process.version, why: item.node_why ?? null };
+  save("install", result);
   const deps = realDeps(dir);
   rmSync(deps.asideDir, { recursive: true, force: true });
   const { installed, install } = await installFor(item, dir, deps);
@@ -749,7 +753,9 @@ async function runOne(item, runner) {
   if (installed.kind !== "installed") return { ...result, adjustments: [...adjustments], seconds: (Date.now() - t0) / 1000 };
   const pinned = installed.linter;
   const fulls = [];
-  result.readings = item.readings.map(({ key, reading, pair }) => {
+  result.readings = [];
+  save("readings", result);
+  const readingOf = ({ key, reading, pair }) => {
     const full = finish(reading, pinned, adjustments, pair);
     fulls.push(full);
     const plugins = install.path === "as-designed" ? asDesignedPlugins(full, pinned.dir) : readingPlugins(full, install);
@@ -763,8 +769,10 @@ async function runOne(item, runner) {
     const flagged = rp.flagged(proof.reading);
     const findings = flagged.kind === "ran" && flagged.flagged.length ? findingsOf(proof.reading.pinned, proof.reading.reading, flagged.flagged, FINDINGS_CAP, pinned.version) : undefined;
     return { key, reading: full, plugins, proof: { kind: "proved" }, flagged, ...(findings ? { findings } : {}) };
-  });
+  };
+  for (const r of item.readings) { result.readings.push(readingOf(r)); save("readings", result); }
   if (item.cross) {
+    save("cross", result);
     // Cross-example check: each proved reading A on every other proved reading B's planted violation, judged with
     // A's own quiet twin, so `proved` = A flags B's violation; `not-proved` with badHits 0 = A passes it; a not-run
     // stage (e.g. pair-outside-scope: B's file lies outside A's scope) is kept as it is.
@@ -781,25 +789,42 @@ async function runOne(item, runner) {
   return result;
 }
 
-if (inputsPath === "--plan") {
+const summary = (r, n) => `${r.id} ${r.repo}: install ${r.install.outcome} ${r.install.path ?? r.install.attempts.at(-1).failure?.cause} ${r.install.version ?? ""}, ` +
+  `proved ${(r.readings ?? []).filter((x) => x.proof.kind === "proved").length}/${n}, ${r.seconds ?? "-"} s, ${r.ended?.outcome ?? ""}`;
+
+// The runner's limits (seconds): an item's own, and the run step's deadline, which the workflow sets below the step's
+// and the job's timeout-minutes so the runner always writes the results itself.
+export const ITEM_SECONDS = 1500;
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain && inputsPath === "--plan") {
   console.log(JSON.stringify(planOf(JSON.parse(readFileSync(outDir, "utf8")))));
-} else if (inputsPath) {
-  const usage = "run.mjs <inputs.json> <out-dir> --run <run key> --items <i,j,k>";
-  const flag = (name) => { const at = rest.indexOf(name); if (at < 0 || rest[at + 1] === undefined) throw new Error(usage); return rest[at + 1]; };
+} else if (isMain && inputsPath === "--worker") {
+  // node run.mjs --worker <inputs.json> <run folder> <index> <limit seconds> <runner json>: one item, its result written
+  // into the run folder (only the batch runner starts this).
+  const [inputs, runDir, index, limit, runnerJson] = [outDir, ...rest];
+  const item = JSON.parse(readFileSync(inputs, "utf8"))[Number(index)];
+  mkdirSync(cacheDir, { recursive: true });
+  const t0 = Date.now();
+  const r = await runOne(item, JSON.parse(runnerJson), (phase, result) => writePartial(runDir, item.id, phase, result));
+  r.ended = { outcome: "finished", cause: null, phase: "done", seconds: (Date.now() - t0) / 1000, limit_seconds: Number(limit) };
+  installSchema.parse(r.install); // a result whose install record is not the declared shape is not written by the worker
+  writeResult(runDir, item.id, r);
+  console.log(summary(r, item.readings.length));
+} else if (isMain && inputsPath) {
+  const usage = "run.mjs <inputs.json> <out-dir> --run <run key> --items <i,j,k> [--item-seconds N] [--deadline-seconds N]";
+  const flag = (name, dflt) => { const at = rest.indexOf(name); if (at >= 0 && rest[at + 1] !== undefined) return rest[at + 1]; if (dflt !== undefined) return dflt; throw new Error(usage); };
+  const started = Date.now();
   const runKey = flag("--run");
   const runDir = runDirOf(outDir, runKey);
   const items = JSON.parse(readFileSync(inputsPath, "utf8"));
   const indices = itemsArg(flag("--items"), items.length);
-  mkdirSync(cacheDir, { recursive: true });
-  mkdirSync(runDir, { recursive: true });
-  for (const i of indices) {
-    const item = items[i];
-    if (isDone(runDir, item.id)) { console.log(`skip ${item.id} (done in this run)`); continue; }
-    const r = await runOne(item, { run: runKey });
-    installSchema.parse(r.install); // a result whose install record is not the declared shape is not written
-    writeResult(runDir, item.id, r);
-    const proved = (r.readings ?? []).filter((x) => x.proof.kind === "proved").length;
-    console.log(`${item.id} ${item.repo}: install ${r.install.outcome} ${r.install.path ?? r.install.attempts.at(-1).failure?.cause} ${r.install.version ?? ""}, ` +
-      `proved ${proved}/${item.readings.length}, ${r.seconds ?? "-"} s`);
-  }
+  const itemSeconds = Number(flag("--item-seconds", String(ITEM_SECONDS)));
+  const deadlineSeconds = Number(flag("--deadline-seconds", String(24 * 3600)));
+  if (!(itemSeconds > 0 && deadlineSeconds > 0)) throw new Error(usage);
+  const runner = { run: runKey };
+  const self = fileURLToPath(import.meta.url);
+  const { mismatched } = await runBatch({ items, indices, runDir, runner, itemSeconds, deadlineAt: started + deadlineSeconds * 1000,
+    argv: (_item, limit, rn, index) => [process.execPath, self, "--worker", path.resolve(inputsPath), runDir, String(index), String(limit), JSON.stringify(rn)],
+    validate: (r) => installSchema.parse(r.install) });
+  if (mismatched.length) process.exit(1);
 }

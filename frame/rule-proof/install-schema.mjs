@@ -23,7 +23,9 @@ export const CAUSES = [
   "timeout", // a step ran past its time limit
   "unknown", // none of the structured signals decides it
 ];
-export const STAGES = ["clone", "detect", "resolve", "fetch", "load"];
+// "install" and "not-started" are the runner's own: it stopped the item at its time limit during the install (which of
+// its steps the runner cannot see), or the run step's deadline left no time to start it (run-batch.mjs runBatch).
+export const STAGES = ["clone", "detect", "resolve", "fetch", "load", "install", "not-started"];
 // Why an installed reading's planted pair did not run (vigiles' proof stage «parse» or «pair-ignored»), decided only
 // from structure: the pair's file extension, whether the reading has a parser, and ESLint's own config matching.
 export const PAIR_CAUSES = [

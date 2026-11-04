@@ -126,7 +126,9 @@
          "detect",
          "resolve",
          "fetch",
-         "load"
+         "load",
+         "install",
+         "not-started"
         ]
        },
        "cause": {

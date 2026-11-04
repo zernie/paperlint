@@ -61,9 +61,14 @@ jobs:
       - name: install the runner (vigiles only, no install scripts)
         working-directory: frame/rule-proof
         run: npm install --ignore-scripts --no-audit --no-fund
+      # Each item runs in a worker the runner stops at 1,500 s, or sooner so that every item ends by 8,400 s (140 min) after
+      # the step starts; the runner then writes the item's result itself (cause timeout), before the step's 145 or the
+      # job's 150 minutes could kill it with nothing written.
       - name: run one batch of inputs.json
         timeout-minutes: 145
-        run: node frame/rule-proof/run.mjs frame/rule-proof/inputs.json results --run ${{ github.run_id }}-${{ github.run_attempt }} --items ${{ matrix.items }}
+        run: >-
+          node frame/rule-proof/run.mjs frame/rule-proof/inputs.json results --run ${{ github.run_id }}-${{ github.run_attempt }}
+          --items ${{ matrix.items }} --item-seconds 1500 --deadline-seconds 8400
       # Only this run's folder is uploaded, so nothing a batch writes elsewhere reaches the commit.
       - uses: actions/upload-artifact@v4
         if: always()
