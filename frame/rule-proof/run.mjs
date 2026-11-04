@@ -28,8 +28,8 @@ import yarnLockV1 from "@yarnpkg/lockfile";
 import yaml from "js-yaml";
 import semver from "semver";
 import { z } from "zod";
-import { findingsSchema, installSchema, pairCheckSchema } from "./install-schema.mjs";
-import { itemsArg, planOf, readResult, runBatch, runDirOf, runnerRecord, writeKept, writePartial, writeResult } from "./run-batch.mjs";
+import { findingsSchema, installSchema, pairCheckSchema, resultSchema } from "./install-schema.mjs";
+import { RESULT_FORMAT, itemsArg, planOf, readResult, runBatch, runDirOf, runnerRecord, writeKept, writePartial, writeResult } from "./run-batch.mjs";
 import { experimental_ruleProof as rp } from "vigiles/rule-proof";
 
 // The Ruff kit's own reading of a repository's pin files, and the helper every kit reads its linter's JSON report
@@ -761,7 +761,7 @@ async function runOne(item, runner, save = () => {}, runDir = null) {
   const t0 = Date.now();
   const adjustments = new Set();
   // what was measured: the repository and commit inputs.json names, and the commit the clone actually checked out
-  const result = { id: item.id, repo: item.repo, sha: item.sha, checked_out: null, linter: item.linter, rule: item.rule, runner };
+  const result = { format: RESULT_FORMAT, id: item.id, repo: item.repo, sha: item.sha, checked_out: null, linter: item.linter, rule: item.rule, runner };
   const keep = [];
   const kept = (entries) => { keep.push(...entries); if (runDir) result.kept = writeKept(runDir, item.id, keep); };
   if (runDir) result.kept = { file: null, entries: [] };
@@ -844,7 +844,7 @@ if (isMain && inputsPath === "--plan") {
   const t0 = Date.now();
   const r = await runOne(item, JSON.parse(runnerJson), (phase, result) => writePartial(runDir, item.id, phase, result), runDir);
   r.ended = { outcome: "finished", cause: null, phase: "done", seconds: (Date.now() - t0) / 1000, limit_seconds: Number(limit) };
-  installSchema.parse(r.install); // a result whose install record is not the declared shape is not written by the worker
+  resultSchema.parse(r); // a result not of the declared shape (format 4) is not written by the worker
   writeResult(runDir, item.id, r);
   console.log(summary(r, item.readings.length));
 } else if (isMain && inputsPath) {
@@ -864,6 +864,6 @@ if (isMain && inputsPath === "--plan") {
   const self = fileURLToPath(import.meta.url);
   const { mismatched } = await runBatch({ items, indices, runDir, runner, itemSeconds, deadlineAt: started + deadlineSeconds * 1000,
     argv: (_item, limit, rn, index) => [process.execPath, self, "--worker", path.resolve(inputsPath), runDir, String(index), String(limit), JSON.stringify(rn)],
-    validate: (r) => installSchema.parse(r.install) });
+    validate: (r) => resultSchema.parse(r) });
   if (mismatched.length) process.exit(1);
 }

@@ -7,6 +7,7 @@
 // reads it. `unknown` is a legal cause: it is counted and printed, never filled in from `detail`.
 import { writeFileSync } from "node:fs";
 import { z } from "zod";
+import { PHASES, RESULT_FORMAT } from "./run-batch.mjs";
 
 export const CAUSES = [
   "no-lockfile", // no Node lockfile at the root: the version would not be the repository's
@@ -130,12 +131,70 @@ export const findingsSchema = z.strictObject({
   error: z.string().optional(),
 });
 
+// A whole result file. Format 4 (`format: 4`), declared field by field where the runner writes it:
+//   checked_out: the commit the clone checked out (null when the clone did not answer); repo and sha: what inputs.json named
+//   runner: { run (the results folder key: Actions run id-attempt), repo, sha (the runner's own commit), dirty, run_id,
+//     run_attempt, batch } (run-batch.mjs runnerRecord)
+//   ended: { outcome, cause, phase, seconds, limit_seconds, detail? }: finished (cause null, phase done), timeout (cause
+//     timeout: the runner stopped it at its limit, or the deadline left no time to start it), crashed (cause unknown)
+//   kept: { file, entries } (run-batch.mjs writeKept): file is the sidecar, null when no entry is stored; an entry the
+//     repository holds unchanged (in_repo) is never stored
+//   install: the install record above; readings: each with its proof, and findings / pair_check of their own schemas
+// Formats 1 to 3 have no top-level `format` (their findings carry 1, 2 or 3) and are read by legacyResultSchema: the
+// fields every one of them has, the rest as written (their install records predate installSchema).
+const hex40 = z.string().regex(/^[0-9a-f]{40}$/);
+const hex64 = z.string().regex(/^[0-9a-f]{64}$/);
+const ENDED_CAUSE = { finished: null, timeout: "timeout", crashed: "unknown" };
+const endedSchema = z.strictObject({
+  outcome: z.enum(["finished", "timeout", "crashed"]),
+  cause: z.enum(["timeout", "unknown"]).nullable(),
+  phase: z.enum(PHASES),
+  seconds: z.number().nonnegative(),
+  limit_seconds: z.number().nonnegative(),
+  detail: z.string().optional(),
+}).superRefine((e, ctx) => {
+  if (e.cause !== ENDED_CAUSE[e.outcome]) ctx.addIssue({ code: "custom", message: `outcome ${e.outcome} has cause ${ENDED_CAUSE[e.outcome]}` });
+  if ((e.outcome === "finished") !== (e.phase === "done")) ctx.addIssue({ code: "custom", message: "phase done exactly when finished" });
+});
+const runnerSchema = z.strictObject({
+  run: z.string().min(1), repo: z.string().nullable(), sha: hex40.nullable(), dirty: z.boolean().nullable(),
+  run_id: z.string().nullable(), run_attempt: z.string().nullable(), batch: z.number().int().nonnegative().nullable(),
+});
+const keptEntry = z.strictObject({
+  kind: z.enum(["lockfile", "manifest", "config"]), path: z.string().min(1), key: z.string().optional(),
+  in_repo: z.boolean(), stored: z.boolean(), bytes: z.number().int().nonnegative(), sha256: hex64,
+}).refine((e) => !(e.in_repo && e.stored), { message: "a file the repository holds unchanged is not stored" });
+const keptSchema = z.strictObject({ file: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]*\.kept\.json\.gz$/).nullable(), entries: z.array(keptEntry) })
+  .refine((k) => (k.file !== null) === k.entries.some((e) => e.stored), { message: "a sidecar exactly when an entry is stored" });
+const readingRow = z.looseObject({ key: z.string(), proof: z.looseObject({ kind: z.string() }), findings: findingsSchema.optional(), pair_check: pairCheckSchema.optional() });
+export const resultSchema = z.looseObject({
+  format: z.literal(RESULT_FORMAT),
+  id: z.string().min(1), repo: z.string().min(1), sha: z.string().min(1), checked_out: hex40.nullable(),
+  linter: z.enum(["eslint", "ruff"]), rule: z.string().min(1),
+  runner: runnerSchema, ended: endedSchema, kept: keptSchema, install: installSchema,
+  readings: z.array(readingRow).optional(), seconds: z.number().optional(), adjustments: z.array(z.string()).optional(),
+});
+export const legacyResultSchema = z.looseObject({
+  format: z.never().optional(), id: z.string().min(1), repo: z.string().min(1), sha: z.string().min(1), linter: z.string(), rule: z.string(),
+  install: z.looseObject({}), readings: z.array(readingRow).optional(),
+});
+// A result of any format: one with `format` is held to that format, never read as an older one.
+export const anyResultSchema = z.union([resultSchema, legacyResultSchema]);
+// 4 (or later) from the top level; else the highest format of its findings (1 when they carry none, or when it has none).
+export const resultFormatOf = (r) => r.format ?? Math.max(1, ...(r.readings ?? []).filter((x) => x.findings).map((x) => x.findings.format ?? 1));
+
 // The install record's schema at the top level (what a reader validates `install` against); the pair check under
-// $defs.pair_check, a reading's findings under $defs.findings.
+// $defs.pair_check, a reading's findings under $defs.findings, a whole result file of format 4 under $defs.result.
 export const jsonSchema = () => {
   const { $schema: _s, ...pairCheck } = z.toJSONSchema(pairCheckSchema, { io: "input" });
   const { $schema: _f, ...findings } = z.toJSONSchema(findingsSchema, { io: "input" });
-  return { $comment: "generated from install-schema.mjs; do not edit", ...z.toJSONSchema(installSchema, { io: "input" }), $defs: { pair_check: pairCheck, findings } };
+  // The result's install record and its readings' findings and pair checks are the ones declared above: referenced, not
+  // repeated.
+  const { $schema: _r, ...emitted } = z.toJSONSchema(resultSchema, { io: "input" });
+  const row = emitted.properties.readings.items;
+  const result = { ...emitted, properties: { ...emitted.properties, install: { $ref: "#" },
+    readings: { ...emitted.properties.readings, items: { ...row, properties: { ...row.properties, findings: { $ref: "#/$defs/findings" }, pair_check: { $ref: "#/$defs/pair_check" } } } } } };
+  return { $comment: "generated from install-schema.mjs; do not edit", ...z.toJSONSchema(installSchema, { io: "input" }), $defs: { pair_check: pairCheck, findings, result } };
 };
 
 if (process.argv[2] === "--write") {

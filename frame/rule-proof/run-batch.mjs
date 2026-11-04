@@ -12,6 +12,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
 
+// The format of a result file (install-schema.mjs resultSchema). 4: the first with a top-level `format`, and with `runner`,
+// `ended` and `kept`; results without one are formats 1 to 3 (resultFormatOf).
+export const RESULT_FORMAT = 4;
 export const MAX_JOBS = 256;
 export const BATCH_ITEMS = 25;
 
@@ -133,7 +136,8 @@ const readPartial = (runDir, id) => { try { return JSON.parse(readFileSync(parti
 // runner cannot see which step of the install it was on).
 const STAGE_OF = { "not-started": "not-started", clone: "clone" };
 export function stoppedResult(item, partial, ended, runner) {
-  const base = { id: item.id, repo: item.repo, sha: item.sha, checked_out: null, linter: item.linter, rule: item.rule, ...(partial?.result ?? {}), runner };
+  const base = { format: RESULT_FORMAT, id: item.id, repo: item.repo, sha: item.sha, checked_out: null, linter: item.linter, rule: item.rule,
+    kept: { file: null, entries: [] }, ...(partial?.result ?? {}), runner };
   const install = base.install ?? { outcome: "not-installed", path: null, version: null, versions: {}, plugins: {}, adjustments: [],
     attempts: [{ path: "as-designed", outcome: "not-installed", failure: { stage: STAGE_OF[ended.phase] ?? "install", cause: ended.cause, detail: ended.detail } }] };
   return { ...base, install, ended, seconds: ended.seconds };

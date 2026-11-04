@@ -349,5 +349,59 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
   if (!wf.includes("--batch ${{ matrix.batch }}")) fail.push("the workflow passes the batch number");
 }
 
+// ---- Result format 4: run, runner, ended, kept declared; formats 1 to 3 still read -----------------------------------
+{
+  const { anyResultSchema, resultFormatOf, resultSchema } = await import("./install-schema.mjs");
+  const { RESULT_FORMAT, stoppedResult } = await import("./run-batch.mjs");
+  if (RESULT_FORMAT !== 4) fail.push(`the result format is 4: ${RESULT_FORMAT}`);
+  const hex = (c, n) => c.repeat(n);
+  const install = { outcome: "installed", path: "as-designed", version: "9.1.0", versions: {}, plugins: {}, adjustments: [], attempts: [{ path: "as-designed", outcome: "installed" }] };
+  const ok4 = {
+    format: 4, id: "R1", repo: "o/r", sha: hex("a", 40), checked_out: hex("a", 40), linter: "eslint", rule: "no-tabs",
+    runner: { run: "41852334655-1", repo: "o/p", sha: hex("b", 40), dirty: false, run_id: "41852334655", run_attempt: "1", batch: 0 },
+    ended: { outcome: "finished", cause: null, phase: "done", seconds: 12.5, limit_seconds: 1500 },
+    kept: { file: "R1.kept.json.gz", entries: [
+      { kind: "lockfile", path: "package-lock.json", in_repo: false, stored: true, bytes: 10, sha256: hex("c", 64) },
+      { kind: "lockfile", path: "pnpm-lock.yaml", in_repo: true, stored: false, bytes: 5, sha256: hex("d", 64) },
+      { kind: "config", path: ".vigiles-rule-proof.config.mjs", key: "k1", in_repo: false, stored: true, bytes: 3, sha256: hex("e", 64) }] },
+    install, seconds: 12.5, adjustments: [],
+    readings: [{ key: "k1", reading: {}, plugins: [], proof: { kind: "proved" }, flagged: { kind: "ran" }, findings: { format: 3, cap: FINDINGS_CAP, files: ff } }],
+  };
+  const v4 = resultSchema.safeParse(ok4);
+  if (!v4.success) fail.push(`a format 4 result parses: ${JSON.stringify(v4.error?.issues).slice(0, 400)}`);
+  const refused = {
+    "no runner sha key": { ...ok4, runner: { ...ok4.runner, sha: undefined } },
+    "finished with a cause": { ...ok4, ended: { ...ok4.ended, cause: "timeout" } },
+    "timeout without cause timeout": { ...ok4, ended: { ...ok4.ended, outcome: "timeout", cause: "unknown" } },
+    "an in-repo file stored": { ...ok4, kept: { ...ok4.kept, entries: [{ ...ok4.kept.entries[1], stored: true }] } },
+    "stored files but no sidecar": { ...ok4, kept: { ...ok4.kept, file: null } },
+    "a short commit": { ...ok4, checked_out: "abc" },
+    "no ended": { ...ok4, ended: undefined },
+    "a finding off its schema": { ...ok4, readings: [{ ...ok4.readings[0], findings: { format: 3, cap: FINDINGS_CAP, files: { "a.js": { total: 1 } } } }] },
+  };
+  for (const [why, r] of Object.entries(refused)) if (resultSchema.safeParse(r).success) fail.push(`a format 4 result is refused when: ${why}`);
+  // What the runner itself writes for a stopped item has the format 4 shape.
+  const item = { id: "S1", repo: "o/s", sha: hex("f", 40), linter: "eslint", rule: "no-tabs" };
+  const stop = stoppedResult(item, null, { outcome: "timeout", cause: "timeout", phase: "not-started", seconds: 0, limit_seconds: 0, detail: "not started" }, ok4.runner);
+  const vs = resultSchema.safeParse(stop);
+  if (!vs.success || stop.format !== 4 || !same(stop.kept, { file: null, entries: [] })) fail.push(`a not-started result is format 4: ${JSON.stringify(vs.error?.issues ?? stop).slice(0, 300)}`);
+  const midway = stoppedResult(item, { phase: "readings", result: { ...ok4, id: "S1", ended: undefined } }, { outcome: "timeout", cause: "timeout", phase: "readings", seconds: 1500, limit_seconds: 1500, detail: "x" }, ok4.runner);
+  if (!resultSchema.safeParse(midway).success || midway.readings.length !== 1 || midway.kept.file !== "R1.kept.json.gz") fail.push("a result stopped midway keeps its readings and kept files, and is format 4");
+  // Earlier formats stay readable: every result committed under results/ (formats 1 to 3: no top-level format), and
+  // resultFormatOf names each one's format.
+  const resultsDir = fileURLToPath(new URL("./results", import.meta.url));
+  const committed = (await import("node:fs")).readdirSync(resultsDir).filter((f) => /\.json(\.gz)?$/.test(f));
+  const unread = committed.filter((f) => !anyResultSchema.safeParse(readResult(path.join(resultsDir, f))).success);
+  if (committed.length < 100 || unread.length) fail.push(`every committed result of formats 1-3 parses (${committed.length} files): ${unread.slice(0, 5)}`);
+  const formats = [...new Set(committed.map((f) => resultFormatOf(readResult(path.join(resultsDir, f)))))].sort();
+  if (formats.some((x) => ![1, 2, 3].includes(x))) fail.push(`committed results are formats 1-3: ${formats}`);
+  if (resultFormatOf(ok4) !== 4 || resultFormatOf({ readings: [{ findings: { format: 3 } }] }) !== 3 || resultFormatOf({ readings: [{ findings: { cap: {} } }] }) !== 1 || resultFormatOf({ id: "x" }) !== 1) fail.push("resultFormatOf: 4 at the top, else the findings' format, else 1");
+  if (!anyResultSchema.safeParse(ok4).success || anyResultSchema.safeParse({ ...ok4, ended: undefined }).success) fail.push("a result with format 4 is held to format 4, never read as an older one");
+  if (jsonSchema().$defs?.result?.properties?.format?.const !== 4 || !jsonSchema().$defs.result.properties.runner || !jsonSchema().$defs.result.properties.kept) fail.push("the format 4 result is in the emitted schema under $defs.result");
+  // The worker and the runner write only what parses as format 4.
+  const src = readFileSync(new URL("./run.mjs", import.meta.url), "utf8");
+  if ((src.match(/resultSchema\.parse\(/g) ?? []).length < 2) fail.push("run.mjs validates the worker's result and the runner's own against resultSchema");
+}
+
 if (fail.length) { console.log("FAIL:\n  " + fail.join("\n  ")); process.exit(1); }
 console.log("ok: batches (at most 256 jobs for any size, one Node version each), one folder per run checked at commit, each item stopped at its limit with a timeout result (its process group killed), the resolved lockfile and each reading\'s config kept gzipped beside the result with the runner\'s commit and run, cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, every finding, long lines kept to 20,000 characters with length and sha256), the linter\'s version and resolved config, on a real ESLint run");

@@ -792,6 +792,300 @@
     "files"
    ],
    "additionalProperties": false
+  },
+  "result": {
+   "type": "object",
+   "properties": {
+    "format": {
+     "type": "number",
+     "const": 4
+    },
+    "id": {
+     "type": "string",
+     "minLength": 1
+    },
+    "repo": {
+     "type": "string",
+     "minLength": 1
+    },
+    "sha": {
+     "type": "string",
+     "minLength": 1
+    },
+    "checked_out": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[0-9a-f]{40}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "linter": {
+     "type": "string",
+     "enum": [
+      "eslint",
+      "ruff"
+     ]
+    },
+    "rule": {
+     "type": "string",
+     "minLength": 1
+    },
+    "runner": {
+     "type": "object",
+     "properties": {
+      "run": {
+       "type": "string",
+       "minLength": 1
+      },
+      "repo": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "sha": {
+       "anyOf": [
+        {
+         "type": "string",
+         "pattern": "^[0-9a-f]{40}$"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "dirty": {
+       "type": [
+        "boolean",
+        "null"
+       ]
+      },
+      "run_id": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "run_attempt": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "batch": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 9007199254740991
+        },
+        {
+         "type": "null"
+        }
+       ]
+      }
+     },
+     "required": [
+      "run",
+      "repo",
+      "sha",
+      "dirty",
+      "run_id",
+      "run_attempt",
+      "batch"
+     ],
+     "additionalProperties": false
+    },
+    "ended": {
+     "type": "object",
+     "properties": {
+      "outcome": {
+       "type": "string",
+       "enum": [
+        "finished",
+        "timeout",
+        "crashed"
+       ]
+      },
+      "cause": {
+       "anyOf": [
+        {
+         "type": "string",
+         "enum": [
+          "timeout",
+          "unknown"
+         ]
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "phase": {
+       "type": "string",
+       "enum": [
+        "not-started",
+        "clone",
+        "install",
+        "readings",
+        "cross",
+        "done"
+       ]
+      },
+      "seconds": {
+       "type": "number",
+       "minimum": 0
+      },
+      "limit_seconds": {
+       "type": "number",
+       "minimum": 0
+      },
+      "detail": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "outcome",
+      "cause",
+      "phase",
+      "seconds",
+      "limit_seconds"
+     ],
+     "additionalProperties": false
+    },
+    "kept": {
+     "type": "object",
+     "properties": {
+      "file": {
+       "anyOf": [
+        {
+         "type": "string",
+         "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.kept\\.json\\.gz$"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "entries": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "kind": {
+          "type": "string",
+          "enum": [
+           "lockfile",
+           "manifest",
+           "config"
+          ]
+         },
+         "path": {
+          "type": "string",
+          "minLength": 1
+         },
+         "key": {
+          "type": "string"
+         },
+         "in_repo": {
+          "type": "boolean"
+         },
+         "stored": {
+          "type": "boolean"
+         },
+         "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+         },
+         "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+         }
+        },
+        "required": [
+         "kind",
+         "path",
+         "in_repo",
+         "stored",
+         "bytes",
+         "sha256"
+        ],
+        "additionalProperties": false
+       }
+      }
+     },
+     "required": [
+      "file",
+      "entries"
+     ],
+     "additionalProperties": false
+    },
+    "install": {
+     "$ref": "#"
+    },
+    "readings": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "key": {
+        "type": "string"
+       },
+       "proof": {
+        "type": "object",
+        "properties": {
+         "kind": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "kind"
+        ],
+        "additionalProperties": {}
+       },
+       "findings": {
+        "$ref": "#/$defs/findings"
+       },
+       "pair_check": {
+        "$ref": "#/$defs/pair_check"
+       }
+      },
+      "required": [
+       "key",
+       "proof"
+      ],
+      "additionalProperties": {}
+     }
+    },
+    "seconds": {
+     "type": "number"
+    },
+    "adjustments": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   },
+   "required": [
+    "format",
+    "id",
+    "repo",
+    "sha",
+    "checked_out",
+    "linter",
+    "rule",
+    "runner",
+    "ended",
+    "kept",
+    "install"
+   ],
+   "additionalProperties": {}
   }
  }
 }
