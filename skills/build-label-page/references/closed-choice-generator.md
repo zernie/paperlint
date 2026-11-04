@@ -21,7 +21,10 @@ with the core's payload. Another page shape would be another template on the sam
 Rules 2 to 5, 7 and the page half of 8 of [`checklist.md`](checklist.md): a filter instead of
 scrolling, complete-item counting, neutral ids in a seeded order, the leak guard (an item field
 outside the allow-list stops the build), save on click with a time, the store-unavailable banner,
-the "How to answer" screen, the practice before the real items, one question per screen. Its look:
+the "How to answer" screen (folded into a toggle once the practice is done), the practice before
+the real items, one question per screen, each card's place ("G007 · 7 of 20"), the card just
+answered kept under "Next unanswered" until the next answer (so a mis-tap can be changed), and a
+closing line once every item is complete. Its look:
 one dark palette, one column, answer buttons as full-width rows with space between them, an optional
 icon per answer and never a coloured side stripe, `backticks` and the `code` field shown as code,
 code blocks that show leading and trailing whitespace (a space as ·, a tab as →) and each line's
@@ -48,7 +51,7 @@ length.
   | kind       | the labeller decides                                 | required on every card                             |
   | ---------- | ---------------------------------------------------- | -------------------------------------------------- |
   | `approval` | keep or drop a drawn requirement                     | `unit` (the line, the requirement marked), `rules` |
-  | `witness`  | why two readings of a requirement disagree on a file | `rules`, `readings`, `file`                        |
+  | `witness`  | one situation in code where two readings split      | `situation`, `example`, `details` (below)          |
   | `labels`   | a gold label, a blind review                         | nothing beyond the item                            |
 
   Nothing reads `context`: it stays free text. A rule, a line or two readings written there show
@@ -76,10 +79,40 @@ length.
   full. Splitting the line is the study's job, before the page.
 - **`seed`**: fixes the order. Rebuilding with the same seed keeps every id, and a new item gets the
   next one; a different seed is refused once a key exists.
-- **`ask_why`** on an option: a prompt. That answer is incomplete, on the page and in the export,
-  until a reason is saved. The reason saves as it is typed (after a pause, and when the page is
-  left), so a labeller who closes the page from inside the box does not leave a drop without its
-  reason; a store echo while typing keeps the box and its focus.
+- **`ask_why`** on an option: a prompt. The page does not write that answer to the store until its
+  reason box holds text: the card says «Not saved yet», and the store keeps what it had. The reason
+  then saves with the answer as it is typed (after a pause, and when the page is left); a store echo
+  while typing keeps the box and its focus. An answer stored without its reason (by an older page,
+  or merged from chat) still counts as incomplete, on the page and in the export.
+
+## The witness card
+
+A witness page asks about code, never about configs: one card per situation (one requirement ×
+one reason its readings split), and one question, whose text each card replaces with its own
+`situation.question`. A page with two questions is refused. Items made for the earlier card (only
+`readings` and `file`) are refused, naming `situation`.
+
+- **`situation`**: `{kind, summary, question}`. `kind` is `scope` (the readings check different
+  files, named by the file category) or `construct` (they forbid different code, named by the
+  construct); `summary` is one plain sentence.
+- **`example`**: `{file, url, lines, message, caught_by}`. `lines` are `{n, text, mark}`, the
+  caught line marked and 2 or 3 lines of context (`text` may be empty); at least one line is
+  marked. `message` is the linter's own, shown under the code; `caught_by` (`a` or `b`) is shown
+  only in the settings. `url` (optional) makes the file name a link.
+- **`more_like_this`** (optional): `{count, files}`, shown as «N more like it», folded; `files`
+  may list fewer than `count`.
+- **`details`**: `{a, b}`, each a list of `{key, raw, plain, matches_example}`: one row per glob or
+  option (`key` is `files`, `ignores`, `rule` or `option:<name>`), the raw value, its plain reading
+  by a fixed template, and whether it matches the example file (`true`, `false`, or `null` when
+  the row does not decide that). Folded under «Settings behind this card»; a row in both lists
+  (same `key` and `raw`) is shown once as «A and B», after the differences.
+- **`repeat`** (optional): `{group, index, of}`; «Card i of n for this requirement» when `of` is
+  more than 1. `group` never reaches the page.
+- **`rules[].explanation`**, required on every rule of a witness card and allowed on any card:
+  `{source, what, why, example_bad, example_good, url}`, the rule as its own docs explain it.
+  `source` is `ruff rule`, `eslint docs`, `plugin docs`, `config message` or `none`; `what` is
+  required unless it is `none`, and `none` shows «No official explanation for this rule». A rule
+  with an explanation is not looked up in the linter. Long text shows three lines and a «more».
 
 ## The approval page
 
