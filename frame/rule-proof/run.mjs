@@ -117,18 +117,23 @@ export function asDesignedPlugins(reading, dir) {
 const stable = (v) => typeof v === "string" && semver.valid(v) === v && semver.prerelease(v) === null;
 const byVersion = (a, b) => semver.compare(a, b);
 
-// Ruff with no pin: the latest release uploaded to PyPI before the commit (DESIGN.md §9.8), not a pre-release.
-export function dateMatched(releases, commitIso) {
-  const at = Date.parse(commitIso);
-  const ok = Object.entries(releases)
-    .filter(([v, files]) => stable(v) && files.length > 0 && Math.min(...files.map((f) => Date.parse(f.upload_time_iso_8601))) <= at)
-    .map(([v]) => v);
-  return ok.length ? ok.sort(byVersion).at(-1) : null;
-}
+// The date-matched release of a commit (D10), by the package managers' own date flags: npm install --before <time>
+// and uv pip compile --exclude-newer <time> (P3-S109 RUN-STATUS §8: npm matched the hand-built pick on 19 of 20
+// (package, date) pairs, the 20th a peer resolution; uv on 6 of 6 Ruff dates). The time is the commit's committer date
+// as a UTC instant.
+export const utcInstant = (iso) => new Date(iso).toISOString();
 
-async function ruffReleases() {
-  const r = await fetch("https://pypi.org/pypi/ruff/json");
-  return (await r.json()).releases;
+// Ruff current at `at`: uv resolves the requirement «ruff» with --exclude-newer and answers a pylock.toml, read by a
+// TOML parser. -> { version } or { failure }
+export function uvRuffAt(deps, at) {
+  const cmd = `uv pip compile - --exclude-newer ${at} --format pylock.toml --python-version 3.12 --no-header -q`;
+  const r = deps.uvCompile(at);
+  let version = null;
+  if (r.code === 0) {
+    try { version = (toml.parse(r.stdout).packages ?? []).find((p) => p.name === "ruff")?.version ?? null; } catch { version = null; }
+  }
+  if (r.code === 0 && stable(version)) return { version };
+  return { failure: { stage: "resolve", cause: r.timedOut ? "timeout" : "unknown", tool: { cmd, exit: r.code ?? null, code: null }, detail: tailOf(r.stderr) } };
 }
 
 // ---- Install paths: what happens when the repository's own install leaves no linter ------------------------------
@@ -139,9 +144,10 @@ async function ruffReleases() {
 //    lockfile, or it failed, but a package of the repository declares ESLint and a lockfile of the repository pins
 //    it: those exact versions (ESLint, the TypeScript parser, each plugin a reading names that the same lockfile
 //    pins) are installed at the root.
-// 3. date-matched (a declared deviation from the as-designed rule): ESLint, and each plugin a reading names, at the release
-//    current at the commit's date; the TypeScript parser too when the repository has a tsconfig.json or a reading
-//    names a typescript-eslint rule.
+// 3. date-matched: ESLint, each plugin a reading names and, when asked (needsTsParser), the TypeScript parser, each
+//    with the range "*", picked by npm --before <the commit's time>: every version, transitive packages included, is
+//    the one npm resolves at that time, peers resolved by npm (a plugin whose ESLint peer excludes the newest ESLint
+//    gets the newest ESLint it admits; no --legacy-peer-deps). TypeScript comes from the parser's own peer range.
 // Paths 2 and 3 set the repository's root package.json, lockfiles, .npmrc and node_modules aside (outside the
 // repository, so nothing set aside is linted) and install a manifest of their own with npm, scripts off.
 const NODE_LOCKS = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"];
@@ -149,13 +155,6 @@ const ASIDE = ["package.json", ...NODE_LOCKS, ".npmrc", ".yarnrc", ".yarnrc.yml"
   "pnpm-workspace.yaml", "bunfig.toml"];
 const DEP_KEYS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 const TS_PARSER = "@typescript-eslint/parser";
-
-// npm: the highest release (no pre-release) published on or before the commit.
-export function npmDateMatched(time, commitIso) {
-  const at = Date.parse(commitIso);
-  const ok = Object.entries(time ?? {}).filter(([v, t]) => stable(v) && Date.parse(t) <= at).map(([v]) => v);
-  return ok.length ? ok.sort(byVersion).at(-1) : null;
-}
 
 const readJson = (p) => { try { return JSON.parse(readFileSync(p, "utf8")); } catch { return null; } };
 const declares = (pkg, name) => DEP_KEYS.map((k) => pkg?.[k]?.[name]).find((v) => typeof v === "string") ?? null;
@@ -313,6 +312,50 @@ function npmManifest(dir, deps, base, plugins) {
   return { plugins: out, legacy, versions: dev, resolved, tsResolved: resolved.some((x) => x.cause === "peer-conflict-typescript") };
 }
 
+// The date-matched manifest: the packages named with the range "*", npm --before <at> picking every version. Each plugin
+// is added on its own, so one npm cannot resolve with ESLint at that time (not on npm, no release by then, a peer no
+// ESLint release admits) costs only the readings that name it. The lockfile is removed before each resolution, so
+// npm resolves the whole set afresh. -> { versions, plugins, typescriptFromPeerRange } or { failure }
+function npmBeforeManifest(dir, deps, at, tsAsked, names) {
+  const lockPath = path.join(dir, "package-lock.json");
+  const args = ["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", "--json", "--before", at];
+  const cmd = `npm ${args.join(" ")}`;
+  const lock = (dev) => {
+    rmSync(lockPath, { force: true });
+    writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "rule-proof-install", private: true, devDependencies: dev }, null, 1) + "\n");
+    return deps.npm(args, dir);
+  };
+  let dev = { eslint: "*", ...(tsAsked ? { [TS_PARSER]: "*" } : {}) };
+  const r0 = lock(dev);
+  if (r0.code !== 0) return { failure: npmFailureOf(cmd, r0) };
+  const failed = {};
+  for (const name of names) {
+    const next = { ...dev, [name]: "*" };
+    const r = lock(next);
+    if (r.code === 0) { dev = next; continue; }
+    const f = npmFailureOf(cmd, r);
+    failed[name] = { version: null, error: `npm --before ${at} could not resolve ${name} with ESLint`, cause: f.cause };
+  }
+  let rf = lock(dev);
+  if (rf.code !== 0) return { failure: npmFailureOf(cmd, rf) };
+  const entry = (n) => readJson(lockPath)?.packages?.[`node_modules/${n}`] ?? null;
+  // A parser that marks TypeScript an optional peer (5.x) gets none from npm: TypeScript is added with the range that
+  // parser's lockfile entry declares, and npm picks it at the same time.
+  let typescriptFromPeerRange = false;
+  if (tsAsked && !entry("typescript")) {
+    const range = entry(TS_PARSER)?.peerDependencies?.typescript;
+    if (typeof range === "string") {
+      dev = { ...dev, typescript: range };
+      rf = lock(dev);
+      if (rf.code !== 0) return { failure: npmFailureOf(cmd, rf) };
+      typescriptFromPeerRange = true;
+    }
+  }
+  const versions = Object.fromEntries(["eslint", TS_PARSER, "typescript"].map((n) => [n, entry(n)?.version]).filter(([, v]) => typeof v === "string"));
+  const plugins = Object.fromEntries(names.map((n) => [n, failed[n] ?? { version: entry(n)?.version ?? null, error: entry(n) ? null : `${n} is not in npm's lockfile`, ...(entry(n) ? {} : { cause: "unknown" }) }]));
+  return { versions, plugins, typescriptFromPeerRange };
+}
+
 const pluginNames = (readings) => [...new Set(readings.map((r) => pluginOf(r.reading.rule)).filter(Boolean))].sort();
 
 // A file ESLint needs the TypeScript parser for, by its extension.
@@ -328,18 +371,6 @@ export function needsTsParser(dir, readings) {
     ...(readings.some((r) => pluginOf(r.reading.rule) === "@typescript-eslint/eslint-plugin") ? ["typescript-eslint-rule"] : []),
     ...(readings.some((r) => pairIsTs(r.pair)) ? ["typescript-pair"] : []),
   ];
-}
-
-async function dateMatchedVersions(names, commitIso, deps) {
-  const out = {};
-  for (const name of names) {
-    let doc;
-    try { doc = await deps.registry(name); } catch { out[name] = { version: null, error: `the registry did not answer for ${name}`, cause: "registry-or-network" }; continue; }
-    if (doc === null) { out[name] = { version: null, error: `${name} is not on the npm registry`, cause: "package-not-found" }; continue; }
-    const v = npmDateMatched(doc.time, commitIso);
-    out[name] = v ? { version: v, error: null } : { version: null, error: `${name} has no release on or before ${commitIso}`, cause: "package-not-found" };
-  }
-  return out;
 }
 
 // Per reading: each plugin its rule names, the version installed, or why none was.
@@ -425,19 +456,19 @@ export async function installFor(item, dir, deps) {
     if (first.cause === "no-pin" || first.cause === "tool-resolve") {
       if (first.cause === "tool-resolve") adjustments.add("pre-commit-rev-not-a-release");
       const commitIso = deps.commitIso(dir);
-      let releases = null;
-      try { releases = await deps.ruffReleases(); } catch { releases = null; }
-      const version = releases ? dateMatched(releases, commitIso) : null;
-      if (version) {
-        writeFileSync(path.join(dir, "requirements-date-matched-ruff.txt"), `ruff==${version}\n`);
+      const at = utcInstant(commitIso);
+      const by = { date_matched_by: { tool: "uv", flag: "--exclude-newer", at } };
+      const u = uvRuffAt(deps, at);
+      if (u.version) {
+        writeFileSync(path.join(dir, "requirements-date-matched-ruff.txt"), `ruff==${u.version}\n`);
         adjustments.add("date-matched-version");
         installed = deps.install(item.linter, dir);
         attempts.push(installed.kind === "installed" ? { path: "as-designed", outcome: "installed", rule: "ruff-date-matched" }
           : { path: "as-designed", outcome: "not-installed", rule: "ruff-date-matched", failure: { stage: "fetch", cause: installed.stage === "timeout" ? "timeout" : "unknown", detail: String(installed.reason ?? "").slice(0, 600) } });
-        return shape(installed, { date_matched: { commit: commitIso, ruff: version } });
+        return shape(installed, { date_matched: { commit: commitIso, ruff: u.version }, ...by });
       }
-      attempts.push({ path: "as-designed", outcome: "not-installed", rule: "ruff-date-matched",
-        failure: { stage: "fetch", cause: releases ? "package-not-found" : "registry-or-network", detail: "no Ruff release on or before the commit's date" } });
+      attempts.push({ path: "as-designed", outcome: "not-installed", rule: "ruff-date-matched", failure: u.failure });
+      return shape(installed, by);
     }
     return shape(installed);
   }
@@ -463,17 +494,16 @@ export async function installFor(item, dir, deps) {
     for (const f of r.record.aside) renameSync(path.join(deps.asideDir, f), path.join(dir, f));
     rmSync(path.join(dir, "node_modules"), { recursive: true, force: true });
   }
-  const want = ["eslint", ...(tsAsked.length ? [TS_PARSER, "typescript"] : [])];
-  const base = await dateMatchedVersions(want, commitIso, deps);
-  if (base.eslint.version === null) {
-    attempts.push({ path: "date-matched", outcome: "not-installed", failure: { stage: "fetch", cause: base.eslint.cause, detail: base.eslint.error } });
-    return shape({ kind: "not-installed" }, common);
-  }
-  const versions = Object.fromEntries(Object.entries(base).filter(([, x]) => x.version).map(([n, x]) => [n, x.version]));
-  const plugins = await dateMatchedVersions(names, commitIso, deps);
-  const r = await ownManifest(dir, deps, "date-matched", versions, plugins);
-  attempts.push(r.attempt);
-  return shape(r.installed, { ...common, ...r.record });
+  const at = utcInstant(commitIso);
+  const aside = setAside(dir, deps.asideDir);
+  const m = npmBeforeManifest(dir, deps, at, tsAsked.length > 0, names);
+  const record = { ...common, aside, date_matched_by: { tool: "npm", flag: "--before", at }, versions: m.versions ?? {}, plugins: m.plugins ?? {},
+    ...(m.typescriptFromPeerRange ? { typescript_from_peer_range: true } : {}) };
+  if (m.failure) { attempts.push({ path: "date-matched", outcome: "not-installed", failure: m.failure }); return shape({ kind: "not-installed" }, record); }
+  const installed2 = deps.install("eslint", dir);
+  if (installed2.kind === "installed") { attempts.push({ path: "date-matched", outcome: "installed" }); return shape(installed2, record); }
+  attempts.push({ path: "date-matched", outcome: "not-installed", failure: { stage: "fetch", cause: installed2.stage === "timeout" ? "timeout" : "unknown", detail: String(installed2.reason ?? "").slice(0, 600) } });
+  return shape(installed2, record);
 }
 
 // The plan job's matrix: one entry per item; Node 22 unless the item names another (from the repository's engines).
@@ -533,13 +563,11 @@ function realDeps(dir) {
   const env = { npm_config_cache: path.join(cacheDir, "npm"), npm_config_update_notifier: "false", HOME: path.join(cacheDir, "home") };
   return {
     install: (linter, d) => rp.install(linter, d, { cacheDir }),
-    registry: async (name) => {
-      const r = await fetch(`https://registry.npmjs.org/${name.replace("/", "%2F")}`);
-      if (r.status === 404) return null;
-      if (!r.ok) throw new Error(`registry ${name}: HTTP ${r.status}`);
-      return r.json();
+    uvCompile: (at) => {
+      const r = spawnSync("uv", ["pip", "compile", "-", "--exclude-newer", at, "--format", "pylock.toml", "--python-version", "3.12", "--no-header", "-q"],
+        { input: "ruff\n", encoding: "utf8", timeout: 300_000, env: { ...process.env, UV_CACHE_DIR: path.join(cacheDir, "uv") } });
+      return { code: r.status ?? 1, stdout: r.stdout ?? "", stderr: `${r.stderr ?? ""}${r.error ? String(r.error) : ""}`, timedOut: r.error?.code === "ETIMEDOUT" };
     },
-    ruffReleases,
     npm: (args, cwd) => {
       const r = spawnSync("npm", args, { cwd, env: { ...process.env, ...env }, encoding: "utf8", timeout: 300_000 });
       return { code: r.status ?? 1, stdout: r.stdout ?? "", stderr: `${r.stderr ?? ""}${r.error ? String(r.error) : ""}` };

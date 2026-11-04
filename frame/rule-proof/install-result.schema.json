@@ -323,6 +323,37 @@
      "typescript-pair"
     ]
    }
+  },
+  "date_matched_by": {
+   "type": "object",
+   "properties": {
+    "tool": {
+     "type": "string",
+     "enum": [
+      "npm",
+      "uv"
+     ]
+    },
+    "flag": {
+     "type": "string",
+     "enum": [
+      "--before",
+      "--exclude-newer"
+     ]
+    },
+    "at": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "tool",
+    "flag",
+    "at"
+   ],
+   "additionalProperties": false
+  },
+  "typescript_from_peer_range": {
+   "type": "boolean"
   }
  },
  "required": [

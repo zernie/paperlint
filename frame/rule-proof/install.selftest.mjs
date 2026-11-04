@@ -7,7 +7,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { optionsSchema, pluginPart } from "./diagnose.mjs";
 import { installSchema, jsonSchema, pairCheckSchema } from "./install-schema.mjs";
-import { installFor as installForReal, lockedVersion, matrixOf, needsTsParser, npmDateMatched, otherRuffPin, pairCauseOf, pairCheck, readingPlugins, repoEslint } from "./run.mjs";
+import semver from "semver";
+import * as runner from "./run.mjs";
+
+const { installFor: installForReal, lockedVersion, matrixOf, needsTsParser, otherRuffPin, pairCauseOf, pairCheck, readingPlugins, repoEslint } = runner;
 
 const fail = [];
 const seenInstalls = [];
@@ -15,12 +18,8 @@ const installFor = async (...a) => { const r = await installForReal(...a); seenI
 const check = (ok, what) => { if (!ok) fail.push(what); };
 const T = (d) => `${d}T00:00:00.000Z`;
 
-// npm: the highest release published on or before the commit, no pre-release.
 const time = { created: T("2013-06-01"), modified: T("2026-10-01"), "8.57.0": T("2024-02-23"), "9.0.0": T("2024-04-05"),
   "9.1.0-rc.0": T("2024-04-10"), "9.1.0": T("2024-04-19"), "8.57.1": T("2024-09-16") };
-check(npmDateMatched(time, T("2024-04-12")) === "9.0.0", `npmDateMatched ${npmDateMatched(time, T("2024-04-12"))}: 9.0.0`);
-check(npmDateMatched(time, T("2024-10-01")) === "9.1.0", "a backport published later (8.57.1) does not beat 9.1.0");
-check(npmDateMatched(time, T("2010-01-01")) === null, "no release before the date: null");
 
 function repo(files) {
   const dir = mkdtempSync(path.join(tmpdir(), "rp-fixture-"));
@@ -32,9 +31,58 @@ function repo(files) {
 }
 
 // Fakes. The install stands in for vigiles' rp.install: it installs only from a lockfile, and finds ESLint only when
-// the lockfile's package.json depends on it, as the real kit does.
+// the lockfile's package.json depends on it, as the real kit does. npm with --before stands in for npm's resolver on a
+// registry of `docs` ({name: {time: {version: iso}, peers: {version: {eslint, typescript, typescript_optional}}}}): each
+// package the newest stable release on or before the date that its range admits, ESLint the newest that every chosen
+// package's ESLint peer admits (ERESOLVE when none), TypeScript from the parser's peer range when the parser requires
+// it; a name it does not know is E404, no release by the date ETARGET. uv pip compile --exclude-newer stands in for
+// uv on the Ruff releases `ruff` ({version: [{upload_time_iso_8601}]}), answering a pylock.toml.
+export function npmResolve(dev, docs, before) {
+  const at = Date.parse(before);
+  const at_ = (name, spec) => {
+    const d = docs[name];
+    if (!d) return { code: "E404" };
+    const vs = Object.entries(d.time ?? {}).filter(([v, t]) => semver.valid(v) === v && !semver.prerelease(v) && Date.parse(t) <= at && semver.satisfies(v, spec)).map(([v]) => v);
+    return vs.length ? { list: vs.sort(semver.rcompare) } : { code: "ETARGET" };
+  };
+  const pick = {};
+  for (const [n, spec] of Object.entries(dev)) {
+    if (n === "eslint" || n === "typescript") continue;
+    const r = at_(n, spec);
+    if (r.code) return { error: r.code };
+    pick[n] = r.list[0];
+  }
+  const peers = (n) => docs[n]?.peers?.[pick[n]] ?? {};
+  const e = at_("eslint", dev.eslint ?? "*");
+  if (e.code) return { error: e.code };
+  const eslint = e.list.find((v) => Object.keys(pick).every((n) => !peers(n).eslint || semver.satisfies(v, peers(n).eslint)));
+  if (!eslint) return { error: "ERESOLVE" };
+  pick.eslint = eslint;
+  const tp = pick["@typescript-eslint/parser"] ? peers("@typescript-eslint/parser") : {};
+  if (dev.typescript) {
+    const t = at_("typescript", dev.typescript);
+    if (t.code) return { error: t.code };
+    const v = t.list.find((x) => !tp.typescript || semver.satisfies(x, tp.typescript));
+    if (!v) return { error: "ERESOLVE" };
+    pick.typescript = v;
+  } else if (tp.typescript && !tp.typescript_optional) {
+    const t = at_("typescript", tp.typescript);
+    if (t.code) return { error: "ERESOLVE" };
+    pick.typescript = t.list[0];
+  }
+  const entry = (n) => {
+    const p = peers(n);
+    const pd = Object.fromEntries(["eslint", "typescript"].filter((k) => p[k]).map((k) => [k, p[k]]));
+    return { version: pick[n], ...(Object.keys(pd).length ? { peerDependencies: pd } : {}),
+      ...(p.typescript_optional ? { peerDependenciesMeta: { typescript: { optional: true } } } : {}) };
+  };
+  return { packages: { "": { devDependencies: dev }, ...Object.fromEntries(Object.keys(pick).map((n) => [`node_modules/${n}`, entry(n)])) } };
+}
+
+const pylock = (version) => `lock-version = "1.0"\ncreated-by = "uv"\n\n[[packages]]\nname = "ruff"\nversion = "${version}"\n`;
+
 function fakes({ registryDocs = {}, ruff = {} } = {}) {
-  const calls = { registry: [], npm: [], install: [] };
+  const calls = { registry: [], npm: [], install: [], uv: [] };
   return {
     calls,
     deps: {
@@ -42,25 +90,39 @@ function fakes({ registryDocs = {}, ruff = {} } = {}) {
         calls.install.push(linter);
         if (linter === "ruff") {
           const req = existsSync(path.join(dir, "requirements-date-matched-ruff.txt"));
-          return req ? { kind: "installed", linter: { version: "0.4.1", dir } }
+          return req ? { kind: "installed", linter: { version: readFileSync(path.join(dir, "requirements-date-matched-ruff.txt"), "utf8").trim().split("==")[1], dir } }
             : { kind: "not-installed", stage: "install", reason: `uvx exited 1: Distribution not found at: file://${dir}/f12be1ebaa5351c1fc76472de98db2c3446c8253` };
         }
         if (!existsSync(path.join(dir, "package-lock.json"))) return { kind: "not-installed", stage: "no-lockfile", reason: "no lockfile" };
         const pkg = JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8"));
-        const v = (pkg.devDependencies ?? {}).eslint ?? (pkg.dependencies ?? {}).eslint;
+        const lock = JSON.parse(readFileSync(path.join(dir, "package-lock.json"), "utf8") || "{}");
+        const v = lock.packages?.["node_modules/eslint"]?.version ?? (pkg.devDependencies ?? {}).eslint ?? (pkg.dependencies ?? {}).eslint;
         return v ? { kind: "installed", linter: { version: v, dir } } : { kind: "not-installed", stage: "no-linter", reason: "no eslint" };
       },
       registry: async (name) => { calls.registry.push(name); return registryDocs[name] ?? null; },
       ruffReleases: async () => ruff,
+      uvCompile: (iso) => {
+        calls.uv.push(iso);
+        const at = Date.parse(iso);
+        const ok = Object.entries(ruff).filter(([v, f]) => semver.valid(v) === v && f.length && Math.min(...f.map((x) => Date.parse(x.upload_time_iso_8601))) <= at).map(([v]) => v);
+        return ok.length ? { code: 0, stdout: pylock(ok.sort(semver.rcompare)[0]), stderr: "" } : { code: 1, stdout: "", stderr: "No solution found when resolving dependencies" };
+      },
       npm: (args, cwd) => {
         calls.npm.push(args.join(" "));
         const pkg = JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf8"));
+        const bi = args.indexOf("--before");
+        if (bi >= 0) {
+          const r = npmResolve(pkg.devDependencies, registryDocs, args[bi + 1]);
+          if (r.error) return { code: 1, stdout: JSON.stringify({ error: { code: r.error } }), stderr: "npm error see the log" };
+          writeFileSync(path.join(cwd, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, packages: r.packages }));
+          return { code: 0, stdout: "{}", stderr: "" };
+        }
         const bad = Object.keys(pkg.devDependencies).find((n) => n === "eslint-plugin-conflicts");
         if (bad && !args.includes("--legacy-peer-deps")) return { code: 1, stdout: JSON.stringify({ error: { code: "ERESOLVE", summary: "unable to resolve dependency tree" } }), stderr: "npm error see the log" };
         writeFileSync(path.join(cwd, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, packages: { "": pkg } }));
         return { code: 0, stderr: "" };
       },
-      commitIso: () => T("2024-04-12"),
+      commitIso: () => "2024-04-12T05:00:00+05:00",
       asideDir: mkdtempSync(path.join(tmpdir(), "rp-aside-")),
     },
   };
@@ -71,7 +133,7 @@ const item = { id: "DX01", linter: "eslint", rule: "no-tabs", readings: [reading
   reading("google-s1", "check-file/folder-naming-convention"), reading("deepseek-s1", "nonexistent/x"),
   reading("deepseek-s2", "conflicts/y")] };
 const docs = { eslint: { time }, "eslint-plugin-check-file": { time: { "2.6.0": T("2023-08-01"), "2.8.0": T("2024-04-20") } },
-  "eslint-plugin-conflicts": { time: { "1.0.0": T("2022-01-01") } } };
+  "eslint-plugin-conflicts": { time: { "1.0.0": T("2022-01-01") }, peers: { "1.0.0": { eslint: "^6" } } } };
 
 // 1. A planted repository with no lockfile takes the date-matched path.
 {
@@ -85,15 +147,17 @@ const docs = { eslint: { time }, "eslint-plugin-check-file": { time: { "2.6.0": 
   check(r.install.repo_eslint?.declared?.[0] === "package.json", "the repository's own ESLint declarations are recorded");
   const p = r.install.plugins ?? {};
   check(p["eslint-plugin-check-file"]?.version === "2.6.0" && p["eslint-plugin-check-file"]?.error === null, `plugin at its release current at that date: ${JSON.stringify(p)}`);
-  check(p["eslint-plugin-nonexistent"]?.version === null && /not on the npm registry/.test(p["eslint-plugin-nonexistent"]?.error ?? ""), "a plugin npm does not have is an error, not a drop");
-  check(p["eslint-plugin-conflicts"]?.version === "1.0.0" && p["eslint-plugin-conflicts"]?.peer_conflict === true, "a peer conflict installs with legacy peer deps and says so");
+  check(p["eslint-plugin-nonexistent"]?.version === null && p["eslint-plugin-nonexistent"]?.cause === "package-not-found", `a plugin npm does not have is an error with npm's code as its cause, not a drop: ${JSON.stringify(p["eslint-plugin-nonexistent"])}`);
+  check(p["eslint-plugin-conflicts"]?.version === null && p["eslint-plugin-conflicts"]?.cause === "peer-conflict-other" && !r.install.legacy_peer_deps,
+    `a plugin whose ESLint peer no release at the date admits does not install (no --legacy-peer-deps): ${JSON.stringify(p["eslint-plugin-conflicts"])} legacy ${r.install.legacy_peer_deps}`);
   check(existsSync(path.join(deps.asideDir, ".npmrc")) && existsSync(path.join(deps.asideDir, "package.json")), "the repository's package.json and .npmrc are set aside, outside the repository");
-  check(!existsSync(path.join(dir, ".npmrc")) || readFileSync(path.join(dir, ".npmrc"), "utf8") === "legacy-peer-deps=true\n", "only our own .npmrc sits in the repository");
+  check(!existsSync(path.join(dir, ".npmrc")), "no .npmrc sits in the repository (the repository's is set aside, none of ours is written)");
   const rp = Object.fromEntries(item.readings.map((x) => [x.key, readingPlugins(x.reading, r.install)]));
   check(JSON.stringify(rp["anthropic-s1"]) === "[]", "a core rule names no plugin");
   check(rp["google-s1"][0]?.name === "eslint-plugin-check-file" && rp["google-s1"][0]?.version === "2.6.0", `reading plugins ${JSON.stringify(rp["google-s1"])}`);
   check(rp["deepseek-s1"][0]?.version === null && rp["deepseek-s1"][0]?.error, "a reading whose plugin did not install carries the error");
-  check(calls.registry.includes("eslint"), "the registry was asked");
+  check(calls.npm.length > 0 && calls.npm.every((a) => a.includes("--before 2024-04-12T00:00:00.000Z")) && calls.registry.length === 0,
+    `npm picks the versions itself, --before the commit's time in UTC; the registry is not read by the runner: ${JSON.stringify(calls)}`);
 }
 
 // 2. A repository with a lockfile and ESLint stays on the as-designed path; nothing is fetched.
@@ -155,34 +219,35 @@ check(JSON.stringify(optionsSchema([{ enum: ["a"] }], 9)) === JSON.stringify({ t
 check(JSON.stringify(optionsSchema(undefined, 9)) === JSON.stringify({ type: "array", minItems: 0, maxItems: 0 }) && optionsSchema(undefined, 8) === null && optionsSchema(false, 9) === null, "no schema: no options from ESLint 9, unvalidated before; false: unvalidated");
 check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) === JSON.stringify({ pkg: "@eslint-community/eslint-plugin-eslint-comments", name: "no-use" }) && pluginPart("quotes") === null && pluginPart("@typescript-eslint/x").pkg === "@typescript-eslint/eslint-plugin", "pluginPart");
 
-// 9. A TypeScript release newer than the parser's peer range (measured: typescript 7.0.2 against
-//    @typescript-eslint/parser 8.72.1, npm ERESOLVE): TypeScript is left to npm's peer resolution, and said so.
+// 9. TypeScript on the date-matched path comes from the TypeScript parser's own peer range: a TypeScript release
+//    newer than that range (measured: typescript 7.0.2 against @typescript-eslint/parser 8.72.1, ERESOLVE) is never
+//    asked for; npm installs the newest TypeScript the range admits at the date.
+const tsDocs = { ...docs, "@typescript-eslint/parser": { time: { "8.72.1": T("2024-04-01") }, peers: { "8.72.1": { eslint: "^8.57.0 || ^9.0.0", typescript: ">=4.8.4 <6.1.0" } } },
+  typescript: { time: { "5.4.5": T("2024-03-01"), "6.0.3": T("2024-03-20"), "7.0.2": T("2024-04-02") } } };
 {
   const dir = repo({ "package.json": "{}", "package-lock.json": "{}", "tsconfig.json": "{}" });
-  const { deps } = fakes({ registryDocs: { ...docs, "@typescript-eslint/parser": { time: { "8.72.1": T("2024-04-01") } },
-    typescript: { time: { "7.0.2": T("2024-04-02") } } } });
-  const npm = deps.npm;
-  deps.npm = (args, cwd) => {
-    const pkg = JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf8"));
-    if (pkg.devDependencies.typescript === "7.0.2" && !args.includes("--legacy-peer-deps"))
-      return { code: 1, stdout: JSON.stringify({ error: { code: "ERESOLVE" } }), stderr: "npm error see the log" };
-    const r = npm(args, cwd);
-    const lock = JSON.parse(readFileSync(path.join(cwd, "package-lock.json"), "utf8"));
-    lock.packages["node_modules/typescript"] = { version: "6.0.3" };
-    writeFileSync(path.join(cwd, "package-lock.json"), JSON.stringify(lock));
-    return r;
-  };
+  const { deps } = fakes({ registryDocs: tsDocs });
   const r = await installFor({ id: "DX03", linter: "eslint", readings: [reading("anthropic-s1", "no-tabs")] }, dir, deps);
-  check(r.installed.kind === "installed" && r.install.path === "date-matched", `TypeScript peer conflict: ${JSON.stringify(r.install).slice(0, 300)}`);
-  check(r.install.versions?.typescript === "6.0.3" && r.install.typescript_peer_resolved === true, `TypeScript from the parser's peer range, recorded: ${JSON.stringify(r.install.versions)}`);
-  check(r.install.attempts.at(-1).resolved?.[0]?.cause === "peer-conflict-typescript", "the attempt says which conflict it resolved");
+  check(r.installed.kind === "installed" && r.install.path === "date-matched", `TypeScript from the parser's range: ${JSON.stringify(r.install).slice(0, 300)}`);
+  check(r.install.versions?.typescript === "6.0.3" && r.install.versions?.["@typescript-eslint/parser"] === "8.72.1", `TypeScript 6.0.3, not 7.0.2: ${JSON.stringify(r.install.versions)}`);
+}
+
+// 13. A parser that marks TypeScript an optional peer (5.x): npm installs none, so the runner adds TypeScript with the
+//     range the lockfile's parser entry declares, and says so.
+{
+  const dir = repo({ "package.json": "{}", "package-lock.json": "{}", "tsconfig.json": "{}" });
+  const { deps, calls } = fakes({ registryDocs: { ...tsDocs, "@typescript-eslint/parser": { time: { "5.62.0": T("2023-07-01") },
+    peers: { "5.62.0": { eslint: "^6.0.0 || ^7.0.0 || ^8.0.0", typescript: "*", typescript_optional: true } } } } });
+  const r = await installFor({ id: "DX05", linter: "eslint", readings: [reading("anthropic-s1", "no-tabs")] }, dir, deps);
+  check(r.install.versions?.typescript === "7.0.2" && r.install.versions?.eslint === "8.57.0" && r.install.typescript_from_peer_range === true,
+    `optional TypeScript peer: added with the parser's range, ESLint the newest the parser admits: ${JSON.stringify(r.install.versions)} ${r.install.typescript_from_peer_range}`);
+  check(calls.npm.some((a) => a.includes("--before")) && !calls.npm.some((a) => a.includes("--legacy-peer-deps")), "no --legacy-peer-deps on the date-matched path");
 }
 
 // 10. npm's error is decided by the code in its --json output, never by words in its stderr.
 {
   const dir = repo({ "package.json": "{}", "package-lock.json": "{}", "tsconfig.json": "{}" });
-  const { deps } = fakes({ registryDocs: { ...docs, "@typescript-eslint/parser": { time: { "8.72.1": T("2024-04-01") } },
-    typescript: { time: { "7.0.2": T("2024-04-02") } } } });
+  const { deps } = fakes({ registryDocs: tsDocs });
   const seen = [];
   deps.npm = (args, cwd) => {
     seen.push(args.includes("--json"));
@@ -207,29 +272,6 @@ check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) ===
   check(r2.installed.kind === "installed" && (r2.install.adjustments ?? []).includes("pre-commit-rev-not-a-release"), "the pre-commit rev is the only pin file: the no-pin rule applies whatever the failure says");
 }
 
-// 13. A TypeScript peer conflict and then a plugin that needs --legacy-peer-deps (measured on two items): legacy mode
-//     installs no peers, so the TypeScript npm chose is pinned explicitly and survives.
-{
-  const dir = repo({ "package.json": "{}", "package-lock.json": "{}", "tsconfig.json": "{}" });
-  const { deps } = fakes({ registryDocs: { ...docs, "@typescript-eslint/parser": { time: { "8.70.0": T("2024-04-01") } },
-    typescript: { time: { "7.0.2": T("2024-04-02") } } } });
-  const npm = deps.npm;
-  deps.npm = (args, cwd) => {
-    const pkg = JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf8"));
-    if (pkg.devDependencies.typescript === "7.0.2") return { code: 1, stdout: JSON.stringify({ error: { code: "ERESOLVE" } }), stderr: "" };
-    const r = npm(args, cwd);
-    if (r.code !== 0) return r;
-    const lock = JSON.parse(readFileSync(path.join(cwd, "package-lock.json"), "utf8"));
-    const legacy = args.includes("--legacy-peer-deps");
-    if (!legacy || pkg.devDependencies.typescript) lock.packages["node_modules/typescript"] = { version: pkg.devDependencies.typescript ?? "6.0.3" };
-    writeFileSync(path.join(cwd, "package-lock.json"), JSON.stringify(lock));
-    return r;
-  };
-  const r = await installFor({ id: "DX05", linter: "eslint", readings: [reading("anthropic-s1", "conflicts/y")] }, dir, deps);
-  check(r.install.legacy_peer_deps === true && r.install.versions?.typescript === "6.0.3", `TypeScript kept explicit under --legacy-peer-deps: ${JSON.stringify(r.install.versions)}`);
-  check(JSON.stringify(r.install.attempts.at(-1).resolved?.map((x) => x.cause)) === JSON.stringify(["peer-conflict-typescript", "peer-conflict-other"]), `both conflicts recorded: ${JSON.stringify(r.install.attempts.at(-1).resolved)}`);
-}
-
 // 14. A planted pair that is TypeScript asks for the TypeScript parser, whatever sits at the root (measured, D14: 32
 //     sub-readings stopped at «Parsing error» because only a root tsconfig.json or a typescript-eslint rule asked for
 //     it). On the lockfile-pinned path the parser and TypeScript come from the same lockfile as ESLint.
@@ -252,11 +294,12 @@ const jsPair = { bad: { path: "p/bad.js", text: "x\n" }, good: { path: "p/good.j
 // 15. The same on the date-matched path: no tsconfig.json anywhere, a .ts pair.
 {
   const dir = repo({ "README.md": "x\n", "app/x.ts": "x\n" });
-  const { deps, calls } = fakes({ registryDocs: { ...docs, "@typescript-eslint/parser": { time: { "8.1.0": T("2024-04-01") } }, typescript: { time: { "5.4.5": T("2024-04-02") } } } });
+  const { deps, calls } = fakes({ registryDocs: { ...docs, "@typescript-eslint/parser": { time: { "8.1.0": T("2024-04-01") }, peers: { "8.1.0": { typescript: ">=4.7.4 <5.5.0" } } }, typescript: { time: { "5.4.5": T("2024-04-02"), "5.5.2": T("2024-04-03") } } } });
   const r = await installFor({ id: "DX15", linter: "eslint", readings: [{ ...reading("google-s1", "no-console"), pair: tsPair("app") }] }, dir, deps);
   check(r.install.path === "date-matched" && r.install.versions?.["@typescript-eslint/parser"] === "8.1.0" && r.install.versions?.typescript === "5.4.5",
     `date-matched, .ts pair: parser and TypeScript at the date: ${JSON.stringify(r.install.versions)}`);
-  check(calls.registry.includes("@typescript-eslint/parser"), "the registry was asked for the parser");
+  check(calls.npm.some((a) => a.includes("--before")) && JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8")).devDependencies?.["@typescript-eslint/parser"] === "*",
+    "the parser is in npm's manifest with the range *, npm --before picks it");
 }
 
 // 16. Whether another root file pins Ruff is the Ruff kit's own answer (vigiles' ruffPin, which the install reads),
@@ -309,6 +352,56 @@ const jsPair = { bad: { path: "p/bad.js", text: "x\n" }, good: { path: "p/good.j
     && needsTsParser(repo({ "README.md": "x\n" }), [{ reading: { rule: "no-console" }, pair: jsPair }]).length === 0, "needsTsParser: what asked for the parser");
 }
 
+// 19. The date-matched path (D10 by the package managers' own date flags, R15): every package npm installs has the
+//     range "*" and is picked by npm --before <the commit's committer time in UTC>; the versions recorded are the ones
+//     in the lockfile npm wrote (transitive packages are dated too: they are npm's to pick).
+{
+  const dir = repo({ "README.md": "x\n" });
+  const { deps, calls } = fakes({ registryDocs: docs });
+  const r = await installFor({ id: "DX19", linter: "eslint", readings: [reading("google-s1", "check-file/folder-naming-convention")] }, dir, deps);
+  const manifest = JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8")).devDependencies;
+  check(JSON.stringify(manifest) === JSON.stringify({ eslint: "*", "eslint-plugin-check-file": "*" }), `the manifest names the packages, npm picks the versions: ${JSON.stringify(manifest)}`);
+  check(calls.npm.length > 0 && calls.npm.every((a) => a.split(" ").includes("--before") && a.includes("2024-04-12T00:00:00.000Z")), `npm --before the commit time (UTC): ${JSON.stringify(calls.npm)}`);
+  check(r.install.versions?.eslint === "9.0.0" && r.install.plugins?.["eslint-plugin-check-file"]?.version === "2.6.0", `versions read back from npm's lockfile: ${JSON.stringify(r.install.versions)} ${JSON.stringify(r.install.plugins)}`);
+  check(JSON.stringify(r.install.date_matched_by) === JSON.stringify({ tool: "npm", flag: "--before", at: "2024-04-12T00:00:00.000Z" }), `the record names the tool and the time: ${JSON.stringify(r.install.date_matched_by)}`);
+}
+
+// 20. A plugin whose ESLint peer excludes the newest ESLint at the date: npm picks the newest ESLint the plugin admits
+//     (measured, P3-S109 RUN-STATUS §8.2: 2024-06-01, eslint 8.57.0 with eslint-plugin-import 2.29.1); no
+//     --legacy-peer-deps.
+{
+  const dir = repo({ "README.md": "x\n" });
+  const { deps, calls } = fakes({ registryDocs: { ...docs, "eslint-plugin-import": { time: { "2.29.1": T("2023-12-14") }, peers: { "2.29.1": { eslint: "^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8" } } } } });
+  const r = await installFor({ id: "DX20", linter: "eslint", readings: [reading("deepseek-s1", "import/no-cycle"), reading("anthropic-s1", "no-tabs")] }, dir, deps);
+  check(r.install.versions?.eslint === "8.57.0" && r.install.plugins?.["eslint-plugin-import"]?.version === "2.29.1", `ESLint the plugin admits: ${JSON.stringify(r.install.versions)}`);
+  check(!calls.npm.some((a) => a.includes("--legacy-peer-deps")) && r.install.legacy_peer_deps !== true, "no --legacy-peer-deps");
+}
+
+// 21. Ruff with no pin: uv pip compile --exclude-newer <commit time> --format pylock.toml; the version is read from the
+//     pylock file by a TOML parser; the record names the tool and the time.
+{
+  const dir = repo({ "pyproject.toml": "[project]\nname = \"x\"\n" });
+  const { deps, calls } = fakes({ ruff: { "0.4.1": [{ upload_time_iso_8601: T("2024-04-01") }], "0.4.2": [{ upload_time_iso_8601: T("2024-04-30") }] } });
+  const inst = deps.install;
+  deps.install = (l, d) => (existsSync(path.join(d, "requirements-date-matched-ruff.txt")) ? inst(l, d) : { kind: "not-installed", stage: "no-pin", reason: "no ruff pin" });
+  const r = await installFor({ id: "DR21", linter: "ruff", readings: [] }, dir, deps);
+  check(r.installed.kind === "installed" && r.install.date_matched?.ruff === "0.4.1" && calls.uv.join() === "2024-04-12T00:00:00.000Z",
+    `uv --exclude-newer at the commit time picks Ruff: ${JSON.stringify(r.install)} uv ${calls.uv}`);
+  check(JSON.stringify(r.install.date_matched_by) === JSON.stringify({ tool: "uv", flag: "--exclude-newer", at: "2024-04-12T00:00:00.000Z" }), `the record names uv: ${JSON.stringify(r.install.date_matched_by)}`);
+}
+
+// 22. uv that finds no Ruff by the date fails the attempt with uv's own command and exit status, cause «unknown»
+//     (uv reports no structured code that tells a network failure from an empty resolution).
+{
+  const dir = repo({ "pyproject.toml": "[project]\nname = \"x\"\n" });
+  const { deps } = fakes({ ruff: { "0.5.0": [{ upload_time_iso_8601: T("2024-06-01") }] } });
+  deps.install = () => ({ kind: "not-installed", stage: "no-pin", reason: "no ruff pin" });
+  const r = await installFor({ id: "DR22", linter: "ruff", readings: [] }, dir, deps);
+  const f = r.install.attempts.at(-1).failure;
+  check(r.installed.kind === "not-installed" && f?.cause === "unknown" && f?.tool?.cmd?.startsWith("uv pip compile") && f?.tool?.exit === 1,
+    `uv's failure recorded with its command and exit: ${JSON.stringify(r.install.attempts)}`);
+}
+
 // 12. Every install record any fixture above produced has the declared shape, and the committed JSON Schema is the
 //     one install-schema.mjs generates.
 {
@@ -328,4 +421,4 @@ check(JSON.stringify(matrixOf([{ id: "a" }, { id: "b", node: "20" }])) === JSON.
 check(JSON.stringify(repoEslint(repo({ "package.json": "{}", "a/package.json": JSON.stringify({ devDependencies: { eslint: "8" } }) })).declared) === JSON.stringify(["a/package.json"]), "repoEslint finds a sub-package");
 
 if (fail.length) { console.log("FAIL:\n  " + fail.join("\n  ")); process.exit(1); }
-console.log("ok: npm date-matched versions; no-lockfile fixture -> date-matched with plugins recorded per reading, an unknown plugin an error, a peer conflict marked; lockfile fixture -> as-designed, nothing fetched; no ESLint of its own -> date-matched, marked; Ruff sha rev -> no-pin rule; matrix Node per item; a .ts pair asks for the TypeScript parser (lockfile-pinned, date-matched); the Ruff pin is the kit's own answer; yarn v1 and Berry by their parsers; why a pair did not run, from structure and ESLint's config matching");
+console.log("ok: date-matched by npm --before and uv --exclude-newer at the commit time, versions read back from npm's lockfile and uv's pylock.toml, ESLint the newest a plugin's peer admits, no --legacy-peer-deps on that path, TypeScript from the parser's peer range; no-lockfile fixture -> date-matched with plugins recorded per reading, an unknown plugin an error, an unresolvable peer a plugin-not-installed; lockfile fixture -> as-designed, nothing fetched; no ESLint of its own -> date-matched, marked; Ruff sha rev -> no-pin rule; matrix Node per item; a .ts pair asks for the TypeScript parser (lockfile-pinned, date-matched); the Ruff pin is the kit's own answer; yarn v1 and Berry by their parsers; why a pair did not run, from structure and ESLint's config matching");

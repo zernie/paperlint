@@ -71,6 +71,10 @@ export const installSchema = z.strictObject({
   legacy_peer_deps: z.boolean().optional(),
   typescript_peer_resolved: z.boolean().optional(),
   ts_parser_asked: z.array(z.enum(["root-tsconfig", "typescript-eslint-rule", "typescript-pair"])).optional(),
+  // the date-matched release, picked by the package manager's own date flag at the commit's time (UTC)
+  date_matched_by: z.strictObject({ tool: z.enum(["npm", "uv"]), flag: z.enum(["--before", "--exclude-newer"]), at: z.string() }).optional(),
+  // TypeScript added with the range the parser's lockfile entry declares (a parser whose TypeScript peer is optional)
+  typescript_from_peer_range: z.boolean().optional(),
 }).superRefine((v, ctx) => {
   const last = v.attempts.at(-1);
   if (last.outcome !== v.outcome) ctx.addIssue({ code: "custom", message: "outcome is the last attempt's" });
