@@ -176,6 +176,33 @@ test(
 );
 
 test(
+  "🔴 an answer that needs a reason is not saved while its reason is empty; another answer replaces it unsaved",
+  async () => {
+    await onApprovalPage("browser-refuse", 20, async (page) => {
+      await page.waitForTimeout(1200); // longer than the reason's pause: nothing may arrive
+      assert.deepEqual(await writes(page), []);
+      assert.match(
+        (await page.locator("article.item").first().textContent()) ?? "",
+        /Not saved yet/,
+      );
+      // Leaving the page with the box empty saves nothing either.
+      await page.evaluate(() => {
+        window.dispatchEvent(new Event("pagehide"));
+      });
+      await page.waitForTimeout(100);
+      assert.deepEqual(await writes(page), []);
+      await page.getByRole("button", { name: /Keep/ }).first().click();
+      await page.waitForTimeout(100);
+      assert.deepEqual(
+        await page.evaluate("window.__writes.map(function (w) { return w.answers; })"),
+        [{ keep: "keep" }],
+      );
+    });
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
   "a Keep needs no reason and writes none: the page stays quiet",
   async () => {
     const { page: html } = build(setup("browser-keep", approval()));
