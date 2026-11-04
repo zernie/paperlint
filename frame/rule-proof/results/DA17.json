@@ -6,8 +6,18 @@
  "rule": "no-restricted-syntax",
  "checked_out": "a16b48539a4f0cfdf1e72927f8f324cb83306c14",
  "install": {
-  "kind": "installed",
-  "version": "8.57.1"
+  "outcome": "installed",
+  "path": "as-designed",
+  "version": "8.57.1",
+  "versions": {},
+  "plugins": {},
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": []
  },
  "readings": [
   {
@@ -36,6 +46,7 @@
     },
     "parser": "@typescript-eslint/parser"
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -73,6 +84,7 @@
     },
     "parser": "@typescript-eslint/parser"
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -106,6 +118,7 @@
     },
     "parser": "@typescript-eslint/parser"
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -117,6 +130,64 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "projects/auth0-angular/src/lib/auth.client.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 16,
+        "column": 12,
+        "ruleId": "no-restricted-syntax",
+        "message": "Using 'NewExpression[callee.name=\"Auth0Client\"]' is not allowed.",
+        "lines": [
+         {
+          "n": 13,
+          "text": "      );",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    }",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "    return new Auth0Client({",
+          "mark": true
+         },
+         {
+          "n": 17,
+          "text": "      ...config,",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "      auth0Client: {",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "        name: useragent.name,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -143,6 +214,7 @@
     },
     "parser": "@typescript-eslint/parser"
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -156,6 +228,162 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "projects/auth0-angular/src/lib/auth.client.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 16,
+        "column": 12,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not construct a new Auth0Client instance. Use the existing instance from Auth0ClientService.",
+        "lines": [
+         {
+          "n": 13,
+          "text": "      );",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    }",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "    return new Auth0Client({",
+          "mark": true
+         },
+         {
+          "n": 17,
+          "text": "      ...config,",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "      auth0Client: {",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "        name: useragent.name,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "projects/auth0-angular/src/lib/auth.interceptor.spec.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 93,
+        "column": 19,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not construct a new Auth0Client instance. Use the existing instance from Auth0ClientService.",
+        "lines": [
+         {
+          "n": 90,
+          "text": "    isLoading$ = new BehaviorSubject<boolean>(false);",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "    req = undefined as any;",
+          "mark": false
+         },
+         {
+          "n": 92,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 93,
+          "text": "    auth0Client = new Auth0Client({",
+          "mark": true
+         },
+         {
+          "n": 94,
+          "text": "      domain: '',",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "      clientId: '',",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "    });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "projects/auth0-angular/src/lib/auth.service.spec.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 104,
+        "column": 19,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not construct a new Auth0Client instance. Use the existing instance from Auth0ClientService.",
+        "lines": [
+         {
+          "n": 101,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 102,
+          "text": "  beforeEach(() => {",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "    authConfig = {};",
+          "mark": false
+         },
+         {
+          "n": 104,
+          "text": "    auth0Client = new Auth0Client({",
+          "mark": true
+         },
+         {
+          "n": 105,
+          "text": "      domain: '',",
+          "mark": false
+         },
+         {
+          "n": 106,
+          "text": "      clientId: '',",
+          "mark": false
+         },
+         {
+          "n": 107,
+          "text": "    });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -189,6 +417,7 @@
     },
     "parser": "@typescript-eslint/parser"
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -202,6 +431,334 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "projects/auth0-angular/src/lib/auth.client.spec.ts": {
+      "total": 9,
+      "capped": true,
+      "items": [
+       {
+        "line": 28,
+        "column": 22,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never call the factory per request; reuse the existing Auth0Client instance.",
+        "lines": [
+         {
+          "n": 25,
+          "text": "      };",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "      const configClient = new AuthClientConfig(config);",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "      const client = Auth0ClientFactory.createClient(configClient);",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "      expect(client).not.toBeUndefined();",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "    });",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 36,
+        "column": 20,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never call the factory per request; reuse the existing Auth0Client instance.",
+        "lines": [
+         {
+          "n": 33,
+          "text": "    it('throws an error when no config was supplied', () => {",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "      const configClient = new AuthClientConfig();",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "      expect(() => Auth0ClientFactory.createClient(configClient)).toThrow(",
+          "mark": true
+         },
+         {
+          "n": 37,
+          "text": "        /^Configuration must be specified/",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": "      );",
+          "mark": false
+         },
+         {
+          "n": 39,
+          "text": "    });",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 50,
+        "column": 22,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never call the factory per request; reuse the existing Auth0Client instance.",
+        "lines": [
+         {
+          "n": 47,
+          "text": "      };",
+          "mark": false
+         },
+         {
+          "n": 48,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 49,
+          "text": "      const configClient = new AuthClientConfig(config);",
+          "mark": false
+         },
+         {
+          "n": 50,
+          "text": "      const client = Auth0ClientFactory.createClient(configClient);",
+          "mark": true
+         },
+         {
+          "n": 51,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "      expect(client).not.toBeUndefined();",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "      expect((client as any).options.domain).toEqual('test.domain.com');",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 67,
+        "column": 22,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never call the factory per request; reuse the existing Auth0Client instance.",
+        "lines": [
+         {
+          "n": 64,
+          "text": "      };",
+          "mark": false
+         },
+         {
+          "n": 65,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "      const configClient = new AuthClientConfig(config);",
+          "mark": false
+         },
+         {
+          "n": 67,
+          "text": "      const client = Auth0ClientFactory.createClient(configClient);",
+          "mark": true
+         },
+         {
+          "n": 68,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "      expect(client).not.toBeUndefined();",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "      expect((client as any).options.domain).toEqual('test.domain.com');",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 88,
+        "column": 24,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never call the factory per request; reuse the existing Auth0Client instance.",
+        "lines": [
+         {
+          "n": 85,
+          "text": "        };",
+          "mark": false
+         },
+         {
+          "n": 86,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "        const configClient = new AuthClientConfig(config);",
+          "mark": false
+         },
+         {
+          "n": 88,
+          "text": "        const client = Auth0ClientFactory.createClient(configClient);",
+          "mark": true
+         },
+         {
+          "n": 89,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "        expect(client).not.toBeUndefined();",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "        expect((client as any).options.refreshTokenMode).toEqual('online');",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "projects/auth0-angular/src/lib/auth.interceptor.spec.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 93,
+        "column": 19,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never construct a new Auth0Client instance; reuse the existing instance injected via Auth0ClientService.",
+        "lines": [
+         {
+          "n": 90,
+          "text": "    isLoading$ = new BehaviorSubject<boolean>(false);",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "    req = undefined as any;",
+          "mark": false
+         },
+         {
+          "n": 92,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 93,
+          "text": "    auth0Client = new Auth0Client({",
+          "mark": true
+         },
+         {
+          "n": 94,
+          "text": "      domain: '',",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "      clientId: '',",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "    });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "projects/auth0-angular/src/lib/auth.service.spec.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 104,
+        "column": 19,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never construct a new Auth0Client instance; reuse the existing instance injected via Auth0ClientService.",
+        "lines": [
+         {
+          "n": 101,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 102,
+          "text": "  beforeEach(() => {",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "    authConfig = {};",
+          "mark": false
+         },
+         {
+          "n": 104,
+          "text": "    auth0Client = new Auth0Client({",
+          "mark": true
+         },
+         {
+          "n": 105,
+          "text": "      domain: '',",
+          "mark": false
+         },
+         {
+          "n": 106,
+          "text": "      clientId: '',",
+          "mark": false
+         },
+         {
+          "n": 107,
+          "text": "    });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -235,6 +792,7 @@
     },
     "parser": "@typescript-eslint/parser"
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -248,6 +806,162 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "projects/auth0-angular/src/lib/auth.client.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 16,
+        "column": 12,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never construct a new Auth0Client instance. Reuse the existing Auth0Client instance injected via Auth0ClientService.",
+        "lines": [
+         {
+          "n": 13,
+          "text": "      );",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    }",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "    return new Auth0Client({",
+          "mark": true
+         },
+         {
+          "n": 17,
+          "text": "      ...config,",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "      auth0Client: {",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "        name: useragent.name,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "projects/auth0-angular/src/lib/auth.interceptor.spec.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 93,
+        "column": 19,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never construct a new Auth0Client instance. Reuse the existing Auth0Client instance injected via Auth0ClientService.",
+        "lines": [
+         {
+          "n": 90,
+          "text": "    isLoading$ = new BehaviorSubject<boolean>(false);",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "    req = undefined as any;",
+          "mark": false
+         },
+         {
+          "n": 92,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 93,
+          "text": "    auth0Client = new Auth0Client({",
+          "mark": true
+         },
+         {
+          "n": 94,
+          "text": "      domain: '',",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "      clientId: '',",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "    });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "projects/auth0-angular/src/lib/auth.service.spec.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 104,
+        "column": 19,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never construct a new Auth0Client instance. Reuse the existing Auth0Client instance injected via Auth0ClientService.",
+        "lines": [
+         {
+          "n": 101,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 102,
+          "text": "  beforeEach(() => {",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "    authConfig = {};",
+          "mark": false
+         },
+         {
+          "n": 104,
+          "text": "    auth0Client = new Auth0Client({",
+          "mark": true
+         },
+         {
+          "n": 105,
+          "text": "      domain: '',",
+          "mark": false
+         },
+         {
+          "n": 106,
+          "text": "      clientId: '',",
+          "mark": false
+         },
+         {
+          "n": 107,
+          "text": "    });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   }
  ],
@@ -426,5 +1140,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 51.252
+ "seconds": 52.803
 }

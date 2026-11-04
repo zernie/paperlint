@@ -5,18 +5,40 @@
  "linter": "ruff",
  "rule": "ANN003",
  "checked_out": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-pin",
-  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
- },
- "date_matched": {
-  "commit": "2026-10-27T16:16:35-07:00",
-  "ruff": "0.17.3"
- },
  "install": {
-  "kind": "installed",
-  "version": "0.17.3"
+  "outcome": "installed",
+  "path": "as-designed",
+  "version": "0.17.3",
+  "versions": {},
+  "plugins": {},
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-pin",
+     "detail": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+    }
+   },
+   {
+    "path": "as-designed",
+    "outcome": "installed",
+    "rule": "ruff-date-matched"
+   }
+  ],
+  "adjustments": [
+   "date-matched-version"
+  ],
+  "date_matched": {
+   "commit": "2026-10-27T16:16:35-07:00",
+   "ruff": "0.17.3"
+  },
+  "date_matched_by": {
+   "tool": "uv",
+   "flag": "--exclude-newer",
+   "at": "2026-10-27T23:16:35.000Z"
+  }
  },
  "readings": [
   {
@@ -38,6 +60,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -88,6 +111,3095 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "activation-search/persona_label_qualify.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 221,
+        "column": 20,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**body`",
+        "lines": [
+         {
+          "n": 218,
+          "text": "    stop=threading.Event();state_lock=threading.RLock();active=set();stage='admission';terminal=None",
+          "mark": false
+         },
+         {
+          "n": 219,
+          "text": "    for sig in (signal.SIGTERM,signal.SIGINT):signal.signal(sig,lambda *_:stop.set())",
+          "mark": false
+         },
+         {
+          "n": 220,
+          "text": "    board_cache={'time':0,'value':None}",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "    def event(kind,**body):",
+          "mark": true
+         },
+         {
+          "n": 222,
+          "text": "        with connect(args.database) as db:db.execute('INSERT INTO events VALUES(?,?,?)',(time.time(),kind,json.dumps(body)))",
+          "mark": false
+         },
+         {
+          "n": 223,
+          "text": "        print(json.dumps({'time':time.time(),'event':kind,**body}),flush=True)",
+          "mark": false
+         },
+         {
+          "n": 224,
+          "text": "    def status():",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "activation-search/persona_overnight_map.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 275,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**body`",
+        "lines": [
+         {
+          "n": 272,
+          "text": "    def connect():",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "        return sqlite3.connect(args.database, timeout=60)",
+          "mark": false
+         },
+         {
+          "n": 274,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 275,
+          "text": "    def event(kind, **body):",
+          "mark": true
+         },
+         {
+          "n": 276,
+          "text": "        with connect() as db:",
+          "mark": false
+         },
+         {
+          "n": 277,
+          "text": "            db.execute('INSERT INTO events VALUES(?,?,?)', (time.time(), kind, json.dumps(body)))",
+          "mark": false
+         },
+         {
+          "n": 278,
+          "text": "        print(json.dumps({'time': time.time(), 'event': kind, **body}), flush=True)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "activation-search/persona_probe.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 77,
+        "column": 38,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**arrays`",
+        "lines": [
+         {
+          "n": 74,
+          "text": "        return hashlib.file_digest(stream, \"sha256\").hexdigest()",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 76,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "def save_activation_npz(destination, **arrays):",
+          "mark": true
+         },
+         {
+          "n": 78,
+          "text": "    \"\"\"Write ordinary lossless NPZ members with explicitly bounded compression.",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "    Level one avoids default level-six deflate's measured CPU bottleneck. NPY",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 747,
+        "column": 41,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 744,
+          "text": "            raise RuntimeError(\"Forward cache already bound to another capture override\")",
+          "mark": false
+         },
+         {
+          "n": 745,
+          "text": "        return digest",
+          "mark": false
+         },
+         {
+          "n": 746,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 747,
+          "text": "    def initialize(cache, *, namespace, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 748,
+          "text": "        bound_namespace = {**namespace, \"activation_capture_override_sha256\": digest}",
+          "mark": false
+         },
+         {
+          "n": 749,
+          "text": "        original(cache, namespace=bound_namespace, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 750,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_baseline_schedule.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 146,
+        "column": 14,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**values`",
+        "lines": [
+         {
+          "n": 143,
+          "text": "    # At most one owner service instance; systemd provides the process ownership.",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "    job_id=None; capture_invocation=None; capture_token=None",
+          "mark": false
+         },
+         {
+          "n": 145,
+          "text": "    state_path=ROOT/'results/baseline40k-schedule.json'",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "    def save(**values):",
+          "mark": true
+         },
+         {
+          "n": 147,
+          "text": "        payload=json.dumps({'updated':time.time(),'job_id':job_id,",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "            'capture_invocation':capture_invocation,'capture_token':capture_token,",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "            'opportunistic':args.opportunistic,**values},indent=2)+'\\n'",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_batch_capture.py": {
+      "total": 4,
+      "capped": false,
+      "items": [
+       {
+        "line": 23,
+        "column": 23,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 20,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 21,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 22,
+          "text": "def prepare_adapter(original_prepare):",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "    def wrapped(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 24,
+          "text": "        from ignition.recipes.qwen38_dense import bootstrap",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "        from activation_capture import RequestActivationCapture",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "        original=bootstrap.PreparedDecoder;shared=[]",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 27,
+        "column": 51,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 24,
+          "text": "        from ignition.recipes.qwen38_dense import bootstrap",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "        from activation_capture import RequestActivationCapture",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "        original=bootstrap.PreparedDecoder;shared=[]",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "        def factory(weights,scratch,metadata,pool,**options):",
+          "mark": true
+         },
+         {
+          "n": 28,
+          "text": "            if options.get('mode')=='decode' and metadata.positions.numel() in (2,4):",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "                if options.get('activation_capture') is not None:raise ValueError('Decode capture already instrumented')",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "                steering=options.get('steering')",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 141,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 138,
+          "text": "        if self.capture is None or not hasattr(self.capture,'slot_live'):raise ValueError('B4 request capture absent')",
+          "mark": false
+         },
+         {
+          "n": 139,
+          "text": "        two=self.base.catalog[self.base.names[2]].decoder.activation_capture",
+          "mark": false
+         },
+         {
+          "n": 140,
+          "text": "        if two.residual_last.data_ptr()!=self.capture.residual_last.data_ptr():raise ValueError('B2/B4 backing differs')",
+          "mark": false
+         },
+         {
+          "n": 141,
+          "text": "    def execute(self,cases,**options):",
+          "mark": true
+         },
+         {
+          "n": 142,
+          "text": "        import torch",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "        from persona_probe import REQUEST_STATE_FIELDS",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "        e=self.engine;slots=options.get('slots',list(range(len(cases))));logical={s:i for i,s in enumerate(slots)}",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 235,
+        "column": 24,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 232,
+          "text": "    report['limitations']=['Timing includes capture synchronization and host readback, not kernel-only throughput.','Non-first per-token vectors are represented by hashes; sums rely on the source-bound accumulator.','All new B2/B4 graphs include capture; this is not a same-graph capture-off/on speed comparison.']",
+          "mark": false
+         },
+         {
+          "n": 233,
+          "text": "    report.update(eos_token_ids=list(engine.eos),source_sha256=engine.manifest['source_sha256'],capture_override=engine.manifest.get('capture_override'),heliopause_sha256=engine.manifest['heliopause_sha256'],adapter_sha256=sha(__file__),probe_source_sha256=plan['probe_source_sha256'],legacy_capture_prefix_sha256=plan['legacy_capture_prefix_sha256'])",
+          "mark": false
+         },
+         {
+          "n": 234,
+          "text": "    atomic(output,report);arrays={};values={};cases=plan['cases']",
+          "mark": false
+         },
+         {
+          "n": 235,
+          "text": "    def run(name,items,**options):",
+          "mark": true
+         },
+         {
+          "n": 236,
+          "text": "        print('batch-capture '+name,flush=True)",
+          "mark": false
+         },
+         {
+          "n": 237,
+          "text": "        value=trial.execute(items,**options);values[name]=value",
+          "mark": false
+         },
+         {
+          "n": 238,
+          "text": "        for k in ('_logits','_hidden'):arrays[name+k]=value[k]",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_batch_probe.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 223,
+        "column": 24,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 220,
+          "text": "    report['eos_token_ids']=list(engine.eos)",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "    if history:report['prior_attempts']=history",
+          "mark": false
+         },
+         {
+          "n": 222,
+          "text": "    atomic(path,report);arrays={};results={};trial=None;cases=plan['cases']",
+          "mark": false
+         },
+         {
+          "n": 223,
+          "text": "    def run(name,items,**options):",
+          "mark": true
+         },
+         {
+          "n": 224,
+          "text": "        print('batch-proof '+name,flush=True)",
+          "mark": false
+         },
+         {
+          "n": 225,
+          "text": "        value=trial.execute(items,**options);results[name]=value",
+          "mark": false
+         },
+         {
+          "n": 226,
+          "text": "        for key in ('_logits','_hidden'):arrays[name+key]=value[key]",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_corpus.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 226,
+        "column": 115,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**extra`",
+        "lines": [
+         {
+          "n": 223,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 224,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 225,
+          "text": "def record(source: dict, text: str, *, corpus: str, category: str, split: str, locator: dict,",
+          "mark": false
+         },
+         {
+          "n": 226,
+          "text": "           prompt: str | None = None, system=\"\", mutation=None, labels=None, purpose=\"behavior\", max_tokens=2048, **extra):",
+          "mark": true
+         },
+         {
+          "n": 227,
+          "text": "    source_id = canonical_digest({\"sha256\": source[\"sha256\"], **locator})",
+          "mark": false
+         },
+         {
+          "n": 228,
+          "text": "    row = {\"schema\": SCHEMA, \"corpus\": corpus, \"category\": category, \"split\": split,",
+          "mark": false
+         },
+         {
+          "n": 229,
+          "text": "           \"source_id\": source_id, \"source_sha256\": source[\"sha256\"], \"source\": {**source, **locator},",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_hillclimb.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 59,
+        "column": 43,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 56,
+          "text": "    def bind(self, task, attempt):",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "        self.local.context = {'job_id': task['id'], 'attempt': attempt}",
+          "mark": false
+         },
+         {
+          "n": 58,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 59,
+          "text": "    def __call__(self, url, payload=None, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 60,
+          "text": "        context = getattr(self.local, 'context', None)",
+          "mark": false
+         },
+         {
+          "n": 61,
+          "text": "        if context and payload is not None:",
+          "mark": false
+         },
+         {
+          "n": 62,
+          "text": "            self.queue.audit('hillclimb_wire_request', {**context, 'url': url,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_identity_hub.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 374,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**fields`",
+        "lines": [
+         {
+          "n": 371,
+          "text": "        'watermark': 0, 'pending': None, 'events': [],",
+          "mark": false
+         },
+         {
+          "n": 372,
+          "text": "        'manifest': {'schema': 'character-creation.identity-sweep-manifest.v1', 'repo': REPO, **MODEL,",
+          "mark": false
+         },
+         {
+          "n": 373,
+          "text": "                     'prompt': 'who are you', 'shards': [], 'rows': 0}}",
+          "mark": false
+         },
+         {
+          "n": 374,
+          "text": "    def log(kind, **fields): state['events'] = (state['events'] + [{'time': iso(time.time()), 'event': kind, **fields}])[-30:]",
+          "mark": true
+         },
+         {
+          "n": 375,
+          "text": "    while True:",
+          "mark": false
+         },
+         {
+          "n": 376,
+          "text": "        try:",
+          "mark": false
+         },
+         {
+          "n": 377,
+          "text": "            tick(api, state, log); state['last_error'] = None",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_identity_supervisor.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 150,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**fields`",
+        "lines": [
+         {
+          "n": 147,
+          "text": "    parser.add_argument('--until', type=float, default=float('inf'), help='Epoch at which supervision ends (default: never)')",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "    args = parser.parse_args()",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "    state = json.loads(STATE.read_text()) if STATE.exists() else {'queued_menu': [], 'events': []}",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "    def log(kind, **fields):",
+          "mark": true
+         },
+         {
+          "n": 151,
+          "text": "        state['events'] = (state['events'] + [{'time': time.time(), 'event': kind, **fields}])[-40:]",
+          "mark": false
+         },
+         {
+          "n": 152,
+          "text": "    while time.time() < args.until:",
+          "mark": false
+         },
+         {
+          "n": 153,
+          "text": "        try:",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_literature_batch.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 26,
+        "column": 25,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**details`",
+        "lines": [
+         {
+          "n": 23,
+          "text": "STARTED = time.time()",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "def publish(state: str, **details) -> None:",
+          "mark": true
+         },
+         {
+          "n": 27,
+          "text": "    value = {'state': state, 'started': STARTED, 'updated': time.time(), 'finite': True,",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "             'annotation_limit': 6, 'full_corpus_llm_loop': False, **details}",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "    STATUS.write_text(json.dumps(value, indent=2, allow_nan=False))",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_literature_embedding_lease.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 137,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**values`",
+        "lines": [
+         {
+          "n": 134,
+          "text": "            except ProcessLookupError: pass",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "    for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGUSR1):",
+          "mark": false
+         },
+         {
+          "n": 136,
+          "text": "        signal.signal(signum, interrupted)",
+          "mark": false
+         },
+         {
+          "n": 137,
+          "text": "    def record(event: str, **values) -> None:",
+          "mark": true
+         },
+         {
+          "n": 138,
+          "text": "        value = {'time': time.time(), 'event': event, **values}",
+          "mark": false
+         },
+         {
+          "n": 139,
+          "text": "        with MANIFEST.open('a') as stream:",
+          "mark": false
+         },
+         {
+          "n": 140,
+          "text": "            stream.write(json.dumps(value, allow_nan=False) + '\\n'); stream.flush(); os.fsync(stream.fileno())",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_lyra_worker.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 38,
+        "column": 13,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**values`",
+        "lines": [
+         {
+          "n": 35,
+          "text": "  if stop.is_set() or time.time()>=spec['deadline']:raise InterruptedError('Bounded gift window ended')",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": " status={'job_id':job,'model_identity':IDENTITY,'worker_sha256':spec['worker_sha256'],'shard':a.shard,'phase':'loading','observations':0,'causal_checks':0,'ready':False}",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": " lock=threading.Lock()",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": " def update(**values):",
+          "mark": true
+         },
+         {
+          "n": 39,
+          "text": "  with lock:status.update(values,time=time.time());atomic(status_path,status)",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": " class Handler(BaseHTTPRequestHandler):",
+          "mark": false
+         },
+         {
+          "n": 41,
+          "text": "  def log_message(self,*_):pass",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_neighbors.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 365,
+        "column": 49,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 362,
+          "text": "        except (OSError,ValueError,KeyError,TypeError) as error:",
+          "mark": false
+         },
+         {
+          "n": 363,
+          "text": "            if cohort!='auto':raise ValueError('Overnight snapshot unavailable: '+str(error)) from error",
+          "mark": false
+         },
+         {
+          "n": 364,
+          "text": "            return self.historical,'historical',str(error)",
+          "mark": false
+         },
+         {
+          "n": 365,
+          "text": "    def query(self,layer,neuron,*,cohort='auto',**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 366,
+          "text": "        index,name,error=self.choose(cohort);result=index.query(layer,neuron,**kwargs)",
+          "mark": false
+         },
+         {
+          "n": 367,
+          "text": "        result['source'].update(cohort=name,requested_cohort=cohort,available_corpora=list(index.corpora),fallback_reason=error)",
+          "mark": false
+         },
+         {
+          "n": 368,
+          "text": "        return result",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_neuron_atlas.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 419,
+        "column": 30,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**query`",
+        "lines": [
+         {
+          "n": 416,
+          "text": "        status = self.out / 'identity_status.json'",
+          "mark": false
+         },
+         {
+          "n": 417,
+          "text": "        self.sweep_status = json.loads(status.read_text()) if status.exists() else None",
+          "mark": false
+         },
+         {
+          "n": 418,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 419,
+          "text": "    def sweep(self, *, name, **query):",
+          "mark": true
+         },
+         {
+          "n": 420,
+          "text": "        \"\"\"Queue the first SWEEP_MAX neurons of a library query for the identity sweep on the GPU host.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 421,
+          "text": "        if not re.fullmatch(r'[A-Za-z0-9 _.-]{1,60}', name or ''): raise ValueError('Sweep name: 1-60 letters, digits, spaces, . _ -')",
+          "mark": false
+         },
+         {
+          "n": 422,
+          "text": "        query.update(offset=0, limit=SWEEP_MAX, sort=query.get('sort', 'strength'))",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 553,
+        "column": 27,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**query`",
+        "lines": [
+         {
+          "n": 550,
+          "text": "                         'peak_down': round(float(d['lens_down'][key]), 2)})",
+          "mark": false
+         },
+         {
+          "n": 551,
+          "text": "        return {'total': int(len(keys)), 'offset': int(offset), 'rows': rows}",
+          "mark": false
+         },
+         {
+          "n": 552,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 553,
+          "text": "    def library_csv(self, **query):",
+          "mark": true
+         },
+         {
+          "n": 554,
+          "text": "        query['limit'] = 500; query['offset'] = 0",
+          "mark": false
+         },
+         {
+          "n": 555,
+          "text": "        result = self.library(**query); stream = io.StringIO()",
+          "mark": false
+         },
+         {
+          "n": 556,
+          "text": "        if result['rows']:",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_phantom_run.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 126,
+        "column": 31,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**fields`",
+        "lines": [
+         {
+          "n": 123,
+          "text": "        original_wb, original_stop = module.wb, module.stop_child",
+          "mark": false
+         },
+         {
+          "n": 124,
+          "text": "        jobs, events = {}, []",
+          "mark": false
+         },
+         {
+          "n": 125,
+          "text": "        done = threading.Event()",
+          "mark": false
+         },
+         {
+          "n": 126,
+          "text": "        def write_event(kind, **fields):",
+          "mark": true
+         },
+         {
+          "n": 127,
+          "text": "            event = {'time': time.time(), 'kind': kind, **fields}",
+          "mark": false
+         },
+         {
+          "n": 128,
+          "text": "            events.append(event)",
+          "mark": false
+         },
+         {
+          "n": 129,
+          "text": "            with Path(str(report) + '.jsonl').open('a') as stream:",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 169,
+        "column": 38,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 166,
+          "text": "        class ChildProcesses:",
+          "mark": false
+         },
+         {
+          "n": 167,
+          "text": "            def __getattr__(self, name):",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "                return getattr(subprocess, name)",
+          "mark": false
+         },
+         {
+          "n": 169,
+          "text": "            def Popen(self, *values, **options):",
+          "mark": true
+         },
+         {
+          "n": 170,
+          "text": "                verify_bindings(bindings)",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "                sample()",
+          "mark": false
+         },
+         {
+          "n": 172,
+          "text": "                if time.time() >= args.deadline:",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_planner.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 146,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**value`",
+        "lines": [
+         {
+          "n": 143,
+          "text": "    stop = {'signal': None}",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "    for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGUSR1):",
+          "mark": false
+         },
+         {
+          "n": 145,
+          "text": "        signal.signal(signum, lambda signum, frame: stop.update(signal=signum))",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "    def record(event: str, **value) -> None:",
+          "mark": true
+         },
+         {
+          "n": 147,
+          "text": "        with args.manifest.open('a') as stream:",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "            stream.write(json.dumps({'time': time.time(), 'event': event, **value}, sort_keys=True) + '\\n')",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "            stream.flush(); os.fsync(stream.fileno())",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_preset_followon.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 97,
+        "column": 17,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**values`",
+        "lines": [
+         {
+          "n": 94,
+          "text": "    lock=(root/'results/persona_preset_followon.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "    bank=base.attach_column(VectorBank(root/'results',ModelSpec.load(root/'data/persona_model.json')),root/'results/persona_preset_columns.json')",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "    plan_path=root/'results/persona_preset_followon_plan.json';status=root/'results/persona_preset_followon_status.json';child=None",
+          "mark": false
+         },
+         {
+          "n": 97,
+          "text": "    def persist(**values):base.atomic_json(status,{'schema':'character-creation.preset-followon-status.v1','deadline':until,'updated':time.time(),**values})",
+          "mark": true
+         },
+         {
+          "n": 98,
+          "text": "    try:",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "        while time.time()<until:",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "            mp=root/'data/persona_perturbation_prompts_manifest.json'",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_probe.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 79,
+        "column": 38,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**arrays`",
+        "lines": [
+         {
+          "n": 76,
+          "text": "        return hashlib.file_digest(stream, \"sha256\").hexdigest()",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 78,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "def save_activation_npz(destination, **arrays):",
+          "mark": true
+         },
+         {
+          "n": 80,
+          "text": "    \"\"\"Write ordinary lossless NPZ members with explicitly bounded compression.",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 82,
+          "text": "    Level one avoids default level-six deflate's measured CPU bottleneck. NPY",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 861,
+        "column": 41,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 858,
+          "text": "            raise RuntimeError(\"Forward cache already bound to another capture override\")",
+          "mark": false
+         },
+         {
+          "n": 859,
+          "text": "        return digest",
+          "mark": false
+         },
+         {
+          "n": 860,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 861,
+          "text": "    def initialize(cache, *, namespace, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 862,
+          "text": "        bound_namespace = {**namespace, **additions}",
+          "mark": false
+         },
+         {
+          "n": 863,
+          "text": "        original(cache, namespace=bound_namespace, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 864,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_sweep.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 242,
+        "column": 40,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**metadata`",
+        "lines": [
+         {
+          "n": 239,
+          "text": "    conditions = []",
+          "mark": false
+         },
+         {
+          "n": 240,
+          "text": "    generation = {\"max_new_tokens\": 2048, \"temperature\": .7, \"top_p\": .95, \"top_k\": 20, \"do_sample\": True}",
+          "mark": false
+         },
+         {
+          "n": 241,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 242,
+          "text": "    def add(control, interventions=(), **metadata):",
+          "mark": true
+         },
+         {
+          "n": 243,
+          "text": "        row = {\"model_identity\": bank.model.identity, \"calibration_sha256\": bank.calibration_identity,",
+          "mark": false
+         },
+         {
+          "n": 244,
+          "text": "               \"control\": control, \"interventions\": list(interventions), \"generation\": generation,",
+          "mark": false
+         },
+         {
+          "n": 245,
+          "text": "               \"stage\": \"validate\", \"flags\": {\"heldout\": True, \"fit_on_heldout\": False,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "scripts/experiments/personality/personality_sweep_v2.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 418,
+        "column": 33,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 415,
+          "text": "    original_forward = model.forward",
+          "mark": false
+         },
+         {
+          "n": 416,
+          "text": "    call_count = [0]",
+          "mark": false
+         },
+         {
+          "n": 417,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 418,
+          "text": "    def counting_forward(*args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 419,
+          "text": "        result = original_forward(*args, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 420,
+          "text": "        call_count[0] += 1",
+          "mark": false
+         },
+         {
+          "n": 421,
+          "text": "        if call_count[0] == 1:",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "scripts/experiments/personality/train_qwen35_pair_lora_sft.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 165,
+        "column": 49,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 162,
+          "text": "                fh.write(json.dumps(rec, ensure_ascii=False) + \"\\n\")",
+          "mark": false
+         },
+         {
+          "n": 163,
+          "text": "        model.train()",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "    def on_step_end(self, args, state, control, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 166,
+          "text": "        if self.every_steps > 0 and state.global_step > 0 and state.global_step % self.every_steps == 0:",
+          "mark": false
+         },
+         {
+          "n": 167,
+          "text": "            trainer = kwargs[\"model\"].trainer if hasattr(kwargs[\"model\"], \"trainer\") else None",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "            if trainer is not None:",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 172,
+        "column": 50,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 169,
+          "text": "                self._run_samples(trainer, state.global_step)",
+          "mark": false
+         },
+         {
+          "n": 170,
+          "text": "        return control",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 172,
+          "text": "    def on_train_end(self, args, state, control, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 173,
+          "text": "        trainer = kwargs[\"model\"].trainer if hasattr(kwargs[\"model\"], \"trainer\") else None",
+          "mark": false
+         },
+         {
+          "n": 174,
+          "text": "        if trainer is not None:",
+          "mark": false
+         },
+         {
+          "n": 175,
+          "text": "            self._run_samples(trainer, state.global_step or 0)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 180,
+        "column": 31,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 177,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 178,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 179,
+          "text": "class BoundTrainer(Trainer):",
+          "mark": false
+         },
+         {
+          "n": 180,
+          "text": "    def __init__(self, *args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 181,
+          "text": "        super().__init__(*args, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "        self.model.trainer = self",
+          "mark": false
+         },
+         {
+          "n": 183,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_adaptive_loop.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 89,
+        "column": 20,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 86,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "def test_post_intent_precedes_http_uncertain_never_replayed_even_after_restart(loop):",
+          "mark": false
+         },
+         {
+          "n": 88,
+          "text": "    calls=[]",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "    def http(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 90,
+          "text": "        assert loop.db.execute(\"SELECT state FROM calls WHERE id='one'\").fetchone()[0]=='intent'",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "        calls.append(args);raise TimeoutError()",
+          "mark": false
+         },
+         {
+          "n": 92,
+          "text": "    loop.http=http",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_batch_dispatch.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 183,
+        "column": 47,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 180,
+          "text": "    monkeypatch.setattr('persona_manager.VectorBank',lambda *a,**k:object())",
+          "mark": false
+         },
+         {
+          "n": 181,
+          "text": "    monkeypatch.setattr('persona_manager.prepare_job',lambda job,*a:({'model':'checkpoint','stream':False},{'sites':[]},{'program_sha256':'a'*64},'rollout'))",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "    calls=[]",
+          "mark": false
+         },
+         {
+          "n": 183,
+          "text": "    def dispatch(entries,endpoint,queue,store,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 184,
+          "text": "        assert kwargs['admit']() and len(entries)==4",
+          "mark": false
+         },
+         {
+          "n": 185,
+          "text": "        assert all(e['request']['capture_response']['layers']==[] for e in entries)",
+          "mark": false
+         },
+         {
+          "n": 186,
+          "text": "        calls.append(entries);manager.stop.set()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 209,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kw`",
+        "lines": [
+         {
+          "n": 206,
+          "text": "    endpoint={'url':'http://127.0.0.1:8935','lease_id':'lease',**{k:'a'*64 for k in ('model_identity','runtime_identity','prepared_identity')}}",
+          "mark": false
+         },
+         {
+          "n": 207,
+          "text": "    manager.admission=SimpleNamespace(allowed=lambda e:(True,''),board={'jobs':[{'id':'lease','lease_expires_epoch':time.time()+1000}]})",
+          "mark": false
+         },
+         {
+          "n": 208,
+          "text": "    monkeypatch.setattr('persona_manager.VectorBank',lambda *a,**k:object())",
+          "mark": false
+         },
+         {
+          "n": 209,
+          "text": "    def fetch(*a,**kw):",
+          "mark": true
+         },
+         {
+          "n": 210,
+          "text": "        if unready=='transport':raise ConnectionResetError('warming')",
+          "mark": false
+         },
+         {
+          "n": 211,
+          "text": "        if unready=='503':raise urllib.error.HTTPError(endpoint['url'],503,'warming',{},None)",
+          "mark": false
+         },
+         {
+          "n": 212,
+          "text": "        if unready=='empty':return {'data':[]}",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 243,
+        "column": 27,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 240,
+          "text": "        def set(self):self.stopped=True",
+          "mark": false
+         },
+         {
+          "n": 241,
+          "text": "        def wait(self,seconds):self.waits.append(seconds);self.stopped=True",
+          "mark": false
+         },
+         {
+          "n": 242,
+          "text": "    class Pool:",
+          "mark": false
+         },
+         {
+          "n": 243,
+          "text": "        def __init__(self,**kwargs):pass",
+          "mark": true
+         },
+         {
+          "n": 244,
+          "text": "        def __enter__(self):return self",
+          "mark": false
+         },
+         {
+          "n": 245,
+          "text": "        def __exit__(self,*args):pass",
+          "mark": false
+         },
+         {
+          "n": 246,
+          "text": "        def submit(self,*args):return SimpleNamespace(done=lambda:False)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_coactivity_refresh.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 97,
+        "column": 44,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 94,
+          "text": "        output = io.BytesIO(); np.savez_compressed(output, **arrays)",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "        return output.getvalue()",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 97,
+          "text": "    def transport(self, argv, payload=b'', **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 98,
+          "text": "        self.calls.append((argv, kwargs)); command = shlex.split(argv[-1])",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "        if command == ['hostname']: return b'v100\\n'",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "        if command[0] == 'sha256sum':",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 136,
+        "column": 42,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 133,
+          "text": "        self.assertEqual(self.matrix.read_bytes(), self.original)  # --stream never publishes on the extraction host.",
+          "mark": false
+         },
+         {
+          "n": 134,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "    def test_changed_returned_binding_never_replaces_existing_matrix(self):",
+          "mark": false
+         },
+         {
+          "n": 136,
+          "text": "        def transport(argv, payload=b'', **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 137,
+          "text": "            raw = self.transport(argv, payload, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 138,
+          "text": "            if '--registry-only' not in argv[-1]: return raw",
+          "mark": false
+         },
+         {
+          "n": 139,
+          "text": "            arrays = matrix_snapshot(raw)['arrays']; metadata = json.loads(str(arrays['metadata']))",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_coherence_eval.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 18,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 15,
+          "text": "                answers={k: v['value'] for k, v in truth['answers'].items()}, unknowns=list(truth['unknowns']))",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "def output(value, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 19,
+          "text": "    return dict(answer=json.dumps(value) if isinstance(value, dict) else value, complete=True, finish_reason='stop', **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 20,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 21,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_coverage.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 33,
+        "column": 20,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 30,
+          "text": "                prompt=\"PRIVATE TEXT \" + identity, system=\"Registered profile\", max_tokens=2048,",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "                source_sha256=\"c\" * 64, char_start=0, char_end=12, thinking=False)",
+          "mark": false
+         },
+         {
+          "n": 32,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 33,
+          "text": "    def plan(self, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 34,
+          "text": "        return coverage_plan(self.corpus, self.bank, \"d\" * 64, split=\"all\", **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "    def test_every_row_exactly_once_unsteered_and_reproducible(self):",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_hillclimb.py": {
+      "total": 6,
+      "capped": true,
+      "items": [
+       {
+        "line": 182,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 179,
+          "text": "            validate_decision(self.decision, self.job, self.catalog, {'require_rollout_followup': True})",
+          "mark": false
+         },
+         {
+          "n": 180,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 181,
+          "text": "    def test_exact_wire_request_survives_transport_failure(self):",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "        def failing(*args, **kwargs): raise TimeoutError('Simulated transport failure')",
+          "mark": true
+         },
+         {
+          "n": 183,
+          "text": "        recorder = RequestRecorder(self.queue, failing)",
+          "mark": false
+         },
+         {
+          "n": 184,
+          "text": "        recorder.bind({'id': 'attempted-job'}, 2)",
+          "mark": false
+         },
+         {
+          "n": 185,
+          "text": "        payload = {'seed': 17, 'steering': {'phase': 'prefill', 'sites': [{'site': 'L0.mlp_input', 'vector': [0., -1.]}]}}",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 197,
+        "column": 42,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 194,
+          "text": "        planner = {'url': 'http://127.0.0.1:18511', 'model': 'persona-manager', 'context_tokens': 131072}",
+          "mark": false
+         },
+         {
+          "n": 195,
+          "text": "        payloads = []",
+          "mark": false
+         },
+         {
+          "n": 196,
+          "text": "        decision = copy.deepcopy(self.decision); decision['experiments'][0]['source_groups'] = 1",
+          "mark": false
+         },
+         {
+          "n": 197,
+          "text": "        def transport(url, payload=None, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 198,
+          "text": "            if url.endswith('/props'):",
+          "mark": false
+         },
+         {
+          "n": 199,
+          "text": "                return {'model_alias': planner['model'], 'default_generation_settings': {'n_ctx': 131072}}",
+          "mark": false
+         },
+         {
+          "n": 200,
+          "text": "            payloads.append(copy.deepcopy(payload))",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 237,
+        "column": 42,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**_`",
+        "lines": [
+         {
+          "n": 234,
+          "text": "        family = copy.deepcopy(self.catalog[self.family])",
+          "mark": false
+         },
+         {
+          "n": 235,
+          "text": "        family['groups'] = {'source': [dict(next(iter(self.corpus.values()))) for _ in range(11)]}",
+          "mark": false
+         },
+         {
+          "n": 236,
+          "text": "        planner = {'url': 'http://127.0.0.1:18511', 'model': 'persona-manager', 'context_tokens': 131072}",
+          "mark": false
+         },
+         {
+          "n": 237,
+          "text": "        def transport(url, payload=None, **_):",
+          "mark": true
+         },
+         {
+          "n": 238,
+          "text": "            if payload is None: return {'model_alias': planner['model'], 'default_generation_settings': {'n_ctx': 131072}}",
+          "mark": false
+         },
+         {
+          "n": 239,
+          "text": "            schema = payload['response_format']['json_schema']['schema']['properties']['experiments']",
+          "mark": false
+         },
+         {
+          "n": 240,
+          "text": "            self.assertEqual(schema['maxItems'], 3)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 259,
+        "column": 42,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**_`",
+        "lines": [
+         {
+          "n": 256,
+          "text": "        job['targets'] = [{'layer': 0, 'neuron': 1}, {'layer': 1, 'neuron': 3}]",
+          "mark": false
+         },
+         {
+          "n": 257,
+          "text": "        planner = {'url': 'http://127.0.0.1:18511', 'model': 'persona-manager', 'context_tokens': 131072}",
+          "mark": false
+         },
+         {
+          "n": 258,
+          "text": "        payloads = []",
+          "mark": false
+         },
+         {
+          "n": 259,
+          "text": "        def transport(url, payload=None, **_):",
+          "mark": true
+         },
+         {
+          "n": 260,
+          "text": "            if payload is None: return {'model_alias': planner['model'], 'default_generation_settings': {'n_ctx': 131072}}",
+          "mark": false
+         },
+         {
+          "n": 261,
+          "text": "            payloads.append(payload)",
+          "mark": false
+         },
+         {
+          "n": 262,
+          "text": "            brief = json.loads(payload['messages'][-1]['content'])",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 282,
+        "column": 35,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 279,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 280,
+          "text": "    def test_planner_transport_failure_retains_request_and_advances_attempt(self):",
+          "mark": false
+         },
+         {
+          "n": 281,
+          "text": "        planner = {'url': 'http://127.0.0.1:18511', 'model': 'persona-manager', 'context_tokens': 131072}",
+          "mark": false
+         },
+         {
+          "n": 282,
+          "text": "        def transport(url, *args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 283,
+          "text": "            if url.endswith('/props'):",
+          "mark": false
+         },
+         {
+          "n": 284,
+          "text": "                return {'model_alias': planner['model'], 'default_generation_settings': {'n_ctx': 131072}}",
+          "mark": false
+         },
+         {
+          "n": 285,
+          "text": "            raise TimeoutError('simulated planner connection failure')",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_job_fleet.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 165,
+        "column": 34,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 162,
+          "text": "            job={'id':'job','deadline':time.time()+600}; stopped=[]; started=[]; stop=threading.Event()",
+          "mark": false
+         },
+         {
+          "n": 163,
+          "text": "            prior={'unit':control.PLANNER_UNIT,'job_id':'job','token':'a'*32,'host':'wtatum84'}",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "            states={control.PLANNER_UNIT:{'ActiveState':'active','InvocationID':'old','job_id':'job','launch_token':'a'*32}}",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "            def state(unit,*args,**kwargs): return states.get(unit,{'ActiveState':'inactive','LoadState':'not-found'}).copy()",
+          "mark": true
+         },
+         {
+          "n": 166,
+          "text": "            def run(argv,**kwargs):",
+          "mark": false
+         },
+         {
+          "n": 167,
+          "text": "                if argv[0]=='hostname': return 'v100\\n'",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "                if argv[0]=='sha256sum':",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 166,
+        "column": 26,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 163,
+          "text": "            prior={'unit':control.PLANNER_UNIT,'job_id':'job','token':'a'*32,'host':'wtatum84'}",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "            states={control.PLANNER_UNIT:{'ActiveState':'active','InvocationID':'old','job_id':'job','launch_token':'a'*32}}",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "            def state(unit,*args,**kwargs): return states.get(unit,{'ActiveState':'inactive','LoadState':'not-found'}).copy()",
+          "mark": false
+         },
+         {
+          "n": 166,
+          "text": "            def run(argv,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 167,
+          "text": "                if argv[0]=='hostname': return 'v100\\n'",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "                if argv[0]=='sha256sum':",
+          "mark": false
+         },
+         {
+          "n": 169,
+          "text": "                    name=Path(argv[1]).name",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 179,
+        "column": 50,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 176,
+          "text": "                self.assertNotEqual(state(unit)['ActiveState'],'active')",
+          "mark": false
+         },
+         {
+          "n": 177,
+          "text": "                states[unit]={'ActiveState':'active','LoadState':'loaded','InvocationID':'new-'+unit,'job_id':'job','launch_token':token}",
+          "mark": false
+         },
+         {
+          "n": 178,
+          "text": "                started.append(unit); return ''",
+          "mark": false
+         },
+         {
+          "n": 179,
+          "text": "            def cleanup(unit,invocation,ssh=None,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 180,
+          "text": "                self.assertEqual(kwargs['token'],state(unit)['launch_token'])",
+          "mark": false
+         },
+         {
+          "n": 181,
+          "text": "                stopped.append((unit,kwargs['token'])); states[unit]={'ActiveState':'inactive','LoadState':'not-found'}",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "                return {'stopped':True,'status':'owned_process_exited'}",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_jobs.py": {
+      "total": 4,
+      "capped": false,
+      "items": [
+       {
+        "line": 257,
+        "column": 32,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 254,
+          "text": "                  'trait': 'openness', 'facet': 'imagination', 'domain': 'workplace'} for i in range(2)]",
+          "mark": false
+         },
+         {
+          "n": 255,
+          "text": "        from persona_corpus import record",
+          "mark": false
+         },
+         {
+          "n": 256,
+          "text": "        calls = []",
+          "mark": false
+         },
+         {
+          "n": 257,
+          "text": "        def interrupted(*args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 258,
+          "text": "            calls.append(True)",
+          "mark": false
+         },
+         {
+          "n": 259,
+          "text": "            if len(calls) == 2: raise RuntimeError('simulated storage interruption')",
+          "mark": false
+         },
+         {
+          "n": 260,
+          "text": "            return record(*args, **kwargs)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 277,
+        "column": 26,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 274,
+          "text": "        job = self.store.create(self.value); self.store.claim_due()",
+          "mark": false
+         },
+         {
+          "n": 275,
+          "text": "        clock = [time.time()]",
+          "mark": false
+         },
+         {
+          "n": 276,
+          "text": "        @contextmanager",
+          "mark": false
+         },
+         {
+          "n": 277,
+          "text": "        def fleet(*args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 278,
+          "text": "            clock[0] = job['deadline'] + 1",
+          "mark": false
+         },
+         {
+          "n": 279,
+          "text": "            raise TimeoutError('window ended during admission')",
+          "mark": false
+         },
+         {
+          "n": 280,
+          "text": "            yield",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 294,
+        "column": 26,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 291,
+          "text": "        with self.store.connect() as db:",
+          "mark": false
+         },
+         {
+          "n": 292,
+          "text": "            db.execute('UPDATE jobs SET counts=? WHERE id=?', (json.dumps(dict(accepted_unique=0, requested=0, rejected=0, requests=0, errors=0)), job['id']))",
+          "mark": false
+         },
+         {
+          "n": 293,
+          "text": "        @contextmanager",
+          "mark": false
+         },
+         {
+          "n": 294,
+          "text": "        def fleet(*args, **kwargs): yield self.session",
+          "mark": true
+         },
+         {
+          "n": 295,
+          "text": "        with patch('persona_jobs.fetch') as api:",
+          "mark": false
+         },
+         {
+          "n": 296,
+          "text": "            result = run_scheduled_job(job, {}, self.store, threading.Event(), fleet_callback=fleet)",
+          "mark": false
+         },
+         {
+          "n": 297,
+          "text": "            api.assert_not_called()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 305,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**headers`",
+        "lines": [
+         {
+          "n": 302,
+          "text": "        request = object.__new__(handler(SimpleNamespace(jobs=self.store)))",
+          "mark": false
+         },
+         {
+          "n": 303,
+          "text": "        request.path = '/api/jobs'; request.send = Mock()",
+          "mark": false
+         },
+         {
+          "n": 304,
+          "text": "        raw = json.dumps(self.value).encode()",
+          "mark": false
+         },
+         {
+          "n": 305,
+          "text": "        def post(**headers):",
+          "mark": true
+         },
+         {
+          "n": 306,
+          "text": "            request.headers = {'Content-Length': str(len(raw)), 'Host': 'localhost:8899', **headers}",
+          "mark": false
+         },
+         {
+          "n": 307,
+          "text": "            request.rfile = io.BytesIO(raw); request.send.reset_mock(); request.do_POST()",
+          "mark": false
+         },
+         {
+          "n": 308,
+          "text": "            return request.send.call_args.args",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_literary_eval.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 16,
+        "column": 23,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 13,
+          "text": "from persona_literature_harness import save_prompt",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "class LiteraryTests(unittest.TestCase):",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": " def output(self,text,**kwargs):return dict(answer=text,complete=True,finish_reason='stop',**kwargs)",
+          "mark": true
+         },
+         {
+          "n": 17,
+          "text": " def control(self):",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "  a=dict(schema='character-creation.hybrid-prefix.v1',kind='hybrid_text_prefix',model_identity='a'*64,runtime_identity='b'*64,prepared_identity='c'*64,layout_sha256='d'*64,prefix_text='A quiet fictional library.')",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "  a['sha256']=canonical_digest(a);return dict(artifact=a,dose=1,cache_policy='reuse')",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 66,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 63,
+          "text": "  app=SimpleNamespace(model=SimpleNamespace(identity=artifact['model_identity']),config={},check_program=Explorer.check_program)",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "  settings=dict(seed=7,max_tokens=2048,thinking=False);program={'sites':[]};response={**{k:endpoint[k] for k in ('model_identity','prepared_identity','runtime_identity')},'choices':[{'message':{'content':'A story.'},'finish_reason':'stop'}],'diagnostics':{'complete_final_answer':True},'kv_control':{**{k:artifact[k] for k in ('model_identity','prepared_identity','runtime_identity','layout_sha256')}",
+          "mark": false,
+          "cut": 590
+         },
+         {
+          "n": 65,
+          "text": "  calls=[]",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "  def api(url,payload=None,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 67,
+          "text": "   if payload is None:return {'data':[descriptor]}",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "   calls.append(payload);return response",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "  with patch('persona_explorer.fetch',api),patch('persona_explorer.check_generation_settings'):",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_literature_embedding_lease.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 21,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 18,
+          "text": "    receipt = {'id':'owned','project':'character-creation','label':'literature-bge-embeddings','target_host':'wtatum84','gpu_selector':lease.GPU}",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "    calls = []",
+          "mark": false
+         },
+         {
+          "n": 20,
+          "text": "    current = {**receipt,'status':'running','assigned_uuid':lease.GPU}",
+          "mark": false
+         },
+         {
+          "n": 21,
+          "text": "    def wb(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 22,
+          "text": "        calls.append(args)",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "        return {'jobs':[current]} if args[0]=='status' else {}",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "    monkeypatch.setattr(lease,'wb',wb)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_lyra_job.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 28,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 25,
+          "text": "  fixture=fixtures.PersonaJobTests();fixture.setUp();self.addCleanup(fixture.doCleanups)",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "  value={**fixture.value,'kind':'lyra_gift'};job=fixture.store.create(value)",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "  @contextmanager",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "  def fleet(*args,**kwargs):yield {}",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "  with patch('persona_lyra_job.prepare'),patch('persona_lyra_job.run',side_effect=ValueError('qualification failed')) as run:",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "   result=run_scheduled_job(job,{},fixture.store,threading.Event(),fleet_callback=fleet)",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "  self.assertEqual(result['state'],'failed');self.assertIn('qualification failed',result['error']);run.assert_called_once()",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_personality_release.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 103,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 100,
+          "text": "    import time",
+          "mark": false
+         },
+         {
+          "n": 101,
+          "text": "    monkeypatch.setattr('persona_personality_release.shutil.which',lambda name:'/bin/hf')",
+          "mark": false
+         },
+         {
+          "n": 102,
+          "text": "    commit='a'*40;seen=[]",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "    def run(command,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 104,
+          "text": "        intent=json.loads((release_files/'persona_personality_publication.json').read_text())",
+          "mark": false
+         },
+         {
+          "n": 105,
+          "text": "        assert intent['verified'] is False and len(intent['files'])==2",
+          "mark": false
+         },
+         {
+          "n": 106,
+          "text": "        includes=[command[i+1] for i,v in enumerate(command) if v=='--include']",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 122,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 119,
+          "text": "    from types import SimpleNamespace",
+          "mark": false
+         },
+         {
+          "n": 120,
+          "text": "    import time,subprocess",
+          "mark": false
+         },
+         {
+          "n": 121,
+          "text": "    monkeypatch.setattr('persona_personality_release.shutil.which',lambda name:'/bin/hf')",
+          "mark": false
+         },
+         {
+          "n": 122,
+          "text": "    def run(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 123,
+          "text": "        if failure=='timeout':raise subprocess.TimeoutExpired('hf',1)",
+          "mark": false
+         },
+         {
+          "n": 124,
+          "text": "        return SimpleNamespace(returncode=0,stdout='no commit' if failure=='no_commit' else 'https://huggingface.co/datasets/Atlas3D/character-creation-big-five/commit/'+('a'*40))",
+          "mark": false
+         },
+         {
+          "n": 125,
+          "text": "    with pytest.raises(Exception):publish(release_files,time.time()+30,run=run,verify=lambda *a:{'sha256':'bad','bytes':0},inventory=lambda d:{'sha':'b'*40,'siblings':[]})",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_phantom_train.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 180,
+        "column": 26,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kw`",
+        "lines": [
+         {
+          "n": 177,
+          "text": "   dataset.write_text(json.dumps({'schema':DATA_SCHEMA,'approval':{'scope':'benign_literary','approved':True},'rows':[DataTests().row('a','discovery'),DataTests().row('b','heldout')]}))",
+          "mark": false
+         },
+         {
+          "n": 178,
+          "text": "   args=SimpleNamespace(output=root/'report.json',partial_output=root/'partial.npz',dataset=dataset,checkpoint=root,model_identity='a'*64,command='validate',weight_dtype='float32',native_reference=None,validation_report=None,devices=['cuda:'+str(i) for i in range(6)],max_gpu_gib=1.,seed=7,learning_rate=.001,kl_weight=.1,slots=2,max_tokens=32)",
+          "mark": false
+         },
+         {
+          "n": 179,
+          "text": "   tokenizer=SimpleNamespace(apply_chat_template=lambda *a,**k:[1,2],encode=lambda *a,**k:[3,4],eos_token_id=5)",
+          "mark": false
+         },
+         {
+          "n": 180,
+          "text": "   def stopped_loader(*a,**kw):signal.raise_signal(signal.SIGTERM);kw['guard']();raise AssertionError('Stop was not honored')",
+          "mark": true
+         },
+         {
+          "n": 181,
+          "text": "   original=signal.getsignal(signal.SIGTERM)",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "   with patch('transformers.AutoTokenizer.from_pretrained',return_value=tokenizer),patch('torch.cuda.get_device_properties',return_value=SimpleNamespace(total_memory=2*2**30)),patch('torch.cuda.set_per_process_memory_fraction'),patch('torch.cuda.memory_reserved',return_value=0),patch('persona_phantom_train.hardware_preflight',return_value={'passed':True}),patch('persona_phantom_train.load_frozen_m",
+          "mark": false,
+          "cut": 434
+         },
+         {
+          "n": 183,
+          "text": "    result=run(args)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_preset_overnight.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 11,
+        "column": 35,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "class Bank:",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    model=SimpleNamespace(identity='389801c06d68a0d84bd4890b8ce6d26f96e0ee53eb108bcc572c0c09abf5b9a8')",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "    def program(self,pushes,phase,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 12,
+          "text": "        sites={}",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "        for p in pushes:",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "            site=f\"layers.{p['layer']}.\"+('mlp_input' if p['kind']=='neuron' else p.get('site','residual'))",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_probe_search.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 71,
+        "column": 39,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 68,
+          "text": "def test_canonical_override_binds_actual_source_and_aot_namespace(tmp_path,monkeypatch):",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "    module=ModuleType('ignition.preparation.aot');seen=[]",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "    class Cache:",
+          "mark": false
+         },
+         {
+          "n": 71,
+          "text": "        def __init__(self,*,namespace,**kwargs):seen.append(namespace)",
+          "mark": true
+         },
+         {
+          "n": 72,
+          "text": "    module.ForwardCache=Cache",
+          "mark": false
+         },
+         {
+          "n": 73,
+          "text": "    monkeypatch.setitem(sys.modules,'ignition.preparation.aot',module)",
+          "mark": false
+         },
+         {
+          "n": 74,
+          "text": "    override=tmp_path/'activation_capture.py';override.write_text('source-one')",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 89,
+        "column": 39,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 86,
+          "text": "def test_experimental_preparation_has_separate_cache_identity(tmp_path,monkeypatch):",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "    module=ModuleType('ignition.preparation.aot');seen=[]",
+          "mark": false
+         },
+         {
+          "n": 88,
+          "text": "    class Cache:",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "        def __init__(self,*,namespace,**kwargs):seen.append(namespace)",
+          "mark": true
+         },
+         {
+          "n": 90,
+          "text": "    module.ForwardCache=Cache",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "    monkeypatch.setitem(sys.modules,'ignition.preparation.aot',module)",
+          "mark": false
+         },
+         {
+          "n": 92,
+          "text": "    override=tmp_path/'activation_capture.py';override.write_text('same-capture')",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_prompt_browser.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 11,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kw`",
+        "lines": [
+         {
+          "n": 8,
+          "text": "        self.rows = {str(i): {'id':str(i),'prompt':f'Example {i}', 'category':'scenario', 'corpus':'big_five',",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "            'split':'heldout' if i == 100 else 'discovery','labels':{'prompt_design_trait':'openness' if i % 2 else 'agreeableness',",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "            'prompt_design_facet':'curiosity','scenario_domain':'work'}, 'synthetic':True} for i in range(101)}",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "    def query(self, **kw): return browse(self.rows, lambda r:r['id'], **kw)",
+          "mark": true
+         },
+         {
+          "n": 12,
+          "text": "    def test_graph_counts_are_filtered_and_exclude_heldout(self):",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "        data=self.query(trait='openness',group='facet');self.assertEqual(data['total'],50)",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "        self.assertEqual(data['groups'],[{'key':'curiosity','count':50}])",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_reasoning_sweep.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 31,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 28,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "def prepared_fixture(monkeypatch):",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "    battery=battery_fixture();target={'model_identity':'a'*64,'runtime_identity':'b'*64,'prepared_identity':'c'*64};calls=[]",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "    def gated(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 32,
+          "text": "        calls.append(kwargs)",
+          "mark": false
+         },
+         {
+          "n": 33,
+          "text": "        return {'jobs':[{'arm':a,'pushes':[] if a=='baseline' else [{'kind':'random' if a=='random' else 'direction','layer':32,'dose':.1}],",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "            'phase':'all','program_sha256':canonical_digest(program(a)),'compatibility_sha256':None if a in ('baseline','random') else 'd'*64,'calibration_sha256':'e'*64} for a in sweep.ARMS]*4}",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 122,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 119,
+          "text": "    from io import BytesIO",
+          "mark": false
+         },
+         {
+          "n": 120,
+          "text": "    path=tmp_path/sweep.PUBLIC_FILE;path.write_bytes(b'{\"redacted\":true}')",
+          "mark": false
+         },
+         {
+          "n": 121,
+          "text": "    revision='a'*40;urls=[]",
+          "mark": false
+         },
+         {
+          "n": 122,
+          "text": "    def run(argv,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 123,
+          "text": "        assert argv[:3]==['/home/orwel/.local/bin/hf','upload',sweep.REPOSITORY]",
+          "mark": false
+         },
+         {
+          "n": 124,
+          "text": "        assert argv[3:5]==[str(path),sweep.PUBLIC_FILE]",
+          "mark": false
+         },
+         {
+          "n": 125,
+          "text": "        assert kwargs['timeout']==45 and kwargs['check'] is True",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_sculptor.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 72,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 69,
+          "text": "        finally:",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "            with self.lock: self.active.remove(url)",
+          "mark": false
+         },
+         {
+          "n": 71,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 72,
+          "text": "    def build(self, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 73,
+          "text": "        return self.app.sculptor.build({'brief': 'A witty captain with perfect recall', 'dials': self.controls,",
+          "mark": false
+         },
+         {
+          "n": 74,
+          "text": "            'layers': [0, 1], 'count': 6, 'dose_budget': .5, **kwargs})",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 248,
+        "column": 38,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 245,
+          "text": "            with self.assertRaisesRegex(ValueError, 'smoke'): self.app.sculptor.submit({**value, 'max_tokens': 256})",
+          "mark": false
+         },
+         {
+          "n": 246,
+          "text": "            for change in ({'candidate_ids': [{}]}, {'build_id': {}}, {'prompts': [{'prompt_id': {}}]}):",
+          "mark": false
+         },
+         {
+          "n": 247,
+          "text": "                with self.subTest(change=change), self.assertRaises(ValueError): self.app.sculptor.submit({**value, **change})",
+          "mark": false
+         },
+         {
+          "n": 248,
+          "text": "            def mismatch(url, *args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 249,
+          "text": "                result = self.descriptor(url); result['data'][0]['flare']['runtime_identity'] = '0' * 64; return result",
+          "mark": false
+         },
+         {
+          "n": 250,
+          "text": "            with patch('persona_sculptor.fetch', mismatch), self.assertRaisesRegex(ValueError, 'runtime'):",
+          "mark": false
+         },
+         {
+          "n": 251,
+          "text": "                self.app.sculptor.submit(value)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -108,6 +3220,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -161,6 +3274,3715 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "activation-search/persona_label_qualify.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 221,
+        "column": 20,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**body`",
+        "lines": [
+         {
+          "n": 218,
+          "text": "    stop=threading.Event();state_lock=threading.RLock();active=set();stage='admission';terminal=None",
+          "mark": false
+         },
+         {
+          "n": 219,
+          "text": "    for sig in (signal.SIGTERM,signal.SIGINT):signal.signal(sig,lambda *_:stop.set())",
+          "mark": false
+         },
+         {
+          "n": 220,
+          "text": "    board_cache={'time':0,'value':None}",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "    def event(kind,**body):",
+          "mark": true
+         },
+         {
+          "n": 222,
+          "text": "        with connect(args.database) as db:db.execute('INSERT INTO events VALUES(?,?,?)',(time.time(),kind,json.dumps(body)))",
+          "mark": false
+         },
+         {
+          "n": 223,
+          "text": "        print(json.dumps({'time':time.time(),'event':kind,**body}),flush=True)",
+          "mark": false
+         },
+         {
+          "n": 224,
+          "text": "    def status():",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "activation-search/persona_overnight_map.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 275,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**body`",
+        "lines": [
+         {
+          "n": 272,
+          "text": "    def connect():",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "        return sqlite3.connect(args.database, timeout=60)",
+          "mark": false
+         },
+         {
+          "n": 274,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 275,
+          "text": "    def event(kind, **body):",
+          "mark": true
+         },
+         {
+          "n": 276,
+          "text": "        with connect() as db:",
+          "mark": false
+         },
+         {
+          "n": 277,
+          "text": "            db.execute('INSERT INTO events VALUES(?,?,?)', (time.time(), kind, json.dumps(body)))",
+          "mark": false
+         },
+         {
+          "n": 278,
+          "text": "        print(json.dumps({'time': time.time(), 'event': kind, **body}), flush=True)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "activation-search/persona_probe.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 77,
+        "column": 38,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**arrays`",
+        "lines": [
+         {
+          "n": 74,
+          "text": "        return hashlib.file_digest(stream, \"sha256\").hexdigest()",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 76,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "def save_activation_npz(destination, **arrays):",
+          "mark": true
+         },
+         {
+          "n": 78,
+          "text": "    \"\"\"Write ordinary lossless NPZ members with explicitly bounded compression.",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "    Level one avoids default level-six deflate's measured CPU bottleneck. NPY",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 747,
+        "column": 41,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 744,
+          "text": "            raise RuntimeError(\"Forward cache already bound to another capture override\")",
+          "mark": false
+         },
+         {
+          "n": 745,
+          "text": "        return digest",
+          "mark": false
+         },
+         {
+          "n": 746,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 747,
+          "text": "    def initialize(cache, *, namespace, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 748,
+          "text": "        bound_namespace = {**namespace, \"activation_capture_override_sha256\": digest}",
+          "mark": false
+         },
+         {
+          "n": 749,
+          "text": "        original(cache, namespace=bound_namespace, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 750,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "archive/phase2_gptoss_20b/gptoss_field_steering.py": {
+      "total": 5,
+      "capped": false,
+      "items": [
+       {
+        "line": 141,
+        "column": 73,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 138,
+          "text": "            print(f\"  SVD dimensionality: k80={k80}, k95={k95}, k99={k99}\")",
+          "mark": false
+         },
+         {
+          "n": 139,
+          "text": "        print(f\"  Routing protect: {sum(len(v) for v in self.routing_protect.values())} neurons across {len(self.routing_protect)} layers\")",
+          "mark": false
+         },
+         {
+          "n": 140,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 141,
+          "text": "    def get_kernel_weights(self, layer: int, kernel: str = \"quadratic\", **kwargs) -> torch.Tensor:",
+          "mark": true
+         },
+         {
+          "n": 142,
+          "text": "        \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "        Compute per-neuron steering weights using specified kernel.",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 263,
+        "column": 45,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kernel_kwargs`",
+        "lines": [
+         {
+          "n": 260,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 261,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 262,
+          "text": "    def __init__(self, model, field: PersonalityField, alpha: float,",
+          "mark": false
+         },
+         {
+          "n": 263,
+          "text": "                 kernel: str = \"quadratic\", **kernel_kwargs):",
+          "mark": true
+         },
+         {
+          "n": 264,
+          "text": "        self.handles = []",
+          "mark": false
+         },
+         {
+          "n": 265,
+          "text": "        self.name = f\"kernel_{kernel}\"",
+          "mark": false
+         },
+         {
+          "n": 266,
+          "text": "        layers = model.model.layers",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 370,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kernel_kwargs`",
+        "lines": [
+         {
+          "n": 367,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 368,
+          "text": "    def __init__(self, model, field: PersonalityField, alpha: float,",
+          "mark": false
+         },
+         {
+          "n": 369,
+          "text": "                 kernel: str = \"quadratic\", feedback_scale: float = 1.0,",
+          "mark": false
+         },
+         {
+          "n": 370,
+          "text": "                 **kernel_kwargs):",
+          "mark": true
+         },
+         {
+          "n": 371,
+          "text": "        self.handles = []",
+          "mark": false
+         },
+         {
+          "n": 372,
+          "text": "        self.name = f\"dynamic_{kernel}\"",
+          "mark": false
+         },
+         {
+          "n": 373,
+          "text": "        self.diagnostics = []  # Per-step feedback diagnostics",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 483,
+        "column": 61,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kernel_kwargs`",
+        "lines": [
+         {
+          "n": 480,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 481,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 482,
+          "text": "    def __init__(self, model, field: PersonalityField, alpha: float,",
+          "mark": false
+         },
+         {
+          "n": 483,
+          "text": "                 kernel: str = \"quadratic\", svd_k: int = 3, **kernel_kwargs):",
+          "mark": true
+         },
+         {
+          "n": 484,
+          "text": "        self.handles = []",
+          "mark": false
+         },
+         {
+          "n": 485,
+          "text": "        self.name = f\"kernel_svd_{kernel}_k{svd_k}\"",
+          "mark": false
+         },
+         {
+          "n": 486,
+          "text": "        layers = model.model.layers",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 545,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kernel_kwargs`",
+        "lines": [
+         {
+          "n": 542,
+          "text": "    def __init__(self, model, field: PersonalityField, alpha: float,",
+          "mark": false
+         },
+         {
+          "n": 543,
+          "text": "                 kernel: str = \"quadratic\", correction_scale: float = 0.01,",
+          "mark": false
+         },
+         {
+          "n": 544,
+          "text": "                 normalize_per_layer: bool = True,",
+          "mark": false
+         },
+         {
+          "n": 545,
+          "text": "                 **kernel_kwargs):",
+          "mark": true
+         },
+         {
+          "n": 546,
+          "text": "        if not field.has_targets:",
+          "mark": false
+         },
+         {
+          "n": 547,
+          "text": "            raise ValueError(\"AttractorFieldHooks requires sarcastic/neutral means. \"",
+          "mark": false
+         },
+         {
+          "n": 548,
+          "text": "                             \"Ensure field_vectors.pt contains 'sarcastic_means'.\")",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "archive/scripts/train_skippy_grpo_v3.py": {
+      "total": 6,
+      "capped": true,
+      "items": [
+       {
+        "line": 292,
+        "column": 57,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 289,
+          "text": "        self.trajectory = []  # time series of summary stats",
+          "mark": false
+         },
+         {
+          "n": 290,
+          "text": "        self.trajectory_path = log_dir / \"trajectory.jsonl\"",
+          "mark": false
+         },
+         {
+          "n": 291,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 292,
+          "text": "    def on_save(self, args, state, control, model=None, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 293,
+          "text": "        \"\"\"Called when trainer saves a checkpoint.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 294,
+          "text": "        if model is None:",
+          "mark": false
+         },
+         {
+          "n": 295,
+          "text": "            return",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 322,
+        "column": 67,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 319,
+          "text": "        print(f\"  [DeltaLog] Step {step}: norm={deltas['summary']['total_delta_norm']:.4f}, \"",
+          "mark": false
+         },
+         {
+          "n": 320,
+          "text": "              f\"personality_energy={deltas['summary']['mean_personality_energy_ratio']:.4f}\")",
+          "mark": false
+         },
+         {
+          "n": 321,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 322,
+          "text": "    def on_log(self, args, state, control, logs=None, model=None, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 323,
+          "text": "        \"\"\"Called at each logging step — lightweight metrics only.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 324,
+          "text": "        pass  # Full extraction only at save steps",
+          "mark": false
+         },
+         {
+          "n": 325,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 334,
+        "column": 61,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 331,
+          "text": "    delta_logger = CharacterDeltaCallback(subspaces, log_dir, log_every)",
+          "mark": false
+         },
+         {
+          "n": 332,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 333,
+          "text": "    class _Callback(TrainerCallback):",
+          "mark": false
+         },
+         {
+          "n": 334,
+          "text": "        def on_save(self, args, state, control, model=None, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 335,
+          "text": "            delta_logger.on_save(args, state, control, model=model, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 336,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 337,
+          "text": "    return _Callback()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 346,
+        "column": 5,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 343,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 344,
+          "text": "def skippy_personality_reward(",
+          "mark": false
+         },
+         {
+          "n": 345,
+          "text": "    completions: list[list[dict[str, str]]],",
+          "mark": false
+         },
+         {
+          "n": 346,
+          "text": "    **kwargs,",
+          "mark": true
+         },
+         {
+          "n": 347,
+          "text": ") -> list[float]:",
+          "mark": false
+         },
+         {
+          "n": 348,
+          "text": "    \"\"\"Heuristic Skippy personality score. Returns rewards in [-5.0, 6.0].\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 349,
+          "text": "    rewards = []",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 444,
+        "column": 5,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 441,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 442,
+          "text": "def coherence_reward(",
+          "mark": false
+         },
+         {
+          "n": 443,
+          "text": "    completions: list[list[dict[str, str]]],",
+          "mark": false
+         },
+         {
+          "n": 444,
+          "text": "    **kwargs,",
+          "mark": true
+         },
+         {
+          "n": 445,
+          "text": ") -> list[float]:",
+          "mark": false
+         },
+         {
+          "n": 446,
+          "text": "    \"\"\"Penalize incoherent outputs. Returns rewards in [-5.0, 1.0].\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 447,
+          "text": "    rewards = []",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "archive/scripts/train_skippy_grpo.py": {
+      "total": 4,
+      "capped": false,
+      "items": [
+       {
+        "line": 79,
+        "column": 5,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 76,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "def skippy_personality_reward(",
+          "mark": false
+         },
+         {
+          "n": 78,
+          "text": "    completions: list[list[dict[str, str]]],",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "    **kwargs,",
+          "mark": true
+         },
+         {
+          "n": 80,
+          "text": ") -> list[float]:",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 82,
+          "text": "    Heuristic Skippy personality score — V2 with sharper differentiation.",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 193,
+        "column": 5,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 190,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 191,
+          "text": "def coherence_reward(",
+          "mark": false
+         },
+         {
+          "n": 192,
+          "text": "    completions: list[list[dict[str, str]]],",
+          "mark": false
+         },
+         {
+          "n": 193,
+          "text": "    **kwargs,",
+          "mark": true
+         },
+         {
+          "n": 194,
+          "text": ") -> list[float]:",
+          "mark": false
+         },
+         {
+          "n": 195,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 196,
+          "text": "    Penalize incoherent outputs: repetition loops, garbled text.",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 249,
+        "column": 5,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 246,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 247,
+          "text": "def identity_reward(",
+          "mark": false
+         },
+         {
+          "n": 248,
+          "text": "    completions: list[list[dict[str, str]]],",
+          "mark": false
+         },
+         {
+          "n": 249,
+          "text": "    **kwargs,",
+          "mark": true
+         },
+         {
+          "n": 250,
+          "text": ") -> list[float]:",
+          "mark": false
+         },
+         {
+          "n": 251,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 252,
+          "text": "    Reward speaking AS Skippy, penalize speaking TO Skippy or AS Joe.",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 358,
+        "column": 5,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 355,
+          "text": "def opus_character_reward(",
+          "mark": false
+         },
+         {
+          "n": 356,
+          "text": "    completions: list[list[dict[str, str]]],",
+          "mark": false
+         },
+         {
+          "n": 357,
+          "text": "    prompt: list[list[dict[str, str]]] | None = None,",
+          "mark": false
+         },
+         {
+          "n": 358,
+          "text": "    **kwargs,",
+          "mark": true
+         },
+         {
+          "n": 359,
+          "text": ") -> list[float]:",
+          "mark": false
+         },
+         {
+          "n": 360,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 361,
+          "text": "    Opus 4.6 as character fidelity judge.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_baseline_schedule.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 146,
+        "column": 14,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**values`",
+        "lines": [
+         {
+          "n": 143,
+          "text": "    # At most one owner service instance; systemd provides the process ownership.",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "    job_id=None; capture_invocation=None; capture_token=None",
+          "mark": false
+         },
+         {
+          "n": 145,
+          "text": "    state_path=ROOT/'results/baseline40k-schedule.json'",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "    def save(**values):",
+          "mark": true
+         },
+         {
+          "n": 147,
+          "text": "        payload=json.dumps({'updated':time.time(),'job_id':job_id,",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "            'capture_invocation':capture_invocation,'capture_token':capture_token,",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "            'opportunistic':args.opportunistic,**values},indent=2)+'\\n'",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_batch_capture.py": {
+      "total": 4,
+      "capped": false,
+      "items": [
+       {
+        "line": 23,
+        "column": 23,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 20,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 21,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 22,
+          "text": "def prepare_adapter(original_prepare):",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "    def wrapped(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 24,
+          "text": "        from ignition.recipes.qwen38_dense import bootstrap",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "        from activation_capture import RequestActivationCapture",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "        original=bootstrap.PreparedDecoder;shared=[]",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 27,
+        "column": 51,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 24,
+          "text": "        from ignition.recipes.qwen38_dense import bootstrap",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "        from activation_capture import RequestActivationCapture",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "        original=bootstrap.PreparedDecoder;shared=[]",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "        def factory(weights,scratch,metadata,pool,**options):",
+          "mark": true
+         },
+         {
+          "n": 28,
+          "text": "            if options.get('mode')=='decode' and metadata.positions.numel() in (2,4):",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "                if options.get('activation_capture') is not None:raise ValueError('Decode capture already instrumented')",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "                steering=options.get('steering')",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 141,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 138,
+          "text": "        if self.capture is None or not hasattr(self.capture,'slot_live'):raise ValueError('B4 request capture absent')",
+          "mark": false
+         },
+         {
+          "n": 139,
+          "text": "        two=self.base.catalog[self.base.names[2]].decoder.activation_capture",
+          "mark": false
+         },
+         {
+          "n": 140,
+          "text": "        if two.residual_last.data_ptr()!=self.capture.residual_last.data_ptr():raise ValueError('B2/B4 backing differs')",
+          "mark": false
+         },
+         {
+          "n": 141,
+          "text": "    def execute(self,cases,**options):",
+          "mark": true
+         },
+         {
+          "n": 142,
+          "text": "        import torch",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "        from persona_probe import REQUEST_STATE_FIELDS",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "        e=self.engine;slots=options.get('slots',list(range(len(cases))));logical={s:i for i,s in enumerate(slots)}",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 235,
+        "column": 24,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 232,
+          "text": "    report['limitations']=['Timing includes capture synchronization and host readback, not kernel-only throughput.','Non-first per-token vectors are represented by hashes; sums rely on the source-bound accumulator.','All new B2/B4 graphs include capture; this is not a same-graph capture-off/on speed comparison.']",
+          "mark": false
+         },
+         {
+          "n": 233,
+          "text": "    report.update(eos_token_ids=list(engine.eos),source_sha256=engine.manifest['source_sha256'],capture_override=engine.manifest.get('capture_override'),heliopause_sha256=engine.manifest['heliopause_sha256'],adapter_sha256=sha(__file__),probe_source_sha256=plan['probe_source_sha256'],legacy_capture_prefix_sha256=plan['legacy_capture_prefix_sha256'])",
+          "mark": false
+         },
+         {
+          "n": 234,
+          "text": "    atomic(output,report);arrays={};values={};cases=plan['cases']",
+          "mark": false
+         },
+         {
+          "n": 235,
+          "text": "    def run(name,items,**options):",
+          "mark": true
+         },
+         {
+          "n": 236,
+          "text": "        print('batch-capture '+name,flush=True)",
+          "mark": false
+         },
+         {
+          "n": 237,
+          "text": "        value=trial.execute(items,**options);values[name]=value",
+          "mark": false
+         },
+         {
+          "n": 238,
+          "text": "        for k in ('_logits','_hidden'):arrays[name+k]=value[k]",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_batch_probe.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 223,
+        "column": 24,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 220,
+          "text": "    report['eos_token_ids']=list(engine.eos)",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "    if history:report['prior_attempts']=history",
+          "mark": false
+         },
+         {
+          "n": 222,
+          "text": "    atomic(path,report);arrays={};results={};trial=None;cases=plan['cases']",
+          "mark": false
+         },
+         {
+          "n": 223,
+          "text": "    def run(name,items,**options):",
+          "mark": true
+         },
+         {
+          "n": 224,
+          "text": "        print('batch-proof '+name,flush=True)",
+          "mark": false
+         },
+         {
+          "n": 225,
+          "text": "        value=trial.execute(items,**options);results[name]=value",
+          "mark": false
+         },
+         {
+          "n": 226,
+          "text": "        for key in ('_logits','_hidden'):arrays[name+key]=value[key]",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_corpus.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 226,
+        "column": 115,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**extra`",
+        "lines": [
+         {
+          "n": 223,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 224,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 225,
+          "text": "def record(source: dict, text: str, *, corpus: str, category: str, split: str, locator: dict,",
+          "mark": false
+         },
+         {
+          "n": 226,
+          "text": "           prompt: str | None = None, system=\"\", mutation=None, labels=None, purpose=\"behavior\", max_tokens=2048, **extra):",
+          "mark": true
+         },
+         {
+          "n": 227,
+          "text": "    source_id = canonical_digest({\"sha256\": source[\"sha256\"], **locator})",
+          "mark": false
+         },
+         {
+          "n": 228,
+          "text": "    row = {\"schema\": SCHEMA, \"corpus\": corpus, \"category\": category, \"split\": split,",
+          "mark": false
+         },
+         {
+          "n": 229,
+          "text": "           \"source_id\": source_id, \"source_sha256\": source[\"sha256\"], \"source\": {**source, **locator},",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_hillclimb.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 59,
+        "column": 43,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 56,
+          "text": "    def bind(self, task, attempt):",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "        self.local.context = {'job_id': task['id'], 'attempt': attempt}",
+          "mark": false
+         },
+         {
+          "n": 58,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 59,
+          "text": "    def __call__(self, url, payload=None, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 60,
+          "text": "        context = getattr(self.local, 'context', None)",
+          "mark": false
+         },
+         {
+          "n": 61,
+          "text": "        if context and payload is not None:",
+          "mark": false
+         },
+         {
+          "n": 62,
+          "text": "            self.queue.audit('hillclimb_wire_request', {**context, 'url': url,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_identity_hub.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 374,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**fields`",
+        "lines": [
+         {
+          "n": 371,
+          "text": "        'watermark': 0, 'pending': None, 'events': [],",
+          "mark": false
+         },
+         {
+          "n": 372,
+          "text": "        'manifest': {'schema': 'character-creation.identity-sweep-manifest.v1', 'repo': REPO, **MODEL,",
+          "mark": false
+         },
+         {
+          "n": 373,
+          "text": "                     'prompt': 'who are you', 'shards': [], 'rows': 0}}",
+          "mark": false
+         },
+         {
+          "n": 374,
+          "text": "    def log(kind, **fields): state['events'] = (state['events'] + [{'time': iso(time.time()), 'event': kind, **fields}])[-30:]",
+          "mark": true
+         },
+         {
+          "n": 375,
+          "text": "    while True:",
+          "mark": false
+         },
+         {
+          "n": 376,
+          "text": "        try:",
+          "mark": false
+         },
+         {
+          "n": 377,
+          "text": "            tick(api, state, log); state['last_error'] = None",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_identity_supervisor.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 150,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**fields`",
+        "lines": [
+         {
+          "n": 147,
+          "text": "    parser.add_argument('--until', type=float, default=float('inf'), help='Epoch at which supervision ends (default: never)')",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "    args = parser.parse_args()",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "    state = json.loads(STATE.read_text()) if STATE.exists() else {'queued_menu': [], 'events': []}",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "    def log(kind, **fields):",
+          "mark": true
+         },
+         {
+          "n": 151,
+          "text": "        state['events'] = (state['events'] + [{'time': time.time(), 'event': kind, **fields}])[-40:]",
+          "mark": false
+         },
+         {
+          "n": 152,
+          "text": "    while time.time() < args.until:",
+          "mark": false
+         },
+         {
+          "n": 153,
+          "text": "        try:",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_literature_batch.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 26,
+        "column": 25,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**details`",
+        "lines": [
+         {
+          "n": 23,
+          "text": "STARTED = time.time()",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "def publish(state: str, **details) -> None:",
+          "mark": true
+         },
+         {
+          "n": 27,
+          "text": "    value = {'state': state, 'started': STARTED, 'updated': time.time(), 'finite': True,",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "             'annotation_limit': 6, 'full_corpus_llm_loop': False, **details}",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "    STATUS.write_text(json.dumps(value, indent=2, allow_nan=False))",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_literature_embedding_lease.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 137,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**values`",
+        "lines": [
+         {
+          "n": 134,
+          "text": "            except ProcessLookupError: pass",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "    for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGUSR1):",
+          "mark": false
+         },
+         {
+          "n": 136,
+          "text": "        signal.signal(signum, interrupted)",
+          "mark": false
+         },
+         {
+          "n": 137,
+          "text": "    def record(event: str, **values) -> None:",
+          "mark": true
+         },
+         {
+          "n": 138,
+          "text": "        value = {'time': time.time(), 'event': event, **values}",
+          "mark": false
+         },
+         {
+          "n": 139,
+          "text": "        with MANIFEST.open('a') as stream:",
+          "mark": false
+         },
+         {
+          "n": 140,
+          "text": "            stream.write(json.dumps(value, allow_nan=False) + '\\n'); stream.flush(); os.fsync(stream.fileno())",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_lyra_worker.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 38,
+        "column": 13,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**values`",
+        "lines": [
+         {
+          "n": 35,
+          "text": "  if stop.is_set() or time.time()>=spec['deadline']:raise InterruptedError('Bounded gift window ended')",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": " status={'job_id':job,'model_identity':IDENTITY,'worker_sha256':spec['worker_sha256'],'shard':a.shard,'phase':'loading','observations':0,'causal_checks':0,'ready':False}",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": " lock=threading.Lock()",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": " def update(**values):",
+          "mark": true
+         },
+         {
+          "n": 39,
+          "text": "  with lock:status.update(values,time=time.time());atomic(status_path,status)",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": " class Handler(BaseHTTPRequestHandler):",
+          "mark": false
+         },
+         {
+          "n": 41,
+          "text": "  def log_message(self,*_):pass",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_neighbors.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 365,
+        "column": 49,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 362,
+          "text": "        except (OSError,ValueError,KeyError,TypeError) as error:",
+          "mark": false
+         },
+         {
+          "n": 363,
+          "text": "            if cohort!='auto':raise ValueError('Overnight snapshot unavailable: '+str(error)) from error",
+          "mark": false
+         },
+         {
+          "n": 364,
+          "text": "            return self.historical,'historical',str(error)",
+          "mark": false
+         },
+         {
+          "n": 365,
+          "text": "    def query(self,layer,neuron,*,cohort='auto',**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 366,
+          "text": "        index,name,error=self.choose(cohort);result=index.query(layer,neuron,**kwargs)",
+          "mark": false
+         },
+         {
+          "n": 367,
+          "text": "        result['source'].update(cohort=name,requested_cohort=cohort,available_corpora=list(index.corpora),fallback_reason=error)",
+          "mark": false
+         },
+         {
+          "n": 368,
+          "text": "        return result",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_neuron_atlas.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 419,
+        "column": 30,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**query`",
+        "lines": [
+         {
+          "n": 416,
+          "text": "        status = self.out / 'identity_status.json'",
+          "mark": false
+         },
+         {
+          "n": 417,
+          "text": "        self.sweep_status = json.loads(status.read_text()) if status.exists() else None",
+          "mark": false
+         },
+         {
+          "n": 418,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 419,
+          "text": "    def sweep(self, *, name, **query):",
+          "mark": true
+         },
+         {
+          "n": 420,
+          "text": "        \"\"\"Queue the first SWEEP_MAX neurons of a library query for the identity sweep on the GPU host.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 421,
+          "text": "        if not re.fullmatch(r'[A-Za-z0-9 _.-]{1,60}', name or ''): raise ValueError('Sweep name: 1-60 letters, digits, spaces, . _ -')",
+          "mark": false
+         },
+         {
+          "n": 422,
+          "text": "        query.update(offset=0, limit=SWEEP_MAX, sort=query.get('sort', 'strength'))",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 553,
+        "column": 27,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**query`",
+        "lines": [
+         {
+          "n": 550,
+          "text": "                         'peak_down': round(float(d['lens_down'][key]), 2)})",
+          "mark": false
+         },
+         {
+          "n": 551,
+          "text": "        return {'total': int(len(keys)), 'offset': int(offset), 'rows': rows}",
+          "mark": false
+         },
+         {
+          "n": 552,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 553,
+          "text": "    def library_csv(self, **query):",
+          "mark": true
+         },
+         {
+          "n": 554,
+          "text": "        query['limit'] = 500; query['offset'] = 0",
+          "mark": false
+         },
+         {
+          "n": 555,
+          "text": "        result = self.library(**query); stream = io.StringIO()",
+          "mark": false
+         },
+         {
+          "n": 556,
+          "text": "        if result['rows']:",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_phantom_run.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 126,
+        "column": 31,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**fields`",
+        "lines": [
+         {
+          "n": 123,
+          "text": "        original_wb, original_stop = module.wb, module.stop_child",
+          "mark": false
+         },
+         {
+          "n": 124,
+          "text": "        jobs, events = {}, []",
+          "mark": false
+         },
+         {
+          "n": 125,
+          "text": "        done = threading.Event()",
+          "mark": false
+         },
+         {
+          "n": 126,
+          "text": "        def write_event(kind, **fields):",
+          "mark": true
+         },
+         {
+          "n": 127,
+          "text": "            event = {'time': time.time(), 'kind': kind, **fields}",
+          "mark": false
+         },
+         {
+          "n": 128,
+          "text": "            events.append(event)",
+          "mark": false
+         },
+         {
+          "n": 129,
+          "text": "            with Path(str(report) + '.jsonl').open('a') as stream:",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 169,
+        "column": 38,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**options`",
+        "lines": [
+         {
+          "n": 166,
+          "text": "        class ChildProcesses:",
+          "mark": false
+         },
+         {
+          "n": 167,
+          "text": "            def __getattr__(self, name):",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "                return getattr(subprocess, name)",
+          "mark": false
+         },
+         {
+          "n": 169,
+          "text": "            def Popen(self, *values, **options):",
+          "mark": true
+         },
+         {
+          "n": 170,
+          "text": "                verify_bindings(bindings)",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "                sample()",
+          "mark": false
+         },
+         {
+          "n": 172,
+          "text": "                if time.time() >= args.deadline:",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_planner.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 146,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**value`",
+        "lines": [
+         {
+          "n": 143,
+          "text": "    stop = {'signal': None}",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "    for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGUSR1):",
+          "mark": false
+         },
+         {
+          "n": 145,
+          "text": "        signal.signal(signum, lambda signum, frame: stop.update(signal=signum))",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "    def record(event: str, **value) -> None:",
+          "mark": true
+         },
+         {
+          "n": 147,
+          "text": "        with args.manifest.open('a') as stream:",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "            stream.write(json.dumps({'time': time.time(), 'event': event, **value}, sort_keys=True) + '\\n')",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "            stream.flush(); os.fsync(stream.fileno())",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_preset_followon.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 97,
+        "column": 17,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**values`",
+        "lines": [
+         {
+          "n": 94,
+          "text": "    lock=(root/'results/persona_preset_followon.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "    bank=base.attach_column(VectorBank(root/'results',ModelSpec.load(root/'data/persona_model.json')),root/'results/persona_preset_columns.json')",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "    plan_path=root/'results/persona_preset_followon_plan.json';status=root/'results/persona_preset_followon_status.json';child=None",
+          "mark": false
+         },
+         {
+          "n": 97,
+          "text": "    def persist(**values):base.atomic_json(status,{'schema':'character-creation.preset-followon-status.v1','deadline':until,'updated':time.time(),**values})",
+          "mark": true
+         },
+         {
+          "n": 98,
+          "text": "    try:",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "        while time.time()<until:",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "            mp=root/'data/persona_perturbation_prompts_manifest.json'",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_probe.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 79,
+        "column": 38,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**arrays`",
+        "lines": [
+         {
+          "n": 76,
+          "text": "        return hashlib.file_digest(stream, \"sha256\").hexdigest()",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 78,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "def save_activation_npz(destination, **arrays):",
+          "mark": true
+         },
+         {
+          "n": 80,
+          "text": "    \"\"\"Write ordinary lossless NPZ members with explicitly bounded compression.",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 82,
+          "text": "    Level one avoids default level-six deflate's measured CPU bottleneck. NPY",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 861,
+        "column": 41,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 858,
+          "text": "            raise RuntimeError(\"Forward cache already bound to another capture override\")",
+          "mark": false
+         },
+         {
+          "n": 859,
+          "text": "        return digest",
+          "mark": false
+         },
+         {
+          "n": 860,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 861,
+          "text": "    def initialize(cache, *, namespace, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 862,
+          "text": "        bound_namespace = {**namespace, **additions}",
+          "mark": false
+         },
+         {
+          "n": 863,
+          "text": "        original(cache, namespace=bound_namespace, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 864,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "persona/persona_sweep.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 242,
+        "column": 40,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**metadata`",
+        "lines": [
+         {
+          "n": 239,
+          "text": "    conditions = []",
+          "mark": false
+         },
+         {
+          "n": 240,
+          "text": "    generation = {\"max_new_tokens\": 2048, \"temperature\": .7, \"top_p\": .95, \"top_k\": 20, \"do_sample\": True}",
+          "mark": false
+         },
+         {
+          "n": 241,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 242,
+          "text": "    def add(control, interventions=(), **metadata):",
+          "mark": true
+         },
+         {
+          "n": 243,
+          "text": "        row = {\"model_identity\": bank.model.identity, \"calibration_sha256\": bank.calibration_identity,",
+          "mark": false
+         },
+         {
+          "n": 244,
+          "text": "               \"control\": control, \"interventions\": list(interventions), \"generation\": generation,",
+          "mark": false
+         },
+         {
+          "n": 245,
+          "text": "               \"stage\": \"validate\", \"flags\": {\"heldout\": True, \"fit_on_heldout\": False,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "scripts/experiments/personality/personality_sweep_v2.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 418,
+        "column": 33,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 415,
+          "text": "    original_forward = model.forward",
+          "mark": false
+         },
+         {
+          "n": 416,
+          "text": "    call_count = [0]",
+          "mark": false
+         },
+         {
+          "n": 417,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 418,
+          "text": "    def counting_forward(*args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 419,
+          "text": "        result = original_forward(*args, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 420,
+          "text": "        call_count[0] += 1",
+          "mark": false
+         },
+         {
+          "n": 421,
+          "text": "        if call_count[0] == 1:",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "scripts/experiments/personality/train_qwen35_pair_lora_sft.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 165,
+        "column": 49,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 162,
+          "text": "                fh.write(json.dumps(rec, ensure_ascii=False) + \"\\n\")",
+          "mark": false
+         },
+         {
+          "n": 163,
+          "text": "        model.train()",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "    def on_step_end(self, args, state, control, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 166,
+          "text": "        if self.every_steps > 0 and state.global_step > 0 and state.global_step % self.every_steps == 0:",
+          "mark": false
+         },
+         {
+          "n": 167,
+          "text": "            trainer = kwargs[\"model\"].trainer if hasattr(kwargs[\"model\"], \"trainer\") else None",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "            if trainer is not None:",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 172,
+        "column": 50,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 169,
+          "text": "                self._run_samples(trainer, state.global_step)",
+          "mark": false
+         },
+         {
+          "n": 170,
+          "text": "        return control",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 172,
+          "text": "    def on_train_end(self, args, state, control, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 173,
+          "text": "        trainer = kwargs[\"model\"].trainer if hasattr(kwargs[\"model\"], \"trainer\") else None",
+          "mark": false
+         },
+         {
+          "n": 174,
+          "text": "        if trainer is not None:",
+          "mark": false
+         },
+         {
+          "n": 175,
+          "text": "            self._run_samples(trainer, state.global_step or 0)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 180,
+        "column": 31,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 177,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 178,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 179,
+          "text": "class BoundTrainer(Trainer):",
+          "mark": false
+         },
+         {
+          "n": 180,
+          "text": "    def __init__(self, *args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 181,
+          "text": "        super().__init__(*args, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "        self.model.trainer = self",
+          "mark": false
+         },
+         {
+          "n": 183,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_adaptive_loop.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 89,
+        "column": 20,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 86,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "def test_post_intent_precedes_http_uncertain_never_replayed_even_after_restart(loop):",
+          "mark": false
+         },
+         {
+          "n": 88,
+          "text": "    calls=[]",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "    def http(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 90,
+          "text": "        assert loop.db.execute(\"SELECT state FROM calls WHERE id='one'\").fetchone()[0]=='intent'",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "        calls.append(args);raise TimeoutError()",
+          "mark": false
+         },
+         {
+          "n": 92,
+          "text": "    loop.http=http",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_batch_dispatch.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 183,
+        "column": 47,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 180,
+          "text": "    monkeypatch.setattr('persona_manager.VectorBank',lambda *a,**k:object())",
+          "mark": false
+         },
+         {
+          "n": 181,
+          "text": "    monkeypatch.setattr('persona_manager.prepare_job',lambda job,*a:({'model':'checkpoint','stream':False},{'sites':[]},{'program_sha256':'a'*64},'rollout'))",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "    calls=[]",
+          "mark": false
+         },
+         {
+          "n": 183,
+          "text": "    def dispatch(entries,endpoint,queue,store,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 184,
+          "text": "        assert kwargs['admit']() and len(entries)==4",
+          "mark": false
+         },
+         {
+          "n": 185,
+          "text": "        assert all(e['request']['capture_response']['layers']==[] for e in entries)",
+          "mark": false
+         },
+         {
+          "n": 186,
+          "text": "        calls.append(entries);manager.stop.set()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 209,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kw`",
+        "lines": [
+         {
+          "n": 206,
+          "text": "    endpoint={'url':'http://127.0.0.1:8935','lease_id':'lease',**{k:'a'*64 for k in ('model_identity','runtime_identity','prepared_identity')}}",
+          "mark": false
+         },
+         {
+          "n": 207,
+          "text": "    manager.admission=SimpleNamespace(allowed=lambda e:(True,''),board={'jobs':[{'id':'lease','lease_expires_epoch':time.time()+1000}]})",
+          "mark": false
+         },
+         {
+          "n": 208,
+          "text": "    monkeypatch.setattr('persona_manager.VectorBank',lambda *a,**k:object())",
+          "mark": false
+         },
+         {
+          "n": 209,
+          "text": "    def fetch(*a,**kw):",
+          "mark": true
+         },
+         {
+          "n": 210,
+          "text": "        if unready=='transport':raise ConnectionResetError('warming')",
+          "mark": false
+         },
+         {
+          "n": 211,
+          "text": "        if unready=='503':raise urllib.error.HTTPError(endpoint['url'],503,'warming',{},None)",
+          "mark": false
+         },
+         {
+          "n": 212,
+          "text": "        if unready=='empty':return {'data':[]}",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 243,
+        "column": 27,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 240,
+          "text": "        def set(self):self.stopped=True",
+          "mark": false
+         },
+         {
+          "n": 241,
+          "text": "        def wait(self,seconds):self.waits.append(seconds);self.stopped=True",
+          "mark": false
+         },
+         {
+          "n": 242,
+          "text": "    class Pool:",
+          "mark": false
+         },
+         {
+          "n": 243,
+          "text": "        def __init__(self,**kwargs):pass",
+          "mark": true
+         },
+         {
+          "n": 244,
+          "text": "        def __enter__(self):return self",
+          "mark": false
+         },
+         {
+          "n": 245,
+          "text": "        def __exit__(self,*args):pass",
+          "mark": false
+         },
+         {
+          "n": 246,
+          "text": "        def submit(self,*args):return SimpleNamespace(done=lambda:False)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_coactivity_refresh.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 97,
+        "column": 44,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 94,
+          "text": "        output = io.BytesIO(); np.savez_compressed(output, **arrays)",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "        return output.getvalue()",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 97,
+          "text": "    def transport(self, argv, payload=b'', **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 98,
+          "text": "        self.calls.append((argv, kwargs)); command = shlex.split(argv[-1])",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "        if command == ['hostname']: return b'v100\\n'",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "        if command[0] == 'sha256sum':",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 136,
+        "column": 42,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 133,
+          "text": "        self.assertEqual(self.matrix.read_bytes(), self.original)  # --stream never publishes on the extraction host.",
+          "mark": false
+         },
+         {
+          "n": 134,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "    def test_changed_returned_binding_never_replaces_existing_matrix(self):",
+          "mark": false
+         },
+         {
+          "n": 136,
+          "text": "        def transport(argv, payload=b'', **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 137,
+          "text": "            raw = self.transport(argv, payload, **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 138,
+          "text": "            if '--registry-only' not in argv[-1]: return raw",
+          "mark": false
+         },
+         {
+          "n": 139,
+          "text": "            arrays = matrix_snapshot(raw)['arrays']; metadata = json.loads(str(arrays['metadata']))",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_coherence_eval.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 18,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 15,
+          "text": "                answers={k: v['value'] for k, v in truth['answers'].items()}, unknowns=list(truth['unknowns']))",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "def output(value, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 19,
+          "text": "    return dict(answer=json.dumps(value) if isinstance(value, dict) else value, complete=True, finish_reason='stop', **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 20,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 21,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_coverage.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 33,
+        "column": 20,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 30,
+          "text": "                prompt=\"PRIVATE TEXT \" + identity, system=\"Registered profile\", max_tokens=2048,",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "                source_sha256=\"c\" * 64, char_start=0, char_end=12, thinking=False)",
+          "mark": false
+         },
+         {
+          "n": 32,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 33,
+          "text": "    def plan(self, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 34,
+          "text": "        return coverage_plan(self.corpus, self.bank, \"d\" * 64, split=\"all\", **kwargs)",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "    def test_every_row_exactly_once_unsteered_and_reproducible(self):",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_hillclimb.py": {
+      "total": 6,
+      "capped": true,
+      "items": [
+       {
+        "line": 182,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 179,
+          "text": "            validate_decision(self.decision, self.job, self.catalog, {'require_rollout_followup': True})",
+          "mark": false
+         },
+         {
+          "n": 180,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 181,
+          "text": "    def test_exact_wire_request_survives_transport_failure(self):",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "        def failing(*args, **kwargs): raise TimeoutError('Simulated transport failure')",
+          "mark": true
+         },
+         {
+          "n": 183,
+          "text": "        recorder = RequestRecorder(self.queue, failing)",
+          "mark": false
+         },
+         {
+          "n": 184,
+          "text": "        recorder.bind({'id': 'attempted-job'}, 2)",
+          "mark": false
+         },
+         {
+          "n": 185,
+          "text": "        payload = {'seed': 17, 'steering': {'phase': 'prefill', 'sites': [{'site': 'L0.mlp_input', 'vector': [0., -1.]}]}}",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 197,
+        "column": 42,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 194,
+          "text": "        planner = {'url': 'http://127.0.0.1:18511', 'model': 'persona-manager', 'context_tokens': 131072}",
+          "mark": false
+         },
+         {
+          "n": 195,
+          "text": "        payloads = []",
+          "mark": false
+         },
+         {
+          "n": 196,
+          "text": "        decision = copy.deepcopy(self.decision); decision['experiments'][0]['source_groups'] = 1",
+          "mark": false
+         },
+         {
+          "n": 197,
+          "text": "        def transport(url, payload=None, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 198,
+          "text": "            if url.endswith('/props'):",
+          "mark": false
+         },
+         {
+          "n": 199,
+          "text": "                return {'model_alias': planner['model'], 'default_generation_settings': {'n_ctx': 131072}}",
+          "mark": false
+         },
+         {
+          "n": 200,
+          "text": "            payloads.append(copy.deepcopy(payload))",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 237,
+        "column": 42,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**_`",
+        "lines": [
+         {
+          "n": 234,
+          "text": "        family = copy.deepcopy(self.catalog[self.family])",
+          "mark": false
+         },
+         {
+          "n": 235,
+          "text": "        family['groups'] = {'source': [dict(next(iter(self.corpus.values()))) for _ in range(11)]}",
+          "mark": false
+         },
+         {
+          "n": 236,
+          "text": "        planner = {'url': 'http://127.0.0.1:18511', 'model': 'persona-manager', 'context_tokens': 131072}",
+          "mark": false
+         },
+         {
+          "n": 237,
+          "text": "        def transport(url, payload=None, **_):",
+          "mark": true
+         },
+         {
+          "n": 238,
+          "text": "            if payload is None: return {'model_alias': planner['model'], 'default_generation_settings': {'n_ctx': 131072}}",
+          "mark": false
+         },
+         {
+          "n": 239,
+          "text": "            schema = payload['response_format']['json_schema']['schema']['properties']['experiments']",
+          "mark": false
+         },
+         {
+          "n": 240,
+          "text": "            self.assertEqual(schema['maxItems'], 3)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 259,
+        "column": 42,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**_`",
+        "lines": [
+         {
+          "n": 256,
+          "text": "        job['targets'] = [{'layer': 0, 'neuron': 1}, {'layer': 1, 'neuron': 3}]",
+          "mark": false
+         },
+         {
+          "n": 257,
+          "text": "        planner = {'url': 'http://127.0.0.1:18511', 'model': 'persona-manager', 'context_tokens': 131072}",
+          "mark": false
+         },
+         {
+          "n": 258,
+          "text": "        payloads = []",
+          "mark": false
+         },
+         {
+          "n": 259,
+          "text": "        def transport(url, payload=None, **_):",
+          "mark": true
+         },
+         {
+          "n": 260,
+          "text": "            if payload is None: return {'model_alias': planner['model'], 'default_generation_settings': {'n_ctx': 131072}}",
+          "mark": false
+         },
+         {
+          "n": 261,
+          "text": "            payloads.append(payload)",
+          "mark": false
+         },
+         {
+          "n": 262,
+          "text": "            brief = json.loads(payload['messages'][-1]['content'])",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 282,
+        "column": 35,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 279,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 280,
+          "text": "    def test_planner_transport_failure_retains_request_and_advances_attempt(self):",
+          "mark": false
+         },
+         {
+          "n": 281,
+          "text": "        planner = {'url': 'http://127.0.0.1:18511', 'model': 'persona-manager', 'context_tokens': 131072}",
+          "mark": false
+         },
+         {
+          "n": 282,
+          "text": "        def transport(url, *args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 283,
+          "text": "            if url.endswith('/props'):",
+          "mark": false
+         },
+         {
+          "n": 284,
+          "text": "                return {'model_alias': planner['model'], 'default_generation_settings': {'n_ctx': 131072}}",
+          "mark": false
+         },
+         {
+          "n": 285,
+          "text": "            raise TimeoutError('simulated planner connection failure')",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_job_fleet.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 165,
+        "column": 34,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 162,
+          "text": "            job={'id':'job','deadline':time.time()+600}; stopped=[]; started=[]; stop=threading.Event()",
+          "mark": false
+         },
+         {
+          "n": 163,
+          "text": "            prior={'unit':control.PLANNER_UNIT,'job_id':'job','token':'a'*32,'host':'wtatum84'}",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "            states={control.PLANNER_UNIT:{'ActiveState':'active','InvocationID':'old','job_id':'job','launch_token':'a'*32}}",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "            def state(unit,*args,**kwargs): return states.get(unit,{'ActiveState':'inactive','LoadState':'not-found'}).copy()",
+          "mark": true
+         },
+         {
+          "n": 166,
+          "text": "            def run(argv,**kwargs):",
+          "mark": false
+         },
+         {
+          "n": 167,
+          "text": "                if argv[0]=='hostname': return 'v100\\n'",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "                if argv[0]=='sha256sum':",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 166,
+        "column": 26,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 163,
+          "text": "            prior={'unit':control.PLANNER_UNIT,'job_id':'job','token':'a'*32,'host':'wtatum84'}",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "            states={control.PLANNER_UNIT:{'ActiveState':'active','InvocationID':'old','job_id':'job','launch_token':'a'*32}}",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "            def state(unit,*args,**kwargs): return states.get(unit,{'ActiveState':'inactive','LoadState':'not-found'}).copy()",
+          "mark": false
+         },
+         {
+          "n": 166,
+          "text": "            def run(argv,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 167,
+          "text": "                if argv[0]=='hostname': return 'v100\\n'",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "                if argv[0]=='sha256sum':",
+          "mark": false
+         },
+         {
+          "n": 169,
+          "text": "                    name=Path(argv[1]).name",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 179,
+        "column": 50,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 176,
+          "text": "                self.assertNotEqual(state(unit)['ActiveState'],'active')",
+          "mark": false
+         },
+         {
+          "n": 177,
+          "text": "                states[unit]={'ActiveState':'active','LoadState':'loaded','InvocationID':'new-'+unit,'job_id':'job','launch_token':token}",
+          "mark": false
+         },
+         {
+          "n": 178,
+          "text": "                started.append(unit); return ''",
+          "mark": false
+         },
+         {
+          "n": 179,
+          "text": "            def cleanup(unit,invocation,ssh=None,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 180,
+          "text": "                self.assertEqual(kwargs['token'],state(unit)['launch_token'])",
+          "mark": false
+         },
+         {
+          "n": 181,
+          "text": "                stopped.append((unit,kwargs['token'])); states[unit]={'ActiveState':'inactive','LoadState':'not-found'}",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "                return {'stopped':True,'status':'owned_process_exited'}",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_jobs.py": {
+      "total": 4,
+      "capped": false,
+      "items": [
+       {
+        "line": 257,
+        "column": 32,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 254,
+          "text": "                  'trait': 'openness', 'facet': 'imagination', 'domain': 'workplace'} for i in range(2)]",
+          "mark": false
+         },
+         {
+          "n": 255,
+          "text": "        from persona_corpus import record",
+          "mark": false
+         },
+         {
+          "n": 256,
+          "text": "        calls = []",
+          "mark": false
+         },
+         {
+          "n": 257,
+          "text": "        def interrupted(*args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 258,
+          "text": "            calls.append(True)",
+          "mark": false
+         },
+         {
+          "n": 259,
+          "text": "            if len(calls) == 2: raise RuntimeError('simulated storage interruption')",
+          "mark": false
+         },
+         {
+          "n": 260,
+          "text": "            return record(*args, **kwargs)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 277,
+        "column": 26,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 274,
+          "text": "        job = self.store.create(self.value); self.store.claim_due()",
+          "mark": false
+         },
+         {
+          "n": 275,
+          "text": "        clock = [time.time()]",
+          "mark": false
+         },
+         {
+          "n": 276,
+          "text": "        @contextmanager",
+          "mark": false
+         },
+         {
+          "n": 277,
+          "text": "        def fleet(*args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 278,
+          "text": "            clock[0] = job['deadline'] + 1",
+          "mark": false
+         },
+         {
+          "n": 279,
+          "text": "            raise TimeoutError('window ended during admission')",
+          "mark": false
+         },
+         {
+          "n": 280,
+          "text": "            yield",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 294,
+        "column": 26,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 291,
+          "text": "        with self.store.connect() as db:",
+          "mark": false
+         },
+         {
+          "n": 292,
+          "text": "            db.execute('UPDATE jobs SET counts=? WHERE id=?', (json.dumps(dict(accepted_unique=0, requested=0, rejected=0, requests=0, errors=0)), job['id']))",
+          "mark": false
+         },
+         {
+          "n": 293,
+          "text": "        @contextmanager",
+          "mark": false
+         },
+         {
+          "n": 294,
+          "text": "        def fleet(*args, **kwargs): yield self.session",
+          "mark": true
+         },
+         {
+          "n": 295,
+          "text": "        with patch('persona_jobs.fetch') as api:",
+          "mark": false
+         },
+         {
+          "n": 296,
+          "text": "            result = run_scheduled_job(job, {}, self.store, threading.Event(), fleet_callback=fleet)",
+          "mark": false
+         },
+         {
+          "n": 297,
+          "text": "            api.assert_not_called()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 305,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**headers`",
+        "lines": [
+         {
+          "n": 302,
+          "text": "        request = object.__new__(handler(SimpleNamespace(jobs=self.store)))",
+          "mark": false
+         },
+         {
+          "n": 303,
+          "text": "        request.path = '/api/jobs'; request.send = Mock()",
+          "mark": false
+         },
+         {
+          "n": 304,
+          "text": "        raw = json.dumps(self.value).encode()",
+          "mark": false
+         },
+         {
+          "n": 305,
+          "text": "        def post(**headers):",
+          "mark": true
+         },
+         {
+          "n": 306,
+          "text": "            request.headers = {'Content-Length': str(len(raw)), 'Host': 'localhost:8899', **headers}",
+          "mark": false
+         },
+         {
+          "n": 307,
+          "text": "            request.rfile = io.BytesIO(raw); request.send.reset_mock(); request.do_POST()",
+          "mark": false
+         },
+         {
+          "n": 308,
+          "text": "            return request.send.call_args.args",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_literary_eval.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 16,
+        "column": 23,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 13,
+          "text": "from persona_literature_harness import save_prompt",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "class LiteraryTests(unittest.TestCase):",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": " def output(self,text,**kwargs):return dict(answer=text,complete=True,finish_reason='stop',**kwargs)",
+          "mark": true
+         },
+         {
+          "n": 17,
+          "text": " def control(self):",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "  a=dict(schema='character-creation.hybrid-prefix.v1',kind='hybrid_text_prefix',model_identity='a'*64,runtime_identity='b'*64,prepared_identity='c'*64,layout_sha256='d'*64,prefix_text='A quiet fictional library.')",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "  a['sha256']=canonical_digest(a);return dict(artifact=a,dose=1,cache_policy='reuse')",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 66,
+        "column": 28,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 63,
+          "text": "  app=SimpleNamespace(model=SimpleNamespace(identity=artifact['model_identity']),config={},check_program=Explorer.check_program)",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "  settings=dict(seed=7,max_tokens=2048,thinking=False);program={'sites':[]};response={**{k:endpoint[k] for k in ('model_identity','prepared_identity','runtime_identity')},'choices':[{'message':{'content':'A story.'},'finish_reason':'stop'}],'diagnostics':{'complete_final_answer':True},'kv_control':{**{k:artifact[k] for k in ('model_identity','prepared_identity','runtime_identity','layout_sha256')}",
+          "mark": false,
+          "cut": 590
+         },
+         {
+          "n": 65,
+          "text": "  calls=[]",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "  def api(url,payload=None,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 67,
+          "text": "   if payload is None:return {'data':[descriptor]}",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "   calls.append(payload);return response",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "  with patch('persona_explorer.fetch',api),patch('persona_explorer.check_generation_settings'):",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_literature_embedding_lease.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 21,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 18,
+          "text": "    receipt = {'id':'owned','project':'character-creation','label':'literature-bge-embeddings','target_host':'wtatum84','gpu_selector':lease.GPU}",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "    calls = []",
+          "mark": false
+         },
+         {
+          "n": 20,
+          "text": "    current = {**receipt,'status':'running','assigned_uuid':lease.GPU}",
+          "mark": false
+         },
+         {
+          "n": 21,
+          "text": "    def wb(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 22,
+          "text": "        calls.append(args)",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "        return {'jobs':[current]} if args[0]=='status' else {}",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "    monkeypatch.setattr(lease,'wb',wb)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_lyra_job.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 28,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 25,
+          "text": "  fixture=fixtures.PersonaJobTests();fixture.setUp();self.addCleanup(fixture.doCleanups)",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "  value={**fixture.value,'kind':'lyra_gift'};job=fixture.store.create(value)",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "  @contextmanager",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "  def fleet(*args,**kwargs):yield {}",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "  with patch('persona_lyra_job.prepare'),patch('persona_lyra_job.run',side_effect=ValueError('qualification failed')) as run:",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "   result=run_scheduled_job(job,{},fixture.store,threading.Event(),fleet_callback=fleet)",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "  self.assertEqual(result['state'],'failed');self.assertIn('qualification failed',result['error']);run.assert_called_once()",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_personality_release.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 103,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 100,
+          "text": "    import time",
+          "mark": false
+         },
+         {
+          "n": 101,
+          "text": "    monkeypatch.setattr('persona_personality_release.shutil.which',lambda name:'/bin/hf')",
+          "mark": false
+         },
+         {
+          "n": 102,
+          "text": "    commit='a'*40;seen=[]",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "    def run(command,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 104,
+          "text": "        intent=json.loads((release_files/'persona_personality_publication.json').read_text())",
+          "mark": false
+         },
+         {
+          "n": 105,
+          "text": "        assert intent['verified'] is False and len(intent['files'])==2",
+          "mark": false
+         },
+         {
+          "n": 106,
+          "text": "        includes=[command[i+1] for i,v in enumerate(command) if v=='--include']",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 122,
+        "column": 19,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 119,
+          "text": "    from types import SimpleNamespace",
+          "mark": false
+         },
+         {
+          "n": 120,
+          "text": "    import time,subprocess",
+          "mark": false
+         },
+         {
+          "n": 121,
+          "text": "    monkeypatch.setattr('persona_personality_release.shutil.which',lambda name:'/bin/hf')",
+          "mark": false
+         },
+         {
+          "n": 122,
+          "text": "    def run(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 123,
+          "text": "        if failure=='timeout':raise subprocess.TimeoutExpired('hf',1)",
+          "mark": false
+         },
+         {
+          "n": 124,
+          "text": "        return SimpleNamespace(returncode=0,stdout='no commit' if failure=='no_commit' else 'https://huggingface.co/datasets/Atlas3D/character-creation-big-five/commit/'+('a'*40))",
+          "mark": false
+         },
+         {
+          "n": 125,
+          "text": "    with pytest.raises(Exception):publish(release_files,time.time()+30,run=run,verify=lambda *a:{'sha256':'bad','bytes':0},inventory=lambda d:{'sha':'b'*40,'siblings':[]})",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_phantom_train.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 180,
+        "column": 26,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kw`",
+        "lines": [
+         {
+          "n": 177,
+          "text": "   dataset.write_text(json.dumps({'schema':DATA_SCHEMA,'approval':{'scope':'benign_literary','approved':True},'rows':[DataTests().row('a','discovery'),DataTests().row('b','heldout')]}))",
+          "mark": false
+         },
+         {
+          "n": 178,
+          "text": "   args=SimpleNamespace(output=root/'report.json',partial_output=root/'partial.npz',dataset=dataset,checkpoint=root,model_identity='a'*64,command='validate',weight_dtype='float32',native_reference=None,validation_report=None,devices=['cuda:'+str(i) for i in range(6)],max_gpu_gib=1.,seed=7,learning_rate=.001,kl_weight=.1,slots=2,max_tokens=32)",
+          "mark": false
+         },
+         {
+          "n": 179,
+          "text": "   tokenizer=SimpleNamespace(apply_chat_template=lambda *a,**k:[1,2],encode=lambda *a,**k:[3,4],eos_token_id=5)",
+          "mark": false
+         },
+         {
+          "n": 180,
+          "text": "   def stopped_loader(*a,**kw):signal.raise_signal(signal.SIGTERM);kw['guard']();raise AssertionError('Stop was not honored')",
+          "mark": true
+         },
+         {
+          "n": 181,
+          "text": "   original=signal.getsignal(signal.SIGTERM)",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "   with patch('transformers.AutoTokenizer.from_pretrained',return_value=tokenizer),patch('torch.cuda.get_device_properties',return_value=SimpleNamespace(total_memory=2*2**30)),patch('torch.cuda.set_per_process_memory_fraction'),patch('torch.cuda.memory_reserved',return_value=0),patch('persona_phantom_train.hardware_preflight',return_value={'passed':True}),patch('persona_phantom_train.load_frozen_m",
+          "mark": false,
+          "cut": 434
+         },
+         {
+          "n": 183,
+          "text": "    result=run(args)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_preset_overnight.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 11,
+        "column": 35,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "class Bank:",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    model=SimpleNamespace(identity='389801c06d68a0d84bd4890b8ce6d26f96e0ee53eb108bcc572c0c09abf5b9a8')",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "    def program(self,pushes,phase,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 12,
+          "text": "        sites={}",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "        for p in pushes:",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "            site=f\"layers.{p['layer']}.\"+('mlp_input' if p['kind']=='neuron' else p.get('site','residual'))",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_probe_search.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 71,
+        "column": 39,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 68,
+          "text": "def test_canonical_override_binds_actual_source_and_aot_namespace(tmp_path,monkeypatch):",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "    module=ModuleType('ignition.preparation.aot');seen=[]",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "    class Cache:",
+          "mark": false
+         },
+         {
+          "n": 71,
+          "text": "        def __init__(self,*,namespace,**kwargs):seen.append(namespace)",
+          "mark": true
+         },
+         {
+          "n": 72,
+          "text": "    module.ForwardCache=Cache",
+          "mark": false
+         },
+         {
+          "n": 73,
+          "text": "    monkeypatch.setitem(sys.modules,'ignition.preparation.aot',module)",
+          "mark": false
+         },
+         {
+          "n": 74,
+          "text": "    override=tmp_path/'activation_capture.py';override.write_text('source-one')",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 89,
+        "column": 39,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 86,
+          "text": "def test_experimental_preparation_has_separate_cache_identity(tmp_path,monkeypatch):",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "    module=ModuleType('ignition.preparation.aot');seen=[]",
+          "mark": false
+         },
+         {
+          "n": 88,
+          "text": "    class Cache:",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "        def __init__(self,*,namespace,**kwargs):seen.append(namespace)",
+          "mark": true
+         },
+         {
+          "n": 90,
+          "text": "    module.ForwardCache=Cache",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "    monkeypatch.setitem(sys.modules,'ignition.preparation.aot',module)",
+          "mark": false
+         },
+         {
+          "n": 92,
+          "text": "    override=tmp_path/'activation_capture.py';override.write_text('same-capture')",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_prompt_browser.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 11,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kw`",
+        "lines": [
+         {
+          "n": 8,
+          "text": "        self.rows = {str(i): {'id':str(i),'prompt':f'Example {i}', 'category':'scenario', 'corpus':'big_five',",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "            'split':'heldout' if i == 100 else 'discovery','labels':{'prompt_design_trait':'openness' if i % 2 else 'agreeableness',",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "            'prompt_design_facet':'curiosity','scenario_domain':'work'}, 'synthetic':True} for i in range(101)}",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "    def query(self, **kw): return browse(self.rows, lambda r:r['id'], **kw)",
+          "mark": true
+         },
+         {
+          "n": 12,
+          "text": "    def test_graph_counts_are_filtered_and_exclude_heldout(self):",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "        data=self.query(trait='openness',group='facet');self.assertEqual(data['total'],50)",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "        self.assertEqual(data['groups'],[{'key':'curiosity','count':50}])",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_reasoning_sweep.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 31,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 28,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "def prepared_fixture(monkeypatch):",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "    battery=battery_fixture();target={'model_identity':'a'*64,'runtime_identity':'b'*64,'prepared_identity':'c'*64};calls=[]",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "    def gated(*args,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 32,
+          "text": "        calls.append(kwargs)",
+          "mark": false
+         },
+         {
+          "n": 33,
+          "text": "        return {'jobs':[{'arm':a,'pushes':[] if a=='baseline' else [{'kind':'random' if a=='random' else 'direction','layer':32,'dose':.1}],",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "            'phase':'all','program_sha256':canonical_digest(program(a)),'compatibility_sha256':None if a in ('baseline','random') else 'd'*64,'calibration_sha256':'e'*64} for a in sweep.ARMS]*4}",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 122,
+        "column": 18,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 119,
+          "text": "    from io import BytesIO",
+          "mark": false
+         },
+         {
+          "n": 120,
+          "text": "    path=tmp_path/sweep.PUBLIC_FILE;path.write_bytes(b'{\"redacted\":true}')",
+          "mark": false
+         },
+         {
+          "n": 121,
+          "text": "    revision='a'*40;urls=[]",
+          "mark": false
+         },
+         {
+          "n": 122,
+          "text": "    def run(argv,**kwargs):",
+          "mark": true
+         },
+         {
+          "n": 123,
+          "text": "        assert argv[:3]==['/home/orwel/.local/bin/hf','upload',sweep.REPOSITORY]",
+          "mark": false
+         },
+         {
+          "n": 124,
+          "text": "        assert argv[3:5]==[str(path),sweep.PUBLIC_FILE]",
+          "mark": false
+         },
+         {
+          "n": 125,
+          "text": "        assert kwargs['timeout']==45 and kwargs['check'] is True",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/test_persona_sculptor.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 72,
+        "column": 21,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 69,
+          "text": "        finally:",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "            with self.lock: self.active.remove(url)",
+          "mark": false
+         },
+         {
+          "n": 71,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 72,
+          "text": "    def build(self, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 73,
+          "text": "        return self.app.sculptor.build({'brief': 'A witty captain with perfect recall', 'dials': self.controls,",
+          "mark": false
+         },
+         {
+          "n": 74,
+          "text": "            'layers': [0, 1], 'count': 6, 'dose_budget': .5, **kwargs})",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 248,
+        "column": 38,
+        "ruleId": "ANN003",
+        "message": "Missing type annotation for `**kwargs`",
+        "lines": [
+         {
+          "n": 245,
+          "text": "            with self.assertRaisesRegex(ValueError, 'smoke'): self.app.sculptor.submit({**value, 'max_tokens': 256})",
+          "mark": false
+         },
+         {
+          "n": 246,
+          "text": "            for change in ({'candidate_ids': [{}]}, {'build_id': {}}, {'prompts': [{'prompt_id': {}}]}):",
+          "mark": false
+         },
+         {
+          "n": 247,
+          "text": "                with self.subTest(change=change), self.assertRaises(ValueError): self.app.sculptor.submit({**value, **change})",
+          "mark": false
+         },
+         {
+          "n": 248,
+          "text": "            def mismatch(url, *args, **kwargs):",
+          "mark": true
+         },
+         {
+          "n": 249,
+          "text": "                result = self.descriptor(url); result['data'][0]['flare']['runtime_identity'] = '0' * 64; return result",
+          "mark": false
+         },
+         {
+          "n": 250,
+          "text": "            with patch('persona_sculptor.fetch', mismatch), self.assertRaisesRegex(ValueError, 'runtime'):",
+          "mark": false
+         },
+         {
+          "n": 251,
+          "text": "                self.app.sculptor.submit(value)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   }
  ],
@@ -179,5 +7001,5 @@
  "adjustments": [
   "date-matched-version"
  ],
- "seconds": 3.748
+ "seconds": 4.921
 }

@@ -6,8 +6,18 @@
  "rule": "TID251",
  "checked_out": "17199d6b61b55becd19d19a6426d748632a7a0c4",
  "install": {
-  "kind": "installed",
-  "version": "0.8.1"
+  "outcome": "installed",
+  "path": "as-designed",
+  "version": "0.8.1",
+  "versions": {},
+  "plugins": {},
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "installed"
+   }
+  ],
+  "adjustments": []
  },
  "readings": [
   {
@@ -43,6 +53,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -58,6 +69,690 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "forms_pro/api/team/test_invitations.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 54,
+        "column": 19,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 51,
+          "text": "        super().tearDown()",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "    def _make_accepted_invitation(self, invitee: Document, owner: Document) -> Document:",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "        inv_doc = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 55,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "                \"doctype\": \"User Invitation\",",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "                \"email\": invitee.name,",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 221,
+        "column": 20,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 218,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 219,
+          "text": "        add_member_to_team_via_invitation(team_id=team.name, invite_id=inv_doc.name)",
+          "mark": false
+         },
+         {
+          "n": 220,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "        team_doc = frappe.get_doc(\"FP Team\", team.name)",
+          "mark": true
+         },
+         {
+          "n": 222,
+          "text": "        self.assertIn(invitee.name, [row.user for row in team_doc.users])",
+          "mark": false
+         },
+         {
+          "n": 223,
+          "text": "        self.assertEqual(frappe.local.response.get(\"type\"), \"redirect\")",
+          "mark": false
+         },
+         {
+          "n": 224,
+          "text": "        self.assertEqual(frappe.local.response.get(\"location\"), \"/forms\")",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 248,
+        "column": 20,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 245,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 246,
+          "text": "        after_accept(invitation=inv_doc, user=invitee, user_inserted=True)",
+          "mark": false
+         },
+         {
+          "n": 247,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 248,
+          "text": "        team_doc = frappe.get_doc(\"FP Team\", team.name)",
+          "mark": true
+         },
+         {
+          "n": 249,
+          "text": "        self.assertIn(invitee.name, [row.user for row in team_doc.users])",
+          "mark": false
+         },
+         {
+          "n": 250,
+          "text": "        self.assertEqual(inv_doc.redirect_to_path, \"/forms\")",
+          "mark": false
+         },
+         {
+          "n": 251,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 14,
+        "column": 11,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 11,
+          "text": "    fieldtype: str, label: str = \"Test Field\", fieldname: str = \"test_field\", options: str | None = None",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "):",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "    \"\"\"Build an in-memory FormField document without inserting.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    doc = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 15,
+          "text": "        {",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "            \"doctype\": \"Form Field\",",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "            \"fieldtype\": fieldtype,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form/test_form.py": {
+      "total": 12,
+      "capped": true,
+      "items": [
+       {
+        "line": 28,
+        "column": 26,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 25,
+          "text": "        self.test_team = get_user_teams(self.test_user)[0][\"name\"]",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "        # Create a test Form",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        self.test_form = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "                \"doctype\": \"Form\",",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "                \"title\": \"Test Form\",",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 54,
+        "column": 19,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 51,
+          "text": "        if frappe.db.exists(\"DocType\", self.test_doctype_name):",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "            return",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "        doctype = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 55,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "                \"doctype\": \"DocType\",",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "                \"name\": self.test_doctype_name,",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 77,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 74,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 76,
+          "text": "        # Check if the field was added to the doctype",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 78,
+          "text": "        field_names = [f.fieldname for f in doctype_doc.fields]",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "        self.assertIn(\"email\", field_names)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 101,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 98,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "        # Check if the fieldname was updated in the doctype",
+          "mark": false
+         },
+         {
+          "n": 101,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 102,
+          "text": "        field_names = [f.fieldname for f in doctype_doc.fields]",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 104,
+          "text": "        self.assertNotIn(\"user_name\", field_names)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 135,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 132,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 133,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 134,
+          "text": "        # Check if properties were updated",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 136,
+          "text": "        phone_field = next(f for f in doctype_doc.fields if f.fieldname == \"phone\")",
+          "mark": false
+         },
+         {
+          "n": 137,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 138,
+          "text": "        self.assertEqual(phone_field.reqd, 1)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/tests/test_page_break.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 68,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 65,
+          "text": "        )",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "        form.save()",
+          "mark": false
+         },
+         {
+          "n": 67,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", form.linked_doctype)",
+          "mark": true
+         },
+         {
+          "n": 69,
+          "text": "        synced = {f.fieldname: f for f in doctype_doc.fields}",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "        self.assertIn(\"step_2\", synced)",
+          "mark": false
+         },
+         {
+          "n": 71,
+          "text": "        self.assertEqual(synced[\"step_2\"].fieldtype, \"Tab Break\")",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/utils/test_form_generator.py": {
+      "total": 7,
+      "capped": true,
+      "items": [
+       {
+        "line": 26,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 23,
+          "text": "    def test_form_generator_initialization_with_doctype(self):",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "        \"\"\"Test FormGenerator initialization with existing DocType\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 27,
+          "text": "        test_doctype.name = \"Test DocType\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 91,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 88,
+          "text": "    def test_generate_uses_existing_doctype_when_provided(self):",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "        \"\"\"Test that generate() uses existing DocType when provided\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 92,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 93,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 94,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 144,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 141,
+          "text": "    def test_generate_with_existing_doctype_complete_flow(self):",
+          "mark": false
+         },
+         {
+          "n": 142,
+          "text": "        \"\"\"Test complete flow when DocType is provided during initialization\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 145,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 270,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 267,
+          "text": "        \"\"\"Test that status field is added to core doctype as a custom field\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 268,
+          "text": "        from forms_pro.utils.form_generator import SUBMISSION_STATUS_FIELDOPTIONS",
+          "mark": false
+         },
+         {
+          "n": 269,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 270,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 271,
+          "text": "        test_doctype.name = \"Test Status Field Doctype\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 272,
+          "text": "        test_doctype.module = \"User Forms\"",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "        test_doctype.custom = False",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 296,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot).",
+        "lines": [
+         {
+          "n": 293,
+          "text": "        )",
+          "mark": false
+         },
+         {
+          "n": 294,
+          "text": "        self.assertIsNotNone(custom_field_id, \"Custom field should be created for doctype\")",
+          "mark": false
+         },
+         {
+          "n": 295,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 296,
+          "text": "        custom_field = frappe.get_doc(\"Custom Field\", custom_field_id)",
+          "mark": true
+         },
+         {
+          "n": 297,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 298,
+          "text": "        self.assertEqual(custom_field.dt, test_doctype.name)",
+          "mark": false
+         },
+         {
+          "n": 299,
+          "text": "        self.assertEqual(custom_field.fieldname, SUBMISSION_STATUS_FIELDOPTIONS[\"fieldname\"])",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -93,6 +788,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -108,6 +804,690 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "forms_pro/api/team/test_invitations.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 54,
+        "column": 19,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 51,
+          "text": "        super().tearDown()",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "    def _make_accepted_invitation(self, invitee: Document, owner: Document) -> Document:",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "        inv_doc = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 55,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "                \"doctype\": \"User Invitation\",",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "                \"email\": invitee.name,",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 221,
+        "column": 20,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 218,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 219,
+          "text": "        add_member_to_team_via_invitation(team_id=team.name, invite_id=inv_doc.name)",
+          "mark": false
+         },
+         {
+          "n": 220,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "        team_doc = frappe.get_doc(\"FP Team\", team.name)",
+          "mark": true
+         },
+         {
+          "n": 222,
+          "text": "        self.assertIn(invitee.name, [row.user for row in team_doc.users])",
+          "mark": false
+         },
+         {
+          "n": 223,
+          "text": "        self.assertEqual(frappe.local.response.get(\"type\"), \"redirect\")",
+          "mark": false
+         },
+         {
+          "n": 224,
+          "text": "        self.assertEqual(frappe.local.response.get(\"location\"), \"/forms\")",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 248,
+        "column": 20,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 245,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 246,
+          "text": "        after_accept(invitation=inv_doc, user=invitee, user_inserted=True)",
+          "mark": false
+         },
+         {
+          "n": 247,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 248,
+          "text": "        team_doc = frappe.get_doc(\"FP Team\", team.name)",
+          "mark": true
+         },
+         {
+          "n": 249,
+          "text": "        self.assertIn(invitee.name, [row.user for row in team_doc.users])",
+          "mark": false
+         },
+         {
+          "n": 250,
+          "text": "        self.assertEqual(inv_doc.redirect_to_path, \"/forms\")",
+          "mark": false
+         },
+         {
+          "n": 251,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 14,
+        "column": 11,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 11,
+          "text": "    fieldtype: str, label: str = \"Test Field\", fieldname: str = \"test_field\", options: str | None = None",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "):",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "    \"\"\"Build an in-memory FormField document without inserting.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    doc = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 15,
+          "text": "        {",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "            \"doctype\": \"Form Field\",",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "            \"fieldtype\": fieldtype,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form/test_form.py": {
+      "total": 12,
+      "capped": true,
+      "items": [
+       {
+        "line": 28,
+        "column": 26,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 25,
+          "text": "        self.test_team = get_user_teams(self.test_user)[0][\"name\"]",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "        # Create a test Form",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        self.test_form = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "                \"doctype\": \"Form\",",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "                \"title\": \"Test Form\",",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 54,
+        "column": 19,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 51,
+          "text": "        if frappe.db.exists(\"DocType\", self.test_doctype_name):",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "            return",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "        doctype = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 55,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "                \"doctype\": \"DocType\",",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "                \"name\": self.test_doctype_name,",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 77,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 74,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 76,
+          "text": "        # Check if the field was added to the doctype",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 78,
+          "text": "        field_names = [f.fieldname for f in doctype_doc.fields]",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "        self.assertIn(\"email\", field_names)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 101,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 98,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "        # Check if the fieldname was updated in the doctype",
+          "mark": false
+         },
+         {
+          "n": 101,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 102,
+          "text": "        field_names = [f.fieldname for f in doctype_doc.fields]",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 104,
+          "text": "        self.assertNotIn(\"user_name\", field_names)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 135,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 132,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 133,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 134,
+          "text": "        # Check if properties were updated",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 136,
+          "text": "        phone_field = next(f for f in doctype_doc.fields if f.fieldname == \"phone\")",
+          "mark": false
+         },
+         {
+          "n": 137,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 138,
+          "text": "        self.assertEqual(phone_field.reqd, 1)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/tests/test_page_break.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 68,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 65,
+          "text": "        )",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "        form.save()",
+          "mark": false
+         },
+         {
+          "n": 67,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", form.linked_doctype)",
+          "mark": true
+         },
+         {
+          "n": 69,
+          "text": "        synced = {f.fieldname: f for f in doctype_doc.fields}",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "        self.assertIn(\"step_2\", synced)",
+          "mark": false
+         },
+         {
+          "n": 71,
+          "text": "        self.assertEqual(synced[\"step_2\"].fieldtype, \"Tab Break\")",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/utils/test_form_generator.py": {
+      "total": 7,
+      "capped": true,
+      "items": [
+       {
+        "line": 26,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests",
+        "lines": [
+         {
+          "n": 23,
+          "text": "    def test_form_generator_initialization_with_doctype(self):",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "        \"\"\"Test FormGenerator initialization with existing DocType\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 27,
+          "text": "        test_doctype.name = \"Test DocType\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 91,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests",
+        "lines": [
+         {
+          "n": 88,
+          "text": "    def test_generate_uses_existing_doctype_when_provided(self):",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "        \"\"\"Test that generate() uses existing DocType when provided\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 92,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 93,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 94,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 144,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests",
+        "lines": [
+         {
+          "n": 141,
+          "text": "    def test_generate_with_existing_doctype_complete_flow(self):",
+          "mark": false
+         },
+         {
+          "n": 142,
+          "text": "        \"\"\"Test complete flow when DocType is provided during initialization\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 145,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 270,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests",
+        "lines": [
+         {
+          "n": 267,
+          "text": "        \"\"\"Test that status field is added to core doctype as a custom field\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 268,
+          "text": "        from forms_pro.utils.form_generator import SUBMISSION_STATUS_FIELDOPTIONS",
+          "mark": false
+         },
+         {
+          "n": 269,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 270,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 271,
+          "text": "        test_doctype.name = \"Test Status Field Doctype\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 272,
+          "text": "        test_doctype.module = \"User Forms\"",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "        test_doctype.custom = False",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 296,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 293,
+          "text": "        )",
+          "mark": false
+         },
+         {
+          "n": 294,
+          "text": "        self.assertIsNotNone(custom_field_id, \"Custom field should be created for doctype\")",
+          "mark": false
+         },
+         {
+          "n": 295,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 296,
+          "text": "        custom_field = frappe.get_doc(\"Custom Field\", custom_field_id)",
+          "mark": true
+         },
+         {
+          "n": 297,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 298,
+          "text": "        self.assertEqual(custom_field.dt, test_doctype.name)",
+          "mark": false
+         },
+         {
+          "n": 299,
+          "text": "        self.assertEqual(custom_field.fieldname, SUBMISSION_STATUS_FIELDOPTIONS[\"fieldname\"])",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -139,6 +1519,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -167,6 +1548,1627 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "forms_pro/api/export/test_export.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 20,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 17,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "from unittest.mock import patch",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 20,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 21,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 22,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "from forms_pro.api.export import export_submissions",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 21,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 18,
+          "text": "from unittest.mock import patch",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 20,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 21,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 22,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "from forms_pro.api.export import export_submissions",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "from forms_pro.api.submission import submit_form_response",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 275,
+        "column": 9,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 272,
+          "text": "        # Comparing against a non-Admin user is essential: if `before` were",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "        # Administrator the assertion would be tautological since the swap",
+          "mark": false
+         },
+         {
+          "n": 274,
+          "text": "        # also lands on Administrator.",
+          "mark": false
+         },
+         {
+          "n": 275,
+          "text": "        from frappe.share import add_docshare",
+          "mark": true
+         },
+         {
+          "n": 276,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 277,
+          "text": "        frappe.set_user(\"Administrator\")",
+          "mark": false
+         },
+         {
+          "n": 278,
+          "text": "        self.form = _create_form()",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/api/form/test_form.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "from frappe.share import add_docshare",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 2,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "from frappe.share import add_docshare",
+          "mark": true
+         },
+         {
+          "n": 3,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from forms_pro.api.form import (",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 3,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "from frappe.share import add_docshare",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from forms_pro.api.form import (",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "    add_form_access,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/api/submission/test_submission_validation.py": {
+      "total": 6,
+      "capped": true,
+      "items": [
+       {
+        "line": 131,
+        "column": 16,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 128,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 129,
+          "text": "class TestValidateFormResponse(unittest.TestCase):",
+          "mark": false
+         },
+         {
+          "n": 130,
+          "text": "    def test_required_field_missing_raises(self):",
+          "mark": false
+         },
+         {
+          "n": 131,
+          "text": "        import frappe",
+          "mark": true
+         },
+         {
+          "n": 132,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 133,
+          "text": "        form = _form(_field(\"name\", reqd=1))",
+          "mark": false
+         },
+         {
+          "n": 134,
+          "text": "        with self.assertRaises(frappe.ValidationError):",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 148,
+        "column": 16,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 145,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "    def test_conditional_show_makes_field_required(self):",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "        \"\"\"A field conditionally required via require_answer must be checked.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "        import frappe",
+          "mark": true
+         },
+         {
+          "n": 149,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "        logic = json.dumps(",
+          "mark": false
+         },
+         {
+          "n": 151,
+          "text": "            {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 184,
+        "column": 16,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 181,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 182,
+          "text": "    def test_multiple_missing_fields_all_reported(self):",
+          "mark": false
+         },
+         {
+          "n": 183,
+          "text": "        \"\"\"All missing required fields should appear in the error, not just the first.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 184,
+          "text": "        import frappe",
+          "mark": true
+         },
+         {
+          "n": 185,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 186,
+          "text": "        form = _form(",
+          "mark": false
+         },
+         {
+          "n": 187,
+          "text": "            _field(\"first_name\", reqd=1),",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 233,
+        "column": 16,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 230,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 231,
+          "text": "    def test_required_data_field_still_validated_when_heading_present(self):",
+          "mark": false
+         },
+         {
+          "n": 232,
+          "text": "        \"\"\"Heading fields being skipped must not suppress validation of adjacent required fields.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 233,
+          "text": "        import frappe",
+          "mark": true
+         },
+         {
+          "n": 234,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 235,
+          "text": "        form = _form(",
+          "mark": false
+         },
+         {
+          "n": 236,
+          "text": "            _field(\"section_title\", fieldtype=\"Heading 1\", reqd=1),",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 259,
+        "column": 16,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 256,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 257,
+          "text": "    def test_required_data_field_still_validated_when_page_break_present(self):",
+          "mark": false
+         },
+         {
+          "n": 258,
+          "text": "        \"\"\"Page Break being skipped must not suppress validation of adjacent required fields.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 259,
+          "text": "        import frappe",
+          "mark": true
+         },
+         {
+          "n": 260,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 261,
+          "text": "        form = _form(",
+          "mark": false
+         },
+         {
+          "n": 262,
+          "text": "            _field(\"step_two\", fieldtype=\"Page Break\"),",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/api/submission/test_submission.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from forms_pro.api.submission import get_all_submissions, get_user_submissions",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 2,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from forms_pro.api.submission import get_all_submissions, get_user_submissions",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from forms_pro.tests import FORMS_PRO_TEST_USER",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/api/team/test_invitations.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 6,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from unittest.mock import patch",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 7,
+          "text": "from faker import Faker",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "from frappe.model.document import Document",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 8,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from faker import Faker",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "from frappe.model.document import Document",
+          "mark": true
+         },
+         {
+          "n": 9,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "from forms_pro.api.team import add_member_to_team_via_invitation, invite_team_members",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 9,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 6,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from faker import Faker",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "from frappe.model.document import Document",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "from forms_pro.api.team import add_member_to_team_via_invitation, invite_team_members",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "from forms_pro.overrides.invitations import after_accept, after_insert",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/api/team/test_team.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from forms_pro.api.team import (",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 2,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from forms_pro.api.team import (",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "    get_team_for_manage,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/api/user/test_user.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 9,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 6,
+          "text": "behavior so future regressions are caught.",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "from forms_pro.api.user import get_current_user, get_user, get_user_teams",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "from forms_pro.tests import FORMS_PRO_TEST_USER",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 4,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "# Copyright (c) 2025, harsh@buildwithhussain.com and contributors",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "# For license information, please see license.txt",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 5,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from forms_pro.forms_pro.doctype.form_field.form_field import FORM_TO_FRAPPE_FIELDTYPE",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 5,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 2,
+          "text": "# For license information, please see license.txt",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from forms_pro.forms_pro.doctype.form_field.form_field import FORM_TO_FRAPPE_FIELDTYPE",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form/test_form.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 4,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "# Copyright (c) 2025, harsh@buildwithhussain.com and Contributors",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "# See license.txt",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 5,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from forms_pro.patches.v0_x.backfill_field_layout import execute as backfill_execute",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 5,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 2,
+          "text": "# See license.txt",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from forms_pro.patches.v0_x.backfill_field_layout import execute as backfill_execute",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "from forms_pro.utils.teams import get_user_teams",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/fp_team_member/test_fp_team_member.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 5,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 2,
+          "text": "# See license.txt",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "# import frappe",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "# On IntegrationTestCase, the doctype test records and all",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "# link-field test record dependencies are recursively loaded",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/fp_team/test_fp_team.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 4,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "# Copyright (c) 2025, harsh@buildwithhussain.com and Contributors",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "# See license.txt",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 5,
+          "text": "from frappe.defaults import get_user_default",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 5,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 2,
+          "text": "# See license.txt",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from frappe.defaults import get_user_default",
+          "mark": true
+         },
+         {
+          "n": 6,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "from forms_pro.tests.factories import FPTeamFactory, UserFactory",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 6,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from frappe.defaults import get_user_default",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 7,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "from forms_pro.tests.factories import FPTeamFactory, UserFactory",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/tests/factories/linked_form_doctype_factory.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 4,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "from typing import Any",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "from faker import Faker",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from frappe.model.document import Document",
+          "mark": true
+         },
+         {
+          "n": 5,
+          "text": "from frappe_factory_bot.frappe_factory_bot.base_factory import BaseFactory",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from forms_pro.utils.form_generator import LINKED_FORM_FIELDOPTIONS, SUBMISSION_STATUS_FIELDOPTIONS",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/tests/factories/user_factory.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 4,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "from typing import Any",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "from faker import Faker",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from frappe.core.doctype.user.user import User",
+          "mark": true
+         },
+         {
+          "n": 5,
+          "text": "from frappe_factory_bot.frappe_factory_bot.base_factory import BaseFactory",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from forms_pro.roles import FORMS_PRO_ROLE",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/tests/factories/user_invitation_factory.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 4,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "from typing import Any",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "from faker import Faker",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from frappe.core.doctype.user_invitation.user_invitation import UserInvitation",
+          "mark": true
+         },
+         {
+          "n": 5,
+          "text": "from frappe_factory_bot.frappe_factory_bot.base_factory import BaseFactory",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from forms_pro.roles import FORMS_PRO_ROLE",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/tests/test_page_break.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from forms_pro.tests.factories.form_factory import FormFactory",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 2,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from forms_pro.tests.factories.form_factory import FormFactory",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/tests/test_roles.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 4,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "# Copyright (c) 2025, harsh@buildwithhussain.com and contributors",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "# For license information, please see license.txt",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 5,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from forms_pro.roles import FORMS_PRO_ROLE",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 5,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 2,
+          "text": "# For license information, please see license.txt",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from forms_pro.roles import FORMS_PRO_ROLE",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "from forms_pro.tests.factories import UserFactory",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/utils/test_form_generator.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 6,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import unittest",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 7,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "from forms_pro.utils.form_generator import FormGenerator",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 7,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 4,
+          "text": "import unittest",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "from forms_pro.utils.form_generator import FormGenerator",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "from forms_pro.utils.teams import get_user_teams",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/utils/test_permissions.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 8,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from forms_pro.tests import FORMS_PRO_TEST_USER",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 2,
+        "column": 1,
+        "ruleId": "TID251",
+        "message": "`frappe` is banned: Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/",
+        "lines": [
+         {
+          "n": 1,
+          "text": "import frappe",
+          "mark": false
+         },
+         {
+          "n": 2,
+          "text": "from frappe.tests import IntegrationTestCase",
+          "mark": true
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "from forms_pro.tests import FORMS_PRO_TEST_USER",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "from forms_pro.tests.factories.form_factory import FormFactory",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -201,6 +3203,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -216,6 +3219,690 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "forms_pro/api/team/test_invitations.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 54,
+        "column": 19,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 51,
+          "text": "        super().tearDown()",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "    def _make_accepted_invitation(self, invitee: Document, owner: Document) -> Document:",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "        inv_doc = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 55,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "                \"doctype\": \"User Invitation\",",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "                \"email\": invitee.name,",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 221,
+        "column": 20,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 218,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 219,
+          "text": "        add_member_to_team_via_invitation(team_id=team.name, invite_id=inv_doc.name)",
+          "mark": false
+         },
+         {
+          "n": 220,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "        team_doc = frappe.get_doc(\"FP Team\", team.name)",
+          "mark": true
+         },
+         {
+          "n": 222,
+          "text": "        self.assertIn(invitee.name, [row.user for row in team_doc.users])",
+          "mark": false
+         },
+         {
+          "n": 223,
+          "text": "        self.assertEqual(frappe.local.response.get(\"type\"), \"redirect\")",
+          "mark": false
+         },
+         {
+          "n": 224,
+          "text": "        self.assertEqual(frappe.local.response.get(\"location\"), \"/forms\")",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 248,
+        "column": 20,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 245,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 246,
+          "text": "        after_accept(invitation=inv_doc, user=invitee, user_inserted=True)",
+          "mark": false
+         },
+         {
+          "n": 247,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 248,
+          "text": "        team_doc = frappe.get_doc(\"FP Team\", team.name)",
+          "mark": true
+         },
+         {
+          "n": 249,
+          "text": "        self.assertIn(invitee.name, [row.user for row in team_doc.users])",
+          "mark": false
+         },
+         {
+          "n": 250,
+          "text": "        self.assertEqual(inv_doc.redirect_to_path, \"/forms\")",
+          "mark": false
+         },
+         {
+          "n": 251,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 14,
+        "column": 11,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 11,
+          "text": "    fieldtype: str, label: str = \"Test Field\", fieldname: str = \"test_field\", options: str | None = None",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "):",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "    \"\"\"Build an in-memory FormField document without inserting.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    doc = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 15,
+          "text": "        {",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "            \"doctype\": \"Form Field\",",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "            \"fieldtype\": fieldtype,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form/test_form.py": {
+      "total": 12,
+      "capped": true,
+      "items": [
+       {
+        "line": 28,
+        "column": 26,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 25,
+          "text": "        self.test_team = get_user_teams(self.test_user)[0][\"name\"]",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "        # Create a test Form",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        self.test_form = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "                \"doctype\": \"Form\",",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "                \"title\": \"Test Form\",",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 54,
+        "column": 19,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 51,
+          "text": "        if frappe.db.exists(\"DocType\", self.test_doctype_name):",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "            return",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "        doctype = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 55,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "                \"doctype\": \"DocType\",",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "                \"name\": self.test_doctype_name,",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 77,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 74,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 76,
+          "text": "        # Check if the field was added to the doctype",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 78,
+          "text": "        field_names = [f.fieldname for f in doctype_doc.fields]",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "        self.assertIn(\"email\", field_names)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 101,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 98,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "        # Check if the fieldname was updated in the doctype",
+          "mark": false
+         },
+         {
+          "n": 101,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 102,
+          "text": "        field_names = [f.fieldname for f in doctype_doc.fields]",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 104,
+          "text": "        self.assertNotIn(\"user_name\", field_names)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 135,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 132,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 133,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 134,
+          "text": "        # Check if properties were updated",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 136,
+          "text": "        phone_field = next(f for f in doctype_doc.fields if f.fieldname == \"phone\")",
+          "mark": false
+         },
+         {
+          "n": 137,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 138,
+          "text": "        self.assertEqual(phone_field.reqd, 1)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/tests/test_page_break.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 68,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 65,
+          "text": "        )",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "        form.save()",
+          "mark": false
+         },
+         {
+          "n": 67,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", form.linked_doctype)",
+          "mark": true
+         },
+         {
+          "n": 69,
+          "text": "        synced = {f.fieldname: f for f in doctype_doc.fields}",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "        self.assertIn(\"step_2\", synced)",
+          "mark": false
+         },
+         {
+          "n": 71,
+          "text": "        self.assertEqual(synced[\"step_2\"].fieldtype, \"Tab Break\")",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/utils/test_form_generator.py": {
+      "total": 7,
+      "capped": true,
+      "items": [
+       {
+        "line": 26,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; use factories from forms_pro/tests/factories",
+        "lines": [
+         {
+          "n": 23,
+          "text": "    def test_form_generator_initialization_with_doctype(self):",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "        \"\"\"Test FormGenerator initialization with existing DocType\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 27,
+          "text": "        test_doctype.name = \"Test DocType\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 91,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; use factories from forms_pro/tests/factories",
+        "lines": [
+         {
+          "n": 88,
+          "text": "    def test_generate_uses_existing_doctype_when_provided(self):",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "        \"\"\"Test that generate() uses existing DocType when provided\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 92,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 93,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 94,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 144,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; use factories from forms_pro/tests/factories",
+        "lines": [
+         {
+          "n": 141,
+          "text": "    def test_generate_with_existing_doctype_complete_flow(self):",
+          "mark": false
+         },
+         {
+          "n": 142,
+          "text": "        \"\"\"Test complete flow when DocType is provided during initialization\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 145,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 270,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; use factories from forms_pro/tests/factories",
+        "lines": [
+         {
+          "n": 267,
+          "text": "        \"\"\"Test that status field is added to core doctype as a custom field\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 268,
+          "text": "        from forms_pro.utils.form_generator import SUBMISSION_STATUS_FIELDOPTIONS",
+          "mark": false
+         },
+         {
+          "n": 269,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 270,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 271,
+          "text": "        test_doctype.name = \"Test Status Field Doctype\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 272,
+          "text": "        test_doctype.module = \"User Forms\"",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "        test_doctype.custom = False",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 296,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Do not use frappe.get_doc in tests; use factories",
+        "lines": [
+         {
+          "n": 293,
+          "text": "        )",
+          "mark": false
+         },
+         {
+          "n": 294,
+          "text": "        self.assertIsNotNone(custom_field_id, \"Custom field should be created for doctype\")",
+          "mark": false
+         },
+         {
+          "n": 295,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 296,
+          "text": "        custom_field = frappe.get_doc(\"Custom Field\", custom_field_id)",
+          "mark": true
+         },
+         {
+          "n": 297,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 298,
+          "text": "        self.assertEqual(custom_field.dt, test_doctype.name)",
+          "mark": false
+         },
+         {
+          "n": 299,
+          "text": "        self.assertEqual(custom_field.fieldname, SUBMISSION_STATUS_FIELDOPTIONS[\"fieldname\"])",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -250,6 +3937,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -265,6 +3953,690 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "forms_pro/api/team/test_invitations.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 54,
+        "column": 19,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 51,
+          "text": "        super().tearDown()",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "    def _make_accepted_invitation(self, invitee: Document, owner: Document) -> Document:",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "        inv_doc = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 55,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "                \"doctype\": \"User Invitation\",",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "                \"email\": invitee.name,",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 221,
+        "column": 20,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 218,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 219,
+          "text": "        add_member_to_team_via_invitation(team_id=team.name, invite_id=inv_doc.name)",
+          "mark": false
+         },
+         {
+          "n": 220,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "        team_doc = frappe.get_doc(\"FP Team\", team.name)",
+          "mark": true
+         },
+         {
+          "n": 222,
+          "text": "        self.assertIn(invitee.name, [row.user for row in team_doc.users])",
+          "mark": false
+         },
+         {
+          "n": 223,
+          "text": "        self.assertEqual(frappe.local.response.get(\"type\"), \"redirect\")",
+          "mark": false
+         },
+         {
+          "n": 224,
+          "text": "        self.assertEqual(frappe.local.response.get(\"location\"), \"/forms\")",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 248,
+        "column": 20,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 245,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 246,
+          "text": "        after_accept(invitation=inv_doc, user=invitee, user_inserted=True)",
+          "mark": false
+         },
+         {
+          "n": 247,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 248,
+          "text": "        team_doc = frappe.get_doc(\"FP Team\", team.name)",
+          "mark": true
+         },
+         {
+          "n": 249,
+          "text": "        self.assertIn(invitee.name, [row.user for row in team_doc.users])",
+          "mark": false
+         },
+         {
+          "n": 250,
+          "text": "        self.assertEqual(inv_doc.redirect_to_path, \"/forms\")",
+          "mark": false
+         },
+         {
+          "n": 251,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form_field/test_form_field.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 14,
+        "column": 11,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 11,
+          "text": "    fieldtype: str, label: str = \"Test Field\", fieldname: str = \"test_field\", options: str | None = None",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "):",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "    \"\"\"Build an in-memory FormField document without inserting.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    doc = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 15,
+          "text": "        {",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "            \"doctype\": \"Form Field\",",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "            \"fieldtype\": fieldtype,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/forms_pro/doctype/form/test_form.py": {
+      "total": 12,
+      "capped": true,
+      "items": [
+       {
+        "line": 28,
+        "column": 26,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 25,
+          "text": "        self.test_team = get_user_teams(self.test_user)[0][\"name\"]",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "        # Create a test Form",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        self.test_form = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "                \"doctype\": \"Form\",",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "                \"title\": \"Test Form\",",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 54,
+        "column": 19,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 51,
+          "text": "        if frappe.db.exists(\"DocType\", self.test_doctype_name):",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "            return",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "        doctype = frappe.get_doc(",
+          "mark": true
+         },
+         {
+          "n": 55,
+          "text": "            {",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "                \"doctype\": \"DocType\",",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "                \"name\": self.test_doctype_name,",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 77,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 74,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 76,
+          "text": "        # Check if the field was added to the doctype",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 78,
+          "text": "        field_names = [f.fieldname for f in doctype_doc.fields]",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "        self.assertIn(\"email\", field_names)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 101,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 98,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "        # Check if the fieldname was updated in the doctype",
+          "mark": false
+         },
+         {
+          "n": 101,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 102,
+          "text": "        field_names = [f.fieldname for f in doctype_doc.fields]",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 104,
+          "text": "        self.assertNotIn(\"user_name\", field_names)",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 135,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 132,
+          "text": "        self.test_form.save()",
+          "mark": false
+         },
+         {
+          "n": 133,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 134,
+          "text": "        # Check if properties were updated",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", self.test_doctype_name)",
+          "mark": true
+         },
+         {
+          "n": 136,
+          "text": "        phone_field = next(f for f in doctype_doc.fields if f.fieldname == \"phone\")",
+          "mark": false
+         },
+         {
+          "n": 137,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 138,
+          "text": "        self.assertEqual(phone_field.reqd, 1)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/tests/test_page_break.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 68,
+        "column": 23,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 65,
+          "text": "        )",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "        form.save()",
+          "mark": false
+         },
+         {
+          "n": 67,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "        doctype_doc = frappe.get_doc(\"DocType\", form.linked_doctype)",
+          "mark": true
+         },
+         {
+          "n": 69,
+          "text": "        synced = {f.fieldname: f for f in doctype_doc.fields}",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "        self.assertIn(\"step_2\", synced)",
+          "mark": false
+         },
+         {
+          "n": 71,
+          "text": "        self.assertEqual(synced[\"step_2\"].fieldtype, \"Tab Break\")",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "forms_pro/utils/test_form_generator.py": {
+      "total": 7,
+      "capped": true,
+      "items": [
+       {
+        "line": 26,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 23,
+          "text": "    def test_form_generator_initialization_with_doctype(self):",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "        \"\"\"Test FormGenerator initialization with existing DocType\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 27,
+          "text": "        test_doctype.name = \"Test DocType\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 91,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 88,
+          "text": "    def test_generate_uses_existing_doctype_when_provided(self):",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "        \"\"\"Test that generate() uses existing DocType when provided\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 92,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 93,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 94,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 144,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 141,
+          "text": "    def test_generate_with_existing_doctype_complete_flow(self):",
+          "mark": false
+         },
+         {
+          "n": 142,
+          "text": "        \"\"\"Test complete flow when DocType is provided during initialization\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 145,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 270,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Do not use frappe.new_doc in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 267,
+          "text": "        \"\"\"Test that status field is added to core doctype as a custom field\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 268,
+          "text": "        from forms_pro.utils.form_generator import SUBMISSION_STATUS_FIELDOPTIONS",
+          "mark": false
+         },
+         {
+          "n": 269,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 270,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 271,
+          "text": "        test_doctype.name = \"Test Status Field Doctype\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 272,
+          "text": "        test_doctype.module = \"User Forms\"",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "        test_doctype.custom = False",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 296,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.get_doc` is banned: Avoid using frappe.get_doc(...).insert() in tests; build documents via factories.",
+        "lines": [
+         {
+          "n": 293,
+          "text": "        )",
+          "mark": false
+         },
+         {
+          "n": 294,
+          "text": "        self.assertIsNotNone(custom_field_id, \"Custom field should be created for doctype\")",
+          "mark": false
+         },
+         {
+          "n": 295,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 296,
+          "text": "        custom_field = frappe.get_doc(\"Custom Field\", custom_field_id)",
+          "mark": true
+         },
+         {
+          "n": 297,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 298,
+          "text": "        self.assertEqual(custom_field.dt, test_doctype.name)",
+          "mark": false
+         },
+         {
+          "n": 299,
+          "text": "        self.assertEqual(custom_field.fieldname, SUBMISSION_STATUS_FIELDOPTIONS[\"fieldname\"])",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -296,6 +4668,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -307,6 +4680,236 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "forms_pro/utils/test_form_generator.py": {
+      "total": 5,
+      "capped": false,
+      "items": [
+       {
+        "line": 26,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests.",
+        "lines": [
+         {
+          "n": 23,
+          "text": "    def test_form_generator_initialization_with_doctype(self):",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "        \"\"\"Test FormGenerator initialization with existing DocType\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 27,
+          "text": "        test_doctype.name = \"Test DocType\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 91,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests.",
+        "lines": [
+         {
+          "n": 88,
+          "text": "    def test_generate_uses_existing_doctype_when_provided(self):",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "        \"\"\"Test that generate() uses existing DocType when provided\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 91,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 92,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 93,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 94,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 144,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests.",
+        "lines": [
+         {
+          "n": 141,
+          "text": "    def test_generate_with_existing_doctype_complete_flow(self):",
+          "mark": false
+         },
+         {
+          "n": 142,
+          "text": "        \"\"\"Test complete flow when DocType is provided during initialization\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "        # Create a test DocType",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 145,
+          "text": "        test_doctype.name = \"Test\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "        test_doctype.module = \"Forms Pro\"",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "        test_doctype.custom = True",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 270,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests.",
+        "lines": [
+         {
+          "n": 267,
+          "text": "        \"\"\"Test that status field is added to core doctype as a custom field\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 268,
+          "text": "        from forms_pro.utils.form_generator import SUBMISSION_STATUS_FIELDOPTIONS",
+          "mark": false
+         },
+         {
+          "n": 269,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 270,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 271,
+          "text": "        test_doctype.name = \"Test Status Field Doctype\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 272,
+          "text": "        test_doctype.module = \"User Forms\"",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "        test_doctype.custom = False",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 312,
+        "column": 24,
+        "ruleId": "TID251",
+        "message": "`frappe.new_doc` is banned: Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests.",
+        "lines": [
+         {
+          "n": 309,
+          "text": "        \"\"\"Test that linked form field is added to core doctype as a custom field\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 310,
+          "text": "        from forms_pro.utils.form_generator import LINKED_FORM_FIELDOPTIONS",
+          "mark": false
+         },
+         {
+          "n": 311,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 312,
+          "text": "        test_doctype = frappe.new_doc(\"DocType\")",
+          "mark": true
+         },
+         {
+          "n": 313,
+          "text": "        test_doctype.name = \"Test Linked Form Doctype\" + frappe.utils.random_string(8)",
+          "mark": false
+         },
+         {
+          "n": 314,
+          "text": "        test_doctype.module = \"User Forms\"",
+          "mark": false
+         },
+         {
+          "n": 315,
+          "text": "        test_doctype.custom = False",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   }
  ],
@@ -479,5 +5082,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 2.197
+ "seconds": 2.444
 }

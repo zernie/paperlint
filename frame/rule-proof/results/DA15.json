@@ -134,6 +134,2664 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "backend/controllers/podController.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 617,
+        "column": 22,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 614,
+          "text": "        const { assertInstalledAgentMayJoinPod } = require('../services/outsiderGrantAgentJoinPolicy');",
+          "mark": false
+         },
+         {
+          "n": 615,
+          "text": "        try {",
+          "mark": false
+         },
+         {
+          "n": 616,
+          "text": "          await assertInstalledAgentMayJoinPod(",
+          "mark": false
+         },
+         {
+          "n": 617,
+          "text": "            pod._id, joiningUser.botMetadata?.agentName, joiningUser.botMetadata?.instanceId,",
+          "mark": true
+         },
+         {
+          "n": 618,
+          "text": "          );",
+          "mark": false
+         },
+         {
+          "n": 619,
+          "text": "        } catch (joinError: any) {",
+          "mark": false
+         },
+         {
+          "n": 620,
+          "text": "          if (joinError?.code === 'outsider_grant_non_native_agent_join') {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/controllers/reactionController.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 173,
+        "column": 30,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 170,
+          "text": "    // HTTP auth and the agent WebSocket derive different fallbacks. Do not",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "    // enqueue a receipt either delivery path might strand; leave a visible",
+          "mark": false
+         },
+         {
+          "n": 172,
+          "text": "    // operational signal instead of silently treating it as delivered.",
+          "mark": false
+         },
+         {
+          "n": 173,
+          "text": "    const agentName = String(author.botMetadata?.agentName || '').trim().toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 174,
+          "text": "    if (!agentName) {",
+          "mark": false
+         },
+         {
+          "n": 175,
+          "text": "      // eslint-disable-next-line no-console",
+          "mark": false
+         },
+         {
+          "n": 176,
+          "text": "      console.warn('[reactionController] agent acknowledgement skipped: missing botMetadata.agentName', authorUserId);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/agentEnsemble.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 166,
+        "column": 27,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 163,
+          "text": "  try {",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "    const { podId } = req.params || {};",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "    const { ensembleId, agentType, instanceId, content, messageId } = (req.body || {}) as { ensembleId?: string; agentType?: string; instanceId?: string; content?: string; messageId?: string };",
+          "mark": false
+         },
+         {
+          "n": 166,
+          "text": "    const authAgentType = req.agentUser?.botMetadata?.agentName || req.agentInstallation?.agentName;",
+          "mark": true
+         },
+         {
+          "n": 167,
+          "text": "    const authInstanceId = req.agentUser?.botMetadata?.instanceId || req.agentInstallation?.instanceId || 'default';",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "    if (authAgentType !== agentType || authInstanceId !== (instanceId || 'default')) {",
+          "mark": false
+         },
+         {
+          "n": 169,
+          "text": "      return res.status(403).json({ error: 'Agent identity mismatch', expected: `${authAgentType}:${authInstanceId}`, received: `${agentType}:${instanceId || 'default'}` });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/agentHooks.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 43,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 40,
+          "text": "const resolveIdentity = (req: any): { agentId: string; agentName: string; instanceId: string } => ({",
+          "mark": false
+         },
+         {
+          "n": 41,
+          "text": "  agentId: String(req.agentUser?._id || req.agentUser?.id || '').trim(),",
+          "mark": false
+         },
+         {
+          "n": 42,
+          "text": "  agentName: normalize(",
+          "mark": false
+         },
+         {
+          "n": 43,
+          "text": "    req.agentUser?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 44,
+          "text": "      || req.agentInstallation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 45,
+          "text": "      || req.agentUser?.username,",
+          "mark": false
+         },
+         {
+          "n": 46,
+          "text": "  ),",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/agentsRuntime.ts": {
+      "total": 10,
+      "capped": true,
+      "items": [
+       {
+        "line": 299,
+        "column": 36,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 296,
+          "text": "    return { error: res.status(400).json({ message: 'agentName and instanceId must be strings' }) };",
+          "mark": false
+         },
+         {
+          "n": 297,
+          "text": "  }",
+          "mark": false
+         },
+         {
+          "n": 298,
+          "text": "  const identity = {",
+          "mark": false
+         },
+         {
+          "n": 299,
+          "text": "    agentName: String(agentName || user.botMetadata?.agentName || user.username),",
+          "mark": true
+         },
+         {
+          "n": 300,
+          "text": "    instanceId: String(instanceId || user.botMetadata?.instanceId || 'default'),",
+          "mark": false
+         },
+         {
+          "n": 301,
+          "text": "  };",
+          "mark": false
+         },
+         {
+          "n": 302,
+          "text": "  const expectedUsername = AgentIdentityService.buildAgentUsername(identity.agentName, identity.instanceId);",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 379,
+        "column": 8,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 376,
+          "text": "const resolveClaimIdentity = (req: any) => ({",
+          "mark": false
+         },
+         {
+          "n": 377,
+          "text": "  agentName: String(",
+          "mark": false
+         },
+         {
+          "n": 378,
+          "text": "    req.agentInstallation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 379,
+          "text": "    || req.agentUser?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 380,
+          "text": "    || req.agentUser?.username || '',",
+          "mark": false
+         },
+         {
+          "n": 381,
+          "text": "  ).toLowerCase(),",
+          "mark": false
+         },
+         {
+          "n": 382,
+          "text": "  instanceId: String(",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 555,
+        "column": 10,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 552,
+          "text": "    const agentInstallation = req.agentInstallation;",
+          "mark": false
+         },
+         {
+          "n": 553,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 554,
+          "text": "    const agentName = agentInstallation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 555,
+          "text": "      || req.agentUser?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 556,
+          "text": "      || req.agentUser?.botMetadata?.agentType",
+          "mark": false
+         },
+         {
+          "n": 557,
+          "text": "      || req.agentUser?.username;",
+          "mark": false
+         },
+         {
+          "n": 558,
+          "text": "    const instanceId = agentInstallation?.instanceId",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 647,
+        "column": 10,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 644,
+          "text": "    const installation = req.agentInstallation;",
+          "mark": false
+         },
+         {
+          "n": 645,
+          "text": "    const agentUser = req.agentUser;",
+          "mark": false
+         },
+         {
+          "n": 646,
+          "text": "    const agentName = installation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 647,
+          "text": "      || agentUser?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 648,
+          "text": "      || agentUser?.botMetadata?.agentType",
+          "mark": false
+         },
+         {
+          "n": 649,
+          "text": "      || agentUser?.username;",
+          "mark": false
+         },
+         {
+          "n": 650,
+          "text": "    const instanceId = installation?.instanceId",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1219,
+        "column": 20,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 1216,
+          "text": "      // falls through to `username`, the right answer.",
+          "mark": false
+         },
+         {
+          "n": 1217,
+          "text": "      targetMeta = {",
+          "mark": false
+         },
+         {
+          "n": 1218,
+          "text": "        isBot: !!lookup.isBot,",
+          "mark": false
+         },
+         {
+          "n": 1219,
+          "text": "        agentName: lookup.botMetadata?.agentName || undefined,",
+          "mark": true
+         },
+         {
+          "n": 1220,
+          "text": "        instanceId: lookup.botMetadata?.instanceId || 'default',",
+          "mark": false
+         },
+         {
+          "n": 1221,
+          "text": "        displayName: AgentIdentityService.resolveAgentDisplayLabel(",
+          "mark": false
+         },
+         {
+          "n": 1222,
+          "text": "          lookup,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/contextApi.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 40,
+        "column": 49,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 37,
+          "text": "});",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 39,
+          "text": "const resolveAgentContext = (user: AuthReq['user'] | null) => user?.isBot",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": "  ? { agentName: user.botMetadata?.agentType || user.botMetadata?.agentName || user.username, instanceId: user.botMetadata?.instanceId || 'default' }",
+          "mark": true
+         },
+         {
+          "n": 41,
+          "text": "  : null;",
+          "mark": false
+         },
+         {
+          "n": 42,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 43,
+          "text": "const findMembership = (pod: { members?: Array<unknown> }, userId: unknown) => pod.members?.find((m) => {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/hostedMcpOperatorKey.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 48,
+        "column": 28,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 45,
+          "text": "  // The identity comes from the bot's own row, never the body, and is lowercased",
+          "mark": false
+         },
+         {
+          "n": 46,
+          "text": "  // as credentials.ts does. Refused before the probe, so a refused caller's key",
+          "mark": false
+         },
+         {
+          "n": 47,
+          "text": "  // never reaches the vendor.",
+          "mark": false
+         },
+         {
+          "n": 48,
+          "text": "  const agentName = String(agent?.botMetadata?.agentName || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 49,
+          "text": "  const instanceId = String(agent?.botMetadata?.instanceId || '');",
+          "mark": false
+         },
+         {
+          "n": 50,
+          "text": "  if (!agent || !agentName || !instanceId) {",
+          "mark": false
+         },
+         {
+          "n": 51,
+          "text": "    return res.status(400).json({ error: 'invalid_agent', message: 'agentId must name an agent' });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/mcpGrants.ts": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 107,
+        "column": 43,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 104,
+          "text": "  const identity = {",
+          "mark": false
+         },
+         {
+          "n": 105,
+          "text": "    grantId: String(req.params.grantId),",
+          "mark": false
+         },
+         {
+          "n": 106,
+          "text": "    agentUserId,",
+          "mark": false
+         },
+         {
+          "n": 107,
+          "text": "    agentName: installation?.agentName || agent?.botMetadata?.agentName || agent?.username,",
+          "mark": true
+         },
+         {
+          "n": 108,
+          "text": "    instanceId: installation?.instanceId || agent?.botMetadata?.instanceId || 'default',",
+          "mark": false
+         },
+         {
+          "n": 109,
+          "text": "  };",
+          "mark": false
+         },
+         {
+          "n": 110,
+          "text": "  try {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 148,
+        "column": 45,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 145,
+          "text": "    const identity = {",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "      grantId: String(req.params.grantId),",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "      agentUserId,",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "      agentName: installation?.agentName || agent?.botMetadata?.agentName || agent?.username,",
+          "mark": true
+         },
+         {
+          "n": 149,
+          "text": "      instanceId: installation?.instanceId || agent?.botMetadata?.instanceId || 'default',",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "    };",
+          "mark": false
+         },
+         {
+          "n": 151,
+          "text": "    const listed = await listToolsForGrant(identity);",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 190,
+        "column": 8,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 187,
+          "text": "  const agentUserId = String(agent?._id || '');",
+          "mark": false
+         },
+         {
+          "n": 188,
+          "text": "  if (!agentUserId) return res.status(401).json({ error: 'agent_identity_required' });",
+          "mark": false
+         },
+         {
+          "n": 189,
+          "text": "  const agentName = installation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 190,
+          "text": "    || agent?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 191,
+          "text": "    || agent?.username;",
+          "mark": false
+         },
+         {
+          "n": 192,
+          "text": "  const instanceId = installation?.instanceId",
+          "mark": false
+         },
+         {
+          "n": 193,
+          "text": "    || agent?.botMetadata?.instanceId",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/podInvites.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 274,
+        "column": 22,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 271,
+          "text": "      if (joiningUser?.isBot || joiningUser?.botType) {",
+          "mark": false
+         },
+         {
+          "n": 272,
+          "text": "        try {",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "          await assertInstalledAgentMayJoinPod(",
+          "mark": false
+         },
+         {
+          "n": 274,
+          "text": "            pod._id, joiningUser.botMetadata?.agentName, joiningUser.botMetadata?.instanceId,",
+          "mark": true
+         },
+         {
+          "n": 275,
+          "text": "          );",
+          "mark": false
+         },
+         {
+          "n": 276,
+          "text": "        } catch (joinError: any) {",
+          "mark": false
+         },
+         {
+          "n": 277,
+          "text": "          if (joinError?.code === 'outsider_grant_non_native_agent_join') {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/pods.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 576,
+        "column": 29,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 573,
+          "text": "      .lean();",
+          "mark": false
+         },
+         {
+          "n": 574,
+          "text": "    const userTokensByIdentity = new Map<string, Array<{ lastListenedAt?: Date }>>();",
+          "mark": false
+         },
+         {
+          "n": 575,
+          "text": "    (agentUsers || []).forEach((u: any) => {",
+          "mark": false
+         },
+         {
+          "n": 576,
+          "text": "      const key = `${String(u.botMetadata?.agentName || '').toLowerCase()}:${String(u.botMetadata?.instanceId || 'default').toLowerCase()}`;",
+          "mark": true
+         },
+         {
+          "n": 577,
+          "text": "      userTokensByIdentity.set(key, u.agentRuntimeTokens || []);",
+          "mark": false
+         },
+         {
+          "n": 578,
+          "text": "    });",
+          "mark": false
+         },
+         {
+          "n": 579,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/registry/install.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 342,
+        "column": 13,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 339,
+          "text": "      // Do not let the first new installer claim its User and memory.",
+          "mark": false
+         },
+         {
+          "n": 340,
+          "text": "      if ((existingPrincipal && (!existingPrincipal.botMetadata?.ownerUserId",
+          "mark": false
+         },
+         {
+          "n": 341,
+          "text": "          || String(existingPrincipal.botMetadata.ownerUserId) !== String(userId)))",
+          "mark": false
+         },
+         {
+          "n": 342,
+          "text": "        || (existingPrincipal?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 343,
+          "text": "          && existingPrincipal.botMetadata.agentName !== resolvedType)",
+          "mark": false
+         },
+         {
+          "n": 344,
+          "text": "        || (existingPrincipal?.botMetadata?.instanceId",
+          "mark": false
+         },
+         {
+          "n": 345,
+          "text": "          && existingPrincipal.botMetadata.instanceId !== normalizedInstanceId)) {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 343,
+        "column": 14,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 340,
+          "text": "      if ((existingPrincipal && (!existingPrincipal.botMetadata?.ownerUserId",
+          "mark": false
+         },
+         {
+          "n": 341,
+          "text": "          || String(existingPrincipal.botMetadata.ownerUserId) !== String(userId)))",
+          "mark": false
+         },
+         {
+          "n": 342,
+          "text": "        || (existingPrincipal?.botMetadata?.agentName",
+          "mark": false
+         },
+         {
+          "n": 343,
+          "text": "          && existingPrincipal.botMetadata.agentName !== resolvedType)",
+          "mark": true
+         },
+         {
+          "n": 344,
+          "text": "        || (existingPrincipal?.botMetadata?.instanceId",
+          "mark": false
+         },
+         {
+          "n": 345,
+          "text": "          && existingPrincipal.botMetadata.instanceId !== normalizedInstanceId)) {",
+          "mark": false
+         },
+         {
+          "n": 346,
+          "text": "        return res.status(409).json({",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/registry/pod-agents.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 85,
+        "column": 25,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 82,
+          "text": "      const username = AgentIdentityService.buildAgentUsername(resolvedType, instanceId);",
+          "mark": false
+         },
+         {
+          "n": 83,
+          "text": "      const candidateUser = await User.findOne({ username, isBot: true })",
+          "mark": false
+         },
+         {
+          "n": 84,
+          "text": "        .select('_id agentRuntimeTokens botMetadata').lean();",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "      const agentUser = candidateUser?.botMetadata?.agentName === resolvedType",
+          "mark": true
+         },
+         {
+          "n": 86,
+          "text": "        && candidateUser?.botMetadata?.instanceId === instanceId ? candidateUser : null;",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "      const hasProfile = await AgentProfile.exists({ agentId: buildAgentProfileId(name, instanceId), podId });",
+          "mark": false
+         },
+         {
+          "n": 88,
+          "text": "      const hasMembership = agentUser && pod.members?.some((member: any) => (",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/showcase.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 150,
+        "column": 18,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 147,
+          "text": "  if (isBot) {",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "    return {",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "      ...base,",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "      agentName: m.botMetadata?.agentName,",
+          "mark": true
+         },
+         {
+          "n": 151,
+          "text": "      instanceId: m.botMetadata?.instanceId,",
+          "mark": false
+         },
+         {
+          "n": 152,
+          "text": "    };",
+          "mark": false
+         },
+         {
+          "n": 153,
+          "text": "  }",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 172,
+        "column": 20,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 169,
+          "text": "      .filter((m) => !!m.isBot)",
+          "mark": false
+         },
+         {
+          "n": 170,
+          "text": "      .map((m) => ({",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "        displayName: resolveAgentDisplayLabel(m, m.username),",
+          "mark": false
+         },
+         {
+          "n": 172,
+          "text": "        agentName: m.botMetadata?.agentName,",
+          "mark": true
+         },
+         {
+          "n": 173,
+          "text": "        instanceId: m.botMetadata?.instanceId,",
+          "mark": false
+         },
+         {
+          "n": 174,
+          "text": "        profilePicture: m.profilePicture || 'default',",
+          "mark": false
+         },
+         {
+          "n": 175,
+          "text": "      }));",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/tasksApi.ts": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 193,
+        "column": 80,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 190,
+          "text": "});",
+          "mark": false
+         },
+         {
+          "n": 191,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 192,
+          "text": "async function resolveAuthor(req: AuthReq): Promise<string> {",
+          "mark": false
+         },
+         {
+          "n": 193,
+          "text": "  const agentInstance = req.user?.isBot ? (req.user.botMetadata?.instanceId || req.user.botMetadata?.agentName) : null;",
+          "mark": true
+         },
+         {
+          "n": 194,
+          "text": "  if (agentInstance) return agentInstance;",
+          "mark": false
+         },
+         {
+          "n": 195,
+          "text": "  const userId = req.userId || req.user?._id || req.user?.id || req.agentUser?._id;",
+          "mark": false
+         },
+         {
+          "n": 196,
+          "text": "  if (userId) {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 213,
+        "column": 24,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 210,
+          "text": "  if (!userId || !mongoose.isValidObjectId(String(userId))) return undefined;",
+          "mark": false
+         },
+         {
+          "n": 211,
+          "text": "  const row = await User.findById(userId).select('isBot botMetadata').lean() as",
+          "mark": false
+         },
+         {
+          "n": 212,
+          "text": "    { isBot?: boolean; botMetadata?: { agentName?: string; instanceId?: string } } | null;",
+          "mark": false
+         },
+         {
+          "n": 213,
+          "text": "  return row?.isBot && row.botMetadata?.agentName ? boardNameOf(row.botMetadata) : undefined;",
+          "mark": true
+         },
+         {
+          "n": 214,
+          "text": "}",
+          "mark": false
+         },
+         {
+          "n": 215,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 216,
+          "text": "function resolveAgentInstanceId(req: AuthReq): string | null {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 218,
+        "column": 46,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 215,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 216,
+          "text": "function resolveAgentInstanceId(req: AuthReq): string | null {",
+          "mark": false
+         },
+         {
+          "n": 217,
+          "text": "  if (!req.user?.isBot) return null;",
+          "mark": false
+         },
+         {
+          "n": 218,
+          "text": "  return req.user.botMetadata?.instanceId || req.user.botMetadata?.agentName || null;",
+          "mark": true
+         },
+         {
+          "n": 219,
+          "text": "}",
+          "mark": false
+         },
+         {
+          "n": 220,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/users.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 201,
+        "column": 32,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 198,
+          "text": "    let latestConnection: { at: Date; identity: any } | null = null;",
+          "mark": false
+         },
+         {
+          "n": 199,
+          "text": "    let latestToolUse: { at: Date; identity: any } | null = null;",
+          "mark": false
+         },
+         {
+          "n": 200,
+          "text": "    for (const agentUser of agentUsers || []) {",
+          "mark": false
+         },
+         {
+          "n": 201,
+          "text": "      const agentName = String(agentUser.botMetadata?.agentName || '').trim().toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 202,
+          "text": "      const instanceId = String(agentUser.botMetadata?.instanceId || 'default').trim().toLowerCase();",
+          "mark": false
+         },
+         {
+          "n": 203,
+          "text": "      const identity = installationsByIdentity.get(`${agentName}:${instanceId}`);",
+          "mark": false
+         },
+         {
+          "n": 204,
+          "text": "      if (!identity) continue;",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/dedupe-agent-display-names.ts": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 79,
+        "column": 28,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 76,
+          "text": "// instanceId tie falls to agentName, then _id, so the pick never depends on",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "// the order Mongo returns rows.",
+          "mark": false
+         },
+         {
+          "n": 78,
+          "text": "const isFirstPartyDefault = (u: BotUser): boolean => (u.botMetadata?.instanceId || '') === 'default'",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "  && isFirstPartyAgentName(u.botMetadata?.agentName || '');",
+          "mark": true
+         },
+         {
+          "n": 80,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "export const pickCanonical = (users: BotUser[]): BotUser => [...users].sort((a, b) => {",
+          "mark": false
+         },
+         {
+          "n": 82,
+          "text": "  if (isFirstPartyDefault(a) !== isFirstPartyDefault(b)) return isFirstPartyDefault(a) ? -1 : 1;",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 87,
+        "column": 9,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 84,
+          "text": "  const bi = b.botMetadata?.instanceId || '';",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "  if (ai.length !== bi.length) return ai.length - bi.length;",
+          "mark": false
+         },
+         {
+          "n": 86,
+          "text": "  return ai.localeCompare(bi)",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "    || (a.botMetadata?.agentName || '').localeCompare(b.botMetadata?.agentName || '')",
+          "mark": true
+         },
+         {
+          "n": 88,
+          "text": "    || String(a._id).localeCompare(String(b._id));",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "})[0];",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 87,
+        "column": 55,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 84,
+          "text": "  const bi = b.botMetadata?.instanceId || '';",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "  if (ai.length !== bi.length) return ai.length - bi.length;",
+          "mark": false
+         },
+         {
+          "n": 86,
+          "text": "  return ai.localeCompare(bi)",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "    || (a.botMetadata?.agentName || '').localeCompare(b.botMetadata?.agentName || '')",
+          "mark": true
+         },
+         {
+          "n": 88,
+          "text": "    || String(a._id).localeCompare(String(b._id));",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "})[0];",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/migrate-agent-dm-multimember.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 205,
+        "column": 32,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 202,
+          "text": "            .lean<Array<{ _id: unknown; username?: string; botMetadata?: { agentName?: string; instanceId?: string } }>>();",
+          "mark": false
+         },
+         {
+          "n": 203,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 204,
+          "text": "          for (const bot of droppedBots) {",
+          "mark": false
+         },
+         {
+          "n": 205,
+          "text": "            const agentName = (bot.botMetadata?.agentName || bot.username || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 206,
+          "text": "            const instanceId = bot.botMetadata?.instanceId || 'default';",
+          "mark": false
+         },
+         {
+          "n": 207,
+          "text": "            if (!agentName) continue;",
+          "mark": false
+         },
+         {
+          "n": 208,
+          "text": "            const updateRes = await AgentInstallation.updateMany(",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/rename-agent-dm-pods.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 146,
+        "column": 44,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 143,
+          "text": "    if (pod.type === 'agent-room') {",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "      pod.description = `Agent room — talk with ${desiredName}`;",
+          "mark": false
+         },
+         {
+          "n": 145,
+          "text": "    } else {",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "      const isBotPair = users.every((u) => u.botMetadata?.agentName);",
+          "mark": true
+         },
+         {
+          "n": 147,
+          "text": "      pod.description = isBotPair",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "        ? `Agent-to-agent DM — ${labels[0]} and ${labels[1]}`",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "        : `Direct message — ${labels[0]} and ${labels[1]}`;",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/repair-first-party-labels.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 201,
+        "column": 16,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 198,
+          "text": "  const rows = users.map((u) => ({",
+          "mark": false
+         },
+         {
+          "n": 199,
+          "text": "    id: String(u._id),",
+          "mark": false
+         },
+         {
+          "n": 200,
+          "text": "    username: u.username,",
+          "mark": false
+         },
+         {
+          "n": 201,
+          "text": "    agentName: u.botMetadata?.agentName,",
+          "mark": true
+         },
+         {
+          "n": 202,
+          "text": "    instanceId: u.botMetadata?.instanceId,",
+          "mark": false
+         },
+         {
+          "n": 203,
+          "text": "    displayName: u.botMetadata?.displayName,",
+          "mark": false
+         },
+         {
+          "n": 204,
+          "text": "  }));",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/sweep-leftover-runtime-tokens.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 96,
+        "column": 10,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 93,
+          "text": ") => {",
+          "mark": false
+         },
+         {
+          "n": 94,
+          "text": "  const userHashesByIdentity = new Map<string, Set<string>>();",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "  for (const user of users) {",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "    if (!user.botMetadata?.agentName) continue;",
+          "mark": true
+         },
+         {
+          "n": 97,
+          "text": "    const key = identityKey(user.botMetadata?.agentName, user.botMetadata?.instanceId);",
+          "mark": false
+         },
+         {
+          "n": 98,
+          "text": "    const userHashes = userHashesByIdentity.get(key) || new Set<string>();",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "    for (const token of user.agentRuntimeTokens || []) {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 97,
+        "column": 29,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 94,
+          "text": "  const userHashesByIdentity = new Map<string, Set<string>>();",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "  for (const user of users) {",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "    if (!user.botMetadata?.agentName) continue;",
+          "mark": false
+         },
+         {
+          "n": 97,
+          "text": "    const key = identityKey(user.botMetadata?.agentName, user.botMetadata?.instanceId);",
+          "mark": true
+         },
+         {
+          "n": 98,
+          "text": "    const userHashes = userHashesByIdentity.get(key) || new Set<string>();",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "    for (const token of user.agentRuntimeTokens || []) {",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "      if (token?.tokenHash) userHashes.add(token.tokenHash);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/agentIdentityService.ts": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 168,
+        "column": 48,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 165,
+          "text": "export const carriesAgentMarkers = (row: {",
+          "mark": false
+         },
+         {
+          "n": 166,
+          "text": "  botType?: string | null;",
+          "mark": false
+         },
+         {
+          "n": 167,
+          "text": "  botMetadata?: { agentName?: string | null } | null;",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "}): boolean => Boolean(row.botType) || Boolean(row.botMetadata?.agentName);",
+          "mark": true
+         },
+         {
+          "n": 169,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 170,
+          "text": "export const isAgentOwnedRow = (",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "  row: {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 445,
+        "column": 18,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 442,
+          "text": "    current,",
+          "mark": false
+         },
+         {
+          "n": 443,
+          "text": "    ...peers.map((p) => ({",
+          "mark": false
+         },
+         {
+          "n": 444,
+          "text": "      instanceId: p.botMetadata?.instanceId || '',",
+          "mark": false
+         },
+         {
+          "n": 445,
+          "text": "      agentName: p.botMetadata?.agentName || '',",
+          "mark": true
+         },
+         {
+          "n": 446,
+          "text": "    })),",
+          "mark": false
+         },
+         {
+          "n": 447,
+          "text": "  ];",
+          "mark": false
+         },
+         {
+          "n": 448,
+          "text": "  // A first-party agent's default instance keeps the bare name over any peer",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 764,
+        "column": 18,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 761,
+          "text": "        await assertAgentRuntimeMayJoinPod(podId, intendedRuntimeType, intendedHostedEngine);",
+          "mark": false
+         },
+         {
+          "n": 762,
+          "text": "      } else {",
+          "mark": false
+         },
+         {
+          "n": 763,
+          "text": "        await assertInstalledAgentMayJoinPod(",
+          "mark": false
+         },
+         {
+          "n": 764,
+          "text": "          podId, agentUser.botMetadata?.agentName, agentUser.botMetadata?.instanceId,",
+          "mark": true
+         },
+         {
+          "n": 765,
+          "text": "        );",
+          "mark": false
+         },
+         {
+          "n": 766,
+          "text": "      }",
+          "mark": false
+         },
+         {
+          "n": 767,
+          "text": "      pod.members.push(agentId);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/agentMentionService.ts": {
+      "total": 7,
+      "capped": true,
+      "items": [
+       {
+        "line": 326,
+        "column": 30,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 323,
+          "text": "): string => {",
+          "mark": false
+         },
+         {
+          "n": 324,
+          "text": "  if (!user) return '';",
+          "mark": false
+         },
+         {
+          "n": 325,
+          "text": "  if (user.isBot) {",
+          "mark": false
+         },
+         {
+          "n": 326,
+          "text": "    const agentName = String(user.botMetadata?.agentName || '');",
+          "mark": true
+         },
+         {
+          "n": 327,
+          "text": "    if (!agentName) return '';",
+          "mark": false
+         },
+         {
+          "n": 328,
+          "text": "    return routedMentionHandle(map, { agentName, instanceId: String(user.botMetadata?.instanceId || 'default') });",
+          "mark": false
+         },
+         {
+          "n": 329,
+          "text": "  }",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1095,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 1092,
+          "text": "    .select('isBot botMetadata')",
+          "mark": false
+         },
+         {
+          "n": 1093,
+          "text": "    .lean() as SenderRow | null;",
+          "mark": false
+         },
+         {
+          "n": 1094,
+          "text": "  const agentName = replyAuthor?.isBot",
+          "mark": false
+         },
+         {
+          "n": 1095,
+          "text": "    ? replyAuthor.botMetadata?.agentName?.toLowerCase()",
+          "mark": true
+         },
+         {
+          "n": 1096,
+          "text": "    : null;",
+          "mark": false
+         },
+         {
+          "n": 1097,
+          "text": "  const instanceId = replyAuthor?.isBot",
+          "mark": false
+         },
+         {
+          "n": 1098,
+          "text": "    ? (replyAuthor.botMetadata?.instanceId || 'default').toLowerCase()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1220,
+        "column": 21,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 1217,
+          "text": "    .select('isBot botMetadata')",
+          "mark": false
+         },
+         {
+          "n": 1218,
+          "text": "    .lean() as SenderRow | null;",
+          "mark": false
+         },
+         {
+          "n": 1219,
+          "text": "  if (!author?.isBot) return null;",
+          "mark": false
+         },
+         {
+          "n": 1220,
+          "text": "  const agentName = author.botMetadata?.agentName?.toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 1221,
+          "text": "  const instanceId = (author.botMetadata?.instanceId || 'default').toLowerCase();",
+          "mark": false
+         },
+         {
+          "n": 1222,
+          "text": "  if (!agentName) return null;",
+          "mark": false
+         },
+         {
+          "n": 1223,
+          "text": "  const installation = reachable.find((candidate) => (",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1365,
+        "column": 29,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 1362,
+          "text": "      _id: unknown; botMetadata?: { agentName?: string; instanceId?: string };",
+          "mark": false
+         },
+         {
+          "n": 1363,
+          "text": "    }>;",
+          "mark": false
+         },
+         {
+          "n": 1364,
+          "text": "    for (const row of rows) {",
+          "mark": false
+         },
+         {
+          "n": 1365,
+          "text": "      const key = `${String(row.botMetadata?.agentName || '').toLowerCase()}:${",
+          "mark": true
+         },
+         {
+          "n": 1366,
+          "text": "        String(row.botMetadata?.instanceId || 'default')}`;",
+          "mark": false
+         },
+         {
+          "n": 1367,
+          "text": "      out.set(key, String(row._id));",
+          "mark": false
+         },
+         {
+          "n": 1368,
+          "text": "    }",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1483,
+        "column": 17,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 1480,
+          "text": "}): Promise<string[]> => {",
+          "mark": false
+         },
+         {
+          "n": 1481,
+          "text": "  const woken: string[] = [];",
+          "mark": false
+         },
+         {
+          "n": 1482,
+          "text": "  const senderKey = sender?.isBot",
+          "mark": false
+         },
+         {
+          "n": 1483,
+          "text": "    ? `${String(sender.botMetadata?.agentName || '').toLowerCase()}:${String(sender.botMetadata?.instanceId || 'default').toLowerCase()}`",
+          "mark": true
+         },
+         {
+          "n": 1484,
+          "text": "    : null;",
+          "mark": false
+         },
+         {
+          "n": 1485,
+          "text": "  let targets = (installations || []).filter((inst) => {",
+          "mark": false
+         },
+         {
+          "n": 1486,
+          "text": "    const key = installKey(inst);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/askerStartCommandCue.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 81,
+        "column": 11,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 78,
+          "text": "    .lean() as BotRow[];",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "  // The username is not injective, so the row is matched on its metadata too.",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "  const tokensByKey = new Map<string, Array<{ lastListenedAt?: Date | string | null }>>(bots.map((b) => [",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "    keyOf(b.botMetadata?.agentName, b.botMetadata?.instanceId), [...(b.agentRuntimeTokens || [])],",
+          "mark": true
+         },
+         {
+          "n": 82,
+          "text": "  ]));",
+          "mark": false
+         },
+         {
+          "n": 83,
+          "text": "  // In the asker's room one agent can show up once per pod it was added to. A",
+          "mark": false
+         },
+         {
+          "n": 84,
+          "text": "  // listen on any of those installs means it has connected.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/assignedTaskWakeService.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 345,
+        "column": 13,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 342,
+          "text": "    'botMetadata.agentName': { $in: [...new Set(installs.map((install) => install.agentName))].map(exactIgnoringCase) },",
+          "mark": false
+         },
+         {
+          "n": 343,
+          "text": "  }).select('_id botMetadata').lean();",
+          "mark": false
+         },
+         {
+          "n": 344,
+          "text": "  const principalIds = new Map(principals.map((user) => [",
+          "mark": false
+         },
+         {
+          "n": 345,
+          "text": "    seatKey(user.botMetadata?.agentName, user.botMetadata?.instanceId), String(user._id),",
+          "mark": true
+         },
+         {
+          "n": 346,
+          "text": "  ]));",
+          "mark": false
+         },
+         {
+          "n": 347,
+          "text": "  const visited = new Set<string>();",
+          "mark": false
+         },
+         {
+          "n": 348,
+          "text": "  let eligible = 0;",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/attentionItemService.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 57,
+        "column": 57,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 54,
+          "text": "): Promise<string | null> => {",
+          "mark": false
+         },
+         {
+          "n": 55,
+          "text": "  const agent = agentUserId",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "    ? await User.findById(agentUserId).select('isBot username botMetadata').lean() : null;",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "  const name = String(declaredName || (agent?.isBot && (agent.botMetadata?.agentName || agent.username)) || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 58,
+          "text": "  if (name) {",
+          "mark": false
+         },
+         {
+          "n": 59,
+          "text": "    const instanceId = String(declaredInstanceId || agent?.botMetadata?.instanceId || 'default');",
+          "mark": false
+         },
+         {
+          "n": 60,
+          "text": "    const installation = await AgentInstallation.findOne({",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 157,
+        "column": 25,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 154,
+          "text": "    if (!author?.isBot) return new Set<string>();",
+          "mark": false
+         },
+         {
+          "n": 155,
+          "text": "    return await humansAnsweredBy({",
+          "mark": false
+         },
+         {
+          "n": 156,
+          "text": "      podId,",
+          "mark": false
+         },
+         {
+          "n": 157,
+          "text": "      agentName: String(author.botMetadata?.agentName || author.username || ''),",
+          "mark": true
+         },
+         {
+          "n": 158,
+          "text": "      instanceId: String(author.botMetadata?.instanceId || 'default'),",
+          "mark": false
+         },
+         {
+          "n": 159,
+          "text": "      replyToMessageId: message?.reply_to_message_id ?? message?.replyToMessageId,",
+          "mark": false
+         },
+         {
+          "n": 160,
+          "text": "      // Carried from the post, never stored on the row (agentAnswerService).",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/dailyDigestService.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 162,
+        "column": 21,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 159,
+          "text": "    }>;",
+          "mark": false
+         },
+         {
+          "n": 160,
+          "text": "    return new Map(users.map((user) => [String(user._id), {",
+          "mark": false
+         },
+         {
+          "n": 161,
+          "text": "      label: resolveAgentDisplayLabel(user, user.username),",
+          "mark": false
+         },
+         {
+          "n": 162,
+          "text": "      guide: String(user.botMetadata?.agentName || '').toLowerCase() === 'scout',",
+          "mark": true
+         },
+         {
+          "n": 163,
+          "text": "    }]));",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "  }",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/installHandoffMemory.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 51,
+        "column": 9,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 48,
+          "text": "  if (principal && ((principal.botMetadata?.ownerUserId",
+          "mark": false
+         },
+         {
+          "n": 49,
+          "text": "      && String(principal.botMetadata.ownerUserId) !== String(userId))",
+          "mark": false
+         },
+         {
+          "n": 50,
+          "text": "    || (!principal.botMetadata?.ownerUserId && !targetInstalls.length)",
+          "mark": false
+         },
+         {
+          "n": 51,
+          "text": "    || (principal.botMetadata?.agentName && principal.botMetadata.agentName !== resolvedType)",
+          "mark": true
+         },
+         {
+          "n": 52,
+          "text": "    || (principal.botMetadata?.instanceId && principal.botMetadata.instanceId !== instanceId))) {",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "    throw new HandoffRefusal(403, 'Memory handoff target identity belongs to another owner');",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "  }",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 51,
+        "column": 45,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 48,
+          "text": "  if (principal && ((principal.botMetadata?.ownerUserId",
+          "mark": false
+         },
+         {
+          "n": 49,
+          "text": "      && String(principal.botMetadata.ownerUserId) !== String(userId))",
+          "mark": false
+         },
+         {
+          "n": 50,
+          "text": "    || (!principal.botMetadata?.ownerUserId && !targetInstalls.length)",
+          "mark": false
+         },
+         {
+          "n": 51,
+          "text": "    || (principal.botMetadata?.agentName && principal.botMetadata.agentName !== resolvedType)",
+          "mark": true
+         },
+         {
+          "n": 52,
+          "text": "    || (principal.botMetadata?.instanceId && principal.botMetadata.instanceId !== instanceId))) {",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "    throw new HandoffRefusal(403, 'Memory handoff target identity belongs to another owner');",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "  }",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/kernelWorkSweepService.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 141,
+        "column": 30,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 138,
+          "text": "      ? await User.findById(claimedBy).select('username isBot botMetadata agentRuntimeTokens').lean()",
+          "mark": false
+         },
+         {
+          "n": 139,
+          "text": "      : null;",
+          "mark": false
+         },
+         {
+          "n": 140,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 141,
+          "text": "    const agentName = String(holder?.botMetadata?.agentName || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 142,
+          "text": "    const instanceId = String(holder?.botMetadata?.instanceId || (isObjectId ? 'default' : claimedBy));",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "    const label = assignee || holder?.username || claimedBy;",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/outsiderGrantPodEligibility.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 65,
+        "column": 15,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 62,
+          "text": "  const installations = await AgentInstallation.find({ podId, status: 'active' })",
+          "mark": false
+         },
+         {
+          "n": 63,
+          "text": "    .select('agentName instanceId config').lean();",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "  const agentKeys = new Set(agents.map((agent: any) => (",
+          "mark": false
+         },
+         {
+          "n": 65,
+          "text": "    `${String(agent.botMetadata?.agentName || '').toLowerCase()}:${String(agent.botMetadata?.instanceId || 'default')}`",
+          "mark": true
+         },
+         {
+          "n": 66,
+          "text": "  )));",
+          "mark": false
+         },
+         {
+          "n": 67,
+          "text": "  for (const installation of installations) {",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "    const key = `${installation.agentName}:${String(installation.instanceId || 'default')}`;",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 77,
+        "column": 25,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 74,
+          "text": "  }",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "  for (const agent of agents) {",
+          "mark": false
+         },
+         {
+          "n": 76,
+          "text": "    if (agent.botType !== 'agent') return 'non_native_agent';",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "    const name = String(agent.botMetadata?.agentName || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 78,
+          "text": "    const instanceId = String(agent.botMetadata?.instanceId || 'default');",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "    const matching = installations.filter((row: any) => row.agentName === name",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "      && String(row.instanceId || 'default') === instanceId);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/stalledConnectService.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 175,
+        "column": 31,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 172,
+          "text": "      + 'agentRuntimeTokens.lastMcpSeenAt agentRuntimeTokens.createdAt',",
+          "mark": false
+         },
+         {
+          "n": 173,
+          "text": "  ).lean() as Array<{ botMetadata?: { agentName?: string; instanceId?: string }; agentRuntimeTokens?: BotTokens }>;",
+          "mark": false
+         },
+         {
+          "n": 174,
+          "text": "  for (const row of rows) {",
+          "mark": false
+         },
+         {
+          "n": 175,
+          "text": "    const key = botKey(String(row.botMetadata?.agentName), String(row.botMetadata?.instanceId));",
+          "mark": true
+         },
+         {
+          "n": 176,
+          "text": "    if (!byKey.has(key)) byKey.set(key, row.agentRuntimeTokens || []);",
+          "mark": false
+         },
+         {
+          "n": 177,
+          "text": "  }",
+          "mark": false
+         },
+         {
+          "n": 178,
+          "text": "  return byKey;",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/systemExchangeTriggers.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 83,
+        "column": 25,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 80,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "  const agents = bots",
+          "mark": false
+         },
+         {
+          "n": 82,
+          "text": "    .map((u) => {",
+          "mark": false
+         },
+         {
+          "n": 83,
+          "text": "      const agentName = u.botMetadata?.agentName || u.username || '';",
+          "mark": true
+         },
+         {
+          "n": 84,
+          "text": "      const instanceId = u.botMetadata?.instanceId || 'default';",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "      return { agentName: String(agentName).toLowerCase(), instanceId };",
+          "mark": false
+         },
+         {
+          "n": 86,
+          "text": "    })",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/taskAssigneeService.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 37,
+        "column": 49,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 34,
+          "text": "  if (ids.length === 0) return { agents: [], people: new Set() };",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "  const users = await User.find({ _id: { $in: ids } }).select('username isBot botMetadata')",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "    .lean<Array<{ username?: string; isBot?: boolean; botMetadata?: { agentName?: string; instanceId?: string } }>>();",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": "  const agents = users.filter((u) => u.isBot && u.botMetadata?.agentName).map((u) => ({",
+          "mark": true
+         },
+         {
+          "n": 38,
+          "text": "    agentName: String(u.botMetadata?.agentName),",
+          "mark": false
+         },
+         {
+          "n": 39,
+          "text": "    instanceId: String(u.botMetadata?.instanceId || 'default'),",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": "    username: String(u.username || ''),",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 38,
+        "column": 23,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 35,
+          "text": "  const users = await User.find({ _id: { $in: ids } }).select('username isBot botMetadata')",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "    .lean<Array<{ username?: string; isBot?: boolean; botMetadata?: { agentName?: string; instanceId?: string } }>>();",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": "  const agents = users.filter((u) => u.isBot && u.botMetadata?.agentName).map((u) => ({",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": "    agentName: String(u.botMetadata?.agentName),",
+          "mark": true
+         },
+         {
+          "n": 39,
+          "text": "    instanceId: String(u.botMetadata?.instanceId || 'default'),",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": "    username: String(u.username || ''),",
+          "mark": false
+         },
+         {
+          "n": 41,
+          "text": "  }));",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "frontend/src/v2/components/V2PersonProfile.tsx": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 132,
+        "column": 21,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 129,
+          "text": "  const joined = formatDate(profile.createdAt, i18n.language, JOINED_FORMAT);",
+          "mark": false
+         },
+         {
+          "n": 130,
+          "text": "  const following = Boolean(profile.isFollowing);",
+          "mark": false
+         },
+         {
+          "n": 131,
+          "text": "  const avatarKind = profile.isBot ? 'agent' : 'human';",
+          "mark": false
+         },
+         {
+          "n": 132,
+          "text": "  const agentHref = profile.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 133,
+          "text": "    ? `/v2/agent/${encodeURIComponent(profile.botMetadata.agentName)}/${encodeURIComponent(profile.botMetadata.instanceId || 'default')}`",
+          "mark": false
+         },
+         {
+          "n": 134,
+          "text": "    : '/v2/agents';",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 133,
+        "column": 39,
+        "ruleId": "no-restricted-syntax",
+        "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead.",
+        "lines": [
+         {
+          "n": 130,
+          "text": "  const following = Boolean(profile.isFollowing);",
+          "mark": false
+         },
+         {
+          "n": 131,
+          "text": "  const avatarKind = profile.isBot ? 'agent' : 'human';",
+          "mark": false
+         },
+         {
+          "n": 132,
+          "text": "  const agentHref = profile.botMetadata?.agentName",
+          "mark": false
+         },
+         {
+          "n": 133,
+          "text": "    ? `/v2/agent/${encodeURIComponent(profile.botMetadata.agentName)}/${encodeURIComponent(profile.botMetadata.instanceId || 'default')}`",
+          "mark": true
+         },
+         {
+          "n": 134,
+          "text": "    : '/v2/agents';",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 136,
+          "text": "  const toggleFollow = async () => {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -212,6 +2870,2664 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "backend/controllers/podController.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 617,
+        "column": 22,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 614,
+          "text": "        const { assertInstalledAgentMayJoinPod } = require('../services/outsiderGrantAgentJoinPolicy');",
+          "mark": false
+         },
+         {
+          "n": 615,
+          "text": "        try {",
+          "mark": false
+         },
+         {
+          "n": 616,
+          "text": "          await assertInstalledAgentMayJoinPod(",
+          "mark": false
+         },
+         {
+          "n": 617,
+          "text": "            pod._id, joiningUser.botMetadata?.agentName, joiningUser.botMetadata?.instanceId,",
+          "mark": true
+         },
+         {
+          "n": 618,
+          "text": "          );",
+          "mark": false
+         },
+         {
+          "n": 619,
+          "text": "        } catch (joinError: any) {",
+          "mark": false
+         },
+         {
+          "n": 620,
+          "text": "          if (joinError?.code === 'outsider_grant_non_native_agent_join') {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/controllers/reactionController.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 173,
+        "column": 30,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 170,
+          "text": "    // HTTP auth and the agent WebSocket derive different fallbacks. Do not",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "    // enqueue a receipt either delivery path might strand; leave a visible",
+          "mark": false
+         },
+         {
+          "n": 172,
+          "text": "    // operational signal instead of silently treating it as delivered.",
+          "mark": false
+         },
+         {
+          "n": 173,
+          "text": "    const agentName = String(author.botMetadata?.agentName || '').trim().toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 174,
+          "text": "    if (!agentName) {",
+          "mark": false
+         },
+         {
+          "n": 175,
+          "text": "      // eslint-disable-next-line no-console",
+          "mark": false
+         },
+         {
+          "n": 176,
+          "text": "      console.warn('[reactionController] agent acknowledgement skipped: missing botMetadata.agentName', authorUserId);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/agentEnsemble.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 166,
+        "column": 27,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 163,
+          "text": "  try {",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "    const { podId } = req.params || {};",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "    const { ensembleId, agentType, instanceId, content, messageId } = (req.body || {}) as { ensembleId?: string; agentType?: string; instanceId?: string; content?: string; messageId?: string };",
+          "mark": false
+         },
+         {
+          "n": 166,
+          "text": "    const authAgentType = req.agentUser?.botMetadata?.agentName || req.agentInstallation?.agentName;",
+          "mark": true
+         },
+         {
+          "n": 167,
+          "text": "    const authInstanceId = req.agentUser?.botMetadata?.instanceId || req.agentInstallation?.instanceId || 'default';",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "    if (authAgentType !== agentType || authInstanceId !== (instanceId || 'default')) {",
+          "mark": false
+         },
+         {
+          "n": 169,
+          "text": "      return res.status(403).json({ error: 'Agent identity mismatch', expected: `${authAgentType}:${authInstanceId}`, received: `${agentType}:${instanceId || 'default'}` });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/agentHooks.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 43,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 40,
+          "text": "const resolveIdentity = (req: any): { agentId: string; agentName: string; instanceId: string } => ({",
+          "mark": false
+         },
+         {
+          "n": 41,
+          "text": "  agentId: String(req.agentUser?._id || req.agentUser?.id || '').trim(),",
+          "mark": false
+         },
+         {
+          "n": 42,
+          "text": "  agentName: normalize(",
+          "mark": false
+         },
+         {
+          "n": 43,
+          "text": "    req.agentUser?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 44,
+          "text": "      || req.agentInstallation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 45,
+          "text": "      || req.agentUser?.username,",
+          "mark": false
+         },
+         {
+          "n": 46,
+          "text": "  ),",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/agentsRuntime.ts": {
+      "total": 10,
+      "capped": true,
+      "items": [
+       {
+        "line": 299,
+        "column": 36,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 296,
+          "text": "    return { error: res.status(400).json({ message: 'agentName and instanceId must be strings' }) };",
+          "mark": false
+         },
+         {
+          "n": 297,
+          "text": "  }",
+          "mark": false
+         },
+         {
+          "n": 298,
+          "text": "  const identity = {",
+          "mark": false
+         },
+         {
+          "n": 299,
+          "text": "    agentName: String(agentName || user.botMetadata?.agentName || user.username),",
+          "mark": true
+         },
+         {
+          "n": 300,
+          "text": "    instanceId: String(instanceId || user.botMetadata?.instanceId || 'default'),",
+          "mark": false
+         },
+         {
+          "n": 301,
+          "text": "  };",
+          "mark": false
+         },
+         {
+          "n": 302,
+          "text": "  const expectedUsername = AgentIdentityService.buildAgentUsername(identity.agentName, identity.instanceId);",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 379,
+        "column": 8,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 376,
+          "text": "const resolveClaimIdentity = (req: any) => ({",
+          "mark": false
+         },
+         {
+          "n": 377,
+          "text": "  agentName: String(",
+          "mark": false
+         },
+         {
+          "n": 378,
+          "text": "    req.agentInstallation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 379,
+          "text": "    || req.agentUser?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 380,
+          "text": "    || req.agentUser?.username || '',",
+          "mark": false
+         },
+         {
+          "n": 381,
+          "text": "  ).toLowerCase(),",
+          "mark": false
+         },
+         {
+          "n": 382,
+          "text": "  instanceId: String(",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 555,
+        "column": 10,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 552,
+          "text": "    const agentInstallation = req.agentInstallation;",
+          "mark": false
+         },
+         {
+          "n": 553,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 554,
+          "text": "    const agentName = agentInstallation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 555,
+          "text": "      || req.agentUser?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 556,
+          "text": "      || req.agentUser?.botMetadata?.agentType",
+          "mark": false
+         },
+         {
+          "n": 557,
+          "text": "      || req.agentUser?.username;",
+          "mark": false
+         },
+         {
+          "n": 558,
+          "text": "    const instanceId = agentInstallation?.instanceId",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 647,
+        "column": 10,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 644,
+          "text": "    const installation = req.agentInstallation;",
+          "mark": false
+         },
+         {
+          "n": 645,
+          "text": "    const agentUser = req.agentUser;",
+          "mark": false
+         },
+         {
+          "n": 646,
+          "text": "    const agentName = installation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 647,
+          "text": "      || agentUser?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 648,
+          "text": "      || agentUser?.botMetadata?.agentType",
+          "mark": false
+         },
+         {
+          "n": 649,
+          "text": "      || agentUser?.username;",
+          "mark": false
+         },
+         {
+          "n": 650,
+          "text": "    const instanceId = installation?.instanceId",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1219,
+        "column": 20,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 1216,
+          "text": "      // falls through to `username`, the right answer.",
+          "mark": false
+         },
+         {
+          "n": 1217,
+          "text": "      targetMeta = {",
+          "mark": false
+         },
+         {
+          "n": 1218,
+          "text": "        isBot: !!lookup.isBot,",
+          "mark": false
+         },
+         {
+          "n": 1219,
+          "text": "        agentName: lookup.botMetadata?.agentName || undefined,",
+          "mark": true
+         },
+         {
+          "n": 1220,
+          "text": "        instanceId: lookup.botMetadata?.instanceId || 'default',",
+          "mark": false
+         },
+         {
+          "n": 1221,
+          "text": "        displayName: AgentIdentityService.resolveAgentDisplayLabel(",
+          "mark": false
+         },
+         {
+          "n": 1222,
+          "text": "          lookup,",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/contextApi.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 40,
+        "column": 49,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 37,
+          "text": "});",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 39,
+          "text": "const resolveAgentContext = (user: AuthReq['user'] | null) => user?.isBot",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": "  ? { agentName: user.botMetadata?.agentType || user.botMetadata?.agentName || user.username, instanceId: user.botMetadata?.instanceId || 'default' }",
+          "mark": true
+         },
+         {
+          "n": 41,
+          "text": "  : null;",
+          "mark": false
+         },
+         {
+          "n": 42,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 43,
+          "text": "const findMembership = (pod: { members?: Array<unknown> }, userId: unknown) => pod.members?.find((m) => {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/hostedMcpOperatorKey.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 48,
+        "column": 28,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 45,
+          "text": "  // The identity comes from the bot's own row, never the body, and is lowercased",
+          "mark": false
+         },
+         {
+          "n": 46,
+          "text": "  // as credentials.ts does. Refused before the probe, so a refused caller's key",
+          "mark": false
+         },
+         {
+          "n": 47,
+          "text": "  // never reaches the vendor.",
+          "mark": false
+         },
+         {
+          "n": 48,
+          "text": "  const agentName = String(agent?.botMetadata?.agentName || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 49,
+          "text": "  const instanceId = String(agent?.botMetadata?.instanceId || '');",
+          "mark": false
+         },
+         {
+          "n": 50,
+          "text": "  if (!agent || !agentName || !instanceId) {",
+          "mark": false
+         },
+         {
+          "n": 51,
+          "text": "    return res.status(400).json({ error: 'invalid_agent', message: 'agentId must name an agent' });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/mcpGrants.ts": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 107,
+        "column": 43,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 104,
+          "text": "  const identity = {",
+          "mark": false
+         },
+         {
+          "n": 105,
+          "text": "    grantId: String(req.params.grantId),",
+          "mark": false
+         },
+         {
+          "n": 106,
+          "text": "    agentUserId,",
+          "mark": false
+         },
+         {
+          "n": 107,
+          "text": "    agentName: installation?.agentName || agent?.botMetadata?.agentName || agent?.username,",
+          "mark": true
+         },
+         {
+          "n": 108,
+          "text": "    instanceId: installation?.instanceId || agent?.botMetadata?.instanceId || 'default',",
+          "mark": false
+         },
+         {
+          "n": 109,
+          "text": "  };",
+          "mark": false
+         },
+         {
+          "n": 110,
+          "text": "  try {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 148,
+        "column": 45,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 145,
+          "text": "    const identity = {",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "      grantId: String(req.params.grantId),",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "      agentUserId,",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "      agentName: installation?.agentName || agent?.botMetadata?.agentName || agent?.username,",
+          "mark": true
+         },
+         {
+          "n": 149,
+          "text": "      instanceId: installation?.instanceId || agent?.botMetadata?.instanceId || 'default',",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "    };",
+          "mark": false
+         },
+         {
+          "n": 151,
+          "text": "    const listed = await listToolsForGrant(identity);",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 190,
+        "column": 8,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 187,
+          "text": "  const agentUserId = String(agent?._id || '');",
+          "mark": false
+         },
+         {
+          "n": 188,
+          "text": "  if (!agentUserId) return res.status(401).json({ error: 'agent_identity_required' });",
+          "mark": false
+         },
+         {
+          "n": 189,
+          "text": "  const agentName = installation?.agentName",
+          "mark": false
+         },
+         {
+          "n": 190,
+          "text": "    || agent?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 191,
+          "text": "    || agent?.username;",
+          "mark": false
+         },
+         {
+          "n": 192,
+          "text": "  const instanceId = installation?.instanceId",
+          "mark": false
+         },
+         {
+          "n": 193,
+          "text": "    || agent?.botMetadata?.instanceId",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/podInvites.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 274,
+        "column": 22,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 271,
+          "text": "      if (joiningUser?.isBot || joiningUser?.botType) {",
+          "mark": false
+         },
+         {
+          "n": 272,
+          "text": "        try {",
+          "mark": false
+         },
+         {
+          "n": 273,
+          "text": "          await assertInstalledAgentMayJoinPod(",
+          "mark": false
+         },
+         {
+          "n": 274,
+          "text": "            pod._id, joiningUser.botMetadata?.agentName, joiningUser.botMetadata?.instanceId,",
+          "mark": true
+         },
+         {
+          "n": 275,
+          "text": "          );",
+          "mark": false
+         },
+         {
+          "n": 276,
+          "text": "        } catch (joinError: any) {",
+          "mark": false
+         },
+         {
+          "n": 277,
+          "text": "          if (joinError?.code === 'outsider_grant_non_native_agent_join') {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/pods.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 576,
+        "column": 29,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 573,
+          "text": "      .lean();",
+          "mark": false
+         },
+         {
+          "n": 574,
+          "text": "    const userTokensByIdentity = new Map<string, Array<{ lastListenedAt?: Date }>>();",
+          "mark": false
+         },
+         {
+          "n": 575,
+          "text": "    (agentUsers || []).forEach((u: any) => {",
+          "mark": false
+         },
+         {
+          "n": 576,
+          "text": "      const key = `${String(u.botMetadata?.agentName || '').toLowerCase()}:${String(u.botMetadata?.instanceId || 'default').toLowerCase()}`;",
+          "mark": true
+         },
+         {
+          "n": 577,
+          "text": "      userTokensByIdentity.set(key, u.agentRuntimeTokens || []);",
+          "mark": false
+         },
+         {
+          "n": 578,
+          "text": "    });",
+          "mark": false
+         },
+         {
+          "n": 579,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/registry/install.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 342,
+        "column": 13,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 339,
+          "text": "      // Do not let the first new installer claim its User and memory.",
+          "mark": false
+         },
+         {
+          "n": 340,
+          "text": "      if ((existingPrincipal && (!existingPrincipal.botMetadata?.ownerUserId",
+          "mark": false
+         },
+         {
+          "n": 341,
+          "text": "          || String(existingPrincipal.botMetadata.ownerUserId) !== String(userId)))",
+          "mark": false
+         },
+         {
+          "n": 342,
+          "text": "        || (existingPrincipal?.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 343,
+          "text": "          && existingPrincipal.botMetadata.agentName !== resolvedType)",
+          "mark": false
+         },
+         {
+          "n": 344,
+          "text": "        || (existingPrincipal?.botMetadata?.instanceId",
+          "mark": false
+         },
+         {
+          "n": 345,
+          "text": "          && existingPrincipal.botMetadata.instanceId !== normalizedInstanceId)) {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 343,
+        "column": 14,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 340,
+          "text": "      if ((existingPrincipal && (!existingPrincipal.botMetadata?.ownerUserId",
+          "mark": false
+         },
+         {
+          "n": 341,
+          "text": "          || String(existingPrincipal.botMetadata.ownerUserId) !== String(userId)))",
+          "mark": false
+         },
+         {
+          "n": 342,
+          "text": "        || (existingPrincipal?.botMetadata?.agentName",
+          "mark": false
+         },
+         {
+          "n": 343,
+          "text": "          && existingPrincipal.botMetadata.agentName !== resolvedType)",
+          "mark": true
+         },
+         {
+          "n": 344,
+          "text": "        || (existingPrincipal?.botMetadata?.instanceId",
+          "mark": false
+         },
+         {
+          "n": 345,
+          "text": "          && existingPrincipal.botMetadata.instanceId !== normalizedInstanceId)) {",
+          "mark": false
+         },
+         {
+          "n": 346,
+          "text": "        return res.status(409).json({",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/registry/pod-agents.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 85,
+        "column": 25,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 82,
+          "text": "      const username = AgentIdentityService.buildAgentUsername(resolvedType, instanceId);",
+          "mark": false
+         },
+         {
+          "n": 83,
+          "text": "      const candidateUser = await User.findOne({ username, isBot: true })",
+          "mark": false
+         },
+         {
+          "n": 84,
+          "text": "        .select('_id agentRuntimeTokens botMetadata').lean();",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "      const agentUser = candidateUser?.botMetadata?.agentName === resolvedType",
+          "mark": true
+         },
+         {
+          "n": 86,
+          "text": "        && candidateUser?.botMetadata?.instanceId === instanceId ? candidateUser : null;",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "      const hasProfile = await AgentProfile.exists({ agentId: buildAgentProfileId(name, instanceId), podId });",
+          "mark": false
+         },
+         {
+          "n": 88,
+          "text": "      const hasMembership = agentUser && pod.members?.some((member: any) => (",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/showcase.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 150,
+        "column": 18,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 147,
+          "text": "  if (isBot) {",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "    return {",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "      ...base,",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "      agentName: m.botMetadata?.agentName,",
+          "mark": true
+         },
+         {
+          "n": 151,
+          "text": "      instanceId: m.botMetadata?.instanceId,",
+          "mark": false
+         },
+         {
+          "n": 152,
+          "text": "    };",
+          "mark": false
+         },
+         {
+          "n": 153,
+          "text": "  }",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 172,
+        "column": 20,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 169,
+          "text": "      .filter((m) => !!m.isBot)",
+          "mark": false
+         },
+         {
+          "n": 170,
+          "text": "      .map((m) => ({",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "        displayName: resolveAgentDisplayLabel(m, m.username),",
+          "mark": false
+         },
+         {
+          "n": 172,
+          "text": "        agentName: m.botMetadata?.agentName,",
+          "mark": true
+         },
+         {
+          "n": 173,
+          "text": "        instanceId: m.botMetadata?.instanceId,",
+          "mark": false
+         },
+         {
+          "n": 174,
+          "text": "        profilePicture: m.profilePicture || 'default',",
+          "mark": false
+         },
+         {
+          "n": 175,
+          "text": "      }));",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/tasksApi.ts": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 193,
+        "column": 80,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 190,
+          "text": "});",
+          "mark": false
+         },
+         {
+          "n": 191,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 192,
+          "text": "async function resolveAuthor(req: AuthReq): Promise<string> {",
+          "mark": false
+         },
+         {
+          "n": 193,
+          "text": "  const agentInstance = req.user?.isBot ? (req.user.botMetadata?.instanceId || req.user.botMetadata?.agentName) : null;",
+          "mark": true
+         },
+         {
+          "n": 194,
+          "text": "  if (agentInstance) return agentInstance;",
+          "mark": false
+         },
+         {
+          "n": 195,
+          "text": "  const userId = req.userId || req.user?._id || req.user?.id || req.agentUser?._id;",
+          "mark": false
+         },
+         {
+          "n": 196,
+          "text": "  if (userId) {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 213,
+        "column": 24,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 210,
+          "text": "  if (!userId || !mongoose.isValidObjectId(String(userId))) return undefined;",
+          "mark": false
+         },
+         {
+          "n": 211,
+          "text": "  const row = await User.findById(userId).select('isBot botMetadata').lean() as",
+          "mark": false
+         },
+         {
+          "n": 212,
+          "text": "    { isBot?: boolean; botMetadata?: { agentName?: string; instanceId?: string } } | null;",
+          "mark": false
+         },
+         {
+          "n": 213,
+          "text": "  return row?.isBot && row.botMetadata?.agentName ? boardNameOf(row.botMetadata) : undefined;",
+          "mark": true
+         },
+         {
+          "n": 214,
+          "text": "}",
+          "mark": false
+         },
+         {
+          "n": 215,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 216,
+          "text": "function resolveAgentInstanceId(req: AuthReq): string | null {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 218,
+        "column": 46,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 215,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 216,
+          "text": "function resolveAgentInstanceId(req: AuthReq): string | null {",
+          "mark": false
+         },
+         {
+          "n": 217,
+          "text": "  if (!req.user?.isBot) return null;",
+          "mark": false
+         },
+         {
+          "n": 218,
+          "text": "  return req.user.botMetadata?.instanceId || req.user.botMetadata?.agentName || null;",
+          "mark": true
+         },
+         {
+          "n": 219,
+          "text": "}",
+          "mark": false
+         },
+         {
+          "n": 220,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 221,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/routes/users.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 201,
+        "column": 32,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 198,
+          "text": "    let latestConnection: { at: Date; identity: any } | null = null;",
+          "mark": false
+         },
+         {
+          "n": 199,
+          "text": "    let latestToolUse: { at: Date; identity: any } | null = null;",
+          "mark": false
+         },
+         {
+          "n": 200,
+          "text": "    for (const agentUser of agentUsers || []) {",
+          "mark": false
+         },
+         {
+          "n": 201,
+          "text": "      const agentName = String(agentUser.botMetadata?.agentName || '').trim().toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 202,
+          "text": "      const instanceId = String(agentUser.botMetadata?.instanceId || 'default').trim().toLowerCase();",
+          "mark": false
+         },
+         {
+          "n": 203,
+          "text": "      const identity = installationsByIdentity.get(`${agentName}:${instanceId}`);",
+          "mark": false
+         },
+         {
+          "n": 204,
+          "text": "      if (!identity) continue;",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/dedupe-agent-display-names.ts": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 79,
+        "column": 28,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 76,
+          "text": "// instanceId tie falls to agentName, then _id, so the pick never depends on",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "// the order Mongo returns rows.",
+          "mark": false
+         },
+         {
+          "n": 78,
+          "text": "const isFirstPartyDefault = (u: BotUser): boolean => (u.botMetadata?.instanceId || '') === 'default'",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "  && isFirstPartyAgentName(u.botMetadata?.agentName || '');",
+          "mark": true
+         },
+         {
+          "n": 80,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "export const pickCanonical = (users: BotUser[]): BotUser => [...users].sort((a, b) => {",
+          "mark": false
+         },
+         {
+          "n": 82,
+          "text": "  if (isFirstPartyDefault(a) !== isFirstPartyDefault(b)) return isFirstPartyDefault(a) ? -1 : 1;",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 87,
+        "column": 9,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 84,
+          "text": "  const bi = b.botMetadata?.instanceId || '';",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "  if (ai.length !== bi.length) return ai.length - bi.length;",
+          "mark": false
+         },
+         {
+          "n": 86,
+          "text": "  return ai.localeCompare(bi)",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "    || (a.botMetadata?.agentName || '').localeCompare(b.botMetadata?.agentName || '')",
+          "mark": true
+         },
+         {
+          "n": 88,
+          "text": "    || String(a._id).localeCompare(String(b._id));",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "})[0];",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 87,
+        "column": 55,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 84,
+          "text": "  const bi = b.botMetadata?.instanceId || '';",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "  if (ai.length !== bi.length) return ai.length - bi.length;",
+          "mark": false
+         },
+         {
+          "n": 86,
+          "text": "  return ai.localeCompare(bi)",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "    || (a.botMetadata?.agentName || '').localeCompare(b.botMetadata?.agentName || '')",
+          "mark": true
+         },
+         {
+          "n": 88,
+          "text": "    || String(a._id).localeCompare(String(b._id));",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "})[0];",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/migrate-agent-dm-multimember.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 205,
+        "column": 32,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 202,
+          "text": "            .lean<Array<{ _id: unknown; username?: string; botMetadata?: { agentName?: string; instanceId?: string } }>>();",
+          "mark": false
+         },
+         {
+          "n": 203,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 204,
+          "text": "          for (const bot of droppedBots) {",
+          "mark": false
+         },
+         {
+          "n": 205,
+          "text": "            const agentName = (bot.botMetadata?.agentName || bot.username || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 206,
+          "text": "            const instanceId = bot.botMetadata?.instanceId || 'default';",
+          "mark": false
+         },
+         {
+          "n": 207,
+          "text": "            if (!agentName) continue;",
+          "mark": false
+         },
+         {
+          "n": 208,
+          "text": "            const updateRes = await AgentInstallation.updateMany(",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/rename-agent-dm-pods.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 146,
+        "column": 44,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 143,
+          "text": "    if (pod.type === 'agent-room') {",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "      pod.description = `Agent room — talk with ${desiredName}`;",
+          "mark": false
+         },
+         {
+          "n": 145,
+          "text": "    } else {",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "      const isBotPair = users.every((u) => u.botMetadata?.agentName);",
+          "mark": true
+         },
+         {
+          "n": 147,
+          "text": "      pod.description = isBotPair",
+          "mark": false
+         },
+         {
+          "n": 148,
+          "text": "        ? `Agent-to-agent DM — ${labels[0]} and ${labels[1]}`",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "        : `Direct message — ${labels[0]} and ${labels[1]}`;",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/repair-first-party-labels.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 201,
+        "column": 16,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 198,
+          "text": "  const rows = users.map((u) => ({",
+          "mark": false
+         },
+         {
+          "n": 199,
+          "text": "    id: String(u._id),",
+          "mark": false
+         },
+         {
+          "n": 200,
+          "text": "    username: u.username,",
+          "mark": false
+         },
+         {
+          "n": 201,
+          "text": "    agentName: u.botMetadata?.agentName,",
+          "mark": true
+         },
+         {
+          "n": 202,
+          "text": "    instanceId: u.botMetadata?.instanceId,",
+          "mark": false
+         },
+         {
+          "n": 203,
+          "text": "    displayName: u.botMetadata?.displayName,",
+          "mark": false
+         },
+         {
+          "n": 204,
+          "text": "  }));",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/scripts/sweep-leftover-runtime-tokens.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 96,
+        "column": 10,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 93,
+          "text": ") => {",
+          "mark": false
+         },
+         {
+          "n": 94,
+          "text": "  const userHashesByIdentity = new Map<string, Set<string>>();",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "  for (const user of users) {",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "    if (!user.botMetadata?.agentName) continue;",
+          "mark": true
+         },
+         {
+          "n": 97,
+          "text": "    const key = identityKey(user.botMetadata?.agentName, user.botMetadata?.instanceId);",
+          "mark": false
+         },
+         {
+          "n": 98,
+          "text": "    const userHashes = userHashesByIdentity.get(key) || new Set<string>();",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "    for (const token of user.agentRuntimeTokens || []) {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 97,
+        "column": 29,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 94,
+          "text": "  const userHashesByIdentity = new Map<string, Set<string>>();",
+          "mark": false
+         },
+         {
+          "n": 95,
+          "text": "  for (const user of users) {",
+          "mark": false
+         },
+         {
+          "n": 96,
+          "text": "    if (!user.botMetadata?.agentName) continue;",
+          "mark": false
+         },
+         {
+          "n": 97,
+          "text": "    const key = identityKey(user.botMetadata?.agentName, user.botMetadata?.instanceId);",
+          "mark": true
+         },
+         {
+          "n": 98,
+          "text": "    const userHashes = userHashesByIdentity.get(key) || new Set<string>();",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "    for (const token of user.agentRuntimeTokens || []) {",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "      if (token?.tokenHash) userHashes.add(token.tokenHash);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/agentIdentityService.ts": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 168,
+        "column": 48,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 165,
+          "text": "export const carriesAgentMarkers = (row: {",
+          "mark": false
+         },
+         {
+          "n": 166,
+          "text": "  botType?: string | null;",
+          "mark": false
+         },
+         {
+          "n": 167,
+          "text": "  botMetadata?: { agentName?: string | null } | null;",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "}): boolean => Boolean(row.botType) || Boolean(row.botMetadata?.agentName);",
+          "mark": true
+         },
+         {
+          "n": 169,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 170,
+          "text": "export const isAgentOwnedRow = (",
+          "mark": false
+         },
+         {
+          "n": 171,
+          "text": "  row: {",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 445,
+        "column": 18,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 442,
+          "text": "    current,",
+          "mark": false
+         },
+         {
+          "n": 443,
+          "text": "    ...peers.map((p) => ({",
+          "mark": false
+         },
+         {
+          "n": 444,
+          "text": "      instanceId: p.botMetadata?.instanceId || '',",
+          "mark": false
+         },
+         {
+          "n": 445,
+          "text": "      agentName: p.botMetadata?.agentName || '',",
+          "mark": true
+         },
+         {
+          "n": 446,
+          "text": "    })),",
+          "mark": false
+         },
+         {
+          "n": 447,
+          "text": "  ];",
+          "mark": false
+         },
+         {
+          "n": 448,
+          "text": "  // A first-party agent's default instance keeps the bare name over any peer",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 764,
+        "column": 18,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 761,
+          "text": "        await assertAgentRuntimeMayJoinPod(podId, intendedRuntimeType, intendedHostedEngine);",
+          "mark": false
+         },
+         {
+          "n": 762,
+          "text": "      } else {",
+          "mark": false
+         },
+         {
+          "n": 763,
+          "text": "        await assertInstalledAgentMayJoinPod(",
+          "mark": false
+         },
+         {
+          "n": 764,
+          "text": "          podId, agentUser.botMetadata?.agentName, agentUser.botMetadata?.instanceId,",
+          "mark": true
+         },
+         {
+          "n": 765,
+          "text": "        );",
+          "mark": false
+         },
+         {
+          "n": 766,
+          "text": "      }",
+          "mark": false
+         },
+         {
+          "n": 767,
+          "text": "      pod.members.push(agentId);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/agentMentionService.ts": {
+      "total": 7,
+      "capped": true,
+      "items": [
+       {
+        "line": 326,
+        "column": 30,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 323,
+          "text": "): string => {",
+          "mark": false
+         },
+         {
+          "n": 324,
+          "text": "  if (!user) return '';",
+          "mark": false
+         },
+         {
+          "n": 325,
+          "text": "  if (user.isBot) {",
+          "mark": false
+         },
+         {
+          "n": 326,
+          "text": "    const agentName = String(user.botMetadata?.agentName || '');",
+          "mark": true
+         },
+         {
+          "n": 327,
+          "text": "    if (!agentName) return '';",
+          "mark": false
+         },
+         {
+          "n": 328,
+          "text": "    return routedMentionHandle(map, { agentName, instanceId: String(user.botMetadata?.instanceId || 'default') });",
+          "mark": false
+         },
+         {
+          "n": 329,
+          "text": "  }",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1095,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 1092,
+          "text": "    .select('isBot botMetadata')",
+          "mark": false
+         },
+         {
+          "n": 1093,
+          "text": "    .lean() as SenderRow | null;",
+          "mark": false
+         },
+         {
+          "n": 1094,
+          "text": "  const agentName = replyAuthor?.isBot",
+          "mark": false
+         },
+         {
+          "n": 1095,
+          "text": "    ? replyAuthor.botMetadata?.agentName?.toLowerCase()",
+          "mark": true
+         },
+         {
+          "n": 1096,
+          "text": "    : null;",
+          "mark": false
+         },
+         {
+          "n": 1097,
+          "text": "  const instanceId = replyAuthor?.isBot",
+          "mark": false
+         },
+         {
+          "n": 1098,
+          "text": "    ? (replyAuthor.botMetadata?.instanceId || 'default').toLowerCase()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1220,
+        "column": 21,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 1217,
+          "text": "    .select('isBot botMetadata')",
+          "mark": false
+         },
+         {
+          "n": 1218,
+          "text": "    .lean() as SenderRow | null;",
+          "mark": false
+         },
+         {
+          "n": 1219,
+          "text": "  if (!author?.isBot) return null;",
+          "mark": false
+         },
+         {
+          "n": 1220,
+          "text": "  const agentName = author.botMetadata?.agentName?.toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 1221,
+          "text": "  const instanceId = (author.botMetadata?.instanceId || 'default').toLowerCase();",
+          "mark": false
+         },
+         {
+          "n": 1222,
+          "text": "  if (!agentName) return null;",
+          "mark": false
+         },
+         {
+          "n": 1223,
+          "text": "  const installation = reachable.find((candidate) => (",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1365,
+        "column": 29,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 1362,
+          "text": "      _id: unknown; botMetadata?: { agentName?: string; instanceId?: string };",
+          "mark": false
+         },
+         {
+          "n": 1363,
+          "text": "    }>;",
+          "mark": false
+         },
+         {
+          "n": 1364,
+          "text": "    for (const row of rows) {",
+          "mark": false
+         },
+         {
+          "n": 1365,
+          "text": "      const key = `${String(row.botMetadata?.agentName || '').toLowerCase()}:${",
+          "mark": true
+         },
+         {
+          "n": 1366,
+          "text": "        String(row.botMetadata?.instanceId || 'default')}`;",
+          "mark": false
+         },
+         {
+          "n": 1367,
+          "text": "      out.set(key, String(row._id));",
+          "mark": false
+         },
+         {
+          "n": 1368,
+          "text": "    }",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 1483,
+        "column": 17,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 1480,
+          "text": "}): Promise<string[]> => {",
+          "mark": false
+         },
+         {
+          "n": 1481,
+          "text": "  const woken: string[] = [];",
+          "mark": false
+         },
+         {
+          "n": 1482,
+          "text": "  const senderKey = sender?.isBot",
+          "mark": false
+         },
+         {
+          "n": 1483,
+          "text": "    ? `${String(sender.botMetadata?.agentName || '').toLowerCase()}:${String(sender.botMetadata?.instanceId || 'default').toLowerCase()}`",
+          "mark": true
+         },
+         {
+          "n": 1484,
+          "text": "    : null;",
+          "mark": false
+         },
+         {
+          "n": 1485,
+          "text": "  let targets = (installations || []).filter((inst) => {",
+          "mark": false
+         },
+         {
+          "n": 1486,
+          "text": "    const key = installKey(inst);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/askerStartCommandCue.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 81,
+        "column": 11,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 78,
+          "text": "    .lean() as BotRow[];",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "  // The username is not injective, so the row is matched on its metadata too.",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "  const tokensByKey = new Map<string, Array<{ lastListenedAt?: Date | string | null }>>(bots.map((b) => [",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "    keyOf(b.botMetadata?.agentName, b.botMetadata?.instanceId), [...(b.agentRuntimeTokens || [])],",
+          "mark": true
+         },
+         {
+          "n": 82,
+          "text": "  ]));",
+          "mark": false
+         },
+         {
+          "n": 83,
+          "text": "  // In the asker's room one agent can show up once per pod it was added to. A",
+          "mark": false
+         },
+         {
+          "n": 84,
+          "text": "  // listen on any of those installs means it has connected.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/assignedTaskWakeService.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 345,
+        "column": 13,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 342,
+          "text": "    'botMetadata.agentName': { $in: [...new Set(installs.map((install) => install.agentName))].map(exactIgnoringCase) },",
+          "mark": false
+         },
+         {
+          "n": 343,
+          "text": "  }).select('_id botMetadata').lean();",
+          "mark": false
+         },
+         {
+          "n": 344,
+          "text": "  const principalIds = new Map(principals.map((user) => [",
+          "mark": false
+         },
+         {
+          "n": 345,
+          "text": "    seatKey(user.botMetadata?.agentName, user.botMetadata?.instanceId), String(user._id),",
+          "mark": true
+         },
+         {
+          "n": 346,
+          "text": "  ]));",
+          "mark": false
+         },
+         {
+          "n": 347,
+          "text": "  const visited = new Set<string>();",
+          "mark": false
+         },
+         {
+          "n": 348,
+          "text": "  let eligible = 0;",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/attentionItemService.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 57,
+        "column": 57,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 54,
+          "text": "): Promise<string | null> => {",
+          "mark": false
+         },
+         {
+          "n": 55,
+          "text": "  const agent = agentUserId",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "    ? await User.findById(agentUserId).select('isBot username botMetadata').lean() : null;",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "  const name = String(declaredName || (agent?.isBot && (agent.botMetadata?.agentName || agent.username)) || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 58,
+          "text": "  if (name) {",
+          "mark": false
+         },
+         {
+          "n": 59,
+          "text": "    const instanceId = String(declaredInstanceId || agent?.botMetadata?.instanceId || 'default');",
+          "mark": false
+         },
+         {
+          "n": 60,
+          "text": "    const installation = await AgentInstallation.findOne({",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 157,
+        "column": 25,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 154,
+          "text": "    if (!author?.isBot) return new Set<string>();",
+          "mark": false
+         },
+         {
+          "n": 155,
+          "text": "    return await humansAnsweredBy({",
+          "mark": false
+         },
+         {
+          "n": 156,
+          "text": "      podId,",
+          "mark": false
+         },
+         {
+          "n": 157,
+          "text": "      agentName: String(author.botMetadata?.agentName || author.username || ''),",
+          "mark": true
+         },
+         {
+          "n": 158,
+          "text": "      instanceId: String(author.botMetadata?.instanceId || 'default'),",
+          "mark": false
+         },
+         {
+          "n": 159,
+          "text": "      replyToMessageId: message?.reply_to_message_id ?? message?.replyToMessageId,",
+          "mark": false
+         },
+         {
+          "n": 160,
+          "text": "      // Carried from the post, never stored on the row (agentAnswerService).",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/dailyDigestService.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 162,
+        "column": 21,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 159,
+          "text": "    }>;",
+          "mark": false
+         },
+         {
+          "n": 160,
+          "text": "    return new Map(users.map((user) => [String(user._id), {",
+          "mark": false
+         },
+         {
+          "n": 161,
+          "text": "      label: resolveAgentDisplayLabel(user, user.username),",
+          "mark": false
+         },
+         {
+          "n": 162,
+          "text": "      guide: String(user.botMetadata?.agentName || '').toLowerCase() === 'scout',",
+          "mark": true
+         },
+         {
+          "n": 163,
+          "text": "    }]));",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "  }",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/installHandoffMemory.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 51,
+        "column": 9,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 48,
+          "text": "  if (principal && ((principal.botMetadata?.ownerUserId",
+          "mark": false
+         },
+         {
+          "n": 49,
+          "text": "      && String(principal.botMetadata.ownerUserId) !== String(userId))",
+          "mark": false
+         },
+         {
+          "n": 50,
+          "text": "    || (!principal.botMetadata?.ownerUserId && !targetInstalls.length)",
+          "mark": false
+         },
+         {
+          "n": 51,
+          "text": "    || (principal.botMetadata?.agentName && principal.botMetadata.agentName !== resolvedType)",
+          "mark": true
+         },
+         {
+          "n": 52,
+          "text": "    || (principal.botMetadata?.instanceId && principal.botMetadata.instanceId !== instanceId))) {",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "    throw new HandoffRefusal(403, 'Memory handoff target identity belongs to another owner');",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "  }",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 51,
+        "column": 45,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 48,
+          "text": "  if (principal && ((principal.botMetadata?.ownerUserId",
+          "mark": false
+         },
+         {
+          "n": 49,
+          "text": "      && String(principal.botMetadata.ownerUserId) !== String(userId))",
+          "mark": false
+         },
+         {
+          "n": 50,
+          "text": "    || (!principal.botMetadata?.ownerUserId && !targetInstalls.length)",
+          "mark": false
+         },
+         {
+          "n": 51,
+          "text": "    || (principal.botMetadata?.agentName && principal.botMetadata.agentName !== resolvedType)",
+          "mark": true
+         },
+         {
+          "n": 52,
+          "text": "    || (principal.botMetadata?.instanceId && principal.botMetadata.instanceId !== instanceId))) {",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "    throw new HandoffRefusal(403, 'Memory handoff target identity belongs to another owner');",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "  }",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/kernelWorkSweepService.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 141,
+        "column": 30,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 138,
+          "text": "      ? await User.findById(claimedBy).select('username isBot botMetadata agentRuntimeTokens').lean()",
+          "mark": false
+         },
+         {
+          "n": 139,
+          "text": "      : null;",
+          "mark": false
+         },
+         {
+          "n": 140,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 141,
+          "text": "    const agentName = String(holder?.botMetadata?.agentName || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 142,
+          "text": "    const instanceId = String(holder?.botMetadata?.instanceId || (isObjectId ? 'default' : claimedBy));",
+          "mark": false
+         },
+         {
+          "n": 143,
+          "text": "    const label = assignee || holder?.username || claimedBy;",
+          "mark": false
+         },
+         {
+          "n": 144,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/outsiderGrantPodEligibility.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 65,
+        "column": 15,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 62,
+          "text": "  const installations = await AgentInstallation.find({ podId, status: 'active' })",
+          "mark": false
+         },
+         {
+          "n": 63,
+          "text": "    .select('agentName instanceId config').lean();",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "  const agentKeys = new Set(agents.map((agent: any) => (",
+          "mark": false
+         },
+         {
+          "n": 65,
+          "text": "    `${String(agent.botMetadata?.agentName || '').toLowerCase()}:${String(agent.botMetadata?.instanceId || 'default')}`",
+          "mark": true
+         },
+         {
+          "n": 66,
+          "text": "  )));",
+          "mark": false
+         },
+         {
+          "n": 67,
+          "text": "  for (const installation of installations) {",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "    const key = `${installation.agentName}:${String(installation.instanceId || 'default')}`;",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 77,
+        "column": 25,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 74,
+          "text": "  }",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "  for (const agent of agents) {",
+          "mark": false
+         },
+         {
+          "n": 76,
+          "text": "    if (agent.botType !== 'agent') return 'non_native_agent';",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "    const name = String(agent.botMetadata?.agentName || '').toLowerCase();",
+          "mark": true
+         },
+         {
+          "n": 78,
+          "text": "    const instanceId = String(agent.botMetadata?.instanceId || 'default');",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "    const matching = installations.filter((row: any) => row.agentName === name",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "      && String(row.instanceId || 'default') === instanceId);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/stalledConnectService.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 175,
+        "column": 31,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 172,
+          "text": "      + 'agentRuntimeTokens.lastMcpSeenAt agentRuntimeTokens.createdAt',",
+          "mark": false
+         },
+         {
+          "n": 173,
+          "text": "  ).lean() as Array<{ botMetadata?: { agentName?: string; instanceId?: string }; agentRuntimeTokens?: BotTokens }>;",
+          "mark": false
+         },
+         {
+          "n": 174,
+          "text": "  for (const row of rows) {",
+          "mark": false
+         },
+         {
+          "n": 175,
+          "text": "    const key = botKey(String(row.botMetadata?.agentName), String(row.botMetadata?.instanceId));",
+          "mark": true
+         },
+         {
+          "n": 176,
+          "text": "    if (!byKey.has(key)) byKey.set(key, row.agentRuntimeTokens || []);",
+          "mark": false
+         },
+         {
+          "n": 177,
+          "text": "  }",
+          "mark": false
+         },
+         {
+          "n": 178,
+          "text": "  return byKey;",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/systemExchangeTriggers.ts": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 83,
+        "column": 25,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 80,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "  const agents = bots",
+          "mark": false
+         },
+         {
+          "n": 82,
+          "text": "    .map((u) => {",
+          "mark": false
+         },
+         {
+          "n": 83,
+          "text": "      const agentName = u.botMetadata?.agentName || u.username || '';",
+          "mark": true
+         },
+         {
+          "n": 84,
+          "text": "      const instanceId = u.botMetadata?.instanceId || 'default';",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "      return { agentName: String(agentName).toLowerCase(), instanceId };",
+          "mark": false
+         },
+         {
+          "n": 86,
+          "text": "    })",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "backend/services/taskAssigneeService.ts": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 37,
+        "column": 49,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 34,
+          "text": "  if (ids.length === 0) return { agents: [], people: new Set() };",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "  const users = await User.find({ _id: { $in: ids } }).select('username isBot botMetadata')",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "    .lean<Array<{ username?: string; isBot?: boolean; botMetadata?: { agentName?: string; instanceId?: string } }>>();",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": "  const agents = users.filter((u) => u.isBot && u.botMetadata?.agentName).map((u) => ({",
+          "mark": true
+         },
+         {
+          "n": 38,
+          "text": "    agentName: String(u.botMetadata?.agentName),",
+          "mark": false
+         },
+         {
+          "n": 39,
+          "text": "    instanceId: String(u.botMetadata?.instanceId || 'default'),",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": "    username: String(u.username || ''),",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 38,
+        "column": 23,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 35,
+          "text": "  const users = await User.find({ _id: { $in: ids } }).select('username isBot botMetadata')",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "    .lean<Array<{ username?: string; isBot?: boolean; botMetadata?: { agentName?: string; instanceId?: string } }>>();",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": "  const agents = users.filter((u) => u.isBot && u.botMetadata?.agentName).map((u) => ({",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": "    agentName: String(u.botMetadata?.agentName),",
+          "mark": true
+         },
+         {
+          "n": 39,
+          "text": "    instanceId: String(u.botMetadata?.instanceId || 'default'),",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": "    username: String(u.username || ''),",
+          "mark": false
+         },
+         {
+          "n": 41,
+          "text": "  }));",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "frontend/src/v2/components/V2PersonProfile.tsx": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 132,
+        "column": 21,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 129,
+          "text": "  const joined = formatDate(profile.createdAt, i18n.language, JOINED_FORMAT);",
+          "mark": false
+         },
+         {
+          "n": 130,
+          "text": "  const following = Boolean(profile.isFollowing);",
+          "mark": false
+         },
+         {
+          "n": 131,
+          "text": "  const avatarKind = profile.isBot ? 'agent' : 'human';",
+          "mark": false
+         },
+         {
+          "n": 132,
+          "text": "  const agentHref = profile.botMetadata?.agentName",
+          "mark": true
+         },
+         {
+          "n": 133,
+          "text": "    ? `/v2/agent/${encodeURIComponent(profile.botMetadata.agentName)}/${encodeURIComponent(profile.botMetadata.instanceId || 'default')}`",
+          "mark": false
+         },
+         {
+          "n": 134,
+          "text": "    : '/v2/agents';",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 133,
+        "column": 39,
+        "ruleId": "no-restricted-syntax",
+        "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead.",
+        "lines": [
+         {
+          "n": 130,
+          "text": "  const following = Boolean(profile.isFollowing);",
+          "mark": false
+         },
+         {
+          "n": 131,
+          "text": "  const avatarKind = profile.isBot ? 'agent' : 'human';",
+          "mark": false
+         },
+         {
+          "n": 132,
+          "text": "  const agentHref = profile.botMetadata?.agentName",
+          "mark": false
+         },
+         {
+          "n": 133,
+          "text": "    ? `/v2/agent/${encodeURIComponent(profile.botMetadata.agentName)}/${encodeURIComponent(profile.botMetadata.instanceId || 'default')}`",
+          "mark": true
+         },
+         {
+          "n": 134,
+          "text": "    : '/v2/agents';",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 136,
+          "text": "  const toggleFollow = async () => {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -572,5 +5888,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 126.272
+ "seconds": 154.904
 }

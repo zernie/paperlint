@@ -27,13 +27,7 @@
    },
    {
     "path": "date-matched",
-    "outcome": "installed",
-    "resolved": [
-     {
-      "cause": "peer-conflict-typescript",
-      "by": "typescript left to the parser's peer range"
-     }
-    ]
+    "outcome": "installed"
    }
   ],
   "adjustments": [],
@@ -42,12 +36,19 @@
    "package_jsons": 1
   },
   "commit": "2026-10-31T21:51:31+01:00",
+  "ts_parser_asked": [
+   "root-tsconfig",
+   "typescript-pair"
+  ],
   "aside": [
    "package.json",
    "package-lock.json"
   ],
-  "legacy_peer_deps": false,
-  "typescript_peer_resolved": true
+  "date_matched_by": {
+   "tool": "npm",
+   "flag": "--before",
+   "at": "2026-10-31T20:51:31.000Z"
+  }
  },
  "readings": [
   {
@@ -93,6 +94,291 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "src/components/shared/Dialog.tsx": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 58,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Modal elements must use `bg-bg-raised` class for the raised surface (dialog requirement).",
+        "lines": [
+         {
+          "n": 55,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "    <BodyPortal>",
+          "mark": false
+         },
+         {
+          "n": 58,
+          "text": "      <div",
+          "mark": true
+         },
+         {
+          "n": 59,
+          "text": "        role=\"dialog\"",
+          "mark": false
+         },
+         {
+          "n": 60,
+          "text": "        aria-modal=\"true\"",
+          "mark": false
+         },
+         {
+          "n": 61,
+          "text": "        aria-labelledby={titleId}",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 58,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog elements must use `bg-bg-raised` class for the raised surface.",
+        "lines": [
+         {
+          "n": 55,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "    <BodyPortal>",
+          "mark": false
+         },
+         {
+          "n": 58,
+          "text": "      <div",
+          "mark": true
+         },
+         {
+          "n": 59,
+          "text": "        role=\"dialog\"",
+          "mark": false
+         },
+         {
+          "n": 60,
+          "text": "        aria-modal=\"true\"",
+          "mark": false
+         },
+         {
+          "n": 61,
+          "text": "        aria-labelledby={titleId}",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/ImageLightbox.tsx": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 31,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Modal elements must use `bg-bg-raised` class for the raised surface (dialog requirement).",
+        "lines": [
+         {
+          "n": 28,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "    <BodyPortal>",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "    <div",
+          "mark": true
+         },
+         {
+          "n": 32,
+          "text": "      ref={container}",
+          "mark": false
+         },
+         {
+          "n": 33,
+          "text": "      tabIndex={-1}",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "      className=\"fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm focus:outline-none\"",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 31,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog elements must use `bg-bg-raised` class for the raised surface.",
+        "lines": [
+         {
+          "n": 28,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "    <BodyPortal>",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "    <div",
+          "mark": true
+         },
+         {
+          "n": 32,
+          "text": "      ref={container}",
+          "mark": false
+         },
+         {
+          "n": 33,
+          "text": "      tabIndex={-1}",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "      className=\"fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm focus:outline-none\"",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/SignupOverlay.tsx": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 25,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Modal elements must use `bg-bg-raised` class for the raised surface (dialog requirement).",
+        "lines": [
+         {
+          "n": 22,
+          "text": "  const { container } = useModal(onClose);",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "    <BodyPortal>",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "      <div",
+          "mark": true
+         },
+         {
+          "n": 26,
+          "text": "        ref={container}",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "        role=\"dialog\"",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        aria-modal=\"true\"",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 25,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog elements must use `bg-bg-raised` class for the raised surface.",
+        "lines": [
+         {
+          "n": 22,
+          "text": "  const { container } = useModal(onClose);",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "    <BodyPortal>",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "      <div",
+          "mark": true
+         },
+         {
+          "n": 26,
+          "text": "        ref={container}",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "        role=\"dialog\"",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "        aria-modal=\"true\"",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -138,6 +424,358 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "src/components/article/ArticleEditor.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 425,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface.",
+        "lines": [
+         {
+          "n": 422,
+          "text": "  const field = `w-full bg-bg border border-border-strong px-3 py-2 text-text text-ui rounded-lg focus:outline-none focus:border-accent placeholder:text-text-dim ${publishing ? \"opacity-70\" : \"\"}`;",
+          "mark": false
+         },
+         {
+          "n": 423,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 424,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 425,
+          "text": "    <Dialog title={editing ? \"Publish update\" : \"Publish\"} size=\"lg\" onClose={onClose} closeOnBackdrop={!publishing}>",
+          "mark": true
+         },
+         {
+          "n": 426,
+          "text": "      <div className=\"p-4 space-y-4\">",
+          "mark": false
+         },
+         {
+          "n": 427,
+          "text": "        <div>",
+          "mark": false
+         },
+         {
+          "n": 428,
+          "text": "          <p className=\"text-caption text-text-muted mb-1\">How it will look in Articles</p>",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/dm/NewMessageDialog.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 147,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface.",
+        "lines": [
+         {
+          "n": 144,
+          "text": "    : \"Loading the people you follow…\";",
+          "mark": false
+         },
+         {
+          "n": 145,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "    <Dialog title=\"New message\" onClose={onClose} returnFocus={returnFocus} closeOnBackdrop={!query.trim()}>",
+          "mark": true
+         },
+         {
+          "n": 148,
+          "text": "      <div className=\"p-4 flex flex-col gap-3\">",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "        <div className=\"flex gap-2\">",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "          <input",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/feed/QuoteModal.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 66,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface.",
+        "lines": [
+         {
+          "n": 63,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "    <>",
+          "mark": false
+         },
+         {
+          "n": 65,
+          "text": "      {/* A click on the backdrop used to throw away a half-written quote without a word. */}",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "      <Dialog title=\"Quote note\" onClose={onClose} closeOnBackdrop={text.trim().length === 0} returnFocus={returnFocus}>",
+          "mark": true
+         },
+         {
+          "n": 67,
+          "text": "        {/* Compose */}",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "        <div className=\"p-4\">",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "          <textarea",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/BackupDialog.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 37,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface.",
+        "lines": [
+         {
+          "n": 34,
+          "text": "  };",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": "    <Dialog title=\"Back up your secret key\" onClose={onClose} size=\"md\">",
+          "mark": true
+         },
+         {
+          "n": 38,
+          "text": "      <div className=\"p-4\">",
+          "mark": false
+         },
+         {
+          "n": 39,
+          "text": "        <p className=\"text-text-muted text-body leading-relaxed mb-3\">",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": "          Your secret key is the only way into this account. If this computer is lost or wiped and you have no copy, the account is gone for good. Paste it into a password manager, then come back and close this.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/HelpModal.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 15,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface.",
+        "lines": [
+         {
+          "n": 12,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "export function HelpModal({ onClose }: { onClose: () => void }) {",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "    <Dialog title=\"Keyboard shortcuts\" size=\"sm\" onClose={onClose}>",
+          "mark": true
+         },
+         {
+          "n": 16,
+          "text": "      <div className=\"px-4 py-4 space-y-2\">",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "        {SHORTCUTS.map(({ key, desc }) => (",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "          <div key={key} className=\"flex items-center gap-3\">",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/LoginModal.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 45,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface.",
+        "lines": [
+         {
+          "n": 42,
+          "text": "  };",
+          "mark": false
+         },
+         {
+          "n": 43,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 44,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 45,
+          "text": "    <Dialog title=\"Sign in\" onClose={onClose} returnFocus={returnFocus}>",
+          "mark": true
+         },
+         {
+          "n": 46,
+          "text": "      <Tabs",
+          "mark": false
+         },
+         {
+          "n": 47,
+          "text": "        label=\"How to sign in\"",
+          "mark": false
+         },
+         {
+          "n": 48,
+          "text": "        tabs={[",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/zap/ZapModal.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 50,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface.",
+        "lines": [
+         {
+          "n": 47,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 48,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 49,
+          "text": "    <>",
+          "mark": false
+         },
+         {
+          "n": 50,
+          "text": "      <Dialog",
+          "mark": true
+         },
+         {
+          "n": 51,
+          "text": "        size=\"sm\"",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "        title={<><Zap size={18} strokeWidth={1.75} className=\"text-zap shrink-0\" aria-hidden /><span className=\"min-w-0 truncate\" title={`Zap ${recipientName}`}>Zap {recipientName}</span></>}",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "        status={!nwcUri && <span className=\"text-danger\">No wallet connected</span>}",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -186,6 +824,677 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "src/components/article/ArticleEditor.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 425,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 422,
+          "text": "  const field = `w-full bg-bg border border-border-strong px-3 py-2 text-text text-ui rounded-lg focus:outline-none focus:border-accent placeholder:text-text-dim ${publishing ? \"opacity-70\" : \"\"}`;",
+          "mark": false
+         },
+         {
+          "n": 423,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 424,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 425,
+          "text": "    <Dialog title={editing ? \"Publish update\" : \"Publish\"} size=\"lg\" onClose={onClose} closeOnBackdrop={!publishing}>",
+          "mark": true
+         },
+         {
+          "n": 426,
+          "text": "      <div className=\"p-4 space-y-4\">",
+          "mark": false
+         },
+         {
+          "n": 427,
+          "text": "        <div>",
+          "mark": false
+         },
+         {
+          "n": 428,
+          "text": "          <p className=\"text-caption text-text-muted mb-1\">How it will look in Articles</p>",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/dm/NewMessageDialog.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 147,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 144,
+          "text": "    : \"Loading the people you follow…\";",
+          "mark": false
+         },
+         {
+          "n": 145,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 146,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 147,
+          "text": "    <Dialog title=\"New message\" onClose={onClose} returnFocus={returnFocus} closeOnBackdrop={!query.trim()}>",
+          "mark": true
+         },
+         {
+          "n": 148,
+          "text": "      <div className=\"p-4 flex flex-col gap-3\">",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "        <div className=\"flex gap-2\">",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "          <input",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/feed/QuoteModal.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 66,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 63,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "    <>",
+          "mark": false
+         },
+         {
+          "n": 65,
+          "text": "      {/* A click on the backdrop used to throw away a half-written quote without a word. */}",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "      <Dialog title=\"Quote note\" onClose={onClose} closeOnBackdrop={text.trim().length === 0} returnFocus={returnFocus}>",
+          "mark": true
+         },
+         {
+          "n": 67,
+          "text": "        {/* Compose */}",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "        <div className=\"p-4\">",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "          <textarea",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/BackupDialog.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 37,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 34,
+          "text": "  };",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": "    <Dialog title=\"Back up your secret key\" onClose={onClose} size=\"md\">",
+          "mark": true
+         },
+         {
+          "n": 38,
+          "text": "      <div className=\"p-4\">",
+          "mark": false
+         },
+         {
+          "n": 39,
+          "text": "        <p className=\"text-text-muted text-body leading-relaxed mb-3\">",
+          "mark": false
+         },
+         {
+          "n": 40,
+          "text": "          Your secret key is the only way into this account. If this computer is lost or wiped and you have no copy, the account is gone for good. Paste it into a password manager, then come back and close this.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/Dialog.test.tsx": {
+      "total": 27,
+      "capped": true,
+      "items": [
+       {
+        "line": 18,
+        "column": 12,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 15,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "describe(\"Dialog\", () => {",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "  it(\"is a modal dialog named by its title\", () => {",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "    render(<Dialog title=\"Quote note\" onClose={() => {}}><p>body</p></Dialog>);",
+          "mark": true
+         },
+         {
+          "n": 19,
+          "text": "    expect(dialog().getAttribute(\"aria-modal\")).toBe(\"true\");",
+          "mark": false
+         },
+         {
+          "n": 20,
+          "text": "    expect(screen.getByRole(\"dialog\", { name: \"Quote note\" })).toBe(dialog());",
+          "mark": false
+         },
+         {
+          "n": 21,
+          "text": "    expect(screen.getByRole(\"heading\", { name: \"Quote note\" })).toBeTruthy();",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 26,
+        "column": 57,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 23,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "  // Inside a feed row a fixed backdrop only covered that row.",
+          "mark": false
+         },
+         {
+          "n": 25,
+          "text": "  it(\"is rendered at the body, not where it was opened\", () => {",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "    const { container } = render(<div data-testid=\"row\"><Dialog title=\"Zap\" onClose={() => {}}>x</Dialog></div>);",
+          "mark": true
+         },
+         {
+          "n": 27,
+          "text": "    expect(container.querySelector(\"[role=dialog]\")).toBeNull();",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "    expect(document.body.querySelector(\"[role=dialog]\")).toBe(dialog());",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "  });",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 32,
+        "column": 33,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 29,
+          "text": "  });",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "  it(\"shows a status line under the title when given one\", () => {",
+          "mark": false
+         },
+         {
+          "n": 32,
+          "text": "    const { rerender } = render(<Dialog title=\"Zap\" status=\"No wallet connected\" onClose={() => {}}>x</Dialog>);",
+          "mark": true
+         },
+         {
+          "n": 33,
+          "text": "    expect(screen.getByText(\"No wallet connected\")).toBeTruthy();",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "    for (const nothing of [false, \"\", null, undefined] as const) {",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "      rerender(<Dialog title=\"Zap\" status={nothing} onClose={() => {}}>x</Dialog>);",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 35,
+        "column": 16,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 32,
+          "text": "    const { rerender } = render(<Dialog title=\"Zap\" status=\"No wallet connected\" onClose={() => {}}>x</Dialog>);",
+          "mark": false
+         },
+         {
+          "n": 33,
+          "text": "    expect(screen.getByText(\"No wallet connected\")).toBeTruthy();",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "    for (const nothing of [false, \"\", null, undefined] as const) {",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "      rerender(<Dialog title=\"Zap\" status={nothing} onClose={() => {}}>x</Dialog>);",
+          "mark": true
+         },
+         {
+          "n": 36,
+          "text": "      expect(screen.queryByText(\"No wallet connected\")).toBeNull();",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": "      // no empty line left behind under the title",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": "      expect(screen.getByRole(\"heading\").parentElement!.children.length).toBe(1);",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 44,
+        "column": 12,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 41,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 42,
+          "text": "  it(\"has a close button that says what it does\", () => {",
+          "mark": false
+         },
+         {
+          "n": 43,
+          "text": "    const onClose = vi.fn();",
+          "mark": false
+         },
+         {
+          "n": 44,
+          "text": "    render(<Dialog title=\"Login\" onClose={onClose}>x</Dialog>);",
+          "mark": true
+         },
+         {
+          "n": 45,
+          "text": "    fireEvent.click(screen.getByRole(\"button\", { name: \"Close\" }));",
+          "mark": false
+         },
+         {
+          "n": 46,
+          "text": "    expect(onClose).toHaveBeenCalledTimes(1);",
+          "mark": false
+         },
+         {
+          "n": 47,
+          "text": "  });",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/HelpModal.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 15,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 12,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "export function HelpModal({ onClose }: { onClose: () => void }) {",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "    <Dialog title=\"Keyboard shortcuts\" size=\"sm\" onClose={onClose}>",
+          "mark": true
+         },
+         {
+          "n": 16,
+          "text": "      <div className=\"px-4 py-4 space-y-2\">",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "        {SHORTCUTS.map(({ key, desc }) => (",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "          <div key={key} className=\"flex items-center gap-3\">",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/ImageLightbox.test.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 106,
+        "column": 14,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 103,
+          "text": "  it(\"closes before a dialog that is under it\", () => {",
+          "mark": false
+         },
+         {
+          "n": 104,
+          "text": "    const closeDialog = vi.fn();",
+          "mark": false
+         },
+         {
+          "n": 105,
+          "text": "    const closeViewer = vi.fn();",
+          "mark": false
+         },
+         {
+          "n": 106,
+          "text": "    render(<><Dialog title=\"Under\" onClose={closeDialog}>x</Dialog><ImageLightbox images={IMAGES} index={0} onClose={closeViewer} onNavigate={() => {}} /></>);",
+          "mark": true
+         },
+         {
+          "n": 107,
+          "text": "    fireEvent.keyDown(document.body, { key: \"Escape\" });",
+          "mark": false
+         },
+         {
+          "n": 108,
+          "text": "    expect(closeViewer).toHaveBeenCalledTimes(1);",
+          "mark": false
+         },
+         {
+          "n": 109,
+          "text": "    expect(closeDialog).not.toHaveBeenCalled();",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/LoginModal.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 45,
+        "column": 5,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 42,
+          "text": "  };",
+          "mark": false
+         },
+         {
+          "n": 43,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 44,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 45,
+          "text": "    <Dialog title=\"Sign in\" onClose={onClose} returnFocus={returnFocus}>",
+          "mark": true
+         },
+         {
+          "n": 46,
+          "text": "      <Tabs",
+          "mark": false
+         },
+         {
+          "n": 47,
+          "text": "        label=\"How to sign in\"",
+          "mark": false
+         },
+         {
+          "n": 48,
+          "text": "        tabs={[",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/shared/SignupOverlay.test.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 66,
+        "column": 12,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 63,
+          "text": "  // The zap dialog's \"Sign in\", then \"Create an account\": the flow must be",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "  // above the dialog that asked for it, and Escape must reach the flow first.",
+          "mark": false
+         },
+         {
+          "n": 65,
+          "text": "  it(\"is above a dialog that was open when it was asked for\", () => {",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "    render(<Dialog title=\"Send a zap\" onClose={() => {}}><button>Sign in</button></Dialog>);",
+          "mark": true
+         },
+         {
+          "n": 67,
+          "text": "    open(\"create\");",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "    const dialogs = [...document.querySelectorAll(\"[role=dialog]\")];",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "    expect(dialogs.map((d) => d.getAttribute(\"aria-label\") ?? d.querySelector(\"h2\")?.textContent)).toEqual([\"Send a zap\", \"Create account\"]);",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "src/components/zap/ZapModal.tsx": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 50,
+        "column": 7,
+        "ruleId": "no-restricted-syntax",
+        "message": "Dialog is a raised surface using bg-bg-raised.",
+        "lines": [
+         {
+          "n": 47,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 48,
+          "text": "  return (",
+          "mark": false
+         },
+         {
+          "n": 49,
+          "text": "    <>",
+          "mark": false
+         },
+         {
+          "n": 50,
+          "text": "      <Dialog",
+          "mark": true
+         },
+         {
+          "n": 51,
+          "text": "        size=\"sm\"",
+          "mark": false
+         },
+         {
+          "n": 52,
+          "text": "        title={<><Zap size={18} strokeWidth={1.75} className=\"text-zap shrink-0\" aria-hidden /><span className=\"min-w-0 truncate\" title={`Zap ${recipientName}`}>Zap {recipientName}</span></>}",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "        status={!nwcUri && <span className=\"text-danger\">No wallet connected</span>}",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -304,5 +1613,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 26.041
+ "seconds": 29.941
 }

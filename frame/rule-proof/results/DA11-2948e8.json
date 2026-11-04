@@ -5,18 +5,40 @@
  "linter": "ruff",
  "rule": "D415",
  "checked_out": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-pin",
-  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
- },
- "date_matched": {
-  "commit": "2026-10-30T11:41:39-04:00",
-  "ruff": "0.17.3"
- },
  "install": {
-  "kind": "installed",
-  "version": "0.17.3"
+  "outcome": "installed",
+  "path": "as-designed",
+  "version": "0.17.3",
+  "versions": {},
+  "plugins": {},
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-pin",
+     "detail": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+    }
+   },
+   {
+    "path": "as-designed",
+    "outcome": "installed",
+    "rule": "ruff-date-matched"
+   }
+  ],
+  "adjustments": [
+   "date-matched-version"
+  ],
+  "date_matched": {
+   "commit": "2026-10-30T11:41:39-04:00",
+   "ruff": "0.17.3"
+  },
+  "date_matched_by": {
+   "tool": "uv",
+   "flag": "--exclude-newer",
+   "at": "2026-10-30T15:41:39.000Z"
+  }
  },
  "readings": [
   {
@@ -43,6 +65,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -104,6 +127,2955 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "benchmark/benchmark_gong_birkhoff.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 12,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 9,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "# First define a system which computes the equations of motion",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "class GongODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 13,
+          "text": "    Define the ODE for the \"Gong Challenge Problem\"",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "    Computational Optimal Control - Theory & Tools Beyond Nonlinear Programming",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/aero/aerodynamics_group.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class AerodynamicsGroup(om.Group):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    The purpose of the Aerodynamics is to compute the lift and",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    drag forces on the aircraft.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/aero/interpND_aero_coef_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 69,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 66,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 67,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 68,
+          "text": "class InterpNDAeroCoeffComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "    \"\"\" Compute the lift, drag, and moment coefficients of the aircraft \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 70,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 71,
+          "text": "    def initialize(self):",
+          "mark": false
+         },
+         {
+          "n": 72,
+          "text": "        self.options.declare('vec_size', types=int)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/flight_equlibrium/lift_equilibrium_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class LiftEquilibriumComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    Compute the rates of TAS and flight path angle required to match a given",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    flight condition.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/flight_equlibrium/thrust_equilibrium_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class ThrustEquilibriumComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    Compute the rates of TAS and flight path angle required to match a given",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    flight condition.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/mass_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class MassComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\" Compute the total mass of the aircraft \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    def initialize(self):",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "        self.options.declare('num_nodes', types=int)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/propulsion/max_thrust_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class MaxThrustComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\" Compute the maximum thrust given the current aircraft state and its",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    maximum sea-level thrust with a simple pressure correction.",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    \"\"\"",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/propulsion/propulsion_group.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 11,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "class PropulsionGroup(om.Group):",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 12,
+          "text": "    The PropulsionGroup computes propulsive forces (thrust), the specific fuel consumption and",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    fuel expenditure rate, and the aircraft throttle setting.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/propulsion/throttle_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class ThrottleComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\" Compute 'tau' (throttle parameter) which is the ratio of the current thrust",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    (as determined to provie flight equilibrium) with the maximum thrust given",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    the current aircraft state.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/propulsion/thrust_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class ThrustComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\" Compute thrust from the thrust coefficient",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    def initialize(self):",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/aircraft_steady_flight/propulsion/tsfc_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class SFCComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\" Compute the specific fuel consumption based on the altitude",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    and the sea-level specific fuel consumption.",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    \"\"\"",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/ballistic_spacecraft/ephem_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 30,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 27,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "def _solve_kepler(M: float, e: float, tol: float = 1e-10, max_iter: int = 20) -> float:",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 31,
+          "text": "    Solve Kepler's equation M = E - e*sin(E) for eccentric anomaly E",
+          "mark": false
+         },
+         {
+          "n": 32,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 33,
+          "text": "    using Newton-Raphson iteration with jax.lax.scan for AD compatibility.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/battery_multibranch/battery_multibranch_ode.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 1,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 1,
+          "text": "\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "ODE for example that shows how to use multiple phases in Dymos to model failure of a battery cell",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "in a simple electrical system.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/brachistochrone/test/test_brachistochrone_subprob_reports.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 1,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 1,
+          "text": "\"\"\"Unit Tests for the code that does automatic report generation\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "import unittest",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "import os",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/cannonball/cannonball_ode.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 17,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 14,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "class CannonballODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 18,
+          "text": "    Cannonball ODE assuming flat earth and accounting for air resistance",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 20,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/cannonball/test/test_cannonball_implicit_duration.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 67,
+        "column": 13,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 64,
+          "text": "        # Build the ODE class",
+          "mark": false
+         },
+         {
+          "n": 65,
+          "text": "        #############################################",
+          "mark": false
+         },
+         {
+          "n": 66,
+          "text": "        class CannonballODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 67,
+          "text": "            \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 68,
+          "text": "            Cannonball ODE assuming flat earth and accounting for air resistance",
+          "mark": false
+         },
+         {
+          "n": 69,
+          "text": "            \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 70,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/cannonball/test/test_cannonball_matrix_state.py": {
+      "total": 3,
+      "capped": false,
+      "items": [
+       {
+        "line": 32,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 29,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "@use_tempdirs",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "class TestCannonballMatrixState(unittest.TestCase):",
+          "mark": false
+         },
+         {
+          "n": 32,
+          "text": "    \"\"\" Tests to verify that dymos can use matrix-states\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 33,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "    def _make_problem(self, tx):",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "        p = om.Problem()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 189,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 186,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 187,
+          "text": "@use_tempdirs",
+          "mark": false
+         },
+         {
+          "n": 188,
+          "text": "class TestCannonballMatrixStateExplicitShape(unittest.TestCase):",
+          "mark": false
+         },
+         {
+          "n": 189,
+          "text": "    \"\"\" Tests to verify that dymos can use matrix-states\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 190,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 191,
+          "text": "    def _make_problem(self, tx):",
+          "mark": false
+         },
+         {
+          "n": 192,
+          "text": "        p = om.Problem()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 300,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 297,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 298,
+          "text": "@use_tempdirs",
+          "mark": false
+         },
+         {
+          "n": 299,
+          "text": "class TestCannonballMatrixStateNonFlatIndices(unittest.TestCase):",
+          "mark": false
+         },
+         {
+          "n": 300,
+          "text": "    \"\"\" Tests to verify that dymos can use matrix-states\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 301,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 302,
+          "text": "    def _make_problem(self, tx):",
+          "mark": false
+         },
+         {
+          "n": 303,
+          "text": "        p = om.Problem()",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/cannonball/test/test_connect_control_to_parameter.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 13,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "class CannonballODEVectorCD(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 14,
+          "text": "    Cannonball ODE assuming flat earth and accounting for air resistance",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/cannonball/test/test_traj_param_static_and_dynamic.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 16,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 13,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "class CannonballODEVectorCD(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 17,
+          "text": "    Cannonball ODE assuming flat earth and accounting for air resistance",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/cannonball/test/test_two_phase_cannonball_birkhoff.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 58,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 55,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "class CannonballODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 58,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 59,
+          "text": "    Cannonball ODE assuming flat earth and accounting for air resistance",
+          "mark": false
+         },
+         {
+          "n": 60,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 61,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/cart_pole/cartpole_dynamics.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 1,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 1,
+          "text": "\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "Cart-pole dynamics (ODE)",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/double_integrator/double_integrator_ode.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 5,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 2,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "class DoubleIntegratorODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 6,
+          "text": "    The double integrator is a special case where the state rates are all set to other states",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "    or parameters.  Since we aren't computing any other outputs, the ODE doesn't actually",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/flying_robot/flying_robot_ode.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 5,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 2,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "class FlyingRobotODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 6,
+          "text": "    The flying robot ODE mimics a free flying robot with thrusters in the vertical axis and",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "    horizontal axis.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/min_time_climb/aero/aero.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 13,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "class AeroGroup(om.Group):",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 14,
+          "text": "    The purpose of the AeroGroup is to compute the aerodynamic forces on the",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "    aircraft in the body frame.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/min_time_climb/aero/cd0_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class CD0Comp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\" Computes the zero-lift drag coefficient",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    def initialize(self):",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/min_time_climb/aero/cla_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class CLaComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\" Computes the alpha lift coefficient for induced drag",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/min_time_climb/aero/kappa_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class KappaComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    r\"\"\" Computes the term kappa in the drag equation:",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    .. math::",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/min_time_climb/aero/lift_drag_force_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class LiftDragForceComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    Compute the aerodynamic forces on the vehicle in the wind axis frame",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    (lift, drag, cross) force.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/min_time_climb/aero/mach_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 7,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 4,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "class MachComp(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "    \"\"\" Compute the Mach number based on vehicle airspeed and local speed",
+          "mark": true
+         },
+         {
+          "n": 8,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    of sound.",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    \"\"\"",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/min_time_climb/prop/prop.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 8,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 5,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "class PropGroup(om.Group):",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 9,
+          "text": "    The purpose of the PropGroup is to compute the propulsive forces on the",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "    aircraft in the body frame.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/min_time_climb/test/aero_partial_coloring.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 14,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 11,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "class AeroGroup(om.Group):",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 15,
+          "text": "    The purpose of the AeroGroup is to compute the aerodynamic forces on the",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "    aircraft in the body frame.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/min_time_climb/test/test_min_time_climb_simulate_failure.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 86,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 83,
+          "text": "@use_tempdirs",
+          "mark": false
+         },
+         {
+          "n": 84,
+          "text": "class TestMinTimeClimbSimulateFailure(unittest.TestCase):",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "    def test_simulate_raises_analysis_error(self):",
+          "mark": false
+         },
+         {
+          "n": 86,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 87,
+          "text": "        Test that simulation of a naive alpha guess for the min time climb results in an",
+          "mark": false
+         },
+         {
+          "n": 88,
+          "text": "        AnalysisError due to a singularity in the dynamics",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "        \"\"\"",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/vanderpol/test/test_vanderpol.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 58,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 55,
+          "text": "    @require_pyoptsparse(optimizer='IPOPT')",
+          "mark": false
+         },
+         {
+          "n": 56,
+          "text": "    @unittest.skipUnless(MPI, 'this test requires MPI')",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "    def test_vanderpol_optimal_mpi(self):",
+          "mark": false
+         },
+         {
+          "n": 58,
+          "text": "        \"\"\"to test with MPI:",
+          "mark": true
+         },
+         {
+          "n": 59,
+          "text": "           OPENMDAO_REQUIRE_MPI=1 mpirun -n 4 python",
+          "mark": false
+         },
+         {
+          "n": 60,
+          "text": "               dymos/examples/vanderpol/test/test_vanderpol.py TestVanderpolExampleMPI.test_vanderpol_optimal_mpi",
+          "mark": false
+         },
+         {
+          "n": 61,
+          "text": "           (using varying values for n should give the same answer)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/vanderpol/vanderpol_dymos.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 9,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 6,
+          "text": "def vanderpol(transcription='gauss-lobatto', num_segments=40, transcription_order=3,",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "              compressed=True, optimizer='SLSQP', use_pyoptsparse=False, delay=0.0, distrib=True,",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "              solve_segments=False):",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    \"\"\"Dymos problem definition for optimal control of a Van der Pol oscillator\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 10,
+          "text": "    # define the OpenMDAO problem",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "    p = om.Problem(model=om.Group())",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/vanderpol/vanderpol_ode.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 9,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "class VanderpolODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    \"\"\"intentionally slow version of vanderpol_ode for effects of demonstrating distributed component calculations",
+          "mark": true
+         },
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "    MPI can run this component in multiple processes, distributing the calculation of derivatives.",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "    This code has a delay in it to simulate a longer computation. It should run faster with more processes.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/examples/water_rocket/water_engine_comp.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 82,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 79,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 81,
+          "text": "class _WaterFlowRate(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 82,
+          "text": "    \"\"\" Computer water flow rate\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 83,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 84,
+          "text": "    def initialize(self):",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "        self.options.declare('num_nodes', types=int)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/grid_refinement/write_iteration.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 1,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 1,
+          "text": "\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "Utility for storing and outputting grid refinement information at each iteration",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "import numpy as np",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/load_case.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 62,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 59,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 60,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 61,
+          "text": "def load_case(problem, previous_solution, deprecation_warning=True):",
+          "mark": false
+         },
+         {
+          "n": 62,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 63,
+          "text": "    Populate a guess for the given problem involving Dymos Phases by interpolating results",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 65,
+          "text": "    from the previous solution.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/models/atmosphere/atmos_1976.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 1,
+        "column": 1,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 1,
+          "text": "\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 2,
+          "text": "United States standard atmosphere 1976 tables, data",
+          "mark": false
+         },
+         {
+          "n": 3,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 4,
+          "text": "obtained from http://www.digitaldutch.com/atmoscalc/index.htm",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/phase/phase.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 2396,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 2393,
+          "text": "                self.control_options[name]['rate2_continuity'] = False",
+          "mark": false
+         },
+         {
+          "n": 2394,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 2395,
+          "text": "    def _check_parameter_options(self):",
+          "mark": false
+         },
+         {
+          "n": 2396,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 2397,
+          "text": "        Check that parameter options are valid and issue warnings if invalid",
+          "mark": false
+         },
+         {
+          "n": 2398,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 2399,
+          "text": "        options are provided.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/phase/test/test_analytic_phase.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 39,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 36,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 37,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": "class SimpleBVPSolution(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 39,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 40,
+          "text": "    A basic BVP ODE solution taken from",
+          "mark": false
+         },
+         {
+          "n": 41,
+          "text": "    https://math.libretexts.org/Bookshelves/Applied_Mathematics/Numerical_Methods_(Chasnov)/07%3A_Ordinary_Differential_Equations/7.01%3A_Examples_of_Analytical_Solutions",
+          "mark": false
+         },
+         {
+          "n": 42,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/test/test_readme.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 11,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 8,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "def extract_python_code(filename):",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "    \"\"\"Extracts Python code blocks from a Markdown file and save them to a temp file\"\"\"",
+          "mark": true
+         },
+         {
+          "n": 12,
+          "text": "    with open(filename, \"r\") as f:",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "        content = f.read()",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/transcriptions/explicit_shooting/ode_evaluation_group.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 329,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 326,
+          "text": "                                            units=rate2_units)",
+          "mark": false
+         },
+         {
+          "n": 327,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 328,
+          "text": "    def _get_rate_source_path(self, state_var):",
+          "mark": false
+         },
+         {
+          "n": 329,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 330,
+          "text": "        Get path of the rate source variable so that we can connect it to the",
+          "mark": false
+         },
+         {
+          "n": 331,
+          "text": "        ",
+          "mark": false
+         },
+         {
+          "n": 332,
+          "text": "        outputs when we're done.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/transcriptions/explicit_shooting/test/test_explicit_shooting.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 16,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 13,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "class Simple2StateODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 16,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 17,
+          "text": "    A simple ODE from https://math.okstate.edu/people/yqwang/teaching/math4513_fall11/Notes/rungekutta.pdf",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 19,
+          "text": "    def initialize(self):",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 55,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 52,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 53,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 54,
+          "text": "class Simple1StateODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 55,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 56,
+          "text": "    A simple ODE from https://math.okstate.edu/people/yqwang/teaching/math4513_fall11/Notes/rungekutta.pdf",
+          "mark": false
+         },
+         {
+          "n": 57,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 58,
+          "text": "    def initialize(self):",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/transcriptions/pseudospectral/components/test/test_collocation_defect_solver.py": {
+      "total": 12,
+      "capped": true,
+      "items": [
+       {
+        "line": 24,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 21,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 22,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "    def test_3_lgl(self):",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 25,
+          "text": "        Test one 3rd order LGL segment indices",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "        All nodes are:   [0, 1, 2]",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 43,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 40,
+          "text": "        self.assertSetEqual(set(state_indeps_comp.state_idx_map['x']['indep']), {0})",
+          "mark": false
+         },
+         {
+          "n": 41,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 42,
+          "text": "    def test_5_lgl(self):",
+          "mark": false
+         },
+         {
+          "n": 43,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 44,
+          "text": "        Test one 5th order LGL segment indices",
+          "mark": false
+         },
+         {
+          "n": 45,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 46,
+          "text": "        All nodes are:   [0, 1, 2, 3, 4]",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 61,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 58,
+          "text": "        self.assertSetEqual(set(state_indeps_comp.state_idx_map['x']['indep']), {0})",
+          "mark": false
+         },
+         {
+          "n": 59,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 60,
+          "text": "    def test_3_lgl_compressed(self):",
+          "mark": false
+         },
+         {
+          "n": 61,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 62,
+          "text": "        Test one 3rd order LGL segment indices",
+          "mark": false
+         },
+         {
+          "n": 63,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "        All nodes are:   [0, 1, 2, 3, 4]",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 80,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 77,
+          "text": "        self.assertSetEqual(set(state_indeps_comp.state_idx_map['x']['indep']), {0})",
+          "mark": false
+         },
+         {
+          "n": 78,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "    def test_5_lgl_compressed(self):",
+          "mark": false
+         },
+         {
+          "n": 80,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 81,
+          "text": "        Test two 5th order LGL segment indices",
+          "mark": false
+         },
+         {
+          "n": 82,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 83,
+          "text": "        All nodes are:   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 99,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 96,
+          "text": "        self.assertSetEqual(set(state_indeps_comp.state_idx_map['x']['indep']), {0})",
+          "mark": false
+         },
+         {
+          "n": 97,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 98,
+          "text": "    def test_3_lgl_uncompressed(self):",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 100,
+          "text": "        Test two 3rd order LGL segment indices",
+          "mark": false
+         },
+         {
+          "n": 101,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 102,
+          "text": "        All nodes are:   [0, 1, 2, 3, 4, 5]",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/transcriptions/pseudospectral/test/test_ps_base.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 12,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 9,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "class crtbp_ode(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 13,
+          "text": "    ODE for the circular restricted three-body problem (CRTBP)",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "    def initialize(self):",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/utils/introspection.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 972,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 969,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 970,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 971,
+          "text": "def _get_common_metadata(targets, metadata_key):",
+          "mark": false
+         },
+         {
+          "n": 972,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 973,
+          "text": "    Given a dictionary containing targets and their metadata, return the value associated",
+          "mark": false
+         },
+         {
+          "n": 974,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 975,
+          "text": "    with the given metadata key if that value is common to all targets, otherwise raise an",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/utils/ode_utils.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 24,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 21,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 22,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 23,
+          "text": "def _parse_index_string(index_str):",
+          "mark": false
+         },
+         {
+          "n": 24,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 25,
+          "text": "    Convert a string representation of array indices to a tuple of slice objects,",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "    ",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "    integer indices, or ellipsis that can be used for array access.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/utils/test/test_testing_utils.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 12,
+        "column": 5,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 9,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 10,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "def create_linear_time_series(n, t_begin, t_end, x_begin, x_end):",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "    \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 13,
+          "text": "    Simple little function to generate a time series to be used for the tests in this file",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "    \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "    slope = (x_end - x_begin) / (t_end - t_begin)",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "dymos/visualization/linkage/test/linkage_report_ui_test.py": {
+      "total": 9,
+      "capped": true,
+      "items": [
+       {
+        "line": 475,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 472,
+          "text": "        await self.page.goto(url, wait_until='networkidle')",
+          "mark": false
+         },
+         {
+          "n": 473,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 474,
+          "text": "    async def generic_toolbar_tests(self):",
+          "mark": false
+         },
+         {
+          "n": 475,
+          "text": "        \"\"\" Click most of the toolbar buttons to see if an error occurs \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 476,
+          "text": "        for test in toolbar_script:",
+          "mark": false
+         },
+         {
+          "n": 477,
+          "text": "            with self.subTest(test['desc']):",
+          "mark": false
+         },
+         {
+          "n": 478,
+          "text": "                self.log_test(\"[Toolbar] \" + test['desc'])",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 486,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 483,
+          "text": "        await self.page.reload(wait_until='networkidle')",
+          "mark": false
+         },
+         {
+          "n": 484,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 485,
+          "text": "    async def assert_element_count(self, selector, expected_found):",
+          "mark": false
+         },
+         {
+          "n": 486,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 487,
+          "text": "        Count the number of elements located by the selector and make",
+          "mark": false
+         },
+         {
+          "n": 488,
+          "text": "        ",
+          "mark": false
+         },
+         {
+          "n": 489,
+          "text": "        sure it exactly matches the supplied value. Try several times",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 540,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 537,
+          "text": "                         ' elements, expected ' + str(expected_found))",
+          "mark": false
+         },
+         {
+          "n": 538,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 539,
+          "text": "    async def assert_arrow_count(self, expected_arrows):",
+          "mark": false
+         },
+         {
+          "n": 540,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 541,
+          "text": "        Count the number of path elements in the n2arrows < div > and make",
+          "mark": false
+         },
+         {
+          "n": 542,
+          "text": "        ",
+          "mark": false
+         },
+         {
+          "n": 543,
+          "text": "        sure it matches the specified value.",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 560,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 557,
+          "text": "        await hndl.hover(force=False)",
+          "mark": false
+         },
+         {
+          "n": 558,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 559,
+          "text": "    async def hover_and_check_arrow_count(self, options):",
+          "mark": false
+         },
+         {
+          "n": 560,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 561,
+          "text": "        Hover over a matrix cell, make sure the number of expected arrows",
+          "mark": false
+         },
+         {
+          "n": 562,
+          "text": "        ",
+          "mark": false
+         },
+         {
+          "n": 563,
+          "text": "        are there, then move off and make sure the arrows go away.",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 573,
+        "column": 9,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 570,
+          "text": "        await self.assert_arrow_count(0)  # Make sure no arrows left",
+          "mark": false
+         },
+         {
+          "n": 571,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 572,
+          "text": "    async def click(self, options):",
+          "mark": false
+         },
+         {
+          "n": 573,
+          "text": "        \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 574,
+          "text": "        Perform a click of the type specified by options.button on the",
+          "mark": false
+         },
+         {
+          "n": 575,
+          "text": "        ",
+          "mark": false
+         },
+         {
+          "n": 576,
+          "text": "        element specified by options.selector.",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "joss/test/test_cannonball_for_joss.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 36,
+        "column": 13,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 33,
+          "text": "                              USatm1976Data.rho * english_to_metric_rho)",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 35,
+          "text": "        class CannonballSize(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 36,
+          "text": "            \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 37,
+          "text": "            Static calculations performed before the dynamic model",
+          "mark": false
+         },
+         {
+          "n": 38,
+          "text": "            \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 39,
+          "text": "",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 61,
+        "column": 13,
+        "ruleId": "D415",
+        "message": "First line should end with a period, question mark, or exclamation point",
+        "lines": [
+         {
+          "n": 58,
+          "text": "                outputs['area'] = np.pi * radius ** 2",
+          "mark": false
+         },
+         {
+          "n": 59,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 60,
+          "text": "        class CannonballODE(om.ExplicitComponent):",
+          "mark": false
+         },
+         {
+          "n": 61,
+          "text": "            \"\"\"",
+          "mark": true
+         },
+         {
+          "n": 62,
+          "text": "            Cannonball ODE assuming flat earth and accounting for air resistance",
+          "mark": false
+         },
+         {
+          "n": 63,
+          "text": "            \"\"\"",
+          "mark": false
+         },
+         {
+          "n": 64,
+          "text": "",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   }
  ],
@@ -111,5 +3083,5 @@
  "adjustments": [
   "date-matched-version"
  ],
- "seconds": 1.35
+ "seconds": 3.083
 }

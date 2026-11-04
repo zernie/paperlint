@@ -8,18 +8,16 @@
  "install": {
   "outcome": "installed",
   "path": "date-matched",
-  "version": "10.13.0",
+  "version": "9.39.5",
   "versions": {
-   "eslint": "10.13.0",
+   "eslint": "9.39.5",
    "@typescript-eslint/parser": "8.72.0",
-   "typescript": "6.0.3",
-   "eslint-plugin-import": "2.32.0"
+   "typescript": "6.0.3"
   },
   "plugins": {
    "eslint-plugin-import": {
     "version": "2.32.0",
-    "error": null,
-    "peer_conflict": true
+    "error": null
    }
   },
   "attempts": [
@@ -34,17 +32,7 @@
    },
    {
     "path": "date-matched",
-    "outcome": "installed",
-    "resolved": [
-     {
-      "cause": "peer-conflict-typescript",
-      "by": "typescript left to the parser's peer range"
-     },
-     {
-      "cause": "peer-conflict-other",
-      "by": "--legacy-peer-deps for eslint-plugin-import"
-     }
-    ]
+    "outcome": "installed"
    }
   ],
   "adjustments": [],
@@ -53,12 +41,19 @@
    "package_jsons": 2
   },
   "commit": "2026-10-26T01:17:10+08:00",
+  "ts_parser_asked": [
+   "root-tsconfig",
+   "typescript-pair"
+  ],
   "aside": [
    "package.json",
    "pnpm-lock.yaml"
   ],
-  "legacy_peer_deps": true,
-  "typescript_peer_resolved": true
+  "date_matched_by": {
+   "tool": "npm",
+   "flag": "--before",
+   "at": "2026-10-25T17:17:10.000Z"
+  }
  },
  "readings": [
   {
@@ -196,6 +191,113 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "scripts/render-sfx.mjs": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 28,
+        "column": 58,
+        "ruleId": "import/extensions",
+        "message": "Unexpected use of file extension \"ts\" for \"/site/sfx.ts\"",
+        "lines": [
+         {
+          "n": 25,
+          "text": "await page.goto(url);",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "const results = await page.evaluate(async () => {",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "  const { recipes, tearSound, masterBus } = await import('/site/sfx.ts');",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "  const rate = 44100;",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "  /** 渲染一段，返回 16 位 PCM wav（base64）和峰值、响度 */",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "scripts/verify-pearl.mjs": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 15,
+        "column": 41,
+        "ruleId": "import/extensions",
+        "message": "Unexpected use of file extension \"mjs\" for \"./pearl-keyframes.mjs\"",
+        "lines": [
+         {
+          "n": 12,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "import { chromium, webkit } from 'playwright-core';",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "import sharp from 'sharp';",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "import { ANIMATIONS, positionsAt } from './pearl-keyframes.mjs';",
+          "mark": true
+         },
+         {
+          "n": 16,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "const argv = process.argv.slice(2);",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "const arg = (name, fallback) => {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -245,6 +347,113 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "scripts/render-sfx.mjs": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 28,
+        "column": 58,
+        "ruleId": "import/extensions",
+        "message": "Unexpected use of file extension \"ts\" for \"/site/sfx.ts\"",
+        "lines": [
+         {
+          "n": 25,
+          "text": "await page.goto(url);",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "const results = await page.evaluate(async () => {",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "  const { recipes, tearSound, masterBus } = await import('/site/sfx.ts');",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "  const rate = 44100;",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "  /** 渲染一段，返回 16 位 PCM wav（base64）和峰值、响度 */",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "scripts/verify-pearl.mjs": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 15,
+        "column": 41,
+        "ruleId": "import/extensions",
+        "message": "Unexpected use of file extension \"mjs\" for \"./pearl-keyframes.mjs\"",
+        "lines": [
+         {
+          "n": 12,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "import { chromium, webkit } from 'playwright-core';",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "import sharp from 'sharp';",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "import { ANIMATIONS, positionsAt } from './pearl-keyframes.mjs';",
+          "mark": true
+         },
+         {
+          "n": 16,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "const argv = process.argv.slice(2);",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "const arg = (name, fallback) => {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -294,6 +503,113 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "scripts/render-sfx.mjs": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 28,
+        "column": 58,
+        "ruleId": "import/extensions",
+        "message": "Unexpected use of file extension \"ts\" for \"/site/sfx.ts\"",
+        "lines": [
+         {
+          "n": 25,
+          "text": "await page.goto(url);",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "const results = await page.evaluate(async () => {",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "  const { recipes, tearSound, masterBus } = await import('/site/sfx.ts');",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "  const rate = 44100;",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "  /** 渲染一段，返回 16 位 PCM wav（base64）和峰值、响度 */",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "scripts/verify-pearl.mjs": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 15,
+        "column": 41,
+        "ruleId": "import/extensions",
+        "message": "Unexpected use of file extension \"mjs\" for \"./pearl-keyframes.mjs\"",
+        "lines": [
+         {
+          "n": 12,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "import { chromium, webkit } from 'playwright-core';",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "import sharp from 'sharp';",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "import { ANIMATIONS, positionsAt } from './pearl-keyframes.mjs';",
+          "mark": true
+         },
+         {
+          "n": 16,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "const argv = process.argv.slice(2);",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "const arg = (name, fallback) => {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   },
   {
@@ -343,6 +659,113 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "scripts/render-sfx.mjs": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 28,
+        "column": 58,
+        "ruleId": "import/extensions",
+        "message": "Unexpected use of file extension \"ts\" for \"/site/sfx.ts\"",
+        "lines": [
+         {
+          "n": 25,
+          "text": "await page.goto(url);",
+          "mark": false
+         },
+         {
+          "n": 26,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 27,
+          "text": "const results = await page.evaluate(async () => {",
+          "mark": false
+         },
+         {
+          "n": 28,
+          "text": "  const { recipes, tearSound, masterBus } = await import('/site/sfx.ts');",
+          "mark": true
+         },
+         {
+          "n": 29,
+          "text": "  const rate = 44100;",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "  /** 渲染一段，返回 16 位 PCM wav（base64）和峰值、响度 */",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "scripts/verify-pearl.mjs": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 15,
+        "column": 41,
+        "ruleId": "import/extensions",
+        "message": "Unexpected use of file extension \"mjs\" for \"./pearl-keyframes.mjs\"",
+        "lines": [
+         {
+          "n": 12,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 13,
+          "text": "import { chromium, webkit } from 'playwright-core';",
+          "mark": false
+         },
+         {
+          "n": 14,
+          "text": "import sharp from 'sharp';",
+          "mark": false
+         },
+         {
+          "n": 15,
+          "text": "import { ANIMATIONS, positionsAt } from './pearl-keyframes.mjs';",
+          "mark": true
+         },
+         {
+          "n": 16,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 17,
+          "text": "const argv = process.argv.slice(2);",
+          "mark": false
+         },
+         {
+          "n": 18,
+          "text": "const arg = (name, fallback) => {",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   }
  ],
@@ -515,5 +938,5 @@
   }
  ],
  "adjustments": [],
- "seconds": 49.021
+ "seconds": 56.498
 }

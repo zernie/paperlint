@@ -5,18 +5,40 @@
  "linter": "ruff",
  "rule": "PT006",
  "checked_out": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
- "as_designed_install": {
-  "kind": "not-installed",
-  "stage": "no-pin",
-  "reason": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
- },
- "date_matched": {
-  "commit": "2026-10-20T21:22:45+02:00",
-  "ruff": "0.17.1"
- },
  "install": {
-  "kind": "installed",
-  "version": "0.17.1"
+  "outcome": "installed",
+  "path": "as-designed",
+  "version": "0.17.1",
+  "versions": {},
+  "plugins": {},
+  "attempts": [
+   {
+    "path": "as-designed",
+    "outcome": "not-installed",
+    "failure": {
+     "stage": "detect",
+     "cause": "no-pin",
+     "detail": "no exact Ruff pin in a lockfile, requirements, pyproject.toml or pre-commit"
+    }
+   },
+   {
+    "path": "as-designed",
+    "outcome": "installed",
+    "rule": "ruff-date-matched"
+   }
+  ],
+  "adjustments": [
+   "date-matched-version"
+  ],
+  "date_matched": {
+   "commit": "2026-10-20T21:22:45+02:00",
+   "ruff": "0.17.1"
+  },
+  "date_matched_by": {
+   "tool": "uv",
+   "flag": "--exclude-newer",
+   "at": "2026-10-20T19:22:45.000Z"
+  }
  },
  "readings": [
   {
@@ -37,6 +59,7 @@
      ]
     }
    },
+   "plugins": [],
    "proof": {
     "kind": "proved"
    },
@@ -51,6 +74,598 @@
     ],
     "parseErrors": [],
     "ignored": []
+   },
+   "findings": {
+    "cap": {
+     "per_file": 5,
+     "context": 3,
+     "line_chars": 400
+    },
+    "files": {
+     "tests/operator/test_crossover.py": {
+      "total": 12,
+      "capped": true,
+      "items": [
+       {
+        "line": 76,
+        "column": 9,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 73,
+          "text": "    \"\"\"Tests for the SinglePointCrossover operator.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 74,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "    @pytest.mark.parametrize(",
+          "mark": false
+         },
+         {
+          "n": 76,
+          "text": "        \"probability,expected_msg\",",
+          "mark": true
+         },
+         {
+          "n": 77,
+          "text": "        [",
+          "mark": false
+         },
+         {
+          "n": 78,
+          "text": "            (-0.5, \"Probability must be between 0.0 and 1.0\"),",
+          "mark": false
+         },
+         {
+          "n": 79,
+          "text": "            (1.5, \"Probability must be between 0.0 and 1.0\"),",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 151,
+        "column": 9,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 148,
+          "text": "    \"\"\"Tests for the SBXCrossover (Simulated Binary Crossover) operator.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 149,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 150,
+          "text": "    @pytest.mark.parametrize(",
+          "mark": false
+         },
+         {
+          "n": 151,
+          "text": "        \"probability,distribution_index\",",
+          "mark": true
+         },
+         {
+          "n": 152,
+          "text": "        [",
+          "mark": false
+         },
+         {
+          "n": 153,
+          "text": "            (0.1, 2.0),  # Valid case",
+          "mark": false
+         },
+         {
+          "n": 154,
+          "text": "            (0.5, 10.5),  # Valid case with non-integer distribution index",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 166,
+        "column": 9,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 163,
+          "text": "        assert crossover.distribution_index == distribution_index",
+          "mark": false
+         },
+         {
+          "n": 164,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 165,
+          "text": "    @pytest.mark.parametrize(",
+          "mark": false
+         },
+         {
+          "n": 166,
+          "text": "        \"probability,expected_msg\",",
+          "mark": true
+         },
+         {
+          "n": 167,
+          "text": "        [",
+          "mark": false
+         },
+         {
+          "n": 168,
+          "text": "            (1.5, \"The probability is greater than one: 1.5\"),  # > 1.0",
+          "mark": false
+         },
+         {
+          "n": 169,
+          "text": "            (-0.1, \"The probability is lower than zero: -0.1\"),  # < 0.0",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 366,
+        "column": 9,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 363,
+          "text": "    \"\"\"Tests for the PMXCrossover (Partially Mapped Crossover) operator.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 364,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 365,
+          "text": "    @pytest.mark.parametrize(",
+          "mark": false
+         },
+         {
+          "n": 366,
+          "text": "        \"probability,expected_msg\",",
+          "mark": true
+         },
+         {
+          "n": 367,
+          "text": "        [",
+          "mark": false
+         },
+         {
+          "n": 368,
+          "text": "            (1.5, \"The probability is greater than one: 1.5\"),  # > 1.0",
+          "mark": false
+         },
+         {
+          "n": 369,
+          "text": "            (-0.1, \"The probability is lower than zero: -0.1\"),  # < 0.0",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 490,
+        "column": 9,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 487,
+          "text": "    \"\"\"Tests for the CXCrossover (Cycle Crossover) operator.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 488,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 489,
+          "text": "    @pytest.mark.parametrize(",
+          "mark": false
+         },
+         {
+          "n": 490,
+          "text": "        \"probability,expected_msg\",",
+          "mark": true
+         },
+         {
+          "n": 491,
+          "text": "        [",
+          "mark": false
+         },
+         {
+          "n": 492,
+          "text": "            (1.5, \"The probability is greater than one: 1.5\"),  # > 1.0",
+          "mark": false
+         },
+         {
+          "n": 493,
+          "text": "            (-0.1, \"The probability is lower than zero: -0.1\"),  # < 0.0",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/operator/test_selection.py": {
+      "total": 1,
+      "capped": false,
+      "items": [
+       {
+        "line": 294,
+        "column": 9,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 291,
+          "text": "        assert selector.index_to_exclude == 5",
+          "mark": false
+         },
+         {
+          "n": 292,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 293,
+          "text": "    @pytest.mark.parametrize(",
+          "mark": false
+         },
+         {
+          "n": 294,
+          "text": "        \"invalid_input,expected_msg\",",
+          "mark": true
+         },
+         {
+          "n": 295,
+          "text": "        [",
+          "mark": false
+         },
+         {
+          "n": 296,
+          "text": "            (None, \"The front is null\"),",
+          "mark": false
+         },
+         {
+          "n": 297,
+          "text": "            ([], \"The front is empty\"),",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/problem/multiobjective/test_uf.py": {
+      "total": 2,
+      "capped": false,
+      "items": [
+       {
+        "line": 9,
+        "column": 5,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 6,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 7,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 8,
+          "text": "@pytest.mark.parametrize(",
+          "mark": false
+         },
+         {
+          "n": 9,
+          "text": "    \"problem_class, n_var, n_obj\",",
+          "mark": true
+         },
+         {
+          "n": 10,
+          "text": "    [",
+          "mark": false
+         },
+         {
+          "n": 11,
+          "text": "        (uf.UF1, 30, 2),",
+          "mark": false
+         },
+         {
+          "n": 12,
+          "text": "        (uf.UF2, 30, 2),",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 31,
+        "column": 5,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 28,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 29,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 30,
+          "text": "@pytest.mark.parametrize(",
+          "mark": false
+         },
+         {
+          "n": 31,
+          "text": "    \"problem_class, n_var, n_obj\",",
+          "mark": true
+         },
+         {
+          "n": 32,
+          "text": "    [",
+          "mark": false
+         },
+         {
+          "n": 33,
+          "text": "        (uf.UF1, 30, 2),",
+          "mark": false
+         },
+         {
+          "n": 34,
+          "text": "        (uf.UF2, 30, 2),",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     },
+     "tests/problem/multiobjective/test_unconstrained.py": {
+      "total": 5,
+      "capped": false,
+      "items": [
+       {
+        "line": 75,
+        "column": 26,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 72,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 73,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 74,
+          "text": "# Parameterized tests",
+          "mark": false
+         },
+         {
+          "n": 75,
+          "text": "@pytest.mark.parametrize(\"variables, expected_objectives\", FONSECA_TEST_CASES)",
+          "mark": true
+         },
+         {
+          "n": 76,
+          "text": "def test_fonseca_evaluate(fonseca, variables, expected_objectives):",
+          "mark": false
+         },
+         {
+          "n": 77,
+          "text": "    \"\"\"Test Fonseca problem evaluation.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 78,
+          "text": "    solution = fonseca.create_solution()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 87,
+        "column": 26,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 84,
+          "text": "        assert obj == pytest.approx(expected, rel=1e-6), f\"Objective {i} mismatch\"",
+          "mark": false
+         },
+         {
+          "n": 85,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 86,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 87,
+          "text": "@pytest.mark.parametrize(\"variables, expected_objectives\", KURSAWE_TEST_CASES)",
+          "mark": true
+         },
+         {
+          "n": 88,
+          "text": "def test_kursawe_evaluate(kursawe, variables, expected_objectives):",
+          "mark": false
+         },
+         {
+          "n": 89,
+          "text": "    \"\"\"Test Kursawe problem evaluation.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 90,
+          "text": "    solution = kursawe.create_solution()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 100,
+        "column": 26,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 97,
+          "text": "            assert obj == pytest.approx(expected, rel=1e-6), f\"Objective {i} mismatch\"",
+          "mark": false
+         },
+         {
+          "n": 98,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 99,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 100,
+          "text": "@pytest.mark.parametrize(\"variables, expected_objectives\", SCHAFFER_TEST_CASES)",
+          "mark": true
+         },
+         {
+          "n": 101,
+          "text": "def test_schaffer_evaluate(schaffer, variables, expected_objectives):",
+          "mark": false
+         },
+         {
+          "n": 102,
+          "text": "    \"\"\"Test Schaffer problem evaluation.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 103,
+          "text": "    solution = schaffer.create_solution()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 112,
+        "column": 26,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 109,
+          "text": "        assert obj == pytest.approx(expected, rel=1e-6), f\"Objective {i} mismatch\"",
+          "mark": false
+         },
+         {
+          "n": 110,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 111,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 112,
+          "text": "@pytest.mark.parametrize(\"variables, expected_objectives\", VIENNET2_TEST_CASES)",
+          "mark": true
+         },
+         {
+          "n": 113,
+          "text": "def test_viennet2_evaluate(viennet2, variables, expected_objectives):",
+          "mark": false
+         },
+         {
+          "n": 114,
+          "text": "    \"\"\"Test Viennet2 problem evaluation.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 115,
+          "text": "    solution = viennet2.create_solution()",
+          "mark": false
+         }
+        ]
+       },
+       {
+        "line": 133,
+        "column": 26,
+        "ruleId": "PT006",
+        "message": "Wrong type passed to first argument of `pytest.mark.parametrize`; expected `tuple`",
+        "lines": [
+         {
+          "n": 130,
+          "text": "    assert one_zero_max.name() == \"OneZeroMax\"",
+          "mark": false
+         },
+         {
+          "n": 131,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 132,
+          "text": "",
+          "mark": false
+         },
+         {
+          "n": 133,
+          "text": "@pytest.mark.parametrize(\"bits, expected_objectives\", ONE_ZERO_MAX_TEST_CASES)",
+          "mark": true
+         },
+         {
+          "n": 134,
+          "text": "def test_one_zero_max_evaluate(one_zero_max, bits, expected_objectives):",
+          "mark": false
+         },
+         {
+          "n": 135,
+          "text": "    \"\"\"Test OneZeroMax problem evaluation.\"\"\"",
+          "mark": false
+         },
+         {
+          "n": 136,
+          "text": "    # Create a custom OneZeroMax with smaller bit length for testing",
+          "mark": false
+         }
+        ]
+       }
+      ]
+     }
+    }
    }
   }
  ],
@@ -58,5 +673,5 @@
  "adjustments": [
   "date-matched-version"
  ],
- "seconds": 2.172
+ "seconds": 2.402
 }
