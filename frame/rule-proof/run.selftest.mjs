@@ -169,6 +169,10 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
   // The workflow reads the plan from `run.mjs --plan` and runs each batch with `--items`.
   const wf = readFileSync(new URL("../../.github/workflows/rule-proof-run.yml", import.meta.url), "utf8");
   if (!wf.includes("run.mjs --plan frame/rule-proof/inputs.json") || !wf.includes("--items ${{ matrix.items }}") || wf.includes("--only")) fail.push("the workflow plans batches and runs each with --items");
+  // The runner's own dependencies come from its committed lockfile (npm ci), so runner.sha pins them all.
+  const installs = wf.match(/working-directory: frame\/rule-proof\n\s+run: npm [^\n]+/g) ?? [];
+  const tracked = spawnSync("git", ["ls-files", "--error-unmatch", "package-lock.json"], { cwd: path.dirname(fileURLToPath(import.meta.url)), stdio: "ignore" }).status === 0;
+  if (installs.length !== 2 || installs.some((l) => !/run: npm ci --ignore-scripts --no-audit --no-fund$/.test(l)) || !tracked) fail.push(`the runner installs with npm ci from its tracked lockfile: ${JSON.stringify(installs)} tracked=${tracked}`);
 }
 
 // ---- One run never reads another run's results: a folder per run, checked at commit --------------------------------

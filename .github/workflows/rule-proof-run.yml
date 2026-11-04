@@ -27,9 +27,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: install the runner (vigiles only, no install scripts)
+      - name: install the runner from its lockfile (npm ci, no install scripts)
         working-directory: frame/rule-proof
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
       # The runner's own selftests gate the run: no repository is run on a runner whose install paths are red.
       - name: runner selftests
         run: node frame/rule-proof/run.selftest.mjs && node frame/rule-proof/install.selftest.mjs
@@ -58,9 +58,9 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: corepack for pnpm and yarn lockfiles
         run: corepack enable
-      - name: install the runner (vigiles only, no install scripts)
+      - name: install the runner from its lockfile (npm ci, no install scripts)
         working-directory: frame/rule-proof
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
       # Each item runs in a worker the runner stops at 1,500 s, or sooner so that every item ends by 8,400 s (140 min) after
       # the step starts; the runner then writes the item's result itself (cause timeout), before the step's 145 or the
       # job's 150 minutes could kill it with nothing written.
