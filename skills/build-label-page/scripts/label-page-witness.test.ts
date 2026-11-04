@@ -22,7 +22,9 @@ import {
 
 const Fixture = z
   .object({
-    practice: z.array(z.object({ expected: z.record(z.string(), z.string()) })),
+    practice: z.array(
+      z.object({ expected: z.record(z.string(), z.string()) }).loose(),
+    ),
     items: z.array(z.record(z.string(), z.unknown())),
   })
   .loose();
@@ -35,12 +37,16 @@ const FIXTURE = Fixture.parse(
     ),
   ),
 );
-const witness = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
+const witness = (
+  over: Record<string, unknown> = {},
+): Record<string, unknown> => ({
   ...FIXTURE,
   ...over,
 });
 /** The fixture's items with `change` applied to the first one. */
-const firstItem = (change: (i: Record<string, unknown>) => Record<string, unknown>) =>
+const firstItem = (
+  change: (i: Record<string, unknown>) => Record<string, unknown>,
+) =>
   witness({
     items: FIXTURE.items.map((i, n) => (n === 0 ? change(i) : i)),
   });
@@ -54,7 +60,9 @@ const [FIRST] = FIXTURE.items;
 assert.ok(FIRST !== undefined);
 const RuleList = z.array(z.record(z.string(), z.unknown()));
 const firstRule = RuleList.parse(FIRST["rules"])[0];
-const Example = z.object({ lines: z.array(z.record(z.string(), z.unknown())) }).loose();
+const Example = z
+  .object({ lines: z.array(z.record(z.string(), z.unknown())) })
+  .loose();
 const firstExample = Example.parse(FIRST["example"]);
 
 /** An item built for the witness card before this one: the rule, two readings and a file. */
@@ -65,63 +73,64 @@ const oldCard = <T extends { readonly body: string }>(c: T, n: number) => ({
 });
 
 /** Witness pages the core refuses, each with its whole refusal. */
-const REFUSED: readonly (readonly [string, Record<string, unknown>, string])[] = [
+const REFUSED: readonly (readonly [string, Record<string, unknown>, string])[] =
   [
-    "witness-old-items",
-    approval({
-      kind: "witness",
-      practice: APPROVAL_PRACTICE.map(oldCard),
-      items: ITEMS.map(oldCard),
-    }),
-    "practice[0].situation: is required and missing — a witness card asks about one situation in code (`situation`, `example`, `details`); items made for the earlier card, with only `readings` and `file`, are not built: make them again in this shape",
-  ],
-  [
-    "witness-no-mark",
-    firstItem((i) => ({
-      ...i,
-      example: {
-        ...firstExample,
-        lines: firstExample.lines.map((l) => ({ ...l, mark: false })),
-      },
-    })),
-    "items[0].example.lines: no line is marked — mark the line the linter caught (`mark: true`)",
-  ],
-  [
-    "witness-no-explanation",
-    firstItem((i) => ({ ...i, rules: [{ linter: "ruff", id: "T201" }] })),
-    "items[0].rules[0].explanation: is required on a witness card — the linter's own explanation of the rule, or `source: \"none\"` when it has none",
-  ],
-  [
-    "witness-explanation-empty",
-    firstItem((i) => ({
-      ...i,
-      rules: [{ ...firstRule, explanation: { source: "ruff rule" } }],
-    })),
-    "items[0].rules[0].explanation.what: is required unless `source` is 'none' — what the rule does, in its source's words",
-  ],
-  [
-    "witness-repeat-range",
-    firstItem((i) => ({ ...i, repeat: { group: "g", index: 3, of: 2 } })),
-    "items[0].repeat.index: 3 is not between 1 and 2",
-  ],
-  [
-    "witness-two-questions",
-    witness({
-      questions: [
-        ...z.array(z.unknown()).parse(FIXTURE["questions"]),
-        {
-          id: "second",
-          text: "Second?",
-          options: [
-            { value: "a", label: "A", example: "a" },
-            { value: "b", label: "B", example: "b" },
-          ],
+    [
+      "witness-old-items",
+      approval({
+        kind: "witness",
+        practice: APPROVAL_PRACTICE.map(oldCard),
+        items: ITEMS.map(oldCard),
+      }),
+      "practice[0].situation: is required and missing — a witness card asks about one situation in code (`situation`, `example`, `details`); items made for the earlier card, with only `readings` and `file`, are not built: make them again in this shape",
+    ],
+    [
+      "witness-no-mark",
+      firstItem((i) => ({
+        ...i,
+        example: {
+          ...firstExample,
+          lines: firstExample.lines.map((l) => ({ ...l, mark: false })),
         },
-      ],
-    }),
-    "questions: a witness page asks one question, each card's `situation.question` being its text; this one has 2",
-  ],
-];
+      })),
+      "items[0].example.lines: no line is marked — mark the line the linter caught (`mark: true`)",
+    ],
+    [
+      "witness-no-explanation",
+      firstItem((i) => ({ ...i, rules: [{ linter: "ruff", id: "T201" }] })),
+      'items[0].rules[0].explanation: is required on a witness card — the linter\'s own explanation of the rule, or `source: "none"` when it has none',
+    ],
+    [
+      "witness-explanation-empty",
+      firstItem((i) => ({
+        ...i,
+        rules: [{ ...firstRule, explanation: { source: "ruff rule" } }],
+      })),
+      "items[0].rules[0].explanation.what: is required unless `source` is 'none' — what the rule does, in its source's words",
+    ],
+    [
+      "witness-repeat-range",
+      firstItem((i) => ({ ...i, repeat: { group: "g", index: 3, of: 2 } })),
+      "items[0].repeat.index: 3 is not between 1 and 2",
+    ],
+    [
+      "witness-two-questions",
+      witness({
+        questions: [
+          ...z.array(z.unknown()).parse(FIXTURE["questions"]),
+          {
+            id: "second",
+            text: "Second?",
+            options: [
+              { value: "a", label: "A", example: "a" },
+              { value: "b", label: "B", example: "b" },
+            ],
+          },
+        ],
+      }),
+      "questions: a witness page asks one question, each card's `situation.question` being its text; this one has 2",
+    ],
+  ];
 
 test("🔴 a witness page refuses old items, an unmarked example, a rule without its explanation, a repeat out of range and a second question", () => {
   assert.deepEqual(
@@ -144,13 +153,18 @@ test("a witness page builds from the generic fixture; no source id and no repeat
     ["req-logging", "req-imports"].filter((s) => page.includes(s)),
     [],
   );
-  assert.ok(page.includes('"repeat": {"index": 1, "of": 2}'), "the repeat shows its place");
+  assert.ok(
+    page.includes('"repeat": {"index": 1, "of": 2}'),
+    "the repeat shows its place",
+  );
 });
 
 /** `text` with every given part present, in this order. */
 const inOrder = (text: string, parts: readonly string[]): readonly string[] => {
   const at = parts.map((p) => text.indexOf(p));
-  return parts.filter((p, n) => at[n] === -1 || (at[n - 1] ?? -1) > (at[n] ?? 0));
+  return parts.filter(
+    (p, n) => at[n] === -1 || (at[n - 1] ?? -1) > (at[n] ?? 0),
+  );
 };
 
 test("🔴 a witness card reads top to bottom: requirement, situation, the code with its line numbers, the linter's message, the rule explained, N more like it, the question, then the settings", async () => {
@@ -160,7 +174,7 @@ test("🔴 a witness card reads top to bottom: requirement, situation, the code 
     ([, v]) => v.source_id === "req-logging:tests",
   )?.[0];
   assert.ok(id !== undefined);
-  const card = shown.slice(shown.indexOf(`\n${id}`));
+  const card = shown.slice(shown.indexOf(`\n${id} ·`));
   // Guards: every part in place; an empty list means nothing is missing or out of order.
   assert.deepEqual(
     inOrder(card, [

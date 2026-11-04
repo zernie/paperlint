@@ -29,8 +29,17 @@ import {
 /** A node of the declared config schema, as `example-generator.py schema` prints it. */
 const Node: z.ZodType<SchemaNode> = z.lazy(() =>
   z.object({
-    kind: z.enum(["string", "integer", "boolean", "map", "array", "object"]),
+    kind: z.enum([
+      "string",
+      "text",
+      "integer",
+      "boolean",
+      "map",
+      "array",
+      "object",
+    ]),
     required: z.boolean(),
+    nullable: z.boolean().optional(),
     pattern: z.string().optional(),
     key_pattern: z.string().optional(),
     min: z.number().optional(),
@@ -42,8 +51,10 @@ const Node: z.ZodType<SchemaNode> = z.lazy(() =>
 );
 
 interface SchemaNode {
-  readonly kind: "string" | "integer" | "boolean" | "map" | "array" | "object";
+  readonly kind:
+    "string" | "text" | "integer" | "boolean" | "map" | "array" | "object";
   readonly required: boolean;
+  readonly nullable?: boolean | undefined;
   readonly pattern?: string | undefined;
   readonly key_pattern?: string | undefined;
   readonly min?: number | undefined;
@@ -64,15 +75,44 @@ interface DocObject {
 const isObject = (v: Doc | undefined): v is DocObject =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
+/** A rule with every field of its explanation: `source: "none"` leaves `what` optional. */
+const EXPLAINED = [
+  {
+    linter: "eslint",
+    id: "no-console",
+    explanation: {
+      source: "none",
+      what: "W",
+      why: "Y",
+      example_bad: "B",
+      example_good: "G",
+      url: "https://example.com/r",
+    },
+  },
+];
 /** Every optional field of a card, for an item and a practice item alike. */
 const CARD = {
   title: "T",
   code: "c = 1",
   context: "ctx",
   file: "`src/a.ts`",
-  rules: [{ linter: "eslint", id: "no-console" }],
+  rules: EXPLAINED,
   unit: { id: "L0", text: "One line.", mark: "One", part: 1, of: 1 },
   readings: { a: "on", b: "off" },
+  situation: { kind: "scope", summary: "S", question: "Q?" },
+  example: {
+    file: "src/a.ts",
+    url: "https://example.com/a.ts",
+    lines: [{ n: 1, text: "", mark: true }],
+    message: "M",
+    caught_by: "a",
+  },
+  more_like_this: { count: 1, files: ["src/b.ts"] },
+  details: {
+    a: [{ key: "files", raw: "src/**", plain: "P", matches_example: true }],
+    b: [{ key: "option:max", raw: "3", plain: "P" }],
+  },
+  repeat: { group: "g", index: 1, of: 1 },
 };
 /** A config with EVERY optional field present, so every schema path has a value to spoil. */
 const FULL: DocObject = (() => {
@@ -187,6 +227,7 @@ function spoil(path: string, bad: Doc | undefined): DocObject {
 
 const WRONG_TYPES: Readonly<Record<SchemaNode["kind"], readonly Doc[]>> = {
   string: [null, 1, true, ["x"], {}, "", "   "],
+  text: [null, 1, true, ["x"], {}],
   integer: [null, "7", true, 7.5, []],
   boolean: [null, "false", 0, [], {}],
   map: [null, "x", ["x"], 1],
@@ -209,6 +250,8 @@ function badCases({ node, member }: Leaf): readonly BadCase[] {
   const wrongType = WRONG_TYPES[node.kind]
     // an empty list is a legal value where nothing is required of it
     .filter((v) => !(Array.isArray(v) && node.kind === "array"))
+    // null says "unknown" where the schema allows it
+    .filter((v) => !(v === null && node.nullable === true))
     .map((v) => bad(JSON.stringify(v), v));
   const extra: readonly BadCase[] = [
     // `__proto__` matches the id pattern, but the page stores answers in plain JavaScript objects,
@@ -1469,21 +1512,6 @@ test("🔴 the same line in two places is two lines: four items, two ids, it bui
   assert.ok(!page.includes("a.md:3"), "the line's id is private");
 });
 
-/** A witness card: an approval card's line and rule, plus the two readings and the file. */
-const witnessCard = <T extends { readonly body: string }>(c: T, n: number) => ({
-  ...approvalCard(c, n),
-  readings: { a: "on", b: "off" },
-  file: "`src/a.ts`: B flags it",
-});
-const witnessPage = (
-  items: readonly Record<string, unknown>[] = ITEMS.map(witnessCard),
-) =>
-  approval({
-    kind: "witness",
-    practice: APPROVAL_PRACTICE.map(witnessCard),
-    items,
-  });
-
 /** Pages that miss their kind or a field it needs, each with its refusal. */
 function kindRefusals(): readonly (readonly [
   string,
@@ -1520,18 +1548,6 @@ function kindRefusals(): readonly (readonly [
       approval(rulesOnly),
       "practice[0].unit: is required and missing — an approval card shows the line its requirement was drawn from, the requirement marked",
     ],
-    [
-      "witness-no-readings",
-      approval({ kind: "witness" }),
-      "practice[0].readings: is required and missing — a witness card shows the two readings, one row each",
-    ],
-    [
-      "witness-no-file",
-      witnessPage(
-        ITEMS.map((c, n) => ({ ...witnessCard(c, n), file: undefined })),
-      ),
-      "items[0].file: is required and missing — a witness card shows the file the readings disagree on, on its own row",
-    ],
   ];
 }
 
@@ -1550,9 +1566,7 @@ test("🔴 a page without its kind, or a card without its kind's fields, fails t
   );
 });
 
-test("a page of each kind with its fields builds; a practice card shows its rule like a real one", () => {
-  const witness = build(setup("witness-ok", witnessPage()));
-  assert.ok(witness.page.includes('"readings": {"a": "on", "b": "off"}'));
+test("a page of each kind with its fields builds; a practice card shows its rule like a real one (the witness page: label-page-witness.test.ts)", () => {
   assert.ok(
     build(setup("approval-ok", approval())).page.includes(
       '"rules": [{"linter": "eslint", "id": "no-console", "description": "Disallow the use of `console`"}]',

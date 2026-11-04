@@ -194,7 +194,9 @@ test(
       await page.getByRole("button", { name: /Keep/ }).first().click();
       await page.waitForTimeout(100);
       assert.deepEqual(
-        await page.evaluate("window.__writes.map(function (w) { return w.answers; })"),
+        await page.evaluate(
+          "window.__writes.map(function (w) { return w.answers; })",
+        ),
         [{ keep: "keep" }],
       );
     });

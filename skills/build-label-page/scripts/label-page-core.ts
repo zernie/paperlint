@@ -108,11 +108,21 @@ const RULES_FIELD = "rules";
 const UNIT_FIELD = "unit";
 // Two readings of one requirement, shown as rows A and B (#374).
 const READINGS_FIELD = "readings";
+// The witness card (#380): one situation in code, the example file with the caught line marked, the
+// files like it, the settings behind the card, and where the card sits among its requirement's cards.
+const WITNESS_FIELDS = [
+  "situation",
+  "example",
+  "more_like_this",
+  "details",
+  "repeat",
+] as const;
 const ALLOWED_FIELDS: readonly string[] = [
   ...PAGE_FIELDS,
   RULES_FIELD,
   UNIT_FIELD,
   READINGS_FIELD,
+  ...WITNESS_FIELDS,
   ...PRIVATE_FIELDS,
 ];
 
@@ -152,8 +162,9 @@ const SOURCES_SHOWN = `(${SOURCES.map(quoted).join(", ")})`;
 // refusal, what a value must be (a pattern) or why a field is required (a page kind needs it).
 type SchemaNode = (
   | { kind: "string"; required: boolean; pattern?: string }
+  | { kind: "text"; required: boolean }
   | { kind: "integer"; required: boolean }
-  | { kind: "boolean"; required: boolean }
+  | { kind: "boolean"; required: boolean; nullable?: boolean }
   | { kind: "array"; required: boolean; min: number; items: SchemaNode }
   | {
       kind: "map";
@@ -179,14 +190,16 @@ const string = (required = true, pattern?: string, why?: string): SchemaNode =>
         pattern,
         ...(why === undefined ? {} : { why }),
       };
+/** A string that may be empty: a blank line of code. */
+const text = (): SchemaNode => ({ kind: "text", required: true });
 const integer = (required = true): SchemaNode => ({
   kind: "integer",
   required,
 });
-const boolean = (required = true): SchemaNode => ({
-  kind: "boolean",
-  required,
-});
+const boolean = (required = true, nullable = false): SchemaNode =>
+  nullable
+    ? { kind: "boolean", required, nullable }
+    : { kind: "boolean", required };
 const array = (items: SchemaNode, required = true, min = 0): SchemaNode => ({
   kind: "array",
   required,
@@ -212,11 +225,47 @@ const obj = (
 
 // What an item and a practice item both may carry beyond text: a practice card looks like the real
 // cards it rehearses. Each is optional here; a page's `kind` makes some of them required (KINDS).
+const LINK = string(false, "https?://\\S+", "an http(s) link");
+const optional = (fields: Readonly<Record<string, SchemaNode>>): SchemaNode =>
+  obj(fields, true, false);
+// A rule as the linter's own docs explain it, taken by the consumer from the source it names.
+const EXPLANATION_SOURCES = [
+  "ruff rule",
+  "eslint docs",
+  "plugin docs",
+  "config message",
+  "none",
+];
+const EXPLANATION = optional({
+  source: string(
+    true,
+    EXPLANATION_SOURCES.join("|"),
+    `one of ${EXPLANATION_SOURCES.join(", ")}`,
+  ),
+  what: string(false),
+  why: string(false),
+  example_bad: string(false),
+  example_good: string(false),
+  url: LINK,
+});
+// One glob or option of a reading: its raw value, a plain reading made by a fixed template, and
+// whether it matches the example file (null: the row does not decide that).
+const SETTING = obj({
+  key: string(
+    true,
+    "files|ignores|rule|option:\\S+",
+    "files, ignores, rule or option:<name>",
+  ),
+  raw: string(),
+  plain: string(),
+  matches_example: boolean(false, true),
+});
 const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
   [RULES_FIELD]: array(
     obj({
       linter: string(true, "eslint|ruff", "eslint or ruff"),
       id: string(),
+      explanation: EXPLANATION,
     }),
     false,
     1,
@@ -235,6 +284,25 @@ const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
   ),
   [READINGS_FIELD]: obj({ a: string(), b: string() }, true, false),
   file: string(false),
+  situation: optional({
+    kind: string(true, "scope|construct", "scope or construct"),
+    summary: string(),
+    question: string(),
+  }),
+  example: optional({
+    file: string(),
+    url: LINK,
+    lines: array(obj({ n: integer(), text: text(), mark: boolean() }), true, 1),
+    message: string(),
+    caught_by: string(true, "a|b", "a or b"),
+  }),
+  more_like_this: optional({ count: integer(), files: array(string()) }),
+  details: optional({
+    a: array(SETTING, true, 1),
+    b: array(SETTING, true, 1),
+  }),
+  // `group` (the study's requirement id) is never shown: only the card's place among its cards.
+  repeat: optional({ group: string(), index: integer(), of: integer() }),
 };
 /**
  * THE PAGE KINDS, and the card fields each requires on every item and practice card (#373). A fix to
@@ -242,6 +310,8 @@ const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
  * schema with the field named instead of shipping the old card.
  */
 type Kind = "approval" | "witness" | "labels";
+const WITNESS_WHY =
+  "a witness card asks about one situation in code (`situation`, `example`, `details`); items made for the earlier card, with only `readings` and `file`, are not built: make them again in this shape";
 const KINDS: Readonly<Record<Kind, Readonly<Record<string, string>>>> = {
   // keep or drop a drawn requirement: the line it came from, marked, and the rule read for it
   approval: {
@@ -250,13 +320,10 @@ const KINDS: Readonly<Record<Kind, Readonly<Record<string, string>>>> = {
     [RULES_FIELD]:
       "an approval card shows the rule read for it, with the linter's own description",
   },
-  // why two readings of one requirement disagree on a file
-  witness: {
-    [RULES_FIELD]:
-      "a witness card shows the rule both readings configure, with the linter's description",
-    [READINGS_FIELD]: "a witness card shows the two readings, one row each",
-    file: "a witness card shows the file the readings disagree on, on its own row",
-  },
+  // one situation in code where two readings of one requirement split (#380)
+  witness: Object.fromEntries(
+    ["situation", "example", "details"].map((f) => [f, WITNESS_WHY]),
+  ),
   // gold labels, a blind review: the card is the item, nothing more is required
   labels: {},
 };
@@ -408,9 +475,24 @@ function checkObject(
     );
   }
 }
-function checkBoolean(value: Json, where: string): void {
-  if (typeof value !== "boolean")
+/** A boolean, or null where the schema lets it say "unknown". */
+function checkBoolean(value: Json, nullable: boolean, where: string): void {
+  if (typeof value !== "boolean" && !(nullable && value === null))
     fail(`${where}: must be true or false, got ${repr(value)}`);
+}
+/** A string that may be empty (a blank line of code), or an integer. */
+function checkScalar(
+  value: Json,
+  kind: "text" | "integer",
+  where: string,
+): void {
+  if (kind === "text" && typeof value !== "string")
+    fail(`${where}: must be a string, got ${repr(value)}`);
+  if (
+    kind === "integer" &&
+    (typeof value !== "number" || !Number.isInteger(value))
+  )
+    fail(`${where}: must be an integer, got ${repr(value)}`);
 }
 /** Refuse the first place `value` departs from `node`; the message starts with the field's path. */
 function checkValue(value: Json, node: SchemaNode, path: string): void {
@@ -419,13 +501,12 @@ function checkValue(value: Json, node: SchemaNode, path: string): void {
     case "string":
       checkString(value, node, where);
       break;
+    case "text":
     case "integer":
-      if (typeof value !== "number" || !Number.isInteger(value)) {
-        fail(`${where}: must be an integer, got ${repr(value)}`);
-      }
+      checkScalar(value, node.kind, where);
       break;
     case "boolean":
-      checkBoolean(value, where);
+      checkBoolean(value, node.nullable === true, where);
       break;
     case "array":
       checkArray(value, node, path, where);
@@ -459,15 +540,62 @@ interface Unit {
   readonly part: number;
   readonly of: number;
 }
+interface Explanation {
+  readonly source: string;
+  readonly what?: string;
+  readonly why?: string;
+  readonly example_bad?: string;
+  readonly example_good?: string;
+  readonly url?: string;
+}
+type CardRule = RuleRef & { readonly explanation?: Explanation };
+interface Setting {
+  readonly key: string;
+  readonly raw: string;
+  readonly plain: string;
+  readonly matches_example?: boolean | null;
+}
+/** The witness card's own fields (#380), each optional unless the page's kind needs it. */
+interface WitnessFields {
+  readonly situation?: {
+    readonly kind: string;
+    readonly summary: string;
+    readonly question: string;
+  };
+  readonly example?: {
+    readonly file: string;
+    readonly url?: string;
+    readonly lines: readonly {
+      readonly n: number;
+      readonly text: string;
+      readonly mark: boolean;
+    }[];
+    readonly message: string;
+    readonly caught_by: string;
+  };
+  readonly more_like_this?: {
+    readonly count: number;
+    readonly files: readonly string[];
+  };
+  readonly details?: {
+    readonly a: readonly Setting[];
+    readonly b: readonly Setting[];
+  };
+  readonly repeat?: {
+    readonly group: string;
+    readonly index: number;
+    readonly of: number;
+  };
+}
 /** What a card shows, on an item and on a practice item alike. */
 type Card = {
   readonly [F in (typeof PAGE_FIELDS)[number]]?: string;
-} & {
-  readonly body: string;
-  readonly rules?: readonly RuleRef[];
-  readonly unit?: Unit;
-  readonly readings?: { readonly a: string; readonly b: string };
-};
+} & WitnessFields & {
+    readonly body: string;
+    readonly rules?: readonly CardRule[];
+    readonly unit?: Unit;
+    readonly readings?: { readonly a: string; readonly b: string };
+  };
 type Item = Card & { readonly source_id: string; readonly group: string };
 type Practice = Card & {
   readonly expected: Readonly<Record<string, string>>;
@@ -599,6 +727,10 @@ function checkPractice(cfg: Config): void {
 }
 function checkConfig(cfg: Config): void {
   checkGroups(cfg);
+  if (cfg.kind === "witness" && cfg.questions.length !== 1)
+    fail(
+      `questions: a witness page asks one question, each card's \`situation.question\` being its text; this one has ${String(cfg.questions.length)}`,
+    );
   if (!asksFamiliarity(cfg) && cfg.familiarity_question !== undefined) {
     fail(
       `familiarity_question: ${repr(cfg.familiarity_question)} is never asked, because \`familiarity\` is not true — remove it, or set "familiarity": true`,
@@ -688,6 +820,36 @@ function checkUnits(cfg: Config): void {
     });
   }
 }
+/**
+ * What the witness schema cannot say: the caught line is marked, a rule's explanation says what the
+ * rule does unless its source has none, a repeat sits inside its count, and on a witness page every
+ * rule carries its explanation.
+ */
+function checkWitness(cfg: Config): void {
+  cardsOf(cfg).forEach(([at, card]) => {
+    if (card.example !== undefined && !card.example.lines.some((l) => l.mark))
+      fail(
+        `${at}.example.lines: no line is marked — mark the line the linter caught (\`mark: true\`)`,
+      );
+    const r = card.repeat;
+    if (r !== undefined && (r.index < 1 || r.index > r.of))
+      fail(
+        `${at}.repeat.index: ${String(r.index)} is not between 1 and ${String(r.of)}`,
+      );
+    (card.rules ?? []).forEach((rule, k) => {
+      const where = `${at}.rules[${String(k)}].explanation`;
+      const x = rule.explanation;
+      if (x === undefined && cfg.kind === "witness")
+        fail(
+          `${where}: is required on a witness card — the linter's own explanation of the rule, or \`source: "none"\` when it has none`,
+        );
+      if (x !== undefined && x.source !== "none" && x.what === undefined)
+        fail(
+          `${where}.what: is required unless \`source\` is 'none' — what the rule does, in its source's words`,
+        );
+    });
+  });
+}
 /** Every card of the config, items then practice, by path. */
 const cardsOf = (cfg: Config) => [
   ...cfg.items.map((i, n) => [`items[${String(n)}]`, i] as const),
@@ -720,6 +882,10 @@ const visibleTexts = (item: Item): readonly (readonly [string, string])[] => [
   ...PAGE_FIELDS.map((f): readonly [string, string] => [f, item[f] ?? ""]),
   [UNIT_FIELD, item.unit?.text ?? ""],
   [READINGS_FIELD, `${item.readings?.a ?? ""} ${item.readings?.b ?? ""}`],
+  ...WITNESS_FIELDS.map((f): readonly [string, string] => [
+    f,
+    JSON.stringify(item[f] ?? ""),
+  ]),
 ];
 const escapeRegExp = (s: string): string =>
   s.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&");
@@ -804,13 +970,7 @@ function assignIds(
 }
 
 // ── a build, short of the page ──────────────────────────────────────────────────────────────────
-/** A unit as the page shows it: the line, its mark and its part, without the line's private id. */
-type ShownUnit = Omit<Unit, "id">;
-const shownFields = (
-  item: Card,
-): Readonly<
-  Record<string, string | ShownUnit | NonNullable<Card["readings"]>>
-> => ({
+const shownFields = (item: Card): Readonly<Record<string, unknown>> => ({
   ...Object.fromEntries(
     PAGE_FIELDS.flatMap((f) => {
       const v = item[f];
@@ -828,6 +988,14 @@ const shownFields = (
         },
       }),
   ...(item.readings === undefined ? {} : { [READINGS_FIELD]: item.readings }),
+  ...Object.fromEntries(
+    WITNESS_FIELDS.filter((f) => f !== "repeat").flatMap((f) =>
+      item[f] === undefined ? [] : [[f, item[f]]],
+    ),
+  ),
+  ...(item.repeat === undefined
+    ? {}
+    : { repeat: { index: item.repeat.index, of: item.repeat.of } }),
 });
 /** Rule → the linter's description (and a ruff rule's family), for every rule a card names. */
 type Described = ReadonlyMap<string, RuleText>;
@@ -836,14 +1004,18 @@ const ruleKey = (r: RuleRef): string => `${r.linter} ${r.id}`;
 function describeRules(cfg: Config, fromDir: string): Described {
   return new Map(
     cardsOf(cfg).flatMap(([at, card]) =>
-      (card.rules ?? []).map((r, k): readonly [string, RuleText] => {
-        const text = describeRule(r, fromDir);
-        return text === undefined
-          ? fail(
-              `${at}.rules[${String(k)}]: ${r.linter} ${repr(r.id)} has no description from the linter (${r.linter === "ruff" ? "`ruff rule` does not know it, or ruff is not on PATH" : "not a rule of the ESLint, or of a plugin, installed where items.json is"}) — check the id`,
-            )
-          : [ruleKey(r), text];
-      }),
+      // A rule that carries its explanation was read from its source by the consumer.
+      (card.rules ?? []).flatMap(
+        (r, k): readonly (readonly [string, RuleText])[] => {
+          if (r.explanation !== undefined) return [];
+          const text = describeRule(r, fromDir);
+          return text === undefined
+            ? fail(
+                `${at}.rules[${String(k)}]: ${r.linter} ${repr(r.id)} has no description from the linter (${r.linter === "ruff" ? "`ruff rule` does not know it, or ruff is not on PATH" : "not a rule of the ESLint, or of a plugin, installed where items.json is"}) — check the id`,
+              )
+            : [[ruleKey(r), text]];
+        },
+      ),
     ),
   );
 }
@@ -854,7 +1026,9 @@ const rulesShown = (card: Card, described: Described) =>
         [RULES_FIELD]: card.rules.map((r) => ({
           linter: r.linter,
           id: r.id,
-          ...described.get(ruleKey(r)),
+          ...(r.explanation === undefined
+            ? described.get(ruleKey(r))
+            : { explanation: r.explanation }),
         })),
       };
 
@@ -990,6 +1164,7 @@ export function prepareBuild(configPath: string, outDir: string) {
   checkConfig(cfg);
   checkItemFields(cfg);
   checkUnits(cfg);
+  checkWitness(cfg);
   checkNoSourceShown(cfg);
   const described = describeRules(cfg, dirname(configPath));
   mkdirSync(outDir, { recursive: true });
