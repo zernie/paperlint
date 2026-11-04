@@ -77,7 +77,8 @@ export const lineNamed = firstSign("unit", [
 ]);
 /** Two readings written into one string. */
 export const readingsNamed = firstSign("readings", [
-  /\breadings? [AB]\b/i,
+  // a label, case-sensitive: "reading A:", "Reading B —", "readings A and B"; never "reading a file"
+  /\b[Rr]eadings? [AB](?=\s*[:—–-]|\s+and\s+[AB]\b)/,
   /(?:^|[·|;•])\s*A:\s[\s\S]*(?:^|[·|;•])\s*B:\s/,
 ]);
 

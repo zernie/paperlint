@@ -74,9 +74,22 @@ test("🔴 two readings written into one string are found; one 'A:' alone is not
   const found = [
     "reading A: options {} · reading B: options {}",
     "Rule eslint `max-len` · A: [100] · B: [120] · file `a.ts`",
+    "Reading B — tests excluded",
+    "readings A and B differ on tests",
     "Plan A: ship it",
+    // prose: the article "a" after "reading" is not a label
+    "Use pathlib when reading a file.",
+    "Reload when reading a config",
   ].map((t) => readingsNamed(t).map((f) => f.found));
-  assert.deepEqual(found, [["reading A"], ["· A: [100] · B:"], []]);
+  assert.deepEqual(found, [
+    ["reading A"],
+    ["· A: [100] · B:"],
+    ["Reading B"],
+    ["readings A"],
+    [],
+    [],
+    [],
+  ]);
 });
 
 test("🔴 a shape the item's own field holds is not reported; one it does not hold is, by text field", () => {
