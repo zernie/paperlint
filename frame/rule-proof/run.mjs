@@ -348,6 +348,25 @@ export async function installFor(item, dir, deps) {
 // The plan job's matrix: one entry per item; Node 22 unless the item names another (from the repository's engines).
 export const matrixOf = (items) => items.map((it, index) => ({ index, node: String(it.node ?? "22") }));
 
+// Why a config did not load, asked of the installed tools (diagnose.mjs; Ruff: `ruff rule <code>`'s exit status).
+// Only for a reading whose proof stopped at config-load; its answer sits beside the linter's message.
+const DIAGNOSE = path.join(path.dirname(new URL(import.meta.url).pathname), "diagnose.mjs");
+export function diagnose(pinned, reading) {
+  if (reading.linter === "ruff") {
+    const r = spawnSync("uvx", [`ruff@${pinned.version}`, "rule", reading.rule], { cwd: pinned.dir, encoding: "utf8", timeout: 120_000,
+      env: { ...process.env, UV_CACHE_DIR: path.join(cacheDir, "uv") } });
+    return { rule_known: r.status === 0 ? true : r.status === 2 || r.status === 1 ? false : null, exit: r.status, plugin: null,
+      plugin_loaded: null, options_valid: null, errors: r.status === 0 ? [] : [tailOf(r.stderr)] };
+  }
+  const at = path.join(pinned.dir, ".rule-proof-diagnose.mjs");
+  writeFileSync(at, readFileSync(DIAGNOSE, "utf8"));
+  try {
+    const r = spawnSync(process.execPath, [at, JSON.stringify(reading)], { cwd: pinned.dir, encoding: "utf8", timeout: 120_000 });
+    const line = (r.stdout ?? "").trim().split("\n").at(-1);
+    try { return JSON.parse(line); } catch { return { errors: [`diagnose exited ${r.status}: ${tailOf(r.stderr)}`] }; }
+  } finally { rmSync(at, { force: true }); }
+}
+
 // The machine's side of installFor: vigiles' install, the registries, npm, git.
 function realDeps(dir) {
   const env = { npm_config_cache: path.join(cacheDir, "npm"), npm_config_update_notifier: "false", HOME: path.join(cacheDir, "home") };
@@ -408,6 +427,7 @@ async function runOne(item) {
     // On our own manifest a plugin that did not install is the reading's own failure kind, never a silent drop.
     if (missing && install.path !== "as-designed") return { key, reading: full, plugins, proof: { kind: "plugin-not-installed", plugin: missing.name, reason: missing.error } };
     const proof = rp.prove(pinned, full, pair);
+    if (proof.kind === "not-run" && proof.stage === "config-load") return { key, reading: full, plugins, proof, diagnosis: diagnose(pinned, full) };
     if (proof.kind !== "proved") return { key, reading: full, plugins, proof };
     const flagged = rp.flagged(proof.reading);
     return { key, reading: full, plugins, proof: { kind: "proved" }, flagged };

@@ -4,6 +4,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { optionsSchema, pluginPart } from "./diagnose.mjs";
 import { installFor, lockedVersion, matrixOf, npmDateMatched, readingPlugins, repoEslint } from "./run.mjs";
 
 const fail = [];
@@ -144,6 +145,11 @@ const docs = { eslint: { time }, "eslint-plugin-check-file": { time: { "2.6.0": 
   check(lockedVersion("yarn.lock", berry, ".", "eslint") === "9.1.1", "yarn Berry block");
   check(lockedVersion("yarn.lock", y1, ".", "eslint-plugin-x") === null, "a package the lockfile does not pin: null");
 }
+
+// 8. Structural load diagnosis: ESLint's own reading of meta.schema, and the plugin package a rule id names.
+check(JSON.stringify(optionsSchema([{ enum: ["a"] }], 9)) === JSON.stringify({ type: "array", items: [{ enum: ["a"] }], minItems: 0, maxItems: 1 }), "positional schema");
+check(JSON.stringify(optionsSchema(undefined, 9)) === JSON.stringify({ type: "array", minItems: 0, maxItems: 0 }) && optionsSchema(undefined, 8) === null && optionsSchema(false, 9) === null, "no schema: no options from ESLint 9, unvalidated before; false: unvalidated");
+check(JSON.stringify(pluginPart("@eslint-community/eslint-comments/no-use")) === JSON.stringify({ pkg: "@eslint-community/eslint-plugin-eslint-comments", name: "no-use" }) && pluginPart("quotes") === null && pluginPart("@typescript-eslint/x").pkg === "@typescript-eslint/eslint-plugin", "pluginPart");
 
 // 5. The plan job's matrix: one entry per item, Node 22 unless the item names another (from the repository's engines).
 check(JSON.stringify(matrixOf([{ id: "a" }, { id: "b", node: "20" }])) === JSON.stringify([{ index: 0, node: "22" }, { index: 1, node: "20" }]), "matrixOf");
