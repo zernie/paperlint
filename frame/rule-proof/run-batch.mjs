@@ -162,15 +162,35 @@ const tail = (t) => String(t ?? "").trim().split("\n").slice(-6).join("\n").slic
 
 // items: inputs.json; indices: this batch's; argv(item, limitSeconds, runner, index): the worker's command; deadlineAt: epoch
 // ms by which the batch must be done; validate(result) throws on a result not to be written as is.
-// -> { results: [{ id, file, sha256, ended }], mismatched: [result files changed after the runner recorded them] }
+// -> { results: [{ id, file, sha256, ended }], mismatched: [files changed after the runner recorded them, put back] }
 export async function runBatch({ items, indices, runDir, runner, argv, itemSeconds, deadlineAt, validate = () => {}, minSeconds = 30, log = console.log }) {
   mkdirSync(runDir, { recursive: true });
   const results = [];
+  // A later item's code runs as the same user and could change an earlier item's files. After each item and at the end,
+  // every file the runner recorded (its sha256 is in the job's log) is compared with the runner's own copy, and a changed
+  // one is put back from that copy and reported, so a changed file never reaches the commit.
+  const mismatched = new Set();
+  const checkOwn = (when) => {
+    for (const { own } of results) {
+      for (const { file, buf } of own) {
+        let now = null;
+        try { now = readFileSync(path.join(runDir, file)); } catch { now = null; }
+        if (now !== null && sha256(now) === sha256(buf)) continue;
+        mismatched.add(file);
+        writeFileSync(path.join(runDir, file), buf);
+        log(`CHANGED after it was written, ${when}: ${file}; put back as written (sha256 ${sha256(buf)})`);
+      }
+    }
+  };
+  // The stopped item's result: from its progress, else from its progress without the install record, else from inputs.json
+  // alone; the first that validates. If none does (a defect of the runner), the last is written anyway and says so: an
+  // item never goes without a result.
   const write = (item, partial, ended) => {
-    const withPartial = stoppedResult(item, partial, ended, runner);
-    let r = withPartial;
-    try { validate(r); } catch { r = stoppedResult(item, { result: { ...partial?.result, install: undefined } }, ended, runner); validate(r); }
-    return writeResult(runDir, item.id, r);
+    const tries = [partial, partial && { ...partial, result: { ...partial.result, install: undefined } }, null].filter((p, i) => i === 2 || p)
+      .map((p) => stoppedResult(item, p, ended, runner));
+    const good = tries.find((r) => { try { validate(r); return true; } catch { return false; } });
+    if (!good) log(`${item.id}: the runner's own result does not validate; written as it is`);
+    return writeResult(runDir, item.id, good ?? tries.at(-1));
   };
   for (const index of indices) {
     const item = items[index];
@@ -187,10 +207,12 @@ export async function runBatch({ items, indices, runDir, runner, argv, itemSecon
         const seconds = (Date.now() - t0) / 1000;
         const partial = readPartial(runDir, item.id);
         const phase = partial?.phase ?? "not-started";
-        if (r.timedOut) {
+        // a result the worker wrote (renamed into place whole) stands, even when the worker then ran past its limit
+        if (isDone(runDir, item.id)) { /* the worker's own result */ }
+        else if (r.timedOut) {
           write(item, partial, { outcome: "timeout", cause: "timeout", phase, seconds, limit_seconds: limit,
             detail: `the runner stopped the item at its limit of ${limit} s, in phase ${phase}` });
-        } else if (!isDone(runDir, item.id)) {
+        } else {
           write(item, partial, { outcome: "crashed", cause: "unknown", phase, seconds, limit_seconds: limit,
             detail: `the worker exited ${r.code ?? r.signal} (exit ${r.code ?? "none"}) without a result: ${tail(r.stderr)}` });
         }
@@ -198,16 +220,16 @@ export async function runBatch({ items, indices, runDir, runner, argv, itemSecon
     }
     const file = resultPath(runDir, item.id);
     const r = readResult(file);
-    results.push({ id: item.id, file: path.basename(file), sha256: sha256(readFileSync(file)), ended: r.ended ?? null });
+    // the runner's own copy of the item's files as they stand now (the worker's process group is gone)
+    const own = [file, ...(r.kept?.file ? [path.join(runDir, r.kept.file)] : [])].map((f) => ({ file: path.basename(f), buf: readFileSync(f) }));
+    results.push({ id: item.id, file: path.basename(file), sha256: sha256(own[0].buf), ended: r.ended ?? null, own });
     log(`${item.id} ${results.at(-1).ended?.outcome ?? "?"} sha256 ${results.at(-1).sha256}`);
+    checkOwn(`after ${item.id}`);
   }
   rmSync(path.join(runDir, ".partial"), { recursive: true, force: true });
   for (const f of readdirSync(runDir).filter((f) => f.endsWith(".tmp"))) rmSync(path.join(runDir, f), { force: true });
-  // The sha256 each result had when the runner recorded it is in the job's log; a later item of the batch (its code runs
-  // as the same user) changing an earlier result is reported here.
-  const mismatched = results.filter((x) => { try { return sha256(readFileSync(path.join(runDir, x.file))) !== x.sha256; } catch { return true; } }).map((x) => x.file);
-  for (const f of mismatched) log(`CHANGED after it was written: ${f}`);
-  return { results, mismatched };
+  checkOwn("at the end of the batch");
+  return { results: results.map(({ own: _o, ...x }) => x), mismatched: [...mismatched] };
 }
 
 // The commit job's check of one run's folder before anything is committed: every file is a result of an item of
@@ -248,7 +270,7 @@ function keptErrors(f, r, runDir) {
 }
 
 //   node run-batch.mjs --close <inputs.json> <run folder> <run key>   exit 1 when the folder holds anything else
-if (process.argv[1] && path.resolve(process.argv[1]) === new URL(import.meta.url).pathname && process.argv[2] === "--close") {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv[2] === "--close") {
   const [, , , inputs, runDir, key] = process.argv;
   const { errors, missing } = closeRun(JSON.parse(readFileSync(inputs, "utf8")), runDir, key);
   for (const e of errors) console.log(`refused ${e}`);

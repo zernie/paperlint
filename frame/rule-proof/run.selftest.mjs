@@ -236,15 +236,17 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
     } else {
       if (mode === "tamper") writeFileSync(resultPath(runDir, "F1"), "forged");
       writeResult(runDir, item.id, { ...base, checked_out: item.sha, install: { outcome: "not-installed" }, ended: { outcome: "finished", cause: null, phase: "done", seconds: 0, limit_seconds: Number(limit) } });
+      // late: its result is written, then the process does not exit before the limit
+      if (mode === "late") setTimeout(() => {}, 600000);
     }
   `);
   const mk = (id, mode) => ({ id, repo: `o/${id}`, sha: "d".repeat(40), linter: "eslint", rule: "no-tabs", readings: [], mode });
-  const items = [mk("F1", "finish"), mk("H1", "hang"), mk("C1", "crash"), mk("F2", "finish")];
+  const items = [mk("F1", "finish"), mk("H1", "hang"), mk("C1", "crash"), mk("F2", "finish"), mk("L1", "late")];
   const argv = (item, limit, runner) => [process.execPath, worker, item.mode, runDir, JSON.stringify(item), String(limit), JSON.stringify(runner)];
   const runner = { run: "300-1" };
   const validate = (r) => installSchema.parse(r.install);
   const t0 = Date.now();
-  const b1 = await runBatch({ items, indices: [0, 1, 2, 3], runDir, runner, argv, itemSeconds: 2, deadlineAt: Date.now() + 600_000, validate, log: () => {} });
+  const b1 = await runBatch({ items, indices: [0, 1, 2, 3, 4], runDir, runner, argv, itemSeconds: 2, deadlineAt: Date.now() + 600_000, validate, log: () => {} });
   const took = (Date.now() - t0) / 1000;
   const read = (id) => readResult(path.join(runDir, `${id}.json.gz`));
   const h = read("H1");
@@ -257,10 +259,11 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
   const alive = () => { try { return !/^\d+ \(.*\) Z/.test(readFileSync(`/proc/${childPid}/stat`, "utf8")); } catch { return false; } };
   for (let i = 0; i < 20 && alive(); i++) await new Promise((r) => setTimeout(r, 100));
   if (alive()) fail.push("the hung item's own child process is killed with it (its process group)");
-  if (took > 15) fail.push(`the batch did not wait past the item's limit: ${took} s`);
+  if (took > 20) fail.push(`the batch did not wait past the item's limit: ${took} s`);
   const c = read("C1");
   if (c.ended?.outcome !== "crashed" || c.ended.cause !== "unknown" || c.ended.phase !== "clone" || !/exit 3/.test(c.ended.detail) || !/boom at clone/.test(c.ended.detail)) fail.push(`a worker that crashed leaves a result saying so: ${JSON.stringify(c.ended)}`);
   if (read("F1").ended?.outcome !== "finished" || read("F2").ended?.outcome !== "finished") fail.push("finished items keep the worker's own result");
+  if (read("L1").ended?.outcome !== "finished") fail.push(`a worker that wrote its result and then ran past its limit keeps that result: ${JSON.stringify(read("L1").ended)}`);
   if (existsSync(path.join(runDir, ".partial"))) fail.push("the progress files are removed after the batch");
   if (!same(b1.mismatched, [])) fail.push(`no result changed after it was written: ${JSON.stringify(b1.mismatched)}`);
   // The run step's deadline: items not started before it get a result with cause timeout, phase not-started.
@@ -272,6 +275,10 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
   const runDir3 = runDirOf(scratch, "302-1");
   const b3 = await runBatch({ items: [mk("F1", "finish"), mk("T1", "tamper")], indices: [0, 1], runDir: runDir3, runner: { run: "302-1" }, argv: (item, limit, rn) => [process.execPath, worker, item.mode, runDir3, JSON.stringify(item), String(limit), JSON.stringify(rn)], itemSeconds: 30, deadlineAt: Date.now() + 600_000, validate, log: () => {} });
   if (!same(b3.mismatched, ["F1.json.gz"])) fail.push(`a result changed by a later item is reported: ${JSON.stringify(b3.mismatched)}`);
+  // ...and put back as the runner wrote it, so the changed file never reaches the commit.
+  let restored = null;
+  try { restored = readResult(path.join(runDir3, "F1.json.gz")); } catch { restored = null; }
+  if (restored?.ended?.outcome !== "finished" || restored.id !== "F1") fail.push(`the changed result is restored from the runner's own copy: ${JSON.stringify(restored)}`);
   // run.mjs itself, past its deadline: every item of the batch gets its result, no worker started (so no network).
   const inputs4 = path.join(scratch, "inputs.json");
   writeFileSync(inputs4, JSON.stringify([mk("R1", "x"), mk("R2", "x")]));
@@ -349,6 +356,22 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
   if (!wf.includes("--batch ${{ matrix.batch }}")) fail.push("the workflow passes the batch number");
 }
 
+// ---- The commit job's command: run-batch.mjs --close, exit 0 on a clean run folder and 1 on a foreign file -----------
+{
+  const { runDirOf } = await import("./run-batch.mjs");
+  const scratch = mkdtempSync(path.join(tmpdir(), "rp-close-"));
+  const runDir = runDirOf(scratch, "600-1");
+  mkdirSync(runDir);
+  const it = { id: "C1", repo: "o/c", sha: "1".repeat(40) };
+  writeFileSync(path.join(scratch, "inputs.json"), JSON.stringify([it]));
+  writeResult(runDir, "C1", { ...it, checked_out: it.sha, runner: { run: "600-1" } });
+  const close = () => spawnSync(process.execPath, [fileURLToPath(new URL("./run-batch.mjs", import.meta.url)), "--close", path.join(scratch, "inputs.json"), runDir, "600-1"], { encoding: "utf8" });
+  const clean = close();
+  writeFileSync(path.join(runDir, "x.json.gz"), "x");
+  const dirty = close();
+  if (clean.status !== 0 || dirty.status !== 1 || !/refused x\.json\.gz/.test(dirty.stdout)) fail.push(`--close: ${clean.status} ${dirty.status} ${dirty.stdout}`);
+}
+
 // ---- Result format 4: run, runner, ended, kept declared; formats 1 to 3 still read -----------------------------------
 {
   const { anyResultSchema, resultFormatOf, resultSchema } = await import("./install-schema.mjs");
@@ -404,4 +427,4 @@ if (typeof broken.error !== "string" || Object.keys(broken.files).length !== 0) 
 }
 
 if (fail.length) { console.log("FAIL:\n  " + fail.join("\n  ")); process.exit(1); }
-console.log("ok: batches (at most 256 jobs for any size, one Node version each), one folder per run checked at commit, each item stopped at its limit with a timeout result (its process group killed), the resolved lockfile and each reading\'s config kept gzipped beside the result with the runner\'s commit and run, cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, every finding, long lines kept to 20,000 characters with length and sha256), the linter\'s version and resolved config, on a real ESLint run");
+console.log("ok: batches (at most 256 jobs for any size, one Node version each), one folder per run checked at commit, each item stopped at its limit with a timeout result (its process group killed), the resolved lockfile and each reading\'s config kept gzipped beside the result with the runner\'s commit and run, result format 4 declared and formats 1-3 still read, cross plan, plugin names, Ruff settings nesting, the commit time as a UTC instant; findings from the linters' JSON reports (line, column, rule, message, ±3 source lines, every finding, long lines kept to 20,000 characters with length and sha256), the linter\'s version and resolved config, on a real ESLint run");
