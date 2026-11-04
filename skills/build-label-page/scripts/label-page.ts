@@ -49,8 +49,8 @@
  *                                 "icon": "✅"},                      icon: optional
  *                                {"value": "no", "label": "No", "example": "another real case",
  *                                 "icon": "❌", "ask_why": "What is wrong with it?"}]}],
- *                                           ask_why: optional; the answer is incomplete until a
- *                                           reason is given. In any shown text, backticks render
+ *                                           ask_why: optional; the answer is not saved until a
+ *                                           reason is typed. In any shown text, backticks render
  *                                           as code.
  *     "practice": [{"body": "…", "expected": {"label": "yes"}, "why": "one line"}, …],   3 or more;
  *                                           a practice card may carry rules, unit, readings, file
@@ -66,6 +66,12 @@
  *                                           requirement marked in it; id (never shown) tells two
  *                                           places with the same words apart. kind approval requires
  *                                           unit and rules; kind witness rules, readings and file.
+ *                                           Content blocks (situation, excerpt, references, more,
+ *                                           table, repeat) and page `labels`: optional on any kind
+ *                                           (references/closed-choice-generator.md, and
+ *                                           scripts/fixtures/blocks-items.json for a whole page);
+ *                                           "preset": "<name>" maps a preset's own card fields onto
+ *                                           them (scripts/label-page-presets.ts).
  *   }
  *
  * TypeScript, compiled beside itself to `label-page.js` by `npm run build`: a consumer runs the skill

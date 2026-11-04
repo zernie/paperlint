@@ -116,7 +116,11 @@ building. In one line each:
 
    It writes \`label-page/page.html\` and \`label-page/key.json\` (the only link from \`G001\` to the
    source id; it never goes on the page). \`kind\` (\`approval\`, \`witness\`, \`labels\`) is required,
-   and each kind requires its card fields on every item and practice card. Written by hand, the page meets the requirements above.
+   and each kind requires its card fields on every item and practice card. Any card may also carry
+   the generic content blocks (a code excerpt with a marked line, references, a list, a table), every
+   word on them from \`items.json\`, with the question right under the excerpt. \`"preset":
+   "linter-config-witness"\` is a narrow preset for comparing linter configs; the blocks underneath
+   are generic. Written by hand, the page meets the requirements above.
 4. **Read it as the labeller, then look at it.** Read the page text once as a person who knows
    nothing about the source: if anything on it tells the answer, take it out. Read each question as
    someone who did not design the study: can they tell what each answer means from the question, its

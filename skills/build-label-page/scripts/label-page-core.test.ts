@@ -29,7 +29,15 @@ import {
 /** A node of the declared config schema, as `example-generator.py schema` prints it. */
 const Node: z.ZodType<SchemaNode> = z.lazy(() =>
   z.object({
-    kind: z.enum(["string", "integer", "boolean", "map", "array", "object"]),
+    kind: z.enum([
+      "string",
+      "text",
+      "integer",
+      "boolean",
+      "map",
+      "array",
+      "object",
+    ]),
     required: z.boolean(),
     pattern: z.string().optional(),
     key_pattern: z.string().optional(),
@@ -42,7 +50,8 @@ const Node: z.ZodType<SchemaNode> = z.lazy(() =>
 );
 
 interface SchemaNode {
-  readonly kind: "string" | "integer" | "boolean" | "map" | "array" | "object";
+  readonly kind:
+    "string" | "text" | "integer" | "boolean" | "map" | "array" | "object";
   readonly required: boolean;
   readonly pattern?: string | undefined;
   readonly key_pattern?: string | undefined;
@@ -73,6 +82,40 @@ const CARD = {
   rules: [{ linter: "eslint", id: "no-console" }],
   unit: { id: "L0", text: "One line.", mark: "One", part: 1, of: 1 },
   readings: { a: "on", b: "off" },
+  situation: { summary: "S", question: "Q?" },
+  excerpt: {
+    file: "src/a.ts",
+    url: "https://example.com/a.ts",
+    lines: [{ n: 1, text: "", mark: true }],
+    caption: "C",
+    mark_label: "M",
+  },
+  references: {
+    summary: "S",
+    entries: [
+      {
+        label: "L",
+        title: "T",
+        fields: [{ label: "F", text: "X", style: "code" }],
+        url: "https://example.com/r",
+        url_label: "U",
+      },
+    ],
+  },
+  more: { summary: "S", items: ["`src/b.ts`"], rest: "R" },
+  table: {
+    summary: "S",
+    note: "N",
+    rows: [
+      {
+        label: "L",
+        value: "V",
+        plain: "P",
+        mark: { tone: "yes", text: "Y" },
+      },
+    ],
+  },
+  repeat: { group: "g", index: 1, of: 1 },
 };
 /** A config with EVERY optional field present, so every schema path has a value to spoil. */
 const FULL: DocObject = (() => {
@@ -92,6 +135,14 @@ const FULL: DocObject = (() => {
       labeller_knows: ["python", "go", "rust"],
       familiarity: true,
       familiarity_question: "How well do you know {group}?",
+      labels: {
+        place: "C",
+        body: "B",
+        line: "L",
+        line_part: "{line} {part}/{of}",
+        repeat: "R",
+        practice_example: "P",
+      },
       practice: PRACTICE.map((p, n) => (n === 0 ? { ...p, ...CARD } : p)),
       items: ITEMS.map((i, n) => (n === 0 ? { ...i, ...CARD } : i)),
     }),
@@ -187,6 +238,7 @@ function spoil(path: string, bad: Doc | undefined): DocObject {
 
 const WRONG_TYPES: Readonly<Record<SchemaNode["kind"], readonly Doc[]>> = {
   string: [null, 1, true, ["x"], {}, "", "   "],
+  text: [null, 1, true, ["x"], {}],
   integer: [null, "7", true, 7.5, []],
   boolean: [null, "false", 0, [], {}],
   map: [null, "x", ["x"], 1],

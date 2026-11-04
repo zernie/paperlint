@@ -13,6 +13,7 @@ import {
   type Described as RuleText,
   type RuleRef,
 } from "./rule-descriptions.ts";
+import { applyPreset } from "./label-page-presets.ts";
 
 // ── refusals and output ───────────────────────────────────────────────────────────────────────
 export class Refusal extends Error {
@@ -83,6 +84,11 @@ const writeJson = (path: string, value: unknown): void => {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 };
 const JSON_VALUE = z.json();
+/** The config with its named preset applied (label-page-presets.ts), refused by path. */
+const withPreset = (raw: Json): Json => {
+  const r = applyPreset(raw);
+  return r.ok ? JSON_VALUE.parse(r.value) : fail(r.message);
+};
 const readJson = (path: string): Json => {
   try {
     return JSON_VALUE.parse(JSON.parse(readFileSync(path, "utf8")));
@@ -108,11 +114,22 @@ const RULES_FIELD = "rules";
 const UNIT_FIELD = "unit";
 // Two readings of one requirement, shown as rows A and B (#374).
 const READINGS_FIELD = "readings";
+// Content blocks (#380): generic, on any kind. Every label and sentence a block shows comes from
+// items.json (or a preset, label-page-presets.ts); the page knows only the block's shape.
+const BLOCK_FIELDS = [
+  "situation",
+  "excerpt",
+  "references",
+  "more",
+  "table",
+  "repeat",
+] as const;
 const ALLOWED_FIELDS: readonly string[] = [
   ...PAGE_FIELDS,
   RULES_FIELD,
   UNIT_FIELD,
   READINGS_FIELD,
+  ...BLOCK_FIELDS,
   ...PRIVATE_FIELDS,
 ];
 
@@ -152,6 +169,7 @@ const SOURCES_SHOWN = `(${SOURCES.map(quoted).join(", ")})`;
 // refusal, what a value must be (a pattern) or why a field is required (a page kind needs it).
 type SchemaNode = (
   | { kind: "string"; required: boolean; pattern?: string }
+  | { kind: "text"; required: boolean }
   | { kind: "integer"; required: boolean }
   | { kind: "boolean"; required: boolean }
   | { kind: "array"; required: boolean; min: number; items: SchemaNode }
@@ -179,6 +197,8 @@ const string = (required = true, pattern?: string, why?: string): SchemaNode =>
         pattern,
         ...(why === undefined ? {} : { why }),
       };
+/** A string that may be empty: a blank line of code. */
+const text = (): SchemaNode => ({ kind: "text", required: true });
 const integer = (required = true): SchemaNode => ({
   kind: "integer",
   required,
@@ -212,6 +232,14 @@ const obj = (
 
 // What an item and a practice item both may carry beyond text: a practice card looks like the real
 // cards it rehearses. Each is optional here; a page's `kind` makes some of them required (KINDS).
+const LINK = string(false, "https?://\\S+", "an http(s) link");
+const optional = (fields: Readonly<Record<string, SchemaNode>>): SchemaNode =>
+  obj(fields, true, false);
+const TEXT_FIELD = obj({
+  label: string(false),
+  text: string(),
+  style: string(false, "code|note", "code or note"),
+});
 const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
   [RULES_FIELD]: array(
     obj({
@@ -235,6 +263,51 @@ const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
   ),
   [READINGS_FIELD]: obj({ a: string(), b: string() }, true, false),
   file: string(false),
+  situation: optional({ summary: string(), question: string() }),
+  excerpt: optional({
+    file: string(false),
+    url: LINK,
+    lines: array(obj({ n: integer(), text: text(), mark: boolean() }), true, 1),
+    caption: string(false),
+    mark_label: string(false),
+  }),
+  references: optional({
+    summary: string(),
+    entries: array(
+      obj({
+        label: string(false),
+        title: string(),
+        fields: array(TEXT_FIELD, true, 1),
+        url: LINK,
+        url_label: string(false),
+      }),
+      true,
+      1,
+    ),
+  }),
+  more: optional({
+    summary: string(),
+    items: array(string(), true, 1),
+    rest: string(false),
+  }),
+  table: optional({
+    summary: string(),
+    note: string(false),
+    rows: array(
+      obj({
+        label: string(),
+        value: string(),
+        plain: string(false),
+        mark: optional({
+          tone: string(true, "yes|no", "yes or no"),
+          text: string(),
+        }),
+      }),
+      true,
+      1,
+    ),
+  }),
+  repeat: optional({ group: string(), index: integer(), of: integer() }),
 };
 /**
  * THE PAGE KINDS, and the card fields each requires on every item and practice card (#373). A fix to
@@ -331,6 +404,15 @@ const configSchema = (kind: Kind): SchemaNode =>
     questions: array(QUESTION_SCHEMA, true, 1),
     practice: array(practiceSchema(kind), true, MIN_PRACTICE),
     practice_round: integer(false),
+    // Page-level words the blocks use (references/closed-choice-generator.md §«Content blocks»).
+    labels: optional({
+      place: string(false),
+      body: string(false),
+      line: string(false),
+      line_part: string(false),
+      repeat: string(false),
+      practice_example: string(false),
+    }),
     items: array(itemSchema(kind), true, 1),
   });
 /** The declared schema (`schema` prints it): every field, those a kind requires left optional. */
@@ -412,6 +494,20 @@ function checkBoolean(value: Json, where: string): void {
   if (typeof value !== "boolean")
     fail(`${where}: must be true or false, got ${repr(value)}`);
 }
+/** A string that may be empty (a blank line of code), or an integer. */
+function checkScalar(
+  value: Json,
+  kind: "text" | "integer",
+  where: string,
+): void {
+  if (kind === "text" && typeof value !== "string")
+    fail(`${where}: must be a string, got ${repr(value)}`);
+  if (
+    kind === "integer" &&
+    (typeof value !== "number" || !Number.isInteger(value))
+  )
+    fail(`${where}: must be an integer, got ${repr(value)}`);
+}
 /** Refuse the first place `value` departs from `node`; the message starts with the field's path. */
 function checkValue(value: Json, node: SchemaNode, path: string): void {
   const where = path || "items.json";
@@ -419,10 +515,9 @@ function checkValue(value: Json, node: SchemaNode, path: string): void {
     case "string":
       checkString(value, node, where);
       break;
+    case "text":
     case "integer":
-      if (typeof value !== "number" || !Number.isInteger(value)) {
-        fail(`${where}: must be an integer, got ${repr(value)}`);
-      }
+      checkScalar(value, node.kind, where);
       break;
     case "boolean":
       checkBoolean(value, where);
@@ -459,15 +554,66 @@ interface Unit {
   readonly part: number;
   readonly of: number;
 }
+interface TextField {
+  readonly label?: string;
+  readonly text: string;
+  readonly style?: string;
+}
+interface CodeLine {
+  readonly n: number;
+  readonly text: string;
+  readonly mark: boolean;
+}
+/** The content blocks (#380), each optional on any kind. */
+interface Blocks {
+  readonly situation?: { readonly summary: string; readonly question: string };
+  readonly excerpt?: {
+    readonly file?: string;
+    readonly url?: string;
+    readonly lines: readonly CodeLine[];
+    readonly caption?: string;
+    readonly mark_label?: string;
+  };
+  readonly references?: {
+    readonly summary: string;
+    readonly entries: readonly {
+      readonly label?: string;
+      readonly title: string;
+      readonly fields: readonly TextField[];
+      readonly url?: string;
+      readonly url_label?: string;
+    }[];
+  };
+  readonly more?: {
+    readonly summary: string;
+    readonly items: readonly string[];
+    readonly rest?: string;
+  };
+  readonly table?: {
+    readonly summary: string;
+    readonly note?: string;
+    readonly rows: readonly {
+      readonly label: string;
+      readonly value: string;
+      readonly plain?: string;
+      readonly mark?: { readonly tone: string; readonly text: string };
+    }[];
+  };
+  readonly repeat?: {
+    readonly group: string;
+    readonly index: number;
+    readonly of: number;
+  };
+}
 /** What a card shows, on an item and on a practice item alike. */
 type Card = {
   readonly [F in (typeof PAGE_FIELDS)[number]]?: string;
-} & {
-  readonly body: string;
-  readonly rules?: readonly RuleRef[];
-  readonly unit?: Unit;
-  readonly readings?: { readonly a: string; readonly b: string };
-};
+} & Blocks & {
+    readonly body: string;
+    readonly rules?: readonly RuleRef[];
+    readonly unit?: Unit;
+    readonly readings?: { readonly a: string; readonly b: string };
+  };
 type Item = Card & { readonly source_id: string; readonly group: string };
 type Practice = Card & {
   readonly expected: Readonly<Record<string, string>>;
@@ -486,6 +632,7 @@ interface Config {
   readonly questions: readonly Question[];
   readonly practice: readonly Practice[];
   readonly practice_round?: number;
+  readonly labels?: Readonly<Record<string, string>>;
   readonly items: readonly Item[];
 }
 /** The config is typed by passing CONFIG_SCHEMA: `checkValue` refuses (throws) on any departure. */
@@ -688,6 +835,43 @@ function checkUnits(cfg: Config): void {
     });
   }
 }
+/**
+ * A situation's sentence or question may name the excerpt's marked line as `{line}`: the page writes
+ * «line N: » and the line's code there, so a question sits next to the code it is about.
+ */
+const LINE_TOKEN = "{line}";
+const SITUATION_TEXTS = ["summary", "question"] as const;
+/** The line `{line}` stands for: the first marked line, its number and its code without the indent. */
+const lineOf = (card: Card) =>
+  card.excerpt?.lines
+    .filter((l) => l.mark)
+    .map((l) => ({ n: l.n, text: l.text.trim() }))[0];
+const usesLine = (card: Card): boolean =>
+  SITUATION_TEXTS.some((f) => card.situation?.[f].includes(LINE_TOKEN));
+/**
+ * What the block schema cannot say: an excerpt marks a line, `{line}` has a marked line to stand for,
+ * and a repeat sits inside its count.
+ */
+function checkBlocks(cfg: Config): void {
+  cardsOf(cfg).forEach(([at, card]) => {
+    if (card.excerpt !== undefined && !card.excerpt.lines.some((l) => l.mark))
+      fail(
+        `${at}.excerpt.lines: no line is marked — mark the line the card is about (\`mark: true\`)`,
+      );
+    const token = SITUATION_TEXTS.find((f) =>
+      card.situation?.[f].includes(LINE_TOKEN),
+    );
+    if (token !== undefined && card.excerpt === undefined)
+      fail(
+        `${at}.situation.${token}: \`${LINE_TOKEN}\` names the excerpt's marked line, and the card has no \`excerpt\` — add it, or write the ${token} without \`${LINE_TOKEN}\``,
+      );
+    const r = card.repeat;
+    if (r !== undefined && (r.index < 1 || r.index > r.of))
+      fail(
+        `${at}.repeat.index: ${String(r.index)} is not between 1 and ${String(r.of)}`,
+      );
+  });
+}
 /** Every card of the config, items then practice, by path. */
 const cardsOf = (cfg: Config) => [
   ...cfg.items.map((i, n) => [`items[${String(n)}]`, i] as const),
@@ -715,12 +899,24 @@ function checkItemFields(cfg: Config): void {
       );
   });
 }
-/** Every text of an item the labeller sees, by field: the page fields and the line of a unit. */
-const visibleTexts = (item: Item): readonly (readonly [string, string])[] => [
-  ...PAGE_FIELDS.map((f): readonly [string, string] => [f, item[f] ?? ""]),
-  [UNIT_FIELD, item.unit?.text ?? ""],
-  [READINGS_FIELD, `${item.readings?.a ?? ""} ${item.readings?.b ?? ""}`],
-];
+/** Every string inside a value: each is tested on its own, as the page renders it, never a serialisation. */
+const stringsIn = (v: unknown): readonly string[] =>
+  typeof v === "string"
+    ? [v]
+    : Array.isArray(v)
+      ? v.flatMap(stringsIn)
+      : typeof v === "object" && v !== null
+        ? Object.values(v).flatMap(stringsIn)
+        : [];
+/**
+ * Every text of an item the labeller sees, by field: each string the page shows (the fields as
+ * `shownFields` passes them, so a repeat without its group), and every rule it names.
+ */
+const visibleTexts = (item: Item): readonly (readonly [string, string])[] =>
+  Object.entries({
+    ...shownFields(item),
+    [RULES_FIELD]: item.rules ?? [],
+  }).flatMap(([f, v]) => stringsIn(v).map((t) => [f, t] as const));
 const escapeRegExp = (s: string): string =>
   s.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&");
 /**
@@ -804,13 +1000,18 @@ function assignIds(
 }
 
 // ── a build, short of the page ──────────────────────────────────────────────────────────────────
-/** A unit as the page shows it: the line, its mark and its part, without the line's private id. */
-type ShownUnit = Omit<Unit, "id">;
-const shownFields = (
-  item: Card,
-): Readonly<
-  Record<string, string | ShownUnit | NonNullable<Card["readings"]>>
-> => ({
+/** A card's situation as the page shows it, with the line `{line}` stands for. */
+const situationShown = (item: Card) =>
+  item.situation === undefined
+    ? {}
+    : {
+        situation: {
+          summary: item.situation.summary,
+          question: item.situation.question,
+          ...(usesLine(item) ? { line: lineOf(item) } : {}),
+        },
+      };
+const shownFields = (item: Card): Readonly<Record<string, unknown>> => ({
   ...Object.fromEntries(
     PAGE_FIELDS.flatMap((f) => {
       const v = item[f];
@@ -828,6 +1029,15 @@ const shownFields = (
         },
       }),
   ...(item.readings === undefined ? {} : { [READINGS_FIELD]: item.readings }),
+  ...Object.fromEntries(
+    BLOCK_FIELDS.filter((f) => f !== "repeat" && f !== "situation").flatMap(
+      (f) => (item[f] === undefined ? [] : [[f, item[f]]]),
+    ),
+  ),
+  ...situationShown(item),
+  ...(item.repeat === undefined
+    ? {}
+    : { repeat: { index: item.repeat.index, of: item.repeat.of } }),
 });
 /** Rule → the linter's description (and a ruff rule's family), for every rule a card names. */
 type Described = ReadonlyMap<string, RuleText>;
@@ -836,14 +1046,16 @@ const ruleKey = (r: RuleRef): string => `${r.linter} ${r.id}`;
 function describeRules(cfg: Config, fromDir: string): Described {
   return new Map(
     cardsOf(cfg).flatMap(([at, card]) =>
-      (card.rules ?? []).map((r, k): readonly [string, RuleText] => {
-        const text = describeRule(r, fromDir);
-        return text === undefined
-          ? fail(
-              `${at}.rules[${String(k)}]: ${r.linter} ${repr(r.id)} has no description from the linter (${r.linter === "ruff" ? "`ruff rule` does not know it, or ruff is not on PATH" : "not a rule of the ESLint, or of a plugin, installed where items.json is"}) — check the id`,
-            )
-          : [ruleKey(r), text];
-      }),
+      (card.rules ?? []).flatMap(
+        (r, k): readonly (readonly [string, RuleText])[] => {
+          const text = describeRule(r, fromDir);
+          return text === undefined
+            ? fail(
+                `${at}.rules[${String(k)}]: ${r.linter} ${repr(r.id)} has no description from the linter (${r.linter === "ruff" ? "`ruff rule` does not know it, or ruff is not on PATH" : "not a rule of the ESLint, or of a plugin, installed where items.json is"}) — check the id`,
+              )
+            : [[ruleKey(r), text]];
+        },
+      ),
     ),
   );
 }
@@ -882,6 +1094,14 @@ const practiceShown = (cfg: Config, described: Described) =>
     ...shownFields(p),
     ...rulesShown(p, described),
   }));
+/** The page's own words where `labels` leaves one out (references/closed-choice-generator.md). */
+const DEFAULT_LABELS: Readonly<Record<string, string>> = {
+  place: "{id} · {n} of {total}",
+  line: "Line",
+  line_part: "{line} · part {part} of {of}",
+  repeat: "Card {index} of {of}",
+  practice_example: "",
+};
 /** What a page shows: the questions, the practice and the items, blind, with their neutral ids. */
 function payloadOf(
   cfg: Config,
@@ -894,6 +1114,7 @@ function payloadOf(
   return {
     title: cfg.title,
     intro: cfg.intro ?? "",
+    labels: { ...DEFAULT_LABELS, ...cfg.labels },
     groups: used.map((g) => ({ id: g, label: String(cfg.groups[g]) })),
     familiarity_question: asksFamiliarity(cfg)
       ? (cfg.familiarity_question ?? "How well do you know {group}?")
@@ -983,13 +1204,14 @@ function keyOf(
  * returns what the page shows. A page written by hand can take its blindness and its key from here.
  */
 export function prepareBuild(configPath: string, outDir: string) {
-  const cfg = readJson(configPath);
+  const cfg = withPreset(readJson(configPath));
   assertConfig(cfg);
   // Once its `kind` is known to be one, the fields that kind needs on every card.
   checkValue(cfg, configSchema(cfg.kind), "");
   checkConfig(cfg);
   checkItemFields(cfg);
   checkUnits(cfg);
+  checkBlocks(cfg);
   checkNoSourceShown(cfg);
   const described = describeRules(cfg, dirname(configPath));
   mkdirSync(outDir, { recursive: true });

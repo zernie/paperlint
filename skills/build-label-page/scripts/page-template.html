@@ -82,6 +82,27 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   background: var(--good); margin-right: 8px; vertical-align: middle; }
 .status.missing { color: var(--mark); }
 .status.failed { color: var(--bad); }
+/* The content blocks (#380): a code excerpt with its line numbers and the marked line lit, references,
+   lists and tables folded away. A long text shows three lines and a «more». */
+a { color: var(--accent); }
+summary { cursor: pointer; color: var(--accent); min-height: 44px; display: flex; align-items: center; gap: 8px; }
+.situation { color: var(--strong); font-weight: 500; }
+pre.numbered { white-space: normal; padding: 8px 0; }
+pre.numbered .line { display: grid; grid-template-columns: 2ch 5ch 1fr; white-space: pre-wrap; padding: 0 10px 0 0; }
+/* The marked line reads as marked without its colour: a marker in the gutter and a label after the code. */
+pre.numbered .g { color: var(--mark); text-align: center; user-select: none; }
+pre.numbered .this { color: var(--mark); font-weight: 700; margin-left: 1ch; white-space: nowrap; user-select: none; }
+pre.numbered .n { color: var(--muted); text-align: right; padding-right: 1.5ch; user-select: none; }
+pre.numbered .hit { background: var(--mark-bg); }
+pre.numbered .hit .n { color: var(--mark); font-weight: 700; }
+.rulebox { display: flex; flex-direction: column; gap: 8px; }
+.clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+/* The clamp cuts at the padding box, so a code block's bottom padding is a border: no fourth line peeks in. */
+pre.clamped { padding-bottom: 0; border-bottom: 10px solid var(--surface); box-shadow: 0 1px 0 var(--line); }
+button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); padding: 0 4px; align-self: flex-start; }
+.setting { display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+.match.yes { color: var(--good); }
+.match.no { color: var(--bad); }
 </style>
 <main id="app"><p class="muted">Loading…</p></main>
 <script type="application/json" id="data">__DATA__</script>
@@ -100,6 +121,9 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     whyTimers: {},    // "<item id>|<question id>" -> the pending save of a reason being typed
     whyBoxes: {},     // "<item id>|<question id>" -> the reason box of the last render
     typingIn: null,   // the item whose reason box has the keyboard: shown even when complete
+    lastAnswered: null, // the item answered last: shown under "Next unanswered" until the next answer
+    pending: {},      // item id -> answers chosen whose reason is still empty: NOT in the store
+    refusedWhy: {},   // item id -> true when an empty reason was refused for its answer
     mine: {},         // item/group key -> the answers this page has just written (ahead of the store)
     inflight: {},     // item/group key -> writes not yet confirmed
     failed: {},       // item/group key -> error code of the last refused write
@@ -115,9 +139,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
 
   // ── what "done" means ────────────────────────────────────────────────────────────────────
   function answersOf(id) {
-    if (state.mine[id]) return state.mine[id];
-    var d = state.answers[id];
-    return d && d.answers ? d.answers : {};
+    return state.pending[id] || savedOf(id);
   }
   // A stored value is an answer only if the build offers it (DATA.allowed, the same lists the
   // export reads from key.json): after a rebuild that removed an option, or a typo merged from chat,
@@ -141,6 +163,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     return d[qid];
   }
   function needsWhy(q, v) { return (DATA.allowed.needs_why[q.id] || []).indexOf(v) !== -1; }
+  function questionOf(qid) { return DATA.questions.filter(function (q) { return q.id === qid; })[0]; }
   // What an item still needs: an answer, or the reason its answer asks for (named "<short> (why)").
   function missingFor(id) {
     var a = answersOf(id), r = reasonsOf(id);
@@ -202,25 +225,71 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   function canWrite() {
     return db && state.loaded.answers && state.loaded.groups && state.loaded.practice && state.store === "ok";
   }
+  // An answer that asks why is not written while its reason is empty (#380): it waits on the page, and
+  // the store keeps what it had, so an export never meets an answer without the reason it needs. Every
+  // write leaves out each such answer, not only the one just picked: on a page of several questions the
+  // next answer would otherwise carry the waiting one into the store without its reason.
+  // A waiting answer that replaces a saved one leaves the saved one in the write until its reason comes.
+  // A stored answer to a question this page no longer asks (removed or renamed between builds) is kept
+  // as it was and never checked: the page has no question to check it against.
+  function resolved(answers, reasons, saved) {
+    var out = {}, waiting = false;
+    Object.keys(answers).forEach(function (q) {
+      var asked = questionOf(q);
+      if (!(asked && needsWhy(asked, answers[q]) && !(reasons[q] || "").trim())) out[q] = answers[q];
+      else {
+        waiting = true;
+        if (Object.prototype.hasOwnProperty.call(saved, q)) out[q] = saved[q];
+      }
+    });
+    return { ready: out, waiting: waiting };
+  }
+  // What the store holds for an item, or what this page last wrote to it ahead of the store.
+  function savedOf(id) {
+    if (state.mine[id]) return state.mine[id];
+    var d = state.answers[id];
+    return d && d.answers ? d.answers : {};
+  }
+  function keep(id, next, reasons) {
+    var r = resolved(next, reasons, savedOf(id)), ready = r.ready;
+    if (r.waiting) state.pending[id] = next;
+    else delete state.pending[id];
+    delete state.refusedWhy[id];
+    state.mine[id] = ready;
+    write(id, "answers", id, { answers: ready, reasons: reasons, savedAt: new Date().toISOString(), source: "page" });
+    render();
+  }
   function answer(id, qid, value) {
     if (!canWrite()) return;
     var next = Object.assign({}, answersOf(id));
     next[qid] = value;
-    state.mine[id] = next;
-    write(id, "answers", id, { answers: next, reasons: reasonsOf(id), savedAt: new Date().toISOString(), source: "page" });
-    render();
+    state.lastAnswered = id;
+    var draft = draftOf(id, qid);
+    var why = draft !== undefined ? draft : reasonsOf(id)[qid] || "";
+    if (needsWhy(questionOf(qid), value) && !why.trim()) {
+      state.pending[id] = next;
+      render();
+      return;
+    }
+    var reasons = Object.assign({}, reasonsOf(id));
+    if (why.trim()) reasons[qid] = why;
+    keep(id, next, reasons);
   }
-  // A reason saves when the labeller leaves the box (the text equivalent of a tap).
+  // A reason saves when the labeller leaves the box (the text equivalent of a tap); an empty one is refused.
   function setReason(id, qid, text) {
     clearTimeout(state.whyTimers[id + "|" + qid]);
     delete state.whyTimers[id + "|" + qid];
     if (!canWrite()) return;
+    var a = answersOf(id);
+    if (needsWhy(questionOf(qid), a[qid]) && !text.trim()) {
+      state.refusedWhy[id] = true;
+      render();
+      return;
+    }
     var why = Object.assign({}, reasonsOf(id));
     why[qid] = text;
     state.mineWhy[id] = why;
-    state.mine[id] = Object.assign({}, answersOf(id));
-    write(id, "answers", id, { answers: answersOf(id), reasons: why, savedAt: new Date().toISOString(), source: "page" });
-    render();
+    keep(id, Object.assign({}, a), why);
   }
   // The first answer to a practice question is the one scored: it cannot be changed afterwards.
   function answerPractice(pid, qid, value) {
@@ -257,8 +326,8 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     });
     return n;
   }
-  // `withExamples`: the practice shows each answer's example on its button; the real items keep the buttons
-  // short, the examples stay on the first screen.
+  // `withExamples`: the practice shows each answer's example on its button, after `labels.practice_example`;
+  // the real items keep the buttons short, the examples stay on the first screen.
   // A code block shows what a labeller would otherwise count by eye: leading and trailing whitespace as
   // faint marks (a space as a middle dot, a tab as an arrow) and each line's length in characters.
   function visible(ws) { return ws.replace(/ /g, "\u00b7").replace(/\t/g, "\u2192"); }
@@ -281,7 +350,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
       var b = el("button", "");
       if (o.icon) b.appendChild(el("span", "icon", o.icon));
       b.appendChild(el("span", "label", o.label));
-      if (withExamples && o.example) b.appendChild(rich("span", "ex", o.example));
+      if (withExamples && o.example) b.appendChild(rich("span", "ex", DATA.labels.practice_example + o.example));
       b.type = "button";
       b.setAttribute("aria-pressed", String(current === o.value));
       b.disabled = disabled;
@@ -296,7 +365,10 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   }
   function statusLine(key, missing, savedAt) {
     var s = el("p", "status");
-    if (state.failed[key]) {
+    if (state.pending[key] || state.refusedWhy[key]) {
+      s.className = "status missing";
+      s.textContent = "Not saved yet: this answer needs a reason. Write it above, or pick another answer.";
+    } else if (state.failed[key]) {
       s.className = "status failed";
       s.textContent = "Not saved (" + state.failed[key] + "). Tap the answer again.";
     } else if (state.inflight[key]) {
@@ -312,15 +384,14 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     return s;
   }
   function itemCard(item, off) {
-    var done = itemDone(item.id);
     var card = el("article", "item");
-    card.appendChild(el("div", "id", item.id));
+    card.appendChild(el("div", "id", fill(DATA.labels.place, { id: item.id, n: DATA.items.indexOf(item) + 1, total: DATA.items.length })));
     evidence(card, item);
     var a = answersOf(item.id);
     askOne(card, a, state.editing[item.id], function (q, v) {
       delete state.editing[item.id];
       answer(item.id, q.id, v);
-    }, function (q) { state.editing[item.id] = q.id; render(); }, off);
+    }, function (q) { state.editing[item.id] = q.id; render(); }, off, false, item.situation);
     DATA.questions.forEach(function (q) {
       var o = q.options.filter(function (x) { return x.value === a[q.id] && x.ask_why; })[0];
       if (!o) return;
@@ -344,6 +415,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     });
     var saved = state.answers[item.id] && state.answers[item.id].savedAt;
     card.appendChild(statusLine(item.id, missingFor(item.id), saved));
+    blocksBelow(card, item);
     return card;
   }
   // A labelled row: a short word, then what it labels.
@@ -361,17 +433,136 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     p.appendChild(rich("span", "", u.text.slice(at + u.mark.length)));
     return p;
   }
+  // A situation's text with each `{line}` written out: «line N: » and the marked line's code as code
+  // (the build passes `line` whenever the text holds the token).
+  function situated(tag, cls, text, line) {
+    var n = el(tag, cls);
+    String(text).split("{line}").forEach(function (part, i) {
+      if (i) {
+        n.appendChild(el("span", "", "line " + line.n + ": "));
+        n.appendChild(el("code", "", line.text));
+      }
+      if (part) n.appendChild(rich("span", "", part));
+    });
+    return n;
+  }
+  // A long text shows its first three lines and a «more» that opens the rest.
+  function clamp(node, text) {
+    if (String(text).length < 200 && String(text).split("\n").length <= 3) return node;
+    var wrap = el("div", "rulebox");
+    node.className += " clamped";
+    var more = el("button", "more", "more");
+    more.type = "button";
+    more.addEventListener("click", function () {
+      node.className = node.className.replace(" clamped", "");
+      wrap.removeChild(more);
+    });
+    wrap.appendChild(node);
+    wrap.appendChild(more);
+    return wrap;
+  }
+  function link(text, url) {
+    var a = el("a", "", text);
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    return a;
+  }
+  function plainCode(text, cls) {
+    var pre = el("pre", cls || "");
+    pre.textContent = text;
+    return pre;
+  }
+  // `{name}` in a page label, from `vars`.
+  function fill(text, vars) {
+    return String(text).replace(/\{(\w+)\}/g, function (m, k) { return k in vars ? String(vars[k]) : m; });
+  }
+  // A code excerpt: its file (a link when there is one), its lines numbered, the marked line with a
+  // gutter marker and a label besides its background, and the caption under it.
+  function excerptBlock(ex) {
+    var box = el("div", "rulebox");
+    if (ex.file) {
+      var name = el("p");
+      name.appendChild(ex.url ? link(ex.file, ex.url) : el("code", "", ex.file));
+      box.appendChild(name);
+    }
+    var pre = el("pre", "numbered");
+    ex.lines.forEach(function (l) {
+      var line = el("div", "line" + (l.mark ? " hit" : ""));
+      line.appendChild(el("span", "g", l.mark ? "\u25b6" : ""));
+      line.appendChild(el("span", "n", String(l.n)));
+      var code = line.appendChild(el("span", "", l.text));
+      if (l.mark) code.appendChild(el("span", "this", ex.mark_label || "\u25c0 this line"));
+      pre.appendChild(line);
+    });
+    box.appendChild(pre);
+    if (ex.caption) box.appendChild(rich("p", "said", ex.caption));
+    return box;
+  }
+  // A reference entry: its title, then each field (a paragraph, a code block on a labelled row, or a
+  // quiet note), then its link.
+  function referenceBlock(r) {
+    var box = el("div", "rulebox");
+    box.appendChild(rich("p", "", r.title));
+    r.fields.forEach(function (f) {
+      if (f.style === "note") box.appendChild(el("p", "muted", f.text));
+      else if (f.style === "code") box.appendChild(row(f.label || "", clamp(plainCode(f.text), f.text)));
+      else box.appendChild(clamp(rich("p", "", (f.label ? f.label + ": " : "") + f.text), f.text));
+    });
+    if (r.url) box.appendChild(el("p")).appendChild(link(r.url_label || r.url, r.url));
+    return box;
+  }
+  function folded(summary) {
+    var d = el("details");
+    d.appendChild(el("summary", "", summary));
+    return d;
+  }
+  function references(x) {
+    var d = folded(x.summary);
+    x.entries.forEach(function (r) { d.appendChild(row(r.label || "", referenceBlock(r))); });
+    return d;
+  }
+  function moreList(m) {
+    var d = folded(m.summary);
+    var ul = el("ul");
+    m.items.forEach(function (f) { ul.appendChild(rich("li", "", f)); });
+    if (m.rest) ul.appendChild(el("li", "muted", m.rest));
+    d.appendChild(ul);
+    return d;
+  }
+  // A folded table: its note, then each row in the order given: label, value as code, plain words, mark.
+  function table(t) {
+    var d = folded(t.summary);
+    if (t.note) d.appendChild(el("p", "muted", t.note));
+    t.rows.forEach(function (r) {
+      var s = el("div", "setting");
+      s.appendChild(el("span", "lbl", r.label));
+      s.appendChild(el("p")).appendChild(el("code", "", r.value));
+      if (r.plain) s.appendChild(rich("p", "", r.plain));
+      if (r.mark) s.appendChild(el("p", "match " + r.mark.tone, r.mark.text));
+      d.appendChild(s);
+    });
+    return d;
+  }
+  // Below the question and its answers: the references, the list of more like it and the table, each
+  // folded, so the question sits right under the code it names.
+  function blocksBelow(card, item) {
+    if (item.references) card.appendChild(references(item.references));
+    if (item.more) card.appendChild(moreList(item.more));
+    if (item.table) card.appendChild(table(item.table));
+  }
   // What a card shows above its question, one labelled row per field (an item and a practice item alike).
   function evidence(card, item) {
     if (item.title) card.appendChild(rich("h3", "", item.title));
-    card.appendChild(rich("p", "body", item.body));
+    var body = rich("p", "body", item.body);
+    card.appendChild(DATA.labels.body ? row(DATA.labels.body, body) : body);
+    if (item.repeat && item.repeat.of > 1) card.appendChild(el("p", "muted", fill(DATA.labels.repeat, item.repeat)));
     if (item.code) card.appendChild(codeBlock(item.code));
-    if (item.unit) card.appendChild(row(item.unit.of > 1 ? "Line · part " + item.unit.part + " of " + item.unit.of : "Line",
+    if (item.unit) card.appendChild(row(item.unit.of > 1 ? fill(DATA.labels.line_part, { line: DATA.labels.line, part: item.unit.part, of: item.unit.of }) : DATA.labels.line,
       markedLine(item.unit)));
     // A rule the item names, with what it does in the linter's own words (looked up at build time).
     (item.rules || []).forEach(function (r) {
-      card.appendChild(row("Rule", rich("p", "", r.linter + " `" + r.id + "`" + (r.family ? " (" + r.family + ")" : "") +
-        ": " + r.description)));
+      card.appendChild(row("Rule", rich("p", "", r.linter + " `" + r.id + "`" + (r.family ? " (" + r.family + ")" : "") + ": " + r.description)));
     });
     if (item.readings) {
       card.appendChild(row("Reading A", rich("p", "", item.readings.a), "reading a"));
@@ -379,6 +570,8 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     }
     if (item.file) card.appendChild(row("File", rich("p", "", item.file)));
     if (item.context) card.appendChild(rich("p", "muted", item.context));
+    if (item.situation) card.appendChild(situated("p", "situation", item.situation.summary, item.situation.line));
+    if (item.excerpt) card.appendChild(excerptBlock(item.excerpt));
   }
   function labelOf(q, v) {
     var o = q.options.filter(function (x) { return x.value === v; })[0];
@@ -386,7 +579,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   }
   // One question per screen: the answered ones stay as a line (with "Change"), and only one question
   // is asked: the one being changed, else the first unanswered.
-  function askOne(card, a, editing, onPick, onChange, off, withExamples) {
+  function askOne(card, a, editing, onPick, onChange, off, withExamples, situation) {
     var open = DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
     var asked = DATA.questions.filter(function (q) { return q.id === editing; })[0] || open[0];
     DATA.questions.forEach(function (q) {
@@ -403,15 +596,22 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     });
     if (!asked) return;
     var ask = el("div", "ask");
-    ask.appendChild(el("p", "q", asked.text));
+    // A card's situation asks the page's first question in its own words; the others keep theirs.
+    ask.appendChild(situation && asked === DATA.questions[0] ? situated("p", "q", situation.question, situation.line) : rich("p", "q", asked.text));
     ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples));
     card.appendChild(ask);
   }
+  // Open until the practice is done; then folded into a toggle, so the cards start near the top.
   function howTo() {
     var sec = el("section");
-    sec.appendChild(el("h2", "", "📖 How to answer"));
+    var body = sec;
+    if (practiceOpen()) sec.appendChild(el("h2", "", "📖 How to answer"));
+    else {
+      body = sec.appendChild(el("details"));
+      body.appendChild(el("summary", "", "📖 How to answer"));
+    }
     DATA.questions.forEach(function (q) {
-      sec.appendChild(el("p", "q", q.text));
+      body.appendChild(el("p", "q", q.text));
       var list = el("div", "examples");
       q.options.forEach(function (o) {
         var row = el("div", "example");
@@ -419,7 +619,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
         row.appendChild(rich("span", "muted", "For example: " + o.example));
         list.appendChild(row);
       });
-      sec.appendChild(list);
+      body.appendChild(list);
     });
     return sec;
   }
@@ -428,13 +628,14 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     card.appendChild(el("div", "id", "Practice " + p.id));
     evidence(card, p);
     var a = practiceAnswers(p.id);
-    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true);
+    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true, p.situation);
     if (practiceAnswered(p)) {
       var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
       card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",
-        (practiceMatched(p) ? "Matched. " : "Expected: " + expected + ". ") + p.why));
+        (practiceMatched(p) ? "Matched. " : "Not matched. Expected: " + expected + ". ") + p.why));
     }
     card.appendChild(statusLine("practice:" + p.id, [], null));
+    blocksBelow(card, p);
     return card;
   }
   function practiceBlock(off) {
@@ -470,7 +671,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
       sec.appendChild(fam);
     }
     groupItems(g.id).forEach(function (i) {
-      if (onlyOpen && itemDone(i.id) && i.id !== state.typingIn) return;
+      if (onlyOpen && itemDone(i.id) && i.id !== state.typingIn && i.id !== state.lastAnswered) return;
       sec.appendChild(itemCard(i, off));
     });
     return sec;
@@ -536,6 +737,12 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
     fill.style.width = (total ? (100 * done / total) : 0) + "%";
     bar.appendChild(fill);
     progress.appendChild(bar);
+    // Done means every item AND every group's familiarity, as «Next unanswered» counts it.
+    var rated = DATA.groups.every(function (g) { return familiarity(g.id) !== undefined; });
+    if (total && done === total && rated && state.filter === "all") {
+      progress.appendChild(el("p", "status saved", "All " + total + " items are complete. Tell the agent you are " +
+        "done; you can still change any answer."));
+    }
 
     var filters = el("div", "tabs");
     [["all", "All items"], ["next", "Next unanswered"]].forEach(function (f) {
@@ -571,7 +778,7 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
       progress.appendChild(note);
     }
     DATA.groups.forEach(function (g) {
-      var typingHere = groupItems(g.id).some(function (i) { return i.id === state.typingIn; });
+      var typingHere = groupItems(g.id).some(function (i) { return i.id === state.typingIn || i.id === state.lastAnswered; });
       if (onlyOpen && groupDone(g.id) && !typingHere) return;
       app.appendChild(groupBlock(g, off, onlyOpen));
     });
