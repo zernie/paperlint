@@ -1184,14 +1184,16 @@ function payloadOf(
       round: practiceRound(cfg),
       items: practiceShown(cfg, described),
     },
-    items: page.items.map((i) => ({
-      id: page.idOf(i),
-      ...shownFields(i),
-      ...rulesShown(i, described),
-      ...(i.answerers === undefined ? {} : { answerers: i.answerers }),
-    })),
+    items: page.items.map((i) => itemShown(i, page.idOf(i), described)),
   };
 }
+/** One item as its card shows it, and whom it is shown to when not every answerer. */
+const itemShown = (i: Item, id: string, described: Described) => ({
+  id,
+  ...shownFields(i),
+  ...rulesShown(i, described),
+  ...(i.answerers === undefined ? {} : { answerers: i.answerers }),
+});
 export type Payload = ReturnType<typeof payloadOf>;
 /** Every id the key keeps (on the page now, or kept from an earlier build), with its source and group. */
 function idsOf(cfg: Config, page: ReturnType<typeof itemsOnPage>): JsonObject {
@@ -1380,15 +1382,20 @@ interface Names {
   readonly fields: readonly string[];
 }
 /** Who an item is shown to: its own list, else every answerer of the page. */
-const shownTo = (key: Key, meta: KeyEntry): readonly string[] =>
-  meta.answerers ?? key.answerers ?? [];
+const shownTo = (all: readonly string[], meta: KeyEntry): readonly string[] =>
+  meta.answerers ?? all;
+/** A document's answerer, and the page's answerers; none on a page without them. */
+type Whose =
+  | { readonly who?: undefined }
+  | { readonly who: string; readonly all: readonly string[] };
 /** The names of a page without answerers, or those of one answerer's documents. */
 function knownNames(
   key: Key,
-  who?: string,
+  whose: Whose,
 ): Readonly<Record<Collection, Names>> {
   const entries = Object.entries(key.ids).filter(
-    ([, m]) => who === undefined || shownTo(key, m).includes(who),
+    ([, m]) =>
+      whose.who === undefined || shownTo(whose.all, m).includes(whose.who),
   );
   const shown = entries.filter(([, m]) => m.on_page);
   const practice = practiceDocs(key);
@@ -1439,7 +1446,7 @@ function answererOf(
   where: string,
   docId: string,
   key: Key,
-): { readonly who?: string; readonly name: string } {
+): Whose & { readonly name: string } {
   const all = key.answerers;
   if (all === undefined) return { name: docId };
   const at = docId.indexOf(SEP);
@@ -1452,7 +1459,7 @@ function answererOf(
     fail(
       `${where}: ${repr(who)} is not an answerer of this page (${all.join(", ")})`,
     );
-  return { who, name: docId.slice(at + 1) };
+  return { who, all, name: docId.slice(at + 1) };
 }
 function checkDocName(
   where: string,
@@ -1549,7 +1556,7 @@ function checkDump(dump: Json, key: Key): asserts dump is JsonObject {
     )) {
       const where = `${kind}/${docId}`;
       const named = answererOf(where, docId, key);
-      const names = knownNames(key, named.who)[kind];
+      const names = knownNames(key, named)[kind];
       const questions = checkDocName(where, named, kind, names);
       checkDocFields(where, doc, kind, names.fields);
       checkDocAnswers(where, doc, questions);
@@ -1792,17 +1799,19 @@ function exportPractice(
     });
   });
 }
+/** Where a round's practice goes, and whose it is: no one's on a page without answerers. */
+interface RoundAt {
+  readonly target: string;
+  readonly day: string;
+  readonly current: boolean;
+  readonly who: string | undefined;
+}
 /** One round's scored practice to `<study>-practice-r<round>-<date>.json`, and one line about it. */
 function exportRound(
   study: string,
   round: number,
   items: ReturnType<typeof scorePractice>,
-  at: {
-    readonly target: string;
-    readonly day: string;
-    readonly current: boolean;
-    readonly who: string | undefined;
-  },
+  at: RoundAt,
 ): void {
   const named = `practice round ${String(round)}${at.who === undefined ? "" : ` (${at.who})`}`;
   if (!items.some((i) => Object.keys(i.answers).length)) {
@@ -1812,10 +1821,11 @@ function exportRound(
   const missed = items.filter((i) => !i.matched).map((i) => i.id);
   const matched = items.length - missed.length;
   const path = join(at.target, practiceFile(study, round, at.day, at.who));
+  const answerer = at.who === undefined ? {} : { answerer: at.who };
   writeJson(path, {
     study,
     round,
-    ...(at.who === undefined ? {} : { answerer: at.who }),
+    ...answerer,
     exported: at.day,
     matched,
     total: items.length,
@@ -1886,38 +1896,43 @@ function answererLabelsOf(
     id: nid,
     source_id: meta.source_id,
     group: meta.group,
-    answerers: shownTo(ctx.key, meta),
+    answerers: shownTo(all, meta),
     by_answerer: Object.fromEntries(
-      shownTo(ctx.key, meta).map((who) => [who, docFor(who, nid)]),
+      shownTo(all, meta).map((who) => [who, docFor(who, nid)]),
     ),
   }));
-  const byAnswerer = Object.fromEntries(
-    all.map((who): [string, Tally] => {
-      const mine = onPage.filter(([, m]) => shownTo(ctx.key, m).includes(who));
-      return [
-        who,
-        tally(
-          mine.map(([nid]) => docFor(who, nid)),
-          groupsFor(mine, dump, ctx, `${who}${SEP}`),
-        ),
-      ];
-    }),
-  );
   return {
     study: ctx.key.study,
     exported: day,
     questions: ctx.key.questions,
     answerers: all,
     items,
-    by_answerer: byAnswerer,
+    by_answerer: Object.fromEntries(
+      all.map((who) => [who, tallyOf({ who, all }, onPage, dump, ctx)]),
+    ),
   };
+}
+/** One answerer's groups and counts, over the items shown to them. */
+function tallyOf(
+  { who, all }: { readonly who: string; readonly all: readonly string[] },
+  onPage: readonly (readonly [string, KeyEntry])[],
+  dump: JsonObject,
+  ctx: Ctx,
+): Tally {
+  const mine = onPage.filter(([, m]) => shownTo(all, m).includes(who));
+  return tally(
+    mine.map(([nid]) =>
+      answerOf(docOf(dump["answers"], `${who}${SEP}${nid}`), ctx),
+    ),
+    groupsFor(mine, dump, ctx, `${who}${SEP}`),
+  );
 }
 /** Each answerer's items and groups, named `<answerer>~<id>` in the report, as in the store. */
 function reportAnswerers(
   out: ReturnType<typeof answererLabelsOf>,
   allowed: Allowed,
 ): void {
-  out.answerers.forEach((who) => {
+  Object.entries(out.by_answerer).forEach(([who, t]) => {
     reportLabels(
       out.items.flatMap((i) => {
         const a = i.by_answerer[who];
@@ -1927,10 +1942,7 @@ function reportAnswerers(
     );
     reportGroups(
       Object.fromEntries(
-        Object.entries(out.by_answerer[who]?.groups ?? {}).map(([g, v]) => [
-          `${who}${SEP}${g}`,
-          v,
-        ]),
+        Object.entries(t.groups).map(([g, v]) => [`${who}${SEP}${g}`, v]),
       ),
       allowed,
     );
@@ -1961,6 +1973,14 @@ export function exportLabels(
   const path = join(outDir, `${key.study}-labels-${day}.json`);
   writeJson(path, out);
   exportPractice(dump, key, outDir, day);
+  reportExport(path, out, allowed);
+}
+/** What the export wrote, and every item and group it did not count. */
+function reportExport(
+  path: string,
+  out: ReturnType<typeof labelsOf> | ReturnType<typeof answererLabelsOf>,
+  allowed: Allowed,
+): void {
   if ("by_answerer" in out) {
     say(
       `wrote ${path}: ${Object.entries(out.by_answerer)

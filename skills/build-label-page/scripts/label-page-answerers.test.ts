@@ -118,6 +118,24 @@ test("🔴 the key carries the answerers, each item's own subset and min_seconds
   assert.match(page, /"answerers": \["author"\]/);
 });
 
+/** What the export writes for one stored document of the page's own: no reason, saved now. */
+const exported = (
+  answers: Record<string, string | null>,
+  more: Record<string, unknown> = {},
+) => ({
+  answers,
+  invalid_answers: {},
+  reasons: {},
+  unexplained: [],
+  complete: Object.values(answers).every((v) => v !== null),
+  source: "page",
+  saved_at: null,
+  ...more,
+});
+const YES = { label: "yes", boundary: "clear" };
+const NONE = { label: null, boundary: null };
+const noFamiliarity = { familiarity: null, invalid_familiarity: null };
+
 test("🔴 without answerers or min_seconds, the key, the page data and the export are what they were", () => {
   const dir = setup("answerers-none", config({ items: ITEMS.slice(0, 2) }));
   assert.equal(buildAt(dir).status, 0);
@@ -126,63 +144,42 @@ test("🔴 without answerers or min_seconds, the key, the page data and the expo
   const page = readFileSync(join(dir, "out", "page.html"), "utf8");
   assert.doesNotMatch(page, /"answerers"|"min_seconds"/);
   const [a, b] = [nidOf(dir, 0), nidOf(dir, 1)];
+  const saved = "2026-01-02T10:00:00Z";
   dumpAt(dir, {
-    answers: {
-      [a]: {
-        answers: { label: "yes", boundary: "clear" },
-        savedAt: "2026-01-02T10:00:00Z",
-        source: "page",
-      },
-    },
+    answers: { [a]: { answers: YES, savedAt: saved, source: "page" } },
     groups: { rust: { familiarity: "well", source: "page" } },
     practice: DONE_PRACTICE,
   });
   const r = exportAt(dir);
   assert.equal(r.status, 0, r.out);
+  const items = [
+    {
+      id: a,
+      source_id: "case-1000",
+      group: "rust",
+      ...exported(YES, { saved_at: saved }),
+    },
+    {
+      id: b,
+      source_id: "case-1001",
+      group: "python",
+      ...exported(NONE, { source: null }),
+    },
+  ].sort((x, y) => (x.id < y.id ? -1 : 1));
   assert.deepEqual(JSON.parse(labelsFile(dir)), {
     study: "demo-gold",
     exported: "2026-01-02",
     questions: ["label", "boundary"],
-    items: [
-      {
-        id: a,
-        source_id: "case-1000",
-        group: "rust",
-        answers: { label: "yes", boundary: "clear" },
-        invalid_answers: {},
-        reasons: {},
-        unexplained: [],
-        complete: true,
-        source: "page",
-        saved_at: "2026-01-02T10:00:00Z",
-      },
-      {
-        id: b,
-        source_id: "case-1001",
-        group: "python",
-        answers: { label: null, boundary: null },
-        invalid_answers: {},
-        reasons: {},
-        unexplained: [],
-        complete: false,
-        source: null,
-        saved_at: null,
-      },
-    ].sort((x, y) => (x.id < y.id ? -1 : 1)),
+    items,
     // Object keys compare in any order: deepEqual reads them as a set.
     groups: {
       rust: {
+        ...noFamiliarity,
         familiarity: "well",
-        invalid_familiarity: null,
         source: "page",
         saved_at: null,
       },
-      python: {
-        familiarity: null,
-        invalid_familiarity: null,
-        source: null,
-        saved_at: null,
-      },
+      python: { ...noFamiliarity, source: null, saved_at: null },
     },
     complete_items: 1,
     invalid_items: 0,
@@ -191,27 +188,22 @@ test("🔴 without answerers or min_seconds, the key, the page data and the expo
   });
 });
 
-test("🔴 export keeps each answerer's answers apart, with the seconds on screen, and counts per answerer", () => {
+/** The four-item page answered by both: author all but one, second one of three; then exported. */
+function exportTwo() {
   const dir = setup("answerers-export", TWO({ min_seconds: 30 }));
   assert.equal(buildAt(dir).status, 0);
   const [a, d] = [nidOf(dir, 0), nidOf(dir, 3)];
-  const yes = { label: "yes", boundary: "clear" };
+  const no = { label: "no", boundary: "clear" };
   dumpAt(dir, {
     answers: {
-      [`author~${a}`]: { answers: yes, seconds: 41, source: "page" },
-      [`second~${a}`]: {
-        answers: { label: "no", boundary: "clear" },
-        seconds: 33,
-        source: "page",
-      },
-      [`author~${d}`]: { answers: yes, seconds: 30, source: "page" },
+      [`author~${a}`]: { answers: YES, seconds: 41, source: "page" },
+      [`second~${a}`]: { answers: no, seconds: 33, source: "page" },
+      [`author~${d}`]: { answers: YES, seconds: 30, source: "page" },
     },
-    groups: {
-      "author~rust": { familiarity: "well", source: "page" },
-    },
+    groups: { "author~rust": { familiarity: "well", source: "page" } },
     practice: {
       ...prefixed("author", DONE_PRACTICE),
-      "second~r1-P1": { answers: yes, source: "page" },
+      "second~r1-P1": { answers: YES, source: "page" },
     },
   });
   const r = exportAt(dir);
@@ -223,18 +215,26 @@ test("🔴 export keeps each answerer's answers apart, with the seconds on scree
         z
           .object({
             id: z.string(),
-            answerers: z.array(z.string()),
-            by_answerer: z.record(
-              z.string(),
-              z.object({ seconds: z.unknown() }).loose(),
-            ),
+            by_answerer: z.record(z.string(), z.unknown()),
           })
           .loose(),
       ),
-      by_answerer: z.record(z.string(), z.unknown()),
+      by_answerer: z.record(
+        z.string(),
+        z.object({
+          complete_items: z.number(),
+          total_items: z.number(),
+          groups: z.record(z.string(), z.unknown()),
+        }),
+      ),
     })
     .loose()
     .parse(JSON.parse(labelsFile(dir)));
+  return { dir, out: r.out, file, a, d, no };
+}
+
+test("🔴 export keeps each answerer's answers to an item apart, with the seconds on screen", () => {
+  const { file, a, d, no } = exportTwo();
   assert.deepEqual(file.answerers, ["author", "second"]);
   assert.deepEqual(
     file.items.find((i) => i.id === a),
@@ -244,26 +244,8 @@ test("🔴 export keeps each answerer's answers apart, with the seconds on scree
       group: "rust",
       answerers: ["author", "second"],
       by_answerer: {
-        author: {
-          answers: yes,
-          invalid_answers: {},
-          reasons: {},
-          unexplained: [],
-          complete: true,
-          source: "page",
-          saved_at: null,
-          seconds: 41,
-        },
-        second: {
-          answers: { label: "no", boundary: "clear" },
-          invalid_answers: {},
-          reasons: {},
-          unexplained: [],
-          complete: true,
-          source: "page",
-          saved_at: null,
-          seconds: 33,
-        },
+        author: exported(YES, { seconds: 41 }),
+        second: exported(no, { seconds: 33 }),
       },
     },
   );
@@ -271,18 +253,12 @@ test("🔴 export keeps each answerer's answers apart, with the seconds on scree
     Object.keys(file.items.find((i) => i.id === d)?.by_answerer ?? { none: 1 }),
     ["author"],
   );
-  const counts = z
-    .record(
-      z.string(),
-      z.object({
-        complete_items: z.number(),
-        total_items: z.number(),
-        groups: z.record(z.string(), z.unknown()),
-      }),
-    )
-    .parse(file.by_answerer);
+});
+
+test("🔴 export counts, reports and scores the practice per answerer", () => {
+  const { dir, out, file } = exportTwo();
   assert.deepEqual(
-    Object.entries(counts).map(([w, c]) => [
+    Object.entries(file.by_answerer).map(([w, c]) => [
       w,
       c.complete_items,
       c.total_items,
@@ -293,13 +269,19 @@ test("🔴 export keeps each answerer's answers apart, with the seconds on scree
       ["second", 1, 3, ["go", "python", "rust"]],
     ],
   );
-  assert.match(r.out, /author: 2 of 4 items complete/);
-  assert.match(r.out, /second: 1 of 3 items complete/);
-  assert.match(r.out, new RegExp(`incomplete second~${nidOf(dir, 1)}`));
-  // Each answerer's practice is scored on its own, into its own file.
-  assert.match(r.out, /practice round 1 \(author\): 3 of 3 matched/);
   assert.match(
-    r.out,
+    out,
+    /author: 2 of 4 items complete; second: 1 of 3 items complete/,
+  );
+  assert.match(
+    out,
+    new RegExp(`incomplete second~${nidOf(dir, 1)}: missing label, boundary`),
+  );
+  assert.match(out, /group second~rust: no familiarity answer/);
+  // Each answerer's practice is scored on its own, into its own file.
+  assert.match(out, /practice round 1 \(author\): 3 of 3 matched/);
+  assert.match(
+    out,
     /practice round 1 \(second\): 1 of 3 matched; missed P2, P3/,
   );
   const second = z

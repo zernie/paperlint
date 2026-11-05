@@ -103,6 +103,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
 .setting { display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid var(--line); }
 .match.yes { color: var(--good); }
 .match.no { color: var(--bad); }
+.who { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); }
+.who button { width: auto; min-height: 44px; border: 0; color: var(--accent); padding: 0 4px; }
 </style>
 <main id="app"><p class="muted">Loading…</p></main>
 <script type="application/json" id="data">__DATA__</script>
@@ -129,13 +131,125 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     failed: {},       // item/group key -> error code of the last refused write
     loaded: { answers: false, groups: false, practice: false },
     store: "loading", // loading | ok | none
-    filter: "all"
+    filter: "all",
+    who: null,        // the answerer picked, on a page with DATA.answerers; null until one is
+    raw: { answers: {}, groups: {}, practice: {} }, // every document of the store, every answerer's
+    dwell: {},        // item id -> ms its card was on screen, clocks stopped (DATA.min_seconds)
+    seenSince: {},    // item id -> when its card came on screen, while it is
+    firstSeconds: {}, // item id -> the seconds this page stored with the item's first save
+    gates: {}         // item id -> the locked buttons and the countdown of the last render
   };
   var db = null;
   var chains = {};
   var WHY_PAUSE_MS = 800;
 
   try { if (localStorage.getItem("label-filter") === "next") state.filter = "next"; } catch (e) {}
+  // ── who is answering (DATA.answerers): each answerer's documents are "<answerer>~<id>" ─────
+  // "~" is outside the build's name pattern, so no answerer, item, group or practice id holds it.
+  var SEP = "~";
+  var ANSWERERS = DATA.answerers || [];
+  var ASKS_WHO = ANSWERERS.length > 0;
+  try {
+    var remembered = localStorage.getItem("label-answerer");
+    if (ANSWERERS.indexOf(remembered) !== -1) state.who = remembered;
+  } catch (e) {}
+  // The store's id of one of this page's documents: as before on a page without answerers.
+  function docName(id) { return ASKS_WHO ? state.who + SEP + id : id; }
+  // The documents of the current answerer, by their names without the answerer.
+  function mineOf(docs) {
+    if (!ASKS_WHO) return docs;
+    var out = {}, prefix = state.who + SEP;
+    if (state.who) Object.keys(docs).forEach(function (k) { if (k.indexOf(prefix) === 0) out[k.slice(prefix.length)] = docs[k]; });
+    return out;
+  }
+  // The items shown to the current answerer: an item's own `answerers`, else everyone's.
+  function itemsShown() {
+    return DATA.items.filter(function (i) { return !i.answerers || i.answerers.indexOf(state.who) !== -1; });
+  }
+  function groupsShown() { return DATA.groups.filter(function (g) { return groupItems(g.id).length > 0; }); }
+  function busy() {
+    return Object.keys(state.inflight).some(function (k) { return state.inflight[k] > 0; }) || Object.keys(state.whyTimers).length > 0;
+  }
+  // Picking (or switching) the answerer: everything this page holds of the last one is dropped.
+  function choose(name) {
+    if (busy()) return;
+    Object.keys(state.seenSince).forEach(stopClock);
+    state.who = name;
+    try {
+      if (name) localStorage.setItem("label-answerer", name);
+      else localStorage.removeItem("label-answerer");
+    } catch (e) {}
+    ["editing", "mineWhy", "draftWhy", "pending", "refusedWhy", "mine", "failed", "dwell", "seenSince", "firstSeconds"]
+      .forEach(function (k) { state[k] = {}; });
+    state.lastAnswered = null;
+    ["answers", "groups", "practice"].forEach(function (c) { state[c] = mineOf(state.raw[c]); });
+    render();
+  }
+  // ── how long a card was on screen (DATA.min_seconds): its answer saves only after that long ──
+  // On screen: half the card in view, or half the viewport filled by a card taller than it.
+  var MIN_SECONDS = DATA.min_seconds || 0;
+  function dwellMs(id) {
+    var ms = state.dwell[id] || 0;
+    return state.seenSince[id] !== undefined ? ms + Date.now() - state.seenSince[id] : ms;
+  }
+  function stopClock(id) {
+    if (state.seenSince[id] === undefined) return;
+    state.dwell[id] = dwellMs(id);
+    delete state.seenSince[id];
+  }
+  function startClock(id) { if (state.seenSince[id] === undefined) state.seenSince[id] = Date.now(); }
+  // An item already saved (by this page or in the store) is never locked again.
+  function unsaved(id) { return !state.answers[id] && state.firstSeconds[id] === undefined; }
+  function locked(id) { return MIN_SECONDS > 0 && unsaved(id) && dwellMs(id) < MIN_SECONDS * 1000; }
+  function waitText(id) {
+    return "\u23f3 You can answer in " + Math.ceil((MIN_SECONDS * 1000 - dwellMs(id)) / 1000) + " s";
+  }
+  // The seconds stored with an item: those of its first save, kept on every later write.
+  function secondsOf(id) {
+    var d = state.answers[id];
+    if (d && typeof d.seconds === "number") return d.seconds;
+    if (state.firstSeconds[id] === undefined) state.firstSeconds[id] = Math.floor(dwellMs(id) / 1000);
+    return state.firstSeconds[id];
+  }
+  var observer = null;
+  var THRESHOLDS = [];
+  for (var t = 0; t <= 20; t += 1) THRESHOLDS.push(t / 20);
+  function onScreen(entry) {
+    var half = Math.min(entry.boundingClientRect.height, window.innerHeight) / 2;
+    return entry.isIntersecting && entry.intersectionRect.height >= half;
+  }
+  // Every render draws new cards: the clocks stop, and the new cards are watched from scratch.
+  function watchCards() {
+    if (observer) observer.disconnect();
+    observer = null;
+    var cards = Array.prototype.slice.call(document.querySelectorAll("article.item[data-id]"));
+    if (typeof IntersectionObserver !== "function") {
+      // No way to tell what is in view: a card counts as on screen from the moment it is drawn.
+      cards.forEach(function (c) { startClock(c.getAttribute("data-id")); });
+      return;
+    }
+    observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var id = e.target.getAttribute("data-id");
+        if (onScreen(e) && document.visibilityState !== "hidden") startClock(id);
+        else stopClock(id);
+      });
+    }, { threshold: THRESHOLDS });
+    cards.forEach(function (c) { observer.observe(c); });
+  }
+  var pausedClocks = [];
+  // The countdown on each locked card, and its buttons let go when its time is up; no render, so
+  // a section the labeller opened stays open.
+  function tick() {
+    Object.keys(state.gates).forEach(function (id) {
+      var g = state.gates[id];
+      if (locked(id)) { g.note.textContent = waitText(id); return; }
+      g.note.textContent = "";
+      g.buttons.forEach(function (b) { b.disabled = !canWrite(); });
+      delete state.gates[id];
+    });
+    setTimeout(tick, 250);
+  }
 
   // ── what "done" means ────────────────────────────────────────────────────────────────────
   function answersOf(id) {
@@ -184,7 +298,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     var d = state.mine["group:" + g] || state.groups[g];
     return d && valid(DATA.allowed.familiarity, d.familiarity) ? d.familiarity : undefined;
   }
-  function groupItems(g) { return DATA.items.filter(function (i) { return i.group === g; }); }
+  function groupItems(g) { return itemsShown().filter(function (i) { return i.group === g; }); }
   // ── the practice (rule 8): known answers, before the real items ──────────────────────────
   function practiceDoc(pid) { return "r" + DATA.practice.round + "-" + pid; }
   function practiceAnswers(pid) {
@@ -209,7 +323,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   function write(key, coll, docId, body) {
     state.inflight[key] = (state.inflight[key] || 0) + 1;
     delete state.failed[key];
-    var step = function () { return db.collection(coll).doc(docId).set(body); };
+    var step = function () { return db.collection(coll).doc(docName(docId)).set(body); };
     var run = (chains[key] || Promise.resolve()).then(step, step);
     chains[key] = run.then(function () {
       state.inflight[key] -= 1;
@@ -223,7 +337,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
   }
   function canWrite() {
-    return db && state.loaded.answers && state.loaded.groups && state.loaded.practice && state.store === "ok";
+    return db && state.loaded.answers && state.loaded.groups && state.loaded.practice && state.store === "ok" &&
+      (!ASKS_WHO || state.who !== null);
   }
   // An answer that asks why is not written while its reason is empty (#380): it waits on the page, and
   // the store keeps what it had, so an export never meets an answer without the reason it needs. Every
@@ -256,11 +371,13 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     else delete state.pending[id];
     delete state.refusedWhy[id];
     state.mine[id] = ready;
-    write(id, "answers", id, { answers: ready, reasons: reasons, savedAt: new Date().toISOString(), source: "page" });
+    var body = { answers: ready, reasons: reasons, savedAt: new Date().toISOString(), source: "page" };
+    if (MIN_SECONDS) body.seconds = secondsOf(id);
+    write(id, "answers", id, body);
     render();
   }
   function answer(id, qid, value) {
-    if (!canWrite()) return;
+    if (!canWrite() || locked(id)) return;
     var next = Object.assign({}, answersOf(id));
     next[qid] = value;
     state.lastAnswered = id;
@@ -385,13 +502,20 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   function itemCard(item, off) {
     var card = el("article", "item");
-    card.appendChild(el("div", "id", fill(DATA.labels.place, { id: item.id, n: DATA.items.indexOf(item) + 1, total: DATA.items.length })));
+    var shown = itemsShown();
+    if (MIN_SECONDS && unsaved(item.id)) card.setAttribute("data-id", item.id);
+    card.appendChild(el("div", "id", fill(DATA.labels.place, { id: item.id, n: shown.indexOf(item) + 1, total: shown.length })));
     evidence(card, item);
     var a = answersOf(item.id);
-    askOne(card, a, state.editing[item.id], function (q, v) {
+    var gate = locked(item.id);
+    var ask = askOne(card, a, state.editing[item.id], function (q, v) {
       delete state.editing[item.id];
       answer(item.id, q.id, v);
-    }, function (q) { state.editing[item.id] = q.id; render(); }, off, false, item.situation);
+    }, function (q) { state.editing[item.id] = q.id; render(); }, off || gate, false, item.situation);
+    if (gate && ask) {
+      var note = ask.appendChild(el("p", "status missing", waitText(item.id)));
+      state.gates[item.id] = { note: note, buttons: Array.prototype.slice.call(ask.querySelectorAll("button")) };
+    }
     DATA.questions.forEach(function (q) {
       var o = q.options.filter(function (x) { return x.value === a[q.id] && x.ask_why; })[0];
       if (!o) return;
@@ -594,12 +718,13 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       }
       card.appendChild(line);
     });
-    if (!asked) return;
+    if (!asked) return null;
     var ask = el("div", "ask");
     // A card's situation asks the page's first question in its own words; the others keep theirs.
     ask.appendChild(situation && asked === DATA.questions[0] ? situated("p", "q", situation.question, situation.line) : rich("p", "q", asked.text));
     ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples));
     card.appendChild(ask);
+    return ask;
   }
   // Open until the practice is done; then folded into a toggle, so the cards start near the top.
   function howTo() {
@@ -706,14 +831,43 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     // Under "Next unanswered" the save that completes an item would hide it, box and all, mid-sentence:
     // the item being typed in stays on the page until the labeller leaves its box.
     state.typingIn = typing ? typing.key.slice(0, typing.key.indexOf("|")) : null;
+    Object.keys(state.seenSince).forEach(stopClock);
+    state.gates = {};
     paint();
+    if (MIN_SECONDS) watchCards();
     var again = typing && state.whyBoxes[typing.key];
     if (again) { again.focus(); again.setSelectionRange(typing.start, typing.end); }
   }
+  // The answerer's choice, before anything else of the page.
+  function whoBlock() {
+    var sec = el("section");
+    sec.appendChild(el("h2", "", "Who is answering?"));
+    sec.appendChild(el("p", "muted", "Each person answers under their own name and sees only their own answers."));
+    var row = el("div", "opts");
+    ANSWERERS.forEach(function (name) {
+      var b = el("button", "", name);
+      b.type = "button";
+      b.addEventListener("click", function () { choose(name); });
+      row.appendChild(b);
+    });
+    sec.appendChild(row);
+    return sec;
+  }
+  function whoLine() {
+    var line = el("p", "who");
+    line.appendChild(el("span", "", "Answering as " + state.who));
+    var b = el("button", "", "Switch");
+    b.type = "button";
+    b.disabled = busy();
+    b.addEventListener("click", function () { choose(null); });
+    line.appendChild(b);
+    return line;
+  }
   function paint() {
     var off = !canWrite();
-    var done = DATA.items.filter(function (i) { return itemDone(i.id); }).length;
-    var total = DATA.items.length;
+    var items = itemsShown(), groups = groupsShown();
+    var done = items.filter(function (i) { return itemDone(i.id); }).length;
+    var total = items.length;
     app.textContent = "";
     var top = el("header", "top");
     app.appendChild(top);
@@ -726,6 +880,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     } else if (state.store === "loading" || !(state.loaded.answers && state.loaded.groups)) {
       top.appendChild(el("p", "muted", "Loading saved answers…"));
     }
+    if (ASKS_WHO && !state.who) { app.appendChild(whoBlock()); return; }
+    if (ASKS_WHO) top.appendChild(whoLine());
     app.appendChild(howTo());
     app.appendChild(practiceBlock(off));
     // Without the store nothing can be answered, practice included: show the real items read-only (rule 7).
@@ -738,7 +894,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     bar.appendChild(fill);
     progress.appendChild(bar);
     // Done means every item AND every group's familiarity, as «Next unanswered» counts it.
-    var rated = DATA.groups.every(function (g) { return familiarity(g.id) !== undefined; });
+    var rated = groups.every(function (g) { return familiarity(g.id) !== undefined; });
     if (total && done === total && rated && state.filter === "all") {
       progress.appendChild(el("p", "status saved", "All " + total + " items are complete. Tell the agent you are " +
         "done; you can still change any answer."));
@@ -760,8 +916,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
 
     var onlyOpen = state.filter === "next";
     if (onlyOpen) {
-      var rest = DATA.items.filter(function (i) { return !itemDone(i.id); });
-      var open = DATA.groups.filter(function (g) { return familiarity(g.id) === undefined; });
+      var rest = items.filter(function (i) { return !itemDone(i.id); });
+      var open = groups.filter(function (g) { return familiarity(g.id) === undefined; });
       var note = el("div", "muted");
       if (!rest.length && !open.length) {
         note.appendChild(el("p", "", "Nothing left. Every item and every group is answered."));
@@ -777,7 +933,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       }
       progress.appendChild(note);
     }
-    DATA.groups.forEach(function (g) {
+    groups.forEach(function (g) {
       var typingHere = groupItems(g.id).some(function (i) { return i.id === state.typingIn || i.id === state.lastAnswered; });
       if (onlyOpen && groupDone(g.id) && !typingHere) return;
       app.appendChild(groupBlock(g, off, onlyOpen));
@@ -789,7 +945,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     return function (snap) {
       var next = {};
       snap.docs.forEach(function (d) { next[d.id] = d.data(); });
-      state[target] = next;
+      state.raw[target] = next;
+      state[target] = mineOf(next);
       state.loaded[loadedKey] = true;
       render();
     };
@@ -797,8 +954,13 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   function broken() { state.store = "none"; render(); }
 
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState !== "visible") flushReasons();
+    if (document.visibilityState !== "visible") {
+      flushReasons();
+      pausedClocks = Object.keys(state.seenSince);
+      pausedClocks.forEach(stopClock);
+    } else pausedClocks.splice(0).forEach(startClock);
   });
+  if (MIN_SECONDS) tick();
   window.addEventListener("pagehide", flushReasons);
   render();
   if (!window.claude || typeof window.claude.use !== "function") { broken(); return; }

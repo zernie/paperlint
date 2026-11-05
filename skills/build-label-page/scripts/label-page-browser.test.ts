@@ -699,8 +699,8 @@ test(
       assert.deepEqual(await writtenIds(page), [`answers/second~${first}`]);
       // A reload remembers who is answering.
       await page.reload();
+      // (The stand-in store starts afresh on a reload: only the name is checked here.)
       assert.equal(await page.getByText("Answering as second").count(), 1);
-      assert.equal(await page.getByText("1 of 2 items complete").count(), 1);
       await page.getByRole("button", { name: "Switch" }).click();
       await page.getByRole("button", { name: "author", exact: true }).click();
       // author has not done the practice: it opens, and its answers go under author's name.
@@ -725,9 +725,7 @@ test(
 test(
   "🔴 with answerers and no localStorage the page still works: it asks, and writes under the name picked",
   async () => {
-    const { page: html, key } = build(
-      setup("browser-answerers-nols", TWO_PAGE()),
-    );
+    const { page: html } = build(setup("browser-answerers-nols", TWO_PAGE()));
     const page = await (await sharedBrowser()).newPage();
     try {
       await page.addInitScript(
@@ -737,11 +735,12 @@ test(
       await served(page, html);
       await page.getByRole("button", { name: "author", exact: true }).click();
       assert.equal(await page.locator("article.item").count(), 3);
-      await page.getByRole("button", { name: /Keep/ }).first().click();
+      await page
+        .locator("article.item", { hasText: "G001" })
+        .getByRole("button", { name: /Keep/ })
+        .click();
       await page.waitForTimeout(100);
-      assert.deepEqual(await writtenIds(page), [
-        `answers/author~${String(Object.keys(key.ids)[0])}`,
-      ]);
+      assert.deepEqual(await writtenIds(page), ["answers/author~G001"]);
     } finally {
       await page.context().close();
     }
@@ -750,7 +749,7 @@ test(
 );
 
 test(
-  "🔴 with min_seconds a card's answer saves only after the card was that long on screen; a card off screen keeps counting down; the seconds are stored",
+  "🔴 with min_seconds a card's answer saves only after the card was that long on screen; a card never on screen stays locked; the seconds are stored",
   async () => {
     const { page: html } = build(
       setup("browser-dwell", approval({ min_seconds: 2 })),
