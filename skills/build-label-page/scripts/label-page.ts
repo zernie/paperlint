@@ -41,6 +41,11 @@
  *     "seed": 7,                            fixes the order; change it and every id changes
  *     "groups": {"python": "Python"},
  *     "labeller_knows": ["python"],         optional: items of other groups are not put on the page
+ *     "answerers": ["author", "second"],   optional, 2 or more: each answers under their own name;
+ *                                           documents become `<answerer>~<id>`; an item's own
+ *                                           `answerers` (a subset) shows it to those only
+ *     "min_seconds": 30,                    optional: an answer saves only after its card was on
+ *                                           screen that long; stored as `seconds`
  *     "familiarity": true,                  optional: a "how well do you know" question per group;
  *                                           left out, none is asked (an approval page)
  *     "familiarity_question": "How well do you know {group}?",          optional

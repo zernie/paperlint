@@ -6,6 +6,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import * as R from "remeda";
 import { test } from "vitest";
 import { z } from "zod";
 import {
@@ -133,6 +134,8 @@ const FULL: DocObject = (() => {
         QUESTIONS[1],
       ],
       labeller_knows: ["python", "go", "rust"],
+      answerers: ["author", "second"],
+      min_seconds: 30,
       familiarity: true,
       familiarity_question: "How well do you know {group}?",
       labels: {
@@ -144,7 +147,9 @@ const FULL: DocObject = (() => {
         practice_example: "P",
       },
       practice: PRACTICE.map((p, n) => (n === 0 ? { ...p, ...CARD } : p)),
-      items: ITEMS.map((i, n) => (n === 0 ? { ...i, ...CARD } : i)),
+      items: ITEMS.map((i, n) =>
+        n === 0 ? { ...i, ...CARD, answerers: ["author"] } : i,
+      ),
     }),
   );
   assert.ok(isObject(doc));
@@ -275,6 +280,21 @@ function badCases({ node, member }: Leaf): readonly BadCase[] {
   return [...wrongType, ...extra];
 }
 
+/** `doc` with its first item's own answerers taken out. */
+function withoutItemAnswerers(doc: DocObject): DocObject {
+  const out = put(doc, ["items", 0, "answerers"], undefined);
+  assert.ok(isObject(out));
+  return out;
+}
+/**
+ * A field whose absence takes another with it: familiarity_question asks nothing unless familiarity
+ * is on, and an item's answerers name the page's.
+ */
+const RELAX: Partial<Record<string, (doc: DocObject) => DocObject>> = {
+  familiarity: (doc) => R.omit(doc, ["familiarity_question"]),
+  answerers: withoutItemAnswerers,
+};
+
 /** Spoil `leaf` each way in `badCases`; every one must stop the build and name the path. */
 function expectRefused(leaf: Leaf): void {
   badCases(leaf).forEach(([label, value], i) => {
@@ -290,16 +310,9 @@ function expectRefused(leaf: Leaf): void {
   });
   if (!leaf.node.required && !leaf.member) {
     const absent = spoil(leaf.path, undefined);
-    // familiarity_question asks nothing unless familiarity is on: the two leave together.
     const r = tryBuild(
       `schema-${leaf.path.replace(/\W/g, "_")}-absent`,
-      leaf.path === "familiarity"
-        ? Object.fromEntries(
-            Object.entries(absent).filter(
-              ([k]) => k !== "familiarity_question",
-            ),
-          )
-        : absent,
+      (RELAX[leaf.path] ?? R.identity())(absent),
     );
     assert.equal(r.status, 0, `${leaf.path} is optional: ${r.out}`);
   }
@@ -313,6 +326,8 @@ const DOCUMENTED_FIELDS = [
   "seed",
   "groups",
   "labeller_knows",
+  "answerers",
+  "min_seconds",
   "familiarity",
   "familiarity_question",
   "questions",

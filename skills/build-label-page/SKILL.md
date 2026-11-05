@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:64e09e4a829be441 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:dce0979d7f187ae7 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -141,6 +141,20 @@ building. In one line each:
    written by hand exports to the same two files, practice kept out of the labels. Commit both in the
    same pass, and add the line "labels → `data/<study>-labels-<date>.json`" to the paper's
    `NOTES.md` for the numbers that use them.
+
+## Two answerers, and a time on screen
+
+Two optional top-level keys of `items.json`, both left out by default:
+
+- `"answerers": ["author", "second"]` — two or more people answer the same published page, each
+  under their own name (picked on the page) and without seeing the other's answers; an item's own
+  `answerers` shows it to that subset only. The store's ids become `<answerer>~<id>`, and the
+  labels file keeps each answerer's answers under `by_answerer`.
+- `"min_seconds": 30` — a card's answer saves only after the card has been on screen that long;
+  the seconds at its first save are stored and exported as `seconds`.
+
+Details and the export's shape: [`references/closed-choice-generator.md`](references/closed-choice-generator.md),
+"Two answerers, and a minimum time on screen".
 
 ## When the page misbehaves
 
