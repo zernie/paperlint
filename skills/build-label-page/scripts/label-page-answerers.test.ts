@@ -317,7 +317,7 @@ test("🔴 export keeps each answerer's answers apart, with the seconds on scree
 });
 
 test("🔴 export refuses a document of no answerer, of an unknown one, or of an item not shown to its answerer", () => {
-  const dir = setup("answerers-refuse-dump", TWO());
+  const dir = setup("answerers-refuse-dump", TWO({ min_seconds: 30 }));
   assert.equal(buildAt(dir).status, 0);
   const [a, d] = [nidOf(dir, 0), nidOf(dir, 3)];
   const doc = { answers: { label: "yes" }, source: "page" };
@@ -375,4 +375,12 @@ test("🔴 without answerers, a prefixed document id is a document the key does 
   const r = exportAt(dir);
   assert.notEqual(r.status, 0);
   assert.match(r.out, new RegExp(`answers/author~${a}: the key does not know`));
+  // Nor does a page built without min_seconds store seconds.
+  dumpAt(dir, {
+    answers: { [a]: { answers: {}, seconds: 3, source: "page" } },
+  });
+  assert.match(
+    exportAt(dir).out,
+    new RegExp(`answers/${a}/seconds: not a field of a stored answer`),
+  );
 });

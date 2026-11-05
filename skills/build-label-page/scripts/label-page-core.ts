@@ -106,6 +106,9 @@ const readJson = (path: string): Json => {
 // prettier-ignore
 const PAGE_FIELDS = ["group", "title", "body", "code", "context", "file"] as const;
 const PRIVATE_FIELDS = ["source_id"] as const;
+// Who of the page's `answerers` an item is shown to: tells the page whom to show it, nothing about
+// the answer or the source.
+const ANSWERERS_FIELD = "answerers";
 // The linter rules an item names ("read as ruff `TID253`"): the page shows each with the linter's
 // own description, looked up at build time (rule-descriptions.ts), never typed into items.json.
 const RULES_FIELD = "rules";
@@ -130,6 +133,7 @@ const ALLOWED_FIELDS: readonly string[] = [
   UNIT_FIELD,
   READINGS_FIELD,
   ...BLOCK_FIELDS,
+  ANSWERERS_FIELD,
   ...PRIVATE_FIELDS,
 ];
 
@@ -157,6 +161,11 @@ const RESERVED_NAMES = [
   "__lookupSetter__",
 ];
 const NAME_PATTERN = `(?!(?:${RESERVED_NAMES.join("|")})$)[A-Za-z0-9_-]+`;
+/**
+ * With `answerers`, a document's id is `<answerer>~<id>`: `~` is outside NAME_PATTERN, so no
+ * answerer's name, item id, group or practice id can hold it, and the id splits at its first `~`.
+ */
+const SEP = "~";
 const SOURCES = ["page", "chat"];
 const SOURCES_SHOWN = `(${SOURCES.map(quoted).join(", ")})`;
 
@@ -356,6 +365,7 @@ const itemSchema = (kind: Kind): SchemaNode =>
         ]),
       ),
       ...cardFields(kind),
+      [ANSWERERS_FIELD]: array(string(true, NAME_PATTERN), false, 1),
     },
     false, // an unlisted item field is the leak guard's refusal, with its own message
   );
@@ -397,6 +407,10 @@ const configSchema = (kind: Kind): SchemaNode =>
     seed: integer(),
     groups: mapping(string(), NAME_PATTERN, 1), // ids become store document ids
     labeller_knows: array(string(true, NAME_PATTERN), false),
+    // Two or more people answer the same page, each under their own name (doc ids `<name>~<id>`).
+    answerers: array(string(true, NAME_PATTERN), false, 2),
+    // An item's answer saves only once the item has been on screen this many seconds.
+    min_seconds: integer(false),
     // true: a "how well do you know {group}" question per group, for a study that filters on it
     // (rule 5). Left out, none is asked: an approval page's author has never seen the repositories.
     familiarity: boolean(false),
@@ -614,7 +628,11 @@ type Card = {
     readonly unit?: Unit;
     readonly readings?: { readonly a: string; readonly b: string };
   };
-type Item = Card & { readonly source_id: string; readonly group: string };
+type Item = Card & {
+  readonly source_id: string;
+  readonly group: string;
+  readonly answerers?: readonly string[];
+};
 type Practice = Card & {
   readonly expected: Readonly<Record<string, string>>;
   readonly why: string;
@@ -627,6 +645,8 @@ interface Config {
   readonly seed: number;
   readonly groups: Readonly<Record<string, string>>;
   readonly labeller_knows?: readonly string[];
+  readonly answerers?: readonly string[];
+  readonly min_seconds?: number;
   readonly familiarity?: boolean;
   readonly familiarity_question?: string;
   readonly questions: readonly Question[];
@@ -744,8 +764,38 @@ function checkPractice(cfg: Config): void {
       fail(`${where}.${missing}: every question needs its expected answer`);
   });
 }
+/** The first entry of `names` that repeats an earlier one, refused by its path. */
+function checkDistinct(names: readonly string[], where: string): void {
+  const at = names.findIndex((x, i) => names.indexOf(x) !== i);
+  if (at !== -1)
+    fail(`${where}[${String(at)}]: ${repr(names[at])} is repeated`);
+}
+/** Each answerer once; an item's own list a subset of the page's; a dwell of a second or more. */
+function checkAnswerers(cfg: Config): void {
+  if ((cfg.min_seconds ?? 1) < 1)
+    fail(`min_seconds: ${repr(cfg.min_seconds)} — must be 1 or more`);
+  const all = cfg.answerers;
+  if (all !== undefined) checkDistinct(all, "answerers");
+  cfg.items.forEach((item, n) => {
+    const where = `items[${String(n)}].answerers`;
+    const own = item.answerers;
+    if (own === undefined) return;
+    if (all === undefined)
+      return fail(
+        `${where}: the page has no \`answerers\` — add the page's list, or take this out`,
+      );
+    own.forEach((who, k) => {
+      if (!all.includes(who))
+        fail(
+          `${where}[${String(k)}]: ${repr(who)} is not in \`answerers\` (${all.join(", ")})`,
+        );
+    });
+    checkDistinct(own, where);
+  });
+}
 function checkConfig(cfg: Config): void {
   checkGroups(cfg);
+  checkAnswerers(cfg);
   if (!asksFamiliarity(cfg) && cfg.familiarity_question !== undefined) {
     fail(
       `familiarity_question: ${repr(cfg.familiarity_question)} is never asked, because \`familiarity\` is not true — remove it, or set "familiarity": true`,
@@ -948,6 +998,8 @@ interface KeyEntry {
   readonly source_id: string;
   readonly group: string;
   readonly on_page: boolean;
+  /** Who the item is shown to, when not every answerer of the page. */
+  readonly answerers?: readonly string[];
 }
 interface OldKey {
   readonly seed: number;
@@ -1102,6 +1154,11 @@ const DEFAULT_LABELS: Readonly<Record<string, string>> = {
   repeat: "Card {index} of {of}",
   practice_example: "",
 };
+/** The answerers and the dwell, only when items.json sets them: a page without them is as it was. */
+const twoKeys = (cfg: Config) => ({
+  ...(cfg.answerers === undefined ? {} : { answerers: cfg.answerers }),
+  ...(cfg.min_seconds === undefined ? {} : { min_seconds: cfg.min_seconds }),
+});
 /** What a page shows: the questions, the practice and the items, blind, with their neutral ids. */
 function payloadOf(
   cfg: Config,
@@ -1121,6 +1178,7 @@ function payloadOf(
       : "",
     familiarity: asksFamiliarity(cfg) ? FAMILIARITY : [],
     allowed: allowedValues(cfg.questions, asksFamiliarity(cfg)),
+    ...twoKeys(cfg),
     questions: cfg.questions,
     practice: {
       round: practiceRound(cfg),
@@ -1130,6 +1188,7 @@ function payloadOf(
       id: page.idOf(i),
       ...shownFields(i),
       ...rulesShown(i, described),
+      ...(i.answerers === undefined ? {} : { answerers: i.answerers }),
     })),
   };
 }
@@ -1144,16 +1203,25 @@ function idsOf(cfg: Config, page: ReturnType<typeof itemsOnPage>): JsonObject {
     ]),
     ...cfg.items.map((i): [string, string] => [i.source_id, i.group]),
   ]);
+  const subsetOf = new Map(
+    cfg.items.flatMap((i) =>
+      i.answerers === undefined ? [] : [[i.source_id, i.answerers] as const],
+    ),
+  );
   const byId = [...page.ids].sort(([, a], [, b]) => byText(a, b));
   return Object.fromEntries(
-    byId.map(([sid, nid]) => [
-      nid,
-      {
-        source_id: sid,
-        group: String(groupOf.get(sid)),
-        on_page: shown.has(nid),
-      },
-    ]),
+    byId.map(([sid, nid]) => {
+      const subset = subsetOf.get(sid);
+      return [
+        nid,
+        {
+          source_id: sid,
+          group: String(groupOf.get(sid)),
+          on_page: shown.has(nid),
+          ...(subset === undefined ? {} : { answerers: subset }),
+        },
+      ];
+    }),
   );
 }
 /** Round → its practice items' expected answers. */
@@ -1178,6 +1246,7 @@ function keyOf(
   return {
     study: cfg.study,
     seed: cfg.seed,
+    ...twoKeys(cfg),
     questions: cfg.questions.map((q) => q.id),
     // What counts as an answer: the same lists the page was given (`allowedValues`). `export`
     // checks every stored answer and familiarity against them, so the build's options decide.
@@ -1229,6 +1298,8 @@ export function prepareBuild(configPath: string, outDir: string) {
 interface Key {
   readonly study: string;
   readonly questions: readonly string[];
+  readonly answerers?: readonly string[];
+  readonly min_seconds?: number;
   readonly allowed?: Json;
   readonly practice?: {
     readonly round: number;
@@ -1246,6 +1317,11 @@ function assertKey(_value: Json): asserts _value is Json & Key {
 }
 
 const ANSWER_DOC_FIELDS = ["answers", "reasons", "savedAt", "source"];
+/** A page built with `min_seconds` also stores how long the item was on screen before its first save. */
+const answerDocFields = (key: Key): readonly string[] =>
+  key.min_seconds === undefined
+    ? ANSWER_DOC_FIELDS
+    : ["answers", "reasons", "savedAt", "seconds", "source"];
 const GROUP_DOC_FIELDS = ["familiarity", "savedAt", "source"];
 const DOC_FIELD_TYPES: readonly (readonly [
   string,
@@ -1263,6 +1339,12 @@ const DOC_FIELD_TYPES: readonly (readonly [
     "savedAt",
     (v) => v === null || typeof v === "string",
     "a timestamp string or null",
+  ],
+  [
+    "seconds",
+    (v) =>
+      v === null || (typeof v === "number" && Number.isInteger(v) && v >= 0),
+    "a whole number of seconds or null",
   ],
 ];
 const COLLECTIONS = ["answers", "groups", "practice"] as const;
@@ -1297,15 +1379,24 @@ interface Names {
   readonly onPage: readonly string[];
   readonly fields: readonly string[];
 }
-function knownNames(key: Key): Readonly<Record<Collection, Names>> {
-  const entries = Object.entries(key.ids);
+/** Who an item is shown to: its own list, else every answerer of the page. */
+const shownTo = (key: Key, meta: KeyEntry): readonly string[] =>
+  meta.answerers ?? key.answerers ?? [];
+/** The names of a page without answerers, or those of one answerer's documents. */
+function knownNames(
+  key: Key,
+  who?: string,
+): Readonly<Record<Collection, Names>> {
+  const entries = Object.entries(key.ids).filter(
+    ([, m]) => who === undefined || shownTo(key, m).includes(who),
+  );
   const shown = entries.filter(([, m]) => m.on_page);
   const practice = practiceDocs(key);
   return {
     answers: {
       known: entries.map(([nid]) => [nid, key.questions] as const),
       onPage: shown.map(([nid]) => nid),
-      fields: ANSWER_DOC_FIELDS,
+      fields: answerDocFields(key),
     },
     groups: {
       known: entries.map(([, m]) => [m.group, key.questions] as const),
@@ -1315,7 +1406,7 @@ function knownNames(key: Key): Readonly<Record<Collection, Names>> {
     practice: {
       known: practice,
       onPage: practice.map(([n]) => n),
-      fields: ANSWER_DOC_FIELDS,
+      fields: answerDocFields(key),
     },
   };
 }
@@ -1340,16 +1431,39 @@ function checkDumpShape(dump: Json): asserts dump is JsonObject {
       `${stray}: the store has no such collection (expected ${COLLECTIONS.join(", ")})`,
     );
 }
+/**
+ * A document's answerer and its name without it. A page without answerers has none; with them, an
+ * id without `~`, or before it a name the page does not have, is refused.
+ */
+function answererOf(
+  where: string,
+  docId: string,
+  key: Key,
+): { readonly who?: string; readonly name: string } {
+  const all = key.answerers;
+  if (all === undefined) return { name: docId };
+  const at = docId.indexOf(SEP);
+  if (at === -1)
+    return fail(
+      `${where}: this page has answerers (${all.join(", ")}), so a document's id is <answerer>${SEP}<id>`,
+    );
+  const who = docId.slice(0, at);
+  if (!all.includes(who))
+    fail(
+      `${where}: ${repr(who)} is not an answerer of this page (${all.join(", ")})`,
+    );
+  return { who, name: docId.slice(at + 1) };
+}
 function checkDocName(
   where: string,
-  name: string,
+  { who, name }: { readonly who?: string; readonly name: string },
   kind: Collection,
   names: Names,
 ): readonly string[] {
   const hit = names.known.find(([n]) => n === name);
   if (hit === undefined) {
     return fail(
-      `${where}: the key does not know this ${NOUN[kind]} (${[...new Set(names.known.map(([n]) => n))].sort().join(", ")})`,
+      `${where}: the key does not know this ${NOUN[kind]}${who === undefined ? "" : ` for ${who}`} (${[...new Set(names.known.map(([n]) => n))].sort().join(", ")})`,
     );
   }
   if (!names.onPage.includes(name)) {
@@ -1428,15 +1542,16 @@ function checkDocAnswers(
  */
 function checkDump(dump: Json, key: Key): asserts dump is JsonObject {
   checkDumpShape(dump);
-  const names = knownNames(key);
   for (const kind of COLLECTIONS) {
     const collection = dump[kind];
-    for (const [name, doc] of sortedEntries(
+    for (const [docId, doc] of sortedEntries(
       isObject(collection) ? collection : {},
     )) {
-      const where = `${kind}/${name}`;
-      const questions = checkDocName(where, name, kind, names[kind]);
-      checkDocFields(where, doc, kind, names[kind].fields);
+      const where = `${kind}/${docId}`;
+      const named = answererOf(where, docId, key);
+      const names = knownNames(key, named.who)[kind];
+      const questions = checkDocName(where, named, kind, names);
+      checkDocFields(where, doc, kind, names.fields);
       checkDocAnswers(where, doc, questions);
     }
   }
@@ -1524,8 +1639,8 @@ function answersOf(doc: JsonObject, ctx: Ctx) {
   );
   return { given, invalid };
 }
-/** One item of the labels file: its answers, what is invalid, the reasons, and whether it is done. */
-function labelOf(nid: string, meta: KeyEntry, doc: JsonObject, ctx: Ctx) {
+/** One stored answer: its answers, what is invalid, the reasons, and whether it is done. */
+function answerOf(doc: JsonObject, ctx: Ctx) {
   const { given, invalid } = answersOf(doc, ctx);
   const reasons = Object.fromEntries(
     Object.entries(textsOf(doc["reasons"])).filter(([, r]) => r.trim()),
@@ -1537,9 +1652,6 @@ function labelOf(nid: string, meta: KeyEntry, doc: JsonObject, ctx: Ctx) {
     )
     .map(([q]) => q);
   return {
-    id: nid,
-    source_id: meta.source_id,
-    group: meta.group,
     answers: given,
     invalid_answers: invalid,
     reasons,
@@ -1548,19 +1660,31 @@ function labelOf(nid: string, meta: KeyEntry, doc: JsonObject, ctx: Ctx) {
       Object.values(given).every((v) => v !== null) && !unexplained.length,
     source: textOf(doc["source"]),
     saved_at: doc["savedAt"] ?? null,
+    // Only a page built with `min_seconds` stores how long the item was on screen.
+    ...(ctx.key.min_seconds === undefined
+      ? {}
+      : { seconds: doc["seconds"] ?? null }),
   };
 }
-type Label = ReturnType<typeof labelOf>;
+type Answer = ReturnType<typeof answerOf>;
+/** One item of the labels file of a page without answerers. */
+const labelOf = (nid: string, meta: KeyEntry, doc: JsonObject, ctx: Ctx) => ({
+  id: nid,
+  source_id: meta.source_id,
+  group: meta.group,
+  ...answerOf(doc, ctx),
+});
 
 /** Same rule as for item answers: a familiarity outside the options is marked, not counted as rated. */
 function groupsOf(
   groupIds: readonly string[],
   groups: Json | undefined,
   allowed: Allowed,
+  prefix = "",
 ) {
   return Object.fromEntries(
     groupIds.map((g) => {
-      const doc = docOf(groups, g);
+      const doc = docOf(groups, `${prefix}${g}`);
       const fam = textOf(doc["familiarity"]);
       const bad = fam !== null && !allowed.familiarity.includes(fam);
       return [
@@ -1575,7 +1699,10 @@ function groupsOf(
     }),
   );
 }
-function reportLabels(items: readonly Label[], allowed: Allowed): void {
+function reportLabels(
+  items: readonly (Answer & { readonly id: string })[],
+  allowed: Allowed,
+): void {
   for (const i of items) {
     for (const [q, v] of Object.entries(i.invalid_answers)) {
       say(
@@ -1605,9 +1732,14 @@ function reportGroups(
   }
 }
 /** Each practice item of the key's round: what was answered first, what was expected, whether they match. */
-function scorePractice(dump: JsonObject, round: string, all: Expected) {
+function scorePractice(
+  dump: JsonObject,
+  round: string,
+  all: Expected,
+  prefix: string,
+) {
   return Object.entries(all).map(([pid, expected]) => {
-    const doc = docOf(dump["practice"], `r${round}-${pid}`);
+    const doc = docOf(dump["practice"], `${prefix}r${round}-${pid}`);
     const answers = isObject(doc["answers"]) ? doc["answers"] : {};
     const matched = Object.entries(expected).every(
       ([q, v]) => answers[q] === v,
@@ -1621,9 +1753,14 @@ function scorePractice(dump: JsonObject, round: string, all: Expected) {
     };
   });
 }
-/** One file per round: a second round exported the same day keeps the first. */
-const practiceFile = (study: string, round: number, day: string): string =>
-  `${study}-practice-r${String(round)}-${day}.json`;
+/** One file per round (and answerer): a second round exported the same day keeps the first. */
+const practiceFile = (
+  study: string,
+  round: number,
+  day: string,
+  who: string | undefined,
+): string =>
+  `${study}-practice-r${String(round)}${who === undefined ? "" : `-${who}`}-${day}.json`;
 /**
  * Every practice round the store holds answers for, each scored against its own expected answers
  * into its own file; never into the labels. The key's own round is reported even unanswered.
@@ -1636,20 +1773,24 @@ function exportPractice(
 ): void {
   const p = key.practice;
   if (p === undefined) return;
-  Object.entries(roundsIn(p))
-    .sort(([a], [b]) => Number(a) - Number(b))
-    .forEach(([round, expected]) => {
+  const rounds = Object.entries(roundsIn(p)).sort(
+    ([a], [b]) => Number(a) - Number(b),
+  );
+  (key.answerers ?? [undefined]).forEach((who) => {
+    rounds.forEach(([round, expected]) => {
       exportRound(
         key.study,
         Number(round),
-        scorePractice(dump, round, expected),
-        {
-          target,
-          day,
-          current: Number(round) === p.round,
-        },
+        scorePractice(
+          dump,
+          round,
+          expected,
+          who === undefined ? "" : `${who}${SEP}`,
+        ),
+        { target, day, current: Number(round) === p.round, who },
       );
     });
+  });
 }
 /** One round's scored practice to `<study>-practice-r<round>-<date>.json`, and one line about it. */
 function exportRound(
@@ -1660,55 +1801,143 @@ function exportRound(
     readonly target: string;
     readonly day: string;
     readonly current: boolean;
+    readonly who: string | undefined;
   },
 ): void {
+  const named = `practice round ${String(round)}${at.who === undefined ? "" : ` (${at.who})`}`;
   if (!items.some((i) => Object.keys(i.answers).length)) {
-    if (at.current) say(`practice round ${String(round)}: not answered`);
+    if (at.current) say(`${named}: not answered`);
     return;
   }
   const missed = items.filter((i) => !i.matched).map((i) => i.id);
   const matched = items.length - missed.length;
-  const path = join(at.target, practiceFile(study, round, at.day));
+  const path = join(at.target, practiceFile(study, round, at.day, at.who));
   writeJson(path, {
     study,
     round,
+    ...(at.who === undefined ? {} : { answerer: at.who }),
     exported: at.day,
     matched,
     total: items.length,
     items,
   });
   say(
-    `practice round ${String(round)}: ${String(matched)} of ${String(items.length)} matched${missed.length ? `; missed ${missed.join(", ")}` : ""} -> ${path}`,
+    `${named}: ${String(matched)} of ${String(items.length)} matched${missed.length ? `; missed ${missed.join(", ")}` : ""} -> ${path}`,
   );
 }
+/** The counts of one set of answers and groups. */
+const tally = (
+  items: readonly Answer[],
+  groups: ReturnType<typeof groupsOf>,
+) => ({
+  groups,
+  complete_items: items.filter((i) => i.complete).length,
+  invalid_items: items.filter((i) => Object.keys(i.invalid_answers).length)
+    .length,
+  invalid_groups: Object.values(groups).filter(
+    (g) => g.invalid_familiarity !== null,
+  ).length,
+  total_items: items.length,
+});
+type Tally = ReturnType<typeof tally>;
+/** The familiarity of the groups of `onPage`, or none on a page that asks none. */
+const groupsFor = (
+  onPage: readonly (readonly [string, KeyEntry])[],
+  dump: JsonObject,
+  ctx: Ctx,
+  prefix = "",
+) =>
+  ctx.allowed.familiarity.length
+    ? groupsOf(
+        [...new Set(onPage.map(([, m]) => m.group))],
+        dump["groups"],
+        ctx.allowed,
+        prefix,
+      )
+    : {};
 /** The labels file: every item on the page with its answers, the groups, and the counts. */
 function labelsOf(dump: JsonObject, ctx: Ctx, day: string) {
   const onPage = Object.entries(ctx.key.ids).filter(([, m]) => m.on_page);
   const items = onPage.map(([nid, meta]) =>
     labelOf(nid, meta, docOf(dump["answers"], nid), ctx),
   );
-  const groups = ctx.allowed.familiarity.length
-    ? groupsOf(
-        [...new Set(onPage.map(([, m]) => m.group))],
-        dump["groups"],
-        ctx.allowed,
-      )
-    : {};
   return {
     study: ctx.key.study,
     exported: day,
     questions: ctx.key.questions,
     items,
-    groups,
-    complete_items: items.filter((i) => i.complete).length,
-    invalid_items: items.filter((i) => Object.keys(i.invalid_answers).length)
-      .length,
-    invalid_groups: Object.values(groups).filter(
-      (g) => g.invalid_familiarity !== null,
-    ).length,
-    total_items: items.length,
+    ...tally(items, groupsFor(onPage, dump, ctx)),
   };
 }
+/**
+ * The labels file of a page with answerers: each item with every answerer it is shown to and their
+ * answers apart (`by_answerer`), and each answerer's groups and counts (`by_answerer` at the top).
+ */
+function answererLabelsOf(
+  dump: JsonObject,
+  ctx: Ctx,
+  day: string,
+  all: readonly string[],
+) {
+  const onPage = Object.entries(ctx.key.ids).filter(([, m]) => m.on_page);
+  const docFor = (who: string, nid: string) =>
+    answerOf(docOf(dump["answers"], `${who}${SEP}${nid}`), ctx);
+  const items = onPage.map(([nid, meta]) => ({
+    id: nid,
+    source_id: meta.source_id,
+    group: meta.group,
+    answerers: shownTo(ctx.key, meta),
+    by_answerer: Object.fromEntries(
+      shownTo(ctx.key, meta).map((who) => [who, docFor(who, nid)]),
+    ),
+  }));
+  const byAnswerer = Object.fromEntries(
+    all.map((who): [string, Tally] => {
+      const mine = onPage.filter(([, m]) => shownTo(ctx.key, m).includes(who));
+      return [
+        who,
+        tally(
+          mine.map(([nid]) => docFor(who, nid)),
+          groupsFor(mine, dump, ctx, `${who}${SEP}`),
+        ),
+      ];
+    }),
+  );
+  return {
+    study: ctx.key.study,
+    exported: day,
+    questions: ctx.key.questions,
+    answerers: all,
+    items,
+    by_answerer: byAnswerer,
+  };
+}
+/** Each answerer's items and groups, named `<answerer>~<id>` in the report, as in the store. */
+function reportAnswerers(
+  out: ReturnType<typeof answererLabelsOf>,
+  allowed: Allowed,
+): void {
+  out.answerers.forEach((who) => {
+    reportLabels(
+      out.items.flatMap((i) => {
+        const a = i.by_answerer[who];
+        return a === undefined ? [] : [{ id: `${who}${SEP}${i.id}`, ...a }];
+      }),
+      allowed,
+    );
+    reportGroups(
+      Object.fromEntries(
+        Object.entries(out.by_answerer[who]?.groups ?? {}).map(([g, v]) => [
+          `${who}${SEP}${g}`,
+          v,
+        ]),
+      ),
+      allowed,
+    );
+  });
+}
+const completeLine = (t: Tally): string =>
+  `${String(t.complete_items)} of ${String(t.total_items)} items complete`;
 export function exportLabels(
   dumpPath: string,
   keyPath: string,
@@ -1722,14 +1951,26 @@ export function exportLabels(
   assertAllowed(allowed, key, keyPath);
   checkDump(dump, key);
   checkNoFamiliarity(dump, allowed);
-  const out = labelsOf(dump, { key, allowed }, day);
+  const ctx = { key, allowed };
+  const all = key.answerers;
+  const out =
+    all === undefined
+      ? labelsOf(dump, ctx, day)
+      : answererLabelsOf(dump, ctx, day, all);
   mkdirSync(outDir, { recursive: true });
   const path = join(outDir, `${key.study}-labels-${day}.json`);
   writeJson(path, out);
   exportPractice(dump, key, outDir, day);
-  say(
-    `wrote ${path}: ${String(out.complete_items)} of ${String(out.total_items)} items complete`,
-  );
-  reportLabels(out.items, allowed);
-  reportGroups(out.groups, allowed);
+  if ("by_answerer" in out) {
+    say(
+      `wrote ${path}: ${Object.entries(out.by_answerer)
+        .map(([who, t]) => `${who}: ${completeLine(t)}`)
+        .join("; ")}`,
+    );
+    reportAnswerers(out, allowed);
+  } else {
+    say(`wrote ${path}: ${completeLine(out)}`);
+    reportLabels(out.items, allowed);
+    reportGroups(out.groups, allowed);
+  }
 }
