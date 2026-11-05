@@ -19,7 +19,9 @@ import {
   APPROVAL_PRACTICE,
   PRACTICE,
   QUESTIONS,
+  ITEMS,
   approval,
+  approvalCard,
   build,
   config,
   setup,
@@ -32,6 +34,7 @@ const STORE = (
   answers: Record<string, unknown> = {},
 ): string => `
   window.__writes = [];
+  window.__ids = [];
   (function () {
     var docs = { answers: ${JSON.stringify(answers)}, groups: {}, practice: ${JSON.stringify(practice)} };
     var subs = {};
@@ -44,6 +47,7 @@ const STORE = (
       onSnapshot: function (cb) { (subs[n] = subs[n] || []).push(cb); snap(n); },
       doc: function (id) { return { set: function (body) {
         window.__writes.push(body);
+        window.__ids.push(n + "/" + id);
         docs[n][id] = body;
         return new Promise(function (r) { setTimeout(function () { r(); snap(n); }, ${String(echoMs)}); });
       } }; }
@@ -599,6 +603,195 @@ test(
       assert.deepEqual(
         (await writes(page)).map((w) => w["answers"]),
         [{ renamed: "x", keep: "keep" }],
+      );
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
+
+/** The collection and document id of every write, in order. */
+const writtenIds = async (page: Page): Promise<readonly string[]> =>
+  z.array(z.string()).parse(await page.evaluate("window.__ids"));
+/** A page served from an origin of its own, so it has a localStorage that a reload keeps. */
+async function served(page: Page, html: string): Promise<void> {
+  await page.route("http://label.test/", (route) =>
+    route.fulfill({ body: html, contentType: "text/html" }),
+  );
+  await page.goto("http://label.test/");
+}
+const prefixedPractice = (who: string) =>
+  Object.fromEntries(
+    Object.entries(PRACTICE_DONE).map(([k, v]) => [`${who}~${k}`, v]),
+  );
+
+test(
+  "🔴 without answerers the page asks nobody's name and writes the documents it always wrote, with no seconds",
+  async () => {
+    const { page: html } = build(
+      setup(
+        "browser-plain-ids",
+        approval({ items: ITEMS.slice(0, 2).map(approvalCard) }),
+      ),
+    );
+    const page = await (await sharedBrowser()).newPage();
+    try {
+      await page.addInitScript(STORE(PRACTICE_DONE, 20));
+      await page.goto("about:blank");
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      assert.equal(await page.getByText("Who is answering?").count(), 0);
+      await page.getByRole("button", { name: /Keep/ }).first().click();
+      await page.waitForTimeout(100);
+      assert.deepEqual(await writtenIds(page), ["answers/G001"]);
+      assert.deepEqual(Object.keys((await writes(page))[0] ?? {}).sort(), [
+        "answers",
+        "reasons",
+        "savedAt",
+        "source",
+      ]);
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
+
+/** Three approval cards: the first two for both answerers, the third for `author` only. */
+const TWO_PAGE = (over: Record<string, unknown> = {}) =>
+  approval({
+    answerers: ["author", "second"],
+    items: ITEMS.slice(0, 3)
+      .map(approvalCard)
+      .map((i, n) => (n === 2 ? { ...i, answerers: ["author"] } : i)),
+    ...over,
+  });
+
+test(
+  "🔴 with answerers the page asks who is answering, remembers it, writes and reads only that answerer's documents, and can switch",
+  async () => {
+    const dir = setup("browser-answerers", TWO_PAGE());
+    const { page: html, key } = build(dir);
+    const third = Object.entries(key.ids).find(
+      ([, v]) => v.source_id === "case-1002",
+    )?.[0];
+    const [first] = Object.keys(key.ids).filter((n) => n !== third);
+    assert.ok(third !== undefined && first !== undefined);
+    const page = await (await sharedBrowser()).newPage();
+    try {
+      await page.addInitScript(
+        STORE(prefixedPractice("second"), 20, {
+          [`author~${first}`]: { answers: { keep: "keep" }, source: "page" },
+        }),
+      );
+      await served(page, html);
+      assert.equal(await page.getByText("Who is answering?").count(), 1);
+      assert.equal(await page.locator("article.item").count(), 0);
+      await page.getByRole("button", { name: "second", exact: true }).click();
+      // Guards: second sees two items, none answered: author's answer is not theirs.
+      assert.equal(await page.locator("article.item").count(), 2);
+      assert.equal(await page.getByText("0 of 2 items complete").count(), 1);
+      await page
+        .locator("article.item", { hasText: first })
+        .getByRole("button", { name: /Keep/ })
+        .click();
+      await page.waitForTimeout(100);
+      assert.deepEqual(await writtenIds(page), [`answers/second~${first}`]);
+      // A reload remembers who is answering.
+      await page.reload();
+      assert.equal(await page.getByText("Answering as second").count(), 1);
+      assert.equal(await page.getByText("1 of 2 items complete").count(), 1);
+      await page.getByRole("button", { name: "Switch" }).click();
+      await page.getByRole("button", { name: "author", exact: true }).click();
+      // author has not done the practice: it opens, and its answers go under author's name.
+      assert.equal(
+        await page.getByText("Practice: 0 of 3 answered").count(),
+        1,
+      );
+      await page
+        .locator("article.item")
+        .first()
+        .getByRole("button", { name: /Keep/ })
+        .click();
+      await page.waitForTimeout(100);
+      assert.equal((await writtenIds(page)).at(-1), "practice/author~r1-P1");
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "🔴 with answerers and no localStorage the page still works: it asks, and writes under the name picked",
+  async () => {
+    const { page: html, key } = build(
+      setup("browser-answerers-nols", TWO_PAGE()),
+    );
+    const page = await (await sharedBrowser()).newPage();
+    try {
+      await page.addInitScript(
+        `Object.defineProperty(window, "localStorage", { get: function () { throw new Error("denied"); } });`,
+      );
+      await page.addInitScript(STORE(prefixedPractice("author"), 20));
+      await served(page, html);
+      await page.getByRole("button", { name: "author", exact: true }).click();
+      assert.equal(await page.locator("article.item").count(), 3);
+      await page.getByRole("button", { name: /Keep/ }).first().click();
+      await page.waitForTimeout(100);
+      assert.deepEqual(await writtenIds(page), [
+        `answers/author~${String(Object.keys(key.ids)[0])}`,
+      ]);
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "🔴 with min_seconds a card's answer saves only after the card was that long on screen; a card off screen keeps counting down; the seconds are stored",
+  async () => {
+    const { page: html } = build(
+      setup("browser-dwell", approval({ min_seconds: 2 })),
+    );
+    const page = await (
+      await sharedBrowser()
+    ).newPage({ viewport: { width: 400, height: 700 } });
+    try {
+      await page.addInitScript(STORE(PRACTICE_DONE, 20));
+      await page.goto("about:blank");
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      const cards = page.locator("article.item");
+      const firstCard = cards.first();
+      const lastCard = cards.last();
+      await firstCard.scrollIntoViewIfNeeded();
+      const keep = firstCard.getByRole("button", { name: /Keep/ });
+      assert.equal(await keep.isDisabled(), true);
+      assert.match((await firstCard.textContent()) ?? "", /answer in [12] s/);
+      await keep.click({ force: true });
+      assert.deepEqual(await writes(page), [], "nothing saves before the time");
+      await page.waitForTimeout(2600);
+      assert.equal(await keep.isDisabled(), false);
+      assert.equal(
+        await lastCard.getByRole("button", { name: /Keep/ }).isDisabled(),
+        true,
+        "the last card was never on screen",
+      );
+      await keep.click();
+      await page.waitForTimeout(100);
+      const [stored] = z
+        .array(z.object({ seconds: z.number().int() }).loose())
+        .parse(await page.evaluate("window.__writes"));
+      assert.ok(
+        stored !== undefined && stored.seconds >= 2 && stored.seconds <= 4,
+        JSON.stringify(stored),
+      );
+      await lastCard.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(2600);
+      assert.equal(
+        await lastCard.getByRole("button", { name: /Keep/ }).isDisabled(),
+        false,
       );
     } finally {
       await page.context().close();
