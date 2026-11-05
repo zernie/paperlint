@@ -1,371 +1,369 @@
 [
  {
-  "id": "DA02-35a5af",
-  "repo": "operaton/operaton",
-  "sha": "ccea9712f28a73b380829621fa6c2fb6540685f1",
-  "linter": "eslint",
-  "rule": "no-tabs",
-  "cross": true,
-  "readings": [
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-tabs",
-     "options": [],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function add(a, b) {\n\treturn a + b;\n}\n\nmodule.exports = add;\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function add(a, b) {\n  return a + b;\n}\n\nmodule.exports = add;\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DA02-7f113a",
-  "repo": "operaton/operaton",
-  "sha": "ccea9712f28a73b380829621fa6c2fb6540685f1",
-  "linter": "eslint",
-  "rule": "indent",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "indent",
-     "options": [
-      2
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.mjs",
-       "**/*.ts",
-       "**/*.jsx",
-       "**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/node_modules/**",
-       "**/target/**",
-       "**/dist/**",
-       "**/*.min.js"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "indent",
-     "options": [
-      2
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.mjs",
-       "**/*.ts",
-       "**/*.jsx",
-       "**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/node_modules/**",
-       "**/target/**",
-       "**/dist/**",
-       "**/*.min.js"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "indent",
-     "options": [
-      2
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.mjs"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function greet(name) {\n    const message = 'Hello, ' + name;\n    return message;\n}\n\nmodule.exports = greet;\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function greet(name) {\n  const message = 'Hello, ' + name;\n  return message;\n}\n\nmodule.exports = greet;\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "indent",
-     "options": [
-      2
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "indent",
-     "options": [
-      2
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "indent",
-     "options": [
-      2
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function add(a, b) {\n    const sum = a + b;\n    return sum;\n}\n\nmodule.exports = add;\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function add(a, b) {\n  const sum = a + b;\n  return sum;\n}\n\nmodule.exports = add;\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DA11-2948e8",
-  "repo": "openmdao/dymos",
-  "sha": "f60ecacd65f0d19dc1a85c391e49f73b342ea53e",
+  "id": "S1-61750a",
+  "repo": "NatLabRockies/gdx-pandas",
+  "sha": "aad60d3a939f1405f593eb0a5b9947b906284e9a",
   "linter": "ruff",
-  "rule": "D415",
+  "rule": "ANN001",
   "cross": true,
   "readings": [
    {
-    "key": "deepseek-s2",
+    "key": "anthropic-s1",
     "reading": {
      "linter": "ruff",
-     "rule": "D415",
-     "settings": {
-      "pydocstyle.convention": "numpy"
-     },
+     "rule": "ANN001",
+     "settings": {},
      "scope": {
       "files": [
-       "**/*.py"
+       "src/gdxpds/**/*.py"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**"
+       "**/build/**",
+       "src/gdxpds/_engine.py",
+       "src/gdxpds/_gdxcc_engine.py",
+       "src/gdxpds/_transfer_engine.py",
+       "src/gdxpds/_verify_install/**"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.py",
-      "text": "def add(a, b):\n    \"\"\"Add two numbers\n\n    Parameters\n    ----------\n    a : int\n        First number.\n    b : int\n        Second number.\n\n    Returns\n    -------\n    int\n        The sum.\n    \"\"\"\n    return a + b\n"
+      "path": "src/gdxpds/rule-proof-pair/bad.py",
+      "text": "def to_dataframe(gdx_file, symbol_name: str) -> list:\n    return [gdx_file, symbol_name]\n"
      },
      "good": {
-      "path": "p3s109-pair/good.py",
-      "text": "def add(a, b):\n    \"\"\"Add two numbers.\n\n    Parameters\n    ----------\n    a : int\n        First number.\n    b : int\n        Second number.\n\n    Returns\n    -------\n    int\n        The sum.\n    \"\"\"\n    return a + b\n"
+      "path": "src/gdxpds/rule-proof-pair/good.py",
+      "text": "def to_dataframe(gdx_file: str, symbol_name: str) -> list:\n    return [gdx_file, symbol_name]\n"
+     }
+    }
+   },
+   {
+    "key": "anthropic-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN001",
+     "settings": {},
+     "scope": {
+      "files": [
+       "src/gdxpds/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "src/gdxpds/_engine.py",
+       "src/gdxpds/_gdxcc_engine.py",
+       "src/gdxpds/_transfer_engine.py",
+       "src/gdxpds/_verify_install/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "src/gdxpds/rule-proof-pair/bad.py",
+      "text": "def load_symbol(path, name: str) -> list:\n    with open(path) as handle:\n        return [line.strip() for line in handle if name in line]\n"
+     },
+     "good": {
+      "path": "src/gdxpds/rule-proof-pair/good.py",
+      "text": "def load_symbol(path: str, name: str) -> list:\n    with open(path) as handle:\n        return [line.strip() for line in handle if name in line]\n"
+     }
+    }
+   },
+   {
+    "key": "google-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN001",
+     "settings": {},
+     "scope": {
+      "files": [
+       "src/gdxpds/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "src/gdxpds/**/_*.py"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "src/gdxpds/rule-proof-pair/bad.py",
+      "text": "import pandas as pd\n\n\ndef load_symbol(path, name: str) -> pd.DataFrame:\n    return pd.read_csv(path).rename(columns={\"value\": name})\n"
+     },
+     "good": {
+      "path": "src/gdxpds/rule-proof-pair/good.py",
+      "text": "import pandas as pd\n\n\ndef load_symbol(path: str, name: str) -> pd.DataFrame:\n    return pd.read_csv(path).rename(columns={\"value\": name})\n"
+     }
+    }
+   },
+   {
+    "key": "google-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN001",
+     "settings": {},
+     "scope": {
+      "files": [
+       "src/gdxpds/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "src/gdxpds/_engine.py",
+       "src/gdxpds/_gdxcc_engine.py",
+       "src/gdxpds/_transfer_engine.py",
+       "src/gdxpds/_verify_install/**/*.py"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "src/gdxpds/rule-proof-pair/bad.py",
+      "text": "def load_symbols(gdx_file, symbol_names: list[str]) -> list[str]:\n    return [name for name in symbol_names if gdx_file]\n"
+     },
+     "good": {
+      "path": "src/gdxpds/rule-proof-pair/good.py",
+      "text": "def load_symbols(gdx_file: str, symbol_names: list[str]) -> list[str]:\n    return [name for name in symbol_names if gdx_file]\n"
      }
     }
    }
   ]
  },
  {
-  "id": "DA15",
-  "repo": "Team-Commonly/commonly",
-  "sha": "d437e1b8b8ca0dee4a21fea33e587eb75aafc2dd",
+  "id": "S1-74fc8c",
+  "repo": "NatLabRockies/gdx-pandas",
+  "sha": "aad60d3a939f1405f593eb0a5b9947b906284e9a",
+  "linter": "ruff",
+  "rule": "ANN201",
+  "cross": true,
+  "readings": [
+   {
+    "key": "anthropic-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN201",
+     "settings": {},
+     "scope": {
+      "files": [
+       "src/gdxpds/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "src/gdxpds/_engine.py",
+       "src/gdxpds/_gdxcc_engine.py",
+       "src/gdxpds/_transfer_engine.py",
+       "src/gdxpds/_verify_install/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "src/gdxpds/rule-proof-pair/bad.py",
+      "text": "def load_symbols(path):\n    return [path, path]\n"
+     },
+     "good": {
+      "path": "src/gdxpds/rule-proof-pair/good.py",
+      "text": "def load_symbols(path) -> list:\n    return [path, path]\n"
+     }
+    }
+   },
+   {
+    "key": "anthropic-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN201",
+     "settings": {},
+     "scope": {
+      "files": [
+       "src/gdxpds/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "src/gdxpds/_engine.py",
+       "src/gdxpds/_gdxcc_engine.py",
+       "src/gdxpds/_transfer_engine.py",
+       "src/gdxpds/_verify_install/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "src/gdxpds/rule-proof-pair/bad.py",
+      "text": "def load_symbol_names(path: str) -> list[str]:\n    return [line.strip() for line in open(path)]\n\n\ndef count_symbols(path: str):\n    names = load_symbol_names(path)\n    return len(names)\n"
+     },
+     "good": {
+      "path": "src/gdxpds/rule-proof-pair/good.py",
+      "text": "def load_symbol_names(path: str) -> list[str]:\n    return [line.strip() for line in open(path)]\n\n\ndef count_symbols(path: str) -> int:\n    names = load_symbol_names(path)\n    return len(names)\n"
+     }
+    }
+   },
+   {
+    "key": "google-s1",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN201",
+     "settings": {},
+     "scope": {
+      "files": [
+       "src/gdxpds/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "src/gdxpds/**/_*.py"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "src/gdxpds/rule-proof-pair/bad.py",
+      "text": "import pandas as pd\n\n\ndef load_symbols(path: str):\n    frame = pd.read_csv(path)\n    return frame.columns.tolist()\n"
+     },
+     "good": {
+      "path": "src/gdxpds/rule-proof-pair/good.py",
+      "text": "import pandas as pd\n\n\ndef load_symbols(path: str) -> list[str]:\n    frame = pd.read_csv(path)\n    return frame.columns.tolist()\n"
+     }
+    }
+   },
+   {
+    "key": "google-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN201",
+     "settings": {},
+     "scope": {
+      "files": [
+       "src/gdxpds/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "src/gdxpds/_engine.py",
+       "src/gdxpds/_gdxcc_engine.py",
+       "src/gdxpds/_transfer_engine.py",
+       "src/gdxpds/_verify_install/**/*.py"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "src/gdxpds/rule-proof-pair/bad.py",
+      "text": "def load_symbols(path: str):\n    with open(path) as handle:\n        return [line.strip() for line in handle]\n"
+     },
+     "good": {
+      "path": "src/gdxpds/rule-proof-pair/good.py",
+      "text": "def load_symbols(path: str) -> list[str]:\n    with open(path) as handle:\n        return [line.strip() for line in handle]\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "S1-6c0377",
+  "repo": "NatLabRockies/gdx-pandas",
+  "sha": "aad60d3a939f1405f593eb0a5b9947b906284e9a",
+  "linter": "ruff",
+  "rule": "ANN204",
+  "cross": true,
+  "readings": [
+   {
+    "key": "anthropic-s2",
+    "reading": {
+     "linter": "ruff",
+     "rule": "ANN204",
+     "settings": {},
+     "scope": {
+      "files": [
+       "src/gdxpds/**/*.py"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**",
+       "src/gdxpds/_engine.py",
+       "src/gdxpds/_gdxcc_engine.py",
+       "src/gdxpds/_transfer_engine.py",
+       "src/gdxpds/_verify_install/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "src/gdxpds/rule-proof-pair/bad.py",
+      "text": "class GdxSymbol:\n    def __init__(self, name: str, dims: int):\n        self.name = name\n        self.dims = dims\n\n    def describe(self) -> str:\n        return f\"{self.name}/{self.dims}\"\n"
+     },
+     "good": {
+      "path": "src/gdxpds/rule-proof-pair/good.py",
+      "text": "class GdxSymbol:\n    def __init__(self, name: str, dims: int) -> None:\n        self.name = name\n        self.dims = dims\n\n    def describe(self) -> str:\n        return f\"{self.name}/{self.dims}\"\n"
+     }
+    }
+   }
+  ]
+ },
+ {
+  "id": "S2-37a648",
+  "repo": "nullvoxpopuli/limber",
+  "sha": "4472ef469c08839823267e512d99eac105b50624",
   "linter": "eslint",
-  "rule": "no-restricted-syntax",
+  "rule": "quotes",
   "cross": true,
   "readings": [
    {
     "key": "anthropic-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-syntax",
+     "rule": "quotes",
      "options": [
+      "single",
       {
-       "selector": "MemberExpression[property.name='agentName'][object.property.name='botMetadata']",
-       "message": "Never use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw), not a display name. Use the resolved agent display label instead."
+       "avoidEscape": true
       }
      ],
      "scope": {
       "files": [
-       "backend/**/*.ts",
-       "backend/**/*.js",
-       "frontend/src/**/*.ts",
-       "frontend/src/**/*.tsx"
+       "**/*.js",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.gjs",
+       "**/*.gts"
       ],
       "ignores": [
        "**/node_modules/**",
        "**/.venv/**",
        "**/dist/**",
-       "**/build/**",
-       "**/__tests__/**",
-       "**/*.test.ts",
-       "**/*.test.tsx",
-       "**/*.test.js"
+       "**/build/**"
       ]
      }
     },
     "pair": {
      "bad": {
-      "path": "backend/p3s109-pair/bad.ts",
-      "text": "interface Participant {\n  botMetadata?: { agentName?: string; runtime?: string };\n}\n\nexport function getDmLabel(participant: Participant): string {\n  return participant.botMetadata.agentName ?? 'Unknown';\n}\n"
+      "path": "rule-proof-pair/bad.js",
+      "text": "const greeting = \"hello world\";\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
      },
      "good": {
-      "path": "backend/p3s109-pair/good.ts",
-      "text": "interface Participant {\n  botMetadata?: { agentName?: string; runtime?: string };\n  displayLabel?: string;\n}\n\nexport function getDmLabel(participant: Participant): string {\n  return participant.displayLabel ?? 'Unknown';\n}\n"
+      "path": "rule-proof-pair/good.js",
+      "text": "const greeting = 'hello world';\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
      }
     }
    },
@@ -373,101 +371,21 @@
     "key": "anthropic-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-syntax",
+     "rule": "quotes",
      "options": [
+      "single",
       {
-       "selector": "MemberExpression[property.name='agentName'][object.property.name='botMetadata'], MemberExpression[property.name='agentName'][object.name='botMetadata']",
-       "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime (e.g. openclaw). Use the agent display label helper instead."
+       "avoidEscape": true
       }
      ],
      "scope": {
       "files": [
-       "backend/**/*.ts",
-       "backend/**/*.js",
-       "frontend/src/**/*.ts",
-       "frontend/src/**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "backend/__tests__/**",
-       "**/*.test.ts",
-       "**/*.test.tsx",
-       "**/*.test.js",
-       "frontend/src/**/__tests__/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "backend/p3s109-pair/bad.ts",
-      "text": "interface Conversation {\n  botMetadata: { agentName: string; runtime: string };\n}\n\nexport function getDmLabel(conversation: Conversation): string {\n  return conversation.botMetadata.agentName;\n}\n"
-     },
-     "good": {
-      "path": "backend/p3s109-pair/good.ts",
-      "text": "interface Conversation {\n  botMetadata: { agentName: string; runtime: string };\n  agentDisplayLabel: string;\n}\n\nfunction getAgentDisplayLabel(conversation: Conversation): string {\n  return conversation.agentDisplayLabel;\n}\n\nexport function getDmLabel(conversation: Conversation): string {\n  return getAgentDisplayLabel(conversation);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-properties",
-     "options": [
-      {
-       "object": "botMetadata",
-       "property": "agentName",
-       "message": "Do not use botMetadata.agentName for DM display labels; it holds the runtime name."
-      }
-     ],
-     "scope": {
-      "files": [
-       "backend/**/*.ts",
-       "backend/**/*.js"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "backend/__tests__/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "backend/p3s109-pair/bad.ts",
-      "text": "interface BotMetadata {\n  agentName: string;\n  displayName: string;\n}\n\nexport function dmLabel(botMetadata: BotMetadata): string {\n  return `DM with ${botMetadata.agentName}`;\n}\n"
-     },
-     "good": {
-      "path": "backend/p3s109-pair/good.ts",
-      "text": "interface BotMetadata {\n  agentName: string;\n  displayName: string;\n}\n\nexport function dmLabel(botMetadata: BotMetadata): string {\n  return `DM with ${botMetadata.displayName}`;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-properties",
-     "options": [
-      {
-       "object": "botMetadata",
-       "property": "agentName",
-       "message": "Avoid using botMetadata.agentName; it holds the runtime name and must not be used for DM display labels."
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.ts",
-       "**/*.tsx",
        "**/*.js",
-       "**/*.jsx",
        "**/*.mjs",
-       "**/*.cjs"
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.gts",
+       "**/*.gjs"
       ],
       "ignores": [
        "**/node_modules/**",
@@ -479,12 +397,92 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "interface BotMetadata {\n  agentName: string;\n  displayName: string;\n}\n\nexport function dmLabel(botMetadata: BotMetadata): string {\n  return `DM with ${botMetadata.agentName}`;\n}\n"
+      "path": "rule-proof-pair/bad.js",
+      "text": "const greeting = \"hello\";\nconst name = 'world';\n\nfunction greet() {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
      },
      "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "interface BotMetadata {\n  agentName: string;\n  displayName: string;\n}\n\nexport function dmLabel(botMetadata: BotMetadata): string {\n  return `DM with ${botMetadata.displayName}`;\n}\n"
+      "path": "rule-proof-pair/good.js",
+      "text": "const greeting = 'hello';\nconst name = 'world';\n\nfunction greet() {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s1",
+    "reading": {
+     "linter": "eslint",
+     "rule": "quotes",
+     "options": [
+      "single",
+      {
+       "avoidEscape": true,
+       "allowTemplateLiterals": false
+      }
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "rule-proof-pair/bad.js",
+      "text": "const greeting = \"hello\";\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
+     },
+     "good": {
+      "path": "rule-proof-pair/good.js",
+      "text": "const greeting = 'hello';\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
+     }
+    }
+   },
+   {
+    "key": "deepseek-s2",
+    "reading": {
+     "linter": "eslint",
+     "rule": "quotes",
+     "options": [
+      "single"
+     ],
+     "scope": {
+      "files": [
+       "**/*.js",
+       "**/*.jsx",
+       "**/*.mjs",
+       "**/*.cjs",
+       "**/*.ts",
+       "**/*.tsx",
+       "**/*.mts",
+       "**/*.cts"
+      ],
+      "ignores": [
+       "**/node_modules/**",
+       "**/.venv/**",
+       "**/dist/**",
+       "**/build/**"
+      ]
+     }
+    },
+    "pair": {
+     "bad": {
+      "path": "rule-proof-pair/bad.js",
+      "text": "const greeting = \"hello\";\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
+     },
+     "good": {
+      "path": "rule-proof-pair/good.js",
+      "text": "const greeting = 'hello';\n\nfunction greet(name) {\n  return greeting + ', ' + name;\n}\n\nmodule.exports = { greet };\n"
      }
     }
    },
@@ -492,12 +490,9 @@
     "key": "google-s1",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-syntax",
+     "rule": "quotes",
      "options": [
-      {
-       "selector": "MemberExpression[object.name='botMetadata'][property.name='agentName']",
-       "message": "Never use `botMetadata.agentName` for DM display labels (it holds the runtime)."
-      }
+      "single"
      ],
      "scope": {
       "files": [
@@ -520,12 +515,12 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "export function getDmLabel(botMetadata) {\n  return botMetadata.agentName;\n}\n"
+      "path": "rule-proof-pair/bad.js",
+      "text": "const greeting = \"hello\";\nconst name = 'world';\n\nfunction greet() {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
      },
      "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "export function getDmLabel(botMetadata) {\n  return botMetadata.displayName;\n}\n"
+      "path": "rule-proof-pair/good.js",
+      "text": "const greeting = 'hello';\nconst name = 'world';\n\nfunction greet() {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
      }
     }
    },
@@ -533,13 +528,9 @@
     "key": "google-s2",
     "reading": {
      "linter": "eslint",
-     "rule": "no-restricted-properties",
+     "rule": "quotes",
      "options": [
-      {
-       "object": "botMetadata",
-       "property": "agentName",
-       "message": "Never use botMetadata.agentName for DM display labels (it holds the runtime)."
-      }
+      "single"
      ],
      "scope": {
       "files": [
@@ -562,1625 +553,17 @@
     },
     "pair": {
      "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "export function getDmLabel(botMetadata) {\n  return botMetadata.agentName;\n}\n"
+      "path": "rule-proof-pair/bad.js",
+      "text": "const greeting = \"hello\";\nconst name = 'world';\n\nfunction greet() {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
      },
      "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "export function getDmLabel(botMetadata) {\n  return botMetadata.displayName;\n}\n"
+      "path": "rule-proof-pair/good.js",
+      "text": "const greeting = 'hello';\nconst name = 'world';\n\nfunction greet() {\n  return greeting + ' ' + name;\n}\n\nmodule.exports = { greet };\n"
      }
     }
    }
-  ]
- },
- {
-  "id": "DA17",
-  "repo": "auth0/auth0-angular",
-  "sha": "a16b48539a4f0cfdf1e72927f8f324cb83306c14",
-  "linter": "eslint",
-  "rule": "no-restricted-syntax",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "NewExpression[callee.name='Auth0Client']",
-       "message": "Do not construct a new Auth0Client. Reuse the injected instance from Auth0ClientService (this.auth0Client)."
-      }
-     ],
-     "scope": {
-      "files": [
-       "projects/auth0-angular/src/**/*.ts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "projects/auth0-angular/src/**/*.spec.ts",
-       "projects/auth0-angular/src/lib/auth.client.ts"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "projects/auth0-angular/src/p3s109-pair/bad.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenReader {\n  private client: Auth0Client;\n\n  constructor() {\n    this.client = new Auth0Client({\n      domain: 'example.auth0.com',\n      clientId: 'abc123',\n    });\n  }\n\n  getToken() {\n    return this.client.getTokenSilently();\n  }\n}\n"
-     },
-     "good": {
-      "path": "projects/auth0-angular/src/p3s109-pair/good.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenReader {\n  constructor(private client: Auth0Client) {}\n\n  getToken() {\n    return this.client.getTokenSilently();\n  }\n}\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "NewExpression[callee.name='Auth0Client']",
-       "message": "Do not construct a new Auth0Client; reuse the instance injected via Auth0ClientService."
-      }
-     ],
-     "scope": {
-      "files": [
-       "projects/auth0-angular/src/**/*.ts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "projects/auth0-angular/src/**/*.spec.ts",
-       "projects/auth0-angular/src/lib/auth.client.ts"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "projects/auth0-angular/src/p3s109-pair/bad.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenService {\n  private client: Auth0Client;\n\n  constructor() {\n    this.client = new Auth0Client({\n      domain: 'example.auth0.com',\n      clientId: 'abc123',\n    });\n  }\n\n  getToken() {\n    return this.client.getTokenSilently();\n  }\n}\n"
-     },
-     "good": {
-      "path": "projects/auth0-angular/src/p3s109-pair/good.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenService {\n  private client: Auth0Client;\n\n  constructor(client: Auth0Client) {\n    this.client = client;\n  }\n\n  getToken() {\n    return this.client.getTokenSilently();\n  }\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      "NewExpression[callee.name=\"Auth0Client\"]"
-     ],
-     "scope": {
-      "files": [
-       "projects/**/*.ts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/*.spec.ts"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "projects/p3s109-pair/bad.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport function createClient(): Auth0Client {\n  return new Auth0Client({\n    domain: 'example.auth0.com',\n    clientId: 'abc123',\n  });\n}\n"
-     },
-     "good": {
-      "path": "projects/p3s109-pair/good.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport function createClient(client: Auth0Client): Auth0Client {\n  return client;\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "NewExpression[callee.name='Auth0Client']",
-       "message": "Do not construct a new Auth0Client instance. Use the existing instance from Auth0ClientService."
-      }
-     ],
-     "scope": {
-      "files": [
-       "projects/**/*.ts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "projects/p3s109-pair/bad.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class LoginButton {\n  private client = new Auth0Client({\n    domain: 'example.auth0.com',\n    clientId: 'abc123',\n  });\n\n  login(): Promise<void> {\n    return this.client.loginWithRedirect();\n  }\n}\n"
-     },
-     "good": {
-      "path": "projects/p3s109-pair/good.ts",
-      "text": "import { Auth0ClientService } from './auth0-client.service';\n\nexport class LoginButton {\n  private client = Auth0ClientService.instance;\n\n  login(): Promise<void> {\n    return this.client.loginWithRedirect();\n  }\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "NewExpression[callee.name='Auth0Client']",
-       "message": "Never construct a new Auth0Client instance; reuse the existing instance injected via Auth0ClientService."
-      },
-      {
-       "selector": "CallExpression[callee.object.name='Auth0ClientFactory'][callee.property.name='createClient']",
-       "message": "Never call the factory per request; reuse the existing Auth0Client instance."
-      }
-     ],
-     "scope": {
-      "files": [
-       "projects/**/*.ts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "projects/auth0-angular/src/lib/auth.client.ts",
-       "projects/auth0-angular/src/lib/auth.module.ts",
-       "projects/auth0-angular/src/lib/provide.ts"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "projects/p3s109-pair/bad.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenService {\n  async getToken(): Promise<string> {\n    const client = new Auth0Client({\n      domain: 'example.auth0.com',\n      clientId: 'abc123',\n    });\n    return client.getTokenSilently();\n  }\n}\n"
-     },
-     "good": {
-      "path": "projects/p3s109-pair/good.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class TokenService {\n  constructor(private readonly client: Auth0Client) {}\n\n  async getToken(): Promise<string> {\n    return this.client.getTokenSilently();\n  }\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "NewExpression[callee.name='Auth0Client']",
-       "message": "Never construct a new Auth0Client instance. Reuse the existing Auth0Client instance injected via Auth0ClientService."
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class SessionService {\n  private client: Auth0Client;\n\n  constructor() {\n    this.client = new Auth0Client({\n      domain: 'example.auth0.com',\n      clientId: 'abc123',\n    });\n  }\n\n  async getToken(): Promise<string> {\n    return this.client.getTokenSilently();\n  }\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.ts",
-      "text": "import { Auth0Client } from '@auth0/auth0-spa-js';\n\nexport class SessionService {\n  private client: Auth0Client;\n\n  constructor(client: Auth0Client) {\n    this.client = client;\n  }\n\n  async getToken(): Promise<string> {\n    return this.client.getTokenSilently();\n  }\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DA20-502b61",
-  "repo": "jmetal/jmetalpy",
-  "sha": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
-  "linter": "ruff",
-  "rule": "PT009",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "PT009",
-     "settings": {},
-     "scope": {
-      "files": [
-       "tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "tests/p3s109-pair/test_bad.py",
-      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
-     },
-     "good": {
-      "path": "tests/p3s109-pair/test_good.py",
-      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        assert 1 + 1 == 2\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "PT009",
-     "settings": {},
-     "scope": {
-      "files": [
-       "tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "tests/p3s109-pair/test_bad.py",
-      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
-     },
-     "good": {
-      "path": "tests/p3s109-pair/test_good.py",
-      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        assert 1 + 1 == 2\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "PT009",
-     "settings": {},
-     "scope": {
-      "files": [
-       "tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "tests/p3s109-pair/test_bad.py",
-      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
-     },
-     "good": {
-      "path": "tests/p3s109-pair/test_good.py",
-      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        assert 1 + 1 == 2\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "PT009",
-     "settings": {},
-     "scope": {
-      "files": [
-       "tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "tests/p3s109-pair/test_bad.py",
-      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
-     },
-     "good": {
-      "path": "tests/p3s109-pair/test_good.py",
-      "text": "import unittest\n\n\nclass TestMath(unittest.TestCase):\n    def test_add(self):\n        assert 1 + 1 == 2\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DA20-a534d0",
-  "repo": "jmetal/jmetalpy",
-  "sha": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
-  "linter": "ruff",
-  "rule": "TID251",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports.banned-api": {
-       "unittest.TestCase": {
-        "msg": "Use pytest for tests (plain functions or `class Test<Subject>:`), not unittest.TestCase"
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "tests/p3s109-pair/test_bad.py",
-      "text": "import unittest\n\n\ndef add(a, b):\n    return a + b\n\n\nclass TestAdd(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(add(1, 2), 3)\n"
-     },
-     "good": {
-      "path": "tests/p3s109-pair/test_good.py",
-      "text": "def add(a, b):\n    return a + b\n\n\nclass TestAdd:\n    def test_add(self):\n        assert add(1, 2) == 3\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports.banned-api": {
-       "unittest": {
-        "msg": "Use pytest for tests"
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "tests/p3s109-pair/test_bad.py",
-      "text": "import unittest\n\n\nclass TestAdd(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(1 + 1, 2)\n"
-     },
-     "good": {
-      "path": "tests/p3s109-pair/test_good.py",
-      "text": "def test_add():\n    assert 1 + 1 == 2\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DA20-e1f582",
-  "repo": "jmetal/jmetalpy",
-  "sha": "1d0116f0d3100aa30a6597edf69ee59d5a9b7fdb",
-  "linter": "ruff",
-  "rule": "PT006",
-  "cross": true,
-  "readings": [
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "PT006",
-     "settings": {},
-     "scope": {
-      "files": [
-       "tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "tests/p3s109-pair/test_bad.py",
-      "text": "import pytest\n\n\n@pytest.mark.parametrize(\"a, b\", [(1, 2), (3, 4)])\ndef test_add(a, b):\n    assert a + 1 == b\n"
-     },
-     "good": {
-      "path": "tests/p3s109-pair/test_good.py",
-      "text": "import pytest\n\n\n@pytest.mark.parametrize((\"a\", \"b\"), [(1, 2), (3, 4)])\ndef test_add(a, b):\n    assert a + 1 == b\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DA25",
-  "repo": "tui-cs/Terminal.Gui",
-  "sha": "925cca7b47596af47fd8bf7ae52b7fabf171c4d4",
-  "linter": "eslint",
-  "rule": "padding-line-between-statements",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "padding-line-between-statements",
-     "options": [
-      {
-       "blankLine": "always",
-       "prev": "block-like",
-       "next": "*"
-      }
-     ],
-     "scope": {
-      "files": [
-       "docfx/**/*.js"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "docfx/**/*.min.js"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "docfx/p3s109-pair/bad.js",
-      "text": "function check(items) {\n  if (items.length === 0) {\n    return null;\n  }\n  const first = items[0];\n  return first;\n}\n\nmodule.exports = check;\n"
-     },
-     "good": {
-      "path": "docfx/p3s109-pair/good.js",
-      "text": "function check(items) {\n  if (items.length === 0) {\n    return null;\n  }\n\n  const first = items[0];\n  return first;\n}\n\nmodule.exports = check;\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "padding-line-between-statements",
-     "options": [
-      {
-       "blankLine": "always",
-       "prev": "*",
-       "next": "return"
-      },
-      {
-       "blankLine": "always",
-       "prev": "block-like",
-       "next": "*"
-      }
-     ],
-     "scope": {
-      "files": [
-       "docfx/**/*.js"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/*.min.js"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "docfx/p3s109-pair/bad.js",
-      "text": "function check(items) {\n  for (const item of items) {\n    if (item.invalid) {\n      throw new Error('invalid');\n    }\n  }\n  const total = items.length;\n\n  return total;\n}\n\nmodule.exports = check;\n"
-     },
-     "good": {
-      "path": "docfx/p3s109-pair/good.js",
-      "text": "function check(items) {\n  for (const item of items) {\n    if (item.invalid) {\n      throw new Error('invalid');\n    }\n  }\n\n  const total = items.length;\n\n  return total;\n}\n\nmodule.exports = check;\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "padding-line-between-statements",
-     "options": [
-      {
-       "blankLine": "always",
-       "prev": "block-like",
-       "next": "*"
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function check(items) {\n  let count = 0;\n  for (const item of items) {\n    if (item) {\n      count += 1;\n    }\n  }\n  return count;\n}\n\nmodule.exports = check;\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function check(items) {\n  let count = 0;\n  for (const item of items) {\n    if (item) {\n      count += 1;\n    }\n  }\n\n  return count;\n}\n\nmodule.exports = check;\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "padding-line-between-statements",
-     "options": [
-      {
-       "blankLine": "always",
-       "prev": "block-like",
-       "next": "*"
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n  return total;\n}\n\nmodule.exports = { check };\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n\n  return total;\n}\n\nmodule.exports = { check };\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "padding-line-between-statements",
-     "options": [
-      {
-       "blankLine": "always",
-       "prev": "block-like",
-       "next": "*"
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n  return total;\n}\n\nmodule.exports = check;\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n\n  return total;\n}\n\nmodule.exports = check;\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "padding-line-between-statements",
-     "options": [
-      {
-       "blankLine": "always",
-       "prev": "block-like",
-       "next": "*"
-      }
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n  return total;\n}\n\nmodule.exports = { check };\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "function check(items) {\n  let total = 0;\n  for (const item of items) {\n    total += item;\n  }\n\n  return total;\n}\n\nmodule.exports = { check };\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DB19",
-  "repo": "hoornet/vega",
-  "sha": "dfae0c4b6c31b5201a07afb282fea809b9a63ba9",
-  "linter": "eslint",
-  "rule": "better-tailwindcss/no-restricted-classes",
-  "cross": true,
-  "readings": [
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "JSXOpeningElement:has(JSXAttribute[name.name=\"role\"][value.value=\"dialog\"]):not(:has(JSXAttribute[name.name=\"className\"]:matches([value.value=/bg-bg-raised/])))",
-       "message": "Dialog elements must use `bg-bg-raised` class for the raised surface."
-      },
-      {
-       "selector": "JSXOpeningElement:has(JSXAttribute[name.name=\"aria-modal\"][value.value=\"true\"]):not(:has(JSXAttribute[name.name=\"className\"]:matches([value.value=/bg-bg-raised/])))",
-       "message": "Modal elements must use `bg-bg-raised` class for the raised surface (dialog requirement)."
-      }
-     ],
-     "scope": {
-      "files": [
-       "src/**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/*.test.tsx"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/p3s109-pair/bad.tsx",
-      "text": "export function ConfirmDialog() {\n  return (\n    <div role=\"dialog\" className=\"p-4 rounded shadow\">\n      <h2>Confirm</h2>\n      <button>OK</button>\n    </div>\n  );\n}\n"
-     },
-     "good": {
-      "path": "src/p3s109-pair/good.tsx",
-      "text": "export function ConfirmDialog() {\n  return (\n    <div role=\"dialog\" className=\"p-4 rounded shadow bg-bg-raised\">\n      <h2>Confirm</h2>\n      <button>OK</button>\n    </div>\n  );\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "JSXOpeningElement[name.name='Dialog']:not([attributes.name='className'][attributes.value.value*='bg-bg-raised'])",
-       "message": "Dialog must use className 'bg-bg-raised' to ensure it is a raised surface."
-      }
-     ],
-     "scope": {
-      "files": [
-       "src/**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "src/**/*.test.tsx"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/p3s109-pair/bad.tsx",
-      "text": "import { Dialog } from \"./ui\";\n\nexport function Confirm({ open }: { open: boolean }) {\n  return (\n    <Dialog open={open}>\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n"
-     },
-     "good": {
-      "path": "src/p3s109-pair/good.tsx",
-      "text": "import { Panel } from \"./ui\";\n\nexport function Confirm({ open }: { open: boolean }) {\n  return (\n    <Panel open={open} className=\"bg-bg-raised\">\n      <p>Are you sure?</p>\n    </Panel>\n  );\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      "error",
-      {
-       "selector": "JSXOpeningElement[name.name=/^[Dd]ialog$/]:not(:has(JSXAttribute[name.name='className'] Literal[value=/bg-bg-raised/]))",
-       "message": "Dialog is a raised surface using bg-bg-raised."
-      }
-     ],
-     "scope": {
-      "files": [
-       "src/**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/p3s109-pair/bad.tsx",
-      "text": "export function Confirm() {\n  return (\n    <Dialog className=\"p-4 rounded\">\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n"
-     },
-     "good": {
-      "path": "src/p3s109-pair/good.tsx",
-      "text": "export function Confirm() {\n  return (\n    <Dialog className=\"bg-bg-raised p-4 rounded\">\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "no-restricted-syntax",
-     "options": [
-      {
-       "selector": "JSXOpeningElement[name.name='Dialog'] JSXAttribute[name.name='className'] Literal[value=/(^| )bg-bg( |$)/]",
-       "message": "Dialog is a raised surface using `bg-bg-raised`, not `bg-bg`"
-      }
-     ],
-     "scope": {
-      "files": [
-       "src/**/*.tsx"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/p3s109-pair/bad.tsx",
-      "text": "export function Confirm() {\n  return (\n    <Dialog className=\"bg-bg p-4 rounded\">\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n\nfunction Dialog(props: { className?: string; children?: React.ReactNode }) {\n  return <div className={props.className}>{props.children}</div>;\n}\n"
-     },
-     "good": {
-      "path": "src/p3s109-pair/good.tsx",
-      "text": "export function Confirm() {\n  return (\n    <Dialog className=\"bg-bg-raised p-4 rounded\">\n      <p>Are you sure?</p>\n    </Dialog>\n  );\n}\n\nfunction Dialog(props: { className?: string; children?: React.ReactNode }) {\n  return <div className={props.className}>{props.children}</div>;\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DB21",
-  "repo": "BuildWithHussain/forms_pro",
-  "sha": "17199d6b61b55becd19d19a6426d748632a7a0c4",
-  "linter": "ruff",
-  "rule": "TID251",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports.banned-api": {
-       "frappe.new_doc": {
-        "msg": "Do not use frappe.new_doc in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot)."
-       },
-       "frappe.get_doc": {
-        "msg": "Do not use frappe.get_doc(...).insert() in tests; build documents via factories in forms_pro/tests/factories/ (frappe_factory_bot)."
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "forms_pro/**/test_*.py",
-       "forms_pro/tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "forms_pro/tests/factories/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "forms_pro/p3s109-pair/test_bad.py",
-      "text": "import frappe\n\n\ndef test_form_creation():\n    doc = frappe.new_doc(\"Form\")\n    doc.title = \"Contact\"\n    doc.insert()\n    assert doc.name\n"
-     },
-     "good": {
-      "path": "forms_pro/p3s109-pair/test_good.py",
-      "text": "import frappe\n\nfrom forms_pro.tests.factories import FormFactory\n\n\ndef test_form_creation():\n    doc = FormFactory.create(title=\"Contact\")\n    assert doc.name\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports.banned-api": {
-       "frappe.new_doc": {
-        "msg": "Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests"
-       },
-       "frappe.get_doc": {
-        "msg": "Do not build documents with frappe.get_doc(...).insert() in tests; use factories in forms_pro/tests/factories/"
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "forms_pro/**/test_*.py",
-       "forms_pro/tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "forms_pro/tests/factories/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "forms_pro/p3s109-pair/test_bad.py",
-      "text": "import frappe\n\n\ndef test_form_is_created():\n    doc = frappe.new_doc(\"Form\")\n    doc.title = \"Contact\"\n    doc.insert()\n    assert doc.name\n"
-     },
-     "good": {
-      "path": "forms_pro/p3s109-pair/test_good.py",
-      "text": "import frappe\n\nfrom forms_pro.tests.factories.form import make_form\n\n\ndef test_form_is_created():\n    doc = make_form(title=\"Contact\")\n    assert doc.name\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports.banned-api": {
-       "frappe": {
-        "msg": "Do not use frappe.new_doc or frappe.get_doc(...).insert() in tests; use factories from forms_pro/tests/factories/"
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "forms_pro/**/test_*.py",
-       "forms_pro/tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "forms_pro/p3s109-pair/test_bad.py",
-      "text": "import frappe\n\n\ndef test_form_is_created():\n    doc = frappe.new_doc(\"Form\")\n    doc.title = \"Survey\"\n    doc.insert()\n    assert doc.name\n"
-     },
-     "good": {
-      "path": "forms_pro/p3s109-pair/test_good.py",
-      "text": "from forms_pro.tests.factories.form import make_form\n\n\ndef test_form_is_created():\n    doc = make_form(title=\"Survey\")\n    assert doc.name\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports.banned-api": {
-       "frappe.new_doc": {
-        "msg": "Do not use frappe.new_doc in tests; use factories from forms_pro/tests/factories"
-       },
-       "frappe.get_doc": {
-        "msg": "Do not use frappe.get_doc in tests; use factories"
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "forms_pro/**/test_*.py",
-       "forms_pro/tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "forms_pro/p3s109-pair/test_bad.py",
-      "text": "import frappe\n\n\ndef test_form_created():\n    doc = frappe.new_doc(\"Form\")\n    doc.title = \"Contact\"\n    doc.insert()\n    assert doc.name\n"
-     },
-     "good": {
-      "path": "forms_pro/p3s109-pair/test_good.py",
-      "text": "import frappe\n\nfrom forms_pro.tests.factories import make_form\n\n\ndef test_form_created():\n    doc = make_form(title=\"Contact\")\n    assert doc.name\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports": {
-       "banned-api": {
-        "frappe.new_doc": {
-         "msg": "Do not use frappe.new_doc in tests; build documents via factories."
-        },
-        "frappe.get_doc": {
-         "msg": "Avoid using frappe.get_doc(...).insert() in tests; build documents via factories."
-        }
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "**/test_*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "forms_pro/tests/factories/**/*.py"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/test_bad.py",
-      "text": "import frappe\n\n\ndef test_creates_todo():\n    doc = frappe.new_doc(\"ToDo\")\n    doc.description = \"write tests\"\n    doc.insert()\n    assert doc.name\n"
-     },
-     "good": {
-      "path": "p3s109-pair/test_good.py",
-      "text": "import frappe\n\nfrom forms_pro.tests.factories.todo import make_todo\n\n\ndef test_creates_todo():\n    doc = make_todo(description=\"write tests\")\n    assert doc.name\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "TID251",
-     "settings": {
-      "flake8-tidy-imports": {
-       "banned-api": {
-        "frappe.new_doc": {
-         "msg": "Use factories in forms_pro/tests/factories/ instead of frappe.new_doc in tests."
-        }
-       }
-      }
-     },
-     "scope": {
-      "files": [
-       "**/test_*.py",
-       "**/tests/**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/test_bad.py",
-      "text": "import frappe\nfrom frappe.tests.utils import FrappeTestCase\n\n\nclass TestForm(FrappeTestCase):\n    def test_create_form(self):\n        doc = frappe.new_doc(\"Form\")\n        doc.title = \"Sample\"\n        doc.insert()\n        self.assertTrue(doc.name)\n"
-     },
-     "good": {
-      "path": "p3s109-pair/test_good.py",
-      "text": "import frappe\nfrom frappe.tests.utils import FrappeTestCase\n\nfrom forms_pro.tests.factories import make_form\n\n\nclass TestForm(FrappeTestCase):\n    def test_create_form(self):\n        doc = make_form(title=\"Sample\")\n        self.assertTrue(doc.name)\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DB30",
-  "repo": "longsizhuo/holocard",
-  "sha": "62ba2ebbacdbb0a2927817817ba0f3f9564146b7",
-  "linter": "eslint",
-  "rule": "import/extensions",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/extensions",
-     "options": [
-      "never"
-     ],
-     "scope": {
-      "files": [
-       "src/**/*.ts",
-       "server/**/*.ts",
-       "web/**/*.ts",
-       "config/**/*.ts",
-       "scripts/**/*.ts",
-       "vite.config.ts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/*.d.ts"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/p3s109-pair/bad.ts",
-      "text": "import { helper } from './utils.js';\n\nexport function run(): string {\n  return helper('x');\n}\n"
-     },
-     "good": {
-      "path": "src/p3s109-pair/good.ts",
-      "text": "import { helper } from './utils';\n\nexport function run(): string {\n  return helper('x');\n}\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/extensions",
-     "options": [
-      "never"
-     ],
-     "scope": {
-      "files": [
-       "src/**/*.ts",
-       "server/**/*.ts",
-       "web/**/*.ts",
-       "config/**/*.ts",
-       "scripts/**/*.ts",
-       "vite.config.ts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "**/*.d.ts"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "src/p3s109-pair/bad.ts",
-      "text": "import { helper } from './helper.js';\n\nexport function run(input: string): string {\n  return helper(input);\n}\n"
-     },
-     "good": {
-      "path": "src/p3s109-pair/good.ts",
-      "text": "import { helper } from './helper';\n\nexport function run(input: string): string {\n  return helper(input);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/extensions",
-     "options": [
-      "never"
-     ],
-     "scope": {
-      "files": [
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "import { helper } from './utils.js';\n\nexport function run(value) {\n  return helper(value);\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "import { helper } from './utils';\n\nexport function run(value) {\n  return helper(value);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/extensions",
-     "options": [
-      "never"
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "import helper from './helper.js';\n\nexport function run(value) {\n  return helper(value);\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "import helper from './helper';\n\nexport function run(value) {\n  return helper(value);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/extensions",
-     "options": [
-      "never"
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "import helper from './helper.js';\n\nexport function run(value) {\n  return helper(value);\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "import helper from './helper';\n\nexport function run(value) {\n  return helper(value);\n}\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "eslint",
-     "rule": "import/extensions",
-     "options": [
-      "never"
-     ],
-     "scope": {
-      "files": [
-       "**/*.js",
-       "**/*.jsx",
-       "**/*.mjs",
-       "**/*.cjs",
-       "**/*.ts",
-       "**/*.tsx",
-       "**/*.mts",
-       "**/*.cts"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.js",
-      "text": "import { helper } from './utils.js';\n\nexport function run(value) {\n  return helper(value) + 1;\n}\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.js",
-      "text": "import { helper } from './utils';\n\nexport function run(value) {\n  return helper(value) + 1;\n}\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DCB3-cdacab",
-  "repo": "Atlas3DSS/Character-Creation",
-  "sha": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
-  "linter": "ruff",
-  "rule": "ANN202",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "ANN202",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "archive/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.py",
-      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef compute(value: int) -> int:\n    return _helper(value) + 1\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.py",
-      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef compute(value: int) -> int:\n    return _helper(value) + 1\n"
-     }
-    }
-   },
-   {
-    "key": "anthropic-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "ANN202",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "archive/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.py",
-      "text": "def _double(value: int):\n    return value * 2\n\n\ndef quadruple(value: int) -> int:\n    return _double(_double(value))\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.py",
-      "text": "def _double(value: int) -> int:\n    return value * 2\n\n\ndef quadruple(value: int) -> int:\n    return _double(_double(value))\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "ANN202",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.py",
-      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef run() -> int:\n    return _helper(3)\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.py",
-      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef run() -> int:\n    return _helper(3)\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "ANN202",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.py",
-      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef run() -> int:\n    return _helper(4)\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.py",
-      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef run() -> int:\n    return _helper(4)\n"
-     }
-    }
-   },
-   {
-    "key": "google-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "ANN202",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py",
-       "**/*.pyi"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.py",
-      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef run(value: int) -> int:\n    return _helper(value)\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.py",
-      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef run(value: int) -> int:\n    return _helper(value)\n"
-     }
-    }
-   },
-   {
-    "key": "google-s2",
-    "reading": {
-     "linter": "ruff",
-     "rule": "ANN202",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.py",
-      "text": "def _helper(x: int):\n    return x * 2\n\n\ndef compute(values: list[int]) -> list[int]:\n    return [_helper(v) for v in values]\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.py",
-      "text": "def _helper(x: int) -> int:\n    return x * 2\n\n\ndef compute(values: list[int]) -> list[int]:\n    return [_helper(v) for v in values]\n"
-     }
-    }
-   }
-  ]
- },
- {
-  "id": "DCB3-d595b5",
-  "repo": "Atlas3DSS/Character-Creation",
-  "sha": "1c1189aa516eee00339a7c62ef89d67bb3c44008",
-  "linter": "ruff",
-  "rule": "ANN003",
-  "cross": true,
-  "readings": [
-   {
-    "key": "anthropic-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "ANN003",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**",
-       "archive/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.py",
-      "text": "def build_config(name: str, **options) -> dict:\n    config = {\"name\": name}\n    config.update(options)\n    return config\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.py",
-      "text": "def build_config(name: str, **options: str) -> dict:\n    config = {\"name\": name}\n    config.update(options)\n    return config\n"
-     }
-    }
-   },
-   {
-    "key": "deepseek-s1",
-    "reading": {
-     "linter": "ruff",
-     "rule": "ANN003",
-     "settings": {},
-     "scope": {
-      "files": [
-       "**/*.py"
-      ],
-      "ignores": [
-       "**/node_modules/**",
-       "**/.venv/**",
-       "**/dist/**",
-       "**/build/**"
-      ]
-     }
-    },
-    "pair": {
-     "bad": {
-      "path": "p3s109-pair/bad.py",
-      "text": "def build_config(name: str, **options) -> dict:\n    config = {\"name\": name}\n    config.update(options)\n    return config\n"
-     },
-     "good": {
-      "path": "p3s109-pair/good.py",
-      "text": "def build_config(name: str, **options: str) -> dict:\n    config = {\"name\": name}\n    config.update(options)\n    return config\n"
-     }
-    }
-   }
-  ]
+  ],
+  "node": "24",
+  "node_why": "engines.node '>= 24.12'"
  }
 ]
