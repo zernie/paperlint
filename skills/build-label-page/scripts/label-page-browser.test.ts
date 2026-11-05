@@ -799,6 +799,54 @@ test(
 );
 
 test(
+  "🔴 with min_seconds a tall card's clock stops when less than its share is in view, even between the observer's steps",
+  async () => {
+    const { page: html } = build(
+      setup("browser-dwell-tall", approval({ min_seconds: 2 })),
+    );
+    const page = await (
+      await sharedBrowser()
+    ).newPage({ viewport: { width: 400, height: 300 } });
+    try {
+      await page.addInitScript(STORE(PRACTICE_DONE, 20));
+      await page.goto("about:blank");
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      await page.addStyleTag({
+        content: "article.item { min-height: 1200px; box-sizing: border-box; }",
+      });
+      const lastCard = page.locator("article.item").last();
+      const keep = lastCard.getByRole("button", { name: /Keep/ });
+      await keep.waitFor();
+      // Show `px` of the last card at the bottom of the viewport. The card is 1200 px and the
+      // viewport 300 px, so it is on screen with half the viewport, 150 px (12.5 %), in view.
+      const show = (px: number) =>
+        page.evaluate(
+          `(() => { const c = document.querySelectorAll("article.item"); const r = c[c.length - 1].getBoundingClientRect(); window.scrollTo(0, window.scrollY + r.top - window.innerHeight + ${String(px)}); })()`,
+        );
+      await show(170); // 14.2 %: above the share
+      await page.waitForTimeout(200);
+      await show(140); // 11.7 %: below it, and no 5 % step is crossed on the way
+      await page.waitForTimeout(2600);
+      assert.equal(
+        await keep.isDisabled(),
+        true,
+        "140 px of the card in view for 2.6 s does not count",
+      );
+      await show(200);
+      await page.waitForTimeout(2600);
+      assert.equal(
+        await keep.isDisabled(),
+        false,
+        "200 px in view for 2.6 s counts",
+      );
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
   "🔴 with min_seconds a page that loaded in a hidden tab starts the clock of a card in view when the tab comes back",
   async () => {
     const { page: html } = build(

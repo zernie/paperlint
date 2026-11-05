@@ -214,9 +214,14 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   var observer = null;
   var THRESHOLDS = [];
   for (var t = 0; t <= 20; t += 1) THRESHOLDS.push(t / 20);
+  // The share of the card that must be in view is rounded up to the observer's 5 % steps: the
+  // observer reports only when a step is crossed, so a share between two steps could be left
+  // behind with no report and the clock still running.
   function onScreen(entry) {
-    var half = Math.min(entry.boundingClientRect.height, window.innerHeight) / 2;
-    return entry.isIntersecting && entry.intersectionRect.height >= half;
+    var h = entry.boundingClientRect.height;
+    if (!entry.isIntersecting || h <= 0) return false;
+    var need = Math.ceil((Math.min(h, window.innerHeight) / 2 / h) * 20) / 20;
+    return entry.intersectionRect.height / h >= need - 1e-9;
   }
   // Every render draws new cards: the clocks stop, and the new cards are watched from scratch.
   function watchCards() {
