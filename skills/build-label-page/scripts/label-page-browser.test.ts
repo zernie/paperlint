@@ -847,6 +847,41 @@ test(
 );
 
 test(
+  "🔴 with min_seconds a card over 20 viewports tall still unlocks when it fills the screen, and one that grows is judged at its new height",
+  async () => {
+    const { page: html } = build(
+      setup("browser-dwell-huge", approval({ min_seconds: 2 })),
+    );
+    const page = await (
+      await sharedBrowser()
+    ).newPage({ viewport: { width: 400, height: 300 } });
+    try {
+      await page.addInitScript(STORE(PRACTICE_DONE, 20));
+      await page.goto("about:blank");
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      const cards = page.locator("article.item");
+      const huge = cards.last();
+      await huge.getByRole("button", { name: /Keep/ }).waitFor();
+      // The card grows after it was drawn and watched, with no render.
+      await huge.evaluate((el) => {
+        el.style.minHeight = "7000px";
+        el.scrollIntoView({ block: "start" });
+        window.scrollBy(0, 2000);
+      });
+      await page.waitForTimeout(2600);
+      assert.equal(
+        await huge.getByRole("button", { name: /Keep/ }).isDisabled(),
+        false,
+        "a 7000 px card filling a 300 px viewport for 2.6 s counts",
+      );
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
   "🔴 with min_seconds a page that loaded in a hidden tab starts the clock of a card in view when the tab comes back",
   async () => {
     const { page: html } = build(

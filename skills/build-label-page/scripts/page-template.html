@@ -211,36 +211,55 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     if (state.firstSeconds[id] === undefined) state.firstSeconds[id] = Math.floor(dwellMs(id) / 1000);
     return state.firstSeconds[id];
   }
-  var observer = null;
-  var THRESHOLDS = [];
-  for (var t = 0; t <= 20; t += 1) THRESHOLDS.push(t / 20);
-  // The share of the card that must be in view is rounded up to the observer's 5 % steps: the
-  // observer reports only when a step is crossed, so a share between two steps could be left
-  // behind with no report and the clock still running.
+  // An observer reports only when a card crosses one of its thresholds, so each card gets its own
+  // observer whose threshold is that card's share: half the card, or half the viewport for a card
+  // taller than it. The share follows the card's height and the viewport's: a card that changes
+  // size, or a resized window, is watched again with its new share.
+  var observers = [];
+  var sizes = null;
+  function share(h) { return h > 0 ? Math.min(h, window.innerHeight) / 2 / h : 0.5; }
   function onScreen(entry) {
     var h = entry.boundingClientRect.height;
-    if (!entry.isIntersecting || h <= 0) return false;
-    var need = Math.ceil((Math.min(h, window.innerHeight) / 2 / h) * 20) / 20;
-    return entry.intersectionRect.height / h >= need - 1e-9;
+    return entry.isIntersecting && h > 0 &&
+      entry.intersectionRect.height >= Math.min(h, window.innerHeight) / 2 - 0.5;
+  }
+  function watchCard(card) {
+    var id = card.getAttribute("data-id");
+    var o = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (onScreen(e) && document.visibilityState !== "hidden") startClock(id);
+        else stopClock(id);
+      });
+    }, { threshold: [0, share(card.getBoundingClientRect().height)] });
+    o.observe(card);
+    return o;
   }
   // Every render draws new cards: the clocks stop, and the new cards are watched from scratch.
   function watchCards() {
-    if (observer) observer.disconnect();
-    observer = null;
+    observers.forEach(function (o) { o.disconnect(); });
+    observers = [];
+    if (sizes) sizes.disconnect();
+    sizes = null;
     var cards = Array.prototype.slice.call(document.querySelectorAll("article.item[data-id]"));
     if (typeof IntersectionObserver !== "function") {
       // No way to tell what is in view: a card counts as on screen from the moment it is drawn.
       cards.forEach(function (c) { startClock(c.getAttribute("data-id")); });
       return;
     }
-    observer = new IntersectionObserver(function (entries) {
+    observers = cards.map(watchCard);
+    if (typeof ResizeObserver !== "function") return;
+    var heights = cards.map(function (c) { return c.getBoundingClientRect().height; });
+    sizes = new ResizeObserver(function (entries) {
       entries.forEach(function (e) {
-        var id = e.target.getAttribute("data-id");
-        if (onScreen(e) && document.visibilityState !== "hidden") startClock(id);
-        else stopClock(id);
+        var i = cards.indexOf(e.target);
+        var h = e.target.getBoundingClientRect().height;
+        if (i === -1 || Math.abs(h - heights[i]) < 1) return;
+        heights[i] = h;
+        observers[i].disconnect();
+        observers[i] = watchCard(cards[i]);
       });
-    }, { threshold: THRESHOLDS });
-    cards.forEach(function (c) { observer.observe(c); });
+    });
+    cards.forEach(function (c) { sizes.observe(c); });
   }
   // The countdown on each locked card, and its buttons let go when its time is up; no render, so
   // a section the labeller opened stays open.
@@ -965,6 +984,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       Object.keys(state.seenSince).forEach(stopClock);
     } else if (MIN_SECONDS) watchCards();
   });
+  window.addEventListener("resize", function () { if (MIN_SECONDS) watchCards(); });
   if (MIN_SECONDS) tick();
   window.addEventListener("pagehide", flushReasons);
   render();
