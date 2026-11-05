@@ -797,3 +797,38 @@ test(
   },
   BROWSER_TEST_MS,
 );
+
+test(
+  "🔴 with min_seconds a page that loaded in a hidden tab starts the clock of a card in view when the tab comes back",
+  async () => {
+    const { page: html } = build(
+      setup("browser-dwell-hidden", approval({ min_seconds: 2 })),
+    );
+    const page = await (
+      await sharedBrowser()
+    ).newPage({ viewport: { width: 400, height: 700 } });
+    try {
+      await page.addInitScript(
+        `window.__vis = "hidden"; Object.defineProperty(Document.prototype, "visibilityState", { configurable: true, get: function () { return window.__vis; } });`,
+      );
+      await page.addInitScript(STORE(PRACTICE_DONE, 20));
+      await page.goto("about:blank");
+      await page.setContent(html, { waitUntil: "domcontentloaded" });
+      const firstCard = page.locator("article.item").first();
+      await firstCard.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      await page.evaluate(
+        `window.__vis = "visible"; document.dispatchEvent(new Event("visibilitychange"));`,
+      );
+      await page.waitForTimeout(2600);
+      assert.equal(
+        await firstCard.getByRole("button", { name: /Keep/ }).isDisabled(),
+        false,
+        "the card was in view for 2.6 s after the tab came back",
+      );
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);

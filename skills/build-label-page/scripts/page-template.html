@@ -237,7 +237,6 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     }, { threshold: THRESHOLDS });
     cards.forEach(function (c) { observer.observe(c); });
   }
-  var pausedClocks = [];
   // The countdown on each locked card, and its buttons let go when its time is up; no render, so
   // a section the labeller opened stays open.
   function tick() {
@@ -953,12 +952,13 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   function broken() { state.store = "none"; render(); }
 
+  // Hidden: every clock stops. Back: the cards are watched afresh, because a change of tab alone
+  // fires no intersection, and a card drawn while the tab was hidden never started its clock.
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState !== "visible") {
       flushReasons();
-      pausedClocks = Object.keys(state.seenSince);
-      pausedClocks.forEach(stopClock);
-    } else pausedClocks.splice(0).forEach(startClock);
+      Object.keys(state.seenSince).forEach(stopClock);
+    } else if (MIN_SECONDS) watchCards();
   });
   if (MIN_SECONDS) tick();
   window.addEventListener("pagehide", flushReasons);
