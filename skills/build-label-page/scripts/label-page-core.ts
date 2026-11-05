@@ -1463,7 +1463,7 @@ function answererOf(
 }
 function checkDocName(
   where: string,
-  { who, name }: { readonly who?: string; readonly name: string },
+  { who, name }: Whose & { readonly name: string },
   kind: Collection,
   names: Names,
 ): readonly string[] {
