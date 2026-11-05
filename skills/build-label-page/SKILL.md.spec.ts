@@ -153,6 +153,20 @@ building. In one line each:
    same pass, and add the line "labels → \`data/<study>-labels-<date>.json\`" to the paper's
    \`NOTES.md\` for the numbers that use them.
 
+## Two answerers, and a time on screen
+
+Two optional top-level keys of \`items.json\`, both left out by default:
+
+- \`"answerers": ["author", "second"]\` — two or more people answer the same published page, each
+  under their own name (picked on the page) and without seeing the other's answers; an item's own
+  \`answerers\` shows it to that subset only. The store's ids become \`<answerer>~<id>\`, and the
+  labels file keeps each answerer's answers under \`by_answerer\`.
+- \`"min_seconds": 30\` — a card's answer saves only after the card has been on screen that long;
+  the seconds at its first save are stored and exported as \`seconds\`.
+
+Details and the export's shape: [\`references/closed-choice-generator.md\`](references/closed-choice-generator.md),
+"Two answerers, and a minimum time on screen".
+
 ## When the page misbehaves
 
 Look at what the store holds (\`ArtifactData\` \`list\`) before changing anything: the page may be fine

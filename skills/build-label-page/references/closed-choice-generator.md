@@ -246,6 +246,48 @@ author cannot read it is an exclusion made after the draw and goes unrecorded. T
 units whose fate is obvious. Each dropped unit carries its reason in the labels file. The author's words, with the date, then go into
 `author_check` of the plan; a dropped unit is replaced by the next one in the draw.
 
+## Two answerers, and a minimum time on screen
+
+Both keys are optional and top-level. Left out, the page, its store documents and the export are
+exactly as above.
+
+- **`answerers`**: two or more names (letters, digits, `-` and `_`), for a study where two people
+  answer the same published page, each under their own name and without seeing the other's
+  answers. The page first asks "Who is answering?"; the choice is kept in the browser's
+  localStorage when it has one (otherwise it asks again on every visit), and "Switch" beside
+  "Answering as …" asks again. Every document the page writes is named `<answerer>~<id>`
+  (`second~G004`, `second~r1-P2`, `second~python`): `~` is outside the name pattern, so no answerer,
+  item, group or practice id can hold it. The page reads only the current answerer's documents, so
+  their progress, done-state and practice are their own. An item may carry its own `answerers`, a
+  subset of the page's: it is shown only to those. A name an item lists that the page does not, a
+  name twice, or an item's list on a page without one stops the build.
+- **`min_seconds`**: an item's answer saves only after its card has been on screen that long. The
+  cards are a list, so "on screen" is measured by an `IntersectionObserver`: half the card in view,
+  or half the viewport filled by a card taller than that, while the tab is visible. A locked card
+  shows "You can answer in N s" under its disabled buttons. The answer document gains `seconds`:
+  how long the card had been on screen at its first save, kept on every later save. The practice
+  cards are not held.
+
+`key.json` carries `answerers`, each item's own subset (`ids.<id>.answerers`, only where it has one)
+and `min_seconds`. With `answerers`, `export` refuses a document id without `<answerer>~`, an
+answerer the key does not list, and an answer to an item not shown to its answerer, as it refuses
+an unknown item. The labels file keeps each answerer's answers apart:
+
+```text
+{ "answerers": ["author", "second"],
+  "items": [{ "id": "G001", "source_id": "case-1000", "group": "python",
+              "answerers": ["author", "second"],
+              "by_answerer": { "author": { "answers": { "label": "yes" }, "complete": true,
+                                           "seconds": 41, "…": "the fields of an item above" },
+                               "second": { "…": "…" } } }],
+  "by_answerer": { "author": { "groups": {}, "complete_items": 1, "total_items": 1, "…": "…" },
+                   "second": { "…": "…" } } }
+```
+
+An answerer with no document for an item is still listed, with every answer `null`. Each
+answerer's practice is scored into its own file, `<study>-practice-r<round>-<answerer>-<date>.json`.
+`seconds` appears only when the page was built with `min_seconds`.
+
 ## The export
 
 `export` reads the store's three collections (`answers`, `groups`, `practice`) from `dump.json`, in
