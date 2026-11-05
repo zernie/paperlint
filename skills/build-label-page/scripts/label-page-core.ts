@@ -7,6 +7,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import * as R from "remeda";
 import { z } from "zod";
 import {
   describeRule,
@@ -784,12 +785,11 @@ function checkAnswerers(cfg: Config): void {
       return fail(
         `${where}: the page has no \`answerers\` — add the page's list, or take this out`,
       );
-    own.forEach((who, k) => {
-      if (!all.includes(who))
-        fail(
-          `${where}[${String(k)}]: ${repr(who)} is not in \`answerers\` (${all.join(", ")})`,
-        );
-    });
+    const k = own.findIndex((who) => !R.isIncludedIn(who, all));
+    if (k !== -1)
+      fail(
+        `${where}[${String(k)}]: ${repr(own[k])} is not in \`answerers\` (${all.join(", ")})`,
+      );
     checkDistinct(own, where);
   });
 }
@@ -1155,10 +1155,11 @@ const DEFAULT_LABELS: Readonly<Record<string, string>> = {
   practice_example: "",
 };
 /** The answerers and the dwell, only when items.json sets them: a page without them is as it was. */
-const twoKeys = (cfg: Config) => ({
-  ...(cfg.answerers === undefined ? {} : { answerers: cfg.answerers }),
-  ...(cfg.min_seconds === undefined ? {} : { min_seconds: cfg.min_seconds }),
-});
+const twoKeys = (cfg: Config) =>
+  R.pickBy(
+    { answerers: cfg.answerers, min_seconds: cfg.min_seconds },
+    R.isDefined,
+  );
 /** What a page shows: the questions, the practice and the items, blind, with their neutral ids. */
 function payloadOf(
   cfg: Config,
@@ -1192,7 +1193,7 @@ const itemShown = (i: Item, id: string, described: Described) => ({
   id,
   ...shownFields(i),
   ...rulesShown(i, described),
-  ...(i.answerers === undefined ? {} : { answerers: i.answerers }),
+  ...R.pickBy({ answerers: i.answerers }, R.isDefined),
 });
 export type Payload = ReturnType<typeof payloadOf>;
 /** Every id the key keeps (on the page now, or kept from an earlier build), with its source and group. */
@@ -1205,24 +1206,16 @@ function idsOf(cfg: Config, page: ReturnType<typeof itemsOnPage>): JsonObject {
     ]),
     ...cfg.items.map((i): [string, string] => [i.source_id, i.group]),
   ]);
-  const subsetOf = new Map(
-    cfg.items.flatMap((i) =>
-      i.answerers === undefined ? [] : [[i.source_id, i.answerers] as const],
-    ),
-  );
+  const bySource = R.indexBy(cfg.items, (i) => i.source_id);
   const byId = [...page.ids].sort(([, a], [, b]) => byText(a, b));
-  return Object.fromEntries(
-    byId.map(([sid, nid]) => {
-      const subset = subsetOf.get(sid);
-      return [
-        nid,
-        {
-          source_id: sid,
-          group: String(groupOf.get(sid)),
-          on_page: shown.has(nid),
-          ...(subset === undefined ? {} : { answerers: subset }),
-        },
-      ];
+  return R.pullObject(
+    byId,
+    ([, nid]) => nid,
+    ([sid, nid]) => ({
+      source_id: sid,
+      group: String(groupOf.get(sid)),
+      on_page: shown.has(nid),
+      ...R.pickBy({ answerers: bySource[sid]?.answerers }, R.isDefined),
     }),
   );
 }
@@ -1470,7 +1463,11 @@ function checkDocName(
   const hit = names.known.find(([n]) => n === name);
   if (hit === undefined) {
     return fail(
-      `${where}: the key does not know this ${NOUN[kind]}${who === undefined ? "" : ` for ${who}`} (${[...new Set(names.known.map(([n]) => n))].sort().join(", ")})`,
+      `${where}: the key does not know this ${NOUN[kind]}${who === undefined ? "" : ` for ${who}`} (${R.unique(
+        names.known.map(([n]) => n),
+      )
+        .sort()
+        .join(", ")})`,
     );
   }
   if (!names.onPage.includes(name)) {
@@ -1549,6 +1546,8 @@ function checkDocAnswers(
  */
 function checkDump(dump: Json, key: Key): asserts dump is JsonObject {
   checkDumpShape(dump);
+  // A page without answerers knows one set of names; each answerer has their own.
+  const plain = knownNames(key, {});
   for (const kind of COLLECTIONS) {
     const collection = dump[kind];
     for (const [docId, doc] of sortedEntries(
@@ -1556,7 +1555,9 @@ function checkDump(dump: Json, key: Key): asserts dump is JsonObject {
     )) {
       const where = `${kind}/${docId}`;
       const named = answererOf(where, docId, key);
-      const names = knownNames(key, named)[kind];
+      const names = (named.who === undefined ? plain : knownNames(key, named))[
+        kind
+      ];
       const questions = checkDocName(where, named, kind, names);
       checkDocFields(where, doc, kind, names.fields);
       checkDocAnswers(where, doc, questions);
@@ -1668,12 +1669,13 @@ function answerOf(doc: JsonObject, ctx: Ctx) {
     source: textOf(doc["source"]),
     saved_at: doc["savedAt"] ?? null,
     // Only a page built with `min_seconds` stores how long the item was on screen.
-    ...(ctx.key.min_seconds === undefined
-      ? {}
-      : { seconds: doc["seconds"] ?? null }),
+    ...R.pick({ seconds: doc["seconds"] ?? null }, secondsOf(ctx.key)),
   };
 }
 type Answer = ReturnType<typeof answerOf>;
+/** The `seconds` field, on a page built with `min_seconds`; none on any other. */
+const secondsOf = (key: Key): readonly "seconds"[] =>
+  key.min_seconds === undefined ? [] : ["seconds"];
 /** One item of the labels file of a page without answerers. */
 const labelOf = (nid: string, meta: KeyEntry, doc: JsonObject, ctx: Ctx) => ({
   id: nid,
@@ -1780,9 +1782,7 @@ function exportPractice(
 ): void {
   const p = key.practice;
   if (p === undefined) return;
-  const rounds = Object.entries(roundsIn(p)).sort(
-    ([a], [b]) => Number(a) - Number(b),
-  );
+  const rounds = R.sortBy(R.entries(roundsIn(p)), ([r]) => Number(r));
   (key.answerers ?? [undefined]).forEach((who) => {
     rounds.forEach(([round, expected]) => {
       exportRound(
@@ -1821,11 +1821,10 @@ function exportRound(
   const missed = items.filter((i) => !i.matched).map((i) => i.id);
   const matched = items.length - missed.length;
   const path = join(at.target, practiceFile(study, round, at.day, at.who));
-  const answerer = at.who === undefined ? {} : { answerer: at.who };
   writeJson(path, {
     study,
     round,
-    ...answerer,
+    ...R.pickBy({ answerer: at.who }, R.isDefined),
     exported: at.day,
     matched,
     total: items.length,
@@ -1859,7 +1858,7 @@ const groupsFor = (
 ) =>
   ctx.allowed.familiarity.length
     ? groupsOf(
-        [...new Set(onPage.map(([, m]) => m.group))],
+        R.unique(onPage.map(([, m]) => m.group)),
         dump["groups"],
         ctx.allowed,
         prefix,
@@ -1897,9 +1896,7 @@ function answererLabelsOf(
     source_id: meta.source_id,
     group: meta.group,
     answerers: shownTo(all, meta),
-    by_answerer: Object.fromEntries(
-      shownTo(all, meta).map((who) => [who, docFor(who, nid)]),
-    ),
+    by_answerer: R.fromKeys(shownTo(all, meta), (who) => docFor(who, nid)),
   }));
   return {
     study: ctx.key.study,
@@ -1907,8 +1904,8 @@ function answererLabelsOf(
     questions: ctx.key.questions,
     answerers: all,
     items,
-    by_answerer: Object.fromEntries(
-      all.map((who) => [who, tallyOf({ who, all }, onPage, dump, ctx)]),
+    by_answerer: R.fromKeys(all, (who) =>
+      tallyOf({ who, all }, onPage, dump, ctx),
     ),
   };
 }
@@ -1932,7 +1929,7 @@ function reportAnswerers(
   out: ReturnType<typeof answererLabelsOf>,
   allowed: Allowed,
 ): void {
-  Object.entries(out.by_answerer).forEach(([who, t]) => {
+  R.forEachObj(out.by_answerer, (t, who) => {
     reportLabels(
       out.items.flatMap((i) => {
         const a = i.by_answerer[who];
@@ -1941,9 +1938,7 @@ function reportAnswerers(
       allowed,
     );
     reportGroups(
-      Object.fromEntries(
-        Object.entries(t.groups).map(([g, v]) => [`${who}${SEP}${g}`, v]),
-      ),
+      R.mapKeys(t.groups, (g) => `${who}${SEP}${g}`),
       allowed,
     );
   });
@@ -1983,7 +1978,7 @@ function reportExport(
 ): void {
   if ("by_answerer" in out) {
     say(
-      `wrote ${path}: ${Object.entries(out.by_answerer)
+      `wrote ${path}: ${R.entries(out.by_answerer)
         .map(([who, t]) => `${who}: ${completeLine(t)}`)
         .join("; ")}`,
     );

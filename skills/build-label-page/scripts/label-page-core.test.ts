@@ -6,6 +6,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import * as R from "remeda";
 import { test } from "vitest";
 import { z } from "zod";
 import {
@@ -285,6 +286,14 @@ function withoutItemAnswerers(doc: DocObject): DocObject {
   assert.ok(isObject(out));
   return out;
 }
+/**
+ * A field whose absence takes another with it: familiarity_question asks nothing unless familiarity
+ * is on, and an item's answerers name the page's.
+ */
+const RELAX: Partial<Record<string, (doc: DocObject) => DocObject>> = {
+  familiarity: (doc) => R.omit(doc, ["familiarity_question"]),
+  answerers: withoutItemAnswerers,
+};
 
 /** Spoil `leaf` each way in `badCases`; every one must stop the build and name the path. */
 function expectRefused(leaf: Leaf): void {
@@ -301,19 +310,9 @@ function expectRefused(leaf: Leaf): void {
   });
   if (!leaf.node.required && !leaf.member) {
     const absent = spoil(leaf.path, undefined);
-    // familiarity_question asks nothing unless familiarity is on, and an item's answerers name the
-    // page's: each pair leaves together.
     const r = tryBuild(
       `schema-${leaf.path.replace(/\W/g, "_")}-absent`,
-      leaf.path === "familiarity"
-        ? Object.fromEntries(
-            Object.entries(absent).filter(
-              ([k]) => k !== "familiarity_question",
-            ),
-          )
-        : leaf.path === "answerers"
-          ? withoutItemAnswerers(absent)
-          : absent,
+      (RELAX[leaf.path] ?? R.identity())(absent),
     );
     assert.equal(r.status, 0, `${leaf.path} is optional: ${r.out}`);
   }

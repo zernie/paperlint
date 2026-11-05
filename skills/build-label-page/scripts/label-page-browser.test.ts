@@ -12,6 +12,7 @@ import {
 } from "playwright-core";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import * as R from "remeda";
 import { afterAll, test } from "vitest";
 import { z } from "zod";
 import { chromiumPath } from "../../../test/chromium.ts";
@@ -622,9 +623,7 @@ async function served(page: Page, html: string): Promise<void> {
   await page.goto("http://label.test/");
 }
 const prefixedPractice = (who: string) =>
-  Object.fromEntries(
-    Object.entries(PRACTICE_DONE).map(([k, v]) => [`${who}~${k}`, v]),
-  );
+  R.mapKeys(PRACTICE_DONE, (k) => `${who}~${k}`);
 
 test(
   "🔴 without answerers the page asks nobody's name and writes the documents it always wrote, with no seconds",
@@ -663,7 +662,7 @@ const TWO_PAGE = (over: Record<string, unknown> = {}) =>
     answerers: ["author", "second"],
     items: ITEMS.slice(0, 3)
       .map(approvalCard)
-      .map((i, n) => (n === 2 ? { ...i, answerers: ["author"] } : i)),
+      .map((i, n) => (n === 2 ? R.merge(i, { answerers: ["author"] }) : i)),
     ...over,
   });
 

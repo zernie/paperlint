@@ -6,6 +6,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import * as R from "remeda";
 import { test } from "vitest";
 import { z } from "zod";
 import {
@@ -19,9 +20,10 @@ import {
 } from "../../../test/label-page-kit.ts";
 
 /** Four items: three shown to both answerers, the fourth to `author` only. */
-const FOUR = ITEMS.slice(0, 4).map((i, n) =>
-  n === 3 ? { ...i, answerers: ["author"] } : i,
-);
+const FOUR = [
+  ...ITEMS.slice(0, 3),
+  R.merge(ITEMS[3], { answerers: ["author"] }),
+];
 const TWO = (over: Record<string, unknown> = {}) =>
   config({ answerers: ["author", "second"], items: FOUR, ...over });
 
@@ -43,7 +45,7 @@ const buildAt = (dir: string) =>
   run(["build", join(dir, "items.json"), join(dir, "out")]);
 /** The neutral id of the item drawn from `case-<n>`. */
 const nidOf = (dir: string, n: number): string => {
-  const hit = Object.entries(keyOf(dir).ids).find(
+  const hit = R.entries(keyOf(dir).ids).find(
     ([, v]) => v.source_id === `case-${String(1000 + n)}`,
   );
   assert.ok(hit !== undefined);
@@ -53,7 +55,7 @@ const dumpAt = (dir: string, dump: unknown): void => {
   writeFileSync(join(dir, "dump.json"), JSON.stringify(dump));
 };
 const prefixed = (who: string, docs: Record<string, unknown>) =>
-  Object.fromEntries(Object.entries(docs).map(([k, v]) => [`${who}~${k}`, v]));
+  R.mapKeys(docs, (k) => `${who}~${k}`);
 
 test("🔴 build refuses answerers that two people could not tell apart, and an item's subset naming someone unknown", () => {
   const cases: readonly (readonly [string, Record<string, unknown>, string])[] =
@@ -122,16 +124,19 @@ test("🔴 the key carries the answerers, each item's own subset and min_seconds
 const exported = (
   answers: Record<string, string | null>,
   more: Record<string, unknown> = {},
-) => ({
-  answers,
-  invalid_answers: {},
-  reasons: {},
-  unexplained: [],
-  complete: Object.values(answers).every((v) => v !== null),
-  source: "page",
-  saved_at: null,
-  ...more,
-});
+) =>
+  R.merge(
+    {
+      answers,
+      invalid_answers: {},
+      reasons: {},
+      unexplained: [],
+      complete: Object.values(answers).every((v) => v !== null),
+      source: "page",
+      saved_at: null,
+    },
+    more,
+  );
 const YES = { label: "yes", boundary: "clear" };
 const NONE = { label: null, boundary: null };
 const noFamiliarity = { familiarity: null, invalid_familiarity: null };
@@ -152,20 +157,30 @@ test("🔴 without answerers or min_seconds, the key, the page data and the expo
   });
   const r = exportAt(dir);
   assert.equal(r.status, 0, r.out);
-  const items = [
-    {
-      id: a,
-      source_id: "case-1000",
-      group: "rust",
-      ...exported(YES, { saved_at: saved }),
-    },
-    {
-      id: b,
-      source_id: "case-1001",
-      group: "python",
-      ...exported(NONE, { source: null }),
-    },
-  ].sort((x, y) => (x.id < y.id ? -1 : 1));
+  // The labels list the items in id order.
+  const items = R.sortBy(
+    [
+      [
+        a,
+        exported(YES, {
+          id: a,
+          source_id: "case-1000",
+          group: "rust",
+          saved_at: saved,
+        }),
+      ],
+      [
+        b,
+        exported(NONE, {
+          id: b,
+          source_id: "case-1001",
+          group: "python",
+          source: null,
+        }),
+      ],
+    ] as const,
+    ([id]) => id,
+  ).map(([, item]) => item);
   assert.deepEqual(JSON.parse(labelsFile(dir)), {
     study: "demo-gold",
     exported: "2026-01-02",
@@ -173,13 +188,12 @@ test("🔴 without answerers or min_seconds, the key, the page data and the expo
     items,
     // Object keys compare in any order: deepEqual reads them as a set.
     groups: {
-      rust: {
-        ...noFamiliarity,
+      rust: R.merge(noFamiliarity, {
         familiarity: "well",
         source: "page",
         saved_at: null,
-      },
-      python: { ...noFamiliarity, source: null, saved_at: null },
+      }),
+      python: R.merge(noFamiliarity, { source: null, saved_at: null }),
     },
     complete_items: 1,
     invalid_items: 0,
@@ -258,16 +272,15 @@ test("🔴 export keeps each answerer's answers to an item apart, with the secon
 test("🔴 export counts, reports and scores the practice per answerer", () => {
   const { dir, out, file } = exportTwo();
   assert.deepEqual(
-    Object.entries(file.by_answerer).map(([w, c]) => [
-      w,
+    R.mapValues(file.by_answerer, (c) => [
       c.complete_items,
       c.total_items,
-      Object.keys(c.groups).sort(),
+      R.keys(c.groups).sort(),
     ]),
-    [
-      ["author", 2, 4, ["go", "python", "rust"]],
-      ["second", 1, 3, ["go", "python", "rust"]],
-    ],
+    {
+      author: [2, 4, ["go", "python", "rust"]],
+      second: [1, 3, ["go", "python", "rust"]],
+    },
   );
   assert.match(
     out,
@@ -333,7 +346,7 @@ test("🔴 export refuses a document of no answerer, of an unknown one, or of an
       "seconds",
       {
         answers: {
-          [`author~${a}`]: { ...doc, seconds: "long" },
+          [`author~${a}`]: R.merge(doc, { seconds: "long" }),
         },
       },
       `answers/author~${a}/seconds: 'long' — must be a whole number of seconds or null`,
