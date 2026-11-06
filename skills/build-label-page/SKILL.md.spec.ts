@@ -179,6 +179,16 @@ invents a question or an answer; the ids and \`key.json\` are the same with or w
 [\`references/closed-choice-generator.md\`](references/closed-choice-generator.md), "A second
 language for the page's own words".
 
+## A source tag above each block
+
+When the labeller must tell where a block's text came from (copied from a repository, written by the
+model under test, restated by an earlier labelling model, counted by the script), the page's
+\`"sources": {"repo": "From the repository", …}\` names the tags, in colour order (at most five), and
+\`from\` on a \`quote\`, a \`situation\` (its summary) or an \`excerpt\` (\`caption_from\` for its caption)
+puts one above that block. The build refuses an unknown id, a dead entry and a tag over a text the card
+lacks. [\`references/closed-choice-generator.md\`](references/closed-choice-generator.md), "A source tag
+above each block".
+
 ## When the page misbehaves
 
 Look at what the store holds (\`ArtifactData\` \`list\`) before changing anything: the page may be fine

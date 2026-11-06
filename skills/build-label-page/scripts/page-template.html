@@ -133,6 +133,14 @@ button.term code { background: transparent; border: 0; padding: 0; }
 #tip .tip-arrow { position: absolute; width: 10px; height: 10px; background: var(--surface); transform: rotate(45deg); }
 #tip.below .tip-arrow { top: -6px; border-left: 1px solid var(--accent); border-top: 1px solid var(--accent); }
 #tip.above .tip-arrow { bottom: -6px; border-right: 1px solid var(--accent); border-bottom: 1px solid var(--accent); }
+/* A source tag (#400): a small pill right above the block it names. The colour is the id's place in the
+   page's `sources`, one of five tokens of :root; text and edge are the colour, the fill a faint wash of it. */
+.tagged { display: flex; flex-direction: column; gap: 6px; }
+.tag { align-self: flex-start; font-size: 0.7rem; line-height: 1.2; letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 500; padding: 3px 9px; border-radius: 999px; color: var(--tag); border: 1px solid var(--tag);
+  background: color-mix(in srgb, var(--tag) 14%, var(--bg)); }
+.tag.s0 { --tag: var(--accent); } .tag.s1 { --tag: var(--good); } .tag.s2 { --tag: var(--mark); }
+.tag.s3 { --tag: var(--bad); } .tag.s4 { --tag: var(--text); }
 .rulebox { display: flex; flex-direction: column; gap: 8px; }
 .clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 /* The clamp cuts at the padding box, so a code block's bottom padding is a border: no fourth line peeks in. */
@@ -537,6 +545,18 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     n.setAttribute("data-test-meta", JSON.stringify(meta || {}));
     return n;
   }
+  // A block under its source tag (#400): the block itself when the page has no `sources` or the block names none.
+  // The tag shows the label in the language picked, else the page's own; its colour is the id's place in `sources`.
+  function tagged(block, id, kind) {
+    if (!id || !DATA.sources) return block;
+    var at = DATA.sources.map(function (s) { return s.id; }).indexOf(id);
+    var own = state.lang !== DATA.lang && DATA.translations ? DATA.translations[state.lang].sources : null;
+    var tag = mark(el("span", "tag s" + at, (own && own[id]) || DATA.sources[at].label), "source-tag", { source: id, block: kind });
+    var wrap = el("div", "tagged");
+    wrap.appendChild(tag);
+    wrap.appendChild(block);
+    return wrap;
+  }
   // Text with `backticks` shown as code spans; everything stays textContent, so nothing is parsed as HTML.
   function rich(tag, cls, text) {
     var n = el(tag, cls);
@@ -763,7 +783,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       } else if (!ex.annotation) r.code.appendChild(el("span", "this", ex.mark_label || "\u25c0 this line"));
     });
     box.appendChild(pre);
-    if (ex.caption) box.appendChild(rich("p", "said", ex.caption));
+    if (ex.caption) box.appendChild(tagged(rich("p", "said", ex.caption), ex.caption_from, "caption"));
     return box;
   }
   // ── terms with a note (#392): a dotted term opens ONE floating note, anchored to it ─────────────
@@ -964,7 +984,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   // A card's quote comes first, under its title: the words asked about, then the code they are about.
   function evidence(card, item, ctx) {
     if (item.title) card.appendChild(rich("h3", "", item.title));
-    if (item.quote) card.appendChild(quoteBlock(item, ctx));
+    if (item.quote) card.appendChild(tagged(quoteBlock(item, ctx), item.quote.from, "quote"));
     if (item.body !== undefined) {
       var body = rich("p", "body", item.body);
       card.appendChild(words().labels.body ? row(words().labels.body, body) : body);
@@ -983,8 +1003,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     }
     if (item.file) card.appendChild(row("File", rich("p", "", item.file)));
     if (item.context) card.appendChild(rich("p", "muted", item.context));
-    if (item.situation && item.situation.summary) card.appendChild(situated("p", "situation", item.situation.summary, item.situation.line));
-    if (item.excerpt) card.appendChild(excerptBlock(item.excerpt, ctx));
+    if (item.situation && item.situation.summary) card.appendChild(tagged(situated("p", "situation", item.situation.summary, item.situation.line), item.situation.from, "situation"));
+    if (item.excerpt) card.appendChild(tagged(excerptBlock(item.excerpt, ctx), item.excerpt.from, "excerpt"));
   }
   function labelOf(q, v) {
     var o = q.options.filter(function (x) { return x.value === v; })[0];

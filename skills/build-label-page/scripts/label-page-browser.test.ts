@@ -1000,9 +1000,10 @@ async function onV7Page(
     cardOf: (sourceId: string) => Promise<Locator>,
   ) => Promise<void>,
   withTime = false,
+  cfg: Record<string, unknown> = V7_CONFIG,
 ): Promise<void> {
   const { page: html, key } = build(
-    setup(name, withTime ? V7_CONFIG : R.omit(V7_CONFIG, ["min_seconds"])),
+    setup(name, withTime ? cfg : R.omit(cfg, ["min_seconds"])),
   );
   const done = ["forbid", "allow", "elsewhere"];
   const page = await (
@@ -1632,6 +1633,131 @@ test(
       ],
       ["en", "de"],
     );
+  },
+  BROWSER_TEST_MS,
+);
+
+const TAG_LABELS = {
+  repo: "From the repository",
+  ours: "Our restatement",
+  model: "Written by the model under test",
+  count: "Counted by our script",
+};
+const TAG_LABELS_RU = {
+  repo: "Из репозитория",
+  ours: "Пересказ нашей модели",
+  model: "Написано проверяемой моделью",
+  count: "Посчитано нашим скриптом",
+};
+const Raw = z.record(z.string(), z.unknown());
+/** A card's block as the fixture has it, with more fields. */
+const withIn = (
+  card: Record<string, unknown>,
+  block: string,
+  more: object,
+) => ({
+  ...card,
+  [block]: { ...Raw.parse(card[block]), ...more },
+});
+/** The v7 fixture with tags: the docstring card has all four kinds, the call card a quote tag only, the depth card none. */
+const TAGGED_CONFIG = {
+  ...V7_CONFIG,
+  sources: TAG_LABELS,
+  translations: { ru: { ...Raw.parse(RU_RAW), sources: TAG_LABELS_RU } },
+  items: V7_CONFIG.items.map((raw, n) => {
+    const card = Raw.parse(raw);
+    return n === 0
+      ? withIn(
+          withIn(withIn(card, "quote", { from: "repo" }), "situation", {
+            from: "ours",
+            summary: "A reviewer objected to this line.",
+          }),
+          "excerpt",
+          {
+            from: "model",
+            caption: "Counted over the file.",
+            caption_from: "count",
+          },
+        )
+      : n === 1
+        ? withIn(card, "quote", { from: "ours" })
+        : card;
+  }),
+};
+const SourceTag = z.object({ source: z.string(), block: z.string() });
+/** Each source tag of a card: its values and its text. */
+const tagsOn = async (card: Locator) =>
+  Promise.all(
+    (await allByKind(card, "source-tag")).map(async (t) => ({
+      ...SourceTag.parse(t.meta),
+      text: await t.loc.textContent(),
+    })),
+  );
+/** How far a tag's bottom edge is above the top of the block it tags (negative: not above). */
+const gapAbove = async (tag: Locator, block: Locator) => {
+  const [t, b] = [await tag.boundingBox(), await block.boundingBox()];
+  assert.ok(t !== null && b !== null);
+  return b.y - (t.y + t.height);
+};
+
+test(
+  "🔴 each tagged block gets a tag with its source id right above it, the label follows the language, and an untagged card has none",
+  async () => {
+    await onV7Page(
+      "browser-v7-source-tags",
+      async (page, cardOf) => {
+        const docstring = await cardOf("card-docstring");
+        assert.deepEqual(await tagsOn(docstring), [
+          { source: "repo", block: "quote", text: TAG_LABELS.repo },
+          { source: "ours", block: "situation", text: TAG_LABELS.ours },
+          { source: "model", block: "excerpt", text: TAG_LABELS.model },
+          { source: "count", block: "caption", text: TAG_LABELS.count },
+        ]);
+        assert.deepEqual(await tagsOn(await cardOf("card-call")), [
+          { source: "ours", block: "quote", text: TAG_LABELS.ours },
+        ]);
+        // Guards: a card whose blocks name no source has no tag at all.
+        assert.deepEqual(await tagsOn(await cardOf("card-depth")), []);
+        const tags = docstring.getByTestId("source-tag");
+        const gaps = [
+          await gapAbove(tags.nth(0), docstring.getByTestId("quote")),
+          await gapAbove(tags.nth(2), docstring.getByTestId("excerpt-path")),
+        ];
+        // Guards: the tag sits above its block, close to it, never beside or below.
+        assert.ok(
+          gaps.every((g) => g >= 0 && g < 16),
+          JSON.stringify(gaps),
+        );
+        const switchTo = async (lang: string) =>
+          (await allByKind(page, "lang-option"))
+            .find(
+              (o) => z.object({ lang: z.string() }).parse(o.meta).lang === lang,
+            )
+            ?.loc.click();
+        await switchTo("ru");
+        assert.deepEqual(
+          (await tagsOn(await cardOf("card-docstring"))).map((t) => t.text),
+          [
+            TAG_LABELS_RU.repo,
+            TAG_LABELS_RU.ours,
+            TAG_LABELS_RU.model,
+            TAG_LABELS_RU.count,
+          ],
+        );
+      },
+      false,
+      TAGGED_CONFIG,
+    );
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "a page without sources draws no source tag",
+  async () => {
+    await onV7Page("browser-v7-no-source-tags", async (page) => {
+      assert.equal(await page.getByTestId("source-tag").count(), 0);
+    });
   },
   BROWSER_TEST_MS,
 );
