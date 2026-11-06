@@ -347,7 +347,7 @@ out, the page is exactly as above.
 For a labeller who cannot tell where a block's text came from: some of it copied from a repository,
 some written by a model under test, some by an earlier labelling model, some counted by the study's
 script (#400). A small coloured tag above the block says which. All fields are optional; a page
-without `sources` is byte for byte as without this section.
+without `sources` shows no tag, and its config, store documents and key are unchanged.
 
 ```jsonc
 {
