@@ -1325,10 +1325,11 @@ function translationsOf(cfg: Config) {
   });
 }
 type Translated = ReturnType<typeof translationsOf>;
-/** The languages, only when items.json has translations: a page without them is as it was. */
+/** The languages: the page's own when items.json names it, and with translations always (English when unnamed).
+ *  A page that names neither is as it was. */
 const languagesOf = (cfg: Config, translated: Translated) =>
   cfg.translations === undefined
-    ? {}
+    ? R.pickBy({ lang: cfg.lang }, R.isDefined)
     : { lang: cfg.lang ?? BASE_LANG, translations: translated };
 
 // ── ids: neutral, in an order fixed by the seed, kept across rebuilds ─────────────────────────

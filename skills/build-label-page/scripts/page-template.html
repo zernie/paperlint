@@ -189,7 +189,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   // ── the page's own words, in the language picked (DATA.translations, #394) ─────────────────
   // Only the page's words change: the quote, the code and every note on a card stay as built.
   var LANGS = DATA.translations ? [DATA.lang].concat(Object.keys(DATA.translations)) : [];
-  state.lang = DATA.lang;
+  state.lang = DATA.lang || "en";
   try {
     var said = localStorage.getItem("label-lang");
     if (LANGS.indexOf(said) !== -1) state.lang = said;

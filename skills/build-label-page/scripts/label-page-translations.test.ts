@@ -122,6 +122,17 @@ test("🔴 a translation hands the page each language's words whole, and leaves 
   assert.equal(keyOf(translated), keyOf(plain));
 });
 
+test("🔴 a page that names its language without translations keeps it, and still carries no translations", () => {
+  const page = build(setup("lang-only", config({ lang: "de" }))).page;
+  assert.deepEqual(
+    [
+      z.object({ lang: z.string() }).loose().parse(dataOf(page)).lang,
+      dataKeys(page, ["lang", "translations"]),
+    ],
+    ["de", ["lang"]],
+  );
+});
+
 /** RU with an intro, a reason prompt on «no» and a card question naming the marked line. */
 const RU_FULL = {
   ...RU,

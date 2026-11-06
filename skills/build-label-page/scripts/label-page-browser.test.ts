@@ -1590,3 +1590,48 @@ test(
   },
   BROWSER_TEST_MS,
 );
+
+test(
+  "🔴 a page without translations names its own language on the document: the one it declares, else English",
+  async () => {
+    const htmlLang = async (cfg: Record<string, unknown>, dir: string) => {
+      const { page: html } = build(setup(dir, cfg));
+      const at = "http://label.test/";
+      const page = await (
+        await sharedBrowser()
+      ).newPage({ viewport: { width: 400, height: 800 } });
+      try {
+        await page.route("**/*", (r) =>
+          r.request().url() === at
+            ? r.fulfill({ contentType: "text/html; charset=utf-8", body: html })
+            : r.abort(),
+        );
+        await page.addInitScript(
+          STORE(
+            Object.fromEntries(
+              ["forbid", "allow", "elsewhere"].map((v, n) => [
+                `r1-P${String(n + 1)}`,
+                { answers: { forbid: v }, source: "page" },
+              ]),
+            ),
+            20,
+          ),
+        );
+        await page.goto(at, { waitUntil: "domcontentloaded" });
+        await page.getByTestId("item").first().waitFor();
+        return await page.evaluate(() => document.documentElement.lang);
+      } finally {
+        await page.context().close();
+      }
+    };
+    const plain = R.omit(V7_CONFIG, ["min_seconds"]);
+    assert.deepEqual(
+      [
+        await htmlLang(plain, "browser-v7-lang-none"),
+        await htmlLang({ ...plain, lang: "de" }, "browser-v7-lang-de"),
+      ],
+      ["en", "de"],
+    );
+  },
+  BROWSER_TEST_MS,
+);
