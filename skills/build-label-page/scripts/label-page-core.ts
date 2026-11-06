@@ -280,7 +280,12 @@ const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
   ),
   [READINGS_FIELD]: obj({ a: string(), b: string() }, true, false),
   file: string(false),
-  situation: optional({ summary: string(false), question: string() }),
+  situation: optional({
+    summary: string(false),
+    question: string(),
+    // the source tag over the summary (#400); the question is the page's own and gets none
+    from: string(false),
+  }),
   excerpt: optional({
     file: string(false),
     // the file's language, after its path: "path · Python"
@@ -304,8 +309,15 @@ const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
     annotation: string(false),
     caption: string(false),
     mark_label: string(false),
+    // source tags (#400): over the code box, and over the caption under it
+    from: string(false),
+    caption_from: string(false),
   }),
-  quote: optional({ text: string(), source: string(false) }),
+  quote: optional({
+    text: string(),
+    source: string(false),
+    from: string(false),
+  }),
   terms: array(
     obj({
       term: string(),
@@ -473,6 +485,8 @@ const TRANSLATION = obj({
   labels: LABELS,
   // the first question as the cards with a `situation` ask it; `{n}` is the marked line's number
   situation_question: string(false),
+  // the labels of the page's `sources`, by id; one left out reads as in the page's own language
+  sources: mapping(string(), NAME_PATTERN, 1, false),
   questions: mapping(
     obj({
       text: string(),
@@ -508,6 +522,8 @@ const configSchema = (kind: Kind): SchemaNode =>
     practice: array(practiceSchema(kind), true, MIN_PRACTICE),
     practice_round: integer(false),
     labels: LABELS,
+    // the source tags a card's blocks carry (#400): id → the tag's label, in colour order
+    sources: mapping(string(), NAME_PATTERN, 1, false),
     // the language of the page's own words, and the same words in more languages, with a switch
     lang: string(false, NAME_PATTERN),
     translations: mapping(TRANSLATION, NAME_PATTERN, 1, false),
@@ -683,6 +699,7 @@ interface Blocks {
   readonly situation?: {
     readonly summary?: string;
     readonly question: string;
+    readonly from?: string;
   };
   readonly excerpt?: {
     readonly file?: string;
@@ -693,8 +710,14 @@ interface Blocks {
     readonly annotation?: string;
     readonly caption?: string;
     readonly mark_label?: string;
+    readonly from?: string;
+    readonly caption_from?: string;
   };
-  readonly quote?: { readonly text: string; readonly source?: string };
+  readonly quote?: {
+    readonly text: string;
+    readonly source?: string;
+    readonly from?: string;
+  };
   readonly terms?: readonly Term[];
   readonly answer_notes?: Readonly<
     Record<string, Readonly<Record<string, string>>>
@@ -764,6 +787,7 @@ interface Config {
   readonly practice: readonly Practice[];
   readonly practice_round?: number;
   readonly labels?: Readonly<Record<string, string>>;
+  readonly sources?: Readonly<Record<string, string>>;
   readonly lang?: string;
   readonly translations?: Readonly<Record<string, Translation>>;
   readonly items: readonly Item[];
@@ -788,6 +812,7 @@ interface Translation {
   readonly intro?: string;
   readonly labels?: Readonly<Record<string, string>>;
   readonly situation_question?: string;
+  readonly sources?: Readonly<Record<string, string>>;
   readonly questions: Readonly<Record<string, QuestionWords>>;
 }
 /** The config is typed by passing CONFIG_SCHEMA: `checkValue` refuses (throws) on any departure. */
@@ -1056,6 +1081,65 @@ function checkBlocks(cfg: Config): void {
       );
   });
 }
+// ── source tags (#400) ────────────────────────────────────────────────────────────────────────
+/** The colours the page has for tags (`.tag.s0` to `.tag.s4` in page-template.html), in `sources` order. */
+export const SOURCE_COLOURS = 5;
+/** Each tag a card asks for: the path of the field that names it, the id it names, the text it sits over. */
+const tagsOf = (at: string, card: Card) => [
+  ...(card.quote?.from === undefined
+    ? []
+    : [{ at: `${at}.quote.from`, id: card.quote.from, over: "text" }]),
+  ...(card.situation?.from === undefined
+    ? []
+    : [
+        {
+          at: `${at}.situation.from`,
+          id: card.situation.from,
+          over: card.situation.summary,
+        },
+      ]),
+  ...(card.excerpt?.from === undefined
+    ? []
+    : [{ at: `${at}.excerpt.from`, id: card.excerpt.from, over: "box" }]),
+  ...(card.excerpt?.caption_from === undefined
+    ? []
+    : [
+        {
+          at: `${at}.excerpt.caption_from`,
+          id: card.excerpt.caption_from,
+          over: card.excerpt.caption,
+        },
+      ]),
+];
+/**
+ * What the schema cannot say about source tags: a tag names an id of the page's `sources`, over a
+ * text the card has, the page has colours for its ids, and an id nothing uses is a dead entry.
+ */
+function checkSources(cfg: Config): void {
+  const tags = cardsOf(cfg).flatMap(([at, card]) => tagsOf(at, card));
+  const ids = Object.keys(cfg.sources ?? {});
+  if (ids.length > SOURCE_COLOURS)
+    fail(
+      `sources: ${String(ids.length)} ids, and the page has ${String(SOURCE_COLOURS)} colours for tags — merge ids, or drop one`,
+    );
+  tags.forEach((t) => {
+    if (cfg.sources === undefined)
+      fail(
+        `${t.at}: names the source ${repr(t.id)}, and the page has no \`sources\` — add them, or take the tag out`,
+      );
+    else if (!has(cfg.sources, t.id))
+      fail(`${t.at}: ${repr(t.id)} is not in \`sources\` (${ids.join(", ")})`);
+    if (t.over === undefined)
+      fail(
+        `${t.at}: tags a text the card does not have — add it, or take the tag out`,
+      );
+  });
+  const dead = ids.find((id) => !tags.some((t) => t.id === id));
+  if (dead !== undefined)
+    fail(
+      `sources.${dead}: no item or practice item names it — a tag nothing carries is a dead entry`,
+    );
+}
 /**
  * The texts a term may open a note from, the words asked about first: the quote, its source, then
  * the excerpt's annotation. The page looks a term up in the same texts, split the same way at
@@ -1309,6 +1393,13 @@ function translationsOf(cfg: Config) {
       t.intro,
     );
     checkSituationWords(cfg, at, t);
+    const tagStray = Object.keys(t.sources ?? {}).find(
+      (id) => !has(cfg.sources ?? {}, id),
+    );
+    if (tagStray !== undefined)
+      fail(
+        `${at}.sources.${tagStray}: not one of the page's \`sources\` (${Object.keys(cfg.sources ?? {}).join(", ") || "none"})`,
+      );
     const ids = cfg.questions.map((q) => q.id);
     const stray = Object.keys(t.questions).find((id) => !ids.includes(id));
     if (stray !== undefined)
@@ -1319,7 +1410,10 @@ function translationsOf(cfg: Config) {
       title: t.title ?? cfg.title,
       intro: t.intro ?? "",
       labels: { ...DEFAULT_LABELS, ...cfg.labels, ...t.labels },
-      ...R.pickBy({ situation_question: t.situation_question }, R.isDefined),
+      ...R.pickBy(
+        { situation_question: t.situation_question, sources: t.sources },
+        R.isDefined,
+      ),
       questions: cfg.questions.map((q) => questionIn(q, t, at)),
     };
   });
@@ -1397,7 +1491,10 @@ const situationShown = (item: Card) =>
     ? {}
     : {
         situation: {
-          ...R.pickBy({ summary: item.situation.summary }, R.isDefined),
+          ...R.pickBy(
+            { summary: item.situation.summary, from: item.situation.from },
+            R.isDefined,
+          ),
           question: item.situation.question,
           ...(usesLine(item) ? { line: lineOf(item) } : {}),
         },
@@ -1498,6 +1595,16 @@ const DEFAULT_LABELS: Readonly<Record<string, string>> = {
   how_to: "📖 How to answer",
   for_example: "For example: ",
 };
+/** The tags' ids and labels in colour order, only when items.json has `sources`: a page without them is as it was. */
+const sourcesShown = (cfg: Config) =>
+  cfg.sources === undefined
+    ? {}
+    : {
+        sources: Object.entries(cfg.sources).map(([id, label]) => ({
+          id,
+          label,
+        })),
+      };
 /** The answerers and the dwell, only when items.json sets them: a page without them is as it was. */
 const twoKeys = (cfg: Config) =>
   R.pickBy(
@@ -1518,6 +1625,7 @@ function payloadOf(
     title: cfg.title,
     intro: cfg.intro ?? "",
     labels: { ...DEFAULT_LABELS, ...cfg.labels },
+    ...sourcesShown(cfg),
     groups: used.map((g) => ({ id: g, label: String(cfg.groups[g]) })),
     familiarity_question: asksFamiliarity(cfg)
       ? (cfg.familiarity_question ?? "How well do you know {group}?")
@@ -1623,6 +1731,7 @@ export function prepareBuild(configPath: string, outDir: string) {
   checkUnits(cfg);
   checkBlocks(cfg);
   checkCardText(cfg);
+  checkSources(cfg);
   checkNoSourceShown(cfg);
   const translated = translationsOf(cfg);
   const described = describeRules(cfg, dirname(configPath));
