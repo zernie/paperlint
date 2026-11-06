@@ -8,6 +8,7 @@ import { test } from "vitest";
 import { z } from "zod";
 import {
   ITEMS,
+  PRACTICE,
   build,
   config,
   run,
@@ -125,7 +126,7 @@ const PRACTICE_TAGGED = config({
       expected: { label: "yes", boundary: "clear" },
       why: "w",
     },
-    ...(config()["practice"] as readonly Record<string, unknown>[]).slice(1),
+    ...PRACTICE.slice(1),
   ],
 });
 

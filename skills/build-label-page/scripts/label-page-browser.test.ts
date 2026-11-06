@@ -1663,7 +1663,7 @@ const withIn = (
 const TAGGED_CONFIG = {
   ...V7_CONFIG,
   sources: TAG_LABELS,
-  translations: { ru: { ...RU_RAW, sources: TAG_LABELS_RU } },
+  translations: { ru: { ...Raw.parse(RU_RAW), sources: TAG_LABELS_RU } },
   items: V7_CONFIG.items.map((raw, n) => {
     const card = Raw.parse(raw);
     return n === 0

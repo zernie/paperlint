@@ -1373,6 +1373,21 @@ function questionIn(q: Question, t: Translation, at: string): Question {
     options,
   };
 }
+/** A translated tag label names an id of the page's `sources`. */
+function checkTranslatedSources(cfg: Config, at: string, t: Translation): void {
+  const known = Object.keys(cfg.sources ?? {});
+  const stray = Object.keys(t.sources ?? {}).find((id) => !known.includes(id));
+  if (stray !== undefined)
+    fail(
+      `${at}.sources.${stray}: not one of the page's \`sources\` (${known.join(", ") || "none"})`,
+    );
+}
+/** The translated words a translation may leave out. */
+const optionalWords = (t: Translation) =>
+  R.pickBy(
+    { situation_question: t.situation_question, sources: t.sources },
+    R.isDefined,
+  );
 /**
  * Every language of the page with its words whole, the translations checked: each covers every
  * question and answer of the page and names none it does not have, and gives an intro, a reason
@@ -1393,13 +1408,7 @@ function translationsOf(cfg: Config) {
       t.intro,
     );
     checkSituationWords(cfg, at, t);
-    const tagStray = Object.keys(t.sources ?? {}).find(
-      (id) => !has(cfg.sources ?? {}, id),
-    );
-    if (tagStray !== undefined)
-      fail(
-        `${at}.sources.${tagStray}: not one of the page's \`sources\` (${Object.keys(cfg.sources ?? {}).join(", ") || "none"})`,
-      );
+    checkTranslatedSources(cfg, at, t);
     const ids = cfg.questions.map((q) => q.id);
     const stray = Object.keys(t.questions).find((id) => !ids.includes(id));
     if (stray !== undefined)
@@ -1410,10 +1419,7 @@ function translationsOf(cfg: Config) {
       title: t.title ?? cfg.title,
       intro: t.intro ?? "",
       labels: { ...DEFAULT_LABELS, ...cfg.labels, ...t.labels },
-      ...R.pickBy(
-        { situation_question: t.situation_question, sources: t.sources },
-        R.isDefined,
-      ),
+      ...optionalWords(t),
       questions: cfg.questions.map((q) => questionIn(q, t, at)),
     };
   });
