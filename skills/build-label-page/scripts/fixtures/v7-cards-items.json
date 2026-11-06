@@ -1,0 +1,138 @@
+{
+  "study": "demo-words-forbid",
+  "kind": "labels",
+  "title": "Do the words forbid it",
+  "seed": 3,
+  "min_seconds": 10,
+  "groups": { "all": "Cards" },
+  "labels": { "place": "Card {n} of {total}", "wait": "Save · available after {s} seconds on this card" },
+  "questions": [
+    {
+      "id": "forbid",
+      "text": "Do these words forbid the marked line?",
+      "short": "do the words forbid it?",
+      "options": [
+        { "value": "forbid", "label": "Forbid", "icon": "⛔", "example": "«No print calls» and the line print(x)" },
+        { "value": "allow", "label": "Allow", "icon": "✅", "example": "«No print calls» and the line log.info(x)" },
+        { "value": "unsettled", "label": "The words don't settle it", "icon": "↔️", "example": "«Keep functions short» and a 30-line function" },
+        { "value": "elsewhere", "label": "The words are about something else", "icon": "🔀", "example": "«Use tabs» and a line about a database query" },
+        { "value": "cannot", "label": "I can't judge (say why)", "icon": "❔", "example": "a line in a language you do not read", "ask_why": "What stops you?" }
+      ]
+    }
+  ],
+  "practice": [
+    {
+      "quote": { "text": "No print calls in library code", "source": "`CONTRIBUTING.md`, line 4" },
+      "situation": { "question": "Do these words forbid line 3?" },
+      "excerpt": { "file": "lib/sum.py", "lang": "Python", "lines": [
+        { "n": 2, "text": "def total(xs):", "mark": false },
+        { "n": 3, "text": "    print(xs)", "mark": true }
+      ] },
+      "expected": { "forbid": "forbid" }, "why": "print is a print call, and lib/ is library code."
+    },
+    {
+      "quote": { "text": "No print calls in library code", "source": "`CONTRIBUTING.md`, line 4" },
+      "situation": { "question": "Do these words forbid line 3?" },
+      "excerpt": { "file": "lib/sum.py", "lang": "Python", "lines": [
+        { "n": 2, "text": "def total(xs):", "mark": false },
+        { "n": 3, "text": "    log.debug(xs)", "mark": true }
+      ] },
+      "expected": { "forbid": "allow" }, "why": "A log call is not a print call."
+    },
+    {
+      "quote": { "text": "Use tabs for indentation", "source": "`STYLE.md`, line 2" },
+      "situation": { "question": "Do these words forbid line 8?" },
+      "excerpt": { "file": "db/query.py", "lang": "Python", "lines": [
+        { "n": 8, "text": "rows = db.execute(sql)", "mark": true }
+      ] },
+      "expected": { "forbid": "elsewhere" }, "why": "The words are about indentation; the line is a query."
+    }
+  ],
+  "items": [
+    {
+      "source_id": "card-docstring", "group": "all",
+      "quote": { "text": "Docstrings use Google-style format", "source": "`.github/copilot-instructions.md`, line 67" },
+      "situation": { "question": "Do these words forbid line 48?" },
+      "excerpt": {
+        "file": "src/tables/merge.py", "lang": "Python",
+        "annotation": "Ruff rule `D413` reports: “Missing blank line after last section (\"Returns\")”",
+        "lines": [
+          { "n": 37, "text": "def merge_tables(", "mark": false, "context": true },
+          { "n": 40, "text": "    \"\"\"", "mark": false },
+          { "n": 41, "text": "    Merge the tables picked by the flags.", "mark": false },
+          { "n": 42, "text": "", "mark": false },
+          { "n": 43, "text": "    picks: For each table name, whether to keep its rows of each kind", "mark": false },
+          { "n": 44, "text": "        (kept, dropped), and which of the two to merge first.", "mark": false },
+          { "n": 45, "text": "    tables: Every table that can be merged.", "mark": false },
+          { "n": 46, "text": "        Columns needed: \"name\", \"kind\"", "mark": false },
+          { "n": 47, "text": "", "mark": false },
+          { "n": 48, "text": "    Returns:", "mark": true },
+          { "n": 49, "text": "        One table with the rows of every table picked.", "mark": false },
+          { "n": 50, "text": "    \"\"\"", "mark": false },
+          { "n": 51, "text": "    kinds_needed = {", "mark": false }
+        ]
+      },
+      "terms": [
+        { "term": "Ruff", "note": [{ "quote": "An extremely fast Python linter and code formatter, written in Rust.", "url": "https://docs.astral.sh/ruff/", "url_label": "Ruff docs" }] },
+        { "term": "D413", "note": [{ "title": "Ruff rule D413", "quote": "Checks for missing blank lines after the last section of a multiline docstring", "url": "https://docs.astral.sh/ruff/rules/missing-blank-line-after-last-section/", "url_label": "docs" }] },
+        { "term": "Google-style", "note": [
+          { "title": "Google style", "quote": "Each section begins with a heading line, which ends with a colon.", "example": "(e.g. `Args:`, `Returns:`, `Raises:`)", "url": "https://google.github.io/styleguide/pyguide.html#383-functions-and-methods", "url_label": "Google Python Style Guide, 3.8.3" },
+          { "title": "NumPy style, the other common one", "quote": "Each heading should be underlined in hyphens", "example": "(e.g. `Returns` with `-------` on the line under it)", "url": "https://numpydoc.readthedocs.io/en/latest/format.html#sections", "url_label": "numpydoc format guide" }
+        ] },
+        { "term": ".github/copilot-instructions.md", "note": [{ "quote": "Repository-wide custom instructions apply to all requests made in the context of a repository.", "url": "https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions", "url_label": "GitHub Docs" }] }
+      ],
+      "answer_notes": { "forbid": { "forbid": "like a config with rule D413 on, which flags it", "allow": "like a config without D413, which passes it" } }
+    },
+    {
+      "source_id": "card-call", "group": "all",
+      "quote": { "text": "Use cachedElement('elementId') instead of document.getElementById", "source": "`AGENTS.md`, line 7" },
+      "situation": { "question": "Do these words forbid line 22?" },
+      "excerpt": {
+        "file": "src/dom/cache.ts", "lang": "TypeScript",
+        "annotation": "calls `document.getElementById`",
+        "lines": [
+          { "n": 9, "text": "export const cachedElement = (id: string) => {", "mark": false, "context": true },
+          { "n": 19, "text": "    return hit", "mark": false },
+          { "n": 20, "text": "  }", "mark": false },
+          { "n": 21, "text": "", "mark": false },
+          { "n": 22, "text": "  const el = document.getElementById(id)", "mark": true },
+          { "n": 23, "text": "", "mark": false },
+          { "n": 24, "text": "  if (!el) {", "mark": false },
+          { "n": 25, "text": "    throw new TypeError(`No element with id \"${id}\"`)", "mark": false }
+        ]
+      },
+      "terms": [
+        { "term": "cachedElement", "note": [{ "says": "this project's own function, defined at line 9 of the file above; its comment reads", "quote": "A cache for DOM elements", "url": "https://example.com/src/dom/cache.ts#L3-L9", "url_label": "src/dom/cache.ts" }] },
+        { "term": "document.getElementById", "note": [{ "quote": "returns an Element object representing the element whose id property matches the specified string", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementById", "url_label": "MDN" }] },
+        { "term": "AGENTS.md", "note": [{ "quote": "a dedicated, predictable place to provide the context and instructions to help AI coding agents work on your project.", "url": "https://agents.md/", "url_label": "agents.md" }] }
+      ],
+      "answer_notes": { "forbid": { "forbid": "like a config that bans this call and checks this file", "allow": "like a config that bans this call but doesn't check this file" } }
+    },
+    {
+      "source_id": "card-depth", "group": "all",
+      "quote": { "text": "Avoid deep nesting (use early returns and guard clauses)", "source": "`CLAUDE.md`, line 85" },
+      "situation": { "question": "Do these words forbid line 279?" },
+      "excerpt": {
+        "file": "src/index/FileIndex.ts", "lang": "TypeScript", "gutter_header": "depth",
+        "annotation": "nested 4 blocks deep",
+        "lines": [
+          { "n": 22, "text": "export class FileIndex {", "mark": false, "context": true },
+          { "n": 257, "text": "  private onDeleted(uri: Uri): void {", "mark": false, "context": true },
+          { "n": 262, "text": "    try {", "mark": false, "context": true, "gutter": "1" },
+          { "n": 276, "text": "      if (entry.isDir) {", "mark": false, "gutter": "2" },
+          { "n": 277, "text": "        const prefix = `${rel}/`;", "mark": false },
+          { "n": 278, "text": "        for (const key of this.entries.keys()) {", "mark": false, "gutter": "3" },
+          { "n": 279, "text": "          if (key.startsWith(prefix)) {", "mark": true, "gutter": "4" },
+          { "n": 280, "text": "            this.entries.delete(key);", "mark": false },
+          { "n": 281, "text": "          }", "mark": false },
+          { "n": 282, "text": "        }", "mark": false }
+        ]
+      },
+      "terms": [
+        { "term": "guard clauses", "note": [{ "code": "function price(order) {\n  if (!order) return 0;\n  if (order.free) return 0;\n  if (order.staff) return staffPrice(order);\n  return listPrice(order);\n}", "url": "https://example.com/style-guide#guard-clauses", "url_label": "Style guide (example): guard clauses" }] },
+        { "term": "CLAUDE.md", "note": [{ "quote": "CLAUDE.md files are markdown files that give Claude persistent instructions for a project, your personal workflow, or your entire organization.", "url": "https://code.claude.com/docs/en/memory", "url_label": "Claude Code docs" }] }
+      ],
+      "answer_notes": { "forbid": { "forbid": "like a config with limit 3, which flags it", "allow": "like ESLint's default, limit 4, which passes it" } }
+    }
+  ]
+}

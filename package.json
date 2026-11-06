@@ -55,6 +55,7 @@
     "eslint-plugin-boundaries": "^7.2.0",
     "eslint-plugin-functional": "^10.0.1",
     "eslint-plugin-n": "^18.3.0",
+    "eslint-plugin-playwright": "^2.12.2",
     "eslint-plugin-project-structure": "^3.14.5",
     "eslint-plugin-sonarjs": "^4.2.1",
     "jsonc-parser": "^3.3.1",

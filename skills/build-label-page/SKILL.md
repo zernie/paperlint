@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:dce0979d7f187ae7 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:9d7a2c35df4e6a10 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -106,8 +106,10 @@ building. In one line each:
    It writes `label-page/page.html` and `label-page/key.json` (the only link from `G001` to the
    source id; it never goes on the page). `kind` (`approval`, `witness`, `labels`) is required,
    and each kind requires its card fields on every item and practice card. Any card may also carry
-   the generic content blocks (a code excerpt with a marked line, references, a list, a table), every
-   word on them from `items.json`, with the question right under the excerpt. `"preset":
+   the generic content blocks (a code excerpt with a marked line, a note under it and an extra
+   gutter column; the words asked about as a quote; tap-to-see notes on its terms; a sub-line under
+   each answer; references, a list, a table, none of them folded), every word on them from
+   `items.json`, with the question right under the excerpt. `"preset":
    "linter-config-witness"` is a narrow preset for comparing linter configs; the blocks underneath
    are generic. Written by hand, the page meets the requirements above.
 4. **Read it as the labeller, then look at it.** Read the page text once as a person who knows

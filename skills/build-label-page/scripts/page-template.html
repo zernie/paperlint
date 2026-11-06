@@ -82,19 +82,57 @@ pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line
   background: var(--good); margin-right: 8px; vertical-align: middle; }
 .status.missing { color: var(--mark); }
 .status.failed { color: var(--bad); }
-/* The content blocks (#380): a code excerpt with its line numbers and the marked line lit, references,
-   lists and tables folded away. A long text shows three lines and a «more». */
+/* The content blocks (#380, #392): a code excerpt with its line numbers, hidden ranges as ⋮ rows, an
+   optional extra gutter column and the marked line lit, with a review-style note under it; references,
+   lists and tables shown in place, never folded. A long text shows three lines and a «more». */
 a { color: var(--accent); }
 summary { cursor: pointer; color: var(--accent); min-height: 44px; display: flex; align-items: center; gap: 8px; }
 .situation { color: var(--strong); font-weight: 500; }
-pre.numbered { white-space: normal; padding: 8px 0; }
-pre.numbered .line { display: grid; grid-template-columns: 2ch 5ch 1fr; white-space: pre-wrap; padding: 0 10px 0 0; }
-/* The marked line reads as marked without its colour: a marker in the gutter and a label after the code. */
-pre.numbered .g { color: var(--mark); text-align: center; user-select: none; }
+.path { font-size: 0.8rem; color: var(--muted); }
+.path code, .anno code, .src code, blockquote.quote code, .opts .sub code { background: transparent; border: 0;
+  padding: 0; }
+pre.numbered { white-space: normal; padding: 8px 0; font-size: 12px; line-height: 1.45; border-radius: 12px; }
+pre.numbered .line { display: grid; grid-template-columns: 7ch 1fr; white-space: pre-wrap; padding: 0 10px 0 0; }
+pre.numbered.gutter .line { grid-template-columns: 7ch 5ch 1fr; }
+pre.numbered .c { color: var(--accent); text-align: center; font-weight: 500; user-select: none; }
+pre.numbered .hdr .c { font-family: var(--sans); font-size: 10px; color: var(--muted); font-weight: 400; }
+/* The marked line reads as marked without its colour: a marker before its number, and a label after
+   the code or the note under it. */
 pre.numbered .this { color: var(--mark); font-weight: 700; margin-left: 1ch; white-space: nowrap; user-select: none; }
 pre.numbered .n { color: var(--muted); text-align: right; padding-right: 1.5ch; user-select: none; }
-pre.numbered .hit { background: var(--mark-bg); }
-pre.numbered .hit .n { color: var(--mark); font-weight: 700; }
+pre.numbered .ctx .t, pre.numbered .gap .t { color: var(--muted); }
+pre.numbered .gap .t { font-family: var(--sans); font-size: 11px; }
+pre.numbered .hit { background: var(--mark-bg); box-shadow: inset 3px 0 0 var(--mark); }
+pre.numbered .hit .n, pre.numbered .hit .t { color: var(--mark); }
+.anno { position: relative; margin: 7px 8px 5px; padding: 6px 10px; border: 1px solid var(--accent); border-radius: 8px;
+  background: var(--bg); font-family: var(--sans); font-size: 14px; line-height: 1.4; color: var(--strong);
+  white-space: normal; }
+.anno-arrow { position: absolute; top: -6px; left: 30px; width: 10px; height: 10px; background: var(--bg);
+  border-left: 1px solid var(--accent); border-top: 1px solid var(--accent); transform: rotate(45deg); }
+/* The words a card asks about, as a quote, with their source as a small line under them. */
+blockquote.quote { margin: 0; font-size: 1.1rem; line-height: 1.4; color: var(--strong); font-weight: 500;
+  background: transparent; border: 0; padding: 0; }
+.src { color: var(--muted); font-size: 0.9rem; }
+.opts button .sub { color: var(--muted); grid-column: 2; font-size: 0.8rem; line-height: 1.3; }
+.ask .gate { background: var(--accent); color: var(--bg); opacity: 0.45; border-radius: 10px; min-height: 44px;
+  display: flex; align-items: center; justify-content: center; font-weight: 500; text-align: center; padding: 6px 12px; }
+/* A term with a note: dotted underline; a tap (or hover, where there is hover) opens one floating note. */
+button.term { display: inline; width: auto; min-height: 0; padding: 0; margin: 0; border: 0; border-radius: 0;
+  background: none; font: inherit; color: inherit; text-align: inherit; border-bottom: 1px dotted var(--accent); }
+button.term[aria-expanded="true"] { border-bottom-style: solid; color: var(--strong); padding: 0; }
+button.term code { background: transparent; border: 0; padding: 0; }
+#tip { position: absolute; z-index: 10; width: max-content; max-width: 280px; background: var(--surface);
+  border: 1px solid var(--accent); border-radius: 8px; padding: 8px 10px; font-size: 13.5px; line-height: 1.45;
+  color: var(--text); font-family: var(--sans); }
+#tip.snip { max-width: 300px; }
+#tip p + p, #tip pre + p { margin-top: 6px; }
+#tip a { font-size: 12px; }
+#tip b, #tip q { color: var(--strong); font-weight: 500; }
+#tip pre { margin: 0; padding: 0; border: 0; background: none; font-size: 10px; line-height: 1.45; white-space: pre;
+  overflow-x: auto; color: var(--strong); }
+#tip .tip-arrow { position: absolute; width: 10px; height: 10px; background: var(--surface); transform: rotate(45deg); }
+#tip.below .tip-arrow { top: -6px; border-left: 1px solid var(--accent); border-top: 1px solid var(--accent); }
+#tip.above .tip-arrow { bottom: -6px; border-right: 1px solid var(--accent); border-bottom: 1px solid var(--accent); }
 .rulebox { display: flex; flex-direction: column; gap: 8px; }
 .clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 /* The clamp cuts at the padding box, so a code block's bottom padding is a border: no fourth line peeks in. */
@@ -201,9 +239,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   // An item already saved (by this page or in the store) is never locked again.
   function unsaved(id) { return !state.answers[id] && state.firstSeconds[id] === undefined; }
   function locked(id) { return MIN_SECONDS > 0 && unsaved(id) && dwellMs(id) < MIN_SECONDS * 1000; }
-  function waitText(id) {
-    return "\u23f3 You can answer in " + Math.ceil((MIN_SECONDS * 1000 - dwellMs(id)) / 1000) + " s";
-  }
+  function waitSeconds(id) { return Math.ceil((MIN_SECONDS * 1000 - dwellMs(id)) / 1000); }
+  function waitText(id) { return fill(DATA.labels.wait, { s: waitSeconds(id) }); }
   // The seconds stored with an item: those of its first save, kept on every later write.
   function secondsOf(id) {
     var d = state.answers[id];
@@ -266,8 +303,12 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   function tick() {
     Object.keys(state.gates).forEach(function (id) {
       var g = state.gates[id];
-      if (locked(id)) { g.note.textContent = waitText(id); return; }
-      g.note.textContent = "";
+      if (locked(id)) {
+        g.note.textContent = waitText(id);
+        g.note.setAttribute("data-test-meta", JSON.stringify({ id: id, seconds: waitSeconds(id) }));
+        return;
+      }
+      if (g.note.parentNode) g.note.parentNode.removeChild(g.note);
       g.buttons.forEach(function (b) { b.disabled = !canWrite(); });
       delete state.gates[id];
     });
@@ -458,6 +499,13 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     if (text !== undefined) n.textContent = text;
     return n;
   }
+  // The hook a test finds an element by (`data-test`) and the values it reads from it (`data-test-meta`,
+  // JSON): classes are for the look only, and a test asserts no fact by reading text.
+  function mark(n, kind, meta) {
+    n.setAttribute("data-test", kind);
+    n.setAttribute("data-test-meta", JSON.stringify(meta || {}));
+    return n;
+  }
   // Text with `backticks` shown as code spans; everything stays textContent, so nothing is parsed as HTML.
   function rich(tag, cls, text) {
     var n = el(tag, cls);
@@ -484,12 +532,14 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     return pre;
   }
-  function options(opts, current, onPick, disabled, withExamples) {
+  // `notes`: the card's sub-line per answer (its `answer_notes` for the question), what the answer means here.
+  function options(opts, current, onPick, disabled, withExamples, notes, qid) {
     var row = el("div", "opts");
     opts.forEach(function (o) {
-      var b = el("button", "");
+      var b = mark(el("button", ""), "answer", { question: qid, value: o.value });
       if (o.icon) b.appendChild(el("span", "icon", o.icon));
       b.appendChild(el("span", "label", o.label));
+      if (notes && notes[o.value]) b.appendChild(mark(rich("span", "sub", notes[o.value]), "answer-sub", { question: qid, value: o.value }));
       if (withExamples && o.example) b.appendChild(rich("span", "ex", DATA.labels.practice_example + o.example));
       b.type = "button";
       b.setAttribute("aria-pressed", String(current === o.value));
@@ -504,20 +554,28 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     return isNaN(d) ? "" : d.toLocaleTimeString();
   }
   function statusLine(key, missing, savedAt) {
-    var s = el("p", "status");
+    var s = mark(el("p", "status"), "status", { state: "idle", missing: missing.map(function (q) { return q.id; }) });
+    var as = function (st) {
+      s.setAttribute("data-test-meta", JSON.stringify({ state: st, missing: missing.map(function (q) { return q.id; }) }));
+    };
     if (state.pending[key] || state.refusedWhy[key]) {
+      as("needs-reason");
       s.className = "status missing";
       s.textContent = "Not saved yet: this answer needs a reason. Write it above, or pick another answer.";
     } else if (state.failed[key]) {
+      as("failed");
       s.className = "status failed";
       s.textContent = "Not saved (" + state.failed[key] + "). Tap the answer again.";
     } else if (state.inflight[key]) {
+      as("saving");
       s.textContent = "Saving…";
     } else if (missing.length) {
+      as("missing");
       s.className = "status missing";
       s.textContent = "Still needs: " + missing.map(function (q) { return q.short || q.text; }).join("; ") +
         (savedAt ? ". Saved " + timeOf(savedAt) : "");
     } else if (savedAt) {
+      as("saved");
       s.className = "status saved";
       s.textContent = "Saved " + timeOf(savedAt);
     }
@@ -527,17 +585,19 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     var card = el("article", "item");
     var shown = itemsShown();
     if (MIN_SECONDS && unsaved(item.id)) card.setAttribute("data-id", item.id);
+    mark(card, "item", { id: item.id, index: shown.indexOf(item) + 1, total: shown.length });
     card.appendChild(el("div", "id", fill(DATA.labels.place, { id: item.id, n: shown.indexOf(item) + 1, total: shown.length })));
-    evidence(card, item);
+    var ctx = termsOf(item);
+    evidence(card, item, ctx);
     var a = answersOf(item.id);
     var gate = locked(item.id);
-    var ask = askOne(card, a, state.editing[item.id], function (q, v) {
+    var ask = askOne(card, a, state.editing[item.id], ctx, function (q, v) {
       delete state.editing[item.id];
       answer(item.id, q.id, v);
-    }, function (q) { state.editing[item.id] = q.id; render(); }, off || gate, false, item.situation);
+    }, function (q) { state.editing[item.id] = q.id; render(); }, off || gate, false, item);
     if (gate && ask) {
-      var note = ask.appendChild(el("p", "status missing", waitText(item.id)));
-      state.gates[item.id] = { note: note, buttons: Array.prototype.slice.call(ask.querySelectorAll("button")) };
+      var note = ask.appendChild(mark(el("p", "gate", waitText(item.id)), "wait", { id: item.id, seconds: waitSeconds(item.id) }));
+      state.gates[item.id] = { note: note, buttons: Array.prototype.slice.call(ask.querySelectorAll(".opts button")) };
     }
     DATA.questions.forEach(function (q) {
       var o = q.options.filter(function (x) { return x.value === a[q.id] && x.ask_why; })[0];
@@ -624,26 +684,192 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   function fill(text, vars) {
     return String(text).replace(/\{(\w+)\}/g, function (m, k) { return k in vars ? String(vars[k]) : m; });
   }
-  // A code excerpt: its file (a link when there is one), its lines numbered, the marked line with a
-  // gutter marker and a label besides its background, and the caption under it.
-  function excerptBlock(ex) {
+  // One row of a numbered excerpt: the number (a marker before the marked one), the gutter value when
+  // the excerpt has that column, and the code.
+  function codeRow(cls, n, gutter, withGutter, text) {
+    var line = el("div", "line" + cls);
+    line.appendChild(el("span", "n", n));
+    if (withGutter) line.appendChild(mark(el("span", "c", gutter || ""), "gutter"));
+    return { row: line, code: line.appendChild(el("span", "t", text)) };
+  }
+  // A code excerpt: its file (a link when there is one) and language, its lines numbered, a ⋮ row for
+  // every range it leaves out, the extra gutter column under its header, the marked line lit with the
+  // annotation under it (or a label after its code), and the caption under the code.
+  function excerptBlock(ex, ctx) {
     var box = el("div", "rulebox");
     if (ex.file) {
-      var name = el("p");
+      var name = el("p", "path");
+      mark(name, "excerpt-path", { file: ex.file, lang: ex.lang || "" });
       name.appendChild(ex.url ? link(ex.file, ex.url) : el("code", "", ex.file));
+      if (ex.lang) name.appendChild(el("span", "", " \u00b7 " + ex.lang));
       box.appendChild(name);
     }
-    var pre = el("pre", "numbered");
-    ex.lines.forEach(function (l) {
-      var line = el("div", "line" + (l.mark ? " hit" : ""));
-      line.appendChild(el("span", "g", l.mark ? "\u25b6" : ""));
-      line.appendChild(el("span", "n", String(l.n)));
-      var code = line.appendChild(el("span", "", l.text));
-      if (l.mark) code.appendChild(el("span", "this", ex.mark_label || "\u25c0 this line"));
-      pre.appendChild(line);
+    var withGutter = !!ex.gutter_header || ex.lines.some(function (l) { return l.gutter; });
+    var pre = el("pre", "numbered" + (withGutter ? " gutter" : ""));
+    if (ex.gutter_header) pre.appendChild(mark(codeRow(" hdr", "", ex.gutter_header, true, "").row, "code-header", { gutter: ex.gutter_header }));
+    var annotated = false;
+    ex.lines.forEach(function (l, i) {
+      var prev = ex.lines[i - 1];
+      if (prev && l.n > prev.n + 1) {
+        var from = prev.n + 1, to = l.n - 1;
+        pre.appendChild(mark(codeRow(" gap", "\u22ee", "", withGutter,
+          fill(from === to ? DATA.labels.hidden_one : DATA.labels.hidden, { from: from, to: to })).row, "gap", { from: from, to: to }));
+      }
+      var r = codeRow((l.mark ? " hit" : "") + (l.context ? " ctx" : ""), (l.mark ? "\u25b6" : "") + l.n,
+        l.gutter, withGutter, l.text);
+      mark(r.row, "code-line", { line: l.n, marked: !!l.mark, gutter: l.gutter || "", context: !!l.context });
+      pre.appendChild(r.row);
+      if (!l.mark) return;
+      if (ex.annotation && !annotated) {
+        annotated = true;
+        var anno = pre.appendChild(mark(el("div", "anno"), "annotation", { line: l.n }));
+        anno.setAttribute("role", "note");
+        anno.appendChild(el("span", "anno-arrow"));
+        termed(anno, ex.annotation, ctx, "annotation");
+      } else if (!ex.annotation) r.code.appendChild(el("span", "this", ex.mark_label || "\u25c0 this line"));
     });
     box.appendChild(pre);
     if (ex.caption) box.appendChild(rich("p", "said", ex.caption));
+    return box;
+  }
+  // ── terms with a note (#392): a dotted term opens ONE floating note, anchored to it ─────────────
+  // `ctx` is the card's terms, the text each opens from, and which are drawn already. A term opens from
+  // its first occurrence in the quote, else its source line, else the annotation: the words asked
+  // about come first. A text is split at backticks before it is searched, as the build searches it.
+  var tips = {};       // "<card id>:<k>" -> the note entries of the term drawn under that key
+  function termsOf(card) {
+    var texts = [["quote", card.quote && card.quote.text], ["source", card.quote && card.quote.source],
+      ["annotation", card.excerpt && card.excerpt.annotation]];
+    var home = (card.terms || []).map(function (t) {
+      var at = texts.filter(function (x) {
+        return x[1] && String(x[1]).split("`").some(function (part) { return part.indexOf(t.term) !== -1; });
+      })[0];
+      return at ? at[0] : null;
+    });
+    return { card: card.id, terms: card.terms || [], home: home, used: {} };
+  }
+  function pieces(text, ctx, where) {
+    var best = null;
+    ctx.terms.forEach(function (t, k) {
+      var at = ctx.used[k] || ctx.home[k] !== where ? -1 : text.indexOf(t.term);
+      if (at !== -1 && (!best || at < best.at)) best = { at: at, k: k };
+    });
+    if (!best) return text ? [{ text: text }] : [];
+    ctx.used[best.k] = true;
+    var end = best.at + ctx.terms[best.k].term.length;
+    return (best.at ? [{ text: text.slice(0, best.at) }] : [])
+      .concat([{ text: text.slice(best.at, end), k: best.k }], pieces(text.slice(end), ctx, where));
+  }
+  // `text` into `node`, `backticks` as code, each term of `ctx` whose home is `where` a button that
+  // opens its note.
+  function termed(node, text, ctx, where) {
+    String(text).split("`").forEach(function (part, i) {
+      pieces(part, ctx, where).forEach(function (p) {
+        var inner = el(i % 2 ? "code" : "span", "", p.text);
+        if (p.k === undefined) { node.appendChild(inner); return; }
+        var key = ctx.card + ":" + p.k;
+        tips[key] = ctx.terms[p.k].note;
+        var b = mark(el("button", "term"), "term", { term: ctx.terms[p.k].term });
+        b.type = "button";
+        b.setAttribute("data-tip", key);
+        b.setAttribute("aria-expanded", "false");
+        b.setAttribute("aria-describedby", "tip");
+        b.appendChild(inner);
+        b.addEventListener("click", function () { tapTerm(b); });
+        b.addEventListener("mouseenter", function () { if (HOVER && b !== tipAt) { openTip(b); hovered = true; } });
+        node.appendChild(b);
+      });
+    });
+    return node;
+  }
+  var HOVER = !!(window.matchMedia && window.matchMedia("(hover: hover)").matches);
+  var tip = null, tipAt = null, hovered = false, tipTerm = "", leaving = null;
+  // The grace delay; a test sets `window.__tipGraceMs` to slow or shorten it.
+  function graceMs() { return window.__tipGraceMs || 250; }
+  function stayTip() { if (leaving !== null) { clearTimeout(leaving); leaving = null; } }
+  function tipMeta(open) { mark(tip, "tip", { term: tipTerm, open: open }); }
+  function closeTip() {
+    stayTip();
+    if (tipAt) tipAt.setAttribute("aria-expanded", "false");
+    tipAt = null;
+    hovered = false;
+    if (tip) { tip.hidden = true; tipMeta(false); }
+  }
+  // One entry: its title, its words, the quote as a quote, the example, then the link to the source;
+  // a snippet above its link. Everything is textContent.
+  function tipEntry(e) {
+    var out = [];
+    if (e.code) out.push(plainCode(e.code));
+    var p = el("p");
+    if (e.title) p.appendChild(el("b", "", e.title + ": "));
+    if (e.says) p.appendChild(mark(rich("span", "", e.says + " "), "tip-says"));
+    if (e.quote) p.appendChild(mark(el("q", "", e.quote), "tip-quote"));
+    if (e.example) p.appendChild(rich("span", "", " " + e.example));
+    p.appendChild(el("span", "", " "));
+    p.appendChild(mark(link(e.url_label, e.url), "tip-link", { url: e.url }));
+    return out.concat([p]);
+  }
+  // Below the term if it fits, else above; inside the viewport sideways; the arrow points at the term.
+  function openTip(b) {
+    closeTip();
+    if (!tip) {
+      tip = document.body.appendChild(el("div"));
+      tip.id = "tip";
+      tip.setAttribute("role", "tooltip");
+    }
+    tipAt = b;
+    tipTerm = JSON.parse(b.getAttribute("data-test-meta")).term;
+    b.setAttribute("aria-expanded", "true");
+    var note = tips[b.getAttribute("data-tip")];
+    tip.textContent = "";
+    note.forEach(function (e) { tipEntry(e).forEach(function (n) { tip.appendChild(n); }); });
+    var arrow = tip.appendChild(el("span", "tip-arrow"));
+    tip.className = note.some(function (e) { return e.code; }) ? "snip" : "";
+    tip.hidden = false;
+    tipMeta(true);
+    var r = b.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    var x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), vw - w - 8);
+    var below = r.bottom + h + 12 < window.innerHeight || r.top < h + 12;
+    tip.className += below ? " below" : " above";
+    tip.style.left = (x + window.scrollX) + "px";
+    tip.style.top = ((below ? r.bottom + 8 : r.top - h - 8) + window.scrollY) + "px";
+    arrow.style.left = Math.min(Math.max(10, r.left + r.width / 2 - x - 5), w - 20) + "px";
+  }
+  // A tap opens the term's note, or closes it when it is open; a tap on a note opened by hover keeps it.
+  function tapTerm(b) {
+    if (b !== tipAt) openTip(b);
+    else if (hovered) hovered = false;
+    else closeTip();
+  }
+  // A tap outside the note and its term only closes the note: it never reaches the answer under it.
+  document.addEventListener("click", function (e) {
+    if (!tipAt || !e.target.closest || e.target.closest("button.term, #tip")) return;
+    closeTip();
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeTip(); });
+  // A note opened by hover closes a moment after the pointer leaves its term and the note: the gap
+  // between them must be crossable. Entering the term or the note again keeps it.
+  document.addEventListener("mouseover", function (e) {
+    if (!hovered || !tipAt || !e.target.closest) return;
+    if (e.target.closest("button.term, #tip")) stayTip();
+    else if (leaving === null) leaving = setTimeout(function () { leaving = null; if (hovered) closeTip(); }, graceMs());
+  });
+  // After a render the note follows its term's new button, or closes when the term is gone.
+  function reanchorTip() {
+    if (!tipAt) return;
+    var key = tipAt.getAttribute("data-tip"), wasHover = hovered;
+    var again = app.querySelector('button.term[data-tip="' + key + '"]');
+    if (again) { openTip(again); hovered = wasHover; } else closeTip();
+  }
+  // The words a card asks about, as a quote, and their source as a small line under them.
+  function quoteBlock(item, ctx) {
+    var box = el("div", "rulebox");
+    var bq = box.appendChild(mark(el("blockquote", "quote"), "quote"));
+    termed(bq.appendChild(el("q")), item.quote.text, ctx, "quote");
+    if (item.quote.source) termed(box.appendChild(mark(el("p", "src"), "quote-source")), item.quote.source, ctx, "source");
     return box;
   }
   // A reference entry: its title, then each field (a paragraph, a code block on a labelled row, or a
@@ -659,27 +885,29 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     if (r.url) box.appendChild(el("p")).appendChild(link(r.url_label || r.url, r.url));
     return box;
   }
-  function folded(summary) {
-    var d = el("details");
-    d.appendChild(el("summary", "", summary));
+  // A block of a card's reference material, in place under its heading: nothing a card needs is
+  // folded away (#392).
+  function shownBlock(summary) {
+    var d = el("div", "rulebox");
+    d.appendChild(el("h3", "", summary));
     return d;
   }
   function references(x) {
-    var d = folded(x.summary);
+    var d = shownBlock(x.summary);
     x.entries.forEach(function (r) { d.appendChild(row(r.label || "", referenceBlock(r))); });
     return d;
   }
   function moreList(m) {
-    var d = folded(m.summary);
+    var d = shownBlock(m.summary);
     var ul = el("ul");
     m.items.forEach(function (f) { ul.appendChild(rich("li", "", f)); });
     if (m.rest) ul.appendChild(el("li", "muted", m.rest));
     d.appendChild(ul);
     return d;
   }
-  // A folded table: its note, then each row in the order given: label, value as code, plain words, mark.
+  // A table: its note, then each row in the order given: label, value as code, plain words, mark.
   function table(t) {
-    var d = folded(t.summary);
+    var d = shownBlock(t.summary);
     if (t.note) d.appendChild(el("p", "muted", t.note));
     t.rows.forEach(function (r) {
       var s = el("div", "setting");
@@ -691,18 +919,20 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     return d;
   }
-  // Below the question and its answers: the references, the list of more like it and the table, each
-  // folded, so the question sits right under the code it names.
+  // Below the question and its answers: the references, the list of more like it and the table, in
+  // place, so the question sits right under the code it names.
   function blocksBelow(card, item) {
     if (item.references) card.appendChild(references(item.references));
     if (item.more) card.appendChild(moreList(item.more));
     if (item.table) card.appendChild(table(item.table));
   }
   // What a card shows above its question, one labelled row per field (an item and a practice item alike).
-  function evidence(card, item) {
+  function evidence(card, item, ctx) {
     if (item.title) card.appendChild(rich("h3", "", item.title));
-    var body = rich("p", "body", item.body);
-    card.appendChild(DATA.labels.body ? row(DATA.labels.body, body) : body);
+    if (item.body !== undefined) {
+      var body = rich("p", "body", item.body);
+      card.appendChild(DATA.labels.body ? row(DATA.labels.body, body) : body);
+    }
     if (item.repeat && item.repeat.of > 1) card.appendChild(el("p", "muted", fill(DATA.labels.repeat, item.repeat)));
     if (item.code) card.appendChild(codeBlock(item.code));
     if (item.unit) card.appendChild(row(item.unit.of > 1 ? fill(DATA.labels.line_part, { line: DATA.labels.line, part: item.unit.part, of: item.unit.of }) : DATA.labels.line,
@@ -717,8 +947,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     }
     if (item.file) card.appendChild(row("File", rich("p", "", item.file)));
     if (item.context) card.appendChild(rich("p", "muted", item.context));
-    if (item.situation) card.appendChild(situated("p", "situation", item.situation.summary, item.situation.line));
-    if (item.excerpt) card.appendChild(excerptBlock(item.excerpt));
+    if (item.situation && item.situation.summary) card.appendChild(situated("p", "situation", item.situation.summary, item.situation.line));
+    if (item.excerpt) card.appendChild(excerptBlock(item.excerpt, ctx));
   }
   function labelOf(q, v) {
     var o = q.options.filter(function (x) { return x.value === v; })[0];
@@ -726,9 +956,13 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   // One question per screen: the answered ones stay as a line (with "Change"), and only one question
   // is asked: the one being changed, else the first unanswered.
-  function askOne(card, a, editing, onPick, onChange, off, withExamples, situation) {
+  // A card's quote sits at the top of its question box, or, with nothing left to ask, in the card itself.
+  function askOne(card, a, editing, ctx, onPick, onChange, off, withExamples, item) {
     var open = DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
     var asked = DATA.questions.filter(function (q) { return q.id === editing; })[0] || open[0];
+    var situation = item.situation, notes = item.answer_notes || {};
+    var quote = item.quote ? quoteBlock(item, ctx) : null;
+    if (quote && !asked) card.appendChild(quote);
     DATA.questions.forEach(function (q) {
       if (q === asked || !valid(DATA.allowed.questions[q.id], a[q.id])) return;
       var line = el("p", "answered", (q.short || q.text) + ": " + labelOf(q, a[q.id]) + " ");
@@ -743,9 +977,11 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     if (!asked) return null;
     var ask = el("div", "ask");
+    if (quote) ask.appendChild(quote);
     // A card's situation asks the page's first question in its own words; the others keep theirs.
-    ask.appendChild(situation && asked === DATA.questions[0] ? situated("p", "q", situation.question, situation.line) : rich("p", "q", asked.text));
-    ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples));
+    ask.appendChild(mark(situation && asked === DATA.questions[0] ? situated("p", "q", situation.question, situation.line) : rich("p", "q", asked.text),
+      "question", { question: asked.id }));
+    ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples, notes[asked.id], asked.id));
     card.appendChild(ask);
     return ask;
   }
@@ -772,11 +1008,12 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     return sec;
   }
   function practiceCard(p, off) {
-    var card = el("article", "item");
+    var card = mark(el("article", "item"), "practice-item", { id: p.id });
     card.appendChild(el("div", "id", "Practice " + p.id));
-    evidence(card, p);
+    var ctx = termsOf(p);
+    evidence(card, p, ctx);
     var a = practiceAnswers(p.id);
-    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true, p.situation);
+    askOne(card, a, undefined, ctx, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true, p);
     if (practiceAnswered(p)) {
       var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
       card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",
@@ -856,7 +1093,9 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     state.typingIn = typing ? typing.key.slice(0, typing.key.indexOf("|")) : null;
     Object.keys(state.seenSince).forEach(stopClock);
     state.gates = {};
+    tips = {};
     paint();
+    reanchorTip();
     if (MIN_SECONDS) watchCards();
     var again = typing && state.whyBoxes[typing.key];
     if (again) { again.focus(); again.setSelectionRange(typing.start, typing.end); }

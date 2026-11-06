@@ -320,6 +320,17 @@
       "count": 1
     }
   },
+  "skills/assess-novelty/scripts/candidate_page.test.ts": {
+    "playwright/no-eval": {
+      "count": 1
+    },
+    "playwright/no-wait-for-selector": {
+      "count": 3
+    },
+    "playwright/prefer-locator": {
+      "count": 27
+    }
+  },
   "skills/build-benchmark/build-benchmark.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -333,6 +344,11 @@
   "skills/build-label-page/build-label-page.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
+    }
+  },
+  "skills/build-label-page/scripts/label-page-browser.test.ts": {
+    "playwright/no-raw-locators": {
+      "count": 37
     }
   },
   "skills/camera-ready/camera-ready.eval.mjs": {

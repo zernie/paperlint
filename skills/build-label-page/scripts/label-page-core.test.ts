@@ -86,11 +86,32 @@ const CARD = {
   situation: { summary: "S", question: "Q?" },
   excerpt: {
     file: "src/a.ts",
+    lang: "TypeScript",
     url: "https://example.com/a.ts",
-    lines: [{ n: 1, text: "", mark: true }],
+    gutter_header: "depth",
+    lines: [{ n: 1, text: "", mark: true, gutter: "1", context: false }],
+    annotation: "a `Term` here",
     caption: "C",
     mark_label: "M",
   },
+  quote: { text: "Q with Term", source: "`R.md`, line 1" },
+  terms: [
+    {
+      term: "Term",
+      note: [
+        {
+          title: "T",
+          says: "S",
+          quote: "Q",
+          code: "x = 1",
+          example: "E",
+          url: "https://example.com/t",
+          url_label: "U",
+        },
+      ],
+    },
+  ],
+  answer_notes: { label: { yes: "like A" } },
   references: {
     summary: "S",
     entries: [
@@ -145,6 +166,9 @@ const FULL: DocObject = (() => {
         line_part: "{line} {part}/{of}",
         repeat: "R",
         practice_example: "P",
+        hidden: "H {from}-{to}",
+        hidden_one: "H {from}",
+        wait: "W {s}",
       },
       practice: PRACTICE.map((p, n) => (n === 0 ? { ...p, ...CARD } : p)),
       items: ITEMS.map((i, n) =>

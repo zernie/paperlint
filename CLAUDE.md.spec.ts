@@ -97,6 +97,11 @@ Before writing machinery, **run the thing you are about to replace and paste its
       'Before adding a CLI command or changing a delivery channel (skill links, hook wiring, the composite action, the npm package), read how comparable tools did it. "We need another command for X" has, in every tool examined, been the CONFIG not declaring something.',
       { details: file("docs/prior-art/README.md") },
     ),
+    "browser-tests-find-by-data-test": enforce(
+      "eslint/playwright/no-raw-locators",
+      "A browser test finds an element only by `getByTestId` on `data-test`, and reads its values from the JSON in `data-test-meta`, never from CSS classes or visible text; content text is compared with the fixture's value. The older browser tests sit in `eslint-suppressions.json`, which may only shrink.",
+      { details: file("docs/testing.md") },
+    ),
     "new-code-is-functional": enforce(
       "eslint/functional/no-let",
       "In `src/`, `eslint-rules/` and `lib/`, tests and harnesses aside: no `let`, no mutation, no loop, read-only types; collections through [Remeda](https://remedajs.com/). `functional/immutable-data`, `functional/no-loop-statements` and `functional/prefer-immutable-types` hold the rest, and `eslint-suppressions.json` (old code) may only shrink.",

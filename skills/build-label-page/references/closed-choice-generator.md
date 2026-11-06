@@ -21,7 +21,7 @@ with the core's payload. Another page shape would be another template on the sam
 Rules 2 to 5, 7 and the page half of 8 of [`checklist.md`](checklist.md): a filter instead of
 scrolling, complete-item counting, neutral ids in a seeded order, the leak guard (an item field
 outside the allow-list stops the build), save on click with a time, the store-unavailable banner,
-the "How to answer" screen (folded into a toggle once the practice is done), the practice before
+the "How to answer" screen (folded into a toggle once the practice is done; it is page-level, not part of any card), the practice before
 the real items, one question per screen, each card's place (`labels.place`, by default
 "G007 · 7 of 20"), the card just
 answered kept under "Next unanswered" until the next answer (so a mis-tap can be changed), and a
@@ -111,7 +111,7 @@ Any card may carry these blocks, on any `kind`, and each one is optional. The pa
     "mark_label": "◀ the line in question", // optional; default «◀ this line»
   },
   "references": {
-    "summary": "What the guideline says", // the folded block's toggle
+    "summary": "What the guideline says", // the block's heading
     "entries": [
       {
         "label": "Guideline", // optional row label
@@ -162,17 +162,50 @@ Any card may carry these blocks, on any `kind`, and each one is optional. The pa
   4. the older fields (`code`, `unit`, `rules`, `readings`, `file`, `context`);
   5. the situation's summary;
   6. the excerpt;
-  7. **the question and its answers**;
-  8. `references`, `more` and `table`, each folded and closed.
+  7. **the question box**: the `quote` and its source, the question, and its answers with their `answer_notes`;
+  8. `references`, `more` and `table`, each in place under its heading. Nothing on a card is folded:
+     a labeller who has to open a block to answer reads half a card (#392).
 
   The question therefore sits right under the code it names.
 
-- **`situation`**: `{summary, question}`.
-  - `summary` is one sentence above the excerpt.
+- **`situation`**: `{summary?, question}`.
+  - `summary` is one sentence above the excerpt; optional.
   - `question` replaces the text of the page's first question on this card. Other questions keep their own text.
   - In either text, `{line}` stands for the excerpt's first marked line. The page writes «line N: », then the line's code as code, without its indent. A code line holding a backtick reads as it is.
   - `{line}` on a card without an `excerpt` is refused by path.
-- **`excerpt`**: at least one line is marked (`mark: true`). The marked line gets a `▶` in the gutter and `mark_label` after its code, and keeps its background, so it reads as marked even without its colour. A line's `text` may be empty, for a blank line.
+- **`excerpt`**: at least one line is marked (`mark: true`). The marked line gets a `▶` before its number and keeps its background, so it reads as marked even without its colour; after its code comes `mark_label`, unless the excerpt has an `annotation`. A line's `text` may be empty, for a blank line.
+  - `lang` follows the file name: «path · Python».
+  - Where two lines' numbers are not consecutive, a `⋮` row says what is left out (`labels.hidden`, `labels.hidden_one`). A line with `context: true` is drawn faint: one shown only to place the code, such as an enclosing block's opener.
+  - `gutter_header` and each line's `gutter` add a column between the number and the code: one word on top, one value per line («depth», `4`). The values are the consumer's, never computed by the page.
+  - `annotation` is one short fact in a box right under the first marked line, inside the code, with an arrow pointing at the line, as a code-review comment sits.
+
+### The approved card: a quote, notes on terms, answers that say what they mean
+
+`scripts/fixtures/v7-cards-items.json` is a page of three such cards (#392). The fields:
+
+```jsonc
+{
+  "quote": { "text": "Docstrings use Google-style format", "source": "`.github/copilot-instructions.md`, line 67" },
+  "situation": { "question": "Do these words forbid line 48?" },
+  "excerpt": { "file": "src/tables/merge.py", "lang": "Python", "annotation": "Ruff rule `D413` reports: …", "lines": [ … ] },
+  "terms": [
+    {
+      "term": "Google-style", // the card's own words that open the note
+      "note": [
+        // one or more entries; each has `quote` or `code` (verbatim), and its source link
+        { "title": "Google style", "quote": "Each section begins with a heading line, which ends with a colon.",
+          "example": "(e.g. `Args:`)", "url": "https://google.github.io/styleguide/pyguide.html", "url_label": "Google Python Style Guide" },
+      ],
+    },
+  ],
+  "answer_notes": { "forbid": { "forbid": "like a config with rule D413 on, which flags it" } }, // question → answer → sub-line
+}
+```
+
+- **`quote`** shows the words being asked about at the top of the question box, `source` as a small line under them. A card needs `body` or `quote`.
+- **`terms`**: each `term` must occur in the quote, its source or the annotation, inside one backtick span or outside all of them; the build refuses one it cannot find there, and a note entry with neither `quote` nor `code`. A term opens from its first occurrence in the quote, else the source, else the annotation. On the page it is a dotted button: a tap (or hover, where there is hover) opens one floating note anchored to it, at most 280 px wide (300 with a snippet), flipped above the term when there is no room below, kept inside the viewport. A tap outside closes it and does nothing else, so it never answers a card; so does Esc. Answer buttons carry no terms.
+- **`answer_notes`** puts a sub-line under an answer's label on this card: what the answer means here. A question or an answer the page does not have is refused.
+- Whether a note pushes the labeller toward one answer is not checked: the consumer lists each note for the study's author.
 - **`references.entries[].fields`**:
   - A field without `style` is a paragraph («label: text» when it has a label). A long one shows three lines and a «more».
   - `style: "code"` is a code block on a `label` row.
@@ -189,6 +222,9 @@ Any card may carry these blocks, on any `kind`, and each one is optional. The pa
   | `line_part`        | the `unit` row's label when the line holds several requirements | `{line} · part {part} of {of}` |
   | `repeat`           | the repeat sentence                                             | `Card {index} of {of}`         |
   | `practice_example` | text before each answer's example on a practice button          | empty                          |
+  | `hidden`           | a `⋮` row for lines left out                                    | `lines {from}–{to}`            |
+  | `hidden_one`       | a `⋮` row for one line left out                                 | `line {from}`                  |
+  | `wait`             | the bar under the answers while `min_seconds` runs              | `⏳ You can answer in {s} s`   |
 
 - The leak guard reads every string these blocks render, one string at a time.
 
@@ -199,7 +235,7 @@ A preset is opt-in. An items file names it with `"preset": "<name>"`. The preset
 - **`linter-config-witness`** is narrow: two linter configs of one requirement disagree on a line of code. The blocks underneath are generic.
   - **Input fields on a card:**
     - `example: {file, url?, lines, message, caught_by}`, which becomes the excerpt, with the caption «The linter says: …».
-    - `rules: [{linter, id, explanation}]`, whose explanation has `source` (`ruff rule`, `eslint docs`, `plugin docs`, `config message` or `none`), plus `what`, `why`, `example_bad`, `example_good` and `url`. These become the references, folded under «What the linter rule does (official docs)».
+    - `rules: [{linter, id, explanation}]`, whose explanation has `source` (`ruff rule`, `eslint docs`, `plugin docs`, `config message` or `none`), plus `what`, `why`, `example_bad`, `example_good` and `url`. These become the references, under «What the linter rule does (official docs)».
     - `more_like_this: {count, files}`, which becomes the list «N more file(s) with the same situation».
     - `details: {a, b}`: rows of `{key, raw, plain, matches_example}`. They become the table «Settings behind this card», with «A only / B only / A and B» rows.
   - **Its labels**: «Card {n} of {total}», «Requirement», «Card {index} of {of} for this requirement», and «Example of this answer, about other code: ».

@@ -149,3 +149,15 @@ file matches, and it transpiles without type-checking, so `npm run check` runs
    really occur stays, with the test that reaches it. `scripts/coverage-config.test.ts` fails on any
    coverage-ignore comment and pins `.c8rc.json`'s `exclude` list.
 7. **Say what an assertion guards** in a comment directly above it (`// Guards: …`).
+8. **A browser test finds an element by `data-test` and reads its values from `data-test-meta`.**
+   The page marks every element a test touches with `data-test="<kind>"` and puts the element's
+   values in `data-test-meta` as JSON (`{"line":279,"marked":true}`). The test sets
+   `selectors.setTestIdAttribute("data-test")`, locates only with `getByTestId`, parses the meta and
+   compares it with one `deepEqual`. CSS classes stay for styling and visible text stays for people,
+   so a restyle or a reworded label does not turn a test red. Text that IS the content (an
+   annotation, a quote) is compared with the fixture's value, never with a literal typed into the
+   test. Accessibility state (`aria-expanded`) may be asserted on purpose, but it never locates
+   anything. `playwright/no-raw-locators`, `playwright/prefer-locator`, `playwright/no-wait-for-selector`
+   and `playwright/no-eval` hold the locating half; the older browser tests sit in
+   `eslint-suppressions.json`, which may only shrink. Example: `annotatedFacts` and
+   `annotatedExpected` in `skills/build-label-page/scripts/label-page-browser.test.ts`.

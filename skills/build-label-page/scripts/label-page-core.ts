@@ -120,6 +120,9 @@ const UNIT_FIELD = "unit";
 const READINGS_FIELD = "readings";
 // Content blocks (#380): generic, on any kind. Every label and sentence a block shows comes from
 // items.json (or a preset, label-page-presets.ts); the page knows only the block's shape.
+// `quote`, `terms` and `answer_notes` (#392): the words a card asks about, shown as a quote with
+// its source; tap-to-see notes on terms in that quote and in the excerpt's annotation; and a sub-line
+// under an answer that says what the answer means on this card.
 const BLOCK_FIELDS = [
   "situation",
   "excerpt",
@@ -127,6 +130,9 @@ const BLOCK_FIELDS = [
   "more",
   "table",
   "repeat",
+  "quote",
+  "terms",
+  "answer_notes",
 ] as const;
 const ALLOWED_FIELDS: readonly string[] = [
   ...PAGE_FIELDS,
@@ -227,9 +233,10 @@ const mapping = (
   values: SchemaNode,
   keyPattern: string,
   min = 0,
+  required = true,
 ): SchemaNode => ({
   kind: "map",
-  required: true,
+  required,
   min,
   key_pattern: keyPattern,
   values,
@@ -273,14 +280,59 @@ const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
   ),
   [READINGS_FIELD]: obj({ a: string(), b: string() }, true, false),
   file: string(false),
-  situation: optional({ summary: string(), question: string() }),
+  situation: optional({ summary: string(false), question: string() }),
   excerpt: optional({
     file: string(false),
+    // the file's language, after its path: "path · Python"
+    lang: string(false),
     url: LINK,
-    lines: array(obj({ n: integer(), text: text(), mark: boolean() }), true, 1),
+    // the header of an extra gutter column; each line's `gutter` is its value there ("depth")
+    gutter_header: string(false),
+    lines: array(
+      obj({
+        n: integer(),
+        text: text(),
+        mark: boolean(),
+        gutter: string(false),
+        // a line shown only to place the code (an enclosing block's opener): drawn faint
+        context: boolean(false),
+      }),
+      true,
+      1,
+    ),
+    // one short fact, drawn in a box right under the marked line, pointing at it
+    annotation: string(false),
     caption: string(false),
     mark_label: string(false),
   }),
+  quote: optional({ text: string(), source: string(false) }),
+  terms: array(
+    obj({
+      term: string(),
+      note: array(
+        obj({
+          title: string(false),
+          says: string(false),
+          quote: string(false),
+          code: string(false),
+          example: string(false),
+          url: string(true, "https?://\\S+", "an http(s) link"),
+          url_label: string(),
+        }),
+        true,
+        1,
+      ),
+    }),
+    false,
+    1,
+  ),
+  // question id → option value → the sub-line under that answer's button on this card
+  answer_notes: mapping(
+    mapping(string(), NAME_PATTERN, 1),
+    NAME_PATTERN,
+    1,
+    false,
+  ),
   references: optional({
     summary: string(),
     entries: array(
@@ -362,7 +414,7 @@ const itemSchema = (kind: Kind): SchemaNode =>
       ...Object.fromEntries(
         PAGE_FIELDS.filter((f) => f !== "file").map((f) => [
           f,
-          string(f === "group" || f === "body"),
+          string(f === "group"),
         ]),
       ),
       ...cardFields(kind),
@@ -385,7 +437,7 @@ const practiceSchema = (kind: Kind): SchemaNode =>
     ...Object.fromEntries(
       PAGE_FIELDS.filter((f) => f !== "group" && f !== "file").map((f) => [
         f,
-        string(f === "body"),
+        string(false),
       ]),
     ),
     ...cardFields(kind),
@@ -427,6 +479,9 @@ const configSchema = (kind: Kind): SchemaNode =>
       line_part: string(false),
       repeat: string(false),
       practice_example: string(false),
+      hidden: string(false),
+      hidden_one: string(false),
+      wait: string(false),
     }),
     items: array(itemSchema(kind), true, 1),
   });
@@ -578,17 +633,44 @@ interface CodeLine {
   readonly n: number;
   readonly text: string;
   readonly mark: boolean;
+  readonly gutter?: string;
+  readonly context?: boolean;
+}
+/** One entry of a term's note: a verbatim quote or snippet, and the link to where it is from. */
+interface NoteEntry {
+  readonly title?: string;
+  readonly says?: string;
+  readonly quote?: string;
+  readonly code?: string;
+  readonly example?: string;
+  readonly url: string;
+  readonly url_label: string;
+}
+interface Term {
+  readonly term: string;
+  readonly note: readonly NoteEntry[];
 }
 /** The content blocks (#380), each optional on any kind. */
 interface Blocks {
-  readonly situation?: { readonly summary: string; readonly question: string };
+  readonly situation?: {
+    readonly summary?: string;
+    readonly question: string;
+  };
   readonly excerpt?: {
     readonly file?: string;
+    readonly lang?: string;
     readonly url?: string;
+    readonly gutter_header?: string;
     readonly lines: readonly CodeLine[];
+    readonly annotation?: string;
     readonly caption?: string;
     readonly mark_label?: string;
   };
+  readonly quote?: { readonly text: string; readonly source?: string };
+  readonly terms?: readonly Term[];
+  readonly answer_notes?: Readonly<
+    Record<string, Readonly<Record<string, string>>>
+  >;
   readonly references?: {
     readonly summary: string;
     readonly entries: readonly {
@@ -624,7 +706,7 @@ interface Blocks {
 type Card = {
   readonly [F in (typeof PAGE_FIELDS)[number]]?: string;
 } & Blocks & {
-    readonly body: string;
+    readonly body?: string;
     readonly rules?: readonly RuleRef[];
     readonly unit?: Unit;
     readonly readings?: { readonly a: string; readonly b: string };
@@ -897,7 +979,7 @@ const lineOf = (card: Card) =>
     .filter((l) => l.mark)
     .map((l) => ({ n: l.n, text: l.text.trim() }))[0];
 const usesLine = (card: Card): boolean =>
-  SITUATION_TEXTS.some((f) => card.situation?.[f].includes(LINE_TOKEN));
+  SITUATION_TEXTS.some((f) => card.situation?.[f]?.includes(LINE_TOKEN));
 /**
  * What the block schema cannot say: an excerpt marks a line, `{line}` has a marked line to stand for,
  * and a repeat sits inside its count.
@@ -909,7 +991,7 @@ function checkBlocks(cfg: Config): void {
         `${at}.excerpt.lines: no line is marked — mark the line the card is about (\`mark: true\`)`,
       );
     const token = SITUATION_TEXTS.find((f) =>
-      card.situation?.[f].includes(LINE_TOKEN),
+      card.situation?.[f]?.includes(LINE_TOKEN),
     );
     if (token !== undefined && card.excerpt === undefined)
       fail(
@@ -919,6 +1001,88 @@ function checkBlocks(cfg: Config): void {
     if (r !== undefined && (r.index < 1 || r.index > r.of))
       fail(
         `${at}.repeat.index: ${String(r.index)} is not between 1 and ${String(r.of)}`,
+      );
+  });
+}
+/**
+ * The texts a term may open a note from, the words asked about first: the quote, its source, then
+ * the excerpt's annotation. The page looks a term up in the same texts, split the same way at
+ * backticks, so a term the build finds is a term the page draws.
+ */
+const termTexts = (card: Card): readonly string[] =>
+  [card.quote?.text, card.quote?.source, card.excerpt?.annotation].filter(
+    R.isDefined,
+  );
+const findsTerm = (card: Card, term: string): boolean =>
+  termTexts(card).some((t) => t.split("`").some((part) => part.includes(term)));
+/**
+ * What the schema cannot say about the #392 blocks: a card says something (`body` or `quote`); each
+ * term occurs in a text that can carry it, and each note entry shows a quote or a snippet; an answer
+ * note names a question of the page and one of its options.
+ */
+function checkCardText(cfg: Config): void {
+  const options = new Map(
+    cfg.questions.map((q) => [q.id, q.options.map((o) => o.value)]),
+  );
+  cardsOf(cfg).forEach(([at, card]) => {
+    if (card.body === undefined && card.quote === undefined)
+      fail(
+        `${at}.body: is required and missing — a card shows its \`body\`, or its words as a \`quote\``,
+      );
+    checkTerms(at, card);
+    checkAnswerNotes(at, card, options);
+  });
+}
+/**
+ * One term's text inside another's on the same card (or the same text twice): the page draws one
+ * button for the words, so the other term's note would never open.
+ */
+function checkTermsDoNotOverlap(at: string, card: Card): void {
+  const texts = (card.terms ?? []).map((t) => t.term);
+  const named = (k: number) => `${at}.terms[${String(k)}]`;
+  texts.forEach((inner, k) => {
+    const j = texts.findIndex(
+      (outer, m) =>
+        m !== k && outer.includes(inner) && (outer !== inner || m > k),
+    );
+    if (j !== -1)
+      fail(
+        `${named(k)}.term: ${repr(inner)} is inside ${named(j)}.term ${repr(texts[j])} — the page draws one of two overlapping terms, so the other note never opens`,
+      );
+  });
+}
+function checkTerms(at: string, card: Card): void {
+  checkTermsDoNotOverlap(at, card);
+  (card.terms ?? []).forEach((t, k) => {
+    const where = `${at}.terms[${String(k)}]`;
+    if (!findsTerm(card, t.term))
+      fail(
+        `${where}.term: ${repr(t.term)} is not in the card's annotation, quote or quote source — a note opens from words the card shows`,
+      );
+    const bare = t.note.findIndex(
+      (e) => e.quote === undefined && e.code === undefined,
+    );
+    if (bare !== -1)
+      fail(
+        `${where}.note[${String(bare)}]: has neither \`quote\` nor \`code\` — a note shows its source's own words`,
+      );
+  });
+}
+function checkAnswerNotes(
+  at: string,
+  card: Card,
+  options: ReadonlyMap<string, readonly string[]>,
+): void {
+  Object.entries(card.answer_notes ?? {}).forEach(([qid, notes]) => {
+    const values = options.get(qid);
+    if (values === undefined)
+      return fail(
+        `${at}.answer_notes.${qid}: not a question of this page (${[...options.keys()].join(", ")})`,
+      );
+    const stray = Object.keys(notes).find((v) => !values.includes(v));
+    if (stray !== undefined)
+      fail(
+        `${at}.answer_notes.${qid}.${stray}: not one of ${values.join(", ")}`,
       );
   });
 }
@@ -1058,7 +1222,7 @@ const situationShown = (item: Card) =>
     ? {}
     : {
         situation: {
-          summary: item.situation.summary,
+          ...R.pickBy({ summary: item.situation.summary }, R.isDefined),
           question: item.situation.question,
           ...(usesLine(item) ? { line: lineOf(item) } : {}),
         },
@@ -1153,6 +1317,9 @@ const DEFAULT_LABELS: Readonly<Record<string, string>> = {
   line_part: "{line} · part {part} of {of}",
   repeat: "Card {index} of {of}",
   practice_example: "",
+  hidden: "lines {from}\u2013{to}",
+  hidden_one: "line {from}",
+  wait: "\u23f3 You can answer in {s} s",
 };
 /** The answerers and the dwell, only when items.json sets them: a page without them is as it was. */
 const twoKeys = (cfg: Config) =>
@@ -1276,6 +1443,7 @@ export function prepareBuild(configPath: string, outDir: string) {
   checkItemFields(cfg);
   checkUnits(cfg);
   checkBlocks(cfg);
+  checkCardText(cfg);
   checkNoSourceShown(cfg);
   const described = describeRules(cfg, dirname(configPath));
   mkdirSync(outDir, { recursive: true });
