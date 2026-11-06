@@ -369,3 +369,53 @@ test("🔴 a translation that leaves out or invents a question, an answer, an in
     [0, 0],
   );
 });
+
+/** A page with two tagged cards, and Russian labels for its tags. */
+const taggedPage = (ru: Record<string, unknown>) =>
+  config({
+    sources: { repo: "From the repository", ours: "Our restatement" },
+    items: ITEMS.map((i, n) =>
+      n < 2 ? { ...i, quote: { text: "t", from: n ? "ours" : "repo" } } : i,
+    ),
+    translations: { ru: { ...RU, ...ru } },
+  });
+
+test("🔴 translations.<lang>.sources hands the page the tag labels in that language, and one left out stays the page's own", () => {
+  const ru = { sources: { repo: "Из репозитория" } };
+  const data = z
+    .object({
+      translations: z.object({
+        ru: z.object({ sources: z.record(z.string(), z.string()) }).loose(),
+      }),
+    })
+    .loose()
+    .parse(dataOf(build(setup("lang-sources", taggedPage(ru))).page));
+  assert.deepEqual(data.translations.ru.sources, ru.sources);
+});
+
+test("🔴 a translated tag label for an id the page's sources do not have is refused, with or without sources on the page", () => {
+  const stray = { sources: { zzz: "Чужой" } };
+  const refused = (name: string, cfg: Record<string, unknown>) => {
+    const dir = setup(name, cfg);
+    return run(["build", join(dir, "items.json"), join(dir, "out")]);
+  };
+  assert.deepEqual(
+    [
+      refused("lang-sources-stray", taggedPage(stray)),
+      refused(
+        "lang-sources-none",
+        withRu({ translations: { ru: { ...RU, ...stray } } }),
+      ),
+    ],
+    [
+      {
+        status: 1,
+        out: "REFUSED: translations.ru.sources.zzz: not one of the page's `sources` (repo, ours)\n",
+      },
+      {
+        status: 1,
+        out: "REFUSED: translations.ru.sources.zzz: not one of the page's `sources` (none)\n",
+      },
+    ],
+  );
+});

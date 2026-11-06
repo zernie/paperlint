@@ -342,6 +342,54 @@ out, the page is exactly as above.
 - **Ids and key:** the neutral ids, the store's documents, `key.json` and the export are the same,
   byte for byte, with or without translations.
 
+## A source tag above each block
+
+For a labeller who cannot tell where a block's text came from: some of it copied from a repository,
+some written by a model under test, some by an earlier labelling model, some counted by the study's
+script (#400). A small coloured tag above the block says which. All fields are optional; a page
+without `sources` is byte for byte as without this section.
+
+```jsonc
+{
+  // id → the tag's label, in colour order (at most 5 ids: the page has five colours)
+  "sources": {
+    "repo": "From the repository",
+    "ours": "Our labelling model's restatement",
+    "model": "Written by the model under test",
+    "count": "Counted by our script",
+  },
+  "items": [
+    {
+      "quote": { "text": "…", "source": "…", "from": "repo" }, // tags the quote and its source line
+      "situation": { "summary": "…", "question": "…", "from": "ours" }, // tags the summary, not the question
+      "excerpt": {
+        "lines": [],
+        "caption": "…",
+        "from": "repo",
+        "caption_from": "count",
+      }, // the box, the caption under it
+    },
+  ],
+  "translations": { "ru": { "sources": { "repo": "Из репозитория" } } },
+}
+```
+
+- **`from`** names an id of `sources`, on `quote`, `situation` and `excerpt`; **`caption_from`**
+  on `excerpt` tags the caption. Practice items take the same fields. The question is the page's own
+  words and gets no tag.
+- **On the page:** a small uppercase pill directly above the block. Its colour is the id's place in
+  `sources` (accent, green, amber, red, grey-blue: tokens the page already has). Each carries
+  `data-test="source-tag"` and `data-test-meta` `{"source": "<id>", "block": "quote" | "situation" |
+"excerpt" | "caption"}`.
+- **Refused, by path:** a `from` or `caption_from` with no `sources` on the page; one naming an id not
+  in `sources`; one over a text the card does not have (a `caption_from` without a `caption`, a
+  situation `from` without a `summary`); a `sources` id no item or practice item names; an empty
+  label; more than 5 ids; a `translations.<lang>.sources` id the page's `sources` lack.
+- **Translations:** `translations.<lang>.sources` gives the tag labels in that language. A label it
+  leaves out reads as in the page's own language.
+- **A tag is not a blind-page field:** it shows the labeller where text came from. Use it only where
+  the study allows the labeller to know; a study that blinds the source must not name one.
+
 ## Two answerers, and a minimum time on screen
 
 Both keys are optional and top-level. Left out, the page, its store documents and the export are

@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:46ebfc043d459ff0 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c5863cfb5f123f19 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -167,6 +167,16 @@ do, because those words are what is judged. The build refuses a translation that
 invents a question or an answer; the ids and `key.json` are the same with or without it.
 [`references/closed-choice-generator.md`](references/closed-choice-generator.md), "A second
 language for the page's own words".
+
+## A source tag above each block
+
+When the labeller must tell where a block's text came from (copied from a repository, written by the
+model under test, restated by an earlier labelling model, counted by the script), the page's
+`"sources": {"repo": "From the repository", …}` names the tags, in colour order (at most five), and
+`from` on a `quote`, a `situation` (its summary) or an `excerpt` (`caption_from` for its caption)
+puts one above that block. The build refuses an unknown id, a dead entry and a tag over a text the card
+lacks. [`references/closed-choice-generator.md`](references/closed-choice-generator.md), "A source tag
+above each block".
 
 ## When the page misbehaves
 
