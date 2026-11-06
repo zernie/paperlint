@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:9d7a2c35df4e6a10 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:ed201d81c5934675 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -57,7 +57,7 @@ building. In one line each:
    passing proves nothing about this.
 2. **Navigation never relies on in-page scrolling or toasts.** "Next unanswered" is a filter: it hides
    every finished item and group, and a note at the top lists what is left and what each still needs.
-3. **An item is done only when every question on it is answered.** The card names the missing
+3. **An item is done only when every question on it is answered.** The card asks the missing
    question; the progress counter counts complete items only.
 4. **Blind.** Neutral ids (`G001`…), order shuffled with a fixed seed, no model answers, verdicts or
    source labels on the page. The generator refuses to build when an item carries a field outside an

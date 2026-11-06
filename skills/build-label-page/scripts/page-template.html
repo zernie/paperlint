@@ -3,8 +3,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono&display=swap">
 <style>
 /* One look, dark whatever the viewer's theme (Material Ocean, no purple): every color is a token below.
-   One column, sections apart by a hairline and wide space, items flat; the only raised block of an item is
-   the question being asked. Answer buttons are full-width rows with space between them, so a thumb cannot
+   One column, sections apart by a hairline and wide space; each item a bordered panel with wide space after
+   it, and the only raised block inside it the question being asked. Answer buttons are full-width rows with space between them, so a thumb cannot
    land between two of them, and the chosen one has a 2px accent border. */
 :root {
   color-scheme: dark;
@@ -28,8 +28,9 @@ p { margin: 0; max-width: var(--measure); }
 .muted { color: var(--muted); }
 .id { font-family: var(--mono); color: var(--muted); }
 section { display: flex; flex-direction: column; gap: var(--gap-item); }
-.item { display: flex; flex-direction: column; gap: 20px; padding-top: var(--gap-item);
-  border-top: 1px solid var(--line); }
+.item { display: flex; flex-direction: column; gap: 20px; padding: var(--gap-item);
+  border: 1px solid var(--line); border-radius: 14px; }
+.item + .item { margin-top: 24px; }
 /* The evidence of a card: one labelled row per field, the label a short word above its content. The two
    readings sit in the same place on every card: A on a solid accent rule, B on a dashed one. */
 .row { display: flex; flex-direction: column; gap: 4px; }
@@ -37,7 +38,6 @@ section { display: flex; flex-direction: column; gap: var(--gap-item); }
 .reading { border-left: 3px solid var(--accent); padding-left: 12px; }
 .reading.b { border-left: 3px dashed var(--text); }
 mark { background: transparent; color: var(--mark); font-weight: 500; }
-.item:first-of-type { border-top: 0; padding-top: 0; }
 .ask { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
   display: flex; flex-direction: column; gap: 12px; }
 .q { color: var(--strong); font-weight: 500; }
@@ -569,11 +569,14 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     } else if (state.inflight[key]) {
       as("saving");
       s.textContent = "Saving…";
+    } else if (missing.length && !savedAt) {
+      // The open question and its save button already say what is missing: nothing to show.
+      as("missing");
+      s.hidden = true;
     } else if (missing.length) {
       as("missing");
-      s.className = "status missing";
-      s.textContent = "Still needs: " + missing.map(function (q) { return q.short || q.text; }).join("; ") +
-        (savedAt ? ". Saved " + timeOf(savedAt) : "");
+      s.className = "status saved";
+      s.textContent = "Saved " + timeOf(savedAt);
     } else if (savedAt) {
       as("saved");
       s.className = "status saved";
@@ -591,7 +594,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     evidence(card, item, ctx);
     var a = answersOf(item.id);
     var gate = locked(item.id);
-    var ask = askOne(card, a, state.editing[item.id], ctx, function (q, v) {
+    var ask = askOne(card, a, state.editing[item.id], function (q, v) {
       delete state.editing[item.id];
       answer(item.id, q.id, v);
     }, function (q) { state.editing[item.id] = q.id; render(); }, off || gate, false, item);
@@ -927,8 +930,10 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     if (item.table) card.appendChild(table(item.table));
   }
   // What a card shows above its question, one labelled row per field (an item and a practice item alike).
+  // A card's quote comes first, under its title: the words asked about, then the code they are about.
   function evidence(card, item, ctx) {
     if (item.title) card.appendChild(rich("h3", "", item.title));
+    if (item.quote) card.appendChild(quoteBlock(item, ctx));
     if (item.body !== undefined) {
       var body = rich("p", "body", item.body);
       card.appendChild(DATA.labels.body ? row(DATA.labels.body, body) : body);
@@ -956,13 +961,10 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   // One question per screen: the answered ones stay as a line (with "Change"), and only one question
   // is asked: the one being changed, else the first unanswered.
-  // A card's quote sits at the top of its question box, or, with nothing left to ask, in the card itself.
-  function askOne(card, a, editing, ctx, onPick, onChange, off, withExamples, item) {
+  function askOne(card, a, editing, onPick, onChange, off, withExamples, item) {
     var open = DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
     var asked = DATA.questions.filter(function (q) { return q.id === editing; })[0] || open[0];
     var situation = item.situation, notes = item.answer_notes || {};
-    var quote = item.quote ? quoteBlock(item, ctx) : null;
-    if (quote && !asked) card.appendChild(quote);
     DATA.questions.forEach(function (q) {
       if (q === asked || !valid(DATA.allowed.questions[q.id], a[q.id])) return;
       var line = el("p", "answered", (q.short || q.text) + ": " + labelOf(q, a[q.id]) + " ");
@@ -977,7 +979,6 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     });
     if (!asked) return null;
     var ask = el("div", "ask");
-    if (quote) ask.appendChild(quote);
     // A card's situation asks the page's first question in its own words; the others keep theirs.
     ask.appendChild(mark(situation && asked === DATA.questions[0] ? situated("p", "q", situation.question, situation.line) : rich("p", "q", asked.text),
       "question", { question: asked.id }));
@@ -1013,7 +1014,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     var ctx = termsOf(p);
     evidence(card, p, ctx);
     var a = practiceAnswers(p.id);
-    askOne(card, a, undefined, ctx, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true, p);
+    askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true, p);
     if (practiceAnswered(p)) {
       var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
       card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",

@@ -41,8 +41,8 @@ filter works in any frame, because the next thing to answer is simply the first 
 
 ## 3. An item counts as done only when every question on it is answered
 
-**Do.** Done means all questions answered. The card shows which one is missing ("Still needs:
-boundary"). The progress counter counts complete items only, so "7 of 12" means 7 items with every
+**Do.** Done means all questions answered. The card asks the one still missing in its question
+box, and "Next unanswered" lists what each item still needs. The progress counter counts complete items only, so "7 of 12" means 7 items with every
 question answered. A group is finished when all its items are and its familiarity question (rule 5)
 is answered.
 
@@ -50,7 +50,7 @@ is answered.
 and surfaces weeks later as a gap in the data. A counter that counts partial items reports progress
 that the analysis cannot use.
 
-**Check.** Answer one question of a two-question item: the counter stays put and the card names the
+**Check.** Answer one question of a two-question item: the counter stays put and the card asks the
 other question.
 
 ## 4. Blind: the page tells the labeller nothing about the answer or the source

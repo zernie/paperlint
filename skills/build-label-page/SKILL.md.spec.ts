@@ -68,7 +68,7 @@ building. In one line each:
    passing proves nothing about this.
 2. **Navigation never relies on in-page scrolling or toasts.** "Next unanswered" is a filter: it hides
    every finished item and group, and a note at the top lists what is left and what each still needs.
-3. **An item is done only when every question on it is answered.** The card names the missing
+3. **An item is done only when every question on it is answered.** The card asks the missing
    question; the progress counter counts complete items only.
 4. **Blind.** Neutral ids (\`G001\`…), order shuffled with a fixed seed, no model answers, verdicts or
    source labels on the page. The generator refuses to build when an item carries a field outside an
