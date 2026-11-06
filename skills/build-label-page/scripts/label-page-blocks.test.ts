@@ -505,12 +505,12 @@ const unticked = (text: string): string => text.split("`").join("");
 const shownBy = (n: FakeNode): string => n.textContent.replace(/\n/g, "");
 /** The kinds of the card's parts, in the order they appear. */
 const KINDS = [
+  "quote",
+  "quote-source",
   "excerpt-path",
   "code-line",
   "gap",
   "annotation",
-  "quote",
-  "quote-source",
   "question",
   "answer",
   "answer-sub",
@@ -567,19 +567,18 @@ function fixtureFacts() {
       { question: V7_QUESTION.id, value: o.value },
       unticked(notes[o.value] ?? ""),
     ]),
-    status: [
-      [{ state: "missing", missing: [V7_QUESTION.id] }],
-      [`Still needs: ${V7_QUESTION.short}`],
-    ],
+    // The save button and the open question already say what is missing: the line keeps its values
+    // and shows nothing.
+    status: [[{ state: "missing", missing: [V7_QUESTION.id] }], [""]],
     order: [
+      "quote",
+      "quote-source",
       "excerpt-path",
       ...lines.flatMap((l, n) => [
         ...(l.n > (lines[n - 1]?.n ?? l.n) + 1 ? ["gap"] : []),
         "code-line",
         ...(l.mark ? ["annotation"] : []),
       ]),
-      "quote",
-      "quote-source",
       "question",
       ...V7_QUESTION.options.flatMap((o) =>
         o.value in notes ? ["answer", "answer-sub"] : ["answer"],
@@ -589,7 +588,7 @@ function fixtureFacts() {
   };
 }
 
-test("🔴 an approved card reads top to bottom: its path, the code with a gap row for what it leaves out, the marked line and the note under it, the quote, its source, the question, each answer with its sub-line, then what it still needs", async () => {
+test("🔴 an approved card reads top to bottom: the quote and its source, its path, the code with a gap row for what it leaves out, the marked line and the note under it, the question, each answer with its sub-line, then a status line that shows nothing while the card is unanswered", async () => {
   const { page: html, key } = build(setup("v7-face", v7()));
   const { app } = await openLive(html, { practice: V7_DONE });
   const id = Object.entries(key.ids).find(

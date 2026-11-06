@@ -504,3 +504,32 @@ test("🔴 «All items are complete» waits for every group's familiarity too, a
   );
   assert.deepEqual([await said({}), await said(rated)], [false, true]);
 });
+
+test("🔴 the status line names nothing missing: empty while a card is unanswered, «Saved <time>» once part of it is saved, and its values keep what is missing", async () => {
+  const { page, key } = build(setup("status-missing", config()));
+  const [a, b] = Object.keys(key.ids);
+  assert.ok(a !== undefined && b !== undefined);
+  const savedAt = "2026-01-02T10:00:00Z";
+  const { app } = await openLive(page, {
+    answers: { [a]: { answers: { label: "yes" }, savedAt, source: "page" } },
+    groups: {},
+    practice: DONE_PRACTICE,
+  });
+  const statusOf = (id: string) => {
+    const card = app
+      .getByTestId("item")
+      .find((n) => z.object({ id: z.string() }).parse(n.meta()).id === id);
+    const line = card?.getByTestId("status")[0];
+    return [line?.meta(), line?.textContent];
+  };
+  assert.deepEqual(
+    [statusOf(a), statusOf(b)],
+    [
+      [
+        { state: "missing", missing: ["boundary"] },
+        `Saved ${new Date(savedAt).toLocaleTimeString()}`,
+      ],
+      [{ state: "missing", missing: ["label", "boundary"] }, ""],
+    ],
+  );
+});

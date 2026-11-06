@@ -1357,3 +1357,64 @@ test(
   },
   BROWSER_TEST_MS,
 );
+
+/** Where a part of a card sits, by its `data-test`: the first one of that kind. */
+const boxOf = async (card: Locator, kind: string) =>
+  card.getByTestId(kind).first().boundingBox();
+const Panel = z.object({
+  border: z.number(),
+  radius: z.number(),
+  padding: z.number(),
+});
+test(
+  "🔴 a quote card reads once from top to bottom, quote, code, question, answers, wait bar, inside a panel of its own; its «still needs» line is not shown",
+  async () => {
+    await onV7Page(
+      "browser-v7-order",
+      async (page, cardOf) => {
+        const card = await cardOf("card-docstring");
+        const parts = ["quote", "excerpt-path", "question", "answer", "wait"];
+        const boxes = await Promise.all(parts.map((k) => boxOf(card, k)));
+        // Guards: each part starts below the one before it ends, so the eye never goes back up.
+        assert.deepEqual(
+          R.zip(boxes, boxes.slice(1)).map(
+            ([a, b]) => a !== null && b !== null && b.y >= a.y + a.height,
+          ),
+          [true, true, true, true],
+          JSON.stringify(boxes),
+        );
+        const status = card.getByTestId("status");
+        assert.deepEqual(
+          [await metaOf(status), await status.isVisible()],
+          [{ state: "missing", missing: ["forbid"] }, false],
+        );
+        // A panel: a border all round, rounded, padded, and wide space before the next card.
+        const panel = Panel.parse(
+          await card.evaluate((e) => {
+            const s = getComputedStyle(e);
+            return {
+              border: parseFloat(s.borderBottomWidth),
+              radius: parseFloat(s.borderTopLeftRadius),
+              padding: parseFloat(s.paddingLeft),
+            };
+          }),
+        );
+        assert.ok(
+          panel.border >= 1 && panel.radius >= 8 && panel.padding >= 12,
+          JSON.stringify(panel),
+        );
+        const cards = await page.getByTestId("item").all();
+        const [first, second] = await Promise.all(
+          cards.slice(0, 2).map(async (c) => c.boundingBox()),
+        );
+        assert.ok(first && second, "two cards drawn");
+        assert.ok(
+          second.y - (first.y + first.height) >= 32,
+          JSON.stringify([first, second]),
+        );
+      },
+      true,
+    );
+  },
+  BROWSER_TEST_MS,
+);

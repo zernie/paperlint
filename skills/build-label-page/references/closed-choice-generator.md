@@ -155,18 +155,22 @@ Any card may carry these blocks, on any `kind`, and each one is optional. The pa
 }
 ```
 
-- **Order on the card.** The card shows, in this order:
-  1. its place (`labels.place`);
-  2. the body, on a `labels.body` row when that label is set;
-  3. the repeat sentence;
-  4. the older fields (`code`, `unit`, `rules`, `readings`, `file`, `context`);
-  5. the situation's summary;
-  6. the excerpt;
-  7. **the question box**: the `quote` and its source, the question, and its answers with their `answer_notes`;
-  8. `references`, `more` and `table`, each in place under its heading. Nothing on a card is folded:
-     a labeller who has to open a block to answer reads half a card (#392).
+- **Order on the card.** Each card is a bordered panel, with wide space before the next. It shows, in this order:
+  1. its place (`labels.place`), then its `title`;
+  2. the `quote` and its source;
+  3. the body, on a `labels.body` row when that label is set;
+  4. the repeat sentence;
+  5. the older fields (`code`, `unit`, `rules`, `readings`, `file`, `context`);
+  6. the situation's summary;
+  7. the excerpt;
+  8. **the question box**: the question, its answers with their `answer_notes`, and the wait bar of `min_seconds`;
+  9. the reason box of an answer with `ask_why`, then the status line. The status line never lists
+     what is missing (the question box asks it): it shows «Saved <time>», «Saving…», why a save did not happen, or nothing;
+  10. `references`, `more` and `table`, each in place under its heading. Nothing on a card is folded:
+      a labeller who has to open a block to answer reads half a card (#392).
 
-  The question therefore sits right under the code it names.
+  A card is read once, top to bottom: the words asked about, the code they are about, the question
+  right under that code, its answers. A card without a `quote` has the same order without step 2.
 
 - **`situation`**: `{summary?, question}`.
   - `summary` is one sentence above the excerpt; optional.
@@ -202,7 +206,7 @@ Any card may carry these blocks, on any `kind`, and each one is optional. The pa
 }
 ```
 
-- **`quote`** shows the words being asked about at the top of the question box, `source` as a small line under them. A card needs `body` or `quote`.
+- **`quote`** shows the words being asked about at the top of the card, above its code, `source` as a small line under them. A card needs `body` or `quote`.
 - **`terms`**: each `term` must occur in the quote, its source or the annotation, inside one backtick span or outside all of them; the build refuses one it cannot find there, and a note entry with neither `quote` nor `code`. A term opens from its first occurrence in the quote, else the source, else the annotation. On the page it is a dotted button: a tap (or hover, where there is hover) opens one floating note anchored to it, at most 280 px wide (300 with a snippet), flipped above the term when there is no room below, kept inside the viewport. A tap outside closes it and does nothing else, so it never answers a card; so does Esc. Answer buttons carry no terms.
 - **`answer_notes`** puts a sub-line under an answer's label on this card: what the answer means here. A question or an answer the page does not have is refused.
 - Whether a note pushes the labeller toward one answer is not checked: the consumer lists each note for the study's author.
