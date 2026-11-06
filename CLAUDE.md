@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:58c66e374c084cc5 compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:d595fb538eb0a81e compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -105,6 +105,11 @@ Before writing machinery, **run the thing you are about to replace and paste its
 ### Prior Art Before A Command Or A Channel
 
 **Guidance only** — Before adding a CLI command or changing a delivery channel (skill links, hook wiring, the composite action, the npm package), read how comparable tools did it. "We need another command for X" has, in every tool examined, been the CONFIG not declaring something. [Details](docs/prior-art/README.md)
+
+### Browser Tests Find By Data Test
+
+**Enforced by:** `eslint/playwright/no-raw-locators`
+**Why:** A browser test finds an element only by `getByTestId` on `data-test`, and reads its values from the JSON in `data-test-meta`, never from CSS classes or visible text; content text is compared with the fixture's value. The older browser tests sit in `eslint-suppressions.json`, which may only shrink. [Details](docs/testing.md)
 
 ### New Code Is Functional
 
