@@ -141,6 +141,8 @@ button.term code { background: transparent; border: 0; padding: 0; }
   background: color-mix(in srgb, var(--tag) 14%, var(--bg)); }
 .tag.s0 { --tag: var(--accent); } .tag.s1 { --tag: var(--good); } .tag.s2 { --tag: var(--mark); }
 .tag.s3 { --tag: var(--bad); } .tag.s4 { --tag: var(--text); }
+/* A tag inside an annotation's box: the first thing in it, on the line before the note's words. */
+.anno > .tag { display: inline-block; margin: 0 6px 4px 0; vertical-align: 1px; }
 .rulebox { display: flex; flex-direction: column; gap: 8px; }
 .clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 /* The clamp cuts at the padding box, so a code block's bottom padding is a border: no fourth line peeks in. */
@@ -547,11 +549,14 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   // A block under its source tag (#400): the block itself when the page has no `sources` or the block names none.
   // The tag shows the label in the language picked, else the page's own; its colour is the id's place in `sources`.
-  function tagged(block, id, kind) {
-    if (!id || !DATA.sources) return block;
+  function sourceTag(id, kind) {
     var at = DATA.sources.map(function (s) { return s.id; }).indexOf(id);
     var own = state.lang !== DATA.lang && DATA.translations ? DATA.translations[state.lang].sources : null;
-    var tag = mark(el("span", "tag s" + at, (own && own[id]) || DATA.sources[at].label), "source-tag", { source: id, block: kind });
+    return mark(el("span", "tag s" + at, (own && own[id]) || DATA.sources[at].label), "source-tag", { source: id, block: kind });
+  }
+  function tagged(block, id, kind) {
+    if (!id || !DATA.sources) return block;
+    var tag = sourceTag(id, kind);
     var wrap = el("div", "tagged");
     wrap.appendChild(tag);
     wrap.appendChild(block);
@@ -779,6 +784,9 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
         var anno = pre.appendChild(mark(el("div", "anno"), "annotation", { line: l.n }));
         anno.setAttribute("role", "note");
         anno.appendChild(el("span", "anno-arrow"));
+        // An annotation with its own source (#401's sibling): the tag opens the box, so the note reads as that
+        // source's and not as the tagged code box's around it.
+        if (ex.annotation_from && DATA.sources) anno.appendChild(sourceTag(ex.annotation_from, "annotation"));
         termed(anno, ex.annotation, ctx, "annotation");
       } else if (!ex.annotation) r.code.appendChild(el("span", "this", ex.mark_label || "\u25c0 this line"));
     });

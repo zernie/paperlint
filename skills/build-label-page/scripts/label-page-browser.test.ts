@@ -1659,7 +1659,8 @@ const withIn = (
   ...card,
   [block]: { ...Raw.parse(card[block]), ...more },
 });
-/** The v7 fixture with tags: the docstring card has all four kinds, the call card a quote tag only, the depth card none. */
+/** The v7 fixture with tags: the docstring card has all four kinds, the call card a quote tag only, the depth card a
+ * tag on its annotation only. */
 const TAGGED_CONFIG = {
   ...V7_CONFIG,
   sources: TAG_LABELS,
@@ -1681,7 +1682,7 @@ const TAGGED_CONFIG = {
         )
       : n === 1
         ? withIn(card, "quote", { from: "ours" })
-        : card;
+        : withIn(card, "excerpt", { annotation_from: "ours" });
   }),
 };
 const SourceTag = z.object({ source: z.string(), block: z.string() });
@@ -1701,7 +1702,7 @@ const gapAbove = async (tag: Locator, block: Locator) => {
 };
 
 test(
-  "🔴 each tagged block gets a tag with its source id right above it, the label follows the language, and an untagged card has none",
+  "🔴 each tagged block gets a tag with its source id right above it, the label follows the language, and an annotation's own tag sits inside its box",
   async () => {
     await onV7Page(
       "browser-v7-source-tags",
@@ -1716,8 +1717,18 @@ test(
         assert.deepEqual(await tagsOn(await cardOf("card-call")), [
           { source: "ours", block: "quote", text: TAG_LABELS.ours },
         ]);
-        // Guards: a card whose blocks name no source has no tag at all.
-        assert.deepEqual(await tagsOn(await cardOf("card-depth")), []);
+        // An annotation's own tag sits inside the annotation's box, and it is the depth card's only tag.
+        const depth = await cardOf("card-depth");
+        assert.deepEqual(await tagsOn(depth), [
+          { source: "ours", block: "annotation", text: TAG_LABELS.ours },
+        ]);
+        assert.equal(
+          await depth
+            .getByTestId("annotation")
+            .getByTestId("source-tag")
+            .count(),
+          1,
+        );
         const tags = docstring.getByTestId("source-tag");
         const gaps = [
           await gapAbove(tags.nth(0), docstring.getByTestId("quote")),

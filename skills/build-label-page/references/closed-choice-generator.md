@@ -375,14 +375,15 @@ without `sources` shows no tag, and its config, store documents and key are unch
 ```
 
 - **`from`** names an id of `sources`, on `quote`, `situation` and `excerpt`; **`caption_from`**
-  on `excerpt` tags the caption. Practice items take the same fields. The question is the page's own
+  on `excerpt` tags the caption; **`annotation_from`** on `excerpt` tags the annotation, the tag first inside the annotation's box (a note
+  that is not the code box's source, such as a reading of the docs, inside a box tagged as a model's code). Practice items take the same fields. The question is the page's own
   words and gets no tag.
 - **On the page:** a small uppercase pill directly above the block. Its colour is the id's place in
   `sources` (accent, green, amber, red, grey-blue: tokens the page already has). Each carries
   `data-test="source-tag"` and `data-test-meta` `{"source": "<id>", "block": "quote" | "situation" |
-"excerpt" | "caption"}`.
-- **Refused, by path:** a `from` or `caption_from` with no `sources` on the page; one naming an id not
-  in `sources`; one over a text the card does not have (a `caption_from` without a `caption`, a
+"excerpt" | "caption" | "annotation"}`.
+- **Refused, by path:** a `from`, `caption_from` or `annotation_from` with no `sources` on the page; one naming an id not
+  in `sources`; one over a text the card does not have (a `caption_from` without a `caption`, an `annotation_from` without an `annotation`, a
   situation `from` without a `summary`); a `sources` id no item or practice item names; an empty
   label; more than 5 ids; a `translations.<lang>.sources` id the page's `sources` lack.
 - **Translations:** `translations.<lang>.sources` gives the tag labels in that language. A label it

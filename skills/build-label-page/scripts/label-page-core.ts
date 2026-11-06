@@ -309,9 +309,10 @@ const CARD_FIELDS: Readonly<Record<string, SchemaNode>> = {
     annotation: string(false),
     caption: string(false),
     mark_label: string(false),
-    // source tags (#400): over the code box, and over the caption under it
+    // source tags (#400): over the code box, over the caption under it, and inside the annotation's box
     from: string(false),
     caption_from: string(false),
+    annotation_from: string(false),
   }),
   quote: optional({
     text: string(),
@@ -712,6 +713,7 @@ interface Blocks {
     readonly mark_label?: string;
     readonly from?: string;
     readonly caption_from?: string;
+    readonly annotation_from?: string;
   };
   readonly quote?: {
     readonly text: string;
@@ -1085,32 +1087,31 @@ function checkBlocks(cfg: Config): void {
 /** The colours the page has for tags (`.tag.s0` to `.tag.s4` in page-template.html), in `sources` order. */
 export const SOURCE_COLOURS = 5;
 /** Each tag a card asks for: the path of the field that names it, the id it names, the text it sits over. */
-const tagsOf = (at: string, card: Card) => [
-  ...(card.quote?.from === undefined
-    ? []
-    : [{ at: `${at}.quote.from`, id: card.quote.from, over: "text" }]),
-  ...(card.situation?.from === undefined
-    ? []
-    : [
-        {
-          at: `${at}.situation.from`,
-          id: card.situation.from,
-          over: card.situation.summary,
-        },
-      ]),
-  ...(card.excerpt?.from === undefined
-    ? []
-    : [{ at: `${at}.excerpt.from`, id: card.excerpt.from, over: "box" }]),
-  ...(card.excerpt?.caption_from === undefined
-    ? []
-    : [
-        {
-          at: `${at}.excerpt.caption_from`,
-          id: card.excerpt.caption_from,
-          over: card.excerpt.caption,
-        },
-      ]),
-];
+const tagsOf = (at: string, card: Card) =>
+  R.pipe(
+    [
+      { field: "quote.from", id: card.quote?.from, over: "text" },
+      {
+        field: "situation.from",
+        id: card.situation?.from,
+        over: card.situation?.summary,
+      },
+      { field: "excerpt.from", id: card.excerpt?.from, over: "box" },
+      {
+        field: "excerpt.caption_from",
+        id: card.excerpt?.caption_from,
+        over: card.excerpt?.caption,
+      },
+      {
+        field: "excerpt.annotation_from",
+        id: card.excerpt?.annotation_from,
+        over: card.excerpt?.annotation,
+      },
+    ] as const,
+    R.flatMap(({ field, id, over }) =>
+      id === undefined ? [] : [{ at: `${at}.${field}`, id, over }],
+    ),
+  );
 /**
  * What the schema cannot say about source tags: a tag names an id of the page's `sources`, over a
  * text the card has, the page has colours for its ids, and an id nothing uses is a dead entry.
