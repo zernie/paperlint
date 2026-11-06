@@ -143,6 +143,9 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
 .match.no { color: var(--bad); }
 .who { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); }
 .who button { width: auto; min-height: 44px; border: 0; color: var(--accent); padding: 0 4px; }
+/* The language switch: small buttons side by side under the title, the picked one pressed. */
+.langs { display: flex; gap: 8px; }
+.langs button { width: auto; min-width: 56px; min-height: 44px; text-align: center; }
 </style>
 <main id="app"><p class="muted">Loading…</p></main>
 <script type="application/json" id="data">__DATA__</script>
@@ -182,6 +185,34 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   var WHY_PAUSE_MS = 800;
 
   try { if (localStorage.getItem("label-filter") === "next") state.filter = "next"; } catch (e) {}
+  var BASE = { title: DATA.title, intro: DATA.intro, labels: DATA.labels, questions: DATA.questions };
+  // ── the page's own words, in the language picked (DATA.translations, #394) ─────────────────
+  // Only the page's words change: the quote, the code and every note on a card stay as built.
+  var LANGS = DATA.translations ? [DATA.lang].concat(Object.keys(DATA.translations)) : [];
+  state.lang = DATA.lang;
+  try {
+    var said = localStorage.getItem("label-lang");
+    if (LANGS.indexOf(said) !== -1) state.lang = said;
+  } catch (e) {}
+  function words() { return state.lang === DATA.lang || !DATA.translations ? BASE : DATA.translations[state.lang]; }
+  function Qs() { return words().questions; }
+  function pickLang(lang) {
+    state.lang = lang;
+    try { localStorage.setItem("label-lang", lang); } catch (e) {}
+    render();
+  }
+  // One button per language, its tag on it ("EN", "RU"); the one picked is pressed.
+  function langSwitch() {
+    var row = mark(el("div", "langs"), "lang-switch", { lang: state.lang, langs: LANGS });
+    LANGS.forEach(function (lang) {
+      var b = mark(el("button", "", lang.toUpperCase()), "lang-option", { lang: lang });
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.lang === lang));
+      b.addEventListener("click", function () { pickLang(lang); });
+      row.appendChild(b);
+    });
+    return row;
+  }
   // ── who is answering (DATA.answerers): each answerer's documents are "<answerer>~<id>" ─────
   // "~" is outside the build's name pattern, so no answerer, item, group or practice id holds it.
   var SEP = "~";
@@ -240,7 +271,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   function unsaved(id) { return !state.answers[id] && state.firstSeconds[id] === undefined; }
   function locked(id) { return MIN_SECONDS > 0 && unsaved(id) && dwellMs(id) < MIN_SECONDS * 1000; }
   function waitSeconds(id) { return Math.ceil((MIN_SECONDS * 1000 - dwellMs(id)) / 1000); }
-  function waitText(id) { return fill(DATA.labels.wait, { s: waitSeconds(id) }); }
+  function waitText(id) { return fill(words().labels.wait, { s: waitSeconds(id) }); }
   // The seconds stored with an item: those of its first save, kept on every later write.
   function secondsOf(id) {
     var d = state.answers[id];
@@ -341,11 +372,11 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     return d[qid];
   }
   function needsWhy(q, v) { return (DATA.allowed.needs_why[q.id] || []).indexOf(v) !== -1; }
-  function questionOf(qid) { return DATA.questions.filter(function (q) { return q.id === qid; })[0]; }
+  function questionOf(qid) { return Qs().filter(function (q) { return q.id === qid; })[0]; }
   // What an item still needs: an answer, or the reason its answer asks for (named "<short> (why)").
   function missingFor(id) {
     var a = answersOf(id), r = reasonsOf(id);
-    return DATA.questions.map(function (q) {
+    return Qs().map(function (q) {
       if (!valid(DATA.allowed.questions[q.id], a[q.id])) return q;
       if (needsWhy(q, a[q.id]) && !(r[q.id] || "").trim()) {
         return { id: q.id, text: q.text + " (why)", short: (q.short || q.text) + " (why)" };
@@ -373,12 +404,12 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   }
   function practiceMissing(pid) {
     var a = practiceAnswers(pid);
-    return DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
+    return Qs().filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
   }
   function practiceAnswered(p) { return practiceMissing(p.id).length === 0; }
   function practiceMatched(p) {
     var a = practiceAnswers(p.id);
-    return DATA.questions.every(function (q) { return a[q.id] === p.expected[q.id]; });
+    return Qs().every(function (q) { return a[q.id] === p.expected[q.id]; });
   }
   function practiceOpen() { return !DATA.practice.items.every(practiceAnswered); }
   function groupDone(g) { return familiarity(g) !== undefined && groupItems(g).every(function (i) { return itemDone(i.id); }); }
@@ -540,7 +571,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       if (o.icon) b.appendChild(el("span", "icon", o.icon));
       b.appendChild(el("span", "label", o.label));
       if (notes && notes[o.value]) b.appendChild(mark(rich("span", "sub", notes[o.value]), "answer-sub", { question: qid, value: o.value }));
-      if (withExamples && o.example) b.appendChild(rich("span", "ex", DATA.labels.practice_example + o.example));
+      if (withExamples && o.example) b.appendChild(rich("span", "ex", words().labels.practice_example + o.example));
       b.type = "button";
       b.setAttribute("aria-pressed", String(current === o.value));
       b.disabled = disabled;
@@ -589,7 +620,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     var shown = itemsShown();
     if (MIN_SECONDS && unsaved(item.id)) card.setAttribute("data-id", item.id);
     mark(card, "item", { id: item.id, index: shown.indexOf(item) + 1, total: shown.length });
-    card.appendChild(el("div", "id", fill(DATA.labels.place, { id: item.id, n: shown.indexOf(item) + 1, total: shown.length })));
+    card.appendChild(el("div", "id", fill(words().labels.place, { id: item.id, n: shown.indexOf(item) + 1, total: shown.length })));
     var ctx = termsOf(item);
     evidence(card, item, ctx);
     var a = answersOf(item.id);
@@ -602,7 +633,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       var note = ask.appendChild(mark(el("p", "gate", waitText(item.id)), "wait", { id: item.id, seconds: waitSeconds(item.id) }));
       state.gates[item.id] = { note: note, buttons: Array.prototype.slice.call(ask.querySelectorAll(".opts button")) };
     }
-    DATA.questions.forEach(function (q) {
+    Qs().forEach(function (q) {
       var o = q.options.filter(function (x) { return x.value === a[q.id] && x.ask_why; })[0];
       if (!o) return;
       card.appendChild(el("p", "q", o.ask_why));
@@ -716,7 +747,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       if (prev && l.n > prev.n + 1) {
         var from = prev.n + 1, to = l.n - 1;
         pre.appendChild(mark(codeRow(" gap", "\u22ee", "", withGutter,
-          fill(from === to ? DATA.labels.hidden_one : DATA.labels.hidden, { from: from, to: to })).row, "gap", { from: from, to: to }));
+          fill(from === to ? words().labels.hidden_one : words().labels.hidden, { from: from, to: to })).row, "gap", { from: from, to: to }));
       }
       var r = codeRow((l.mark ? " hit" : "") + (l.context ? " ctx" : ""), (l.mark ? "\u25b6" : "") + l.n,
         l.gutter, withGutter, l.text);
@@ -936,11 +967,11 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     if (item.quote) card.appendChild(quoteBlock(item, ctx));
     if (item.body !== undefined) {
       var body = rich("p", "body", item.body);
-      card.appendChild(DATA.labels.body ? row(DATA.labels.body, body) : body);
+      card.appendChild(words().labels.body ? row(words().labels.body, body) : body);
     }
-    if (item.repeat && item.repeat.of > 1) card.appendChild(el("p", "muted", fill(DATA.labels.repeat, item.repeat)));
+    if (item.repeat && item.repeat.of > 1) card.appendChild(el("p", "muted", fill(words().labels.repeat, item.repeat)));
     if (item.code) card.appendChild(codeBlock(item.code));
-    if (item.unit) card.appendChild(row(item.unit.of > 1 ? fill(DATA.labels.line_part, { line: DATA.labels.line, part: item.unit.part, of: item.unit.of }) : DATA.labels.line,
+    if (item.unit) card.appendChild(row(item.unit.of > 1 ? fill(words().labels.line_part, { line: words().labels.line, part: item.unit.part, of: item.unit.of }) : words().labels.line,
       markedLine(item.unit)));
     // A rule the item names, with what it does in the linter's own words (looked up at build time).
     (item.rules || []).forEach(function (r) {
@@ -959,13 +990,21 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     var o = q.options.filter(function (x) { return x.value === v; })[0];
     return o ? o.label : v;
   }
+  // A card's own wording of the first question, or the translation's, with `{n}` its marked line's number.
+  function situationQuestion(item) {
+    var own = words().situation_question;
+    if (own === undefined) return situated("p", "q", item.situation.question, item.situation.line);
+    var hit = item.excerpt && item.excerpt.lines.filter(function (l) { return l.mark; })[0];
+    var line = hit ? { n: hit.n, text: hit.text.trim() } : null;
+    return situated("p", "q", line ? fill(own, { n: line.n }) : own, line);
+  }
   // One question per screen: the answered ones stay as a line (with "Change"), and only one question
   // is asked: the one being changed, else the first unanswered.
   function askOne(card, a, editing, onPick, onChange, off, withExamples, item) {
-    var open = DATA.questions.filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
-    var asked = DATA.questions.filter(function (q) { return q.id === editing; })[0] || open[0];
+    var open = Qs().filter(function (q) { return !valid(DATA.allowed.questions[q.id], a[q.id]); });
+    var asked = Qs().filter(function (q) { return q.id === editing; })[0] || open[0];
     var situation = item.situation, notes = item.answer_notes || {};
-    DATA.questions.forEach(function (q) {
+    Qs().forEach(function (q) {
       if (q === asked || !valid(DATA.allowed.questions[q.id], a[q.id])) return;
       var line = el("p", "answered", (q.short || q.text) + ": " + labelOf(q, a[q.id]) + " ");
       if (onChange) {
@@ -980,7 +1019,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     if (!asked) return null;
     var ask = el("div", "ask");
     // A card's situation asks the page's first question in its own words; the others keep theirs.
-    ask.appendChild(mark(situation && asked === DATA.questions[0] ? situated("p", "q", situation.question, situation.line) : rich("p", "q", asked.text),
+    ask.appendChild(mark(situation && asked === Qs()[0] ? situationQuestion(item) : rich("p", "q", asked.text),
       "question", { question: asked.id }));
     ask.appendChild(options(asked.options, a[asked.id], function (v) { onPick(asked, v); }, off, withExamples, notes[asked.id], asked.id));
     card.appendChild(ask);
@@ -990,18 +1029,19 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   function howTo() {
     var sec = el("section");
     var body = sec;
-    if (practiceOpen()) sec.appendChild(el("h2", "", "📖 How to answer"));
+    var heading = words().labels.how_to;
+    if (practiceOpen()) sec.appendChild(el("h2", "", heading));
     else {
       body = sec.appendChild(el("details"));
-      body.appendChild(el("summary", "", "📖 How to answer"));
+      body.appendChild(el("summary", "", heading));
     }
-    DATA.questions.forEach(function (q) {
-      body.appendChild(el("p", "q", q.text));
+    Qs().forEach(function (q) {
+      body.appendChild(mark(el("p", "q", q.text), "how-to-question", { question: q.id }));
       var list = el("div", "examples");
       q.options.forEach(function (o) {
-        var row = el("div", "example");
+        var row = mark(el("div", "example"), "how-to-answer", { question: q.id, value: o.value });
         row.appendChild(el("b", "", (o.icon ? o.icon + " " : "") + o.label));
-        row.appendChild(rich("span", "muted", "For example: " + o.example));
+        row.appendChild(rich("span", "muted", words().labels.for_example + o.example));
         list.appendChild(row);
       });
       body.appendChild(list);
@@ -1016,7 +1056,7 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     var a = practiceAnswers(p.id);
     askOne(card, a, undefined, function (q, v) { answerPractice(p.id, q.id, v); }, null, off, true, p);
     if (practiceAnswered(p)) {
-      var expected = DATA.questions.map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
+      var expected = Qs().map(function (q) { return labelOf(q, p.expected[q.id]); }).join(" · ");
       card.appendChild(rich("p", practiceMatched(p) ? "status saved" : "quote",
         (practiceMatched(p) ? "Matched. " : "Not matched. Expected: " + expected + ". ") + p.why));
     }
@@ -1134,8 +1174,10 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     app.textContent = "";
     var top = el("header", "top");
     app.appendChild(top);
-    top.appendChild(el("h1", "", DATA.title));
-    if (DATA.intro) top.appendChild(el("p", "muted", DATA.intro));
+    try { document.documentElement.lang = state.lang; } catch (e) {}
+    top.appendChild(el("h1", "", words().title));
+    if (LANGS.length) top.appendChild(langSwitch());
+    if (words().intro) top.appendChild(el("p", "muted", words().intro));
     if (state.store === "none") {
       top.appendChild(el("div", "banner",
         "Answers cannot be saved in this view, so it is read-only. Open the page from the claude.ai " +
