@@ -783,9 +783,13 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     return node;
   }
   var HOVER = !!(window.matchMedia && window.matchMedia("(hover: hover)").matches);
-  var tip = null, tipAt = null, hovered = false, tipTerm = "";
+  var tip = null, tipAt = null, hovered = false, tipTerm = "", leaving = null;
+  // The grace delay; a test sets `window.__tipGraceMs` to slow or shorten it.
+  function graceMs() { return window.__tipGraceMs || 250; }
+  function stayTip() { if (leaving !== null) { clearTimeout(leaving); leaving = null; } }
   function tipMeta(open) { mark(tip, "tip", { term: tipTerm, open: open }); }
   function closeTip() {
+    stayTip();
     if (tipAt) tipAt.setAttribute("aria-expanded", "false");
     tipAt = null;
     hovered = false;
@@ -846,8 +850,12 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     e.stopPropagation();
   }, true);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeTip(); });
+  // A note opened by hover closes a moment after the pointer leaves its term and the note: the gap
+  // between them must be crossable. Entering the term or the note again keeps it.
   document.addEventListener("mouseover", function (e) {
-    if (hovered && tipAt && e.target.closest && !e.target.closest("button.term, #tip")) closeTip();
+    if (!hovered || !tipAt || !e.target.closest) return;
+    if (e.target.closest("button.term, #tip")) stayTip();
+    else if (leaving === null) leaving = setTimeout(function () { leaving = null; if (hovered) closeTip(); }, graceMs());
   });
   // After a render the note follows its term's new button, or closes when the term is gone.
   function reanchorTip() {

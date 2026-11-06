@@ -1077,6 +1077,14 @@ const tipNow = async (page: Page) => {
   };
 };
 
+/** Wait until the note reports itself closed (it closes on its own schedule). */
+const noteClosed = (page: Page) =>
+  page.waitForFunction(
+    `JSON.parse(document.querySelector('[data-test="tip"]').getAttribute("data-test-meta")).open === false`,
+    undefined,
+    { timeout: 5_000 },
+  );
+
 test(
   "🔴 a dotted term opens one floating note on a tap, with its quote and its source link, anchored and inside a 400 px viewport",
   async () => {
@@ -1109,6 +1117,9 @@ test(
         ["card-depth", "guard clauses"],
         ["card-call", "document.getElementById"],
       ] as const) {
+        // Each term is measured on its own: the note of the one before may cover this one.
+        await page.keyboard.press("Escape");
+        await noteClosed(page);
         await (await termOf(await cardOf(source), term)).click();
         const t = await tipNow(page);
         edges.push([t.term, t.left >= 0 && t.right <= 400 && t.width <= 300]);
@@ -1160,6 +1171,64 @@ test(
       await (await answerOf(depth, "unsettled")).click();
       await page.waitForTimeout(100);
       assert.equal((await writes(page)).length, 1);
+    });
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "🔴 a note opened by hover stays open while the pointer crosses the gap to it, keeps its link reachable, and closes after the pointer leaves for good",
+  async () => {
+    await onV7Page("browser-v7-hover", async (page, cardOf) => {
+      const docstring = await cardOf("card-docstring");
+      const google = fixtureCard("card-docstring").terms.find(
+        (t) => t.term === "Google-style",
+      );
+      assert.ok(google !== undefined);
+      const term = await termOf(docstring, google.term);
+      // A slow runner must not outrun the grace delay while the pointer crosses the gap.
+      await page.evaluate("window.__tipGraceMs = 5000");
+      // At its top left corner: a term that wraps has a box whose middle may lie over another term.
+      await term.hover({ position: { x: 4, y: 4 } });
+      assert.deepEqual(
+        [(await tipNow(page)).term, (await tipNow(page)).open],
+        [google.term, true],
+      );
+      // Straight down from the term, in small steps, through the gap into the note. Only the gap
+      // lies between them on this path, so no other term opens on the way.
+      const tip = page.getByTestId("tip");
+      const from = await term.boundingBox();
+      const to = await tip.boundingBox();
+      assert.ok(from !== null && to !== null);
+      const top = from.y + from.height;
+      // The other terms do not react while the pointer crosses: only the gap is under test, and
+      // which term lies in it depends on how the line wraps. The arrow bridges the gap at the
+      // middle of the term, so the crossing is at its right end.
+      await page.addStyleTag({
+        content: 'button.term[aria-expanded="false"] { pointer-events: none; }',
+      });
+      const x = from.x + from.width - 8;
+      assert.ok(
+        to.y > top && x > to.x && x < to.x + to.width,
+        "the note lies below the term and covers that column",
+      );
+      await page.mouse.move(x, from.y + from.height - 1);
+      for (const k of R.range(0, Math.ceil((to.y + 10 - top) / 3))) {
+        await page.mouse.move(x, top + 3 * k);
+      }
+      await page.mouse.move(x, to.y + 10);
+      const inside = await tipNow(page);
+      assert.deepEqual(
+        [inside.term, inside.open, inside.expanded],
+        [google.term, true, [google.term]],
+      );
+      // Guards: the link answers a click at its own position, nothing covers it.
+      await page.getByTestId("tip-link").first().click({ trial: true });
+      // Far from the term and the note, it closes by itself once the grace delay has run out.
+      await page.evaluate("window.__tipGraceMs = 50");
+      await page.mouse.move(2, 2, { steps: 20 });
+      await noteClosed(page);
+      assert.equal((await tipNow(page)).open, false);
     });
   },
   BROWSER_TEST_MS,

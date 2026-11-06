@@ -395,6 +395,34 @@ const V7_REFUSED: readonly (readonly [
     "items[0].terms[0].term: 'rule D413' is not in the card's annotation, quote or quote source — a note opens from words the card shows",
   ],
   [
+    "v7-terms-overlap",
+    v7((i) => ({
+      ...i,
+      terms: [
+        {
+          term: "Ruff",
+          note: [{ quote: "q", url: "https://e.x/", url_label: "u" }],
+        },
+        {
+          term: "Ruff rule",
+          note: [{ quote: "q", url: "https://e.x/", url_label: "u" }],
+        },
+      ],
+    })),
+    "items[0].terms[0].term: 'Ruff' is inside items[0].terms[1].term 'Ruff rule' — the page draws one of two overlapping terms, so the other note never opens",
+  ],
+  [
+    "v7-terms-twice",
+    v7((i) => ({
+      ...i,
+      terms: ["Ruff", "Ruff"].map((term) => ({
+        term,
+        note: [{ quote: "q", url: "https://e.x/", url_label: "u" }],
+      })),
+    })),
+    "items[0].terms[0].term: 'Ruff' is inside items[0].terms[1].term 'Ruff' — the page draws one of two overlapping terms, so the other note never opens",
+  ],
+  [
     "v7-note-without-words",
     v7((i) => ({
       ...i,

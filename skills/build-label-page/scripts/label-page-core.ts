@@ -1033,7 +1033,26 @@ function checkCardText(cfg: Config): void {
     checkAnswerNotes(at, card, options);
   });
 }
+/**
+ * One term's text inside another's on the same card (or the same text twice): the page draws one
+ * button for the words, so the other term's note would never open.
+ */
+function checkTermsDoNotOverlap(at: string, card: Card): void {
+  const texts = (card.terms ?? []).map((t) => t.term);
+  const named = (k: number) => `${at}.terms[${String(k)}]`;
+  texts.forEach((inner, k) => {
+    const j = texts.findIndex(
+      (outer, m) =>
+        m !== k && outer.includes(inner) && (outer !== inner || m > k),
+    );
+    if (j !== -1)
+      fail(
+        `${named(k)}.term: ${repr(inner)} is inside ${named(j)}.term ${repr(texts[j])} — the page draws one of two overlapping terms, so the other note never opens`,
+      );
+  });
+}
 function checkTerms(at: string, card: Card): void {
+  checkTermsDoNotOverlap(at, card);
   (card.terms ?? []).forEach((t, k) => {
     const where = `${at}.terms[${String(k)}]`;
     if (!findsTerm(card, t.term))
