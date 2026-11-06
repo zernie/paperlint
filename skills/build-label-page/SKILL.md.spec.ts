@@ -169,6 +169,16 @@ Two optional top-level keys of \`items.json\`, both left out by default:
 Details and the export's shape: [\`references/closed-choice-generator.md\`](references/closed-choice-generator.md),
 "Two answerers, and a minimum time on screen".
 
+## A second language
+
+A labeller who reads another language better gets the page's own words in it: \`"translations": {"ru":
+{…}}\` (and \`"lang"\`, the page's own, \`en\` by default) adds a switch under the title. The questions,
+answers, examples, reason prompts, intro and labels change; the quote, the code and every note never
+do, because those words are what is judged. The build refuses a translation that leaves out or
+invents a question or an answer; the ids and \`key.json\` are the same with or without it.
+[\`references/closed-choice-generator.md\`](references/closed-choice-generator.md), "A second
+language for the page's own words".
+
 ## When the page misbehaves
 
 Look at what the store holds (\`ArtifactData\` \`list\`) before changing anything: the page may be fine

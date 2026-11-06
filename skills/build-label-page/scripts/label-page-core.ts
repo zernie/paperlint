@@ -451,6 +451,42 @@ const QUESTION_SCHEMA = obj({
   short: string(false),
   options: array(OPTION_SCHEMA, true, 2),
 });
+// Page-level words the blocks use (references/closed-choice-generator.md §«Content blocks»).
+const LABELS = optional({
+  place: string(false),
+  body: string(false),
+  line: string(false),
+  line_part: string(false),
+  repeat: string(false),
+  practice_example: string(false),
+  hidden: string(false),
+  hidden_one: string(false),
+  wait: string(false),
+  how_to: string(false),
+  for_example: string(false),
+});
+// The page's own words in another language (#394): never the quote, code, notes or any card text
+// the labeller judges. Keyed like the page, so a translation names its questions and answers by id.
+const TRANSLATION = obj({
+  title: string(false),
+  intro: string(false),
+  labels: LABELS,
+  // the first question as the cards with a `situation` ask it; `{n}` is the marked line's number
+  situation_question: string(false),
+  questions: mapping(
+    obj({
+      text: string(),
+      short: string(false),
+      options: mapping(
+        obj({ label: string(), example: string(), ask_why: string(false) }),
+        NAME_PATTERN,
+        1,
+      ),
+    }),
+    NAME_PATTERN,
+    1,
+  ),
+});
 const configSchema = (kind: Kind): SchemaNode =>
   obj({
     study: string(true, NAME_PATTERN), // becomes a file name
@@ -471,18 +507,10 @@ const configSchema = (kind: Kind): SchemaNode =>
     questions: array(QUESTION_SCHEMA, true, 1),
     practice: array(practiceSchema(kind), true, MIN_PRACTICE),
     practice_round: integer(false),
-    // Page-level words the blocks use (references/closed-choice-generator.md §«Content blocks»).
-    labels: optional({
-      place: string(false),
-      body: string(false),
-      line: string(false),
-      line_part: string(false),
-      repeat: string(false),
-      practice_example: string(false),
-      hidden: string(false),
-      hidden_one: string(false),
-      wait: string(false),
-    }),
+    labels: LABELS,
+    // the language of the page's own words, and the same words in more languages, with a switch
+    lang: string(false, NAME_PATTERN),
+    translations: mapping(TRANSLATION, NAME_PATTERN, 1, false),
     items: array(itemSchema(kind), true, 1),
   });
 /** The declared schema (`schema` prints it): every field, those a kind requires left optional. */
@@ -736,7 +764,31 @@ interface Config {
   readonly practice: readonly Practice[];
   readonly practice_round?: number;
   readonly labels?: Readonly<Record<string, string>>;
+  readonly lang?: string;
+  readonly translations?: Readonly<Record<string, Translation>>;
   readonly items: readonly Item[];
+}
+interface QuestionWords {
+  readonly text: string;
+  readonly short?: string;
+  readonly options: Readonly<
+    Record<
+      string,
+      {
+        readonly label: string;
+        readonly example: string;
+        readonly ask_why?: string;
+      }
+    >
+  >;
+}
+/** The page's own words in one more language (#394). */
+interface Translation {
+  readonly title?: string;
+  readonly intro?: string;
+  readonly labels?: Readonly<Record<string, string>>;
+  readonly situation_question?: string;
+  readonly questions: Readonly<Record<string, QuestionWords>>;
 }
 /** The config is typed by passing CONFIG_SCHEMA: `checkValue` refuses (throws) on any departure. */
 function assertConfig(value: Json): asserts value is Json & Config {
@@ -1157,6 +1209,129 @@ function checkNoSourceShown(cfg: Config): void {
   }
 }
 
+// ── a second language for the page's own words (#394) ─────────────────────────────────────────
+/** The language of the page's own words when items.json does not name it. */
+const BASE_LANG = "en";
+/** In a translated `situation_question`, the number of the card's marked line. */
+const NUMBER_TOKEN = "{n}";
+/** A translated text is given exactly when the page shows the text it translates. */
+function checkPresence(
+  where: string,
+  shown: string | undefined,
+  given: string | undefined,
+): void {
+  if (shown !== undefined && given === undefined)
+    fail(`${where}: is required and missing — ${shown}`);
+  if (shown === undefined && given !== undefined)
+    fail(`${where}: is never shown — the page has no text it translates`);
+}
+/** The cards' first question, translated: given exactly when a card has a `situation`. */
+function checkSituationWords(cfg: Config, at: string, t: Translation): void {
+  const cards = cardsOf(cfg).filter(([, c]) => c.situation !== undefined);
+  const first = cards[0];
+  checkPresence(
+    `${at}.situation_question`,
+    first &&
+      `${first[0]}.situation asks the first question in the card's own words`,
+    t.situation_question,
+  );
+  const q = t.situation_question ?? "";
+  const bare = cards.find(([, c]) => lineOf(c) === undefined);
+  if (
+    bare !== undefined &&
+    [NUMBER_TOKEN, LINE_TOKEN].some((token) => q.includes(token))
+  )
+    fail(
+      `${at}.situation_question: names the marked line, and ${bare[0]} has no \`excerpt\` — add it, or write the question without \`${NUMBER_TOKEN}\` and \`${LINE_TOKEN}\``,
+    );
+}
+/** One answer in the translation's words; refused when the translation leaves it out. */
+const optionIn = (o: Option, words: QuestionWords, where: string): Option => {
+  const w =
+    words.options[o.value] ??
+    fail(
+      `${where}.options.${o.value}: is required and missing — every answer is translated`,
+    );
+  checkPresence(
+    `${where}.options.${o.value}.ask_why`,
+    o.ask_why && "this answer asks why",
+    w.ask_why,
+  );
+  return {
+    ...R.omit(o, ["ask_why"]),
+    label: w.label,
+    example: w.example,
+    ...R.pickBy({ ask_why: w.ask_why }, R.isDefined),
+  };
+};
+/** One question in the translation's words: every answer of it, no answer it does not have. */
+function questionIn(q: Question, t: Translation, at: string): Question {
+  const where = `${at}.questions.${q.id}`;
+  const words =
+    t.questions[q.id] ??
+    fail(
+      `${where}: is required and missing — every question of the page is translated`,
+    );
+  const values = q.options.map((o) => o.value);
+  const stray = Object.keys(words.options).find((v) => !values.includes(v));
+  if (stray !== undefined)
+    fail(`${where}.options.${stray}: not one of ${values.join(", ")}`);
+  const options = q.options.map((o) => optionIn(o, words, where));
+  const twice = firstRepeat(options.map((o) => o.label));
+  if (twice !== undefined)
+    fail(
+      `${where}.options.${String(values[twice.at])}.label: ${repr(options[twice.at]?.label)} reads the same as options.${String(values[twice.earlier])}.label — each button needs its own label`,
+    );
+  return {
+    id: q.id,
+    text: words.text,
+    ...R.pickBy({ short: words.short }, R.isDefined),
+    options,
+  };
+}
+/**
+ * Every language of the page with its words whole, the translations checked: each covers every
+ * question and answer of the page and names none it does not have, and gives an intro, a reason
+ * prompt and a situation question exactly where the page shows one. A label it leaves out reads as
+ * in the page's own language.
+ */
+function translationsOf(cfg: Config) {
+  const base = cfg.lang ?? BASE_LANG;
+  return R.mapValues(cfg.translations ?? {}, (t, lang) => {
+    const at = `translations.${lang}`;
+    if (lang === base)
+      fail(
+        `${at}: is the page's own language (\`lang\` is ${repr(base)}) — translate into another one`,
+      );
+    checkPresence(
+      `${at}.intro`,
+      cfg.intro && "the page has an `intro`",
+      t.intro,
+    );
+    checkSituationWords(cfg, at, t);
+    const ids = cfg.questions.map((q) => q.id);
+    const stray = Object.keys(t.questions).find((id) => !ids.includes(id));
+    if (stray !== undefined)
+      fail(
+        `${at}.questions.${stray}: not a question of this page (${ids.join(", ")})`,
+      );
+    return {
+      title: t.title ?? cfg.title,
+      intro: t.intro ?? "",
+      labels: { ...DEFAULT_LABELS, ...cfg.labels, ...t.labels },
+      ...R.pickBy({ situation_question: t.situation_question }, R.isDefined),
+      questions: cfg.questions.map((q) => questionIn(q, t, at)),
+    };
+  });
+}
+type Translated = ReturnType<typeof translationsOf>;
+/** The languages: the page's own when items.json names it, and with translations always (English when unnamed).
+ *  A page that names neither is as it was. */
+const languagesOf = (cfg: Config, translated: Translated) =>
+  cfg.translations === undefined
+    ? R.pickBy({ lang: cfg.lang }, R.isDefined)
+    : { lang: cfg.lang ?? BASE_LANG, translations: translated };
+
 // ── ids: neutral, in an order fixed by the seed, kept across rebuilds ─────────────────────────
 interface KeyEntry {
   readonly source_id: string;
@@ -1320,6 +1495,8 @@ const DEFAULT_LABELS: Readonly<Record<string, string>> = {
   hidden: "lines {from}\u2013{to}",
   hidden_one: "line {from}",
   wait: "\u23f3 You can answer in {s} s",
+  how_to: "📖 How to answer",
+  for_example: "For example: ",
 };
 /** The answerers and the dwell, only when items.json sets them: a page without them is as it was. */
 const twoKeys = (cfg: Config) =>
@@ -1332,6 +1509,7 @@ function payloadOf(
   cfg: Config,
   page: ReturnType<typeof itemsOnPage>,
   described: Described,
+  translated: Translated,
 ) {
   const used = Object.keys(cfg.groups).filter((g) =>
     page.items.some((i) => i.group === g),
@@ -1347,6 +1525,7 @@ function payloadOf(
     familiarity: asksFamiliarity(cfg) ? FAMILIARITY : [],
     allowed: allowedValues(cfg.questions, asksFamiliarity(cfg)),
     ...twoKeys(cfg),
+    ...languagesOf(cfg, translated),
     questions: cfg.questions,
     practice: {
       round: practiceRound(cfg),
@@ -1445,6 +1624,7 @@ export function prepareBuild(configPath: string, outDir: string) {
   checkBlocks(cfg);
   checkCardText(cfg);
   checkNoSourceShown(cfg);
+  const translated = translationsOf(cfg);
   const described = describeRules(cfg, dirname(configPath));
   mkdirSync(outDir, { recursive: true });
   const keyPath = join(outDir, "key.json");
@@ -1452,7 +1632,7 @@ export function prepareBuild(configPath: string, outDir: string) {
   const page = itemsOnPage(cfg, keyPath);
   writeJson(keyPath, keyOf(cfg, page, earlier));
   return {
-    payload: payloadOf(cfg, page, described),
+    payload: payloadOf(cfg, page, described, translated),
     dropped: cfg.items.length - page.items.length,
   };
 }

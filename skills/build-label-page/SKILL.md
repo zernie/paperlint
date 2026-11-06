@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:ed201d81c5934675 compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:46ebfc043d459ff0 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -157,6 +157,16 @@ Two optional top-level keys of `items.json`, both left out by default:
 
 Details and the export's shape: [`references/closed-choice-generator.md`](references/closed-choice-generator.md),
 "Two answerers, and a minimum time on screen".
+
+## A second language
+
+A labeller who reads another language better gets the page's own words in it: `"translations": {"ru":
+{…}}` (and `"lang"`, the page's own, `en` by default) adds a switch under the title. The questions,
+answers, examples, reason prompts, intro and labels change; the quote, the code and every note never
+do, because those words are what is judged. The build refuses a translation that leaves out or
+invents a question or an answer; the ids and `key.json` are the same with or without it.
+[`references/closed-choice-generator.md`](references/closed-choice-generator.md), "A second
+language for the page's own words".
 
 ## When the page misbehaves
 
