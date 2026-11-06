@@ -229,6 +229,8 @@ Any card may carry these blocks, on any `kind`, and each one is optional. The pa
   | `hidden`           | a `⋮` row for lines left out                                    | `lines {from}–{to}`            |
   | `hidden_one`       | a `⋮` row for one line left out                                 | `line {from}`                  |
   | `wait`             | the bar under the answers while `min_seconds` runs              | `⏳ You can answer in {s} s`   |
+  | `how_to`           | the heading of the first screen's questions and examples        | `📖 How to answer`             |
+  | `for_example`      | text before each example on the first screen                    | `For example: `                |
 
 - The leak guard reads every string these blocks render, one string at a time.
 
@@ -285,6 +287,60 @@ units only") with the number excluded reported in the paper; a unit dropped at a
 author cannot read it is an exclusion made after the draw and goes unrecorded. The practice is three
 units whose fate is obvious. Each dropped unit carries its reason in the labels file. The author's words, with the date, then go into
 `author_check` of the plan; a dropped unit is replaced by the next one in the draw.
+
+## A second language for the page's own words
+
+For a labeller who reads another language better (#394). Both keys are optional and top-level; left
+out, the page is exactly as above.
+
+```jsonc
+{
+  "lang": "en", // the language of the page's own words; "en" when left out
+  "translations": {
+    "ru": {
+      "title": "…", // optional: the page's title when left out
+      "intro": "…", // given exactly when the page has an `intro`
+      "labels": {
+        "place": "Карточка {n} из {total}",
+        "how_to": "📖 Как отвечать",
+        "for_example": "Например: ",
+      },
+      "situation_question": "Эти слова запрещают строку {n}?", // given exactly when a card has a `situation`
+      "questions": {
+        "forbid": {
+          "text": "…",
+          "short": "…", // optional: the translated `text` stands in for it
+          "options": {
+            "forbid": { "label": "Запрещают", "example": "…" },
+            "cannot": { "label": "…", "example": "…", "ask_why": "…" },
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+- **What changes with the language:** the title, the intro, the `labels`, every question's text and
+  short form, every answer's label and example, every reason prompt (`ask_why`), and the first question
+  as the cards with a `situation` ask it. The first screen's rows ("How to answer") change too.
+- **What never does:** the quote and its source, the code, the annotation, the term notes, the
+  answer sub-lines (`answer_notes`), a situation's `summary`, and every other card field. Those words
+  are what the labeller judges; a translated quote would be a different item.
+- **`situation_question`** replaces each card's own `situation.question` in that language. `{n}` is
+  the number of the card's first marked line; `{line}` works as in `situation`. Either one on a card
+  without an `excerpt` is refused by path.
+- **Refused, by path:** a translation into the page's own `lang`; a question or an answer it leaves
+  out, or one the page does not have; two answers whose labels read the same; an `intro`, an
+  `ask_why` or a `situation_question` given where the page has none, or missing where it has one.
+- **Left out on purpose:** a label the translation does not give reads as in the page's language.
+  The page's fixed words ("Practice", "Change", "Saved", "Next unanswered", "Who is answering?")
+  and the word «line» that `{line}` writes stay in English.
+- **The switch** sits under the title (`data-test="lang-switch"`), one button per language with its
+  tag ("EN", "RU"). The choice is kept in the browser's localStorage under `label-lang` when it has
+  one.
+- **Ids and key:** the neutral ids, the store's documents, `key.json` and the export are the same,
+  byte for byte, with or without translations.
 
 ## Two answerers, and a minimum time on screen
 
