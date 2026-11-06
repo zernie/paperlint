@@ -1438,6 +1438,7 @@ const Words = z.object({
     }),
   ),
 });
+const RU_RAW = z.json().parse(JSON.parse(readFileSync(RU_FIXTURE, "utf8")));
 const RU_WORDS = z
   .object({
     situation_question: z.string(),
@@ -1453,7 +1454,7 @@ const RU_WORDS = z
       }),
     ),
   })
-  .parse(JSON.parse(readFileSync(RU_FIXTURE, "utf8")));
+  .parse(RU_RAW);
 /** The fixture's page words in one language: the base's, or the Russian translation laid over them. */
 function wordsIn(lang: "en" | "ru") {
   const base = Words.parse({
@@ -1535,7 +1536,7 @@ test(
   async () => {
     const cfg = {
       ...R.omit(V7_CONFIG, ["min_seconds"]),
-      translations: { ru: JSON.parse(readFileSync(RU_FIXTURE, "utf8")) },
+      translations: { ru: RU_RAW },
     };
     const { page: html, key } = build(setup("browser-v7-lang", cfg));
     const at = "http://label.test/";

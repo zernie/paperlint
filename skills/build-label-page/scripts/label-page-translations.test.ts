@@ -54,151 +54,152 @@ const Data = z
   .object({ lang: z.string(), translations: z.record(z.string(), z.unknown()) })
   .loose();
 
+/** What the page is handed for Russian: the kit's labels with RU's over them, and every question. */
+function expectedRu() {
+  const [label, boundary] = QUESTIONS;
+  assert.ok(label !== undefined && boundary !== undefined);
+  const inRu = (qid: "label" | "boundary", value: string) =>
+    qid === "label"
+      ? RU.questions.label.options[value === "yes" ? "yes" : "no"]
+      : RU.questions.boundary.options[value === "clear" ? "clear" : "boundary"];
+  return {
+    title: RU.title,
+    intro: "",
+    labels: {
+      place: "{id} · {n} of {total}",
+      line: "Line",
+      line_part: "{line} · part {part} of {of}",
+      repeat: "Card {index} of {of}",
+      practice_example: "",
+      hidden: "lines {from}–{to}",
+      hidden_one: "line {from}",
+      wait: "⏳ You can answer in {s} s",
+      ...RU.labels,
+    },
+    questions: [
+      {
+        id: "label",
+        text: "Это верно?",
+        short: "верно?",
+        options: label.options.map((o) => ({
+          value: o.value,
+          ...inRu("label", o.value),
+        })),
+      },
+      {
+        id: "boundary",
+        text: "Ясный случай или пограничный?",
+        options: boundary.options.map((o) => ({
+          value: o.value,
+          ...inRu("boundary", o.value),
+        })),
+      },
+    ],
+  };
+}
+/** The keys a built page's data has, of `names`. */
+const dataKeys = (page: string, names: readonly string[]) =>
+  names.filter((k) =>
+    Object.hasOwn(z.object({}).loose().parse(dataOf(page)), k),
+  );
+
 test("🔴 a translation hands the page each language's words whole, and leaves the key byte for byte as without it", () => {
   const plain = setup("lang-plain", config());
   const translated = setup("lang-ru", withRu());
   const { page } = build(translated);
-  build(plain);
   const keyOf = (dir: string) =>
     readFileSync(join(dir, "out", "key.json"), "utf8");
-  assert.equal(keyOf(translated), keyOf(plain));
-  const [label, boundary] = QUESTIONS;
-  assert.ok(label !== undefined && boundary !== undefined);
   const data = Data.parse(dataOf(page));
-  assert.deepEqual(
-    [data.lang, data.translations],
-    [
-      "en",
-      {
-        ru: {
-          title: RU.title,
-          intro: "",
-          labels: {
-            place: "{id} · {n} of {total}",
-            line: "Line",
-            line_part: "{line} · part {part} of {of}",
-            repeat: "Card {index} of {of}",
-            practice_example: "",
-            hidden: "lines {from}–{to}",
-            hidden_one: "line {from}",
-            wait: "⏳ You can answer in {s} s",
-            ...RU.labels,
-          },
-          questions: [
-            {
-              id: "label",
-              text: "Это верно?",
-              short: "верно?",
-              options: label.options.map((o) => ({
-                value: o.value,
-                ...RU.questions.label.options[o.value === "yes" ? "yes" : "no"],
-              })),
-            },
-            {
-              id: "boundary",
-              text: "Ясный случай или пограничный?",
-              options: boundary.options.map((o) => ({
-                value: o.value,
-                ...RU.questions.boundary.options[
-                  o.value === "clear" ? "clear" : "boundary"
-                ],
-              })),
-            },
-          ],
-        },
-      },
-    ],
-  );
-  // Guards: a page without translations carries neither key, so it is as it was.
-  assert.deepEqual(
-    ["lang", "translations"].filter((k) =>
-      Object.hasOwn(
-        z
-          .object({})
-          .loose()
-          .parse(dataOf(build(plain).page)),
-        k,
-      ),
-    ),
-    [],
-  );
-});
-
-test("🔴 the page's own language may be named, and an intro, a reason prompt and a card's own question are translated with it", () => {
-  const [label, boundary] = QUESTIONS;
-  assert.ok(label !== undefined && boundary !== undefined);
-  const why = {
-    ...label,
-    options: [label.options[0], { ...label.options[1], ask_why: "Why not?" }],
-  };
-  const ru = {
-    ...RU,
-    intro: "Отвечайте как знаете.",
-    situation_question: "Строка {n} верна?",
-    questions: {
-      ...RU.questions,
-      label: {
-        ...RU.questions.label,
-        options: {
-          ...RU.questions.label.options,
-          no: { ...RU.questions.label.options.no, ask_why: "Почему?" },
-        },
-      },
-    },
-  };
-  const [first, ...rest] = ITEMS;
-  const { page } = build(
-    setup(
-      "lang-full",
-      config({
-        lang: "de",
-        intro: "Answer as you know.",
-        questions: [why, boundary],
-        translations: { ru },
-        items: [
-          {
-            ...first,
-            situation: { question: "Is line 3 correct?" },
-            excerpt: { lines: [{ n: 3, text: "x = 1", mark: true }] },
-          },
-          ...rest,
-        ],
-      }),
-    ),
-  );
-  const data = z
-    .object({
-      lang: z.string(),
-      translations: z.object({
-        ru: z
-          .object({
-            intro: z.string(),
-            situation_question: z.string(),
-            questions: z.array(z.unknown()),
-          })
-          .loose(),
-      }),
-    })
-    .loose()
-    .parse(dataOf(page));
   assert.deepEqual(
     [
       data.lang,
-      data.translations.ru.intro,
-      data.translations.ru.situation_question,
-      data.translations.ru.questions[0],
+      data.translations,
+      dataKeys(build(plain).page, ["lang", "translations"]),
     ],
+    // Guards: a page without translations carries neither key, so it is as it was.
+    ["en", { ru: expectedRu() }, []],
+  );
+  assert.equal(keyOf(translated), keyOf(plain));
+});
+
+/** RU with an intro, a reason prompt on «no» and a card question naming the marked line. */
+const RU_FULL = {
+  ...RU,
+  intro: "Отвечайте как знаете.",
+  situation_question: "Строка {n} верна?",
+  questions: {
+    ...RU.questions,
+    label: {
+      ...RU.questions.label,
+      options: {
+        ...RU.questions.label.options,
+        no: { ...RU.questions.label.options.no, ask_why: "Почему?" },
+      },
+    },
+  },
+};
+/** A German page with an intro, a reason prompt and a card that asks in its own words, and RU_FULL. */
+function fullConfig() {
+  const [label, boundary] = QUESTIONS;
+  assert.ok(label !== undefined && boundary !== undefined);
+  const [first, ...rest] = ITEMS;
+  return config({
+    lang: "de",
+    intro: "Answer as you know.",
+    questions: [
+      {
+        ...label,
+        options: [
+          label.options[0],
+          { ...label.options[1], ask_why: "Why not?" },
+        ],
+      },
+      boundary,
+    ],
+    translations: { ru: RU_FULL },
+    items: [
+      {
+        ...first,
+        situation: { question: "Is line 3 correct?" },
+        excerpt: { lines: [{ n: 3, text: "x = 1", mark: true }] },
+      },
+      ...rest,
+    ],
+  });
+}
+const FullData = z
+  .object({
+    lang: z.string(),
+    translations: z.object({
+      ru: z
+        .object({
+          intro: z.string(),
+          situation_question: z.string(),
+          questions: z.array(z.unknown()),
+        })
+        .loose(),
+    }),
+  })
+  .loose();
+
+test("🔴 the page's own language may be named, and an intro, a reason prompt and a card's own question are translated with it", () => {
+  const data = FullData.parse(
+    dataOf(build(setup("lang-full", fullConfig())).page),
+  );
+  const ru = data.translations.ru;
+  assert.deepEqual(
+    [data.lang, ru.intro, ru.situation_question, ru.questions[0]],
     [
       "de",
-      ru.intro,
-      ru.situation_question,
+      RU_FULL.intro,
+      RU_FULL.situation_question,
       {
         id: "label",
         text: "Это верно?",
         short: "верно?",
         options: [
           { value: "yes", ...RU.questions.label.options.yes },
-          { value: "no", ...ru.questions.label.options.no },
+          { value: "no", ...RU_FULL.questions.label.options.no },
         ],
       },
     ],
@@ -232,117 +233,119 @@ const situated = (excerpt: boolean) => ({
   ),
 });
 
-test("🔴 a translation that leaves out or invents a question, an answer, an intro, a reason prompt or a card's question stops the build, by path", () => {
+/** A page whose first question asks why on «no». */
+function asksWhy() {
   const [label] = QUESTIONS;
   assert.ok(label !== undefined);
-  const cases: readonly (readonly [string, Record<string, unknown>, string])[] =
-    [
-      [
-        "own",
-        withRu({ translations: { en: RU } }),
-        "translations.en: is the page's own language (`lang` is 'en') — translate into another one",
-      ],
-      [
-        "no-question",
-        refusedWith({ questions: { label: RU.questions.label } }),
-        "translations.ru.questions.boundary: is required and missing — every question of the page is translated",
-      ],
-      [
-        "stray-question",
-        refusedWith({
-          questions: { ...RU.questions, ghost: RU.questions.label },
-        }),
-        "translations.ru.questions.ghost: not a question of this page (label, boundary)",
-      ],
-      [
-        "no-answer",
-        refusedWith(ruOptions({ yes: RU.questions.label.options.yes })),
-        "translations.ru.questions.label.options.no: is required and missing — every answer is translated",
-      ],
-      [
-        "stray-answer",
-        refusedWith(
-          ruOptions({
-            ...RU.questions.label.options,
-            maybe: { label: "Может", example: "e" },
-          }),
-        ),
-        "translations.ru.questions.label.options.maybe: not one of yes, no",
-      ],
-      [
-        "same-label",
-        refusedWith(
-          ruOptions({
-            ...RU.questions.label.options,
-            no: { label: " да ", example: "e" },
-          }),
-        ),
-        "translations.ru.questions.label.options.no.label: ' да ' reads the same as options.yes.label — each button needs its own label",
-      ],
-      [
-        "no-why",
-        withRu({
-          questions: [
-            {
-              ...label,
-              options: [
-                label.options[0],
-                { ...label.options[1], ask_why: "Why?" },
-              ],
-            },
-            QUESTIONS[1],
-          ],
-        }),
-        "translations.ru.questions.label.options.no.ask_why: is required and missing — this answer asks why",
-      ],
-      [
-        "stray-why",
-        refusedWith(
-          ruOptions({
-            ...RU.questions.label.options,
-            no: { ...RU.questions.label.options.no, ask_why: "Почему?" },
-          }),
-        ),
-        "translations.ru.questions.label.options.no.ask_why: is never shown — the page has no text it translates",
-      ],
-      [
-        "no-intro",
-        withRu({ intro: "Answer." }),
-        "translations.ru.intro: is required and missing — the page has an `intro`",
-      ],
-      [
-        "stray-intro",
-        refusedWith({ intro: "Отвечайте." }),
-        "translations.ru.intro: is never shown — the page has no text it translates",
-      ],
-      [
-        "no-situation",
-        withRu(situated(true)),
-        "translations.ru.situation_question: is required and missing — items[0].situation asks the first question in the card's own words",
-      ],
-      [
-        "stray-situation",
-        refusedWith({ situation_question: "Верно?" }),
-        "translations.ru.situation_question: is never shown — the page has no text it translates",
-      ],
-      [
-        "line-without-code",
-        refusedWith(
-          { situation_question: "Строка {n} верна?" },
-          situated(false),
-        ),
-        "translations.ru.situation_question: names the marked line, and items[0] has no `excerpt` — add it, or write the question without `{n}` and `{line}`",
-      ],
-    ];
-  assert.deepEqual(
-    cases.map(([name, cfg]) => {
-      const dir = setup(`lang-refused-${name}`, cfg);
-      return run([
-        "build",
-        join(dir, "items.json"),
-        join(dir, "out"),
-      ]).out.trim();
+  return [
+    {
+      ...label,
+      options: [label.options[0], { ...label.options[1], ask_why: "Why?" }],
+    },
+    QUESTIONS[1],
+  ];
+}
+/** Configs only the translation checks refuse, each with its refusal. */
+const REFUSALS: readonly (readonly [
+  string,
+  Record<string, unknown>,
+  string,
+])[] = [
+  [
+    "own",
+    withRu({ translations: { en: RU } }),
+    "translations.en: is the page's own language (`lang` is 'en') — translate into another one",
+  ],
+  [
+    "no-question",
+    refusedWith({ questions: { label: RU.questions.label } }),
+    "translations.ru.questions.boundary: is required and missing — every question of the page is translated",
+  ],
+  [
+    "stray-question",
+    refusedWith({
+      questions: { ...RU.questions, ghost: RU.questions.label },
     }),
+    "translations.ru.questions.ghost: not a question of this page (label, boundary)",
+  ],
+  [
+    "no-answer",
+    refusedWith(ruOptions({ yes: RU.questions.label.options.yes })),
+    "translations.ru.questions.label.options.no: is required and missing — every answer is translated",
+  ],
+  [
+    "stray-answer",
+    refusedWith(
+      ruOptions({
+        ...RU.questions.label.options,
+        maybe: { label: "Может", example: "e" },
+      }),
+    ),
+    "translations.ru.questions.label.options.maybe: not one of yes, no",
+  ],
+  [
+    "same-label",
+    refusedWith(
+      ruOptions({
+        ...RU.questions.label.options,
+        no: { label: " да ", example: "e" },
+      }),
+    ),
+    "translations.ru.questions.label.options.no.label: ' да ' reads the same as options.yes.label — each button needs its own label",
+  ],
+  [
+    "no-why",
+    withRu({ questions: asksWhy() }),
+    "translations.ru.questions.label.options.no.ask_why: is required and missing — this answer asks why",
+  ],
+  [
+    "stray-why",
+    refusedWith(
+      ruOptions({
+        ...RU.questions.label.options,
+        no: { ...RU.questions.label.options.no, ask_why: "Почему?" },
+      }),
+    ),
+    "translations.ru.questions.label.options.no.ask_why: is never shown — the page has no text it translates",
+  ],
+  [
+    "no-intro",
+    withRu({ intro: "Answer." }),
+    "translations.ru.intro: is required and missing — the page has an `intro`",
+  ],
+  [
+    "stray-intro",
+    refusedWith({ intro: "Отвечайте." }),
+    "translations.ru.intro: is never shown — the page has no text it translates",
+  ],
+  [
+    "no-situation",
+    withRu(situated(true)),
+    "translations.ru.situation_question: is required and missing — items[0].situation asks the first question in the card's own words",
+  ],
+  [
+    "stray-situation",
+    refusedWith({ situation_question: "Верно?" }),
+    "translations.ru.situation_question: is never shown — the page has no text it translates",
+  ],
+  [
+    "line-without-code",
+    refusedWith({ situation_question: "Строка {n} верна?" }, situated(false)),
+    "translations.ru.situation_question: names the marked line, and items[0] has no `excerpt` — add it, or write the question without `{n}` and `{line}`",
+  ],
+];
+/** Build `cfg` in a folder of its own; the exit status and what it printed. */
+const tryBuild = (name: string, cfg: Record<string, unknown>) => {
+  const dir = setup(name, cfg);
+  return run(["build", join(dir, "items.json"), join(dir, "out")]);
+};
+
+test("🔴 a translation that leaves out or invents a question, an answer, an intro, a reason prompt or a card's question stops the build, by path", () => {
+  const cases = REFUSALS;
+  assert.deepEqual(
+    cases.map(([name, cfg]) =>
+      tryBuild(`lang-refused-${name}`, cfg).out.trim(),
+    ),
     cases.map(([, , why]) => `REFUSED: ${why}`),
   );
   // Guards: the same card question with its marked line in the code, and one without `{n}` on a
@@ -351,10 +354,7 @@ test("🔴 a translation that leaves out or invents a question, an answer, an in
     [
       refusedWith({ situation_question: "Строка {n} верна?" }, situated(true)),
       refusedWith({ situation_question: "Верно?" }, situated(false)),
-    ].map((cfg, n) => {
-      const dir = setup(`lang-situated-${String(n)}`, cfg);
-      return run(["build", join(dir, "items.json"), join(dir, "out")]).status;
-    }),
+    ].map((cfg, n) => tryBuild(`lang-situated-${String(n)}`, cfg).status),
     [0, 0],
   );
 });
