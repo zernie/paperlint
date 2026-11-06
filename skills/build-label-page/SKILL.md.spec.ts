@@ -184,8 +184,8 @@ language for the page's own words".
 When the labeller must tell where a block's text came from (copied from a repository, written by the
 model under test, restated by an earlier labelling model, counted by the script), the page's
 \`"sources": {"repo": "From the repository", …}\` names the tags, in colour order (at most five), and
-\`from\` on a \`quote\`, a \`situation\` (its summary) or an \`excerpt\` (\`caption_from\` for its caption)
-puts one above that block. The build refuses an unknown id, a dead entry and a tag over a text the card
+\`from\` on a \`quote\`, a \`situation\` (its summary) or an \`excerpt\` (\`caption_from\` for its caption,
+\`annotation_from\` for its annotation, tagged inside the annotation's box) puts one above that block. The build refuses an unknown id, a dead entry and a tag over a text the card
 lacks. [\`references/closed-choice-generator.md\`](references/closed-choice-generator.md), "A source tag
 above each block".
 

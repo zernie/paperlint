@@ -203,6 +203,38 @@ const REFUSED: readonly (readonly [string, Record<string, unknown>, string])[] =
       }),
       "items[0].situation.from: tags a text the card does not have — add it, or take the tag out",
     ],
+    [
+      "src-unknown-annotation",
+      config({
+        sources: SOURCES,
+        items: [
+          {
+            ...FIRST,
+            quote: { text: "t", from: "repo" },
+            excerpt: { ...EXCERPT, annotation: "a", annotation_from: "nope" },
+          },
+          { ...SECOND, quote: { text: "t", from: "ours" } },
+          ...REST,
+        ],
+      }),
+      "items[0].excerpt.annotation_from: 'nope' is not in `sources` (repo, ours)",
+    ],
+    [
+      "src-no-annotation",
+      config({
+        sources: SOURCES,
+        items: [
+          {
+            ...FIRST,
+            quote: { text: "t", from: "repo" },
+            excerpt: { ...EXCERPT, annotation_from: "ours" },
+          },
+          { ...SECOND, quote: { text: "t", from: "repo" } },
+          ...REST,
+        ],
+      }),
+      "items[0].excerpt.annotation_from: tags a text the card does not have — add it, or take the tag out",
+    ],
   ];
 
 test("🔴 the build refuses a tag with no sources, an id not in sources, a dead entry, an empty label, more ids than colours, and a tag over a text the card lacks", () => {
@@ -215,6 +247,39 @@ test("🔴 the build refuses a tag with no sources, an id not in sources, a dead
       status: 1,
       out: `REFUSED: ${message}\n`,
     })),
+  );
+});
+
+test("🔴 an annotation's own tag reaches the page beside it, and counts as using its source", () => {
+  const data = dataOf(
+    build(
+      setup(
+        "src-annotation",
+        config({
+          sources: SOURCES,
+          items: [
+            {
+              ...FIRST,
+              quote: { text: "t", from: "repo" },
+              excerpt: {
+                ...EXCERPT,
+                annotation: "Our note.",
+                annotation_from: "ours",
+              },
+            },
+            SECOND,
+            ...REST,
+          ],
+        }),
+      ),
+    ).page,
+  );
+  assert.deepEqual(
+    z
+      .object({ annotation: z.string(), annotation_from: z.string() })
+      .loose()
+      .parse(data.items.find((i) => "excerpt" in i)?.["excerpt"]),
+    { ...EXCERPT, annotation: "Our note.", annotation_from: "ours" },
   );
 });
 
