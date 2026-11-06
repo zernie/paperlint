@@ -139,6 +139,42 @@ const CARD = {
   },
   repeat: { group: "g", index: 1, of: 1 },
 };
+/** The translation of FULL's page, with every optional field present. */
+const RU_FULL = {
+  title: "Т",
+  intro: "Разметьте.",
+  labels: {
+    place: "К",
+    body: "Т",
+    line: "С",
+    line_part: "{line} {part}/{of}",
+    repeat: "П",
+    practice_example: "П",
+    hidden: "С {from}-{to}",
+    hidden_one: "С {from}",
+    wait: "Ж {s}",
+    how_to: "Как",
+    for_example: "Н: ",
+  },
+  situation_question: "В?",
+  questions: {
+    label: {
+      text: "Верно?",
+      short: "верно?",
+      options: {
+        yes: { label: "Да", example: "1, 2, 3" },
+        no: { label: "Нет", example: "3, 1, 2", ask_why: "Что не так?" },
+      },
+    },
+    boundary: {
+      text: "Граница?",
+      options: {
+        clear: { label: "Ясно", example: "[]" },
+        boundary: { label: "Граница", example: "равные ключи" },
+      },
+    },
+  },
+};
 /** A config with EVERY optional field present, so every schema path has a value to spoil. */
 const FULL: DocObject = (() => {
   const doc = Doc.parse(
@@ -169,7 +205,11 @@ const FULL: DocObject = (() => {
         hidden: "H {from}-{to}",
         hidden_one: "H {from}",
         wait: "W {s}",
+        how_to: "How",
+        for_example: "E: ",
       },
+      lang: "en",
+      translations: { ru: RU_FULL },
       practice: PRACTICE.map((p, n) => (n === 0 ? { ...p, ...CARD } : p)),
       items: ITEMS.map((i, n) =>
         n === 0 ? { ...i, ...CARD, answerers: ["author"] } : i,
@@ -304,6 +344,15 @@ function badCases({ node, member }: Leaf): readonly BadCase[] {
   return [...wrongType, ...extra];
 }
 
+/** `doc` without the value at `steps`. */
+function without(
+  doc: DocObject,
+  steps: readonly (string | number)[],
+): DocObject {
+  const out = put(doc, steps, undefined);
+  assert.ok(isObject(out));
+  return out;
+}
 /** `doc` with its first item's own answerers taken out. */
 function withoutItemAnswerers(doc: DocObject): DocObject {
   const out = put(doc, ["items", 0, "answerers"], undefined);
@@ -317,6 +366,25 @@ function withoutItemAnswerers(doc: DocObject): DocObject {
 const RELAX: Partial<Record<string, (doc: DocObject) => DocObject>> = {
   familiarity: (doc) => R.omit(doc, ["familiarity_question"]),
   answerers: withoutItemAnswerers,
+  // A translation gives an intro, a reason prompt and a card question exactly where the page has one.
+  intro: (doc) => without(doc, ["translations", "ru", "intro"]),
+  "translations.ru.intro": (doc) => R.omit(doc, ["intro"]),
+  "questions[0].options[1].ask_why": (doc) =>
+    without(doc, [
+      "translations",
+      "ru",
+      "questions",
+      "label",
+      "options",
+      "no",
+      "ask_why",
+    ]),
+  "translations.ru.situation_question": (doc) =>
+    without(without(doc, ["items", 0, "situation"]), [
+      "practice",
+      0,
+      "situation",
+    ]),
 };
 
 /** Spoil `leaf` each way in `badCases`; every one must stop the build and name the path. */

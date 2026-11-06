@@ -1,0 +1,23 @@
+{
+  "title": "Запрещают ли слова",
+  "labels": {
+    "place": "Карточка {n} из {total}",
+    "wait": "Сохранить · можно через {s} с на этой карточке",
+    "how_to": "📖 Как отвечать",
+    "for_example": "Например: "
+  },
+  "situation_question": "Эти слова запрещают строку {n}?",
+  "questions": {
+    "forbid": {
+      "text": "Эти слова запрещают отмеченную строку?",
+      "short": "запрещают ли слова?",
+      "options": {
+        "forbid": { "label": "Запрещают", "example": "«No print calls» и строка print(x)" },
+        "allow": { "label": "Разрешают", "example": "«No print calls» и строка log.info(x)" },
+        "unsettled": { "label": "Из слов это не следует", "example": "«Keep functions short» и функция на 30 строк" },
+        "elsewhere": { "label": "Слова про другое", "example": "«Use tabs» и строка с запросом к базе" },
+        "cannot": { "label": "Не берусь оценить (объясните)", "example": "строка на языке, который вы не читаете", "ask_why": "Что мешает?" }
+      }
+    }
+  }
+}

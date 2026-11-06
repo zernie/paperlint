@@ -1418,3 +1418,174 @@ test(
   },
   BROWSER_TEST_MS,
 );
+
+// ── a second language for the page's own words (#394) ──────────────────────────────────────────
+const RU_FIXTURE = join(import.meta.dirname, "fixtures", "v7-cards-ru.json");
+const Words = z.object({
+  labels: z.object({ for_example: z.string() }).loose(),
+  questions: z.array(
+    z.object({
+      id: z.string(),
+      text: z.string(),
+      options: z.array(
+        z.object({
+          value: z.string(),
+          label: z.string(),
+          example: z.string(),
+          icon: z.string(),
+        }),
+      ),
+    }),
+  ),
+});
+const RU_WORDS = z
+  .object({
+    situation_question: z.string(),
+    labels: z.object({ for_example: z.string() }).loose(),
+    questions: z.record(
+      z.string(),
+      z.object({
+        text: z.string(),
+        options: z.record(
+          z.string(),
+          z.object({ label: z.string(), example: z.string() }),
+        ),
+      }),
+    ),
+  })
+  .parse(JSON.parse(readFileSync(RU_FIXTURE, "utf8")));
+/** The fixture's page words in one language: the base's, or the Russian translation laid over them. */
+function wordsIn(lang: "en" | "ru") {
+  const base = Words.parse({
+    labels: { for_example: "For example: " },
+    questions: z.object({ questions: z.unknown() }).loose().parse(V7_CONFIG)
+      .questions,
+  });
+  if (lang === "en") return base;
+  return {
+    labels: RU_WORDS.labels,
+    questions: base.questions.map((q) => ({
+      ...q,
+      text: RU_WORDS.questions[q.id]?.text ?? "",
+      options: q.options.map((o) => ({
+        ...o,
+        ...RU_WORDS.questions[q.id]?.options[o.value],
+      })),
+    })),
+  };
+}
+/** What the docstring card and the how-to rows say in `lang`, as the fixture states it. */
+function expectedIn(lang: "en" | "ru") {
+  const card = fixtureCard("card-docstring");
+  const { situation, quote } = z
+    .object({
+      situation: z.object({ question: z.string() }),
+      quote: z.object({ text: z.string() }),
+    })
+    .loose()
+    .parse(card);
+  const w = wordsIn(lang);
+  const [q] = w.questions;
+  assert.ok(q !== undefined);
+  const notes = card.answer_notes.forbid;
+  return {
+    switch: { lang, langs: ["en", "ru"] },
+    quote: unticked(quote.text),
+    question:
+      lang === "en"
+        ? situation.question
+        : RU_WORDS.situation_question.replace(
+            "{n}",
+            String(card.excerpt.lines.find((l) => l.mark)?.n),
+          ),
+    answers: q.options.map((o) => [
+      { question: q.id, value: o.value },
+      `${o.icon}${o.label}${unticked(notes[o.value] ?? "")}`,
+    ]),
+    howTo: [
+      q.text,
+      ...q.options.map(
+        (o) => `${o.icon} ${o.label}${w.labels.for_example}${o.example}`,
+      ),
+    ],
+  };
+}
+/** The same, read from the page. */
+async function shownIn(page: Page, card: Locator) {
+  const texts = async (scope: Page | Locator, kind: string) =>
+    scope.getByTestId(kind).allTextContents();
+  return {
+    switch: await metaOf(page.getByTestId("lang-switch")),
+    quote: (await texts(card, "quote")).join(""),
+    question: (await texts(card, "question")).join(""),
+    answers: await Promise.all(
+      (await allByKind(card, "answer")).map(async (a) => [
+        a.meta,
+        await a.loc.textContent(),
+      ]),
+    ),
+    howTo: [
+      ...(await texts(page, "how-to-question")),
+      ...(await texts(page, "how-to-answer")),
+    ],
+  };
+}
+test(
+  "🔴 the language switch swaps the page's own words both ways, keeps the quote and the code as built, and is remembered over a reload",
+  async () => {
+    const cfg = {
+      ...R.omit(V7_CONFIG, ["min_seconds"]),
+      translations: { ru: JSON.parse(readFileSync(RU_FIXTURE, "utf8")) },
+    };
+    const { page: html, key } = build(setup("browser-v7-lang", cfg));
+    const at = "http://label.test/";
+    const page = await (
+      await sharedBrowser()
+    ).newPage({ viewport: { width: 400, height: 800 } });
+    try {
+      // A real origin, so the page has a localStorage; every other request is refused, none leaves.
+      await page.route("**/*", (r) =>
+        r.request().url() === at
+          ? r.fulfill({ contentType: "text/html; charset=utf-8", body: html })
+          : r.abort(),
+      );
+      await page.addInitScript(
+        STORE(
+          Object.fromEntries(
+            ["forbid", "allow", "elsewhere"].map((v, n) => [
+              `r1-P${String(n + 1)}`,
+              { answers: { forbid: v }, source: "page" },
+            ]),
+          ),
+          20,
+        ),
+      );
+      await page.goto(at, { waitUntil: "domcontentloaded" });
+      const id = Object.entries(key.ids).find(
+        ([, v]) => v.source_id === "card-docstring",
+      )?.[0];
+      const card = async () => {
+        await page.getByTestId("item").first().waitFor();
+        const found = (await allByKind(page, "item")).find(
+          (c) => Id.parse(c.meta).id === id,
+        );
+        assert.ok(found !== undefined, "the card is drawn");
+        return found.loc;
+      };
+      const option = async (lang: string) =>
+        (await allByKind(page, "lang-option")).find(
+          (o) => z.object({ lang: z.string() }).parse(o.meta).lang === lang,
+        )?.loc;
+      assert.deepEqual(await shownIn(page, await card()), expectedIn("en"));
+      await (await option("ru"))?.click();
+      assert.deepEqual(await shownIn(page, await card()), expectedIn("ru"));
+      await page.reload({ waitUntil: "domcontentloaded" });
+      assert.deepEqual(await shownIn(page, await card()), expectedIn("ru"));
+      await (await option("en"))?.click();
+      assert.deepEqual(await shownIn(page, await card()), expectedIn("en"));
+    } finally {
+      await page.context().close();
+    }
+  },
+  BROWSER_TEST_MS,
+);
