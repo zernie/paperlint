@@ -87,7 +87,7 @@ const inOrder = (text: string, parts: readonly string[]): readonly string[] => {
   );
 };
 
-test("🔴 a page naming the preset shows its words on the generic blocks: the linter's message, the rule's docs folded with the docs-examples note, the files like it, and the settings with their sides", async () => {
+test("🔴 a page naming the preset shows its words on the generic blocks: the linter's message, the rule's docs with the docs-examples note, the files like it, and the settings with their sides", async () => {
   const { page, key } = build(setup("preset-face", preset()));
   const shown = await showPage(page, {}, {}, PRACTICE_DONE);
   const id = Object.entries(key.ids).find(

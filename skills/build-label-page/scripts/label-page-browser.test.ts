@@ -9,6 +9,7 @@ import {
   chromium,
   type Locator,
   type Page,
+  selectors,
 } from "playwright-core";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -363,9 +364,9 @@ async function onWitnessPage(
   }
 }
 
-/** The code, the linter's message, the question, the rule docs' toggle: one read of the laid-out card,
+/** The code, the linter's message, the question, the rule docs' heading: one read of the laid-out card,
  * so a re-render between reads cannot mix two layouts. */
-const LAYOUT_OF = ["pre.numbered", "p.said", ".ask", "details > summary"];
+const LAYOUT_OF = ["pre.numbered", "p.said", ".ask", ".rulebox > h3"];
 const Layout = z.array(z.object({ top: z.number(), bottom: z.number() }));
 const layout = async (card: Locator) =>
   Layout.parse(
@@ -380,7 +381,7 @@ const layout = async (card: Locator) =>
   );
 
 test(
-  "🔴 at phone width a witness card labels the caught line in its numbered code, asks its question right under that code, folds the rule docs and the settings, opens a long text on «more», and nothing pushes the page sideways",
+  "🔴 at phone width a witness card labels the caught line in its numbered code, asks its question right under that code, shows the rule docs and the settings in place, opens a long text on «more», and nothing pushes the page sideways",
   async () => {
     await onWitnessPage("browser-witness", async (page) => {
       // Measure after the store's practice answers arrived: before them the practice cards sit above.
@@ -391,19 +392,24 @@ test(
         await card.locator("pre.numbered .hit").textContent(),
         '▶18print(f"seeded {len(rows)} rows")◀ this line',
       );
-      // Guards: the rule docs, the files like it and the settings are folded.
+      // Guards: nothing a card needs is folded (#392); the rule docs, the files like it and the
+      // settings are shown in place, each under its heading.
       assert.deepEqual(
         [
           await card.locator("details").count(),
-          await card.locator("details[open]").count(),
+          await card.locator(".rulebox > h3").allTextContents(),
         ],
-        [3, 0],
+        [
+          0,
+          [
+            "What the linter rule does (official docs)",
+            "3 more file(s) with the same situation",
+            "Settings behind this card",
+          ],
+        ],
       );
       // The question sits right under the code it is about: only the linter's message between them,
       // and the rule's docs start below the answers.
-      const docsSummary = card.locator("summary", {
-        hasText: "What the linter rule does (official docs)",
-      });
       const box = await layout(card);
       const [code, said, ask, docs] = box;
       assert.ok(code && said && ask && docs, JSON.stringify(box));
@@ -413,7 +419,6 @@ test(
       );
       assert.ok(ask.top - said.bottom < 40, JSON.stringify(box));
       assert.ok(docs.top >= ask.bottom, JSON.stringify(box));
-      await docsSummary.click();
       const why = card.locator(".clamped", { hasText: "Why:" });
       const folded = (await why.boundingBox())?.height ?? 0;
       await card.getByRole("button", { name: "more" }).first().click();
@@ -912,6 +917,374 @@ test(
     } finally {
       await page.context().close();
     }
+  },
+  BROWSER_TEST_MS,
+);
+
+// ── the approved card (#392): a code-review note on the marked line, tap-to-see notes on terms ──
+// Every element these tests touch carries `data-test`, found only by getByTestId; its values are the
+// JSON in `data-test-meta`. A text that is content (the annotation, the quote) is read against the
+// fixture's own value, never retyped here.
+selectors.setTestIdAttribute("data-test");
+const V7_FIXTURE = join(import.meta.dirname, "fixtures", "v7-cards-items.json");
+const V7_CARD = z
+  .object({
+    source_id: z.string(),
+    terms: z.array(
+      z.object({
+        term: z.string(),
+        note: z.array(
+          z
+            .object({
+              quote: z.string().optional(),
+              url: z.string(),
+              url_label: z.string(),
+            })
+            .loose(),
+        ),
+      }),
+    ),
+    excerpt: z.object({
+      gutter_header: z.string().optional(),
+      annotation: z.string(),
+      lines: z.array(
+        z.object({
+          n: z.number(),
+          mark: z.boolean(),
+          context: z.boolean().optional(),
+          gutter: z.string().optional(),
+        }),
+      ),
+    }),
+    answer_notes: z.object({ forbid: z.record(z.string(), z.string()) }),
+  })
+  .loose();
+const V7_CONFIG = z
+  .object({ practice: z.array(z.unknown()), items: z.array(z.unknown()) })
+  .loose()
+  .parse(JSON.parse(readFileSync(V7_FIXTURE, "utf8")));
+const V7_CARDS = z.array(V7_CARD).parse(V7_CONFIG.items);
+/** The fixture's card of that source id. */
+const fixtureCard = (sourceId: string) => {
+  const found = V7_CARDS.find((i) => i.source_id === sourceId);
+  assert.ok(found !== undefined, sourceId);
+  return found;
+};
+/** A fixture text as the page shows it: its `backticks` are code spans, not characters. */
+const unticked = (text: string): string => text.split("`").join("");
+/** The values an element carries in `data-test-meta`. */
+const metaOf = async (l: Locator): Promise<unknown> =>
+  JSON.parse((await l.getAttribute("data-test-meta")) ?? "null");
+/** The elements of one kind, each with its values. */
+const allByKind = async (scope: Page | Locator, kind: string) =>
+  Promise.all(
+    (await scope.getByTestId(kind).all()).map(async (loc) => ({
+      loc,
+      meta: await metaOf(loc),
+    })),
+  );
+const Id = z.object({ id: z.string() });
+const Term = z.object({ term: z.string() });
+const Answer = z.object({ question: z.string(), value: z.string() });
+const CodeLine = z.object({
+  line: z.number(),
+  marked: z.boolean(),
+  gutter: z.string(),
+  context: z.boolean(),
+});
+/** The three-card fixture, practice done, without its time on screen, at 400 px wide. */
+async function onV7Page(
+  name: string,
+  steps: (
+    page: Page,
+    cardOf: (sourceId: string) => Promise<Locator>,
+  ) => Promise<void>,
+  withTime = false,
+): Promise<void> {
+  const { page: html, key } = build(
+    setup(name, withTime ? V7_CONFIG : R.omit(V7_CONFIG, ["min_seconds"])),
+  );
+  const done = ["forbid", "allow", "elsewhere"];
+  const page = await (
+    await sharedBrowser()
+  ).newPage({ viewport: { width: 400, height: 800 } });
+  try {
+    await page.addInitScript(
+      STORE(
+        Object.fromEntries(
+          done.map((v, n) => [
+            `r1-P${String(n + 1)}`,
+            { answers: { forbid: v }, source: "page" },
+          ]),
+        ),
+        20,
+      ),
+    );
+    await page.goto("about:blank");
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    await page.getByTestId("item").first().waitFor();
+    const cardOf = async (sourceId: string) => {
+      const id = Object.entries(key.ids).find(
+        ([, v]) => v.source_id === sourceId,
+      )?.[0];
+      const found = (await allByKind(page, "item")).find(
+        (c) => Id.parse(c.meta).id === id,
+      );
+      assert.ok(found !== undefined, `${sourceId} is drawn`);
+      return found.loc;
+    };
+    await steps(page, cardOf);
+  } finally {
+    await page.context().close();
+  }
+}
+/** The term of that text on a card. */
+const termOf = async (card: Locator, term: string) => {
+  const found = (await allByKind(card, "term")).find(
+    (t) => Term.parse(t.meta).term === term,
+  );
+  assert.ok(found !== undefined, `${term} is a button`);
+  return found.loc;
+};
+const answerOf = async (card: Locator, value: string) => {
+  const found = (await allByKind(card, "answer")).find(
+    (a) => Answer.parse(a.meta).value === value,
+  );
+  assert.ok(found !== undefined, `${value} is an answer`);
+  return found.loc;
+};
+/** The open note: whether it shows, which term, its box, and the terms marked open. */
+const Tip = z.object({ term: z.string(), open: z.boolean() });
+const tipNow = async (page: Page) => {
+  const tip = page.getByTestId("tip");
+  const drawn = (await tip.count()) > 0;
+  const state = drawn
+    ? Tip.parse(await metaOf(tip))
+    : { term: "", open: false };
+  const box = drawn && state.open ? await tip.boundingBox() : null;
+  const expanded = await Promise.all(
+    (await allByKind(page, "term")).map(async (t) => ({
+      term: Term.parse(t.meta).term,
+      open: (await t.loc.getAttribute("aria-expanded")) === "true",
+    })),
+  );
+  return {
+    ...state,
+    left: box?.x ?? -1,
+    right: box ? box.x + box.width : -1,
+    width: box?.width ?? -1,
+    expanded: expanded.filter((t) => t.open).map((t) => t.term),
+  };
+};
+
+test(
+  "🔴 a dotted term opens one floating note on a tap, with its quote and its source link, anchored and inside a 400 px viewport",
+  async () => {
+    await onV7Page("browser-v7-tip", async (page, cardOf) => {
+      const docstring = fixtureCard("card-docstring");
+      const google = docstring.terms.find((t) => t.term === "Google-style");
+      assert.ok(google !== undefined);
+      await (await termOf(await cardOf("card-docstring"), google.term)).click();
+      const tip = await tipNow(page);
+      assert.deepEqual(
+        [tip.term, tip.open, tip.expanded],
+        [google.term, true, [google.term]],
+      );
+      assert.deepEqual(
+        [
+          await page.getByTestId("tip-quote").allTextContents(),
+          (await allByKind(page, "tip-link")).map((l) => l.meta),
+          await page.getByTestId("tip-link").allTextContents(),
+        ],
+        [
+          google.note.flatMap((e) => e.quote ?? []),
+          google.note.map((e) => ({ url: e.url })),
+          google.note.map((e) => e.url_label),
+        ],
+      );
+      // Inside the viewport and at most 300 px wide, for a term near either edge.
+      const edges = [];
+      for (const [source, term] of [
+        ["card-docstring", ".github/copilot-instructions.md"],
+        ["card-depth", "guard clauses"],
+        ["card-call", "document.getElementById"],
+      ] as const) {
+        await (await termOf(await cardOf(source), term)).click();
+        const t = await tipNow(page);
+        edges.push([t.term, t.left >= 0 && t.right <= 400 && t.width <= 300]);
+      }
+      assert.deepEqual(edges, [
+        [".github/copilot-instructions.md", true],
+        ["guard clauses", true],
+        ["document.getElementById", true],
+      ]);
+    });
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "🔴 a tap outside the open note closes it and answers nothing; Esc closes it; a second term closes the first",
+  async () => {
+    await onV7Page("browser-v7-close", async (page, cardOf) => {
+      const depth = await cardOf("card-depth");
+      // The note covers the first answers; the tap lands on an answer it leaves visible.
+      await (await termOf(depth, "guard clauses")).click();
+      await (await answerOf(depth, "unsettled")).click();
+      await page.waitForTimeout(100);
+      assert.deepEqual(
+        [(await tipNow(page)).open, (await writes(page)).length],
+        [false, 0],
+      );
+      await (await termOf(await cardOf("card-call"), "AGENTS.md")).click();
+      await page.keyboard.press("Escape");
+      assert.equal((await tipNow(page)).open, false);
+      const docstring = await cardOf("card-docstring");
+      const d413 = fixtureCard("card-docstring").terms.find(
+        (t) => t.term === "D413",
+      );
+      assert.ok(d413 !== undefined);
+      await (await termOf(docstring, "Ruff")).click();
+      await (await termOf(docstring, d413.term)).click();
+      const t = await tipNow(page);
+      assert.deepEqual(
+        [
+          t.open,
+          t.expanded,
+          await page.getByTestId("tip-quote").allTextContents(),
+        ],
+        [true, [d413.term], d413.note.flatMap((e) => e.quote ?? [])],
+      );
+      // With the note closed, the same answer saves.
+      await page.keyboard.press("Escape");
+      await (await answerOf(depth, "unsettled")).click();
+      await page.waitForTimeout(100);
+      assert.equal((await writes(page)).length, 1);
+    });
+  },
+  BROWSER_TEST_MS,
+);
+
+/** What the depth card shows around its marked line, read from the page. */
+async function annotatedFacts(depth: Locator) {
+  const lines = await allByKind(depth, "code-line");
+  const header = depth.getByTestId("code-header");
+  const anno = depth.getByTestId("annotation");
+  const subs = await allByKind(depth, "answer-sub");
+  return {
+    annotation: [await metaOf(anno), await anno.textContent()],
+    header: [
+      await metaOf(header),
+      await header.getByTestId("gutter").textContent(),
+    ],
+    lines: lines.map((l) => l.meta),
+    gutters: await Promise.all(
+      lines.map((l) => l.loc.getByTestId("gutter").textContent()),
+    ),
+    gaps: (await allByKind(depth, "gap")).map((g) => g.meta),
+    subs: await Promise.all(
+      subs.map(async (s) => [s.meta, await s.loc.textContent()]),
+    ),
+  };
+}
+/** The same facts, as the fixture states them. */
+function annotatedExpected(fixture: z.infer<typeof V7_CARD>) {
+  const rows = fixture.excerpt.lines;
+  return {
+    annotation: [
+      { line: rows.find((l) => l.mark)?.n },
+      unticked(fixture.excerpt.annotation),
+    ],
+    header: [
+      { gutter: fixture.excerpt.gutter_header },
+      fixture.excerpt.gutter_header,
+    ],
+    lines: rows.map((l) => ({
+      line: l.n,
+      marked: l.mark,
+      gutter: l.gutter ?? "",
+      context: l.context ?? false,
+    })),
+    gutters: rows.map((l) => l.gutter ?? ""),
+    gaps: R.zip(rows, rows.slice(1))
+      .filter(([a, b]) => b.n > a.n + 1)
+      .map(([a, b]) => ({ from: a.n + 1, to: b.n - 1 })),
+    subs: Object.entries(fixture.answer_notes.forbid).map(([v, text]) => [
+      { question: "forbid", value: v },
+      unticked(text),
+    ]),
+  };
+}
+
+test(
+  "🔴 the annotation sits right under the marked line inside the code; the gutter column has its header and its values; each answer carries its sub-line",
+  async () => {
+    await onV7Page("browser-v7-card", async (page, cardOf) => {
+      const depth = await cardOf("card-depth");
+      const lines = await allByKind(depth, "code-line");
+      const marked = lines.find((l) => CodeLine.parse(l.meta).marked);
+      assert.ok(marked !== undefined, "the marked line is drawn");
+      const [hit, note] = [
+        await marked.loc.boundingBox(),
+        await depth.getByTestId("annotation").boundingBox(),
+      ];
+      assert.ok(hit && note, "both drawn");
+      assert.ok(
+        note.y >= hit.y + hit.height && note.y - (hit.y + hit.height) < 16,
+        JSON.stringify([hit, note]),
+      );
+      assert.deepEqual(
+        await annotatedFacts(depth),
+        annotatedExpected(fixtureCard("card-depth")),
+      );
+      assert.equal(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+        400,
+      );
+    });
+  },
+  BROWSER_TEST_MS,
+);
+
+test(
+  "🔴 a card still on its time shows its wait bar with the seconds left, in the page's own words, and the answers wait",
+  async () => {
+    await onV7Page(
+      "browser-v7-wait",
+      async (page, cardOf) => {
+        const { labels, min_seconds: total } = z
+          .object({
+            labels: z.object({ wait: z.string() }),
+            min_seconds: z.number(),
+          })
+          .loose()
+          .parse(V7_CONFIG);
+        const bar = (await cardOf("card-depth")).getByTestId("wait");
+        // One read of both, so a tick between two reads cannot mix them.
+        const [text, raw] = z
+          .tuple([z.string(), z.string()])
+          .parse(
+            await bar.evaluate((n) => [
+              n.textContent,
+              n.getAttribute("data-test-meta"),
+            ]),
+          );
+        const meta = z
+          .object({ id: z.string(), seconds: z.number() })
+          .parse(JSON.parse(raw));
+        assert.deepEqual(
+          [
+            meta.seconds > 0 && meta.seconds <= total,
+            text,
+            await (
+              await answerOf(await cardOf("card-depth"), "forbid")
+            ).isDisabled(),
+          ],
+          [true, labels.wait.replace("{s}", String(meta.seconds)), true],
+        );
+      },
+      true,
+    );
   },
   BROWSER_TEST_MS,
 );

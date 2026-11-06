@@ -19,6 +19,7 @@ import jsReasonRules from "#eslint-rules/js-needs-reason";
 
 import portRules from "#eslint-rules/install-path-literals";
 import n from "eslint-plugin-n";
+import playwright from "eslint-plugin-playwright";
 import tseslint from "typescript-eslint";
 import boundaries from "eslint-plugin-boundaries";
 import functional from "eslint-plugin-functional";
@@ -696,6 +697,22 @@ export default [
   {
     files: TEST_FILES,
     rules: { "max-lines-per-function": ["error", MAX_LINES_TESTS] },
+  },
+  // Browser tests find an element by its test id (`data-test`, set in the page and in
+  // `selectors.setTestIdAttribute`) and read its values from `data-test-meta`: a CSS selector or a
+  // visible text breaks when the look changes. The rules fire under vitest as well as under
+  // Playwright's own runner (measured on label-page-browser.test.ts and candidate_page.test.ts).
+  // The plugin's `testIdAttribute` option belongs to `prefer-native-locators`, which this block does
+  // not enable, so there is nothing to configure.
+  {
+    files: TEST_FILES,
+    plugins: { playwright },
+    rules: {
+      "playwright/no-raw-locators": "error",
+      "playwright/prefer-locator": "error",
+      "playwright/no-wait-for-selector": "error",
+      "playwright/no-eval": "error",
+    },
   },
   // 🔴 DEBT, NOT A PERMISSION. The novelty-check scripts and their harnesses were moved from a consumer
   // repository AS THEY WERE (the 2026-11-02 decision): untyped JSON in, `any` throughout. Making them pass the

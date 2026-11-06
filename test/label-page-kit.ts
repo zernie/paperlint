@@ -190,7 +190,21 @@ export class FakeNode {
     this.children.push(c);
     return c;
   }
-  setAttribute(): void {}
+  private readonly attrs: Record<string, string> = {};
+  setAttribute(name: string, value: string): void {
+    this.attrs[name] = value;
+  }
+  getAttribute(name: string): string | null {
+    return this.attrs[name] ?? null;
+  }
+  /** The nodes under this one that carry `data-test="kind"`, in page order (Playwright's getByTestId). */
+  getByTestId(kind: string): FakeNode[] {
+    return this.all().filter((n) => n.getAttribute("data-test") === kind);
+  }
+  /** The JSON in `data-test-meta`. */
+  meta(): unknown {
+    return JSON.parse(this.getAttribute("data-test-meta") ?? "null");
+  }
   addEventListener(type: string, fn: () => void): void {
     (this.listeners[type] ??= []).push(fn);
   }
