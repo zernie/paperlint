@@ -186,39 +186,40 @@ describe("maxOf — the ceiling a config sets", () => {
   });
 });
 
-describe("the rules, through their create()", () => {
-  const files = memoryFiles({ "/p/paper.tex": "" });
-  const rules = readabilityRules({
-    files,
-    latex: latexReader,
-    codec: sourcesCodec,
+const files = memoryFiles({ "/p/paper.tex": "" });
+const rules = readabilityRules({
+  files,
+  latex: latexReader,
+  codec: sourcesCodec,
+});
+
+/** What a rule reports on `body`, with `options`: line and message data. */
+const reported = (
+  name: ReadabilityRuleName,
+  body: string,
+  options: readonly unknown[] = [],
+  withRaw = true,
+) => {
+  const src = doc(body);
+  const out: unknown[] = [];
+  const visitor = rules[name].create({
+    filename: "/p/paper.tex",
+    options,
+    sourceCode: {
+      text: src,
+      ...(withRaw ? { raw: src } : {}),
+      getLocFromIndex: (i) => ({
+        line: src.slice(0, i).split("\n").length,
+        column: 0,
+      }),
+    },
+    report: (d) => out.push(d),
   });
+  visitor.root?.();
+  return out;
+};
 
-  /** What a rule reports on `body`, with `options`: line and message data. */
-  const reported = (
-    name: ReadabilityRuleName,
-    body: string,
-    options: readonly unknown[] = [],
-  ) => {
-    const src = doc(body);
-    const out: unknown[] = [];
-    const visitor = rules[name].create({
-      filename: "/p/paper.tex",
-      options,
-      sourceCode: {
-        text: src,
-        raw: src,
-        getLocFromIndex: (i) => ({
-          line: src.slice(0, i).split("\n").length,
-          column: 0,
-        }),
-      },
-      report: (d) => out.push(d),
-    });
-    visitor.root?.();
-    return out;
-  };
-
+describe("the rules, through their create()", () => {
   it("each reports at the paragraph or sentence, with its message id", () => {
     // Guards: the three rules are wired to their own judge and message.
     expect(reported("max-paragraph-words", paragraph(16))).toEqual([
@@ -235,16 +236,19 @@ describe("the rules, through their create()", () => {
         },
       },
     ]);
+    expect(reported("max-paragraph-numbers", numbers(9))).toMatchObject([
+      { messageId: "numbers" },
+    ]);
+    expect(reported("max-sentence-words", sentence(60))).toMatchObject([
+      { messageId: "sentence" },
+    ]);
+  });
+
+  it("a source without a raw text is read from its text", () => {
+    // Guards: ESLint's source code may carry no `raw`; the rule falls back to `text`.
     expect(
-      reported("max-paragraph-numbers", numbers(9)).map(
-        (d) => (d as { messageId: string }).messageId,
-      ),
-    ).toEqual(["numbers"]);
-    expect(
-      reported("max-sentence-words", sentence(60)).map(
-        (d) => (d as { messageId: string }).messageId,
-      ),
-    ).toEqual(["sentence"]);
+      reported("max-paragraph-words", paragraph(16), [], false),
+    ).toHaveLength(1);
   });
 
   it("an option moves the ceiling: 140 words fire under max 120", () => {

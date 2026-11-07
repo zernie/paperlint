@@ -33,6 +33,7 @@ import {
   type BodySentence,
 } from "./domain/register.ts";
 import { runOf } from "./domain/sentences.ts";
+import { fieldOf } from "./domain/record.ts";
 import { NUMBER } from "./claim-provenance.ts";
 import { startOf } from "./register.ts";
 import { readPaper, reportInPaper, type ProseDeps } from "./tex-paper.ts";
@@ -59,17 +60,12 @@ const HEAD_WORDS = 8;
 const headOf = (text: string): string =>
   `${text.split(/\s+/u).slice(0, HEAD_WORDS).join(" ")}…`;
 
-/** A paragraph's sentences and its text as the reader sees it, or null when it holds no word. */
+/** A paragraph's sentences and its text as the reader sees it; both empty when it holds no word. */
 const read = (
   p: Passage,
-): {
-  readonly sentences: readonly BodySentence[];
-  readonly text: string;
-} | null => {
+): { readonly sentences: readonly BodySentence[]; readonly text: string } => {
   const sentences = bodySentences([p]);
-  return sentences.length === 0
-    ? null
-    : { sentences, text: sentences.map((s) => s.text).join(" ") };
+  return { sentences, text: sentences.map((s) => s.text).join(" ") };
 };
 
 /** Every paragraph over `max` words, at its start. */
@@ -79,8 +75,8 @@ export const judgeParagraphWords = (
 ): readonly Located[] =>
   passages.flatMap((p) => {
     const r = read(p);
-    const words = r === null ? 0 : wordsOf(r.sentences);
-    return r === null || words <= max
+    const words = wordsOf(r.sentences);
+    return words <= max
       ? []
       : [
           {
@@ -97,14 +93,13 @@ export const judgeParagraphNumbers = (
   max: number,
 ): readonly Located[] =>
   passages.flatMap((p) => {
-    const r = read(p);
     const count = [...runText(runOf(p)).matchAll(NUMBER)].length;
-    return r === null || count <= max
+    return count <= max
       ? []
       : [
           {
             messageId: "numbers",
-            data: { count, max, head: headOf(r.text) },
+            data: { count, max, head: headOf(read(p).text) },
             at: startOf(p),
           },
         ];
@@ -132,11 +127,7 @@ export function maxOf(
   name: ReadabilityRuleName,
   options: readonly unknown[] | undefined,
 ): number {
-  const [o] = options ?? [];
-  const v: unknown =
-    typeof o === "object" && o !== null
-      ? Object.fromEntries(Object.entries(o))["max"]
-      : undefined;
+  const v = fieldOf(options?.[0], "max");
   return typeof v === "number" ? v : DEFAULT_MAX[name];
 }
 
