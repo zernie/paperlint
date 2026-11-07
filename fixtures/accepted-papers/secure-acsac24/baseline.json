@@ -11,9 +11,6 @@
     "tex/claim-provenance": 7,
     "paper/refs-checked": 1,
     "bib/reachable-entry": 77,
-    "paper/allowed-files-only": 5,
-    "tex/max-paragraph-words": 5,
-    "tex/max-paragraph-numbers": 1,
-    "tex/max-sentence-words": 1
+    "paper/allowed-files-only": 5
   }
 }

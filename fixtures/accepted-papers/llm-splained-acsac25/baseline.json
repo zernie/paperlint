@@ -13,9 +13,6 @@
     "paper/leading-zero": 2,
     "pdf/measured": 1,
     "tex/claim-provenance": 11,
-    "paper/allowed-files-only": 3,
-    "tex/max-paragraph-words": 2,
-    "tex/max-paragraph-numbers": 1,
-    "tex/max-sentence-words": 5
+    "paper/allowed-files-only": 3
   }
 }
