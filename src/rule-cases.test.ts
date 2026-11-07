@@ -184,6 +184,24 @@ const DECLARE_SAMPLE_ON: Readonly<Record<string, string>> = {
   }),
 };
 
+/** `tex/max-paragraph-words` is off by default; a paper turns it on in its `paperlint.json`. */
+const MAX_PARAGRAPH_WORDS_ON: Readonly<Record<string, string>> = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: null,
+    rules: { "tex/max-paragraph-words": "warn" },
+  }),
+};
+
+/** A paragraph of exactly `n` words, `n` a multiple of one: ten-word sentences, then the rest. */
+const wordsParagraph = (n: number): string =>
+  [
+    ...Array.from(
+      { length: Math.floor(n / 10) },
+      () => "The rule reads the body and counts what it holds.",
+    ),
+    ...(n % 10 === 0 ? [] : [`${"word ".repeat((n % 10) - 1)}end.`]),
+  ].join(" ");
+
 // ── the venues: presets of the tree's own, never the shipped ones ──────────────────────────────
 //
 // A case judges a RULE, so every number it is sized against is written here, beside the facts and
@@ -1152,6 +1170,17 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex(FORMAL)),
   },
+  // The paragraph ceiling is off by default (see "tex/max-paragraph-words is off by default"
+  // below): its cases turn it on in the paper's paperlint.json, as study/declare-sample's do.
+  "tex/max-paragraph-words": {
+    reports: {
+      tree: paper(tex(wordsParagraph(151)), MAX_PARAGRAPH_WORDS_ON),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(tex(wordsParagraph(150)), MAX_PARAGRAPH_WORDS_ON),
+  },
   // The three register bands judge a body against the anchor of BlindConf's preset; the body opens
   // on line 3, right after the \\section, where the finding about the whole body stands.
   "tex/contrast-frames": {
@@ -1368,6 +1397,19 @@ describe("every registered rule has cases, and every case names a registered rul
         (id) => !registered.includes(id),
       ),
     ).toEqual([]);
+  });
+});
+
+describe("tex/max-paragraph-words is off by default", () => {
+  it("a 300-word paragraph produces nothing under the default config, and fires once the paper turns the rule on", async () => {
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    expect(await ids(paper(tex(wordsParagraph(300))))).not.toContain(
+      "tex/max-paragraph-words",
+    );
+    expect(
+      await ids(paper(tex(wordsParagraph(300)), MAX_PARAGRAPH_WORDS_ON)),
+    ).toContain("tex/max-paragraph-words");
   });
 });
 

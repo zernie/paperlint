@@ -89,6 +89,7 @@ import {
   registerBandRules,
 } from "./register-bands.ts";
 import { headingCaseRule } from "./heading-case.ts";
+import { maxParagraphWordsRule } from "./readability.ts";
 import {
   paperRules,
   identityField,
@@ -413,10 +414,11 @@ const TEX_RULE_DEPS = {
   venuesDir: presetsDir(),
 };
 
-/** The register band rules and `tex/heading-case`: the rules of the `tex` plugin that read a paper's words. */
+/** The register band rules, `tex/heading-case` and `tex/max-paragraph-words` (off until a project turns it on): the rules of the `tex` plugin that read a paper's words. */
 const REGISTER_AND_CASE_RULES = {
   ...registerBandRules(TEX_RULE_DEPS),
   "heading-case": headingCaseRule(TEX_RULE_DEPS),
+  "max-paragraph-words": maxParagraphWordsRule(TEX_RULE_DEPS),
 };
 
 /**
