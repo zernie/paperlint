@@ -89,6 +89,7 @@ import {
   registerBandRules,
 } from "./register-bands.ts";
 import { headingCaseRule } from "./heading-case.ts";
+import { readabilityRules, READABILITY_RULE_LEVELS } from "./readability.ts";
 import {
   paperRules,
   identityField,
@@ -623,6 +624,7 @@ export function buildConfig(
             "claim-provenance": claimProvenanceRule(TEX_RULE_DEPS),
             register: registerRule(TEX_RULE_DEPS),
             ...REGISTER_AND_CASE_RULES,
+            ...readabilityRules(TEX_RULE_DEPS),
           },
         },
         paper: { rules: texPaperRules },
@@ -651,6 +653,8 @@ export function buildConfig(
         // Contrast frames, claims in bold, relation markers: each against the band the venue
         // preset's anchors set, silent for a preset without anchors (src/register-bands.ts).
         ...REGISTER_BAND_RULE_LEVELS,
+        // Three ceilings on the page: words per paragraph, numbers per paragraph, words per sentence.
+        ...READABILITY_RULE_LEVELS,
         "tex/acm-frontmatter-override": "error",
         // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
         ...VENUE_RULE_LEVELS,

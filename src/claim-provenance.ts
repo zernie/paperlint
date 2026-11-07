@@ -49,7 +49,7 @@ import {
  * version, a decimal without its zero), with an optional decimal part and a `%` or `×` after them,
  * and no letter or digit after that.
  */
-const NUMBER =
+export const NUMBER =
   /(?<![\p{L}\p{N}_.,-])(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:\s?%|×|x)?(?![\p{L}\p{N}])/gu;
 
 /** A plain year, read as a date rather than a quantity. */

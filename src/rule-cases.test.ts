@@ -1152,6 +1152,63 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex(FORMAL)),
   },
+  // The three readability ceilings: a body that crosses one, and the same body under it. Each
+  // planted body trips only its own ceiling (src/readability.test.ts holds the exact counts).
+  "tex/max-paragraph-words": {
+    reports: {
+      tree: paper(
+        tex(
+          Array.from(
+            { length: 16 },
+            () => "The rule reads the body and counts what it holds.",
+          ).join(" "),
+        ),
+      ),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(
+      tex(
+        Array.from(
+          { length: 14 },
+          () => "The rule reads the body and counts what it holds.",
+        ).join(" "),
+      ),
+    ),
+  },
+  "tex/max-paragraph-numbers": {
+    reports: {
+      tree: paper(
+        tex(
+          Array.from(
+            { length: 9 },
+            (_, i) => `The second run took ${String(i + 3)} seconds.`,
+          ).join(" "),
+        ),
+      ),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(
+      tex(
+        Array.from(
+          { length: 8 },
+          (_, i) => `The second run took ${String(i + 3)} seconds.`,
+        ).join(" "),
+      ),
+    ),
+  },
+  "tex/max-sentence-words": {
+    reports: {
+      tree: paper(tex(`The ${"word ".repeat(58)}ends.`)),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(tex(`The ${"word ".repeat(52)}ends.`)),
+  },
   // The three register bands judge a body against the anchor of BlindConf's preset; the body opens
   // on line 3, right after the \\section, where the finding about the whole body stands.
   "tex/contrast-frames": {

@@ -10,6 +10,9 @@
     "tex/claim-provenance": 28,
     "paper/refs-checked": 1,
     "bib/reachable-entry": 92,
-    "paper/allowed-files-only": 6
+    "paper/allowed-files-only": 6,
+    "tex/max-paragraph-words": 8,
+    "tex/max-paragraph-numbers": 1,
+    "tex/max-sentence-words": 2
   }
 }
