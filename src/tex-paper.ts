@@ -76,7 +76,7 @@ export function lineColumn(text: string, at: number): string {
 }
 
 /** A message template with its data filled in, the way ESLint fills it. */
-const filled = (
+export const filled = (
   template: string,
   data: Readonly<Record<string, string | number>> = {},
 ): string =>
