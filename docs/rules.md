@@ -242,7 +242,7 @@ papers/
     "body_pt": 10,
     "body_pt_tol": 0.5,
     // the page limit of each kind of paper, as the call for papers states it
-    "kinds": { "full": { "body_pages_max": 13 } },
+    "kinds": { "full": { "body_pages_max": 13, "ref_pages_max": "unlimited" } },
   },
   // only if the proceedings' producer asks for a balanced last page
   "rules": { "pdf/last-page-balance": "error" },

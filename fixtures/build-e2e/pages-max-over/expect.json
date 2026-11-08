@@ -1,0 +1,14 @@
+{
+  "$comment": "The made-up two-page IEEEtran paper of pages-max-at under pages_max 1: every page of the PDF counts, references included, so format/page-limit reports it — and nothing else does.",
+  "build": { "outcome": "pdf" },
+  "lint": {
+    "exit": 1,
+    "findings": [
+      {
+        "rule": "format/page-limit",
+        "severity": 2,
+        "says": ["pages, references included: 2, over the limit 1 for Total/full"]
+      }
+    ]
+  }
+}

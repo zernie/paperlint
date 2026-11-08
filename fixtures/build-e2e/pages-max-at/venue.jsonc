@@ -1,0 +1,9 @@
+// A made-up venue for this fixture: its limit includes the references.
+{
+  "type": "venue",
+  "name": "Total",
+  "url": "https://example.org/cfp",
+  "extends": "paperlint:ieee-conference",
+  "blind": true,
+  "format": { "kinds": { "full": { "pages_max": 2 } } },
+}

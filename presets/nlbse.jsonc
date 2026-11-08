@@ -59,18 +59,17 @@
   ],
 
   "format": {
-    // 🔴 EVERY LIMIT INCLUDES THE REFERENCES, and no key gates a total: `body_pages_max` is banal's
-    // body count, never more than the total, so a paper over it is over the limit; references alone
-    // on a page after a full body pass this gate and are still over (nlbse.md). The competition
+    // 🔴 EVERY LIMIT INCLUDES THE REFERENCES, so they are totals: format/page-limit counts every
+    // page of the PDF, and a full body whose references spill onto one more page is over. The competition
     // papers' «2-4 pages» (Multitask Code Classification) does not say whether references count, so
     // only the call's «Tool Competition entries» line is a kind; the research challenge has no limit.
     "kinds": {
-      "full": { "body_pages_max": 8 },
-      "education": { "body_pages_max": 8 },
-      "replication": { "body_pages_max": 8 },
-      "short": { "body_pages_max": 4 },
-      "position": { "body_pages_max": 2 },
-      "tool-competition": { "body_pages_max": 4 },
+      "full": { "pages_max": 8 },
+      "education": { "pages_max": 8 },
+      "replication": { "pages_max": 8 },
+      "short": { "pages_max": 4 },
+      "position": { "pages_max": 2 },
+      "tool-competition": { "pages_max": 4 },
     },
   },
 }

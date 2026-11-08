@@ -10,7 +10,7 @@
  *
  * and, in plugins named for the requirement rather than the input (paperlint#151):
  *
- *   format/page-limit   error  body and reference pages within the limits of the paper's kind
+ *   format/page-limit   error  total, body and reference pages within the limits of the paper's kind
  *   anonymity/identity  error  a blind venue: the paper declares `identity`, and the PDF says none of it
  *
  * ── WHAT THEY READ ───────────────────────────────────────────────────────────────
@@ -373,6 +373,30 @@ export function judgePages(g: FlatGeometry, resolved: Resolved): Finding[] {
 }
 
 /**
+ * Every page of the PDF against a total limit (`pages_max`: «up to 8 pages, including
+ * references»). The count is pdf.js's, measured on every build, so it needs neither banal nor a
+ * references heading. Pure.
+ */
+export function judgeTotal(
+  pageCount: number,
+  resolved: Resolved,
+): readonly Finding[] {
+  const kind = resolved.kind;
+  const max = kind?.limits.pagesMax ?? null;
+  return kind !== null && max !== null && pageCount > max
+    ? [
+        finding("pages", {
+          what: "pages, references included",
+          got: pageCount,
+          max,
+          venue: resolved.venue,
+          kind: kind.name,
+        }),
+      ]
+    : [];
+}
+
+/**
  * The body counted up to where it ends (`body_ends_at: references`) — the references or the
  * appendix, whichever comes first — against the kind's limit: the page it ends on counts when body
  * text stands above the heading there (`bodyEnd`). A limit to check and no end found, or a
@@ -658,6 +682,7 @@ const JUDGES: Readonly<Record<VenueRuleName, Judge>> = {
   "page-limit": (a) =>
     a.kind === "ready"
       ? [
+          ...judgeTotal(a.facts.pageCount, a.venue),
           ...judgeBodyEnd(a.facts.text, a.venue),
           ...(a.facts.geometry ? judgePages(a.facts.geometry, a.venue) : []),
         ]
@@ -772,7 +797,7 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
   "page-limit": {
     docs: {
       description:
-        "body and reference pages within the limits of the paper's kind at its venue",
+        "the pages — in all, of the body, of the references — within the limits of the paper's kind at its venue",
       url: rulePageUrl("format/page-limit"),
     },
     messages: {

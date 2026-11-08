@@ -4,7 +4,7 @@ description: "Add a venue paperlint does not ship: turn a conference or workshop
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebFetch]
 ---
 
-<!-- vigiles:sha256:f68c1af8faa4380a compiled from .claude/skills/add-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:85c41e5aef5ac2a7 compiled from .claude/skills/add-venue/SKILL.md.spec.ts -->
 
 # add-venue — a call for papers becomes a preset and a card, with the proof beside every number
 
@@ -21,7 +21,8 @@ own venue preset"); steps 1 to 7 are the same.
    portal's own `/deadlines` page (HotCRP: `"sub":<unix>`, `"blind":true`). Note each URL and the day.
 3. **A quote and a URL beside every number**, as a comment in the preset; the fetch day as `read` in
    `deadlines`. `at` is UTC: an AoE day ends at 11:59:59Z of the next day. The page limit says
-   whether references count; no key gates a total, so say in the card what the rule cannot catch.
+   whether references count: «including references» is `pages_max`; a body limit is
+   `body_pages_max` with `ref_pages_max` (pages, or `"unlimited"`), and the schema refuses one without it.
 4. **Sources disagree: keep both.** An organizer's email beats a dates page, the portal beats the
    call. Quote each in the card with its source and date («organizers' email, 2026-10-23»); never
    pick silently.

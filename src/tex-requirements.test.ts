@@ -3,6 +3,7 @@ import { test } from "vitest";
 import {
   identityHint,
   identityHints,
+  kindHint,
   loadTypescript,
   parsePreset,
 } from "./tex-requirements.ts";
@@ -51,6 +52,78 @@ test("a venue without the link to its call for papers is refused at load, saying
       "  v.jsonc: (top level) should have required property 'url'",
       '  v.jsonc: (top level) should match "then" schema',
     ].join("\n"),
+  );
+});
+
+// ── what a page limit counts ─────────────────────────────────────────────────────────
+
+/** A venue preset whose one kind, `full`, has `limits`. */
+const withKind = (limits: object) => ({
+  type: "venue",
+  name: "X",
+  url: "https://example.org/cfp",
+  extends: "paperlint:acm-sigconf",
+  format: { kinds: { full: limits } },
+});
+
+test("🔴 a body limit that does not say what the references get is refused at load, naming both ways out", () => {
+  // Guards: `body_pages_max` alone was how three «including references» venues passed a paper whose
+  // references spilled onto one more page; a preset can no longer be written without deciding.
+  assert.equal(
+    refusalOf("v.jsonc", withKind({ body_pages_max: 8 })),
+    [
+      "v.jsonc does not match venue-profile.schema.json:",
+      '  a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "pages_max" instead',
+      "  v.jsonc: .format.kinds['full'] should have property ref_pages_max when property body_pages_max is present",
+    ].join("\n"),
+  );
+});
+
+test("the three ways a kind counts are read: a total, a body with its reference pages, a body with references unlimited", () => {
+  const kind = (limits: object) =>
+    parsePreset(JSON.stringify(withKind(limits)), "v.jsonc").format.kinds.get(
+      "full",
+    );
+  assert.deepEqual(
+    [
+      kind({ pages_max: 8 }),
+      kind({ body_pages_max: 10, ref_pages_max: 2, pages_max: 12 }),
+      kind({ body_pages_max: 12, ref_pages_max: "unlimited" }),
+      kind({}),
+    ],
+    [
+      { pagesMax: 8, bodyPagesMax: null, refPagesMax: null },
+      { pagesMax: 12, bodyPagesMax: 10, refPagesMax: 2 },
+      { pagesMax: null, bodyPagesMax: 12, refPagesMax: null },
+      { pagesMax: null, bodyPagesMax: null, refPagesMax: null },
+    ],
+  );
+});
+
+test("kindHint has nothing to add to another key's dependency, or to a violation that is not one", () => {
+  assert.deepEqual(
+    [
+      kindHint({
+        keyword: "dependencies",
+        dataPath: ".format",
+        params: {
+          property: "appendix_in_body",
+          missingProperty: "body_ends_at",
+        },
+      }),
+      kindHint({ keyword: "required", dataPath: "", params: {} }),
+    ],
+    [null, null],
+  );
+});
+
+test('a reference limit that is neither a page count nor "unlimited" is refused', () => {
+  assert.match(
+    refusalOf(
+      "v.jsonc",
+      withKind({ body_pages_max: 8, ref_pages_max: "many" }),
+    ),
+    /format\.kinds\['full'\]\.ref_pages_max/u,
   );
 });
 
