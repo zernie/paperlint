@@ -192,6 +192,25 @@ const MAX_PARAGRAPH_WORDS_ON: Readonly<Record<string, string>> = {
   }),
 };
 
+/** `tex/max-paragraph-numbers` and `tex/max-sentence-words` are off by default too. */
+const CEILINGS_ON: Readonly<Record<string, string>> = {
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: null,
+    rules: {
+      "tex/max-paragraph-numbers": "warn",
+      "tex/max-sentence-words": "warn",
+    },
+  }),
+};
+
+/** A sentence of exactly `n` words. */
+const longSentence = (n: number): string =>
+  `${Array.from({ length: n - 1 }, () => "word").join(" ")} end.`;
+
+/** A paragraph of exactly `n` numbers. */
+const numbersParagraph = (n: number): string =>
+  `${Array.from({ length: n }, (_, i) => String(i + 1)).join(" ")}.`;
+
 /** A paragraph of exactly `n` words, `n` a multiple of one: ten-word sentences, then the rest. */
 const wordsParagraph = (n: number): string =>
   [
@@ -1181,6 +1200,24 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex(wordsParagraph(150)), MAX_PARAGRAPH_WORDS_ON),
   },
+  "tex/max-paragraph-numbers": {
+    reports: {
+      tree: paper(tex(numbersParagraph(9)), CEILINGS_ON),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(tex(numbersParagraph(8)), CEILINGS_ON),
+  },
+  "tex/max-sentence-words": {
+    reports: {
+      tree: paper(tex(longSentence(56)), CEILINGS_ON),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(tex(longSentence(55)), CEILINGS_ON),
+  },
   // The three register bands judge a body against the anchor of BlindConf's preset; the body opens
   // on line 3, right after the \\section, where the finding about the whole body stands.
   "tex/contrast-frames": {
@@ -1410,6 +1447,20 @@ describe("tex/max-paragraph-words is off by default", () => {
     expect(
       await ids(paper(tex(wordsParagraph(300)), MAX_PARAGRAPH_WORDS_ON)),
     ).toContain("tex/max-paragraph-words");
+  });
+});
+
+describe("the other two ceilings are off by default", () => {
+  it("nine numbers and a 56-word sentence produce nothing under the default config", async () => {
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    const body = `${numbersParagraph(9)} ${longSentence(56)}`;
+    const off = await ids(paper(tex(body)));
+    expect(off).not.toContain("tex/max-paragraph-numbers");
+    expect(off).not.toContain("tex/max-sentence-words");
+    const on = await ids(paper(tex(body), CEILINGS_ON));
+    expect(on).toContain("tex/max-paragraph-numbers");
+    expect(on).toContain("tex/max-sentence-words");
   });
 });
 
