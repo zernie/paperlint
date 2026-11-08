@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:d595fb538eb0a81e compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:ac953f6a976f76b1 compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -39,7 +39,7 @@ This file loads on every turn, so it holds only what applies to **any** change h
 
 ## Before leaving draft and before merge
 
-`npm run check`, exit code read without a pipe; a `wip:` push to a DRAFT pull request needs only the tests of what it touched (`npx vitest run <dir>`), and is never reported as "the gates", because CI does not run the gates on a draft. Red first · assert the whole value · no test touches the real network · 100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e gate fails, and it says so; `npx paperlint toolchain` installs it.
+`npm run check`, exit code read without a pipe; run it ONCE, before leaving draft — not after each change (2026-11-08: six full runs, ~51 min, where one was due). While drafting, `npm run test:changed` runs only the tests that import what the branch changed (109 s against the full check's ~10 min, measured; a change to `package.json` or the vitest config runs them all, 395 s); a `wip:` push to a DRAFT pull request needs only that, and is never reported as "the gates", because CI does not run the gates on a draft. `npm run lint` caches (`node_modules/.cache/eslint/`, 45 s → 3 s warm): a cached file is not re-judged when only a file it reads or imports changed (a preset, the build facts, an imported type), so a result that looks stale is checked with `rm -rf node_modules/.cache/eslint`; CI starts without the cache. Red first · assert the whole value · no test touches the real network · 100% coverage, no `c8 ignore`. In a container without TeX Live, only the TeX e2e gate fails, and it says so; `npx paperlint toolchain` installs it.
 
 ## Commits
 
