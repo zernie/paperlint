@@ -60,36 +60,39 @@ interface Shard {
 
 const SHARD_PREFIX = "--shard=";
 
-/** A whole number written in digits only (`"2"`), or null: `Number("")` and `Number(" 2")` are not. */
+/** A whole number written in digits only (`"2"`), or null: `""`, `" 2"` and `"02"` are not. */
 const digits = (s: string): number | null =>
-  s !== "" && [...s].every((c) => c >= "0" && c <= "9") ? Number(s) : null;
+  String(Number(s)) === s ? Number(s) : null;
 
-/**
- * The arguments split into the shard and the harness runner's own, or the argument that is no shard.
- * A malformed `--shard` is refused, never ignored: ignored, every shard would run every test.
- */
-export function splitShard(args: readonly string[]):
+/** One `--shard=<i>/<n>` argument, or null when it is not one with 1 ≤ i ≤ n. */
+function shardOf(arg: string): Shard | null {
+  const [i, n, ...extra] = arg.slice(SHARD_PREFIX.length).split("/");
+  const index = digits(i ?? "");
+  const count = digits(n ?? "");
+  if (extra.length > 0 || index === null || count === null) return null;
+  return index >= 1 && index <= count ? { arg, index, count } : null;
+}
+
+/** What the arguments say: the shard and the harness runner's own, or the argument that is no shard. */
+type Split =
   | {
       readonly kind: "ok";
       readonly shard: Shard | null;
       readonly rest: readonly string[];
     }
-  | { readonly kind: "bad"; readonly arg: string } {
-  const given = args.filter((a) => a.startsWith(SHARD_PREFIX));
+  | { readonly kind: "bad"; readonly arg: string };
+
+/**
+ * The arguments split into the shard and the harness runner's own, or the argument that is no shard.
+ * A malformed or repeated `--shard` is refused, never ignored: ignored, every shard would run every test.
+ */
+export function splitShard(args: readonly string[]): Split {
   const rest = args.filter((a) => !a.startsWith(SHARD_PREFIX));
-  const [arg, ...more] = given;
+  const [arg, second] = args.filter((a) => a.startsWith(SHARD_PREFIX));
   if (arg === undefined) return { kind: "ok", shard: null, rest };
-  if (more.length > 0) return { kind: "bad", arg: more[0] ?? arg };
-  const [i, n, ...extra] = arg.slice(SHARD_PREFIX.length).split("/");
-  const index = digits(i ?? "");
-  const count = digits(n ?? "");
-  return extra.length === 0 &&
-    index !== null &&
-    count !== null &&
-    index >= 1 &&
-    index <= count
-    ? { kind: "ok", shard: { arg, index, count }, rest }
-    : { kind: "bad", arg };
+  if (second !== undefined) return { kind: "bad", arg: second };
+  const shard = shardOf(arg);
+  return shard === null ? { kind: "bad", arg } : { kind: "ok", shard, rest };
 }
 
 /** The arguments a suite gets, or null when it does not run: the shard to vitest; the rest to the harnesses, which run on shard 1 only. */
@@ -101,6 +104,22 @@ const argsFor = (
   if (name === "vitest") return shard === null ? [] : [shard.arg];
   return shard === null || shard.index === 1 ? rest : null;
 };
+
+/** Each suite that runs under `split`, spawned in order whatever the one before returned: the failures. */
+function runEach(
+  suites: readonly Suite[],
+  split: Extract<Split, { readonly kind: "ok" }>,
+  spawn: Spawn,
+  env: NodeJS.ProcessEnv,
+): readonly { readonly name: string; readonly code: number }[] {
+  return suites.flatMap(({ name, command }) => {
+    const own = argsFor(name, split.shard, split.rest);
+    if (own === null) return [];
+    const [file, ...fixed] = command;
+    const r = spawn(file, [...fixed, ...own], { stdio: "inherit", env });
+    return r.status === 0 ? [] : [{ name, code: r.status ?? 1 }];
+  });
+}
 
 /**
  * Run every suite, whatever the one before it returned, and name the ones that failed.
@@ -129,16 +148,7 @@ export function runSuites(
     );
     return 2;
   }
-  const failed = suites.flatMap(({ name, command }) => {
-    const own = argsFor(name, split.shard, split.rest);
-    if (own === null) return [];
-    const [file, ...fixed] = command;
-    const r = spawn(file, [...fixed, ...own], {
-      stdio: "inherit",
-      env: withSources(env),
-    });
-    return r.status === 0 ? [] : [{ name, code: r.status ?? 1 }];
-  });
+  const failed = runEach(suites, split, spawn, withSources(env));
   for (const f of failed)
     err(
       `✗ ${f.name} failed (exit ${String(f.code)}) — its own report is above`,
