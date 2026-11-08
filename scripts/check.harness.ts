@@ -40,6 +40,7 @@ const Workflow = z.looseObject({
     .record(
       z.string(),
       z.looseObject({
+        "runs-on": z.string().optional(),
         steps: z.array(Step).optional(),
         strategy: z
           .looseObject({
@@ -137,6 +138,13 @@ check(
   "build-e2e runs on Linux AND macOS — one job, two operating systems",
   buildOs.includes("ubuntu-latest") && buildOs.includes("macos-latest"),
   JSON.stringify(buildOs),
+);
+const unitMacos = workflows["ci.yml"]?.jobs?.["unit-macos"];
+check(
+  "unit-macos runs npm test on macOS — issue #9's platform, in its own job beside the TeX cell",
+  unitMacos?.["runs-on"] === "macos-latest" &&
+    (unitMacos.steps ?? []).some((s) => s.run?.trim() === "npm test"),
+  JSON.stringify(unitMacos?.["runs-on"] ?? null),
 );
 check(
   "no workflow listens to `labeled` — a label trigger re-fires on every push and can pass by skipping",

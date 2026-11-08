@@ -232,7 +232,8 @@ jobs:
   # runs — so the job tests the install path users get, not a CI-only script. It used to be a bash
   # installer here and a separate macOS workflow (platform.yml) there; both are gone. macOS matters
   # twice: install-tl-unx has to work on it, and issue #9 (`/var` is a symlink to `/private/var`)
-  # exists only there, so the macOS cell also runs `npm test` and the temp-dir probe.
+  # exists only there — `npm test` and the temp-dir probe run on macOS in `unit-macos` below, beside
+  # this job rather than before its TeX steps.
   #
   # 🔴 WHY A SEPARATE JOB, NOT A STEP IN `gates`. Its only dependency is TeX Live, and it alone costs
   # minutes: ~270 MB, ~3 min cold (measured 2026-09-24 with `paperlint toolchain`). A separate job runs in
@@ -278,28 +279,6 @@ jobs:
         run: python3 -m pip install --break-system-packages pymupdf
         timeout-minutes: 3
 
-      # Issue #9's distinction: prints BOTH spellings of the temp root. If they match, this machine
-      # is not the platform the macOS cell exists for, and green below says nothing about it.
-      - name: two spellings of one directory — does this machine see them
-        if: runner.os == 'macOS'
-        run: |
-          node -e '
-            const { mkdtempSync, realpathSync } = require("node:fs");
-            const { tmpdir } = require("node:os");
-            const { join } = require("node:path");
-            const d = mkdtempSync(join(tmpdir(), "probe-"));
-            console.log("as typed :", d);
-            console.log("realpath :", realpathSync(d));
-            console.log(d === realpathSync(d) ? "MATCH — issue #9 traps do not exist on this machine"
-                                              : "DIVERGE — this is the platform this job exists for");
-          '
-
-      # Issue #9: `npm test` was red ONLY on macOS.
-      - name: npm test (macOS)
-        if: runner.os == 'macOS'
-        run: npm test
-        timeout-minutes: 10
-
       # The cache key is what the install depends on: the runner and the declared packages (every
       # venue profile, the base set included). NOT the TeX Live year, and not the calendar year that
       # used to stand in for it: the calendar says nothing about CTAN's release, and a restored tree
@@ -336,3 +315,57 @@ jobs:
       - name: npm run test:e2e:tex
         run: npm run test:e2e:tex
         timeout-minutes: 20
+
+  # ── THE UNIT SUITE ON macOS, BESIDE THE TeX JOB, NOT BEFORE IT ─────────────────────────────────
+  #
+  # 🔴 Issue #9: `npm test` was red ONLY on macOS (`/var` is a symlink to `/private/var`), so it runs
+  # there on every push. It used to be a step of build-e2e's macOS cell, BEFORE its TeX steps: on
+  # #428 that cell took 13 min (npm test 8 min 11 s, then toolchain 52 s and the TeX e2e 3 min 8 s)
+  # while every other job was done in 7. As its own job it runs in parallel with the TeX cell; the
+  # minutes are free (public repository, .github/CLAUDE.md). Same gate as build-e2e: a draft, or a
+  # pull request that changes only docs, pays nothing.
+  unit-macos:
+    needs: changes
+    if: >-
+      !cancelled() && (github.event_name != 'pull_request' ||
+      (github.event.pull_request.draft == false && needs.changes.result == 'success' &&
+      needs.changes.outputs.code == 'true'))
+    runs-on: macos-latest
+    # ~1.5x the 8 min 11 s the suite took on #428's macOS run, plus setup: a bond against a hang.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: npm ci
+        run: npm ci
+        timeout-minutes: 8
+
+      # skills/assess-novelty/scripts/crop_quote.py reads PDFs with PyMuPDF (python3 ships on the runners).
+      - name: PyMuPDF for the novelty scripts
+        run: python3 -m pip install --break-system-packages pymupdf
+        timeout-minutes: 3
+
+      # Issue #9's distinction: prints BOTH spellings of the temp root. If they match, this machine
+      # is not the platform the macOS cell exists for, and green below says nothing about it.
+      - name: two spellings of one directory — does this machine see them
+        run: |
+          node -e '
+            const { mkdtempSync, realpathSync } = require("node:fs");
+            const { tmpdir } = require("node:os");
+            const { join } = require("node:path");
+            const d = mkdtempSync(join(tmpdir(), "probe-"));
+            console.log("as typed :", d);
+            console.log("realpath :", realpathSync(d));
+            console.log(d === realpathSync(d) ? "MATCH — issue #9 traps do not exist on this machine"
+                                              : "DIVERGE — this is the platform this job exists for");
+          '
+
+      # Issue #9: `npm test` was red ONLY on macOS.
+      - name: npm test (macOS)
+        run: npm test
+        timeout-minutes: 10
