@@ -364,6 +364,15 @@ test("parseFactsText: every malformed shape is refused with its reason", () => {
     why({ ...written(), pdf_sha256: "xyz" }),
     "no `pdf_sha256` of 64 hex digits",
   );
+  // The total page limit judges `npages`: facts without a page count would pass it on nothing.
+  assert.equal(
+    why({ ...written(), npages: undefined }),
+    "`npages` is not a page count",
+  );
+  assert.equal(
+    why({ ...written(), npages: 0 }),
+    "`npages` is not a page count",
+  );
   assert.equal(
     why({ ...written(), fonts: [{ name: "x" }] }),
     "`fonts` is not a list of { name, type, embedded, program }",

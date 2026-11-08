@@ -3,6 +3,7 @@ import { test } from "vitest";
 import {
   identityHint,
   identityHints,
+  kindHint,
   loadTypescript,
   parsePreset,
 } from "./tex-requirements.ts";
