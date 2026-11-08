@@ -130,7 +130,12 @@ describe("versions/layout and cycle/submitted-frozen", () => {
       cycles: [
         {
           ...OPEN,
-          outcome: { kind: "rejected", date: "2026-10-01", evidence: "m.eml" },
+          outcome: {
+            kind: "rejected",
+            date: "2026-10-01",
+            evidence: "m.eml",
+            desk: true,
+          },
         },
         { ...OPEN, id: "gamma-2027", submission: { id: 9 } },
       ],
@@ -166,7 +171,12 @@ describe("cycle/draft-drift and cycle/camera-ready-source", () => {
     expect(draft(tree({ cycles: null, draft: DRIFTED }))).toStrictEqual([]);
     const rejected = {
       ...OPEN,
-      outcome: { kind: "rejected", date: "2026-12-01", evidence: "m.eml" },
+      outcome: {
+        kind: "rejected",
+        date: "2026-12-01",
+        evidence: "m.eml",
+        desk: true,
+      },
     };
     expect(draft(tree({ cycles: [rejected], draft: DRIFTED }))).toStrictEqual(
       [],

@@ -102,7 +102,12 @@ test("a later --save in the same cycle replaces submitted.* — the last upload 
   const fs = built({
     cycles: [
       cycle("old-2026", {
-        outcome: { kind: "rejected", date: "2026-10-02", evidence: "m.eml" },
+        outcome: {
+          kind: "rejected",
+          date: "2026-10-02",
+          evidence: "m.eml",
+          desk: true,
+        },
       }),
       SENT,
     ],

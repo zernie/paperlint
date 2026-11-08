@@ -61,18 +61,24 @@ export type Outcome =
       readonly date: IsoDate;
       readonly evidence: string;
     }
-  | {
+  | ({
       readonly kind: "rejected";
       readonly date: IsoDate;
       readonly evidence: string;
-      /** A desk rejection (format, scope) — different work follows than after reviews. */
-      readonly desk: boolean;
-    }
+    } & Rejection)
   | {
       readonly kind: "withdrawn";
       readonly date: IsoDate;
       readonly evidence: string;
     };
+/**
+ * Whether a rejection came with reviews, said every time — and a reviewed one names the file of the
+ * reviewers' points (`reviewer-points.ts`), so a rejection with reviews nobody will answer cannot
+ * be written down. A desk rejection (format, scope) has no reviews, so it names no points file.
+ */
+export type Rejection =
+  { readonly desk: true } | { readonly desk: false; readonly points: string };
+
 export const OUTCOME_KINDS: readonly Outcome["kind"][] = [
   "open",
   "accepted",
@@ -203,11 +209,36 @@ function parseVenue(v: unknown, at: string): Result<CycleVenue, string> {
 const isOutcomeKind = (v: unknown): v is Outcome["kind"] =>
   OUTCOME_KINDS.some((k) => k === v);
 
+/** A rejection's `desk` and `points`: both said, and only the pair that can be true. */
+function rejectionOf(
+  desk: unknown,
+  points: unknown,
+  at: string,
+): Result<Rejection, string> {
+  if (desk === undefined)
+    return err(
+      `${at}: a rejected outcome says whether it was a desk rejection: "desk": true (no reviews) or "desk": false (reviewed — then "points": the file with the reviewers' points)`,
+    );
+  if (typeof desk !== "boolean")
+    return err(`${at}: "outcome.desk" must be true or false`);
+  if (desk)
+    return points === undefined
+      ? ok({ desk })
+      : err(
+          `${at}: a desk rejection has no reviews, so no "points" — drop it, or set "desk": false`,
+        );
+  return typeof points === "string" && points !== ""
+    ? ok({ desk, points })
+    : err(
+        `${at}: a reviewed rejection ("desk": false) names the file with the reviewers' points: "points": "reviews/<cycle>-response.yaml" — each point quoted, and answered before the next attempt is sent`,
+      );
+}
+
 /** A decision's shape by kind: `rejected` also says whether it was a desk rejection. */
 const decisionOf = (
   kind: Exclude<Outcome["kind"], "open">,
   decided: { readonly date: IsoDate; readonly evidence: string },
-  desk: unknown,
+  v: Readonly<Record<string, unknown>>,
   at: string,
 ): Result<Outcome, string> => {
   switch (kind) {
@@ -215,17 +246,17 @@ const decisionOf = (
       return ok({ kind, ...decided });
     case "withdrawn":
       return ok({ kind, ...decided });
-    case "rejected":
-      return typeof desk === "boolean" || desk === undefined
-        ? ok({ kind, ...decided, desk: desk === true })
-        : err(`${at}: "outcome.desk" must be true or false`);
+    case "rejected": {
+      const r = rejectionOf(v["desk"], v["points"], at);
+      return r.ok ? ok({ kind, ...decided, ...r.value }) : r;
+    }
   }
 };
 
 const OUTCOME_KEYS: Readonly<Record<Outcome["kind"], readonly string[]>> = {
   open: ["kind"],
   accepted: ["kind", "date", "evidence"],
-  rejected: ["kind", "date", "evidence", "desk"],
+  rejected: ["kind", "date", "evidence", "desk", "points"],
   withdrawn: ["kind", "date", "evidence"],
 };
 
@@ -251,7 +282,7 @@ function parseOutcome(v: unknown, at: string): Result<Outcome, string> {
     return err(
       `${at}: "outcome" of kind ${kind} needs "evidence": a file in the paper folder (the decision mail, the reviews, the note that records the withdrawal)`,
     );
-  return decisionOf(kind, { date, evidence }, v["desk"], at);
+  return decisionOf(kind, { date, evidence }, v, at);
 }
 
 function parseSubmission(

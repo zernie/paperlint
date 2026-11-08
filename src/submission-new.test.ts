@@ -98,6 +98,7 @@ test("new --save in the cycles form: the id goes into the open attempt, the last
   });
   const closed = cycle("first", {
     kind: "rejected",
+    desk: true,
     date: "2026-10-05",
     evidence: "mail.eml",
   });
