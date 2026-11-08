@@ -43,6 +43,16 @@ const REFUSALS: readonly [string, unknown, string][] = [
     'reviews/c1-response.yaml: points[1]: the id "A1" is points[0]\'s too — each point is answered once, by its id',
   ],
   [
+    "a point that is not a mapping, before a good one",
+    { points: ["A1", point()] },
+    "reviews/c1-response.yaml: points[0] is not a mapping",
+  ],
+  [
+    "an answer that is not a mapping",
+    { points: [point({ answer: "done" })] },
+    'reviews/c1-response.yaml: points[0] (A1): "answer.kind" is changed, argued or declined, got "done"',
+  ],
+  [
     "an unknown key on a point",
     { points: [point({ status: "done" })] },
     'reviews/c1-response.yaml: points[0]: unknown key "status" — a point\'s keys: id, reviewer, quote, answer',

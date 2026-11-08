@@ -85,8 +85,7 @@ function lint(cycles: readonly object[] | undefined, points?: string) {
   const visitor = rule.create({
     filename: `${PAPER}/paper.tex`,
     sourceCode: {
-      text: TEX,
-      raw: TEX,
+      text: TEX, // no `raw`: the rule falls back to `text`; rule-cases runs ESLint, which gives one
       getLocFromIndex: () => ({ line: 1, column: 1 }),
     },
     report: (d) => {

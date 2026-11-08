@@ -131,10 +131,13 @@ function duplicateId(
   file: string,
 ): string | null {
   const ids = points.map((p) => p.id);
-  const i = ids.findIndex((id, at) => ids.indexOf(id) < at);
-  return i < 0
+  const dup = points.flatMap((p, at) => {
+    const first = ids.indexOf(p.id);
+    return first < at ? [{ id: p.id, at, first }] : [];
+  })[0];
+  return dup === undefined
     ? null
-    : `${file}: points[${String(i)}]: the id "${ids[i] ?? ""}" is points[${String(ids.indexOf(ids[i] ?? ""))}]'s too — each point is answered once, by its id`;
+    : `${file}: points[${String(dup.at)}]: the id "${dup.id}" is points[${String(dup.first)}]'s too — each point is answered once, by its id`;
 }
 
 /** The points file's parsed YAML → its points, or the one line that says what is wrong. */
@@ -150,14 +153,16 @@ export function parseReviewerPoints(
     return err(
       `${file}: \`points\` is not a non-empty list — a reviewed rejection has at least one point to answer`,
     );
-  const read = list.map((p: unknown, i) =>
-    parsePoint(p, `${file}: points[${String(i)}]`),
+  const read = list.reduce<Result<readonly ReviewerPoint[], string>>(
+    (acc, p: unknown, i) => {
+      if (!acc.ok) return acc;
+      const r = parsePoint(p, `${file}: points[${String(i)}]`);
+      return r.ok ? ok([...acc.value, r.value]) : r;
+    },
+    ok([]),
   );
-  const bad = read.find(
-    (r): r is Extract<(typeof read)[number], { readonly ok: false }> => !r.ok,
-  );
-  if (bad !== undefined) return bad;
-  const points = read.flatMap((r) => (r.ok ? [r.value] : []));
+  if (!read.ok) return read;
+  const points = read.value;
   const dup = duplicateId(points, file);
   return dup === null ? ok(points) : err(dup);
 }
