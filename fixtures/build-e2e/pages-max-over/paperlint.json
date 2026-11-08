@@ -1,0 +1,1 @@
+{"extends": "./venue.jsonc", "kind": "full", "identity": ["Ada Example", "adaexample", "ada@example.org", "Example University", "exampletool"]}

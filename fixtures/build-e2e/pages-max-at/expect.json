@@ -1,0 +1,5 @@
+{
+  "$comment": "A made-up two-page IEEEtran paper under a venue whose limit includes the references, at the limit (pages_max 2): no finding. The quiet half of pages-max-over.",
+  "build": { "outcome": "pdf" },
+  "lint": { "exit": 0, "findings": [] }
+}
