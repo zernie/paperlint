@@ -60,15 +60,15 @@ interface Shard {
 
 const SHARD_PREFIX = "--shard=";
 
-/** A whole number written in digits only (`"2"`), or null: `""`, `" 2"` and `"02"` are not. */
-const digits = (s: string): number | null =>
-  String(Number(s)) === s ? Number(s) : null;
+/** A whole number written in digits only (`"2"`), or null: absent, `""`, `" 2"` and `"02"` are not. */
+const digits = (s: string | undefined): number | null =>
+  s !== undefined && String(Number(s)) === s ? Number(s) : null;
 
 /** One `--shard=<i>/<n>` argument, or null when it is not one with 1 ≤ i ≤ n. */
 function shardOf(arg: string): Shard | null {
   const [i, n, ...extra] = arg.slice(SHARD_PREFIX.length).split("/");
-  const index = digits(i ?? "");
-  const count = digits(n ?? "");
+  const index = digits(i);
+  const count = digits(n);
   if (extra.length > 0 || index === null || count === null) return null;
   return index >= 1 && index <= count ? { arg, index, count } : null;
 }
