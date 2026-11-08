@@ -8,7 +8,8 @@
  * coverage report whole, so a failing test is reported as itself and the coverage figures still
  * mean what they say.
  *
- * Arguments are the harness runner's (`npm test -- --no-skip`), as they were before.
+ * Arguments are the harness runner's (`npm test -- --no-skip`), as they were before, except
+ * `--shard=<i>/<n>`: that one goes to vitest, and the harnesses then run on shard 1 only (CI's macOS job).
  *
  * Both suites run the SOURCES: every child gets `--conditions=paperlint-source`, so `#lib/*` and
  * `#eslint-rules/*` resolve to `.ts`, not to `dist/`. This runner is the one owner of that
@@ -50,8 +51,61 @@ export const SUITES: readonly Suite[] = [
   { name: "harnesses", command: ["vigiles", "test", "--min=1"] },
 ];
 
+/** `--shard=<i>/<n>`, vitest's own form: which part of the unit tests a CI job runs. */
+interface Shard {
+  readonly arg: string;
+  readonly index: number;
+  readonly count: number;
+}
+
+const SHARD_PREFIX = "--shard=";
+
+/** A whole number written in digits only (`"2"`), or null: `Number("")` and `Number(" 2")` are not. */
+const digits = (s: string): number | null =>
+  s !== "" && [...s].every((c) => c >= "0" && c <= "9") ? Number(s) : null;
+
+/**
+ * The arguments split into the shard and the harness runner's own, or the argument that is no shard.
+ * A malformed `--shard` is refused, never ignored: ignored, every shard would run every test.
+ */
+export function splitShard(args: readonly string[]):
+  | {
+      readonly kind: "ok";
+      readonly shard: Shard | null;
+      readonly rest: readonly string[];
+    }
+  | { readonly kind: "bad"; readonly arg: string } {
+  const given = args.filter((a) => a.startsWith(SHARD_PREFIX));
+  const rest = args.filter((a) => !a.startsWith(SHARD_PREFIX));
+  const [arg, ...more] = given;
+  if (arg === undefined) return { kind: "ok", shard: null, rest };
+  if (more.length > 0) return { kind: "bad", arg: more[0] ?? arg };
+  const [i, n, ...extra] = arg.slice(SHARD_PREFIX.length).split("/");
+  const index = digits(i ?? "");
+  const count = digits(n ?? "");
+  return extra.length === 0 &&
+    index !== null &&
+    count !== null &&
+    index >= 1 &&
+    index <= count
+    ? { kind: "ok", shard: { arg, index, count }, rest }
+    : { kind: "bad", arg };
+}
+
+/** The arguments a suite gets, or null when it does not run: the shard to vitest; the rest to the harnesses, which run on shard 1 only. */
+const argsFor = (
+  name: string,
+  shard: Shard | null,
+  rest: readonly string[],
+): readonly string[] | null => {
+  if (name === "vitest") return shard === null ? [] : [shard.arg];
+  return shard === null || shard.index === 1 ? rest : null;
+};
+
 /**
  * Run every suite, whatever the one before it returned, and name the ones that failed.
+ * With `--shard=<i>/<n>`, vitest runs that part of the unit tests, and the harnesses run only on
+ * shard 1, so a sharded CI run executes each of them once.
  * @returns 0 when every suite passed; otherwise the first failing suite's exit code (1 for a signal).
  */
 export function runSuites(
@@ -68,9 +122,18 @@ export function runSuites(
     env?: NodeJS.ProcessEnv;
   } = {},
 ): number {
+  const split = splitShard(args);
+  if (split.kind === "bad") {
+    err(
+      `✗ ${split.arg}: a shard is --shard=<i>/<n> with 1 ≤ i ≤ n (vitest's own form); nothing ran`,
+    );
+    return 2;
+  }
   const failed = suites.flatMap(({ name, command }) => {
-    const [file, ...rest] = command;
-    const r = spawn(file, [...rest, ...(name === "harnesses" ? args : [])], {
+    const own = argsFor(name, split.shard, split.rest);
+    if (own === null) return [];
+    const [file, ...fixed] = command;
+    const r = spawn(file, [...fixed, ...own], {
       stdio: "inherit",
       env: withSources(env),
     });

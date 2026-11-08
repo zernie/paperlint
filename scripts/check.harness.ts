@@ -45,7 +45,10 @@ const Workflow = z.looseObject({
         strategy: z
           .looseObject({
             matrix: z
-              .looseObject({ os: z.array(z.string()).optional() })
+              .looseObject({
+                os: z.array(z.string()).optional(),
+                shard: z.array(z.number()).optional(),
+              })
               .optional(),
           })
           .optional(),
@@ -141,10 +144,16 @@ check(
 );
 const unitMacos = workflows["ci.yml"]?.jobs?.["unit-macos"];
 check(
-  "unit-macos runs npm test on macOS — issue #9's platform, in its own job beside the TeX cell",
+  "unit-macos runs npm test on macOS in two shards — issue #9's platform, beside the TeX cell, every test once",
   unitMacos?.["runs-on"] === "macos-latest" &&
-    (unitMacos.steps ?? []).some((s) => s.run?.trim() === "npm test"),
-  JSON.stringify(unitMacos?.["runs-on"] ?? null),
+    JSON.stringify(unitMacos.strategy?.matrix?.shard) === "[1,2]" &&
+    (unitMacos.steps ?? []).some(
+      (s) => s.run?.trim() === "npm test -- --shard=${{ matrix.shard }}/2",
+    ),
+  JSON.stringify({
+    on: unitMacos?.["runs-on"] ?? null,
+    shard: unitMacos?.strategy?.matrix?.shard ?? null,
+  }),
 );
 check(
   "no workflow listens to `labeled` — a label trigger re-fires on every push and can pass by skipping",

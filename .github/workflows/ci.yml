@@ -330,8 +330,15 @@ jobs:
       !cancelled() && (github.event_name != 'pull_request' ||
       (github.event.pull_request.draft == false && needs.changes.result == 'success' &&
       needs.changes.outputs.code == 'true'))
+    # Two halves of the unit suite (vitest's --shard), each on its own runner; scripts/test.ts runs
+    # the harnesses on shard 1 only, so each still runs once. fail-fast off: one red half must not
+    # cancel the other, whose result is the other half of the answer.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     runs-on: macos-latest
-    # ~1.5x the 8 min 11 s the suite took on #428's macOS run, plus setup: a bond against a hang.
+    # ~1.5x the 8 min 11 s the WHOLE suite took on #428's macOS run, plus setup: a bond against a hang.
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
@@ -366,6 +373,6 @@ jobs:
           '
 
       # Issue #9: `npm test` was red ONLY on macOS.
-      - name: npm test (macOS)
-        run: npm test
+      - name: npm test (macOS), shard ${{ matrix.shard }} of 2
+        run: npm test -- --shard=${{ matrix.shard }}/2
         timeout-minutes: 10
