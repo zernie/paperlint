@@ -30,7 +30,7 @@ import {
   type ReviewerPoint,
 } from "./domain/reviewer-points.ts";
 import type { ParseYaml } from "./ports/yaml.ts";
-import { decoded, filled, readPaper, reportInPaper } from "./tex-paper.ts";
+import { decoded, findingText, readPaper, reportInPaper } from "./tex-paper.ts";
 import type {
   Located,
   TexRuleModule,
@@ -164,9 +164,7 @@ export function priorReviewsLines(
   deps: PriorReviewsDeps,
 ): readonly string[] {
   const r = findingsFor(filename, text, deps);
-  return (r?.found ?? []).map((f) =>
-    filled(META.messages[f.messageId] ?? f.messageId, f.data),
-  );
+  return (r?.found ?? []).map((f) => findingText(META.messages, f));
 }
 
 /** The `cycle` plugin's rule over the reviewers' points, for every `paper.tex`. */

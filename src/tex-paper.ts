@@ -76,7 +76,7 @@ export function lineColumn(text: string, at: number): string {
 }
 
 /** A message template with its data filled in, the way ESLint fills it. */
-export const filled = (
+const filled = (
   template: string,
   data: Readonly<Record<string, string | number>> = {},
 ): string =>
@@ -84,6 +84,12 @@ export const filled = (
     (m, [k, v]) => m.replaceAll(`{{${k}}}`, String(v)),
     template,
   );
+
+/** A finding's message as ESLint prints it; an id the rule does not define is printed as itself. */
+export const findingText = (
+  messages: Readonly<Record<string, string>>,
+  f: Located,
+): string => filled(messages[f.messageId] ?? f.messageId, f.data);
 
 /** Where a finding stands in the main file, and — when its text came from another file — which. */
 interface Placed {
@@ -125,7 +131,7 @@ export function reportInPaper(
       context.report({
         loc: where,
         // A message id the rule does not define is printed as itself rather than dropped.
-        message: `${p.from}: ${filled(messages[f.messageId] ?? f.messageId, f.data)}`,
+        message: `${p.from}: ${findingText(messages, f)}`,
       });
   });
 }
