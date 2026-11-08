@@ -89,7 +89,11 @@ import {
   registerBandRules,
 } from "./register-bands.ts";
 import { headingCaseRule } from "./heading-case.ts";
-import { maxParagraphWordsRule } from "./readability.ts";
+import {
+  maxParagraphNumbersRule,
+  maxParagraphWordsRule,
+  maxSentenceWordsRule,
+} from "./readability.ts";
 import {
   paperRules,
   identityField,
@@ -419,6 +423,8 @@ const REGISTER_AND_CASE_RULES = {
   ...registerBandRules(TEX_RULE_DEPS),
   "heading-case": headingCaseRule(TEX_RULE_DEPS),
   "max-paragraph-words": maxParagraphWordsRule(TEX_RULE_DEPS),
+  "max-paragraph-numbers": maxParagraphNumbersRule(TEX_RULE_DEPS),
+  "max-sentence-words": maxSentenceWordsRule(TEX_RULE_DEPS),
 };
 
 /**

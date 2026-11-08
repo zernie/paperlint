@@ -8,9 +8,13 @@ import { memoryFiles } from "./adapters/memory/index.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
 import {
   DEFAULT_MAX_PARAGRAPH_WORDS,
+  judgeParagraphNumbers,
   judgeParagraphWords,
+  judgeSentenceWords,
   maxOf,
+  maxParagraphNumbersRule,
   maxParagraphWordsRule,
+  maxSentenceWordsRule,
 } from "./readability.ts";
 
 const doc = (body: string): string =>
@@ -143,5 +147,83 @@ describe("the rule, through its create()", () => {
   it("an option moves the ceiling: 140 words fire under max 120, not under the default", () => {
     expect(reported(paragraph(140), [{ max: 120 }])).toHaveLength(1);
     expect(reported(paragraph(140))).toHaveLength(0);
+  });
+});
+
+/** What the numbers judge finds in `body` at the default ceiling. */
+const numbersFound = (body: string) => {
+  const src = doc(body);
+  return judgeParagraphNumbers(latexReader.bodyProse(src), src, 8).map(
+    (f) => f.data,
+  );
+};
+
+describe("tex/max-paragraph-numbers", () => {
+  it("🔴 nine numbers fire, eight stay quiet; places, citations and references are not numbers", () => {
+    const eight =
+      "We ran 1 and 2.5 and 30\\% and 4,000 and \\numA{} and \\numTotal and 7 and 8.";
+    expect(numbersFound(eight)).toEqual([]);
+    expect(numbersFound(`${eight} Then 9.`)).toEqual([
+      { numbers: 9, max: 8, head: "We ran 1 and 2.5 and 30% and…" },
+    ]);
+    // Guards: a place's number, a citation key and a reference are not quantities.
+    expect(
+      numbersFound(
+        `${eight} See Section~3.2, Figs. 3 and 4, \\cite{k2024} and \\ref{sec:1}.`,
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("tex/max-sentence-words", () => {
+  const sentence = (n: number) =>
+    `${Array.from({ length: n - 1 }, () => "word").join(" ")} end.`;
+  const sFound = (body: string) =>
+    judgeSentenceWords(latexReader.bodyProse(doc(body)), 55).map((f) => f.data);
+
+  it("🔴 56 words fire, 55 stay quiet; e.g., et al., Fig. and decimals do not end a sentence", () => {
+    expect(sFound(sentence(55))).toEqual([]);
+    expect(sFound(sentence(56))).toEqual([
+      { words: 56, max: 55, head: "word word word word word word word word…" },
+    ]);
+    // Guards: 30 + 30 words joined by abbreviations and a decimal is ONE sentence of 57 words.
+    const w = (n: number) => Array.from({ length: n }, () => "w").join(" ");
+    expect(
+      sFound(
+        `${w(10)} e.g. ${w(10)} et al. ${w(10)} Fig. 3 ${w(10)} 2.5 ${w(10)} end.`,
+      ),
+    ).toHaveLength(1);
+  });
+});
+
+describe("the new rules, through create()", () => {
+  const deps = {
+    files: memoryFiles({ "/p/paper.tex": "" }),
+    latex: latexReader,
+    codec: sourcesCodec,
+  };
+  const run = (rule: ReturnType<typeof maxSentenceWordsRule>, body: string) => {
+    const src = doc(body);
+    const out: unknown[] = [];
+    rule
+      .create({
+        filename: "/p/paper.tex",
+        options: [],
+        sourceCode: {
+          text: src,
+          getLocFromIndex: () => ({ line: 3, column: 0 }),
+        },
+        report: (d) => out.push(d),
+      })
+      .root?.();
+    return out;
+  };
+  it("report with their message ids", () => {
+    const long = Array.from({ length: 60 }, () => "word").join(" ");
+    expect(run(maxSentenceWordsRule(deps), `${long}.`)).toHaveLength(1);
+    expect(
+      run(maxParagraphNumbersRule(deps), "1 2 3 4 5 6 7 8 9."),
+    ).toHaveLength(1);
+    expect(run(maxParagraphWordsRule(deps), "Short.")).toHaveLength(0);
   });
 });
