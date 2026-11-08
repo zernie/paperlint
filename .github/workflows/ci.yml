@@ -1,9 +1,12 @@
-# CI for paperlint — ONE job, every gate, bonds set BY MEASUREMENT.
+# CI for paperlint — every gate, in jobs that run side by side, bonds set BY MEASUREMENT.
 #
-# ── WHY ONE JOB ─────────────────────────────────────────────────────────────
+# ── WHY SEVERAL JOBS (it was ONE until 2026-11-08) ──────────────────────────
 # Parallelism does not save billable minutes, it ADDS them: every job pays for its own
-# setup + checkout + install (~20-30 s). Splitting is worth it for signal isolation on a big
-# matrix; here the whole suite is ~96 seconds, so a second job would cost more than it isolates.
+# setup + checkout + install (~20-30 s). That argued for one job while the whole suite was ~96 s
+# and the minutes were believed to be billed. Neither holds now: the minutes are free (below),
+# and the one job, `gates`, took 7 min on #428 and 12 min 4 s on #431, its steps one after
+# another although none needs another's result. So the Linux gates are three jobs —
+# `coverage`, `static`, `e2e-node` — and a pull request waits on the longest, not on the sum.
 #
 # ⛽ THIS REPOSITORY IS PUBLIC, so its minutes are FREE — they do not touch the account's
 # 3000/month quota (verified against the API 2026-09-12: `"private": false`). The header said
@@ -63,7 +66,16 @@ permissions:
   contents: read
 
 jobs:
-  gates:
+  # ── THREE JOBS, NOT ONE QUEUE ──────────────────────────────────────────────────────────────────
+  #
+  # These were one job, `gates`, whose steps ran one after another although none needs another's
+  # result: on #431 it took 12 min 4 s (the coverage run 8 min 24 s, the static checks ~1 min 50 s,
+  # the Node e2e ~1 min 10 s). Split, they run side by side and CI waits on the longest, the
+  # coverage run. Each job pays its own `npm ci` (~20 s); the minutes are free (public repository,
+  # .github/CLAUDE.md). The local `npm run check` still runs all of them (scripts/check.ts).
+
+  # Every test, under coverage: the unit tests, then the vigiles harnesses, with c8's thresholds.
+  coverage:
     # 🔴 A DRAFT PULL REQUEST PAYS NOTHING (same gate as vigiles and the knowledge base). Written as
     # `event_name != 'pull_request' || draft == false`, not `draft == false` alone: on a push to main
     # there is no pull_request object, and a bare `.draft` would be missing and kill every check there.
@@ -129,6 +141,30 @@ jobs:
       - name: npm test, under coverage
         run: npm run coverage -- --no-skip
 
+  # Lint, format, types, the skills and the two guards: everything that reads the tree and runs nothing.
+  static:
+    # 🔴 A DRAFT PULL REQUEST PAYS NOTHING (same gate as vigiles and the knowledge base). Written as
+    # `event_name != 'pull_request' || draft == false`, not `draft == false` alone: on a push to main
+    # there is no pull_request object, and a bare `.draft` would be missing and kill every check there.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          # The floor: engines.node is >=22.13, so the gates run on 22. build-e2e runs 24.
+          node-version: 22
+          cache: npm
+
+      # 🔴 ITS OWN BOND. This is the only step that talks to the network, and a hung registry is
+      # indistinguishable from a slow suite at the job level. Measured in the consumer repo:
+      # a `npm ci` without its own bond once held a job for five minutes on a slow mirror.
+      - name: npm ci
+        run: npm ci
+        timeout-minutes: 5
+
       # vitest strips types without checking them, so the tests' types are checked here. After
       # `npm ci`, whose `prepare` built `dist/`: the e2e runs import its declarations.
       - name: the tests type-check
@@ -180,6 +216,30 @@ jobs:
       # own suppressedMessages, so a new `-- legacy …` directive anywhere fails here.
       - name: legacy layer exemptions are frozen
         run: node scripts/layer-legacy-frozen.ts
+
+  # The end-to-end runs that need only Node: the packed package under npm and pnpm, and a study in git.
+  e2e-node:
+    # 🔴 A DRAFT PULL REQUEST PAYS NOTHING (same gate as vigiles and the knowledge base). Written as
+    # `event_name != 'pull_request' || draft == false`, not `draft == false` alone: on a push to main
+    # there is no pull_request object, and a bare `.draft` would be missing and kill every check there.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          # The floor: engines.node is >=22.13, so the gates run on 22. build-e2e runs 24.
+          node-version: 22
+          cache: npm
+
+      # 🔴 ITS OWN BOND. This is the only step that talks to the network, and a hung registry is
+      # indistinguishable from a slow suite at the job level. Measured in the consumer repo:
+      # a `npm ci` without its own bond once held a job for five minutes on a slow mirror.
+      - name: npm ci
+        run: npm ci
+        timeout-minutes: 5
 
       # pnpm is INSTALLED here rather than hoped for. The runner image may or may not carry it,
       # and the npm/pnpm difference is the entire reason the install e2e exists — so leaving it
@@ -235,7 +295,7 @@ jobs:
   # exists only there — `npm test` and the temp-dir probe run on macOS in `unit-macos` below, beside
   # this job rather than before its TeX steps.
   #
-  # 🔴 WHY A SEPARATE JOB, NOT A STEP IN `gates`. Its only dependency is TeX Live, and it alone costs
+  # 🔴 WHY A SEPARATE JOB, NOT A STEP OF THE LINUX GATES. Its only dependency is TeX Live, and it alone costs
   # minutes: ~270 MB, ~3 min cold (measured 2026-09-24 with `paperlint toolchain`). A separate job runs in
   # parallel and caches itself.
   #
@@ -246,7 +306,7 @@ jobs:
   #
   # 🔴 EXCEPT A PULL REQUEST THAT CHANGES ONLY DOCS. A README or docs/*.md edit cannot change what
   # this job builds, and it used to wait for TeX Live on two systems anyway (#343: one new
-  # docs/website.md). `changes` below decides; `gates` still runs on such a PR, because tests read
+  # docs/website.md). `changes` below decides; `coverage`, `static` and `e2e-node` still run on such a PR, because tests read
   # the docs. On a push to main or a manual run `changes` does not run and this job always does.
   build-e2e:
     needs: changes
@@ -266,7 +326,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          # The latest LTS; the gates job covers the 22 floor, so no job runs twice.
+          # The latest LTS; coverage, static and e2e-node cover the 22 floor, so no job runs twice.
           node-version: 24
           cache: npm
 

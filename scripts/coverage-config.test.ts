@@ -291,7 +291,7 @@ test("the floor is 100 on all four measures, and the script that checks it canno
   );
 });
 
-/** The gates job and the one step of it that runs coverage, read from the parsed workflow. */
+/** The coverage job and the one step of it that runs coverage, read from the parsed workflow. */
 const StepSchema = z.looseObject({
   run: z.string().optional(),
   if: z.unknown().optional(),
@@ -330,7 +330,7 @@ export function coverageStepHoles(workflow: string): string[] {
     ];
   const { job, definition, step } = only;
   return [
-    ...(job === "gates" ? [] : [`the step is in job ${job}, not gates`]),
+    ...(job === "coverage" ? [] : [`the step is in job ${job}, not coverage`]),
     ...(definition.if === DRAFT_GATE
       ? []
       : [
@@ -351,13 +351,13 @@ export function coverageStepHoles(workflow: string): string[] {
   ];
 }
 
-test("CI runs the coverage step in the gates job, unconditionally past the draft gate, and fails on it", () => {
+test("CI runs the coverage step in the coverage job, unconditionally past the draft gate, and fails on it", () => {
   const ci = readFileSync(join(ROOT, ".github", "workflows", "ci.yml"), "utf8");
   assert.deepEqual(coverageStepHoles(ci), []);
 });
 
 test("coverageStepHoles names every way to keep CI green over a coverage drop", () => {
-  const wf = (step: string, jobIf = DRAFT_GATE, job = "gates") =>
+  const wf = (step: string, jobIf = DRAFT_GATE, job = "coverage") =>
     [
       "jobs:",
       `  ${job}:`,
@@ -373,14 +373,14 @@ test("coverageStepHoles names every way to keep CI green over a coverage drop", 
       coverageStepHoles(wf("\n        if: false")),
       coverageStepHoles(wf("", "false")),
       coverageStepHoles(wf("", DRAFT_GATE, "other")),
-      coverageStepHoles("jobs:\n  gates:\n    steps: []\n"),
+      coverageStepHoles("jobs:\n  coverage:\n    steps: []\n"),
     ],
     [
       [],
       ["the step has continue-on-error"],
       ["the step has if: false"],
-      ['job gates runs if "false", not only the draft gate'],
-      ["the step is in job other, not gates"],
+      ['job coverage runs if "false", not only the draft gate'],
+      ["the step is in job other, not coverage"],
       ["expected one step running `npm run coverage`, found 0"],
     ],
   );
