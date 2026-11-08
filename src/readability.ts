@@ -88,19 +88,17 @@ const PLACE_NUMBER =
 /** A registered number: `\num`, `\numA`, `\numTotal`…, not TeX's `\number` or `\numberwithin`. */
 const NUMBER_MACRO = /\\num(?!ber)[A-Za-z]*/gu;
 
-const startPos = (p: ProsePiece): number =>
-  p.kind === "text" ? p.segment.at : p.span.start;
 const endPos = (p: ProsePiece): number =>
   p.kind === "text" ? p.segment.at + p.segment.text.length : p.span.end;
 
 /** The numbers of a paragraph: digits in its prose (a place's number left out) and each `\num…` macro in its source. */
 export function numbersIn(p: Passage, source: string): number {
   const text = runText(runOf(p)).replace(PLACE_NUMBER, " ");
-  const first = p.pieces[0];
-  const end = p.pieces.reduce((_, q) => endPos(q), startPos(first));
+  const from = startOf(p).start;
+  const end = p.pieces.reduce((_, q) => endPos(q), from);
   return (
     [...text.matchAll(NUMBER)].length +
-    [...source.slice(startPos(first), end).matchAll(NUMBER_MACRO)].length
+    [...source.slice(from, end).matchAll(NUMBER_MACRO)].length
   );
 }
 
@@ -153,78 +151,86 @@ const MESSAGES = {
     "a sentence of {{words}} words, over {{max}} — «{{head}}». A reader loses its subject before its verb; cut it where a clause could stand alone",
 };
 
-/** A ceiling rule of the `tex` plugin over the body's prose; off until a project turns it on. */
-function ceilingRule(
-  name: Parameters<typeof ruleDocsUrl>[0],
-  what: string,
-  fallback: number,
-  judge: (
+/** What distinguishes one ceiling rule from another. */
+interface Ceiling {
+  readonly name: Parameters<typeof ruleDocsUrl>[0];
+  readonly what: string;
+  readonly fallback: number;
+  readonly judge: (
     passages: readonly Passage[],
     source: string,
     max: number,
-  ) => readonly Located[],
-  deps: ProseDeps,
-): TexRuleModule {
-  return {
-    meta: {
-      type: "suggestion",
-      docs: {
-        description: `${what} (${String(fallback)}). Off until a project turns it on`,
-        url: ruleDocsUrl(name),
-      },
-      schema: [
-        {
-          type: "object",
-          properties: { max: { type: "integer", minimum: 0 } },
-          additionalProperties: false,
-        },
-      ],
-      messages: MESSAGES,
-    },
-    create(context) {
-      return {
-        root() {
-          const sc = context.sourceCode;
-          const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
-          const passages = deps.latex.bodyProse(paper.text);
-          const found = judge(
-            passages,
-            paper.text,
-            maxOf(context.options, fallback),
-          );
-          reportInPaper(context, MESSAGES, paper, found);
-        },
-      };
-    },
-  };
+  ) => readonly Located[];
 }
+
+const CEILING_SCHEMA = [
+  {
+    type: "object",
+    properties: { max: { type: "integer", minimum: 0 } },
+    additionalProperties: false,
+  },
+];
+
+/** A ceiling rule of the `tex` plugin over the body's prose; off until a project turns it on. */
+const ceilingRule = (c: Ceiling, deps: ProseDeps): TexRuleModule => ({
+  meta: {
+    type: "suggestion",
+    docs: {
+      description: `${c.what} (${String(c.fallback)}). Off until a project turns it on`,
+      url: ruleDocsUrl(c.name),
+    },
+    schema: CEILING_SCHEMA,
+    messages: MESSAGES,
+  },
+  create(context) {
+    return {
+      root() {
+        const sc = context.sourceCode;
+        const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
+        const max = maxOf(context.options, c.fallback);
+        const found = c.judge(
+          deps.latex.bodyProse(paper.text),
+          paper.text,
+          max,
+        );
+        reportInPaper(context, MESSAGES, paper, found);
+      },
+    };
+  },
+});
 
 /** `tex/max-paragraph-words`, over the whole paper, its includes spliced. Not on in any default config. */
 export const maxParagraphWordsRule = (deps: ProseDeps): TexRuleModule =>
   ceilingRule(
-    "max-paragraph-words",
-    "a paragraph of the body stays at or under `max` words: past it, the page shows a wall of text",
-    DEFAULT_MAX_PARAGRAPH_WORDS,
-    (passages, _source, max) => judgeParagraphWords(passages, max),
+    {
+      name: "max-paragraph-words",
+      what: "a paragraph of the body stays at or under `max` words: past it, the page shows a wall of text",
+      fallback: DEFAULT_MAX_PARAGRAPH_WORDS,
+      judge: (passages, _source, max) => judgeParagraphWords(passages, max),
+    },
     deps,
   );
 
 /** `tex/max-paragraph-numbers`. Not on in any default config. */
 export const maxParagraphNumbersRule = (deps: ProseDeps): TexRuleModule =>
   ceilingRule(
-    "max-paragraph-numbers",
-    "a paragraph of the body holds at most `max` numbers: past it, it reads as a table written in prose",
-    DEFAULT_MAX_PARAGRAPH_NUMBERS,
-    judgeParagraphNumbers,
+    {
+      name: "max-paragraph-numbers",
+      what: "a paragraph of the body holds at most `max` numbers: past it, it reads as a table written in prose",
+      fallback: DEFAULT_MAX_PARAGRAPH_NUMBERS,
+      judge: judgeParagraphNumbers,
+    },
     deps,
   );
 
 /** `tex/max-sentence-words`. Not on in any default config. */
 export const maxSentenceWordsRule = (deps: ProseDeps): TexRuleModule =>
   ceilingRule(
-    "max-sentence-words",
-    "a sentence of the body stays at or under `max` words",
-    DEFAULT_MAX_SENTENCE_WORDS,
-    (passages, _source, max) => judgeSentenceWords(passages, max),
+    {
+      name: "max-sentence-words",
+      what: "a sentence of the body stays at or under `max` words",
+      fallback: DEFAULT_MAX_SENTENCE_WORDS,
+      judge: (passages, _source, max) => judgeSentenceWords(passages, max),
+    },
     deps,
   );
