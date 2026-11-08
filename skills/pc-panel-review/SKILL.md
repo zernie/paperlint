@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:d92a744ec1cc1b05 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:1d086a8e42bb8443 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -75,6 +75,13 @@ prose-only read can.
      code for
      circularity (echoing stored fields vs recomputing); grep all files (incl. data + compiled
      caches) for anonymization leaks; scope the badge (Available / Functional / Reproduced).
+   - **Prior-reviews reviewer (MANDATORY when the attempt before this one was rejected with
+     reviews)** — the rejection's `"desk": false` outcome in `paperlint.json` names the points file
+     (`outcome.points`). `cycle/prior-reviews-answered` already decides that every point has an
+     answer and that each `where` is a `\section` of the paper; do not re-count that. Give this
+     reviewer the points file beside the paper, and it judges what no rule can: whether the section an
+     answer names really answers the quoted point, and whether a `declined` reason would satisfy the
+     reviewer who raised it. Each answer that does not is a must-fix, named by its point id.
    - **Security/ethics reviewer** (security venues) — threat model soundness, responsible disclosure,
      punching-down risk.
    - **Novelty/related-work reviewer** — is the delta over the nearest neighbor explicit; obvious

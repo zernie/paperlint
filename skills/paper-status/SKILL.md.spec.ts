@@ -60,11 +60,15 @@ cd <paper-dir>
 bash repro/tools/build-submission.sh 2>&1 | grep -Ei 'body pages|VERDICT|Overfull|undefined|anonymity'
 git status --porcelain                      # uncommitted work
 git log --oneline @{u}..HEAD                # unpushed commits
+npx paperlint lint                          # every error is a blocker
 \`\`\`
 
 - **The build is the only page-count authority.** If the repo has an approximate measurer, do not use
   it and say so. In this project \`measure.sh\` was gutted on 2026-08-04 for exactly this reason.
 - Report the build's own verdict line verbatim. Do not paraphrase \`BLOCKED\` into "nearly there".
+- **Every \`paperlint lint\` error is a blocker**, listed as the rule names it — among them
+  \`cycle/prior-reviews-answered\`: a reviewed rejection's points unanswered once the next attempt is
+  open. A rule decides it, so this skill does not re-judge it; \`submission … --save\` refuses on it too.
 
 ### 2. Detect stale gates — the part memory always gets wrong
 
