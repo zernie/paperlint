@@ -40,11 +40,15 @@ const Workflow = z.looseObject({
     .record(
       z.string(),
       z.looseObject({
+        "runs-on": z.string().optional(),
         steps: z.array(Step).optional(),
         strategy: z
           .looseObject({
             matrix: z
-              .looseObject({ os: z.array(z.string()).optional() })
+              .looseObject({
+                os: z.array(z.string()).optional(),
+                shard: z.array(z.number()).optional(),
+              })
               .optional(),
           })
           .optional(),
@@ -137,6 +141,19 @@ check(
   "build-e2e runs on Linux AND macOS — one job, two operating systems",
   buildOs.includes("ubuntu-latest") && buildOs.includes("macos-latest"),
   JSON.stringify(buildOs),
+);
+const unitMacos = workflows["ci.yml"]?.jobs?.["unit-macos"];
+check(
+  "unit-macos runs npm test on macOS in two shards — issue #9's platform, beside the TeX cell, every test once",
+  unitMacos?.["runs-on"] === "macos-latest" &&
+    JSON.stringify(unitMacos.strategy?.matrix?.shard) === "[1,2]" &&
+    (unitMacos.steps ?? []).some(
+      (s) => s.run?.trim() === "npm test -- --shard=${{ matrix.shard }}/2",
+    ),
+  JSON.stringify({
+    on: unitMacos?.["runs-on"] ?? null,
+    shard: unitMacos?.strategy?.matrix?.shard ?? null,
+  }),
 );
 check(
   "no workflow listens to `labeled` — a label trigger re-fires on every push and can pass by skipping",

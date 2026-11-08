@@ -76,3 +76,92 @@ test("every suite runs the SOURCES: the paperlint-source condition is in NODE_OP
     "--conditions=paperlint-source",
   ]);
 });
+
+test("--shard=i/n goes to vitest only, and the harnesses run once, on shard 1", () => {
+  const first = fake({ vitest: 0, vigiles: 0 });
+  assert.equal(
+    runSuites(["--shard=1/2", "--no-skip"], {
+      spawn: first.spawn,
+      err: assert.fail,
+    }),
+    0,
+  );
+  const second = fake({ vitest: 0, vigiles: 0 });
+  assert.equal(
+    runSuites(["--shard=2/2", "--no-skip"], {
+      spawn: second.spawn,
+      err: assert.fail,
+    }),
+    0,
+  );
+  assert.deepEqual(
+    [first.calls, second.calls],
+    [
+      [
+        ["vitest", "run", "--project", "unit", "--shard=1/2"],
+        ["vigiles", "test", "--min=1", "--no-skip"],
+      ],
+      [["vitest", "run", "--project", "unit", "--shard=2/2"]],
+    ],
+  );
+});
+
+test("a --shard that is not i/n with 1 ≤ i ≤ n is refused before anything runs, naming it", () => {
+  const bad = ["--shard=0/2", "--shard=3/2", "--shard=two", "--shard=1/0"];
+  const seen = bad.map((arg) => {
+    const { calls, spawn } = fake({ vitest: 0, vigiles: 0 });
+    const said: string[] = [];
+    const code = runSuites([arg], { spawn, err: (s) => said.push(s) });
+    return { code, calls: calls.length, said };
+  });
+  assert.deepEqual(
+    seen,
+    bad.map((arg) => ({
+      code: 2,
+      calls: 0,
+      said: [
+        `✗ ${arg}: a shard is --shard=<i>/<n> with 1 ≤ i ≤ n (vitest's own form); nothing ran`,
+      ],
+    })),
+  );
+});
+
+test("two --shard arguments are refused, naming the second: which one would bind is a guess", () => {
+  const { calls, spawn } = fake({ vitest: 0, vigiles: 0 });
+  const said: string[] = [];
+  assert.deepEqual(
+    [
+      runSuites(["--shard=1/2", "--shard=2/2"], {
+        spawn,
+        err: (s) => said.push(s),
+      }),
+      calls.length,
+      said,
+    ],
+    [
+      2,
+      0,
+      [
+        "✗ --shard=2/2: a shard is --shard=<i>/<n> with 1 ≤ i ≤ n (vitest's own form); nothing ran",
+      ],
+    ],
+  );
+});
+
+test("--changed: vitest runs only the unit tests the branch affects, on the SOURCES; no harness runs", () => {
+  const seen: { call: string[]; nodeOptions: string | undefined }[] = [];
+  const spawn: Spawn = (file, args, options) => {
+    seen.push({ call: [file, ...args], nodeOptions: options.env.NODE_OPTIONS });
+    return { status: 0 };
+  };
+  assert.equal(
+    runSuites(["--changed"], { spawn, err: assert.fail, env: {} }),
+    0,
+  );
+  assert.deepEqual(seen, [
+    {
+      call: ["vitest", "run", "--project", "unit", "--changed", "origin/main"],
+      nodeOptions: "--conditions=paperlint-source",
+    },
+  ]);
+});

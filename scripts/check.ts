@@ -25,7 +25,7 @@
  *
  * ── WHY IT DOES NOT REPLACE THE CI JOBS ────────────────────────────────────────────────────
  * The jobs solve a different problem: a different environment (TeX Live exists only in
- * `build-e2e`, and macOS only in its second matrix cell) and a named culprit per bond. One command cannot do that and should
+ * `build-e2e`, and macOS only in its second matrix cell and in `unit-macos`) and a named culprit per bond. One command cannot do that and should
  * not try. This is about a human being able to check themselves BEFORE the push.
  *
  * ── NO `--fast` FLAG, ON PURPOSE ───────────────────────────────────────────────────────────
@@ -199,8 +199,11 @@ export function commandOf(gate: Gate): readonly [string, ...string[]] {
  * unexplained gap is indistinguishable from an oversight — which is what the harness enforces.
  */
 export const NOT_COVERED: Readonly<Record<string, string>> = {
-  // build-e2e's macOS cell is the one part of a covered job no local command can stand in for:
-  // it exists because issue #9 appeared on macOS alone (/var is a symlink to /private/var).
+  // macOS is the one platform no local command can stand in for: build-e2e's macOS cell builds the
+  // TeX fixtures there, and unit-macos runs npm test there, because issue #9 appeared on macOS alone.
+  "unit-macos":
+    "ci.yml runs npm test on macOS, beside build-e2e: issue #9 (/var is a symlink to /private/var) " +
+    "appeared on macOS alone, and no local command on another system can stand in for one.",
   changes:
     "ci.yml asks dorny/paths-filter whether a pull request changes anything but docs, so " +
     "build-e2e can skip; it checks nothing itself, and a local run always builds.",
