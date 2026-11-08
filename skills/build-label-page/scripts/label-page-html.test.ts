@@ -14,6 +14,7 @@ import {
   DONE_PRACTICE,
   Exported,
   ITEMS,
+  PRACTICE,
   type KeyFile,
   QUESTIONS,
   approval,
@@ -189,6 +190,119 @@ test("🔴 a new practice round reopens the practice: answers of an earlier roun
   const shown = await showPage(page, {}, {});
   assert.match(shown, /Practice: 0 of 3 answered/);
   assert.doesNotMatch(shown, /G001/);
+});
+
+/** The page's data block, parsed. */
+const dataOf = (page: string): Record<string, unknown> => {
+  const json =
+    /<script type="application\/json" id="data">([\s\S]*?)<\/script>/.exec(
+      page,
+    )?.[1];
+  assert.ok(json !== undefined);
+  return z
+    .record(z.string(), z.unknown())
+    .parse(JSON.parse(json.replace(/<\\\//g, "</")));
+};
+/** key.json as written, every field kept. */
+const rawKeyOf = (dir: string): Record<string, unknown> =>
+  z
+    .record(z.string(), z.unknown())
+    .parse(JSON.parse(readFileSync(join(dir, "out", "key.json"), "utf8")));
+const MISSED_P2 = {
+  ...DONE_PRACTICE,
+  "r1-P2": { answers: { label: "yes", boundary: "clear" }, source: "page" },
+};
+
+test("🔴 with practice_gate a practice miss keeps the real items closed, and the banner says so", async () => {
+  const dir = setup("gate-miss", config({ practice_gate: "matched" }));
+  const { page } = build(dir);
+  assert.equal(dataOf(page)["practice_gate"], "matched");
+  assert.equal(rawKeyOf(dir)["practice_gate"], "matched");
+  const shown = await showPage(page, {}, {}, MISSED_P2);
+  assert.match(shown, /Practice: 2 of 3 matched/);
+  assert.match(shown, /tell the agent/);
+  assert.match(shown, /The real cards stay closed\./);
+  assert.doesNotMatch(shown, /G001/, "a real item is open after a miss");
+  assert.doesNotMatch(shown, /items complete/);
+});
+
+test("🔴 with practice_gate every practice item matched opens the real items", async () => {
+  const { page } = build(
+    setup("gate-matched", config({ practice_gate: "matched" })),
+  );
+  const shown = await showPage(page, {}, {});
+  assert.match(shown, /Practice: 3 of 3 matched/);
+  assert.match(shown, /G001/);
+  assert.match(shown, /0 of 12 items complete/);
+  assert.doesNotMatch(shown, /stay closed/);
+});
+
+test("🔴 with practice_gate a raised practice_round with new items reopens the practice and gates again; the old round stays in the key", async () => {
+  const dir = setup("gate-round-2", config({ practice_gate: "matched" }));
+  build(dir);
+  const reworded = PRACTICE.map((p) => ({ ...p, body: `${p.body} (again)` }));
+  setup(
+    "gate-round-2",
+    config({ practice_gate: "matched", practice: reworded, practice_round: 2 }),
+  );
+  const { page } = build(dir);
+  const Rounds = z.object({
+    practice: z.object({
+      round: z.number(),
+      rounds: z.record(z.string(), z.unknown()),
+    }),
+  });
+  const { practice } = Rounds.parse(rawKeyOf(dir));
+  assert.equal(practice.round, 2);
+  assert.deepEqual(Object.keys(practice.rounds), ["1", "2"]);
+
+  const reopened = await showPage(page, {}, {}, DONE_PRACTICE);
+  assert.match(reopened, /Practice: 0 of 3 answered/);
+  assert.match(
+    reopened,
+    /The real items open when all 3 match their expected answer\./,
+  );
+  assert.match(reopened, /\(again\)/);
+  assert.doesNotMatch(reopened, /G001/);
+
+  const round2 = (answers: Record<string, unknown>) =>
+    Object.fromEntries(
+      PRACTICE.map((p, n) => [
+        `r2-P${String(n + 1)}`,
+        { answers: n === 0 ? answers : p.expected, source: "page" },
+      ]),
+    );
+  const missed = await showPage(
+    page,
+    {},
+    {},
+    round2({ label: "no", boundary: "clear" }),
+  );
+  assert.match(missed, /Practice: 2 of 3 matched/);
+  assert.match(missed, /The real cards stay closed\./);
+  assert.doesNotMatch(missed, /G001/);
+
+  const matched = await showPage(
+    page,
+    {},
+    {},
+    round2(PRACTICE[0]?.expected ?? {}),
+  );
+  assert.match(matched, /Practice: 3 of 3 matched/);
+  assert.match(matched, /G001/);
+});
+
+test("🔴 without practice_gate the page data and the key carry no gate, and a miss leaves the real items open", async () => {
+  const dir = setup("gate-none", config());
+  const { page } = build(dir);
+  assert.ok(!("practice_gate" in dataOf(page)), "the page data has no gate");
+  assert.ok(!("practice_gate" in rawKeyOf(dir)), "the key has no gate");
+  const shown = await showPage(page, {}, {}, MISSED_P2);
+  assert.match(shown, /Practice: 2 of 3 matched/);
+  assert.match(shown, /G001/);
+  assert.doesNotMatch(shown, /stay closed/);
+  const before = await showPage(page, {}, {}, {});
+  assert.match(before, /The real items open when all 3 are answered\./);
 });
 
 test("🔴 one question per screen: an item card asks only its first unanswered question", async () => {

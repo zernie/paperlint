@@ -193,6 +193,7 @@ const FULL: DocObject = (() => {
       labeller_knows: ["python", "go", "rust"],
       answerers: ["author", "second"],
       min_seconds: 30,
+      practice_gate: "matched",
       familiarity: true,
       familiarity_question: "How well do you know {group}?",
       labels: {
@@ -420,6 +421,7 @@ const DOCUMENTED_FIELDS = [
   "labeller_knows",
   "answerers",
   "min_seconds",
+  "practice_gate",
   "familiarity",
   "familiarity_question",
   "questions",
@@ -1091,6 +1093,25 @@ test("🔴 build refuses, by path, every config the schema alone cannot stop", (
     /REFUSED: cannot read .*items\.json as JSON: /,
   );
 }, 60_000);
+
+test('🔴 practice_gate takes only "matched": any other gate is refused by path', () => {
+  const buildWith = (name: string, gate: string) => {
+    const dir = setup(name, config({ practice_gate: gate }));
+    return run(["build", join(dir, "items.json"), join(dir, "out")]);
+  };
+  for (const gate of ["answered", "Matched", "none"]) {
+    const r = buildWith(`gate-${gate}`, gate);
+    assert.notEqual(r.status, 0, gate);
+    assert.ok(
+      r.out.includes(
+        `REFUSED: practice_gate: '${gate}' must be 'matched' or left out`,
+      ),
+      `${gate}\n${r.out}`,
+    );
+  }
+  const ok = buildWith("gate-ok", "matched");
+  assert.equal(ok.status, 0, ok.out);
+});
 
 test("🔴 a rebuild with another seed is refused: the stored answers are keyed by the old ids", () => {
   const dir = setup("reseed", config());

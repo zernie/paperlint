@@ -522,6 +522,9 @@ const configSchema = (kind: Kind): SchemaNode =>
     questions: array(QUESTION_SCHEMA, true, 1),
     practice: array(practiceSchema(kind), true, MIN_PRACTICE),
     practice_round: integer(false),
+    // "matched": the real items stay closed until every practice item of the round is answered as
+    // expected. Left out, answering every practice item opens them, a miss included.
+    practice_gate: string(false, "matched", "'matched' or left out"),
     labels: LABELS,
     // the source tags a card's blocks carry (#400): id → the tag's label, in colour order
     sources: mapping(string(), NAME_PATTERN, 1, false),
@@ -788,6 +791,7 @@ interface Config {
   readonly questions: readonly Question[];
   readonly practice: readonly Practice[];
   readonly practice_round?: number;
+  readonly practice_gate?: "matched";
   readonly labels?: Readonly<Record<string, string>>;
   readonly sources?: Readonly<Record<string, string>>;
   readonly lang?: string;
@@ -1612,10 +1616,17 @@ const sourcesShown = (cfg: Config) =>
           label,
         })),
       };
-/** The answerers and the dwell, only when items.json sets them: a page without them is as it was. */
-const twoKeys = (cfg: Config) =>
+/**
+ * The answerers, the dwell and the practice gate, only where items.json sets them: a page and a key
+ * without them are as they were.
+ */
+const optionalKeys = (cfg: Config) =>
   R.pickBy(
-    { answerers: cfg.answerers, min_seconds: cfg.min_seconds },
+    {
+      answerers: cfg.answerers,
+      min_seconds: cfg.min_seconds,
+      practice_gate: cfg.practice_gate,
+    },
     R.isDefined,
   );
 /** What a page shows: the questions, the practice and the items, blind, with their neutral ids. */
@@ -1639,7 +1650,7 @@ function payloadOf(
       : "",
     familiarity: asksFamiliarity(cfg) ? FAMILIARITY : [],
     allowed: allowedValues(cfg.questions, asksFamiliarity(cfg)),
-    ...twoKeys(cfg),
+    ...optionalKeys(cfg),
     ...languagesOf(cfg, translated),
     questions: cfg.questions,
     practice: {
@@ -1702,7 +1713,7 @@ function keyOf(
   return {
     study: cfg.study,
     seed: cfg.seed,
-    ...twoKeys(cfg),
+    ...optionalKeys(cfg),
     questions: cfg.questions.map((q) => q.id),
     // What counts as an answer: the same lists the page was given (`allowedValues`). `export`
     // checks every stored answer and familiarity against them, so the build's options decide.

@@ -421,7 +421,13 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     var a = practiceAnswers(p.id);
     return Qs().every(function (q) { return a[q.id] === p.expected[q.id]; });
   }
-  function practiceOpen() { return !DATA.practice.items.every(practiceAnswered); }
+  function practiceAllAnswered() { return DATA.practice.items.every(practiceAnswered); }
+  // DATA.practice_gate "matched": the real items open only once every practice item of this round
+  // matches its expected answer. Without it, answering them all opens the real items, a miss included.
+  var GATED = DATA.practice_gate === "matched";
+  function practiceOpen() {
+    return !practiceAllAnswered() || (GATED && !DATA.practice.items.every(practiceMatched));
+  }
   function groupDone(g) { return familiarity(g) !== undefined && groupItems(g).every(function (i) { return itemDone(i.id); }); }
 
   // ── saving: on click, one write at a time per document ────────────────────────────────────
@@ -1095,11 +1101,12 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
   function practiceBlock(off) {
     var items = DATA.practice.items;
     var sec = el("section");
-    if (practiceOpen()) {
+    if (!practiceAllAnswered()) {
       var answered = items.filter(practiceAnswered).length;
       sec.appendChild(el("h2", "", "🎯 Practice: " + answered + " of " + items.length + " answered"));
       sec.appendChild(el("p", "muted", "These answers are known. After each one the page shows the expected " +
-        "answer. The real items open when all " + items.length + " are answered."));
+        "answer. The real items open when all " + items.length +
+        (GATED ? " match their expected answer." : " are answered.")));
       items.forEach(function (p) { sec.appendChild(practiceCard(p, off)); });
       return sec;
     }
@@ -1107,7 +1114,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
     sec.appendChild(el("h2", "", (missed.length ? "⚠️ " : "✅ ") + "Practice: " + (items.length - missed.length) + " of " + items.length + " matched"));
     if (missed.length) {
       sec.appendChild(el("div", "banner", "A practice answer did not match. Before going on, tell the agent " +
-        "which one: the question is reworded and you take the practice again."));
+        "which one: the question is reworded and you take the practice again." +
+        (GATED ? " The real cards stay closed." : "")));
       missed.forEach(function (p) { sec.appendChild(practiceCard(p, off)); });
     }
     return sec;

@@ -163,9 +163,10 @@ not run: banner, items readable, buttons off.
   whitespace (a space as ·, a tab as →) and prints each line's length at its end.
 - One question per screen: an item card asks one question at a time, and the answered ones stay as a
   line with "Change".
-- A practice miss does not lock the page, but it stops the agent: ask the labeller which question
-  was unclear, reword it (and its examples), raise `practice_round`, rebuild, and have the labeller
-  take the practice again before their real answers count. The page keeps only the FIRST answer to a
+- A practice miss does not lock the page (unless `"practice_gate": "matched"` is set), but it stops
+  the agent: ask the labeller which question was unclear, reword it (and its examples), raise
+  `practice_round`, rebuild, and have the labeller take the practice again before their real answers
+  count. The page keeps only the FIRST answer to a
   practice item, so the score is not a retry.
 - Keep a record in the study folder: the practice file `export` writes
   (`<study>-practice-r<round>-<date>.json`: the round, who answered, what matched), and one line in the

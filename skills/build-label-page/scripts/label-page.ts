@@ -25,7 +25,8 @@
  * (`expected`, one per question), and after each one the page shows the expected answer and `why`.
  * The real items open once every practice item of the current `practice_round` is answered; a miss
  * does not lock them, it tells the labeller to tell the agent, who rewords the question, raises
- * `practice_round` and rebuilds. The page stores the FIRST practice answer only, in its own
+ * `practice_round` and rebuilds. With `"practice_gate": "matched"` a miss does lock them: they open
+ * only once every practice item of the round matches its `expected` answer. The page stores the FIRST practice answer only, in its own
  * collection (`practice`, documents `r<round>-P<n>`), so `export` keeps it out of the labels and
  * writes it to `<study>-practice-r<round>-<date>.json`. An item card asks one question at a time.
  *
@@ -60,6 +61,8 @@
  *     "practice": [{"body": "…", "expected": {"label": "yes"}, "why": "one line"}, …],   3 or more;
  *                                           a practice card may carry rules, unit, readings, file
  *     "practice_round": 1,                  optional; raise it after rewording, the practice reopens
+ *     "practice_gate": "matched",           optional: the real items stay closed until every practice
+ *                                           item of the round matches; left out, answering opens them
  *     "items": [{"source_id": "case-0412-b", "group": "python", "body": "…", "code": "…",
  *                "context": "…",
  *                "rules": [{"linter": "ruff", "id": "TID253"}],
