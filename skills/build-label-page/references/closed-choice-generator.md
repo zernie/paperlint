@@ -42,6 +42,11 @@ length.
   `readings`, `file`).
 - **`practice_round`**: raise it after rewording a question; the practice reopens and the answers of
   the earlier round are kept but not counted.
+- **`practice_gate`** (optional, only `"matched"`): the real items stay closed until every practice
+  item of the current round has its first answer equal to `expected`; a miss adds "The real cards
+  stay closed." to the banner, and only a raised `practice_round` reopens the practice. Left out, a
+  miss leaves the real items open. `key.json` carries it; the stored documents and the export do not
+  change.
 - **`items`**: `source_id` (the study's own, never shown), `group`, `body`, and optionally `title`,
   `code`, `context`, `rules`, `unit`, `readings`, `file`. Nothing else: the allow-list is fixed in
   the generator, and a field outside it is taken out of the item, not added to the list to make a

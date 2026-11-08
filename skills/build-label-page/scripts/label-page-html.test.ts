@@ -278,7 +278,12 @@ test("🔴 with practice_gate a raised practice_round with new items reopens the
   assert.match(missed, /The real cards stay closed\./);
   assert.doesNotMatch(missed, /G001/);
 
-  const matched = await showPage(page, {}, {}, round2(PRACTICE[0]?.expected ?? {}));
+  const matched = await showPage(
+    page,
+    {},
+    {},
+    round2(PRACTICE[0]?.expected ?? {}),
+  );
   assert.match(matched, /Practice: 3 of 3 matched/);
   assert.match(matched, /G001/);
 });

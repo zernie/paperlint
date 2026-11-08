@@ -4,7 +4,7 @@ description: Build a phone labelling page published as a claude.ai Artifact with
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, Artifact, ArtifactData]
 ---
 
-<!-- vigiles:sha256:10060c46cd1676af compiled from skills/build-label-page/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:ac42fcbacc1c3233 compiled from skills/build-label-page/SKILL.md.spec.ts -->
 
 # build-label-page — a page the person labels on a phone, and the labels back in the repo
 
@@ -75,7 +75,9 @@ building. In one line each:
    shown on the first screen; 3 or more practice items with known answers come before the real
    items, and the page shows the expected answer after each; one question per screen. A practice
    miss means the question is reworded and the practice taken again; practice answers never reach
-   the labels.
+   the labels. A miss leaves the real items open, unless `items.json` sets
+   `"practice_gate": "matched"`: then they stay closed until every practice item of the current
+   `practice_round` is answered as expected the first time.
 
 ## Procedure
 

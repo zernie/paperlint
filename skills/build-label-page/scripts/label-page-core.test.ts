@@ -1094,7 +1094,7 @@ test("🔴 build refuses, by path, every config the schema alone cannot stop", (
   );
 }, 60_000);
 
-test("🔴 practice_gate takes only \"matched\": any other gate is refused by path", () => {
+test('🔴 practice_gate takes only "matched": any other gate is refused by path', () => {
   const buildWith = (name: string, gate: string) => {
     const dir = setup(name, config({ practice_gate: gate }));
     return run(["build", join(dir, "items.json"), join(dir, "out")]);
