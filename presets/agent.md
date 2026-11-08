@@ -12,7 +12,10 @@ from it. The `submit-paper` skill reads this card for the venue's specifics.
 ([conf.researchr.org/home/icse-2027/agent-2027](https://conf.researchr.org/home/icse-2027/agent-2027)).
 Sources read 2026-10-26: that page, the portal's
 [deadlines page](https://icse2027-agent.hotcrp.com/deadlines), and the
-[ICSE 2027 workshops page](https://conf.researchr.org/track/icse-2027/icse-2027-workshops).
+[ICSE 2027 workshops page](https://conf.researchr.org/track/icse-2027/icse-2027-workshops). The
+extended submission deadline was read on 2026-11-08 from the
+[track page](https://conf.researchr.org/track/icse-2027/agent-2027-papers) and the portal's
+deadlines page.
 
 ## The venue (2027 edition)
 
@@ -25,8 +28,12 @@ Sources read 2026-10-26: that page, the portal's
   paper; the portal's status data carries no `"blind":true`, which agrees.
 - **Publisher**: «Accepted workshop papers will be published by IEEE.» The page does not say
   «archival» or offer a non-archival choice.
-- **Deadlines (AoE)**: submission 13 Nov 2026, notification 11 Dec 2026, camera-ready 29 Jan 2027.
-  The portal reads `"sub":1794657599`, 2026-11-14T11:59:59Z, the end of 13 Nov AoE: the two agree.
+- **Deadlines (AoE)**: submission **20 Nov 2026 (extended from 13 Nov)**, notification 11 Dec 2026,
+  camera-ready 29 Jan 2027. The track page (read 2026-11-08): «Workshop paper submission deadline:
+  November 13, 2026 Extended: November 20, 2026». The portal (read 2026-11-08) reads
+  `"sub":1795262399`, «Saturday Nov 21, 2026, 6:59:59 AM EST», 2026-11-21T11:59:59Z, the end of
+  20 Nov AoE: the two agree. Before the extension the portal read `"sub":1794657599`,
+  2026-11-14T11:59:59Z, the end of 13 Nov AoE (read 2026-10-26).
 
 ## Paper kinds and limits
 

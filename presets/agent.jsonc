@@ -12,6 +12,10 @@
 //    workshop papers will be published by IEEE. It is not possible to pay for extra pages.»
 //   «Workshop paper submission deadline: November 13, 2026 / Notification of acceptance: December
 //    11, 2026 / Camera-ready deadline: January 29, 2027 / All dates are Anywhere on Earth (AoE).»
+//   EXTENDED. Verbatim from https://conf.researchr.org/track/icse-2027/agent-2027-papers (read
+//   2026-11-08): «Workshop paper submission deadline: November 13, 2026 Extended: November 20, 2026»,
+//   «Notification of acceptance: December 11, 2026», «Camera-ready deadline: January 29, 2027»,
+//   «All dates are Anywhere on Earth (AoE).» Notification and camera-ready did not move.
 {
   "type": "venue",
   "name": "AGENT 2027",
@@ -34,17 +38,19 @@
   // «Submission link» on the call's page: HotCRP.
   "portal": { "kind": "hotcrp", "url": "https://icse2027-agent.hotcrp.com" },
 
-  // The portal's reading: `"sub":1794657599` on https://icse2027-agent.hotcrp.com/deadlines, shown
-  // as «Saturday Nov 14, 2026, 6:59:59 AM EST» = 2026-11-14T11:59:59Z = the end of 13 Nov AoE. The
-  // scheduled refresh rewrites it. The call's two other dates are not on the portal; they are the
+  // The portal's reading (2026-11-08): `"sub":1795262399` on https://icse2027-agent.hotcrp.com/deadlines,
+  // shown as «Saturday Nov 21, 2026, 6:59:59 AM EST» = 2026-11-21T11:59:59Z = the end of 20 Nov AoE,
+  // the call's extended date. Extended from `"sub":1794657599`, «Saturday Nov 14, 2026, 6:59:59 AM
+  // EST» = 2026-11-14T11:59:59Z = the end of 13 Nov AoE (read 2026-10-26). The scheduled refresh
+  // rewrites it. The call's two other dates are not on the portal; they are the
   // call's, in UTC at the end of the AoE day.
   "deadlines": [
     {
       "what": "submission",
-      "at": "2026-11-14T11:59:59Z",
+      "at": "2026-11-21T11:59:59Z",
       "source": "portal",
       "url": "https://icse2027-agent.hotcrp.com/deadlines",
-      "read": "2026-10-26",
+      "read": "2026-11-08",
     },
     {
       "what": "notification",
