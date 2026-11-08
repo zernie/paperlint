@@ -159,19 +159,22 @@ const numbersFound = (body: string) => {
 };
 
 describe("tex/max-paragraph-numbers", () => {
-  it("🔴 nine numbers fire, eight stay quiet; places, citations and references are not numbers", () => {
+  it("🔴 nine numbers fire, eight stay quiet; citations and references are not numbers, a hand-typed place is", () => {
     const eight =
       "We ran 1 and 2.5 and 30\\% and 4,000 and \\numA{} and \\numTotal and 7 and 8.";
     expect(numbersFound(eight)).toEqual([]);
     expect(numbersFound(`${eight} Then 9.`)).toEqual([
       { numbers: 9, max: 8, head: "We ran 1 and 2.5 and 30% and…" },
     ]);
-    // Guards: a place's number, a citation key and a reference are not quantities.
+    // Guards: a citation key and a reference are not quantities.
     expect(
-      numbersFound(
-        `${eight} See Section~3.2, Figs. 3 and 4, \\cite{k2024} and \\ref{sec:1}.`,
-      ),
+      numbersFound(`${eight} See \\cite{k2024} and \\ref{sec:1}.`),
     ).toEqual([]);
+    // A place typed by hand is a number like any other; written with \\ref it is not.
+    expect(numbersFound(`${eight} See Section 3.2.`)).toEqual([
+      { numbers: 9, max: 8, head: "We ran 1 and 2.5 and 30% and…" },
+    ]);
+    expect(numbersFound(`${eight} See Section \\ref{sec:x}.`)).toEqual([]);
   });
 });
 

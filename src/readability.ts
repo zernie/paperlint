@@ -81,19 +81,15 @@ export function maxOf(
   return typeof v === "number" ? v : fallback;
 }
 
-/** A place in the paper named in words and its number(s): "Section 4", "Sec. 3.2", "Tables 2 and 3", "§4". Not a quantity. */
-const PLACE_NUMBER =
-  /(?<!\p{L})(?:Sections?|Secs?\.|§§?|Tables?|Tabs?\.|Figures?|Figs?\.|Appendix|Appendices|Listings?|Algorithms?|Equations?|Eqs?\.|Chapters?)\s*\d+(?:\.\d+)*(?:\s*(?:,|and|or|--?)\s*\d+(?:\.\d+)*)*/gu;
-
 /** A registered number: `\num`, `\numA`, `\numTotal`…, not TeX's `\number` or `\numberwithin`. */
 const NUMBER_MACRO = /\\num(?!ber)[A-Za-z]*/gu;
 
 const endPos = (p: ProsePiece): number =>
   p.kind === "text" ? p.segment.at + p.segment.text.length : p.span.end;
 
-/** The numbers of a paragraph: digits in its prose (a place's number left out) and each `\num…` macro in its source. */
+/** The numbers of a paragraph: digits in its prose and each `\num…` macro in its source. */
 export function numbersIn(p: Passage, source: string): number {
-  const text = runText(runOf(p)).replace(PLACE_NUMBER, " ");
+  const text = runText(runOf(p));
   const from = startOf(p).start;
   const end = p.pieces.reduce((_, q) => endPos(q), from);
   return (

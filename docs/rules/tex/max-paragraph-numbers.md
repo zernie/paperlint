@@ -11,7 +11,7 @@ A paragraph of the body with more than `max` numbers (default 8, so a ninth fire
 - Digits in the paragraph's prose: an integer, a decimal (`2.5`), a percentage (`30\%`), a number with thousands commas (`4,000`) and `3x` each count once. Digits glued to a letter before them (`v2`, `RQ1`) do not.
 - Each `\num…` macro in the paragraph's source counts once (`\num{7}`, `\numA`, `\numTotal`), because a consumer's registered numbers leave no digits in the parsed prose. TeX's own `\number` and `\numberwithin` are not counted.
 - A citation, a `\ref` and inline math are marks, not text: their keys and contents are never counted.
-- A place named in words does not count: `Section 3.2`, `Sec. 3`, `Tables 2 and 3`, `Fig. 4`, `Appendix 1`, `§4`.
+- A place typed by hand counts: `Section 4`, `Fig. 4`, `Tables 2 and 3` and `§4` each add their numbers. Write a place with `\ref`, which does not count.
 - A year in prose counts like any other number.
 - Scope: paragraphs, list items and footnotes of the body, as for [`tex/max-paragraph-words`](max-paragraph-words.md).
 
