@@ -438,10 +438,7 @@ export function kindHint(e: SchemaError): string | null {
     fieldOf(e.params, "property") !== "body_pages_max"
   )
     return null;
-  const where = e.dataPath
-    .replace(/^\./u, "")
-    .replace(/\['([^']*)'\]/gu, ".$1");
-  return `${where}: a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "pages_max" instead`;
+  return `a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "pages_max" instead`;
 }
 
 /** The hints for every violation that has one, each once. Ajv's null `errors` has none. */

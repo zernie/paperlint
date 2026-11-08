@@ -73,7 +73,7 @@ test("🔴 a body limit that does not say what the references get is refused at 
     refusalOf("v.jsonc", withKind({ body_pages_max: 8 })),
     [
       "v.jsonc does not match venue-profile.schema.json:",
-      '  format.kinds.full: a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "pages_max" instead',
+      '  a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "pages_max" instead',
       "  v.jsonc: .format.kinds['full'] should have property ref_pages_max when property body_pages_max is present",
     ].join("\n"),
   );
