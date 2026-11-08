@@ -76,8 +76,8 @@ saved mail, a markdown note with the reviews, a PDF.
   here; the person who records the outcome reads the mail. Likewise an override's mail is not read
   for its date.
 - The `date`. It must be a day (`YYYY-MM-DD`), nothing more.
-- Whether a `desk` rejection is marked as such (`"desk": true`); it changes what work follows, not
-  whether the record is consistent.
+- Whether `desk` is true: the record has to say it (a rejection without `desk` does not parse), and
+  a reviewed rejection's points are [`cycle/prior-reviews-answered`](prior-reviews-answered.md)'s.
 
 ## How to fix
 

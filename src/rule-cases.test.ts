@@ -710,6 +710,32 @@ const frozenCameraReady = (
   };
 };
 
+/** A rejection with reviews, then the open attempt that must answer them (cycle/prior-reviews-answered). */
+const PRIOR_REVIEWS_CYCLES = [
+  {
+    id: "alpha-2026",
+    venue: { kind: "named", name: "Alpha", url: "https://alpha.example" },
+    opened: "2026-06-01",
+    deadlines: [],
+    outcome: {
+      kind: "rejected",
+      date: "2026-09-08",
+      evidence: "reviews/alpha.eml",
+      desk: false,
+      points: "reviews/alpha-response.yaml",
+    },
+  },
+  {
+    id: "beta-2027",
+    venue: { kind: "named", name: "Beta", url: "https://beta.example" },
+    opened: "2026-09-09",
+    deadlines: [],
+  },
+];
+/** Its points file with one point and no answer yet. */
+const POINTS_UNANSWERED =
+  "points:\n  - id: A1\n    reviewer: A\n    quote: Two repositories only.\n";
+
 const CASES: Readonly<Record<string, RuleCases>> = {
   "paper/stages": {
     reports: {
@@ -833,6 +859,23 @@ const CASES: Readonly<Record<string, RuleCases>> = {
         cycles: [{ ...BLIND_PORTING, phase: "prepared" }],
       }),
     },
+  },
+  "cycle/prior-reviews-answered": {
+    reports: {
+      tree: paper(tex("\\section{Results}\nText."), {
+        [`${P}/paperlint.json`]: JSON.stringify({
+          cycles: PRIOR_REVIEWS_CYCLES,
+        }),
+        [`${P}/reviews/alpha-response.yaml`]: POINTS_UNANSWERED,
+      }),
+      file: TEX_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: paper(tex("\\section{Results}\nText."), {
+      [`${P}/paperlint.json`]: JSON.stringify({ cycles: PRIOR_REVIEWS_CYCLES }),
+      [`${P}/reviews/alpha-response.yaml`]: `${POINTS_UNANSWERED}    answer:\n      kind: changed\n      where: Results\n`,
+    }),
   },
   "paper/source": {
     reports: {
