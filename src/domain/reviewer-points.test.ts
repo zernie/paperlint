@@ -15,6 +15,64 @@ const point = (over: Record<string, unknown> = {}) => ({
 const parsed = (points: readonly unknown[]) =>
   parseReviewerPoints({ points }, "reviews/c1-response.yaml");
 
+/** Each malformed shape of the points file, and the refusal that names it. */
+const REFUSALS: readonly [string, unknown, string][] = [
+  [
+    "not a mapping",
+    [],
+    "reviews/c1-response.yaml: not a mapping with `points`",
+  ],
+  [
+    "no points",
+    { points: [] },
+    "reviews/c1-response.yaml: `points` is not a non-empty list — a reviewed rejection has at least one point to answer",
+  ],
+  [
+    "an unknown top-level key",
+    { points: [point()], notes: "x" },
+    'reviews/c1-response.yaml: unknown key "notes" — the file\'s keys: points',
+  ],
+  [
+    "a point without its quote",
+    { points: [point({ quote: "" })] },
+    'reviews/c1-response.yaml: points[0] needs "id", "reviewer" and "quote", each non-empty text (the quote verbatim from the review)',
+  ],
+  [
+    "two points with one id",
+    { points: [point(), point()] },
+    'reviews/c1-response.yaml: points[1]: the id "A1" is points[0]\'s too — each point is answered once, by its id',
+  ],
+  [
+    "an unknown key on a point",
+    { points: [point({ status: "done" })] },
+    'reviews/c1-response.yaml: points[0]: unknown key "status" — a point\'s keys: id, reviewer, quote, answer',
+  ],
+  [
+    "an answer of no known kind",
+    { points: [point({ answer: { kind: "fixed", where: "x" } })] },
+    'reviews/c1-response.yaml: points[0] (A1): "answer.kind" is changed, argued or declined, got "fixed"',
+  ],
+  [
+    "a changed answer without where",
+    { points: [point({ answer: { kind: "changed" } })] },
+    'reviews/c1-response.yaml: points[0] (A1): a changed answer says where: "where": the title of the \\section in paper.tex that answers it',
+  ],
+  [
+    "a declined answer without reason",
+    { points: [point({ answer: { kind: "declined" } })] },
+    'reviews/c1-response.yaml: points[0] (A1): a declined answer says why: "reason": one sentence',
+  ],
+  [
+    "a declined answer that also names a place",
+    {
+      points: [
+        point({ answer: { kind: "declined", reason: "r", where: "x" } }),
+      ],
+    },
+    'reviews/c1-response.yaml: points[0] (A1).answer: unknown key "where" — a declined answer\'s keys: kind, reason',
+  ],
+];
+
 describe("parseReviewerPoints — the points file, refused at read when its shape is wrong", () => {
   it("reads points with and without an answer, each answer in its own shape", () => {
     expect(
@@ -59,67 +117,15 @@ describe("parseReviewerPoints — the points file, refused at read when its shap
     });
   });
 
-  it.each<[string, unknown, string]>([
-    [
-      "not a mapping",
-      [],
-      "reviews/c1-response.yaml: not a mapping with `points`",
-    ],
-    [
-      "no points",
-      { points: [] },
-      "reviews/c1-response.yaml: `points` is not a non-empty list — a reviewed rejection has at least one point to answer",
-    ],
-    [
-      "an unknown top-level key",
-      { points: [point()], notes: "x" },
-      'reviews/c1-response.yaml: unknown key "notes" — the file\'s keys: points',
-    ],
-    [
-      "a point without its quote",
-      { points: [point({ quote: "" })] },
-      'reviews/c1-response.yaml: points[0] needs "id", "reviewer" and "quote", each non-empty text (the quote verbatim from the review)',
-    ],
-    [
-      "two points with one id",
-      { points: [point(), point()] },
-      'reviews/c1-response.yaml: points[1]: the id "A1" is points[0]\'s too — each point is answered once, by its id',
-    ],
-    [
-      "an unknown key on a point",
-      { points: [point({ status: "done" })] },
-      'reviews/c1-response.yaml: points[0]: unknown key "status" — a point\'s keys: id, reviewer, quote, answer',
-    ],
-    [
-      "an answer of no known kind",
-      { points: [point({ answer: { kind: "fixed", where: "x" } })] },
-      'reviews/c1-response.yaml: points[0] (A1): "answer.kind" is changed, argued or declined, got "fixed"',
-    ],
-    [
-      "a changed answer without where",
-      { points: [point({ answer: { kind: "changed" } })] },
-      'reviews/c1-response.yaml: points[0] (A1): a changed answer says where: "where": the title of the \\section in paper.tex that answers it',
-    ],
-    [
-      "a declined answer without reason",
-      { points: [point({ answer: { kind: "declined" } })] },
-      'reviews/c1-response.yaml: points[0] (A1): a declined answer says why: "reason": one sentence',
-    ],
-    [
-      "a declined answer that also names a place",
-      {
-        points: [
-          point({ answer: { kind: "declined", reason: "r", where: "x" } }),
-        ],
-      },
-      'reviews/c1-response.yaml: points[0] (A1).answer: unknown key "where" — a declined answer\'s keys: kind, reason',
-    ],
-  ])("refuses %s, naming it", (_, doc, why) => {
-    expect(parseReviewerPoints(doc, "reviews/c1-response.yaml")).toEqual({
-      ok: false,
-      error: why,
-    });
-  });
+  it.each<[string, unknown, string]>(REFUSALS)(
+    "refuses %s, naming it",
+    (_, doc, why) => {
+      expect(parseReviewerPoints(doc, "reviews/c1-response.yaml")).toEqual({
+        ok: false,
+        error: why,
+      });
+    },
+  );
 });
 
 describe("judgeReviewerPoints — once a later cycle is open, every point is answered, in a place that exists", () => {

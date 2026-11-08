@@ -174,7 +174,7 @@ describe("declaredRoots — what a paper's settings name at its root", () => {
               kind: "rejected",
               date: "2026-02-01",
               evidence: "submission/a.eml",
-              desk: false,
+              desk: true,
             },
           },
           {

@@ -153,8 +153,10 @@ export function parseReviewerPoints(
   const read = list.map((p: unknown, i) =>
     parsePoint(p, `${file}: points[${String(i)}]`),
   );
-  const bad = read.find((r) => !r.ok);
-  if (bad !== undefined && !bad.ok) return bad;
+  const bad = read.find(
+    (r): r is Extract<(typeof read)[number], { readonly ok: false }> => !r.ok,
+  );
+  if (bad !== undefined) return bad;
   const points = read.flatMap((r) => (r.ok ? [r.value] : []));
   const dup = duplicateId(points, file);
   return dup === null ? ok(points) : err(dup);

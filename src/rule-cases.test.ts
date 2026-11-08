@@ -617,6 +617,7 @@ const CLOSED_CYCLE = JSON.stringify({
       opened: "2026-07-01",
       outcome: {
         kind: "rejected",
+        desk: true,
         date: "2026-09-08",
         evidence: "reviews/decision.md",
       },

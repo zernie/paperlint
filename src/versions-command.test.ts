@@ -37,6 +37,7 @@ const decision = (kind: string, date: string) => ({
   kind,
   date,
   evidence: "reviews/decision.md",
+  ...(kind === "rejected" ? { desk: true } : {}),
 });
 /** A workshop version accepted, a conference attempt rejected, a journal attempt open. */
 const CYCLES = [

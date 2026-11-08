@@ -184,6 +184,10 @@ import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import { runVersions } from "./versions-command.ts";
 import { parseYaml } from "./adapters/yaml/index.ts";
 import {
+  PRIOR_REVIEWS_RULE_LEVELS,
+  priorReviewsRules,
+} from "./prior-reviews-rule.ts";
+import {
   DRAFT_RULE_LEVELS,
   draftRules,
   submittedFrozenRules,
@@ -446,14 +450,19 @@ const CYCLE_STATUS_RULES = {
   ...submittedFrozenRules({ files: nodeFiles, listDir: nodeListDir }),
 };
 
-/** The `cycle` plugin's rules on `paper.tex`: the port declared done, the draft against its frozen source. */
+/**
+ * The `cycle` plugin's rules on `paper.tex`: the port declared done, the draft against its frozen
+ * source, and the reviewers' points of the rejection before the open attempt, answered.
+ */
 const CYCLE_PAPER_RULES = {
   ...cyclePortRules(TEX_RULE_DEPS),
   ...draftRules(TEX_RULE_DEPS),
+  ...priorReviewsRules({ ...TEX_RULE_DEPS, yaml: parseYaml }),
 };
 const CYCLE_PAPER_RULE_LEVELS = {
   ...CYCLE_PORT_RULE_LEVELS,
   ...DRAFT_RULE_LEVELS,
+  ...PRIOR_REVIEWS_RULE_LEVELS,
 };
 /** The levels of the `cycle` and `versions` rules on `PIPELINE-STATUS.md`. */
 const STATUS_CYCLE_RULE_LEVELS = {

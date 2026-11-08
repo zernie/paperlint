@@ -38,6 +38,7 @@ const ALPHA = {
   submission: { id: 3 },
   outcome: {
     kind: "rejected",
+    desk: true,
     date: "2026-09-01",
     evidence: "reviews/a.md",
   },

@@ -37,6 +37,7 @@ const REJECTED = {
     date: "2026-09-08",
     desk: false,
     evidence: "reviews/alpha.md",
+    points: "reviews/alpha-points.yaml",
   },
 };
 const OPEN = {
@@ -70,11 +71,13 @@ const cycles = (r: ReturnType<typeof parseCycles>): readonly Cycle[] => {
 const parsed = (input: readonly unknown[]): Cycle[] =>
   cycles(parseCycles(input)).map((c, i) => present(c, `cycle ${String(i)}`));
 
-describe("parseCycles", () => {
+describe("parseCycles without cycles", () => {
   it("absent is null: a paper without cycles keeps its flat settings", () => {
     expect(parseCycles(undefined)).toEqual({ ok: true, value: null });
   });
+});
 
+describe("parseCycles", () => {
   it("reads every field, fills the defaults, and keeps the list order", () => {
     const [a, b] = cycles(parseCycles([REJECTED, OPEN]));
     expect(a).toEqual({
@@ -103,6 +106,7 @@ describe("parseCycles", () => {
         date: "2026-09-08",
         desk: false,
         evidence: "reviews/alpha.md",
+        points: "reviews/alpha-points.yaml",
       },
     });
     expect(b?.phase).toBe("porting");
@@ -191,7 +195,7 @@ describe("parseCycles refuses a malformed deadline, outcome or submission", () =
     [
       "an unknown key in a decision",
       [{ ...REJECTED, outcome: { ...REJECTED.outcome, reviews: 3 } }],
-      /^cycles\[0\]\.outcome: unknown key "reviews" — a rejected outcome's keys: kind, date, evidence, desk$/,
+      /^cycles\[0\]\.outcome: unknown key "reviews" — a rejected outcome's keys: kind, date, evidence, desk, points$/,
     ],
     [
       "a desk flag on an acceptance",
@@ -253,6 +257,80 @@ describe("parseCycles refuses an unknown key or a bad shape in a venue or a subm
       /^cycles\[0\]\.submission: unknown key "url" — a submission's keys: id$/,
     ],
   ])("refuses %s, naming the entry and the key", (_what, input, re) => {
+    const r = parseCycles(input);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(re);
+  });
+});
+
+describe("a rejection says whether it was reviewed", () => {
+  it("a desk rejection parses with no points file; a reviewed one carries its points file", () => {
+    const desk = parseCycles([
+      {
+        ...REJECTED,
+        outcome: {
+          kind: "rejected",
+          date: "2026-09-08",
+          evidence: "m.eml",
+          desk: true,
+        },
+      },
+    ]);
+    const reviewed = parseCycles([REJECTED]);
+    expect([
+      desk.ok && desk.value?.[0]?.outcome,
+      reviewed.ok && reviewed.value?.[0]?.outcome,
+    ]).toEqual([
+      { kind: "rejected", date: "2026-09-08", evidence: "m.eml", desk: true },
+      {
+        kind: "rejected",
+        date: "2026-09-08",
+        evidence: "reviews/alpha.md",
+        desk: false,
+        points: "reviews/alpha-points.yaml",
+      },
+    ]);
+  });
+});
+
+describe("parseCycles refuses a rejection that leaves open whether it was reviewed", () => {
+  it.each([
+    [
+      "a rejection that does not say whether it was a desk rejection",
+      [
+        {
+          ...REJECTED,
+          outcome: { kind: "rejected", date: "2026-09-08", evidence: "m.eml" },
+        },
+      ],
+      /^cycles\[0\]: a rejected outcome says whether it was a desk rejection: "desk": true \(no reviews\) or "desk": false \(reviewed — then "points": the file with the reviewers' points\)$/,
+    ],
+    [
+      "a reviewed rejection without its points file",
+      [
+        {
+          ...REJECTED,
+          outcome: {
+            kind: "rejected",
+            date: "2026-09-08",
+            evidence: "m.eml",
+            desk: false,
+          },
+        },
+      ],
+      /^cycles\[0\]: a reviewed rejection \("desk": false\) names the file with the reviewers' points: "points": "reviews\/<cycle>-response\.yaml" — each point quoted, and answered before the next attempt is sent$/,
+    ],
+    [
+      "a desk rejection that names a points file",
+      [
+        {
+          ...REJECTED,
+          outcome: { ...REJECTED.outcome, desk: true },
+        },
+      ],
+      /^cycles\[0\]: a desk rejection has no reviews, so no "points" — drop it, or set "desk": false$/,
+    ],
+  ])("refuses %s, naming the entry", (_what, input, re) => {
     const r = parseCycles(input);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toMatch(re);
