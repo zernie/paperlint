@@ -98,7 +98,7 @@ describe("shipped presets: paperlint:msr", () => {
       "msr.jsonc",
     ]);
     expect([...r.value.format.kinds]).toEqual([
-      ["technical", { bodyPagesMax: 10, refPagesMax: 2 }],
+      ["technical", { totalPagesMax: null, bodyPagesMax: 10, refPagesMax: 2 }],
     ]);
     expect(r.value.format.bodyEndsAt).toBe("references");
     expect(r.value.format.appendixInBody).toBe(true);
@@ -324,14 +324,15 @@ describe("a project's own preset: what its children replace", () => {
     const r = resolve("./mine.jsonc", {
       "/work/papers/p/mine.jsonc": venue({
         extends: "paperlint:agenticdev",
-        format: { kinds: { short: { body_pages_max: 6 } } },
+        format: { kinds: { short: { body_pages_max: 6, ref_pages_max: 2 } } },
       }),
     });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.value.format.kinds.get("short")).toEqual({
+      totalPagesMax: null,
       bodyPagesMax: 6,
-      refPagesMax: null,
+      refPagesMax: 2,
     });
     expect(r.value.format.kinds.get("full")?.bodyPagesMax).toBe(10);
   });

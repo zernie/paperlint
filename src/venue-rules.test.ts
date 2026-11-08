@@ -18,6 +18,7 @@ import {
   anonymityRules,
   findingText,
   judgeBodyEnd,
+  judgeTotal,
   PAGE_LIMIT_RULE_LEVELS,
   pageLimitRules,
   VENUE_RULE_LEVELS,
@@ -542,6 +543,64 @@ describe("format/page-limit", () => {
     expect(
       lint({ venue: { extends: "paperlint:agenticdev", kind: "full" }, facts }),
     ).toEqual([]);
+  });
+});
+
+describe("format/page-limit on a venue whose limit includes the references (AGENT)", () => {
+  const AGENT = { extends: "paperlint:agent", kind: "full" };
+  /** An AGENT full paper: a body that fills eight pages, its references on `refs` more. */
+  const spill = (refs: number): Facts =>
+    withFacts((f) => {
+      f.npages = 8 + refs;
+      f.body_pages = 8;
+      f.ref_pages = refs;
+    });
+  const pageLimit = (fs: readonly Finding[]) =>
+    fs.filter((f) => f.rule === "format/page-limit");
+
+  it("🔴 a full body and the references alone on page 9: banal's body count passes, the total does not", () => {
+    const fs = pageLimit(lint({ venue: AGENT, facts: spill(1) }));
+    expect(fs.map((f) => [f.messageId, f.message])).toEqual([
+      [
+        "pages",
+        "pages, references included: 9, over the limit 8 for AGENT 2027/full — a desk reject; cut the text",
+      ],
+    ]);
+  });
+
+  it("…and the same body with its references inside the eight pages is clean", () => {
+    expect(
+      pageLimit(
+        lint({
+          venue: AGENT,
+          facts: withFacts((f) => {
+            f.npages = 8;
+            f.body_pages = 7;
+            f.ref_pages = 1;
+          }),
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("the total needs no banal: facts without geometry are still judged", () => {
+    const facts = spill(1);
+    facts.geometry_source = null;
+    for (const k of [
+      "page_w_in",
+      "page_h_in",
+      "columns",
+      "body_pt",
+      "ref_pt",
+      "body_pages",
+      "ref_pages",
+      "appendix_pages",
+      "pages_by_type",
+    ])
+      facts[k] = null;
+    expect(ids(pageLimit(lint({ venue: AGENT, facts })))).toEqual([
+      "format/page-limit:pages",
+    ]);
   });
 });
 
@@ -1219,9 +1278,43 @@ describe("judgeBodyEnd, on a venue it does not apply to", () => {
   });
 
   it("a kind with no body limit, or no kind: nothing to count against", () => {
-    const limits = { bodyPagesMax: null, refPagesMax: null };
+    const limits = {
+      totalPagesMax: null,
+      bodyPagesMax: null,
+      refPagesMax: null,
+    };
     expect(judgeBodyEnd(NO_TEXT, venue({ name: "long", limits }))).toEqual([]);
     expect(judgeBodyEnd(NO_TEXT, venue(null))).toEqual([]);
+  });
+
+  it("judgeTotal: over the total is one finding, at it none, and no total or no kind checks nothing", () => {
+    const total = (totalPagesMax: number | null) =>
+      venue({
+        name: "full",
+        limits: { totalPagesMax, bodyPagesMax: null, refPagesMax: null },
+      });
+    expect([
+      judgeTotal(9, total(8)),
+      judgeTotal(8, total(8)),
+      judgeTotal(99, total(null)),
+      judgeTotal(99, venue(null)),
+    ]).toEqual([
+      [
+        {
+          messageId: "pages",
+          data: {
+            what: "pages, references included",
+            got: 9,
+            max: 8,
+            venue: "house",
+            kind: "full",
+          },
+        },
+      ],
+      [],
+      [],
+      [],
+    ]);
   });
 });
 

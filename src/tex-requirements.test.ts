@@ -54,6 +54,61 @@ test("a venue without the link to its call for papers is refused at load, saying
   );
 });
 
+// ── what a page limit counts ─────────────────────────────────────────────────────────
+
+/** A venue preset whose one kind, `full`, has `limits`. */
+const withKind = (limits: object) => ({
+  type: "venue",
+  name: "X",
+  url: "https://example.org/cfp",
+  extends: "paperlint:acm-sigconf",
+  format: { kinds: { full: limits } },
+});
+
+test("🔴 a body limit that does not say what the references get is refused at load, naming both ways out", () => {
+  // Guards: `body_pages_max` alone was how three «including references» venues passed a paper whose
+  // references spilled onto one more page; a preset can no longer be written without deciding.
+  assert.equal(
+    refusalOf("v.jsonc", withKind({ body_pages_max: 8 })),
+    [
+      "v.jsonc does not match venue-profile.schema.json:",
+      '  format.kinds.full: a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "total_pages_max" instead',
+      "  v.jsonc: .format.kinds['full'] should have property ref_pages_max when property body_pages_max is present",
+    ].join("\n"),
+  );
+});
+
+test("the three ways a kind counts are read: a total, a body with its reference pages, a body with references unlimited", () => {
+  const kind = (limits: object) =>
+    parsePreset(JSON.stringify(withKind(limits)), "v.jsonc").format.kinds.get(
+      "full",
+    );
+  assert.deepEqual(
+    [
+      kind({ total_pages_max: 8 }),
+      kind({ body_pages_max: 10, ref_pages_max: 2, total_pages_max: 12 }),
+      kind({ body_pages_max: 12, ref_pages_max: "unlimited" }),
+      kind({}),
+    ],
+    [
+      { totalPagesMax: 8, bodyPagesMax: null, refPagesMax: null },
+      { totalPagesMax: 12, bodyPagesMax: 10, refPagesMax: 2 },
+      { totalPagesMax: null, bodyPagesMax: 12, refPagesMax: null },
+      { totalPagesMax: null, bodyPagesMax: null, refPagesMax: null },
+    ],
+  );
+});
+
+test('a reference limit that is neither a page count nor "unlimited" is refused', () => {
+  assert.match(
+    refusalOf(
+      "v.jsonc",
+      withKind({ body_pages_max: 8, ref_pages_max: "many" }),
+    ),
+    /format\.kinds\['full'\]\.ref_pages_max/u,
+  );
+});
+
 test("🔴 submission_fields naming a key the submission object carries itself is refused, naming it", () => {
   // Guards: a field `submission` spread over the PDF's `content_file` would drop the upload.
   const preset = (key: string) => ({

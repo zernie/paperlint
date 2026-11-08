@@ -149,8 +149,8 @@
     // «Short position papers or work-in-progress (WIP) papers» share one limit, so one kind.
     // References, appendices and the LLM Usage Statement: unlimited.
     "kinds": {
-      "regular": { "body_pages_max": 12 },
-      "short": { "body_pages_max": 6 },
+      "regular": { "body_pages_max": 12, "ref_pages_max": "unlimited" },
+      "short": { "body_pages_max": 6, "ref_pages_max": "unlimited" },
     },
   },
 }

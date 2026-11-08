@@ -125,7 +125,10 @@ export function violations(
 
 /** One kind of paper a venue takes (`short`, `research`, …) and its page limits; null = not limited. */
 export interface KindLimits {
+  /** Every page of the PDF, references included; null when the venue sets no total. */
+  readonly totalPagesMax: number | null;
   readonly bodyPagesMax: number | null;
+  /** Null when not limited: the preset said "unlimited", or set no body limit. */
   readonly refPagesMax: number | null;
 }
 
@@ -232,9 +235,22 @@ export interface PresetFile {
   readonly submissionFields: VenueFields | null;
 }
 
-type KindsJson = Readonly<
-  Record<string, { body_pages_max?: number; ref_pages_max?: number }>
->;
+/**
+ * A kind's limits after the schema accepted them: a body limit always comes with what the
+ * references get (the schema's `dependencies`), so this type cannot hold a body limit that left
+ * them undecided.
+ */
+type KindJson = { readonly total_pages_max?: number } & (
+  | {
+      readonly body_pages_max: number;
+      readonly ref_pages_max: number | "unlimited";
+    }
+  | {
+      readonly body_pages_max?: undefined;
+      readonly ref_pages_max?: number | "unlimited";
+    }
+);
+type KindsJson = Readonly<Record<string, KindJson>>;
 
 /** A preset's `format` block after the schema accepted it. */
 interface FormatJson {
@@ -346,8 +362,10 @@ function kindsOf(k: KindsJson | undefined): ReadonlyMap<string, KindLimits> {
     Object.entries(k ?? {}).map(([name, v]) => [
       name,
       {
+        totalPagesMax: orNull(v.total_pages_max),
         bodyPagesMax: orNull(v.body_pages_max),
-        refPagesMax: orNull(v.ref_pages_max),
+        refPagesMax:
+          v.ref_pages_max === "unlimited" ? null : orNull(v.ref_pages_max),
       },
     ]),
   );
@@ -409,12 +427,31 @@ export function identityHint(e: SchemaError): string | null {
   return null;
 }
 
+/**
+ * What to write instead of a body limit that leaves the references undecided — ajv's words for it
+ * ("should have property ref_pages_max when property body_pages_max is present") name the key, not
+ * the two ways a venue counts. Read off the error's keyword and parameters. Pure.
+ */
+export function kindHint(e: SchemaError): string | null {
+  if (
+    e.keyword !== "dependencies" ||
+    fieldOf(e.params, "property") !== "body_pages_max"
+  )
+    return null;
+  const where = e.dataPath
+    .replace(/^\./u, "")
+    .replace(/\['([^']*)'\]/gu, ".$1");
+  return `${where}: a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "total_pages_max" instead`;
+}
+
 /** The hints for every violation that has one, each once. Ajv's null `errors` has none. */
 export const identityHints = (
   v: Readonly<Pick<Validate, "errors">>,
 ): readonly string[] => [
   ...new Set(
-    (v.errors ?? []).map(identityHint).filter((h): h is string => h !== null),
+    (v.errors ?? [])
+      .flatMap((e) => [identityHint(e), kindHint(e)])
+      .filter((h): h is string => h !== null),
   ),
 ];
 

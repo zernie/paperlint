@@ -63,13 +63,12 @@
   ],
 
   "format": {
-    // 🔴 THE LIMITS INCLUDE THE REFERENCES («up to 8 pages, including references»), and no key
-    // gates a total. `body_pages_max` is banal's body count, which is never more than the total, so
-    // a paper over it is over the limit; a paper whose references sit alone on a page after a full
-    // body passes this gate and is still over. The card says so.
+    // 🔴 THE LIMITS INCLUDE THE REFERENCES («up to 8 pages, including references»), so they are
+    // totals: format/page-limit counts every page of the PDF, and a full body whose references
+    // spill onto one more page is over.
     "kinds": {
-      "full": { "body_pages_max": 8 },
-      "short": { "body_pages_max": 5 },
+      "full": { "total_pages_max": 8 },
+      "short": { "total_pages_max": 5 },
     },
   },
 }

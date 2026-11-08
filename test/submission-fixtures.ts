@@ -296,6 +296,7 @@ export const facts = (
     schema: 3,
     pdf: o.pdf ?? "paper.pdf",
     pdf_sha256: o.sha ?? HEX,
+    npages: pagesText(o.body ?? 4).length,
     fonts: o.fonts ?? [TIMES],
     ...(o.measured === false
       ? { geometry_source: null }

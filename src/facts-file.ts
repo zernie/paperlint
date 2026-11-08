@@ -269,6 +269,8 @@ export interface ReadFacts {
   /** As the file spells it: relative to the paper directory, or absolute. */
   readonly pdf: string;
   readonly sha: Sha256;
+  /** Every page of the PDF (`npages`, pdf.js's count, measured on every build): what a total limit judges. */
+  readonly pageCount: number;
   readonly fonts: readonly FontEntry[];
   /** The geometry columns, or null when no measurer ran (`geometry_source` is null). */
   readonly geometry: FlatGeometry | null;
@@ -410,11 +412,15 @@ function textOf(
 /** What the PDF measures and what it says: the geometry columns and schema 3's fields. */
 function contentOf(
   d: Readonly<Record<string, unknown>>,
-): Result<Pick<ReadFacts, "geometry" | "text">, string> {
+): Result<Pick<ReadFacts, "pageCount" | "geometry" | "text">, string> {
+  const pageCount = d["npages"];
+  if (!isPage(pageCount)) return err("`npages` is not a page count");
   const geometry = geometryOf(d);
   if (!geometry.ok) return geometry;
   const text = textOf(d);
-  return text.ok ? ok({ geometry: geometry.value, text: text.value }) : text;
+  return text.ok
+    ? ok({ pageCount, geometry: geometry.value, text: text.value })
+    : text;
 }
 
 /** The PDF the facts describe: its path and its sha256. */
