@@ -228,7 +228,7 @@ paper. For an ACM workshop with a 4-page limit for short papers, `venues/my-work
     "kinds": {
       // the limit from the call for papers: «4 pages, including references» is a total;
       // a body limit says what the references get, e.g. { "body_pages_max": 4, "ref_pages_max": 1 }
-      "short": { "total_pages_max": 4 },
+      "short": { "pages_max": 4 },
     },
   },
 }

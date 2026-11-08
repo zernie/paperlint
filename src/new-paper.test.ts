@@ -208,7 +208,7 @@ describe("paperlint new --venue / --kind", () => {
   const PRESET = `{
   "type": "venue", "name": "my-workshop", "url": "https://example.org/cfp",
   "extends": "paperlint:acm-sigconf",
-  "format": { "kinds": { "short": { "total_pages_max": 4 } } },
+  "format": { "kinds": { "short": { "pages_max": 4 } } },
 }
 `;
 

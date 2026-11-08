@@ -373,7 +373,7 @@ export function judgePages(g: FlatGeometry, resolved: Resolved): Finding[] {
 }
 
 /**
- * Every page of the PDF against a total limit (`total_pages_max`: «up to 8 pages, including
+ * Every page of the PDF against a total limit (`pages_max`: «up to 8 pages, including
  * references»). The count is pdf.js's, measured on every build, so it needs neither banal nor a
  * references heading. Pure.
  */
@@ -382,7 +382,7 @@ export function judgeTotal(
   resolved: Resolved,
 ): readonly Finding[] {
   const kind = resolved.kind;
-  const max = kind?.limits.totalPagesMax ?? null;
+  const max = kind?.limits.pagesMax ?? null;
   return kind !== null && max !== null && pageCount > max
     ? [
         finding("pages", {

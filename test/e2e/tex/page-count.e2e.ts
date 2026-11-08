@@ -287,6 +287,53 @@ describe.skipIf(skip)("where the body ends, on real ACSAC papers", () => {
   });
 });
 
+describe.skipIf(skip)(
+  "pages_max, on a real ACSAC paper: every page of the PDF counts",
+  () => {
+    const NAME = "secure-acsac24";
+    /** Every page of the real build, as pdf.js counted it into the facts. */
+    const npages = () =>
+      z
+        .looseObject({ npages: z.number().int().positive() })
+        .parse(
+          readJson(join(work, "papers", NAME, "_build", "paper.facts.json")),
+        ).npages;
+    /** The paper judged under a venue of the paper's own whose limit includes the references. */
+    const underTotal = (max: number) => {
+      const preset = join(work, "papers", NAME, "total-venue.jsonc");
+      writeFileSync(
+        preset,
+        JSON.stringify({
+          type: "venue",
+          name: "Total",
+          url: "https://example.org/cfp",
+          extends: "paperlint:ieee-conference",
+          format: { kinds: { full: { pages_max: max } } },
+        }),
+      );
+      try {
+        return messagesOf(NAME, "format/page-limit", {
+          extends: "./total-venue.jsonc",
+          kind: "full",
+          identity: ["Nobody In These Papers"],
+        });
+      } finally {
+        rmSync(preset);
+      }
+    };
+
+    it("🔴 one page over the total, references included, is reported; at the total it is quiet", () => {
+      const n = npages();
+      expect([underTotal(n), underTotal(n - 1)]).toEqual([
+        [],
+        [
+          `pages, references included: ${String(n)}, over the limit ${String(n - 1)} for Total/full — a desk reject; cut the text`,
+        ],
+      ]);
+    });
+  },
+);
+
 describe.skipIf(skip)("pdf/body-size, on real accepted papers", () => {
   const names = [
     ...Object.keys(bodySize.papers),

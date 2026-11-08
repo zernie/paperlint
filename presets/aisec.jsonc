@@ -44,22 +44,22 @@
       "research": {
         "body_pages_max": 10,
         "ref_pages_max": 2,
-        "total_pages_max": 12,
+        "pages_max": 12,
       },
       "benchmark": {
         "body_pages_max": 10,
         "ref_pages_max": 2,
-        "total_pages_max": 12,
+        "pages_max": 12,
       },
       "position": {
         "body_pages_max": 10,
         "ref_pages_max": 2,
-        "total_pages_max": 12,
+        "pages_max": 12,
       },
       "sok": {
         "body_pages_max": 10,
         "ref_pages_max": 2,
-        "total_pages_max": 12,
+        "pages_max": 12,
       },
     },
   },

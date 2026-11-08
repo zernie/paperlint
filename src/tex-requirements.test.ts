@@ -73,7 +73,7 @@ test("🔴 a body limit that does not say what the references get is refused at 
     refusalOf("v.jsonc", withKind({ body_pages_max: 8 })),
     [
       "v.jsonc does not match venue-profile.schema.json:",
-      '  format.kinds.full: a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "total_pages_max" instead',
+      '  format.kinds.full: a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "pages_max" instead',
       "  v.jsonc: .format.kinds['full'] should have property ref_pages_max when property body_pages_max is present",
     ].join("\n"),
   );
@@ -86,16 +86,16 @@ test("the three ways a kind counts are read: a total, a body with its reference 
     );
   assert.deepEqual(
     [
-      kind({ total_pages_max: 8 }),
-      kind({ body_pages_max: 10, ref_pages_max: 2, total_pages_max: 12 }),
+      kind({ pages_max: 8 }),
+      kind({ body_pages_max: 10, ref_pages_max: 2, pages_max: 12 }),
       kind({ body_pages_max: 12, ref_pages_max: "unlimited" }),
       kind({}),
     ],
     [
-      { totalPagesMax: 8, bodyPagesMax: null, refPagesMax: null },
-      { totalPagesMax: 12, bodyPagesMax: 10, refPagesMax: 2 },
-      { totalPagesMax: null, bodyPagesMax: 12, refPagesMax: null },
-      { totalPagesMax: null, bodyPagesMax: null, refPagesMax: null },
+      { pagesMax: 8, bodyPagesMax: null, refPagesMax: null },
+      { pagesMax: 12, bodyPagesMax: 10, refPagesMax: 2 },
+      { pagesMax: null, bodyPagesMax: 12, refPagesMax: null },
+      { pagesMax: null, bodyPagesMax: null, refPagesMax: null },
     ],
   );
 });

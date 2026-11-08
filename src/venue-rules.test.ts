@@ -1279,7 +1279,7 @@ describe("judgeBodyEnd, on a venue it does not apply to", () => {
 
   it("a kind with no body limit, or no kind: nothing to count against", () => {
     const limits = {
-      totalPagesMax: null,
+      pagesMax: null,
       bodyPagesMax: null,
       refPagesMax: null,
     };
@@ -1288,10 +1288,10 @@ describe("judgeBodyEnd, on a venue it does not apply to", () => {
   });
 
   it("judgeTotal: over the total is one finding, at it none, and no total or no kind checks nothing", () => {
-    const total = (totalPagesMax: number | null) =>
+    const total = (pagesMax: number | null) =>
       venue({
         name: "full",
-        limits: { totalPagesMax, bodyPagesMax: null, refPagesMax: null },
+        limits: { pagesMax, bodyPagesMax: null, refPagesMax: null },
       });
     expect([
       judgeTotal(9, total(8)),

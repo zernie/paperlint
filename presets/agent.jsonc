@@ -67,8 +67,8 @@
     // totals: format/page-limit counts every page of the PDF, and a full body whose references
     // spill onto one more page is over.
     "kinds": {
-      "full": { "total_pages_max": 8 },
-      "short": { "total_pages_max": 5 },
+      "full": { "pages_max": 8 },
+      "short": { "pages_max": 5 },
     },
   },
 }

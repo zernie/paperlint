@@ -5,17 +5,17 @@
 
 ## What it catches
 
-A PDF longer than its venue allows for the paper's kind: more pages in all than `total_pages_max`,
+A PDF longer than its venue allows for the paper's kind: more pages in all than `pages_max`,
 more body pages than `body_pages_max`, or more reference pages than `ref_pages_max`.
 
 Every limit says what it counts, and the schema refuses one that does not:
 
-| the call says                                   | the kind sets                                                     | e.g.            |
-| ----------------------------------------------- | ----------------------------------------------------------------- | --------------- |
-| «up to 8 pages, including references»           | `"total_pages_max": 8`                                            | AGENT, NLBSE    |
-| «10 pages, two more containing only references» | `"body_pages_max": 10, "ref_pages_max": 2`                        | MSR, AgenticDev |
-| «12 pages excluding references»                 | `"body_pages_max": 12, "ref_pages_max": "unlimited"`              | AIDC            |
-| «10 pages … 12 pages at most» overall           | `"body_pages_max": 10, "ref_pages_max": 2, "total_pages_max": 12` | AISec           |
+| the call says                                   | the kind sets                                               | e.g.            |
+| ----------------------------------------------- | ----------------------------------------------------------- | --------------- |
+| «up to 8 pages, including references»           | `"pages_max": 8`                                            | AGENT, NLBSE    |
+| «10 pages, two more containing only references» | `"body_pages_max": 10, "ref_pages_max": 2`                  | MSR, AgenticDev |
+| «12 pages excluding references»                 | `"body_pages_max": 12, "ref_pages_max": "unlimited"`        | AIDC            |
+| «10 pages … 12 pages at most» overall           | `"body_pages_max": 10, "ref_pages_max": 2, "pages_max": 12` | AISec           |
 
 `body_pages_max` without `ref_pages_max` is refused when the preset loads: a body limit that
 leaves the references undecided is how a venue whose limit includes them let a paper whose
@@ -109,7 +109,7 @@ When a structural signal and the text disagree, the count is not made and the ru
 
 ## Options / preset fields
 
-No rule options. It reads, from the preset, `format.kinds.<kind>.total_pages_max`,
+No rule options. It reads, from the preset, `format.kinds.<kind>.pages_max`,
 `format.kinds.<kind>.body_pages_max`,
 `format.kinds.<kind>.ref_pages_max`, `format.body_ends_at` and `format.appendix_in_body` (which
 the schema accepts only beside `body_ends_at`); from the paper's `paperlint.json`,

@@ -54,7 +54,7 @@ does, the email and the live pages win.
 | `short`    |     4 | «Short & Demonstration Papers: Maximum of 4 pages, including references.»                                                               |
 | `abstract` |     2 | «Extended Abstracts: Maximum of 2 pages, including references.» They «are free of APC charges and will be included in the proceedings.» |
 
-🔴 **Every limit is a total, references included.** The preset sets them as `total_pages_max`, so
+🔴 **Every limit is a total, references included.** The preset sets them as `pages_max`, so
 `format/page-limit` counts every page of the PDF: references that spill onto a page after a full
 body are a finding.
 

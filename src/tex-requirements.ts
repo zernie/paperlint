@@ -126,7 +126,7 @@ export function violations(
 /** One kind of paper a venue takes (`short`, `research`, …) and its page limits; null = not limited. */
 export interface KindLimits {
   /** Every page of the PDF, references included; null when the venue sets no total. */
-  readonly totalPagesMax: number | null;
+  readonly pagesMax: number | null;
   readonly bodyPagesMax: number | null;
   /** Null when not limited: the preset said "unlimited", or set no body limit. */
   readonly refPagesMax: number | null;
@@ -240,7 +240,7 @@ export interface PresetFile {
  * references get (the schema's `dependencies`), so this type cannot hold a body limit that left
  * them undecided.
  */
-type KindJson = { readonly total_pages_max?: number } & (
+type KindJson = { readonly pages_max?: number } & (
   | {
       readonly body_pages_max: number;
       readonly ref_pages_max: number | "unlimited";
@@ -362,7 +362,7 @@ function kindsOf(k: KindsJson | undefined): ReadonlyMap<string, KindLimits> {
     Object.entries(k ?? {}).map(([name, v]) => [
       name,
       {
-        totalPagesMax: orNull(v.total_pages_max),
+        pagesMax: orNull(v.pages_max),
         bodyPagesMax: orNull(v.body_pages_max),
         refPagesMax:
           v.ref_pages_max === "unlimited" ? null : orNull(v.ref_pages_max),
@@ -441,7 +441,7 @@ export function kindHint(e: SchemaError): string | null {
   const where = e.dataPath
     .replace(/^\./u, "")
     .replace(/\['([^']*)'\]/gu, ".$1");
-  return `${where}: a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "total_pages_max" instead`;
+  return `${where}: a body limit says what the references get — "ref_pages_max": <pages of references allowed after the body> or "unlimited"; a venue whose limit includes the references («up to 8 pages, including references») sets "pages_max" instead`;
 }
 
 /** The hints for every violation that has one, each once. Ajv's null `errors` has none. */

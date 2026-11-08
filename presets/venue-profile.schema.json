@@ -248,14 +248,14 @@
         "kinds": {
           "type": "object",
           "additionalProperties": {
-            "description": "One kind's page limits, each saying what it counts. A venue whose limit includes the references («up to 8 pages, including references») sets `total_pages_max`; one that limits the body sets `body_pages_max` AND says what the references get in `ref_pages_max` — a body limit alone is refused, so no preset can leave the references undecided. A kind with no key is not limited.",
+            "description": "One kind's page limits, each saying what it counts. A venue whose limit includes the references («up to 8 pages, including references») sets `pages_max`; one that limits the body sets `body_pages_max` AND says what the references get in `ref_pages_max` — a body limit alone is refused, so no preset can leave the references undecided. A kind with no key is not limited.",
             "type": "object",
             "additionalProperties": false,
             "dependencies": {
               "body_pages_max": ["ref_pages_max"]
             },
             "properties": {
-              "total_pages_max": {
+              "pages_max": {
                 "description": "Every page of the PDF, references and appendices included (pdf.js's page count; needs no banal).",
                 "type": "integer",
                 "minimum": 1

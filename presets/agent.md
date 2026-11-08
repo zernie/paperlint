@@ -36,7 +36,7 @@ Sources read 2026-10-26: that page, the portal's
 | `short` |     5 | «Short papers (position, emerging research, tool, benchmark, or experience): up to 5 pages, including references.» |
 
 🔴 **The limit is a total, references included**, and «It is not possible to pay for extra pages.»
-The preset sets it as `total_pages_max`, so `format/page-limit` counts every page of the PDF: a
+The preset sets it as `pages_max`, so `format/page-limit` counts every page of the PDF: a
 body that fills the pages and references that spill onto one more page is a finding.
 
 ## What else the preset encodes

@@ -52,7 +52,7 @@ Every limit says «including references».
 Two competition papers have no kind. Multitask Code Classification: «you must write a paper (2-4
 pages)», references not mentioned. The research challenge states no limit.
 
-🔴 **The limits are totals.** The preset sets them as `total_pages_max`, so `format/page-limit`
+🔴 **The limits are totals.** The preset sets them as `pages_max`, so `format/page-limit`
 counts every page of the PDF: references that spill onto a page after a full body are a finding.
 
 ## What else the preset encodes
