@@ -73,35 +73,52 @@ function shardOf(arg: string): Shard | null {
   return index >= 1 && index <= count ? { arg, index, count } : null;
 }
 
-/** What the arguments say: the shard and the harness runner's own, or the argument that is no shard. */
+/**
+ * `--changed`: the draft loop (`npm run test:changed`). vitest runs only the unit tests that import
+ * what the branch changed against origin/main, and the harnesses do not run. It goes through this
+ * runner, not straight to vitest, so it gets the sources like every other run here.
+ */
+const CHANGED = "--changed";
+const CHANGED_VITEST = ["--changed", "origin/main"] as const;
+
+/** What the arguments say: the shard, `--changed` and the harness runner's own, or the argument that is no shard. */
 type Split =
   | {
       readonly kind: "ok";
       readonly shard: Shard | null;
+      readonly changed: boolean;
       readonly rest: readonly string[];
     }
   | { readonly kind: "bad"; readonly arg: string };
 
 /**
- * The arguments split into the shard and the harness runner's own, or the argument that is no shard.
+ * The arguments split into the shard, `--changed` and the harness runner's own, or the argument that is no shard.
  * A malformed or repeated `--shard` is refused, never ignored: ignored, every shard would run every test.
  */
 export function splitShard(args: readonly string[]): Split {
-  const rest = args.filter((a) => !a.startsWith(SHARD_PREFIX));
+  const changed = args.includes(CHANGED);
+  const rest = args.filter((a) => !a.startsWith(SHARD_PREFIX) && a !== CHANGED);
   const [arg, second] = args.filter((a) => a.startsWith(SHARD_PREFIX));
-  if (arg === undefined) return { kind: "ok", shard: null, rest };
+  if (arg === undefined) return { kind: "ok", shard: null, changed, rest };
   if (second !== undefined) return { kind: "bad", arg: second };
   const shard = shardOf(arg);
-  return shard === null ? { kind: "bad", arg } : { kind: "ok", shard, rest };
+  return shard === null
+    ? { kind: "bad", arg }
+    : { kind: "ok", shard, changed, rest };
 }
 
-/** The arguments a suite gets, or null when it does not run: the shard to vitest; the rest to the harnesses, which run on shard 1 only. */
+/**
+ * The arguments a suite gets, or null when it does not run: `--changed` and the shard to vitest; the
+ * rest to the harnesses, which run on shard 1 only and not at all under `--changed`.
+ */
 const argsFor = (
   name: string,
-  shard: Shard | null,
-  rest: readonly string[],
+  split: Extract<Split, { readonly kind: "ok" }>,
 ): readonly string[] | null => {
-  if (name === "vitest") return shard === null ? [] : [shard.arg];
+  const { shard, changed, rest } = split;
+  if (name === "vitest")
+    return [...(changed ? CHANGED_VITEST : []), ...(shard ? [shard.arg] : [])];
+  if (changed) return null;
   return shard === null || shard.index === 1 ? rest : null;
 };
 
@@ -113,7 +130,7 @@ function runEach(
   env: NodeJS.ProcessEnv,
 ): readonly { readonly name: string; readonly code: number }[] {
   return suites.flatMap(({ name, command }) => {
-    const own = argsFor(name, split.shard, split.rest);
+    const own = argsFor(name, split);
     if (own === null) return [];
     const [file, ...fixed] = command;
     const r = spawn(file, [...fixed, ...own], { stdio: "inherit", env });
