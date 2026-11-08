@@ -116,7 +116,7 @@ export type Outcome = "pass" | "skip" | "fail";
 export const GATES: readonly Gate[] = [
   {
     name: "the package compiles",
-    job: "gates",
+    job: "static",
     script: "build",
     // CI has no `npm run build` step: `npm ci` runs `prepare`, which is `tsc` as well.
     inCi: { step: "npm ci", lifecycle: "prepare" },
@@ -125,12 +125,12 @@ export const GATES: readonly Gate[] = [
   },
   {
     name: "rules and scripts lint",
-    job: "gates",
+    job: "static",
     script: "lint",
   },
   {
     name: "skills lint, and the vigiles marks in README.md and CLAUDE.md",
-    job: "gates",
+    job: "static",
     run: ["vigiles", "lint", ".", "README.md"],
     // README.md is passed to `vigiles lint` by name: it is not an instruction file, so vigiles
     // would not open it on its own. The marks tie the `paperlint init` and `paperlint new` sections to the
@@ -138,19 +138,19 @@ export const GATES: readonly Gate[] = [
   },
   {
     name: "formatting",
-    job: "gates",
+    job: "static",
     script: "fmt:check",
     // Prettier defaults, the same config as vigiles. What it must not touch — compiled
     // SKILL.md, fixture data, raw runs — is listed in `.prettierignore` with the reason.
   },
   {
     name: "every declared rule is enabled for a file on disk",
-    job: "gates",
+    job: "static",
     run: ["node", "scripts/rules-see-files.mjs"],
   },
   {
     name: "every test, under coverage — vitest, then the vigiles harnesses, with c8's thresholds (npm run coverage)",
-    job: "gates",
+    job: "coverage",
     script: "coverage",
     // `npm run coverage` IS `npm test`, run under c8 with `--check-coverage` (.c8rc.json holds
     // the thresholds). One run, not two: the tests pass and the coverage floor holds, or the gate
@@ -159,23 +159,23 @@ export const GATES: readonly Gate[] = [
   {
     // vitest transpiles without type-checking, so the tests' types are checked here.
     name: "the tests type-check",
-    job: "gates",
+    job: "static",
     run: ["tsc", "-p", "tsconfig.test.json"],
   },
   {
     name: "legacy layer exemptions are frozen — none new, none grown (#76)",
-    job: "gates",
+    job: "static",
     run: ["node", "scripts/layer-legacy-frozen.ts"],
   },
   {
     name: "install e2e — pack, install under npm and pnpm, run the binary",
-    job: "gates",
+    job: "e2e-node",
     script: "test:e2e:install",
     vitest: true,
   },
   {
     name: "studies e2e — a study decided before its run, in a real git repository",
-    job: "gates",
+    job: "e2e-node",
     script: "test:e2e:studies",
     vitest: true,
   },
