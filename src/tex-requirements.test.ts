@@ -100,6 +100,23 @@ test("the three ways a kind counts are read: a total, a body with its reference 
   );
 });
 
+test("kindHint has nothing to add to another key's dependency, or to a violation that is not one", () => {
+  assert.deepEqual(
+    [
+      kindHint({
+        keyword: "dependencies",
+        dataPath: ".format",
+        params: {
+          property: "appendix_in_body",
+          missingProperty: "body_ends_at",
+        },
+      }),
+      kindHint({ keyword: "required", dataPath: "", params: {} }),
+    ],
+    [null, null],
+  );
+});
+
 test('a reference limit that is neither a page count nor "unlimited" is refused', () => {
   assert.match(
     refusalOf(
