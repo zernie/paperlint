@@ -1105,7 +1105,8 @@ button.more { width: auto; min-height: 44px; border: 0; color: var(--accent); pa
       var answered = items.filter(practiceAnswered).length;
       sec.appendChild(el("h2", "", "🎯 Practice: " + answered + " of " + items.length + " answered"));
       sec.appendChild(el("p", "muted", "These answers are known. After each one the page shows the expected " +
-        "answer. The real items open when all " + items.length + " are answered."));
+        "answer. The real items open when all " + items.length +
+        (GATED ? " match their expected answer." : " are answered.")));
       items.forEach(function (p) { sec.appendChild(practiceCard(p, off)); });
       return sec;
     }

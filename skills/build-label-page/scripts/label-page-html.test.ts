@@ -258,6 +258,10 @@ test("🔴 with practice_gate a raised practice_round with new items reopens the
 
   const reopened = await showPage(page, {}, {}, DONE_PRACTICE);
   assert.match(reopened, /Practice: 0 of 3 answered/);
+  assert.match(
+    reopened,
+    /The real items open when all 3 match their expected answer\./,
+  );
   assert.match(reopened, /\(again\)/);
   assert.doesNotMatch(reopened, /G001/);
 
@@ -297,6 +301,8 @@ test("🔴 without practice_gate the page data and the key carry no gate, and a 
   assert.match(shown, /Practice: 2 of 3 matched/);
   assert.match(shown, /G001/);
   assert.doesNotMatch(shown, /stay closed/);
+  const before = await showPage(page, {}, {}, {});
+  assert.match(before, /The real items open when all 3 are answered\./);
 });
 
 test("🔴 one question per screen: an item card asks only its first unanswered question", async () => {
