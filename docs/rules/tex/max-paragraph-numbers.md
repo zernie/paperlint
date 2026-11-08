@@ -9,7 +9,7 @@ A paragraph of the body with more than `max` numbers (default 8, so a ninth fire
 ## How it counts
 
 - Digits in the paragraph's prose: an integer, a decimal (`2.5`), a percentage (`30\%`), a number with thousands commas (`4,000`) and `3x` each count once. Digits glued to a letter before them (`v2`, `RQ1`) do not.
-- Each `\num…` macro in the paragraph's source counts once (`\num{7}`, `\numA`, `\numTotal`), because a consumer's registered numbers leave no digits in the parsed prose. TeX's own `\number` and `\numberwithin` are not counted.
+- Each `\num…` macro in the paragraph's prose counts once (`\num{7}`, `\numA`, `\numTotal`), because a consumer's registered numbers leave no digits in the parsed prose. The parser counts them where it reads the prose, so one inside inline math, on a commented-out line, or inside a footnote (a passage of its own, counted there) adds nothing to the paragraph. TeX's own `\number` and `\numberwithin` are not counted.
 - A citation, a `\ref` and inline math are marks, not text: their keys and contents are never counted.
 - A place typed by hand counts: `Section 4`, `Fig. 4`, `Tables 2 and 3` and `§4` each add their numbers. Write a place with `\ref`, which does not count.
 - A year in prose counts like any other number.
@@ -48,7 +48,7 @@ In 2023 we saw 1, 2, 3, 4, 5, 6, 7, 8 and 9 cases ...      % fires: nine numbers
 
 ## What it does not check
 
-A number inside inline math (`$p<0.05$`) is not counted. A `\num…` macro standing before a paragraph's first word or after its last piece of text is not seen, because the macro is read from the source between the paragraph's first and last piece. A paragraph that is a list in disguise is counted as written.
+A number inside inline math (`$p<0.05$`, `$\num{9}$`) is not counted. A `\num…` macro inside the argument of a macro paperlint does not know (`\mymacro{\numA}`) is not prose and is not counted. A paragraph that is a list in disguise is counted as written.
 
 ## How to fix
 

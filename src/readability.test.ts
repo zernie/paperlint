@@ -153,7 +153,7 @@ describe("the rule, through its create()", () => {
 /** What the numbers judge finds in `body` at the default ceiling. */
 const numbersFound = (body: string) => {
   const src = doc(body);
-  return judgeParagraphNumbers(latexReader.bodyProse(src), src, 8).map(
+  return judgeParagraphNumbers(latexReader.bodyProse(src), 8).map(
     (f) => f.data,
   );
 };
@@ -175,6 +175,32 @@ describe("tex/max-paragraph-numbers", () => {
       { numbers: 9, max: 8, head: "We ran 1 and 2.5 and 30% and…" },
     ]);
     expect(numbersFound(`${eight} See Section \\ref{sec:x}.`)).toEqual([]);
+  });
+
+  /** Eight numbers a reader sees, none of them a `\num…` macro. */
+  const EIGHT = "We ran 1 and 2 and 3 and 4 and 5 and 6 and 7 and 8 times.";
+
+  it("🔴 a `\\num…` macro in the paragraph's prose counts: the ninth fires", () => {
+    expect(numbersFound(`${EIGHT} Then \\numFoo{} more.`)).toEqual([
+      { numbers: 9, max: 8, head: "We ran 1 and 2 and 3 and…" },
+    ]);
+  });
+
+  it("🔴 a `\\num…` macro inside inline math is math, not prose: not counted", () => {
+    // Guards: the source between the paragraph's first and last piece holds the macro.
+    expect(numbersFound(`${EIGHT} Then $\\num{9}$ more.`)).toEqual([]);
+  });
+
+  it("🔴 a `\\num…` macro on a commented-out line is not counted", () => {
+    // Guards: a comment changes nothing on the page, so it cannot add a number.
+    expect(numbersFound(`${EIGHT}\n% \\numFoo\nThen more.`)).toEqual([]);
+  });
+
+  it("🔴 a `\\num…` macro in a footnote counts for the footnote, not for the paragraph it hangs from", () => {
+    // Guards: a footnote is a passage of its own; its numbers are its own.
+    expect(
+      numbersFound(`${EIGHT}\\footnote{See \\numFoo{}.} Then more.`),
+    ).toEqual([]);
   });
 });
 

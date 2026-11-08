@@ -152,6 +152,12 @@ export type ProsePiece =
 /** A stretch of body prose no sentence crosses — a paragraph, a list item, a footnote. Never empty. */
 export interface Passage {
   readonly pieces: readonly [ProsePiece, ...ProsePiece[]];
+  /**
+   * How many registered numbers (`\num`, `\numA`, `\numTotal`…, not TeX's `\number…`) stand in the
+   * passage's own prose: not in its math, its comments, or a footnote, which is a passage of its own.
+   * They typeset digits the parse cannot see, so no piece holds them.
+   */
+  readonly registeredNumbers: number;
 }
 
 /** How an emphasised phrase is set: bold, italic (or `\emph`), or underlined. */

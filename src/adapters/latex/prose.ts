@@ -37,11 +37,13 @@ import {
 import { CITATION_MACROS, DEFINITION_MACROS, type ParsedTex } from "./parse.ts";
 
 /**
- * What the walk yields: a piece, the end of a passage, the start of the back matter, a footnote, and
- * an emphasised phrase — which stands beside the pieces it typesets, and makes no passage of its own.
+ * What the walk yields: a piece, the end of a passage, the start of the back matter, a footnote, an
+ * emphasised phrase — which stands beside the pieces it typesets, and makes no passage of its own —
+ * and a registered number, which typesets digits the parse cannot see and is counted, not read.
  */
 type Event =
   | { readonly kind: "piece"; readonly piece: ProsePiece }
+  | { readonly kind: "number" }
   | { readonly kind: "break" }
   | { readonly kind: "end" }
   | { readonly kind: "aside"; readonly events: readonly Event[] }
@@ -49,6 +51,11 @@ type Event =
 
 const BREAK: Event = { kind: "break" };
 const END: Event = { kind: "end" };
+const NUMBER: Event = { kind: "number" };
+
+/** A registered number: `\num`, `\numA`, `\numTotal`…, not TeX's `\number` or `\numberwithin`. */
+const isNumberMacro = (name: string): boolean =>
+  name.startsWith("num") && !name.startsWith("number");
 
 /** Environments whose body is not running prose: floats, tables, algorithms, drawings, code. */
 const SKIPPED_ENVS: ReadonlySet<string> = new Set([
@@ -342,6 +349,7 @@ function macroEvents(t: ParsedTex, m: Macro): readonly Event[] {
   if (own !== undefined) return own(t, m);
   if (BREAK_MACROS.has(name)) return [BREAK];
   if (INLINE_MACROS.has(name)) return formattingEvents(t, m);
+  if (isNumberMacro(name)) return [NUMBER];
   const ch = CHARACTER_MACROS.get(name);
   return ch === undefined ? [] : characterAt(m, ch);
 }
@@ -549,7 +557,10 @@ const untilEnd = (events: readonly Event[]): readonly Event[] => {
   return end < 0 ? events : events.slice(0, end);
 };
 
-/** Events → passages: pieces between breaks, each footnote a passage of its own. */
+/**
+ * Events → passages: pieces between breaks, each footnote a passage of its own, with the registered
+ * numbers that stand among a passage's own events (a footnote's are inside its aside, so its own).
+ */
 function passagesOf(events: readonly Event[]): readonly Passage[] {
   // Where each passage starts and ends: between breaks. Slicing between them keeps this linear in
   // the events — a paragraph of thousands of words is one slice, not a copy per word.
@@ -559,10 +570,12 @@ function passagesOf(events: readonly Event[]): readonly Passage[] {
     [...breaks, events.length],
   );
   const own = bounds.flatMap(([from, to]) => {
-    const pieces = events
-      .slice(from, to)
-      .flatMap((e) => (e.kind === "piece" ? [e.piece] : []));
-    return hasAtLeast(pieces, 1) ? [{ pieces }] : [];
+    const stretch = events.slice(from, to);
+    const pieces = stretch.flatMap((e) =>
+      e.kind === "piece" ? [e.piece] : [],
+    );
+    const registeredNumbers = stretch.filter((e) => e.kind === "number").length;
+    return hasAtLeast(pieces, 1) ? [{ pieces, registeredNumbers }] : [];
   });
   const asides = events.flatMap((e) =>
     e.kind === "aside" ? passagesOf(untilEnd(e.events)) : [],

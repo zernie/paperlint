@@ -17,9 +17,11 @@
  * The body's prose through the `LatexReader` port (`bodyProse`): paragraphs, list items and
  * footnotes, each a passage; never a heading, a caption, a float, a table, code, a math environment
  * or the bibliography. Words are those `tex/register` counts (src/domain/register.ts): a citation, a
- * cross-reference or inline math is one word.
+ * cross-reference or inline math is one word. Numbers are the digits of that prose and the
+ * registered numbers the parser counted in it (`Passage.registeredNumbers`); inline math is a mark,
+ * so nothing inside it is a number.
  */
-import type { Passage, ProsePiece } from "./domain/tex-document.ts";
+import type { Passage } from "./domain/tex-document.ts";
 import { runText, spanIn } from "./domain/tex-document.ts";
 import { runOf } from "./domain/sentences.ts";
 import { NUMBER } from "./claim-provenance.ts";
@@ -81,31 +83,20 @@ export function maxOf(
   return typeof v === "number" ? v : fallback;
 }
 
-/** A registered number: `\num`, `\numA`, `\numTotal`…, not TeX's `\number` or `\numberwithin`. */
-const NUMBER_MACRO = /\\num(?!ber)[A-Za-z]*/gu;
-
-const endPos = (p: ProsePiece): number =>
-  p.kind === "text" ? p.segment.at + p.segment.text.length : p.span.end;
-
-/** The numbers of a paragraph: digits in its prose and each `\num…` macro in its source. */
-export function numbersIn(p: Passage, source: string): number {
-  const text = runText(runOf(p));
-  const from = startOf(p).start;
-  const end = p.pieces.reduce((_, q) => endPos(q), from);
-  return (
-    [...text.matchAll(NUMBER)].length +
-    [...source.slice(from, end).matchAll(NUMBER_MACRO)].length
-  );
-}
+/**
+ * The numbers of a paragraph: digits in its prose, and the registered numbers (`\num…` macros) the
+ * parser found in that prose. Math, comments and a footnote's own prose add nothing to it.
+ */
+export const numbersIn = (p: Passage): number =>
+  [...runText(runOf(p)).matchAll(NUMBER)].length + p.registeredNumbers;
 
 /** Every paragraph with more than `max` numbers, at its start. */
 export const judgeParagraphNumbers = (
   passages: readonly Passage[],
-  source: string,
   max: number,
 ): readonly Located[] =>
   passages.flatMap((p) => {
-    const numbers = numbersIn(p, source);
+    const numbers = numbersIn(p);
     return numbers <= max
       ? []
       : [
@@ -154,7 +145,6 @@ interface Ceiling {
   readonly fallback: number;
   readonly judge: (
     passages: readonly Passage[],
-    source: string,
     max: number,
   ) => readonly Located[];
 }
@@ -184,11 +174,7 @@ const ceilingRule = (c: Ceiling, deps: ProseDeps): TexRuleModule => ({
         const sc = context.sourceCode;
         const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
         const max = maxOf(context.options, c.fallback);
-        const found = c.judge(
-          deps.latex.bodyProse(paper.text),
-          paper.text,
-          max,
-        );
+        const found = c.judge(deps.latex.bodyProse(paper.text), max);
         reportInPaper(context, MESSAGES, paper, found);
       },
     };
@@ -202,7 +188,7 @@ export const maxParagraphWordsRule = (deps: ProseDeps): TexRuleModule =>
       name: "max-paragraph-words",
       what: "a paragraph of the body stays at or under `max` words: past it, the page shows a wall of text",
       fallback: DEFAULT_MAX_PARAGRAPH_WORDS,
-      judge: (passages, _source, max) => judgeParagraphWords(passages, max),
+      judge: judgeParagraphWords,
     },
     deps,
   );
@@ -226,7 +212,7 @@ export const maxSentenceWordsRule = (deps: ProseDeps): TexRuleModule =>
       name: "max-sentence-words",
       what: "a sentence of the body stays at or under `max` words",
       fallback: DEFAULT_MAX_SENTENCE_WORDS,
-      judge: (passages, _source, max) => judgeSentenceWords(passages, max),
+      judge: judgeSentenceWords,
     },
     deps,
   );

@@ -493,6 +493,14 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
     ]);
   });
 
+  it("🔴 a passage counts the registered numbers of its own prose: not math, not a comment, not a footnote's, not `\\number`", () => {
+    const src =
+      "\\begin{document}\nA \\numA{} and \\numTotal, $\\num{9}$, \\number\\value{x}\n% \\numFoo\nB.\\footnote{F \\numB{}.}\n\\end{document}";
+    expect(bodyProse(parseLatex(src)).map((p) => p.registeredNumbers)).toEqual([
+      2, 1,
+    ]);
+  });
+
   it("a character macro's character stands at the macro's last source character", () => {
     const src = "C\\%";
     const [p] = bodyProse(parseLatex(src));
