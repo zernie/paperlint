@@ -48,6 +48,7 @@ import {
   paperBodies,
 } from "./paper-includes.ts";
 import { omit } from "remeda";
+import { refusalOf } from "./unowned-file.ts";
 import { ruleTimes, timingLines } from "./lint-timing.ts";
 import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
@@ -972,7 +973,9 @@ function ownRules(
 }
 
 /**
- * The globs paperlint lints, for the refusal message only. Which files a block reaches is decided by
+ * The globs paperlint's own blocks claim, fragments included (the directive block below needs them);
+ * the refusal message leaves the fragment glob out, since it reaches only a built paper's body
+ * files. Which files a block reaches is decided by
  * `narrowToOwners` from `ownedScopes` (src/paper-files.ts), where each glob keeps its exceptions.
  */
 const PAPER_FILE_PATTERNS: string[] = ownedPatterns(
@@ -2144,7 +2147,17 @@ export async function run(
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
     err(
-      `${shown(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
+      refusalOf(
+        unowned,
+        {
+          // The recorded bodies are claimed per paper (includeBlocks), not by a glob of the config.
+          patterns: PAPER_FILE_PATTERNS.filter(
+            (g) => !FRAGMENT_FILES.includes(g),
+          ),
+          shown: (p) => shown(cwd, p),
+        },
+        RECORD_DEPS,
+      ),
     );
     return 2;
   }
