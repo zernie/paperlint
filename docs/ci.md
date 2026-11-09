@@ -60,4 +60,10 @@ steps:
 
 With no `paths` it lints the `papersDir` of your `paperlint.json`; pass `paths:` only to lint less.
 
+`check-hooks: "true"` adds a last step, `paperlint doctor`, and fails the job when the hooks in
+`.claude/settings.json` are partly wired or one is wired twice: the way a CI run catches an upgrade that added
+a hook the project has not wired. It is off by default, because a project that never ran `init` (or ran it with
+`--no-hooks`) has no hooks to check; `doctor` also fails the step on its other findings (see
+[`install.md`](install.md#troubleshooting)).
+
 This is the workflow `paperlint init` offers to write ([`install.md`](install.md)).

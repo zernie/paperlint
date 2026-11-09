@@ -33,8 +33,34 @@ assert.equal(action.runs.using, "composite", "the action must be composite");
 const names = action.runs.steps.map((s) => s.name);
 assert.equal(
   action.runs.steps.length,
-  3,
-  `expected 3 steps, got ${action.runs.steps.length}: ${names}`,
+  4,
+  `expected 4 steps, got ${action.runs.steps.length}: ${names}`,
+);
+
+// `check-hooks` is OFF unless asked for, and when on it runs `paperlint doctor` — the command whose
+// exit code (2 for partly wired or doubled hooks, src/doctor.ts) is the verdict — and nothing else.
+const hooksInput = action.inputs["check-hooks"];
+assert.ok(hooksInput, "the action must take a `check-hooks` input");
+assert.equal(hooksInput.default, "false", "`check-hooks` must default to off");
+assert.equal(hooksInput.required, false);
+const hooksStep = action.runs.steps.find(
+  (s) => s.name === "paperlint doctor (hooks fully wired)",
+);
+assert.ok(hooksStep, `no hooks step among: ${names}`);
+assert.equal(
+  hooksStep.if,
+  "inputs.check-hooks == 'true'",
+  "the hooks step runs only when asked",
+);
+assert.match(
+  hooksStep.run,
+  /npx paperlint doctor/,
+  "the hooks step runs `paperlint doctor`",
+);
+assert.equal(
+  action.runs.steps.at(-1),
+  hooksStep,
+  "the hooks step comes after the lint step, so a failing doctor never hides the lint report",
 );
 
 const eslintStep = action.runs.steps.find((s) => s.name === "paperlint lint");
