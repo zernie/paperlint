@@ -13,7 +13,12 @@ import { test } from "vitest";
 import { z } from "zod";
 import { useTempDir, writeTree } from "../test/support.ts";
 import { run, runHook, spawnHook } from "./cli.ts";
-import { lintLine, mergeNotice, noticeText } from "./hooks-notice.ts";
+import {
+  NOTICE_STATE,
+  lintLine,
+  mergeNotice,
+  noticeText,
+} from "./hooks-notice.ts";
 import { WIRING_FILE } from "./hooks-settings.ts";
 
 const root = useTempDir("hooks-notice-");
@@ -369,5 +374,49 @@ test("spawnHook: the real spawner, once with the terminal's streams and once pip
       encoding: "utf8",
     }),
     { status: 0, stdout: "payload" },
+  );
+});
+
+test("a state file that is garbage, or not an object, counts as not told: the notice speaks and rewrites it", async () => {
+  const state = (dir: string) => join(dir, NOTICE_STATE);
+  const told = (dir: string) =>
+    z
+      .object({ version: z.string() })
+      .parse(JSON.parse(readFileSync(state(dir), "utf8"))).version;
+  const cases = [
+    ["state-garbage", "{ not json"],
+    ["state-array", "[1]"],
+    ["state-empty", ""],
+  ] as const;
+  for (const [name, content] of cases) {
+    const dir = project(name, wiringWithout(["lint-edited"]));
+    writeTree(dir, { [NOTICE_STATE]: content });
+    const file = join(dir, "papers/p/paper.tex");
+    const first = await hook("lint-edited", dir, file, "Fine.");
+    assert.match(first.out, /paperlint 9\.9\.9/, name);
+    assert.equal(told(dir), "9.9.9", name);
+    assert.equal((await hook("lint-edited", dir, file, "Fine.")).out, "", name);
+  }
+});
+
+test("paperlint lint: a settings file it cannot read is no second finding — the report and the exit code are the lint's own", async () => {
+  const dir = project("lint-unreadable", null);
+  // `.claude/settings.json` as a DIRECTORY: reading it throws EISDIR.
+  mkdirSync(join(dir, ".claude", "settings.json"), { recursive: true });
+  const err: string[] = [];
+  const code = await run(["lint"], {
+    log: () => undefined,
+    err: (...a: unknown[]) => void err.push(a.join(" ")),
+    cwd: dir,
+  });
+  const clean = await run(["lint"], {
+    log: () => undefined,
+    err: () => undefined,
+    cwd: project("lint-unreadable-control", null),
+  });
+  assert.equal(code, clean);
+  assert.deepEqual(
+    err.filter((l) => /wired/.test(l)),
+    [],
   );
 });
