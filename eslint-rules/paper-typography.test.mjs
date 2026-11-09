@@ -11,12 +11,14 @@
  */
 import { describe, expect, it } from "vitest";
 import { ESLint } from "eslint";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { texLanguage } from "./latex-language.ts";
 import typography, {
   crefDefinitionRanges,
+  figureFormParses,
   texVisibleRuns,
 } from "./paper-typography.ts";
 
@@ -295,6 +297,61 @@ describe("paper/figure-ref-style", () => {
         "paper/figure-ref-style",
       ),
     ).toEqual([]);
+  });
+});
+
+describe("paper/figure-ref-style on a paper of several files", () => {
+  /** A paper of `n` files, each with one reference, linted file by file as `paperlint lint` does. */
+  const lintPaperOf = async (n, edit = () => undefined) => {
+    const dir = mkdtempSync(join(tmpdir(), "paperlint-figref-"));
+    mkdirSync(join(dir, "sections"));
+    const files = Array.from({ length: n }, (_, i) =>
+      join(dir, i === 0 ? "paper.tex" : `sections/s${String(i)}.tex`),
+    );
+    files.forEach((f, i) =>
+      writeFileSync(
+        f,
+        doc(`${i === 0 ? "Fig." : "Figure"}~\\ref{x${String(i)}} here.`),
+      ),
+    );
+    const run = () =>
+      new ESLint({
+        cwd: dir,
+        overrideConfigFile: true,
+        overrideConfig: [
+          {
+            files: ["**/*.tex"],
+            plugins: {
+              tex: { languages: { latex: texLanguage } },
+              paper: typography,
+            },
+            language: "tex/latex",
+            settings: { paperlint: { paper: { main: files[0], files } } },
+            rules: { "paper/figure-ref-style": "warn" },
+          },
+        ],
+      }).lintFiles(files);
+    const before = figureFormParses.count;
+    const first = await run();
+    const parses = figureFormParses.count - before;
+    edit(files);
+    return { first, parses, files, run };
+  };
+
+  it("parses each file of the paper once, not once per file linted", async () => {
+    const { first, parses } = await lintPaperOf(6);
+    expect(first.flatMap((r) => r.messages)).toHaveLength(1);
+    expect(parses).toBeLessThanOrEqual(6);
+  });
+
+  it("an edited file is read again: the cache is by content, never by path", async () => {
+    const { files, run } = await lintPaperOf(3);
+    writeFileSync(files[1], doc("Fig.~\\ref{y} here."));
+    const messages = (await run()).flatMap((r) => r.messages);
+    expect(
+      messages.filter((m) => m.ruleId === "paper/figure-ref-style"),
+    ).toHaveLength(1);
+    expect(messages[0].message).toMatch(/Figure/);
   });
 });
 

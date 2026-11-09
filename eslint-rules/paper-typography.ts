@@ -58,6 +58,7 @@
  * one to decide what a number means. A real `.05` in any other paragraph is fixed as before.
  */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { takeWhile } from "remeda";
 import {
@@ -468,11 +469,31 @@ function leadingZero(context: RuleContext) {
 
 const FIG_REF = /\b(Fig\.|Figure)(?=~?\\(?:ref|autoref)\b)/g;
 
+/** How many other files of a paper were parsed to read their figure-reference forms (a test reads it). */
+export const figureFormParses = { count: 0 };
+
+/**
+ * The forms of each text already read, by the sha256 of the text. `paperlint lint` runs this rule
+ * once per file of a paper, and each run counts the forms of every OTHER file: parsing them afresh
+ * each time was F×(F−1) parses for F files (measured: 23.7 s of 28 s on a paper of 25 files). Keyed
+ * by content, never by path, so an edit is read again and no count is ever stale.
+ */
+const formsByContent = new Map<string, readonly (string | undefined)[]>();
+
 /** The reference forms another file of the paper writes, read the way the linted file is. */
-const figureFormsIn = (raw: string): readonly (string | undefined)[] =>
-  markupMatchesIn(raw, texToMdast(raw).root.children, FIG_REF).map(
-    ([, form]) => form,
-  );
+const figureFormsIn = (raw: string): readonly (string | undefined)[] => {
+  const key = createHash("sha256").update(raw).digest("hex");
+  const known = formsByContent.get(key);
+  if (known !== undefined) return known;
+  figureFormParses.count += 1;
+  const forms = markupMatchesIn(
+    raw,
+    texToMdast(raw).root.children,
+    FIG_REF,
+  ).map(([, form]) => form);
+  formsByContent.set(key, forms);
+  return forms;
+};
 
 /**
  * The minority form is rewritten to the majority one; on a tie, to the full word. The majority is
