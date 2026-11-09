@@ -16,7 +16,6 @@ import {
   textOf,
   visited,
   type Macro,
-  type Node,
 } from "./nodes.ts";
 import type { ParsedTex } from "./parse.ts";
 import { bodyProse } from "./prose.ts";
@@ -39,11 +38,17 @@ const macrosByStart = (t: ParsedTex): ReadonlyMap<number, Macro> =>
       ),
   );
 
-/** What the walk keeps: the lists so far, and whether the last piece still lets the last list grow. */
+/** What the walk keeps: the lists closed so far, and the one still open (empty when none is). */
 interface Walk {
-  readonly lists: readonly (readonly Reference[])[];
-  readonly open: boolean;
+  readonly done: readonly (readonly Reference[])[];
+  readonly current: readonly Reference[];
 }
+
+/** The walk with its open list closed. */
+const closed = (w: Walk): Walk => ({
+  done: w.current.length > 0 ? [...w.done, w.current] : w.done,
+  current: [],
+});
 
 /** Whether a stretch of text only joins references: commas, spaces, "and", "or". */
 const joins = (text: string): boolean =>
@@ -69,22 +74,17 @@ function listsIn(
   passage: Passage,
   macros: ReadonlyMap<number, Macro>,
 ): readonly (readonly Reference[])[] {
-  return passage.pieces.reduce<Walk>(
+  const end = passage.pieces.reduce<Walk>(
     (w, p) => {
-      if (p.kind === "text")
-        return joins(p.segment.text) ? w : { ...w, open: false };
-      if (p.kind !== "owner") return { ...w, open: false };
-      const m = macros.get(p.span.start);
-      if (m === undefined) return { ...w, open: false };
-      const refs = referencesOf(m, p.span);
-      const grown =
-        w.open && w.lists.length > 0
-          ? [...w.lists.slice(0, -1), [...(w.lists.at(-1) ?? []), ...refs]]
-          : [...w.lists, refs];
-      return { lists: grown, open: true };
+      if (p.kind === "text") return joins(p.segment.text) ? w : closed(w);
+      const m = p.kind === "owner" ? macros.get(p.span.start) : undefined;
+      return p.kind === "owner" && m !== undefined
+        ? { ...w, current: [...w.current, ...referencesOf(m, p.span)] }
+        : closed(w);
     },
-    { lists: [], open: false },
-  ).lists;
+    { done: [], current: [] },
+  );
+  return closed(end).done;
 }
 
 /** Every reference list of the body's prose with at least two references, in document order. */

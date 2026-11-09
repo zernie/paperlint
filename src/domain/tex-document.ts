@@ -243,11 +243,12 @@ export type LabelAnchor =
 
 /**
  * One step of a counter, as the source shows it: where the heading, caption or other command that
- * steps it starts (its identity: two labels that take the same `at` print the same number) and what
- * it is, as a message names it (`\subsection «Check»`, `\caption`).
+ * steps it stands (its identity: two labels that take a step at the same place print the same
+ * number; a step the parser gave no position is the same as none) and what it is, as a message
+ * names it (`\subsection «Check»`, `\caption`).
  */
 export interface Stepped {
-  readonly at: number;
+  readonly at: Place;
   readonly what: string;
 }
 

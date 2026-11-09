@@ -1,12 +1,13 @@
 /**
- * The `\label`s of a source's running text, each with what it takes its number from — for the rule
- * that a label after a bold run-in heading prints the ENCLOSING section's number (#447).
+ * The `\label`s of a source's running text, each with what it takes its number from and the step
+ * of the counter it records — for the rule that one reference list must not print a number twice
+ * (#447), as it does when a label after a bold run-in heading takes the section's number.
  *
  * TeX's `\label` records the number of the last `\refstepcounter`. A numbered heading, a caption and
  * a numbered environment step one; a bold phrase that opens a paragraph (`\textbf{RQ2.}`) does not,
  * and neither does a starred heading or a heading deeper than the class numbers (`secnumdepth`). So
  * the walk goes through the body's top-level nodes in order and keeps, for the paragraph it is in,
- * the last thing a label would take its number from, and the last numbered heading.
+ * the last thing a label would take its number from, and the last step of a counter (its start).
  *
  * Only the running text is read: a label inside an environment (a float, a list, an equation) takes
  * that environment's number or its own, and is not listed. What counts as a run-in heading is the
@@ -116,15 +117,21 @@ interface Scan {
 const NONE: LabelAnchor = { kind: "none" };
 const NUMBERED: LabelAnchor = { kind: "numbered" };
 
-/** A step of a counter by `m`, named `what`; none for a node the parser gave no position. */
-const steppedBy = (m: Macro, what: string): Stepped | null =>
-  inPlace(placeOf(m), (span) => [{ at: span.start, what }]).at(0) ?? null;
+/** A step of a counter by `m`, named `what`, where the parser put it (or that it gave no position). */
+const steppedBy = (m: Macro, what: string): Stepped => ({
+  at: placeOf(m),
+  what,
+});
 
 /**
  * A `\label` as one of the running text's, with its anchor and the step it takes its number from:
  * the last one in TeX's order when something in its paragraph anchors it, unknown when nothing does.
  */
-const placed = (m: Macro, s: Scan, anchor: LabelAnchor): readonly PlacedLabel[] =>
+const placed = (
+  m: Macro,
+  s: Scan,
+  anchor: LabelAnchor,
+): readonly PlacedLabel[] =>
   inPlace(macroPlace(m), (span) => [
     {
       key: textOf(mandatory(m).at(0)?.content).trim(),

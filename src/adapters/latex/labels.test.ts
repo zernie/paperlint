@@ -1,7 +1,7 @@
 /**
  * The labels of a LaTeX source's running text (`labelsOf`) on real parses: what each takes its
- * number from in its paragraph, and the numbered heading it stands under. The cases are the ones
- * #447 measured: a label after a bold run-in heading prints the enclosing section's number.
+ * number from in its paragraph, and the step of the counter whose number it records. The cases are
+ * the ones #447 measured: a label after a bold run-in heading prints the enclosing section's number.
  */
 import { describe, expect, it } from "vitest";
 import type { PlacedLabel } from "../../domain/tex-document.ts";
@@ -21,7 +21,13 @@ const spanOf = (src: string, needle: string) => {
 
 /** The step a heading takes: where the command starts, and what a message calls it. */
 const step = (src: string, needle: string, what: string) => ({
-  at: src.indexOf(needle),
+  at: {
+    kind: "at",
+    span: {
+      start: src.indexOf(needle),
+      end: src.indexOf(needle) + needle.indexOf("{"),
+    },
+  },
   what,
 });
 

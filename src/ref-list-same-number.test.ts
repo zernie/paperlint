@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { sourcesCodec } from "./adapters/sources-record/index.ts";
+import type { PlacedLabel, RefList } from "./domain/tex-document.ts";
 import { refListSameNumberRule, sameNumbers } from "./ref-list-same-number.ts";
 import { builtPaper } from "../test/recorded-fixture.ts";
 
@@ -78,7 +79,9 @@ describe("sameNumbers", () => {
       ],
     ]);
   });
+});
 
+describe("sameNumbers: what is not a list or not known", () => {
   it("a key repeated in a list is not two labels; a run-in cited alone prints one number", () => {
     // Guards: the same key twice (even with another between) and a lone reference are quiet.
     expect([
@@ -155,6 +158,25 @@ function run(
   return reports;
 }
 
+describe("sameNumbers: a step the parser gave no place", () => {
+  it("is not the same as another: two labels on unplaced steps are never reported", () => {
+    const label = (key: string): PlacedLabel => ({
+      key,
+      span: { start: 0, end: 1 },
+      anchor: { kind: "numbered" },
+      takes: { at: { kind: "unplaced" }, what: "\\section" },
+    });
+    const ref = (key: string) => ({
+      macro: "ref",
+      key,
+      span: { start: 0, end: 1 },
+    });
+    const lists: readonly RefList[] = [[ref("a"), ref("b")]];
+    // Guards: the same two labels on one PLACED step are reported, so the quiet is the unplaced.
+    expect(sameNumbers(lists, [label("a"), label("b")])).toEqual([]);
+  });
+});
+
 const LIST = "\n\nSee~\\ref{sec:check} and~\\ref{sec:rq2}.";
 
 describe("the rule, as ESLint runs it", () => {
@@ -183,7 +205,9 @@ describe("the rule, as ESLint runs it", () => {
   });
 
   it("a finding in an included file is reported at its \\input, naming the file, line and column", () => {
-    const main = doc("\\subsection{Check}\\label{sec:check}\n\\input{sections/rq}");
+    const main = doc(
+      "\\subsection{Check}\\label{sec:check}\n\\input{sections/rq}",
+    );
     const files = builtPaper(
       "/p",
       {

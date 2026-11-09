@@ -32,17 +32,28 @@ const MESSAGES = {
     "{{first}} and {{second}} print the same number: both labels take the number of {{what}}",
 };
 
-/** The step each key's label takes its number from; a key defined twice, or anchored nowhere, has none. */
-const stepsByKey = (
+/** A label that stands in a paragraph that anchors it, with the step whose number it records. */
+interface Known {
+  readonly label: PlacedLabel;
+  readonly step: Stepped;
+}
+
+/** The labels whose step is known, by key; a key defined twice has none. */
+const knownByKey = (
   labels: readonly PlacedLabel[],
-): ReadonlyMap<string, PlacedLabel> =>
+): ReadonlyMap<string, Known> =>
   new Map(
-    labels.flatMap((l) =>
-      l.takes !== null && labels.filter((o) => o.key === l.key).length === 1
-        ? [[l.key, l] as const]
+    labels.flatMap((label) =>
+      label.takes !== null &&
+      labels.filter((o) => o.key === label.key).length === 1
+        ? [[label.key, { label, step: label.takes }] as const]
         : [],
     ),
   );
+
+/** Where a step stands, as a number two labels can share; unknown when the parser gave no place. */
+const identity = (k: Known): number | null =>
+  k.step.at.kind === "at" ? k.step.at.span.start : null;
 
 /** A reference as it is written: `\ref{sec:check}`. */
 const written = (r: Reference): string => `\\${r.macro}{${r.key}}`;
@@ -51,13 +62,12 @@ const written = (r: Reference): string => `\\${r.macro}{${r.key}}`;
 function finding(
   r: Reference,
   earlier: Reference,
-  mine: PlacedLabel,
-  theirs: PlacedLabel,
+  labels: readonly [PlacedLabel, PlacedLabel],
   step: Stepped,
 ): Located {
   const first = written(earlier);
   const second = written(r);
-  const runIn = [mine, theirs].find((l) => l.anchor.kind === "run-in");
+  const runIn = labels.find((l) => l.anchor.kind === "run-in");
   return runIn?.anchor.kind === "run-in"
     ? {
         messageId: "runIn",
@@ -85,19 +95,23 @@ export const sameNumbers = (
   lists: readonly RefList[],
   labels: readonly PlacedLabel[],
 ): readonly Located[] => {
-  const known = stepsByKey(labels);
+  const known = knownByKey(labels);
   return lists.flatMap((list) =>
     list.flatMap((r, i) => {
       const mine = known.get(r.key);
+      const id = mine === undefined ? null : identity(mine);
       const before = list.slice(0, i);
-      if (mine?.takes == null || before.some((b) => b.key === r.key)) return [];
-      const clash = before.find(
-        (b) => known.get(b.key)?.takes?.at === mine.takes?.at,
-      );
-      const theirs = clash === undefined ? undefined : known.get(clash.key);
-      return clash === undefined || theirs === undefined
+      if (mine === undefined || id === null) return [];
+      if (before.some((b) => b.key === r.key)) return [];
+      const [hit] = before.flatMap((b) => {
+        const theirs = known.get(b.key);
+        return theirs !== undefined && identity(theirs) === id
+          ? [{ earlier: b, theirs }]
+          : [];
+      });
+      return hit === undefined
         ? []
-        : [finding(r, clash, mine, theirs, mine.takes)];
+        : [finding(r, hit.earlier, [mine.label, hit.theirs.label], mine.step)];
     }),
   );
 };

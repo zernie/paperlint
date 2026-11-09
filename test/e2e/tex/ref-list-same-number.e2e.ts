@@ -43,7 +43,9 @@ export function printed(aux: string): ReadonlyMap<string, string> {
       .split("\n")
       .filter((l) => l.startsWith("\\newlabel{") && !l.includes("@"))
       .map((l) => {
-        const [key = "", rest = ""] = l.slice("\\newlabel{".length).split("}{{");
+        const [key = "", rest = ""] = l
+          .slice("\\newlabel{".length)
+          .split("}{{");
         return [key, rest.split("}{")[0] ?? ""] as const;
       }),
   );
@@ -53,10 +55,7 @@ export function printed(aux: string): ReadonlyMap<string, string> {
  * The lines on which a reference list prints a number an earlier reference of the list, with
  * another key, already printed — what the rule claims, decided by the `.aux`.
  */
-export function auxHits(
-  src: string,
-  aux: string,
-): readonly number[] {
+export function auxHits(src: string, aux: string): readonly number[] {
   const numbers = printed(aux);
   const lineOf = (at: number): number => src.slice(0, at).split("\n").length;
   return latexReader.refLists(src).flatMap((list) =>
@@ -122,7 +121,10 @@ describe.skipIf(skip)("tex/ref-list-same-number against the .aux", () => {
   it("the findings are exactly the lines of the lists the .aux shows printing one number twice", () => {
     expect(built.status, built.out).toBe(0);
     const src = readFileSync(join(paper, "paper.tex"), "utf8");
-    const expected = auxHits(src, readFileSync(join(paper, "paper.aux"), "utf8"));
+    const expected = auxHits(
+      src,
+      readFileSync(join(paper, "paper.aux"), "utf8"),
+    );
     const r = spawnSync(
       process.execPath,
       [CLI, "lint", "papers/fake", "--json"],
