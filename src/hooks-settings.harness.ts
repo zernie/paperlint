@@ -315,7 +315,7 @@ try {
   // ── doctor's section ───────────────────────────────────────────────────────────────────
   const doc = (settings?: Settings | string) => {
     const dir = project(`doc-${String(check.count)}`, settings);
-    return doctorHooks(dir, wiring).join("\n");
+    return doctorHooks(dir, wiring).lines.join("\n");
   };
   const wiredOnce = merge({}, wiring.compiled, MANAGED_BY);
   check(
@@ -361,7 +361,7 @@ try {
   check(
     "an unparsable file is named in doctor, not crashed on",
     /does not parse/.test(
-      doctorHooks(project("doc-broken", "{"), wiring).join("\n"),
+      doctorHooks(project("doc-broken", "{"), wiring).lines.join("\n"),
     ),
   );
   check(
