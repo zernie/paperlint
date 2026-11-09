@@ -183,7 +183,7 @@ function headingStep(
 ): Scan {
   const numbered =
     !isStarred(m) && (s.numberedTo === null || depth <= s.numberedTo);
-  return numbered
+  const next: Scan = numbered
     ? {
         ...s,
         opening: true,
@@ -191,6 +191,9 @@ function headingStep(
         stepped: steppedBy(m, `\\${level} «${shown(m)}»`),
       }
     : { ...s, opening: true, anchor: { kind: "run-in", title: shown(m) } };
+  // A label in the title (`\section{A\label{a}}`) takes the step the heading itself makes.
+  const inside = labelsInside(m).flatMap((l) => placed(l, next, next.anchor));
+  return { ...next, labels: [...s.labels, ...inside] };
 }
 
 /** A macro's step: a label is placed, a heading anchors, a command that steps a counter numbers. */

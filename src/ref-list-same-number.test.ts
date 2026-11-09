@@ -91,6 +91,26 @@ describe("sameNumbers", () => {
   });
 });
 
+describe("sameNumbers: a label inside a heading's title", () => {
+  it("\\section{A\\label{a}} takes the section's number: a run-in after it prints it twice", () => {
+    const hits = found(
+      "\\section{A\\label{a}}\n\\textbf{RQ.}\\label{b} We did.\n\nSee \\ref{a}, \\ref{b}.",
+    );
+    expect(hits.map(([, f]) => [f.messageId, f.data])).toEqual([
+      [
+        "runIn",
+        {
+          first: "\\ref{a}",
+          second: "\\ref{b}",
+          key: "b",
+          title: "RQ.",
+          what: "\\section «A»",
+        },
+      ],
+    ]);
+  });
+});
+
 describe("sameNumbers: what a later or other command changes", () => {
   it("a \\setcounter{secnumdepth} later in the body does not reach the headings before it", () => {
     // Guards: the depth in force at each heading is the last change before it, in document order.
