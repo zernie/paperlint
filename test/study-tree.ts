@@ -83,7 +83,7 @@ export const fakeGit = (
   order: OrderFacts = { kind: "unknown", why: "no history in this test" },
 ): GitHistory & GitOrder => ({
   committed: (_paper, file) => table[file] ?? { kind: "not-committed" },
-  order: () => order,
+  paper: () => ({ order: () => order }),
   fileAt: () => ({ kind: "unknown", why: "no history in this test" }),
 });
 

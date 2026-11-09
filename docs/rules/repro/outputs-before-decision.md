@@ -71,6 +71,25 @@ run puts them in one commit, and that order is gone from the squashed history; m
 with a merge commit instead. History is read whole (`--full-history`): a merge whose first parent is
 already identical to it (a squash of the branch it merges back) does not hide that branch's commits.
 
+## Cost
+
+The rule asks git once per paper, not once per study: five git processes whatever the number of
+studies (`src/adapters/git/index.ts` says which, and why the findings are unchanged). It asked per
+study before, and every `--full-history` call with a path walks the whole history of the repository.
+
+| what                                                                               | before               | after            |
+| ---------------------------------------------------------------------------------- | -------------------- | ---------------- |
+| a real paper with about 115 studies, `paperlint lint`, the author's measurement    | 70 s, this rule 50 s | not re-measured  |
+| a synthetic repository, 100 studies, 295 commits: this rule, `TIMING=10`, two runs | 13.2 s, 13.7 s       | 0.42 s, 0.44 s   |
+| the same: git processes                                                            | 820                  | 5                |
+| the first-commit log of a shallow clone (149 commits, ~500k paths), three runs     | 1.1 s to 1.2 s       | 0.56 s to 0.63 s |
+
+The last row is `--no-renames`: a path's first commit lists its new name whether or not renames are
+detected, so the first commit does not depend on them, and detecting them cost half the time (and
+printed "exhaustive rename detection was skipped" on a large tree). The findings of the synthetic
+repository, and of 500 random study histories with merges and deletions, were identical before and
+after.
+
 ## Examples
 
 Failing:

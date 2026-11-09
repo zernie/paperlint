@@ -4,12 +4,44 @@
  *
  *   committed   the last commit that touched a file (`git log -1`), and whether the file changed since
  *               (`git status --porcelain`)
- *   order       whether the clone is shallow; the decision file's first commit; every file's first
- *               commit under the study's folder (`git log --reverse --name-only`); and for each, whether
- *               any commit that touched the decision is its strict ancestor (`git rev-list -- <decision>`)
+ *   paper       the order facts of ALL of a paper's decide-first studies, from five git processes
+ *               whatever their number (below)
  *   fileAt      a file under the study's folder as it stood at a commit (`git ls-tree`, then `git show`)
+ *
+ * ── ONE QUERY PER PAPER, NOT PER STUDY ─────────────────────────────────────────
+ * `repro/outputs-before-decision` used to ask git, per study: whether the clone is shallow, the
+ * decision's `git log --full-history`, HEAD's tree, the study folder's `git log --name-only`, and one
+ * `git rev-list --full-history <commit> -- <decision>` per distinct output commit. Every
+ * `--full-history` call with a path walks the whole history of the repository. On a real paper with
+ * about 115 studies that was ~110 walks and 50 s of a 70 s lint (89%); a spawn costs ~5 ms, the walks
+ * are the cost. Now, per paper:
+ *
+ *   1. `rev-parse --is-shallow-repository --show-prefix`   shallow (then nothing is read) and where the paper sits
+ *   2. `log --reverse --full-history -m --name-only`       over the decision files: every commit that touched each
+ *   3. `ls-tree HEAD`                                       over the decision files: which are still in HEAD
+ *   4. `log --reverse --full-history --name-only`          over `<paper>/repro`: the first commit of every path
+ *   5. `log --full-history --parents`                       over both: the graph, whose ancestry `ancestry.ts` reads
+ *
+ * and each study's facts are read from those tables in memory.
+ *
+ * The invariant that keeps the findings identical to the per-study queries:
+ *   - a path's first commit is the first commit that lists it, oldest first; a study's files are the
+ *     paths under its folder, in the order the folder's own log listed them;
+ *   - a decision's commits are those `git rev-list --full-history -- <decision>` names, which includes
+ *     a merge that differs from any one parent — `-m --no-renames` lists exactly those, a plain
+ *     `--name-only` prints nothing for a merge;
+ *   - "after" means ANY commit that touched the decision is a strict ancestor of the output's first
+ *     commit (a squash can copy the decision onto another line of history), the same when the output's
+ *     first commit is one of them, and ancestry is the question `rev-list` answered, read from the
+ *     parents-rewritten graph of the listed commits;
+ *   - a commit git did not list where the tables need it is "unknown", never "not after".
+ * Renames are not detected (`--no-renames`): a path's first commit lists its new name either way, so
+ * the first commit does not depend on them, and the detection costs a walk of its own.
  */
+import { relative } from "node:path";
+import { filter, groupBy, map, pipe, uniqueBy } from "remeda";
 import type { AbsolutePath } from "../../domain/paths.ts";
+import { REPRO_DIR } from "../../domain/repro-layout.ts";
 import type {
   CommitAt,
   Committed,
@@ -19,7 +51,9 @@ import type {
   GitOrder,
   Order,
   OrderFacts,
+  PaperOrder,
 } from "../../ports/git-history.ts";
+import { ancestryOf, orderAmong, type Ancestry } from "./ancestry.ts";
 import type { ProcessExit, RunProcess } from "../../ports/process.ts";
 
 const TIMEOUT_MS = 60_000;
@@ -72,22 +106,45 @@ const commitAt = (line: string): CommitAt => {
 const nth = (parts: readonly string[], i: number): string =>
   parts.slice(i, i + 1).join("");
 
+/** Every (path, commit) pair of `git log --format=%x01%H%x09%cI --name-only` output, in the log's order. */
+const listedPaths = (log: string): readonly (readonly [string, CommitAt])[] =>
+  log
+    .split("\x01")
+    .slice(1)
+    .flatMap((block) => {
+      const lines = block.split("\n");
+      const at = commitAt(nth(lines, 0));
+      return lines
+        .slice(1)
+        .filter((n) => n !== "")
+        .map((n) => [n, at] as const);
+    });
+
 /**
  * The first commit of each path in `git log --reverse --format=%x01%H%x09%cI --name-only` output:
  * a line starting with \x01 opens a commit, the lines after it name its files.
  */
 export const firstCommitsOf = (log: string): ReadonlyMap<string, CommitAt> =>
-  log
-    .split("\x01")
-    .slice(1)
-    .reduce((seen, block) => {
-      const lines = block.split("\n");
-      const at = commitAt(nth(lines, 0));
-      const names = lines.slice(1);
-      return names
-        .filter((n) => n !== "" && !seen.has(n))
-        .reduce((m, n) => new Map([...m, [n, at]]), seen);
-    }, new Map<string, CommitAt>());
+  new Map(uniqueBy(listedPaths(log), ([name]) => name));
+
+/**
+ * Every commit that lists each path, in the log's order, a commit once: `-m` prints a merge once per
+ * parent it differs from.
+ */
+export const touchingOf = (
+  log: string,
+): ReadonlyMap<string, readonly CommitAt[]> =>
+  new Map(
+    Object.entries(groupBy(listedPaths(log), ([name]) => name)).map(
+      ([name, pairs]) => [
+        name,
+        uniqueBy(
+          pairs.map(([, at]) => at),
+          (at) => at.commit,
+        ),
+      ],
+    ),
+  );
 
 /** The committed state of files. */
 export function gitHistory(
@@ -111,7 +168,7 @@ export function gitHistory(
         ? { kind: "committed", commit, date }
         : { kind: "changed", commit };
     },
-    order: (studyDir, decision) => orderIn(git, studyDir, decision),
+    paper: (paper, decisions) => paperOrder(git, paper, decisions),
     fileAt: (studyDir, commit, path) => fileAtIn(git, studyDir, commit, path),
   };
 }
@@ -144,133 +201,200 @@ const inHead = (
   return "why" in t ? t : { present: t.out.trim() !== "" };
 };
 
-/**
- * Every ancestor, not git's simplified history: a merge whose first parent already holds the same tree
- * (a squash of the branch it merges) would otherwise hide that branch, and with it the commits that
- * show the decision came first.
- */
-const WHOLE_HISTORY = ["--full-history"] as const;
-
-/** Every path ever under the study's folder, oldest commit first, each commit's paths after its sha and date. */
-const FIRST_COMMITS = [
-  "log",
-  "--reverse",
-  ...WHOLE_HISTORY,
-  "--format=%x01%H%x09%cI",
-  "--name-only",
-  "--relative",
-  "--",
-  ".",
-] as const;
-
-/** The decision's first commit (null: never committed), and whether HEAD's tree still holds it. */
-const decisionIn = (
-  git: Git,
-  studyDir: AbsolutePath,
-  decision: AbsolutePath,
-):
-  | { readonly at: CommitAt | null; readonly deleted: boolean }
-  | { readonly why: string } => {
-  const d = git(studyDir, [
-    "log",
-    ...WHOLE_HISTORY,
-    "--format=%H%x09%cI",
-    "--",
-    decision,
-  ]);
-  if ("why" in d) return d;
-  const lines = d.out.trim().split("\n");
-  const first = commitAt(nth(lines, lines.length - 1));
-  if (first.commit === "") return { at: null, deleted: false };
-  const head = inHead(git, studyDir, decision);
-  return "why" in head ? head : { at: first, deleted: !head.present };
+/** No decision was asked about: nothing is read, and nothing is claimed of any study. */
+const NOTHING_ASKED: OrderFacts = {
+  kind: "read",
+  decision: null,
+  decisionDeleted: false,
+  files: [],
 };
 
-/** The order facts of the study in `studyDir`, decided by `decision`. */
-function orderIn(
+/** What git said of the paper, once: its tables, or why there are none. */
+type Asked =
+  | { readonly kind: "unknown"; readonly why: string }
+  | { readonly kind: "shallow" }
+  | {
+      readonly kind: "tables";
+      /** Where the paper's folder sits in the repository, "" at its top, else ending in `/`. */
+      readonly prefix: string;
+      /** The commits that touched each decision, oldest first, by path from the repository's top. */
+      readonly touching: ReadonlyMap<string, readonly CommitAt[]>;
+      /** The decisions HEAD's tree still holds, by path from the repository's top. */
+      readonly inHead: ReadonlySet<string>;
+      /** The first commit of every path under `<paper>/repro`, by path from the paper. */
+      readonly firsts: ReadonlyMap<string, CommitAt>;
+      readonly ancestry: Ancestry;
+    };
+
+const COMMIT = "--format=%x01%H%x09%cI";
+
+/** Whole history, not git's simplified one: a squash of the branch it merges would hide that branch. */
+const WHOLE = ["--full-history", "--no-renames"] as const;
+
+/** `path` from the paper as a path from the repository's top, `/`-separated. */
+const fromTop = (prefix: string, paper: AbsolutePath, path: string): string =>
+  `${prefix}${relative(paper, path).split("\\").join("/")}`;
+
+/** What the decision files' own history asks: every commit that touched them, and whether HEAD holds them. */
+const decisionLogs = (decisions: readonly AbsolutePath[]) =>
+  [
+    [
+      "log",
+      "--reverse",
+      ...WHOLE,
+      "-m",
+      COMMIT,
+      "--name-only",
+      "--",
+      ...decisions,
+    ],
+    ["ls-tree", "--full-name", "--name-only", "HEAD", "--", ...decisions],
+  ] as const;
+
+/** What `<paper>/repro` asks: the first commit of every path, and the graph the ancestry is read from. */
+const reproLogs = (repro: string, decisions: readonly AbsolutePath[]) =>
+  [
+    [
+      "log",
+      "--reverse",
+      ...WHOLE,
+      COMMIT,
+      "--name-only",
+      "--relative",
+      "--",
+      repro,
+    ],
+    [
+      "log",
+      ...WHOLE,
+      "--topo-order",
+      "--reverse",
+      "--parents",
+      "--format=%H %P",
+      "--",
+      repro,
+      ...decisions,
+    ],
+  ] as const;
+
+/** The four logs of the paper, as git arguments: steps 2 to 5 of the header. */
+const logsOf = (paper: AbsolutePath, decisions: readonly AbsolutePath[]) => [
+  ...decisionLogs(decisions),
+  ...reproLogs(`${paper}/${REPRO_DIR}`, decisions),
+];
+
+/** The paper's history, in the five git processes the header names; the first that fails is the reason. */
+const askPaper = (
   git: Git,
+  paper: AbsolutePath,
+  decisions: readonly AbsolutePath[],
+): Asked => {
+  const where = git(paper, [
+    "rev-parse",
+    "--is-shallow-repository",
+    "--show-prefix",
+  ]);
+  if ("why" in where) return { kind: "unknown", why: where.why };
+  const [shallow = "", prefix = ""] = where.out.split("\n");
+  if (shallow.trim() === "true") return { kind: "shallow" };
+  const answers = logsOf(paper, decisions).map((args) => git(paper, args));
+  const failed = answers.flatMap((a) => ("why" in a ? [a.why] : [])).at(0);
+  const text = answers.map((a) => ("out" in a ? a.out : ""));
+  return failed !== undefined
+    ? { kind: "unknown", why: failed }
+    : {
+        kind: "tables",
+        prefix,
+        touching: touchingOf(nth(text, 0)),
+        inHead: new Set(nth(text, 1).split("\n")),
+        firsts: firstCommitsOf(nth(text, 2)),
+        ancestry: ancestryOf(nth(text, 3)),
+      };
+};
+
+/** The order facts of the studies of `paper`, from one asking of git. */
+const paperOrder = (
+  git: Git,
+  paper: AbsolutePath,
+  decisions: readonly AbsolutePath[],
+): PaperOrder => {
+  if (decisions.length === 0) return { order: () => NOTHING_ASKED };
+  const asked = askPaper(git, paper, decisions);
+  return {
+    order: (studyDir, decision) =>
+      asked.kind === "tables"
+        ? orderIn(asked, paper, studyDir, decision)
+        : asked,
+  };
+};
+
+/** The tables' answer for the study in `studyDir`, decided by `decision`. */
+const orderIn = (
+  t: Extract<Asked, { readonly kind: "tables" }>,
+  paper: AbsolutePath,
   studyDir: AbsolutePath,
   decision: AbsolutePath,
-): OrderFacts {
-  const shallow = git(studyDir, ["rev-parse", "--is-shallow-repository"]);
-  if ("why" in shallow) return { kind: "unknown", why: shallow.why };
-  if (shallow.out.trim() === "true") return { kind: "shallow" };
-  const d = decisionIn(git, studyDir, decision);
-  if ("why" in d) return { kind: "unknown", why: d.why };
-  const files = git(studyDir, FIRST_COMMITS);
-  if ("why" in files) return { kind: "unknown", why: files.why };
+): OrderFacts => {
+  const key = fromTop(t.prefix, paper, decision);
+  const touching = t.touching.get(key) ?? [];
+  const first = touching.slice(0, 1).at(0) ?? null;
+  const folder = `${relative(paper, studyDir).split("\\").join("/")}/`;
+  const mine = pipe(
+    [...t.firsts],
+    filter(([name]) => name.startsWith(folder)),
+    map(([name, at]) => [name.slice(folder.length), at] as const),
+  );
   const ordered = ordersOf(
-    git,
-    studyDir,
-    { at: d.at, path: decision },
-    firstCommitsOf(files.out),
+    t.ancestry,
+    { at: first, touching: touching.map((c) => c.commit) },
+    new Map(mine),
   );
   return "why" in ordered
     ? { kind: "unknown", why: ordered.why }
     : {
         kind: "read",
-        decision: d.at,
-        decisionDeleted: d.deleted,
+        decision: first,
+        decisionDeleted: first !== null && !t.inHead.has(key),
         files: ordered.files,
       };
-}
-
-/** git's answer for one commit: its order, or why git could not say. */
-type Answer =
-  | { readonly commit: string; readonly order: Order }
-  | { readonly commit: string; readonly why: string };
-const isFailed = (
-  a: Answer,
-): a is { readonly commit: string; readonly why: string } => "why" in a;
-const isOrdered = (
-  a: Answer,
-): a is { readonly commit: string; readonly order: Order } => "order" in a;
-
-/**
- * The order of `commit` against the decision: after when any commit that touched the decision is its
- * strict ancestor — not only the decision's first commit, which a squash can copy onto another line
- * of history — the same when `commit` itself first carries it, not after otherwise.
- */
-const answerFor = (
-  git: Git,
-  cwd: AbsolutePath,
-  decision: { readonly at: CommitAt | null; readonly path: AbsolutePath },
-  commit: string,
-): Answer => {
-  if (decision.at === null) return { commit, order: "not-after" };
-  if (commit === decision.at.commit) return { commit, order: "same" };
-  const r = git(cwd, [
-    "rev-list",
-    ...WHOLE_HISTORY,
-    commit,
-    "--",
-    decision.path,
-  ]);
-  if ("why" in r) return { commit, why: r.why };
-  const touched = r.out.split("\n").filter((sha) => sha !== "");
-  if (touched.some((sha) => sha !== commit)) return { commit, order: "after" };
-  return { commit, order: touched.length > 0 ? "same" : "not-after" };
 };
 
-/** Each file's first commit with its order against `decision`'s; git asked once per distinct commit. */
-function ordersOf(
-  git: Git,
-  cwd: AbsolutePath,
-  decision: { readonly at: CommitAt | null; readonly path: AbsolutePath },
+/** The order of `commit` against the decision: not after anything when it was never committed. */
+const orderOf = (
+  a: Ancestry,
+  decision: {
+    readonly at: CommitAt | null;
+    readonly touching: readonly string[];
+  },
+  commit: string,
+): Order | undefined => {
+  if (decision.at === null) return "not-after";
+  // The decision's own first commit is the same one whatever else touched it.
+  if (commit === decision.at.commit) return "same";
+  return orderAmong(a, commit, decision.touching);
+};
+
+/** Each file's first commit with its order against the decision's; the commits in the order they first appear. */
+const ordersOf = (
+  a: Ancestry,
+  decision: {
+    readonly at: CommitAt | null;
+    readonly touching: readonly string[];
+  },
   firsts: ReadonlyMap<string, CommitAt>,
-): { readonly files: readonly FirstCommit[] } | { readonly why: string } {
-  const answers = [...new Set([...firsts.values()].map((c) => c.commit))].map(
-    (c) => answerFor(git, cwd, decision, c),
-  );
-  const failed = answers.find(isFailed);
-  if (failed !== undefined) return { why: failed.why };
+): { readonly files: readonly FirstCommit[] } | { readonly why: string } => {
+  const commits = [...new Set([...firsts.values()].map((c) => c.commit))];
+  const orders = commits.flatMap((c) => {
+    const order = orderOf(a, decision, c);
+    return order === undefined ? [] : [[c, order] as const];
+  });
+  if (orders.length !== commits.length)
+    return { why: "git did not list a commit of this paper's history" };
   return {
-    files: answers
-      .filter(isOrdered)
-      .flatMap(({ commit, order }) =>
-        [...firsts]
-          .filter(([, c]) => c.commit === commit)
-          .map(([path, c]) => ({ path, ...c, order })),
-      ),
+    files: orders.flatMap(([commit, order]) =>
+      [...firsts]
+        .filter(([, c]) => c.commit === commit)
+        .map(([path, c]) => ({ path, ...c, order })),
+    ),
   };
-}
+};

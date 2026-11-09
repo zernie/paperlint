@@ -41,12 +41,25 @@ export type FileAt =
   | { readonly kind: "absent" }
   | { readonly kind: "unknown"; readonly why: string };
 
-export interface GitOrder {
+/** The order facts of one paper's studies, asked of git once for all of them. */
+export interface PaperOrder {
   /** The order of `decision`'s first commit against every file's under `studyDir` (a folder that exists). */
   readonly order: (
     studyDir: AbsolutePath,
     decision: AbsolutePath,
   ) => OrderFacts;
+}
+
+export interface GitOrder {
+  /**
+   * The history of the paper `paper` (a folder that exists) for the studies whose decision files are
+   * `decisions`: git is asked once per paper (a handful of processes, however many studies), never
+   * once per study. `order` answers only for a decision named here.
+   */
+  readonly paper: (
+    paper: AbsolutePath,
+    decisions: readonly AbsolutePath[],
+  ) => PaperOrder;
   /** `path` (relative to `studyDir`) as it stood at `commit`: what a plan's gates were at the first output. */
   readonly fileAt: (
     studyDir: AbsolutePath,

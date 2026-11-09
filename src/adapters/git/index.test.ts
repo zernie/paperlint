@@ -7,7 +7,7 @@ import { expect, it } from "vitest";
 import { exitedWith, scriptedProcess } from "../memory/index.ts";
 import { absolutePath } from "../../domain/paths.ts";
 import type { Command, ProcessExit } from "../../ports/process.ts";
-import { firstCommitsOf, gitHistory } from "./index.ts";
+import { firstCommitsOf, gitHistory, touchingOf } from "./index.ts";
 
 const PAPER = absolutePath("/repo/papers/p");
 const FILE = absolutePath("/repo/papers/p/repro/S/decision.md");
@@ -117,57 +117,103 @@ it("committed: changed since its commit, never committed, or git unable to say a
   ]);
 });
 
-it("every way git can fail is a reason, never an answer", () => {
-  const ask = (x: ProcessExit) =>
-    over({ "rev-parse": x }).git.order(STUDY, FILE);
-  // Guards: no git, no repository, a hang, a kill — each named, none read as "no commits".
-  expect([
-    ask(exitedWith("", 128)),
-    ask({
-      kind: "exited",
-      status: 128,
-      stdout: "",
-      stderr: "fatal: not a git repository\n",
-    }),
-    ask({ kind: "timed-out", afterMs: 1, stdout: "", stderr: "" }),
-    ask({ kind: "signalled", signal: "SIGTERM", stdout: "", stderr: "" }),
-  ]).toEqual([
-    { kind: "unknown", why: "git exited 128" },
-    { kind: "unknown", why: "fatal: not a git repository" },
-    { kind: "unknown", why: "git did not finish (timed-out)" },
-    { kind: "unknown", why: "git did not finish (signalled)" },
+/** The paper's tables as the five git processes print them, each replaceable by a test. */
+const PAPER_KEY = "papers/p/repro/S/decision.md";
+const TABLES: Readonly<Record<string, ProcessExit>> = {
+  where: exitedWith("false\npapers/p/\n"),
+  // The decision: first in D, copied by a squash onto another line of history in C.
+  touched: exitedWith(
+    `\x01${D}\t${DATE}\n${PAPER_KEY}\n\x01${C}\t${DATE}\n${PAPER_KEY}\n\x01${C}\t${DATE}\n${PAPER_KEY}\n`,
+  ),
+  head: exitedWith(`${PAPER_KEY}\n`),
+  files: exitedWith(
+    `\x01${D}\t${DATE}\nrepro/S/x.csv\nrepro/T/other.csv\n\x01${A}\t${DATE}\nrepro/S/a.csv\nrepro/S/x.csv\n\x01${B}\t${DATE}\nrepro/S/b.csv\n\x01${C}\t${DATE}\nrepro/S/c.csv\n`,
+  ),
+  // B and C are roots, A descends from D.
+  graph: exitedWith(`${B} \n${D} \n${A} ${D}\n${C} \n`),
+};
+
+/** The ports over git printing `tables` (by what each process is: its subcommand and flags). */
+const paperOver = (tables: Readonly<Record<string, ProcessExit>>) => {
+  const all = { ...TABLES, ...tables };
+  const run = scriptedProcess((c: Command) => {
+    const sub = String(c.args[2]);
+    if (sub === "rev-parse") return all["where"] ?? exitedWith("");
+    if (sub === "ls-tree") return all["head"] ?? exitedWith("");
+    if (c.args.includes("--parents")) return all["graph"] ?? exitedWith("");
+    return (
+      (c.args.includes("-m") ? all["touched"] : all["files"]) ?? exitedWith("")
+    );
+  });
+  return { git: gitHistory(run, {}), calls: run.calls };
+};
+
+it("paper: five git processes, whatever the number of studies, each from the paper's folder", () => {
+  const { git, calls } = paperOver({});
+  const other = absolutePath("/repo/papers/p/repro/T/decision.md");
+  const p = git.paper(PAPER, [FILE, other]);
+  p.order(STUDY, FILE);
+  p.order(absolutePath("/repo/papers/p/repro/T"), other);
+  // Guards: asking per study again costs no process, and every process is a single question.
+  expect(calls.map((c) => [c.cwd, ...c.args.slice(2)])).toEqual([
+    [PAPER, "rev-parse", "--is-shallow-repository", "--show-prefix"],
+    [
+      PAPER,
+      "log",
+      "--reverse",
+      "--full-history",
+      "--no-renames",
+      "-m",
+      "--format=%x01%H%x09%cI",
+      "--name-only",
+      "--",
+      FILE,
+      other,
+    ],
+    [PAPER, "ls-tree", "--full-name", "--name-only", "HEAD", "--", FILE, other],
+    [
+      PAPER,
+      "log",
+      "--reverse",
+      "--full-history",
+      "--no-renames",
+      "--format=%x01%H%x09%cI",
+      "--name-only",
+      "--relative",
+      "--",
+      "/repo/papers/p/repro",
+    ],
+    [
+      PAPER,
+      "log",
+      "--full-history",
+      "--no-renames",
+      "--topo-order",
+      "--reverse",
+      "--parents",
+      "--format=%H %P",
+      "--",
+      "/repo/papers/p/repro",
+      FILE,
+      other,
+    ],
   ]);
 });
 
-it("order: a shallow clone is said, not judged", () => {
-  // Guards: in a shallow clone every file starts at the clone — no order can be read.
-  expect(
-    over({ "rev-parse": exitedWith("true\n") }).git.order(STUDY, FILE),
-  ).toEqual({ kind: "shallow" });
+it("paper: no decision asked, no process and no claim", () => {
+  const { git, calls } = paperOver({});
+  // Guards: a paper with no decide-first study costs git nothing.
+  expect([git.paper(PAPER, []).order(STUDY, FILE), calls]).toEqual([
+    { kind: "read", decision: null, decisionDeleted: false, files: [] },
+    [],
+  ]);
 });
 
-it("order: each file's first commit against the decision's — after, the same, not after", () => {
-  const log = `\x01${D}\t${DATE}\nx.csv\n\x01${A}\t${DATE}\na.csv\nx.csv\n\x01${B}\t${DATE}\nb.csv\n\x01${C}\t${DATE}\nc.csv\n`;
-  // The commits that touched the decision and are reachable from each one, as `rev-list` names them.
-  const touching: Readonly<Record<string, string>> = {
-    [A]: `${D}\n`,
-    [B]: "",
-    [C]: `${C}\n`,
-  };
-  // Guards: the decision's own commit is `same`, and so is another that first carries it (a squash);
-  // a commit with a decision commit among its strict ancestors is `after`; the rest are `not-after`.
-  const result = gitHistory(
-    scriptedProcess((c) => {
-      const sub = String(c.args[2]);
-      if (sub === "rev-parse") return exitedWith("false\n");
-      if (sub === "ls-tree") return IN_HEAD;
-      if (sub === "log" && c.args.includes("--reverse")) return exitedWith(log);
-      if (sub === "log") return exitedWith(`${A}\t${DATE}\n${D}\t${DATE}\n`);
-      return exitedWith(touching[String(c.args[4])] ?? "");
-    }),
-    {},
-  ).order(STUDY, FILE);
-  expect(result).toEqual({
+it("order: each file's first commit against the decision's — after, the same, not after — only the study's own files", () => {
+  const { git } = paperOver({});
+  // Guards: the decision's own commit and one that first carries it again (a squash) are `same`, a
+  // descendant of a decision commit is `after`, the rest `not-after`; the other study's file is not listed.
+  expect(git.paper(PAPER, [FILE]).order(STUDY, FILE)).toEqual({
     kind: "read",
     decision: { commit: D, date: DATE },
     decisionDeleted: false,
@@ -180,89 +226,106 @@ it("order: each file's first commit against the decision's — after, the same, 
   });
 });
 
-it("order: no decision commit makes every file not-after; a failed ancestry question is a reason", () => {
-  const log = `\x01${A}\t${DATE}\na.csv\n`;
-  const answer = (revList: ProcessExit, decisionLog: string) =>
-    gitHistory(
-      scriptedProcess((c) => {
-        const sub = String(c.args[2]);
-        if (sub === "rev-parse") return exitedWith("false\n");
-        if (sub === "ls-tree") return IN_HEAD;
-        if (sub === "log" && c.args.includes("--reverse"))
-          return exitedWith(log);
-        if (sub === "log") return exitedWith(decisionLog);
-        return revList;
-      }),
-      {},
-    ).order(STUDY, FILE);
-  // Guards: an uncommitted decision orders nothing; git failing mid-way is not "not after".
-  expect(answer(exitedWith(""), "")).toEqual({
-    kind: "read",
-    decision: null,
-    decisionDeleted: false,
-    files: [{ path: "a.csv", commit: A, date: DATE, order: "not-after" }],
-  });
-  expect(
-    answer(
-      {
-        kind: "exited",
-        status: 128,
-        stdout: "",
-        stderr: "fatal: bad object\n",
-      },
-      `${D}\t${DATE}\n`,
-    ),
-  ).toEqual({ kind: "unknown", why: "fatal: bad object" });
-});
-
-it("order: git failing on the decision's log or the folder's log is a reason", () => {
-  const fail = {
-    kind: "exited",
-    status: 128,
-    stdout: "",
-    stderr: "fatal: x\n",
-  } as const;
-  const answer = (decision: ProcessExit, folder: ProcessExit) =>
-    gitHistory(
-      scriptedProcess((c) => {
-        const sub = String(c.args[2]);
-        if (sub === "rev-parse") return exitedWith("false\n");
-        return c.args.includes("--reverse") ? folder : decision;
-      }),
-      {},
-    ).order(STUDY, FILE);
-  // Guards: each step's failure surfaces.
-  expect([answer(fail, exitedWith("")), answer(exitedWith(""), fail)]).toEqual([
-    { kind: "unknown", why: "fatal: x" },
-    { kind: "unknown", why: "fatal: x" },
-  ]);
-});
-
-it("order: a decision not in HEAD is said deleted; git failing on HEAD's tree is a reason", () => {
-  const answer = (lsTree: ProcessExit) =>
-    gitHistory(
-      scriptedProcess((c) => {
-        const sub = String(c.args[2]);
-        if (sub === "rev-parse") return exitedWith("false\n");
-        if (sub === "ls-tree") return lsTree;
-        if (c.args.includes("--reverse"))
-          return exitedWith(`\x01${D}\t${DATE}\ndecision.md\n`);
-        return exitedWith(`${D}\t${DATE}\n`);
-      }),
-      {},
-    ).order(STUDY, FILE);
-  // Guards: the decision's first commit is still read, and its absence from HEAD is carried with it.
-  expect([
-    answer(exitedWith("")),
-    answer({ kind: "spawn-failed", message: "EIO" }),
-  ]).toEqual([
+it("order: a decision never committed makes every file not-after; one not in HEAD is said deleted", () => {
+  const never = paperOver({ touched: exitedWith("") }).git.paper(PAPER, [FILE]);
+  const gone = paperOver({ head: exitedWith("") }).git.paper(PAPER, [FILE]);
+  // Guards: an uncommitted decision orders nothing; a committed, since deleted one still orders.
+  expect([never.order(STUDY, FILE), gone.order(STUDY, FILE)]).toEqual([
+    {
+      kind: "read",
+      decision: null,
+      decisionDeleted: false,
+      files: [
+        { path: "x.csv", commit: D, date: DATE, order: "not-after" },
+        { path: "a.csv", commit: A, date: DATE, order: "not-after" },
+        { path: "b.csv", commit: B, date: DATE, order: "not-after" },
+        { path: "c.csv", commit: C, date: DATE, order: "not-after" },
+      ],
+    },
     {
       kind: "read",
       decision: { commit: D, date: DATE },
       decisionDeleted: true,
-      files: [{ path: "decision.md", commit: D, date: DATE, order: "same" }],
+      files: [
+        { path: "x.csv", commit: D, date: DATE, order: "same" },
+        { path: "a.csv", commit: A, date: DATE, order: "after" },
+        { path: "b.csv", commit: B, date: DATE, order: "not-after" },
+        { path: "c.csv", commit: C, date: DATE, order: "same" },
+      ],
     },
+  ]);
+});
+
+it("order: a shallow clone is said, not judged", () => {
+  // Guards: in a shallow clone every file starts at the clone — no order can be read.
+  expect(
+    paperOver({ where: exitedWith("true\n\n") })
+      .git.paper(PAPER, [FILE])
+      .order(STUDY, FILE),
+  ).toEqual({ kind: "shallow" });
+});
+
+it("order: a commit git did not list in its graph is a reason, never `not-after`", () => {
+  // Guards: the graph lacks A, so A's ancestry is unknown.
+  expect(
+    paperOver({ graph: exitedWith(`${B} \n${D} \n${C} \n`) })
+      .git.paper(PAPER, [FILE])
+      .order(STUDY, FILE),
+  ).toEqual({
+    kind: "unknown",
+    why: "git did not list a commit of this paper's history",
+  });
+});
+
+it("every way git can fail, at any of the five steps, is a reason, never an answer", () => {
+  const exit128 = (stderr: string): ProcessExit => ({
+    kind: "exited",
+    status: 128,
+    stdout: "",
+    stderr,
+  });
+  const ask = (step: string, x: ProcessExit) =>
+    paperOver({ [step]: x })
+      .git.paper(PAPER, [FILE])
+      .order(STUDY, FILE);
+  // Guards: no git, no repository, a hang, a kill — each named, none read as "no commits".
+  expect([
+    ask("where", exitedWith("", 128)),
+    ask("where", exit128("fatal: not a git repository\n")),
+    ask("touched", { kind: "timed-out", afterMs: 1, stdout: "", stderr: "" }),
+    ask("head", {
+      kind: "signalled",
+      signal: "SIGTERM",
+      stdout: "",
+      stderr: "",
+    }),
+    ask("files", exit128("fatal: x\n")),
+    ask("graph", { kind: "spawn-failed", message: "EIO" }),
+  ]).toEqual([
+    { kind: "unknown", why: "git exited 128" },
+    { kind: "unknown", why: "fatal: not a git repository" },
+    { kind: "unknown", why: "git did not finish (timed-out)" },
+    { kind: "unknown", why: "git did not finish (signalled)" },
+    { kind: "unknown", why: "fatal: x" },
     { kind: "unknown", why: "EIO" },
+  ]);
+});
+
+it("touchingOf lists each path's commits oldest first, a merge printed once per parent only once", () => {
+  // Guards: `-m` repeats a merge for each parent it differs from.
+  expect([
+    ...touchingOf(
+      `\x01${A}\t${DATE}\nd\n\x01${B}\t${DATE}\nd\n\x01${B}\t${DATE}\nd\ne\n`,
+    ),
+  ]).toEqual([
+    [
+      "d",
+      [
+        { commit: A, date: DATE },
+        { commit: B, date: DATE },
+      ],
+    ],
+    ["e", [{ commit: B, date: DATE }]],
   ]);
 });
 
