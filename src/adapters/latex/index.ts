@@ -31,6 +31,7 @@ import { headingsOf } from "./headings.ts";
 import { documentBodyOf, includesOf } from "./includes.ts";
 import { labelsOf } from "./labels.ts";
 import { outlineOf } from "./outline.ts";
+import { refListsOf } from "./ref-lists.ts";
 import { parseLatex } from "./parse.ts";
 import { bodyEmphasis, bodyProse } from "./prose.ts";
 import { renderedRuns } from "./rendered.ts";
@@ -56,6 +57,7 @@ export { captionsOf } from "./captions.ts";
 export { headingsOf } from "./headings.ts";
 export { labelsOf } from "./labels.ts";
 export { outlineOf } from "./outline.ts";
+export { refListsOf } from "./ref-lists.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
 export { bodyEmphasis, bodyProse } from "./prose.ts";
 export { renderedRuns } from "./rendered.ts";
@@ -67,6 +69,7 @@ export const latexReader: LatexReader = {
   outline: (src) => outlineOf(parseLatex(src)),
   headings: (src) => headingsOf(parseLatex(src)),
   labels: (src) => labelsOf(parseLatex(src)),
+  refLists: (src) => refListsOf(parseLatex(src)),
   renderedRuns: (src) => renderedRuns(parseLatex(src)),
   bodyProse: (src) => bodyProse(parseLatex(src)),
   bodyEmphasis: (src) => bodyEmphasis(parseLatex(src)),

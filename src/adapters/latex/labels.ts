@@ -15,10 +15,10 @@
  */
 import type {
   DocumentClass,
-  EnclosingHeading,
   HeadingLevel,
   LabelAnchor,
   PlacedLabel,
+  Stepped,
 } from "../../domain/tex-document.ts";
 import { documentClassOf } from "./document-class.ts";
 import { isDefinition, isUnrendered } from "./hidden.ts";
@@ -29,6 +29,7 @@ import {
   isNode,
   macroPlace,
   mandatory,
+  placeOf,
   textOf,
   visited,
   type Macro,
@@ -104,29 +105,32 @@ function secnumdepth(t: ParsedTex, nodes: readonly Node[]): number | null {
 const isStarred = (m: Macro): boolean =>
   textOf(argumentsOf(m).at(0)?.content) === "*";
 
-/** What the walk keeps between nodes: whether a paragraph is opening, its anchor, the section. */
+/** What the walk keeps between nodes: whether a paragraph is opening, its anchor, the last counter stepped. */
 interface Scan {
   readonly opening: boolean;
   readonly anchor: LabelAnchor;
-  readonly enclosing: EnclosingHeading | null;
+  readonly stepped: Stepped | null;
   readonly labels: readonly PlacedLabel[];
 }
 
 const NONE: LabelAnchor = { kind: "none" };
 const NUMBERED: LabelAnchor = { kind: "numbered" };
 
-/** A `\label` as one of the running text's, with the anchor and section it stands under. */
-const placed = (
-  m: Macro,
-  anchor: LabelAnchor,
-  enclosing: EnclosingHeading | null,
-): readonly PlacedLabel[] =>
+/** A step of a counter by `m`, named `what`; none for a node the parser gave no position. */
+const steppedBy = (m: Macro, what: string): Stepped | null =>
+  inPlace(placeOf(m), (span) => [{ at: span.start, what }]).at(0) ?? null;
+
+/**
+ * A `\label` as one of the running text's, with its anchor and the step it takes its number from:
+ * the last one in TeX's order when something in its paragraph anchors it, unknown when nothing does.
+ */
+const placed = (m: Macro, s: Scan, anchor: LabelAnchor): readonly PlacedLabel[] =>
   inPlace(macroPlace(m), (span) => [
     {
       key: textOf(mandatory(m).at(0)?.content).trim(),
       span,
       anchor,
-      enclosing,
+      takes: anchor.kind === "none" ? null : s.stepped,
     },
   ]);
 
@@ -157,7 +161,7 @@ function headingStep(
         ...s,
         opening: true,
         anchor: NUMBERED,
-        enclosing: { level, title: shown(m) },
+        stepped: steppedBy(m, `\\${level} «${shown(m)}»`),
       }
     : { ...s, opening: true, anchor: { kind: "run-in", title: shown(m) } };
 }
@@ -165,11 +169,16 @@ function headingStep(
 /** A macro's step: a label is placed, a heading anchors, a command that steps a counter numbers. */
 function macroStep(s: Scan, m: Macro, numberedTo: number | null): Scan | null {
   if (m.content === "label")
-    return { ...s, labels: [...s.labels, ...placed(m, s.anchor, s.enclosing)] };
+    return { ...s, labels: [...s.labels, ...placed(m, s, s.anchor)] };
   const heading = DEPTHS.get(m.content);
   if (heading !== undefined) return headingStep(s, m, heading, numberedTo);
   return STEPS_COUNTER.has(m.content)
-    ? { ...s, opening: false, anchor: NUMBERED }
+    ? {
+        ...s,
+        opening: false,
+        anchor: NUMBERED,
+        stepped: steppedBy(m, `\\${m.content}`),
+      }
     : null;
 }
 
@@ -178,9 +187,7 @@ function step(t: ParsedTex, numberedTo: number | null, s: Scan, n: Node): Scan {
   if (n.type === "parbreak") return { ...s, opening: true, anchor: NONE };
   if (s.opening && isRunInHeading(t, n)) {
     const anchor: LabelAnchor = { kind: "run-in", title: shown(n) };
-    const inside = labelsInside(n).flatMap((m) =>
-      placed(m, anchor, s.enclosing),
-    );
+    const inside = labelsInside(n).flatMap((m) => placed(m, s, anchor));
     return { ...s, opening: false, anchor, labels: [...s.labels, ...inside] };
   }
   const own = n.type === "macro" ? macroStep(s, n, numberedTo) : null;
@@ -213,7 +220,7 @@ export function labelsOf(t: ParsedTex): readonly PlacedLabel[] {
   const start: Scan = {
     opening: true,
     anchor: NONE,
-    enclosing: null,
+    stepped: null,
     labels: [],
   };
   return body

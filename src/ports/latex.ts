@@ -12,6 +12,7 @@ import type {
   Outline,
   Passage,
   PlacedLabel,
+  RefList,
   Span,
   TextRun,
   TitledHeading,
@@ -58,9 +59,14 @@ export interface LatexReader {
   readonly headings: (src: string) => readonly TitledHeading[];
   /**
    * Every `\label` of the body's running text (not inside an environment), in document order: what
-   * it takes its number from in its paragraph, and the numbered heading it stands under.
+   * it takes its number from in its paragraph, and the step of the counter whose number it records.
    */
   readonly labels: (src: string) => readonly PlacedLabel[];
+  /**
+   * The body's reference lists: two or more `\ref`, `\autoref`, `\cref` or `\Cref` keys of one
+   * sentence, joined by nothing but commas, "and", "or" and spaces.
+   */
+  readonly refLists: (src: string) => readonly RefList[];
   /** The text a reader sees: prose, the author block, footnotes — not comments, keys, math, code. */
   readonly renderedRuns: (src: string) => readonly TextRun[];
   /**

@@ -84,7 +84,7 @@ import {
 } from "./tex-venue-rules.ts";
 import { claimProvenanceRule } from "./claim-provenance.ts";
 import { registerRule } from "./register.ts";
-import { labelAfterRunInRule } from "./label-after-run-in.ts";
+import { refListSameNumberRule } from "./ref-list-same-number.ts";
 import {
   REGISTER_BAND_RULE_LEVELS,
   registerBandRules,
@@ -431,12 +431,12 @@ const TEX_RULE_DEPS = {
 const TEX_PROSE_RULES = {
   "claim-provenance": claimProvenanceRule(TEX_RULE_DEPS),
   register: registerRule(TEX_RULE_DEPS),
-  "label-after-run-in": labelAfterRunInRule(TEX_RULE_DEPS),
+  "ref-list-same-number": refListSameNumberRule(TEX_RULE_DEPS),
 };
 const TEX_PROSE_RULE_LEVELS = {
   "tex/claim-provenance": "warn",
   "tex/register": "warn",
-  "tex/label-after-run-in": "error",
+  "tex/ref-list-same-number": "error",
 } as const;
 
 /** The register band rules, `tex/heading-case` and `tex/max-paragraph-words` (off until a project turns it on): the rules of the `tex` plugin that read a paper's words. */

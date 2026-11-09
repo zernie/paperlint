@@ -241,19 +241,34 @@ export type LabelAnchor =
   | { readonly kind: "run-in"; readonly title: string }
   | { readonly kind: "none" };
 
-/** The numbered heading a place stands under: its level and its title's text. */
-export interface EnclosingHeading {
-  readonly level: HeadingLevel;
-  readonly title: string;
+/**
+ * One step of a counter, as the source shows it: where the heading, caption or other command that
+ * steps it starts (its identity: two labels that take the same `at` print the same number) and what
+ * it is, as a message names it (`\subsection «Check»`, `\caption`).
+ */
+export interface Stepped {
+  readonly at: number;
+  readonly what: string;
 }
+
+/** One key of a `\ref`-like command in the running prose: the command, the key, the command's span. */
+export interface Reference {
+  readonly macro: string;
+  readonly key: string;
+  readonly span: Span;
+}
+
+/** References one sentence joins with commas, "and" or "or": at least two, in source order. */
+export type RefList = readonly Reference[];
 
 /**
  * One `\label` of the body: its key, where it stands, what it takes its number from in its
- * paragraph, and the numbered heading it stands under (none before the first).
+ * paragraph, and the step of the counter whose number it records — unknown (null) when the label
+ * stands in no paragraph that anchors it.
  */
 export interface PlacedLabel {
   readonly key: string;
   readonly span: Span;
   readonly anchor: LabelAnchor;
-  readonly enclosing: EnclosingHeading | null;
+  readonly takes: Stepped | null;
 }

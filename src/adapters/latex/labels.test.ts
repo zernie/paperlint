@@ -19,7 +19,11 @@ const spanOf = (src: string, needle: string) => {
   return { start, end: start + needle.length };
 };
 
-const CHECK = { level: "subsection", title: "Check" } as const;
+/** The step a heading takes: where the command starts, and what a message calls it. */
+const step = (src: string, needle: string, what: string) => ({
+  at: src.indexOf(needle),
+  what,
+});
 
 describe("labelsOf: a bold phrase that opens the paragraph", () => {
   it("the paper that printed «Sections V-A, V-A and V-B»: the label after the bold heading is a run-in's", () => {
@@ -39,19 +43,19 @@ describe("labelsOf: a bold phrase that opens the paragraph", () => {
         key: "sec:results",
         span: spanOf(src, "\\label{sec:results}"),
         anchor: { kind: "numbered" },
-        enclosing: { level: "section", title: "Results" },
+        takes: step(src, "\\section{Results}", "\\section «Results»"),
       },
       {
         key: "sec:check",
         span: spanOf(src, "\\label{sec:check}"),
         anchor: { kind: "numbered" },
-        enclosing: CHECK,
+        takes: step(src, "\\subsection{Check}", "\\subsection «Check»"),
       },
       {
         key: "sec:rq2",
         span: spanOf(src, "\\label{sec:rq2}"),
         anchor: { kind: "run-in", title: "Merged history." },
-        enclosing: CHECK,
+        takes: step(src, "\\subsection{Check}", "\\subsection «Check»"),
       },
     ]);
   });
@@ -70,13 +74,13 @@ describe("labelsOf: a bold phrase that opens the paragraph", () => {
         key: "rq2",
         span: spanOf(src, "\\label{rq2}"),
         anchor: { kind: "run-in", title: "RQ2." },
-        enclosing: CHECK,
+        takes: step(src, "\\subsection{Check}", "\\subsection «Check»"),
       },
       {
         key: "rq3",
         span: spanOf(src, "\\label{rq3}"),
         anchor: { kind: "run-in", title: "RQ3:" },
-        enclosing: CHECK,
+        takes: step(src, "\\subsection{Check}", "\\subsection «Check»"),
       },
     ]);
   });
@@ -136,7 +140,7 @@ describe("labelsOf: a heading that steps no counter", () => {
         key: "m",
         span: spanOf(src, "\\label{m}"),
         anchor: { kind: "run-in", title: "Merged" },
-        enclosing: CHECK,
+        takes: step(src, "\\subsection{Check}", "\\subsection «Check»"),
       },
     ]);
   });
@@ -180,7 +184,7 @@ describe("labelsOf: how deep the class numbers", () => {
       "\\section{Intro}\\label{i}",
       "\\documentclass[acmcp]{acmart}",
     );
-    expect(labels(src).map((l) => [l.key, l.anchor, l.enclosing])).toEqual([
+    expect(labels(src).map((l) => [l.key, l.anchor, l.takes])).toEqual([
       ["i", { kind: "run-in", title: "Intro" }, null],
     ]);
   });
@@ -192,8 +196,12 @@ describe("labelsOf: other classes, and a depth that cannot be read", () => {
       "\\subsection{Check}\n\\subsubsection{Deep}\\label{d}",
       "\\documentclass{llncs}",
     );
-    expect(labels(src).map((l) => [l.key, l.anchor, l.enclosing])).toEqual([
-      ["d", { kind: "run-in", title: "Deep" }, CHECK],
+    expect(labels(src).map((l) => [l.key, l.anchor, l.takes])).toEqual([
+      [
+        "d",
+        { kind: "run-in", title: "Deep" },
+        step(src, "\\subsection{Check}", "\\subsection «Check»"),
+      ],
     ]);
   });
 
@@ -232,8 +240,19 @@ describe("labelsOf: what is read", () => {
         key: "x",
         span: spanOf(src, "\\label{x}"),
         anchor: { kind: "run-in", title: "RQ1." },
-        enclosing: null,
+        takes: null,
       },
+    ]);
+  });
+
+  it("a caption or a counter stepped is what the next label takes; a label with no anchor takes nothing known", () => {
+    const src = doc(
+      "\\section{A}\n\\refstepcounter{rq}\\label{r}\n\n\\textbf{X.}\\label{x}\n\n\\label{n}",
+    );
+    expect(labels(src).map((l) => [l.key, l.takes?.what ?? null])).toEqual([
+      ["r", "\\refstepcounter"],
+      ["x", "\\refstepcounter"],
+      ["n", null],
     ]);
   });
 

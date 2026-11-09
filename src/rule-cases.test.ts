@@ -1019,22 +1019,22 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: blind("Text."),
   },
-  // #447: the label after a bold run-in heading prints the subsection's number; the body starts
-  // on line 3, so the run-in's label is on line 4.
-  "tex/label-after-run-in": {
+  // #447: the label after a bold run-in heading prints the subsection's number, so the list that
+  // cites both prints it twice; the body starts on line 3, and the second reference is on line 6.
+  "tex/ref-list-same-number": {
     reports: {
       tree: paper(
         tex(
-          "\\subsection{Check}\\label{sec:check}\n\\textbf{Merged history.}\\label{sec:rq2} We compared.",
+          "\\subsection{Check}\\label{sec:check}\n\\textbf{Merged history.}\\label{sec:rq2} We compared.\n\nSee~\\ref{sec:check} and~\\ref{sec:rq2}.",
         ),
       ),
       file: TEX_FILE,
       severity: 2,
-      line: 4,
+      line: 6,
     },
     silent: paper(
       tex(
-        "\\subsection{Check}\\label{sec:check}\n\\textbf{Merged history.} We compared.",
+        "\\subsection{Check}\\label{sec:check}\n\\textbf{Merged history.} We compared.\n\nSee~\\ref{sec:check}.",
       ),
     ),
   },
