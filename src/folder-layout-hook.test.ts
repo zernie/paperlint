@@ -7,11 +7,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { memoryFiles, memoryListDir } from "./adapters/memory/index.ts";
-import {
-  folderLayoutHook,
-  paperFolderOf,
-  writtenPath,
-} from "./folder-layout-hook.ts";
+import { paperFolderOf } from "./domain/paper-folder.ts";
+import { folderLayoutHook } from "./folder-layout-hook.ts";
 import { folderLayoutRules } from "./folder-layout-rule.ts";
 import { reproLayoutRules } from "./repro-layout-rule.ts";
 
@@ -191,34 +188,5 @@ describe("paper-folder-layout hook — a new study folder", () => {
     expect(folderLayoutHook({}, deps)).toBeNull();
     expect(folderLayoutHook({ tool_input: { file_path: 7 } }, deps)).toBeNull();
     expect(folderLayoutHook(null, deps)).toBeNull();
-  });
-});
-
-describe("the cheap first step: the nearest folder holding PIPELINE-STATUS.md", () => {
-  const files = memoryFiles(PAPER);
-
-  it("is the paper folder for a file at its root or anywhere below", () => {
-    expect(paperFolderOf(`${DIR}/x.md`, files)).toBe(DIR);
-    expect(paperFolderOf(`${DIR}/a/b/c.md`, files)).toBe(DIR);
-  });
-
-  it("is null outside a paper folder, up to the file system's root", () => {
-    expect(paperFolderOf("/work/papers/x.md", files)).toBeNull();
-    expect(paperFolderOf("/x.md", files)).toBeNull();
-  });
-
-  it("reads the path from file_path, or notebook_path, made absolute against cwd", () => {
-    expect(writtenPath({ tool_input: { file_path: "/a/b.md" } })).toBe(
-      "/a/b.md",
-    );
-    expect(
-      writtenPath({ tool_input: { notebook_path: "n.ipynb" }, cwd: "/w" }),
-    ).toBe("/w/n.ipynb");
-    expect(writtenPath({ tool_input: {} })).toBeNull();
-    // A relative path needs an absolute cwd to mean anything: never the process's own.
-    expect(writtenPath({ tool_input: { file_path: "a.md" } })).toBeNull();
-    expect(
-      writtenPath({ tool_input: { file_path: "a.md" }, cwd: "w" }),
-    ).toBeNull();
   });
 });

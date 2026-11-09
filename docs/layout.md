@@ -118,7 +118,7 @@ Both are explained in [`venues.md`](venues.md).
 | `repro/<id>-<slug>/data/`            | 3 study          | `build-label-page` exports the labels here                                                                                                                                                       | nothing                                                                                                                                                                  |
 | `repro/tools/`, `repro/data/`        | 3 study          | your scripts; `paperlint build` keeps `repro/data/references-cache.json`                                                                                                                         | nothing inside them                                                                                                                                                      |
 | `NOTES.md`                           | 3, then 4        | you: each number → the data it comes from; `build-label-page` adds a line per label file                                                                                                         | nothing                                                                                                                                                                  |
-| `paper.tex`, `sections/`, `*.bib`    | 4 draft          | `draft-paper`, `argument-arc`, `tighten-paper`                                                                                                                                                   | the `tex/*`, `paper/*` and `bib/*` rules ([rules](rules.md)); the hook `paper-edit-guard` refuses a shell write                                                          |
+| `paper.tex`, `sections/`, `*.bib`    | 4 draft          | `draft-paper`, `argument-arc`, `tighten-paper`                                                                                                                                                   | the `tex/*`, `paper/*` and `bib/*` rules ([rules](rules.md)); the hook `lint-edited` reports an agent's edit's new errors; `paper-edit-guard` refuses a shell write      |
 | `CLAIMS.md`, `figures/`              | 4 draft          | you                                                                                                                                                                                              | nothing                                                                                                                                                                  |
 | `paper.pdf`, `_build/`               | 6 submit         | `paperlint build`                                                                                                                                                                                | `pdf/*`, [`format/page-limit`](rules/format/page-limit.md), [`anonymity/identity`](rules/anonymity/identity.md), the reference rules                                     |
 | `versions/`                          | 6, then 7        | you, at submission and at camera-ready (`submit-paper` says how): the frozen PDF and source of each stage                                                                                        | [`versions/layout`](rules/versions/layout.md) with `cycles`; `paper/stages`, `paper/source` without                                                                      |
@@ -128,12 +128,15 @@ Both are explained in [`venues.md`](venues.md).
 
 ## What runs when
 
-A check runs at one of four moments:
+A check runs at one of five moments:
 
 - **Before a write** — a Claude Code hook. It sees an agent's Edit or Write, not a shell `mv` or a
   script, so it saves a round trip and guarantees nothing.
+- **After a write** — the `lint-edited` hook: `paperlint lint` on the file an agent just edited and
+  its paper's `paper.tex`, reporting only the errors that edit introduced ([below](#the-lint-edited-hook)).
+  It too sees only an Edit or Write, so it guarantees nothing either.
 - **On lint** — `paperlint lint`, when you run it. Every rule runs, whatever wrote the files. This is
-  the guarantee. No hook runs it for you.
+  the guarantee.
 - **In CI** — the same lint, on every push, if the project has the workflow `paperlint init` offers.
   The lint-only job skips what needs a build (pages, fonts, references).
 - **On demand** — a skill, when you ask for what it does. A skill stops nothing; it writes.
@@ -141,6 +144,7 @@ A check runs at one of four moments:
 | what                                                                                        | kind    | when it runs                                                | what it stops                                                                                                                                                                          |
 | ------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `paper-folder-layout`                                                                       | hook    | before an agent creates a file (Edit, Write)                | a new entry the layout does not allow, at a paper's root or the top of its `repro/`; never an existing file                                                                            |
+| `lint-edited`                                                                               | hook    | after an agent edits a file of a paper (Edit, Write)        | nothing is undone: an error the edit introduced is put next to the edit's result, so the agent fixes it in the same turn                                                               |
 | `paper-edit-guard`                                                                          | hook    | before an agent's shell command                             | a shell command that writes or moves a paper's source, which would skip the hooks that run after an edit                                                                               |
 | `submission-confirm`                                                                        | hook    | before an agent's shell command                             | a submission send (`--save`, `--submit`), or a command naming a portal's host, that the person has not said yes to in a question naming its PDF's sha256 (or the host and the command) |
 | `paper-skills-nudge`                                                                        | hook    | after an agent edits a paper's source                       | nothing: it shows the agent the pre-submit checklist                                                                                                                                   |
@@ -163,3 +167,51 @@ A check runs at one of four moments:
 
 The hooks are wired by `paperlint init` ([`install.md`](install.md)). A rule's level and options:
 [`rules.md`](rules.md).
+
+### The `lint-edited` hook
+
+**When it fires.** After every Edit, Write and MultiEdit of an agent in Claude Code (PostToolUse,
+timeout 20 s), on a file inside a paper folder (a folder with `PIPELINE-STATUS.md`, not under
+`extra/`) that `paperlint lint` lints — ESLint's own answer on the config `paperlint lint` builds,
+so a file the lint skips (`research/notes.txt`) gets nothing. An edit of any other file is answered
+before the CLI loads: 36–39 ms per edit against 28 ms for `node -e 0` (medians of 15, measured
+2026-11-09), where it was 662 ms while the CLI loaded on every edit.
+
+**What it lints.** The edited file and the paper's `paper.tex`, with the same ESLint, config and
+rules as `paperlint lint` on that paper: one setup serves both. Inside a paper it takes about as long
+as `paperlint lint` on that paper: 701 ms for an edit of a one-page paper, against 781 ms for
+`paperlint lint` on it.
+
+**What turns red.** An error (never a warning) the edit introduced. The hook answers
+`{"decision":"block","reason":…}`: Claude Code puts the findings, as `paperlint lint` prints them,
+next to the edit's result, with a line saying the edit was kept. The edit is not undone. With
+`tex/max-sentence-words` on, a 64-word sentence an agent writes reads:
+
+```
+/home/you/project/papers/p1/paper.tex
+  7:1  error  a sentence of 64 words, over 55 — «word word word word word word word word…». A reader loses its subject before its verb; cut it where a clause could stand alone  tex/max-sentence-words
+
+✖ 1 problem (1 error, 0 warnings)
+paperlint lint-edited: the edit was kept; the errors above are the ones it introduced.
+```
+
+**How it knows what is new: `_build/edit-lint.json`.** After each run the hook writes the paper's
+errors per file to `<paper>/_build/edit-lint.json` (gitignored; `_build/` is allowed by the layout).
+Each error is keyed by its file, rule, message and the trimmed text of the line it points at — not
+the line number, so a line inserted above an old error does not make it new. The next edit reports
+an error only when its key occurs more often than in the snapshot. A file the snapshot has not seen
+yet (the first edit in a paper) has no "before": only the errors on the lines that edit wrote are
+reported — an Edit's new text, each MultiEdit's, every line of a Write. Delete the file to start over.
+
+**What it cannot see.**
+
+- A file written by a shell command (`sed -i`, a script, `mv`, `cp`): no Edit, no Write, no hook.
+  `paperlint lint` and CI still see it.
+- The body files of a paper whose build record is stale. `_build/sources.json` hashes every file TeX
+  read, so the first edit to any of them makes the record stale, and until the next
+  `paperlint build` the paper is `paper.tex` alone — to this hook exactly as to `paperlint lint`
+  ([`paper/sources-fresh`](rules/paper/sources-fresh.md)). A paper never built has no body files.
+- An error the edit caused in a file other than the edited one and `paper.tex`.
+- Anything when the hook itself fails (a payload it cannot read, a `paperlint.json` that does not
+  parse, ESLint throwing): it prints one line, `paperlint: the lint-edited hook did not run: <why>`,
+  and lets the edit stand.

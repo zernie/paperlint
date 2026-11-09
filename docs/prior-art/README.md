@@ -26,6 +26,7 @@ be citable for each one separately.
 | [`readme-structure.md`](readme-structure.md)                 | how do comparable linters lead a new reader to a first working run?                  | one sentence, then a real run with its real output; install on the first screen; design reasoning never on the front page                                                                                            |
 | [`paper-folder-scaffolding.md`](paper-folder-scaffolding.md) | who creates a paper folder, and who wires the hooks — a command or a human?          | ship the template as a FILE and scaffold from it (`rpp new`); `init` writes the hooks into `.claude/settings.json` instead of printing `/plugin` lines                                                               |
 | [`citation-checkers.md`](citation-checkers.md)               | could the reference check depend on an existing package, and how could it be faster? | no dependable package exists (all Python, mostly prototypes); keep the in-repo checker, and the speedups are batch endpoints (Semantic Scholar, OpenAlex) and a committed cache of responses                         |
+| [`edit-time-lint.md`](edit-time-lint.md)                     | how do tools report only the findings a change introduced?                           | each compares against a recorded before; none names the new finding for one edit, so the `lint-edited` hook keeps a per-finding snapshot and falls back to reviewdog's `added` lines                                 |
 
 ## Tools examined, and for what
 
