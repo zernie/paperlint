@@ -47,6 +47,8 @@ import {
   includeBlocks,
   paperBodies,
 } from "./paper-includes.ts";
+import { omit } from "remeda";
+import { ruleTimes, timingLines } from "./lint-timing.ts";
 import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
@@ -1997,6 +1999,7 @@ export async function run(
     log = console.log,
     err = console.error,
     cwd = process.cwd(),
+    now = () => performance.now(),
     checkReferences = onlineReferences,
     loadTexLanguage = async () =>
       (await import("#eslint-rules/latex-language")).texLanguage,
@@ -2004,6 +2007,8 @@ export async function run(
     log?: typeof console.log;
     err?: typeof console.error;
     cwd?: string;
+    /** The clock `lint` times itself with, in milliseconds; a test hands one that answers fixed values. */
+    now?: () => number;
     /**
      * `lint`'s LaTeX language, loaded lazily because only `lint` needs it. A test hands one that
      * fails, as a broken install would.
@@ -2068,6 +2073,7 @@ export async function run(
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
   const { opts, root } = cfg;
+  const started = now();
 
   // A command-line argument OVERRIDES the config: one paper out of the corpus gets linted without
   // editing a file.
@@ -2131,6 +2137,8 @@ export async function run(
       ...includeBlocks(bodies),
     ]),
     fix: a.fix,
+    // ESLint's own per-rule timings, for the line after the report (src/lint-timing.ts).
+    stats: true,
   });
 
   const unowned = await firstUnownedFile(eslint, paths);
@@ -2167,7 +2175,7 @@ export async function run(
     return 1;
   }
 
-  return await reportLint(eslint, results, structure, {
+  const code = await reportLint(eslint, results, structure, {
     a,
     log,
     err,
@@ -2179,6 +2187,15 @@ export async function run(
       .map((d) => join(d, MAIN))
       .filter((f) => existsSync(f)),
   });
+  // On stderr, so `--json` leaves stdout a clean array.
+  timingLines({
+    files: results.length,
+    ms: now() - started,
+    rules: ruleTimes(results),
+  }).forEach((line) => {
+    err(line);
+  });
+  return code;
 }
 
 /**
@@ -2287,7 +2304,16 @@ async function reportLint(
   }
 
   if (a.json)
-    log(JSON.stringify([...asEslintResults(structure), ...results], null, 1));
+    log(
+      JSON.stringify(
+        [
+          ...asEslintResults(structure),
+          ...results.map((r) => omit(r, ["stats"])),
+        ],
+        null,
+        1,
+      ),
+    );
   else {
     // Missing things are printed FIRST: they explain why the report below may be suspiciously
     // short. The reverse order would read as "all clean — oh, and also this".
