@@ -1,0 +1,45 @@
+% A FAKE paper, made to hold every case of tex/ref-list-same-number next to its control. The e2e
+% builds it with the real pdflatex and compares the rule's findings with what TeX's .aux says the
+% references print. Not a real paper: real ones rarely contain the bug, this one contains all of it.
+\documentclass[conference]{IEEEtran}
+% cleveref is not in paperlint's TeX Live; \cref here prints each key of its list through \ref, and
+% the .aux that is the oracle is the same either way.
+\makeatletter
+\newcommand{\cref}[1]{\@for\@key:=#1\do{\ref{\@key}\ }}
+\makeatother
+% Headings deeper than a \subsection are not numbered: their labels print the subsection's number.
+\setcounter{secnumdepth}{2}
+\begin{document}
+\title{Fixture}
+\maketitle
+
+\section{Intro}\label{sec:intro}
+Controls: Sections~\ref{sec:intro}, \ref{sec:check} and~\ref{sec:other} each print their own number.
+
+\section{Method}\label{sec:method}
+\subsection{Check}\label{sec:check}
+\textbf{Merged history.}\label{sec:rq2} We compared merged changes.
+\subsection{Other}\label{sec:other}
+Text of the subsection.
+
+\section{Results}\label{sec:results}
+% The bug: the run-in's label prints the number of Check, cited next to Check itself.
+Sections~\ref{sec:check}, \ref{sec:rq2} and~\ref{sec:other} are the checks.
+
+% A \cref with several keys is a list too.
+See \cref{sec:check,sec:rq2}.
+
+% The same run-in cited alone, and two sections cited in different sentences: no list.
+See \ref{sec:rq2}. Then see \ref{sec:check}.
+
+\subsection{Third}\label{sec:third}
+\subsection*{Unnumbered}\label{sec:starred}
+% A starred heading steps no counter: its label prints the number of Third.
+See \ref{sec:third} and \ref{sec:starred}.
+
+\subsection{Fourth}\label{sec:fourth}
+\subsubsection{Deep}\label{sec:deep}
+% secnumdepth is 2: \subsubsection steps no counter, its label prints Fourth's number.
+See \ref{sec:deep}, \ref{sec:fourth}.
+
+\end{document}
