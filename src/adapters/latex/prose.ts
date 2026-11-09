@@ -274,7 +274,7 @@ const itemBody = (m: Macro): readonly Node[] =>
 function footnote(t: ParsedTex, m: Macro): readonly Event[] {
   const inside = walkList(t, lastArgument(m));
   const aside: Event = { kind: "aside", events: inside };
-  return cites(inside) ? [...mark(m, "citation"), aside] : [aside];
+  return cites(inside) ? [...mark(m), aside] : [aside];
 }
 
 /**
@@ -287,10 +287,7 @@ const OWN_EVENTS: ReadonlyMap<
 > = new Map([
   [
     "href",
-    (t: ParsedTex, m: Macro) => [
-      ...mark(m, "citation"),
-      ...walkList(t, lastArgument(m)),
-    ],
+    (t: ParsedTex, m: Macro) => [...mark(m), ...walkList(t, lastArgument(m))],
   ],
   ["footnote", footnote],
   [
