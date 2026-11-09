@@ -1,0 +1,24 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{\textbf{Example of a model failure.}
+Responses of A.X K1 to the A3 contrast of Table~\ref{tab:example_contrast} (gold answer: A, adsorption) under the three conditions.}
+\label{tab:example_failure}
+\begin{tabular}{@{}p{0.11\textwidth}p{0.41\textwidth}p{0.41\textwidth}@{}}
+\toprule
+ & \textbf{Korean} & \textbf{English translation} \\
+\midrule
+\textit{Closed}: B \newline (incorrect)
+& (모델 추론) 여기서는 용기를 가열하여 증기를 발생시켰고, 그 증기가 뚜껑의 활성탄에 흡착되었다. 따라서 상부공간법을 사용한 것으로 볼 수 있다. 이후 용매로 추출하는 것은 추가적인 과정이지만, 회수 방법 자체는 상부공간법일 것이다.
+& (Model reasoning) Here the container was heated to generate vapor, and the vapor was adsorbed onto the activated carbon in the lid. It can therefore be regarded as using the headspace method. The later extraction with a solvent is an additional step, but the recovery method itself would be the headspace method. \\
+\midrule
+\textit{+K}: C \newline (incorrect)
+& (제공된 지식, 발췌) 흡착법은 휘발성 물질이 흡착제의 표면에 달라붙는 성질을 이용하여 성분을 포집·농축하거나 회수하는 방법이다. 상부공간법은 시료 위의 기체층인 헤드스페이스 자체를 채취하거나 분석하여 휘발성 성분을 확인하는 방법이다.
+& (Provided knowledge, excerpt) The adsorption method captures, concentrates, or recovers components by using the property of volatile substances to adhere to the surface of an adsorbent. The headspace method identifies volatile components by collecting or analyzing the headspace itself, the gas layer above the sample. \\
+\midrule
+\textit{+K+A}: A \newline (correct)
+& (추가된 적용 진술, 발췌) 용기의 상부공간이 언급되더라도 분류 기준은 위치 자체가 아니라 회수 원리이며, 헤드스페이스를 직접 채취·분석하면 상부공간법이고 숯이나 활성탄 같은 흡착제 표면에 휘발성 성분을 붙잡아 포집하면 흡착법이다.
+& (Added application statement, excerpt) Even when the headspace of the container is mentioned, the criterion for classification is the recovery principle rather than the location itself: directly collecting or analyzing the headspace is the headspace method, whereas capturing volatile components on the surface of an adsorbent such as charcoal or activated carbon is the adsorption method. \\
+\bottomrule
+\end{tabular}
+\end{table*}

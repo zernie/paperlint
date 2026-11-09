@@ -1,0 +1,29 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Effect of the anchor bundle.}
+Share (\%) of candidates that fail each criterion before revision, when generated with and without the anchor bundle for the same 36 pairs (108 candidates each).
+Only L4 differs significantly (Fisher's exact test, $p < 0.001$).}
+\label{tab:anchor}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{ID} & \textbf{Criterion} & \textbf{With} & \textbf{Without} \\
+\midrule
+L1  & Answer correctness        & 1.9  & 6.5  \\
+L2  & Answer uniqueness         & 3.7  & 6.5  \\
+L3  & Stem determinacy          & 1.9  & 3.7  \\
+L4  & Bundle conformance        & \textbf{1.9} & \textbf{20.4} \\
+L5  & Surface form              & 0.9  & 0.0  \\
+L6  & Target-level structure    & 20.4 & 23.1 \\
+L7  & Knowledge preservation    & 12.0 & 11.1 \\
+L8  & Shortcut resistance       & 25.9 & 30.6 \\
+L9  & No anchor leakage         & 22.2 & 24.1 \\
+L10 & Distractor diagnosability & 22.2 & 18.5 \\
+L11 & No direct matching        & 3.7  & 5.6  \\
+\midrule
+\multicolumn{2}{@{}l}{Answered correctly by the proxy} & 50.0 & 51.9 \\
+\multicolumn{2}{@{}l}{Fail the automated stage}        & 79.6 & 87.0 \\
+\bottomrule
+\end{tabular}
+\end{table}

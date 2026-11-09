@@ -1,0 +1,79 @@
+\section{Motivation}
+\label{sec:motivation}
+
+We first examine what existing Korean benchmarks demand of a model and where models fail on them.
+We analyze 7,340 multiple-choice questions from CLIcK~\citep{kim2024click}, KMMLU-Redux, and KMMLU-Pro~\citep{hong-etal-2025-kmmlu}.
+
+\subsection{Silver Reasoning}
+\label{sec:silver}
+
+Identifying the knowledge a question requires and how that knowledge must be applied is challenging for an LLM annotator given only the question, since LLMs tend to underperform in non-English languages such as Korean \citep{koo2026emcee}.
+To support this assessment, we follow the answer-conditioned rationalization approach of \citet{zelikman2022star} and use GPT-5.4~\citep{openai2026gpt54} to generate step-by-step solutions conditioned on the question, options, and gold answer, including explanations for incorrect options. 
+We refer to these model-generated solutions as \textit{silver reasoning}, as they have not been verified by domain experts.
+
+We assess answer recoverability on 150 sampled solutions (50 per benchmark; Appendix~\ref{app:silver}).
+After removing explicit statements of the final answer from the silver reasoning, we ask a verifier (GPT-5.4) to answer each question given its options and silver reasoning. 
+The verifier answers all 150 questions correctly, compared with 118 when given only the question and options. 
+While this suggests that silver reasoning helps the verifier answer the questions correctly, it does not establish the factual correctness of individual reasoning steps.
+We therefore use silver reasoning as supplementary reference material for the annotations below and as a source for deriving anchor knowledge in Sec.~\ref{sec:klear}, rather than as ground-truth solutions. 
+
+\subsection{Knowledge and Application Demands}
+\label{sec:ka}
+\input{Tables/Table_ka_val}
+
+We characterize each question along two axes.
+\begin{itemize}[leftmargin=3.5mm, topsep=2pt, itemsep=2pt, parsep=0pt]
+    \item[$\circ$] \textit{Knowledge demand} (K) is the level of prior knowledge needed to solve the question: none (K0), everyday common sense (K1), school-level knowledge (K2), or specialized professional knowledge (K3).
+    \item[$\circ$] \textit{Application demand} (A) is the complexity of connecting that knowledge to the case described in the question. 
+    At A0, the retrieved fact or rule is itself the answer. 
+    At A1, the correspondence between the knowledge and the case is stated explicitly.
+    At A2, a single piece of knowledge applies, but one must judge whether the case satisfies its condition.
+    At A3, two or more candidate rules compete, and one must decide which governs the case.
+\end{itemize}
+Both axes describe the question and its solution, independent of how the model performs.
+We use GPT-5.4 to assign K and A, given the question, options, gold answer, and silver reasoning.
+See Tables~\ref{tab:k_examples} and~\ref{tab:a_examples} for examples.
+
+To validate these labels, two human annotators independently labeled 60 questions sampled evenly across the four A levels, seeing only the question, options, and gold answer (Appendix~\ref{app:ka_annotation}).
+Table~\ref{tab:ka_val} compares their labels with those of the model, with and without silver reasoning.
+With silver reasoning, the model agrees with the annotators on A ($\kappa=0.69$) more closely than the annotators agree with each other ($\kappa=0.60$).
+Without silver reasoning, agreement on A drops to 0.47. 
+Silver reasoning does not improve agreement on K, where the model tends to assign K2 to questions that annotators consider K3. 
+Since application demand is the axis our analysis and construction focus on, we adopt silver reasoning for annotation.
+
+\input{Tables/Table_ka_dist}
+
+Table~\ref{tab:ka_dist} shows the resulting distribution.
+Most questions demand specialized knowledge but little application:
+61.7\% are K3 and 61.1\% are A0, and K3 questions answerable by recall alone account for 39.6\% of the total.
+A0 is the largest level in every benchmark, ranging from 50.6\% in KMMLU-Pro to 73.6\% in KMMLU-Redux.
+Questions that require application are fewer and unevenly distributed, with 72.8\% of A3 questions coming from KMMLU-Pro.
+
+\input{Figures/Figure1}
+
+\subsection{Failure Analysis}
+\label{sec:failure}
+
+We next examine how models fail on these questions.
+We evaluate three Korean LLMs, K-EXAONE \citep{choi2026k}, A.X K1 \citep{cheon2026ax}, and Solar Open \citep{park2026solar}, with reasoning enabled, and collect their 5,808 incorrect responses.
+For each response, GPT-5.4 reads the model's reasoning trace alongside the silver reasoning and assigns one or more failure types, ordered by their contribution to the error (Appendix~\ref{app:source_failure}).
+We group these types into two categories.
+\begin{itemize}[leftmargin=3.5mm, topsep=2pt, itemsep=2pt, parsep=0pt]
+    \item[$\circ$] \textit{Knowledge failure}: the model recalls an incorrect fact, attributes a fact to the wrong entity, or never engages the required rule.
+    \item[$\circ$] \textit{Application failure}: the model invokes the relevant knowledge but misapplies it, for example by misjudging a condition or an exception.
+\end{itemize}
+The remaining responses stem from invalid outputs or defective questions.
+We classify each response by its primary failure type. 
+
+\input{Figures/Figure2}
+
+Figure~\ref{fig:failure} shows that failure composition differs between questions answerable by recall alone and questions that require application.
+On A0 questions, knowledge failures dominate (69.8\% vs.\ 21.1\% application failures).
+On A1--A3 questions, application failures account for 36.6--44.0\% of incorrect responses, comparable to knowledge failures (40.5--44.8\%).
+The same pattern holds among K3 questions alone (Appendix~\ref{app:source_failure}).
+Among questions that require application, accuracy also falls from 88.5\% at A1 to 60.0\% at A3.
+
+These comparisons, however, are not controlled, because questions at different A levels also differ in the knowledge they require.
+For instance, the share of K3 questions ranges from 40.3\% at A1 to 77.3\% at A3, and a single benchmark of professional licensure exams accounts for 72.8\% of A3 questions but at most 33.4\% at any other level. 
+A gap between A levels may thus reflect what the questions are about rather than how much application they demand.
+Isolating the effect of application demand requires contrasts in which the required knowledge is held fixed, which we construct in Sec.~\ref{sec:klear}.

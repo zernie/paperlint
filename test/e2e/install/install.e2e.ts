@@ -970,7 +970,7 @@ function stepRealPaper(c: Consumer): void {
   // input here on which a false positive can show up. It is added AFTER the clean run, and only
   // its own files are counted, so every finding below is the paper's. The verdict is the
   // recorded baseline — growth fails, a full vanish fails, a partial drop does not — read through
-  // the same module `fixtures/accepted-papers/accepted-papers.test.ts` uses, so the installed
+  // the same module `fixtures/real-papers.test.ts` uses, so the installed
   // binary and the repository's own `run` are held to one recording.
   const source = join(ROOT, "fixtures", "accepted-papers", REAL_PAPER);
   cpSync(source, join(consumer, "papers", REAL_PAPER), {

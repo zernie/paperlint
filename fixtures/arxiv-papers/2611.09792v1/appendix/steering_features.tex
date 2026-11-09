@@ -1,0 +1,42 @@
+\begin{table}[!htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\caption{The nine features used for SNMM inputs}\label{tab:steering-snmm}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.34\textwidth}r>{\raggedright\arraybackslash}p{.56\textwidth}@{}}
+\toprule Input & Count & Meaning\\\midrule
+\feat{intercept} & 1 & A constant value of one.\\
+\feat{pass_fraction} & 1 & The fraction of checks passed.\\
+\feat{conflict_visible} & 1 & The visible feedback contains contradictory checks.\\
+\feat{near_conflict} & 1 & At least 80\% but not all checks pass, and the visible feedback contains contradictory checks.\\
+\feat{prior_attack_resisted} & 1 & Earlier steering occurred and the current checkpoint is eligible. An explicit rejection is not required.\\
+\feat{stalled} & 1 & The fraction of checks passed is no higher than after the preceding submission; zero at the first submission.\\
+\feat{execution_error} & 1 & A current check reports an error.\\
+\feat{repeated_failure} & 1 & The current failure signature matches the preceding evaluation's.\\
+\feat{mentions_inconsistency} & 1 & The agent's message contains \texttt{contradict}, \texttt{inconsistent}, \texttt{inconsistency}, or \texttt{impossible}, ignoring capitalization.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\caption{The 36 features for nuisance models.
+}\label{tab:steering-nuisance}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.34\textwidth}r>{\raggedright\arraybackslash}p{.56\textwidth}@{}}
+\toprule Inputs & Count & Meaning\\\midrule
+Current SNMM attributes & 8 & All inputs in Table~\ref{tab:steering-snmm} except the constant.\\
+\feat{previous_pass_fraction}, \feat{progress_delta} & 2 & The fraction of checks passed after the preceding submission, and the change since then.\\
+Progress ranges & 4 & \feat{almost_finished}: $0.8\le p<1$; \feat{zero_progress}: $p=0$; \feat{low_progress}: $p<0.5$; \feat{mid_progress}: $0.5\le p<0.8$, where $p$ is the current pass fraction.\\
+Other progress changes & 3 & \feat{regressed}: $p<p_{-}$; \feat{improved}: $p>p_{-}$; \feat{recovered_from_zero}: $p_{-}=0<p$, where $p_{-}$ is the preceding pass fraction. All are zero at the first submission.\\
+\feat{same_failure_streak}, \feat{unchanged_code} & 2 & The number of consecutive preceding evaluations with the current failure signature; whether the code equals the state saved after the preceding action (zero at the first checkpoint).\\
+Time & 4 & \feat{checkpoint}: preceding action number; \feat{turns_remaining}: $6-\text{checkpoint}$; \feat{late}: checkpoint $\ge3$; \feat{last_chance}: checkpoint $=5$.\\
+\feat{prior_attacks} & 1 & The number of earlier steering assignments.\\
+Previous note (\feat{previous_arm_}) & 4 & One input each for \feat{neutral}, \feat{static}, \feat{contextual}, and \feat{llm}; all zero before the first assignment.\\
+Missing previous progress & 2 & \feat{previous_pass_fraction_missing} and \feat{progress_delta_missing}: whether the corresponding value is missing. Missing values are set to zero.\\
+\feat{log_checks}, \feat{log_code_characters} & 2 & $\log(1+\text{count})$ for current checks and code characters.\\
+Task variant and cohort & 4 & \feat{conflicting_variant}: contradictory tests; \feat{repaired_conflict}: locally repaired fixture; \feat{confirmation_split}: confirmation cohort; \feat{baseten_provider}: always zero for Qwen3.5 Flash.\\
+\bottomrule
+\end{tabular}
+\end{table}

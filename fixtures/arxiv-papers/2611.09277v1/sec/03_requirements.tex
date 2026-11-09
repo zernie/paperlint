@@ -1,0 +1,114 @@
+\section{Forensic-specific requirements for federated learning}
+\label{Forensic Specific Requirements for Federated Learning}
+
+This section derives the requirements that a federated learning system must satisfy in a law enforcement setting and examines the tensions between them.
+
+
+\subsection{Rationale and scope}
+
+The requirements give a shared vocabulary for FL in law enforcement, make explicit what framework design usually leaves out, and inform the architecture in Sec.~\ref{Federated Forensics: A Reference Architecture for Law Enforcement Collaboration}. They are neither a checklist nor a scoring system.
+%
+Several of the requirements below also appear in FL for healthcare and finance. Privacy preservation and auditability, in particular, are common to any regulated domain, so we do not claim the individual requirements as novel. Our contribution is threefold. We consolidate them into one set for the forensic setting, we state what the forensic setting adds to each of them (Table~\ref{tab:domain_contrast}), and we show that two of them conflict under conditions that do not arise in the comparison domains (Sec.~\ref{subsec:req_tensions}).
+
+
+
+\subsection{Methodology}
+Requirements were derived from prior work in three areas:
+
+\textit{FL frameworks and mechanisms.} Comparative studies of FL systems \citep{riedel2024comparative}, foundational work on FL architectures \citep{bonawitz2019towards, kairouz2021advances}, privacy-preserving mechanisms including secure aggregation \citep{secureAggration} and differential privacy \citep{mcmahan2018learning, geyer2017differentially}, and communication-efficient protocols \citep{mcmahan2017communication}. This gave us the core architectural, privacy, and communication design principles.
+
+\textit{Regulated domains.} FL deployments in healthcare \citep{sheller2020federated, rieke2020future, xu2021federated} and finance \citep{FL_bank, yang2019federated}. We chose these two because, among non-LEA deployments, they are close to the LEA context in three respects: strict regulatory oversight, collaboration across organizational boundaries, and high cost of errors. Mobile analytics and IoT were excluded because their FL deployments are mostly cross-device, with many devices under one operator, whereas multi-agency collaboration is cross-silo between independent organizations \citep{kairouz2021advances}.
+This literature informed the requirements on governance, auditability, and compliance with sector regulations such as GDPR \citep{voigt2017eu} and HIPAA \citep{annas2003hipaa}.
+
+\textit{Law enforcement and digital forensics.} We looked at empirical studies of investigative workflows and system requirements \citep{SKIPANES2026100805}, knowledge management in policing \citep{GOTTSCHALK201094}, hybrid intelligence systems that use open-source intelligence \citep{Maio2025HybridOSINT}, forensic process models \citep{carrier2003defining, palmer2001road}, chain-of-custody \citep{casey2011}, and forensic readiness \citep{rowlingson2004ten}. We supplemented this literature with direct practitioner input: one of the authors works for a law enforcement agency and contributed first-hand knowledge of investigative workflows, organizational structures, and operational constraints. This helped us interpret and apply the literature to real law-enforcement settings.
+
+We coded recurring concepts, kept those appearing in more than one source, and grouped them into requirements, excluding those mainstream frameworks already handle well, such as convergence or communication efficiency.
+
+
+
+\subsection{Core requirements}
+
+The seven requirements (R1 to R7) are unranked, because their relative importance depends on the investigative context and the legal environment. The list is not exhaustive. It is scoped to requirements that existing FL frameworks either do not address or address insufficiently for forensic use.
+
+\textbf{R1.} Privacy Preservation and Data Locality:
+Raw data must stay under the control of the originating agency and must not be exposed to unauthorized parties. This includes jurisdictional boundaries, purpose limitation, and data minimization. Under Article~5(1)(b) GDPR and Directive (EU) 2016/680, purpose limitation binds at the level of the individual investigation \citep{gdpr_article5,directive2016680}.
+%
+R1 is often equated with the use of Secure Aggregation and Differential Privacy. In this setting, that equation is wrong. The two mechanisms address different threats, and neither is needed everywhere. Differential Privacy protects data subjects against inference by the aggregator, so its motivation depends on whether the aggregator has a lawful claim to the underlying data. Secure Aggregation hides a participant's contribution from the other participants and from the aggregator, so its motivation is operational rather than data-protective. In the deployments that FL practice comes from, the aggregator is a commercial operator with no legal relationship to the data subjects, and the first threat is acute. A regional hub that aggregates updates from its own subordinate agencies is in a different position. What R1 demands is therefore not a fixed set of mechanisms, but a decision, taken per layer, about which protection is owed to whom. Sec.~\ref{subsec:threat_model} takes that decision for the proposed architecture.
+
+
+\textbf{R2.} Auditability and Traceability:
+Forensic processes need end-to-end auditability. The system must record, reconstruct, and verify the training activity, including model updates, aggregation steps, and who participated. 
+The standard is not internal reproducibility but external examinability. The relevant ISO standards give guidance rather than binding requirements, but the expectation is clear. ISO/IEC 27041 covers the assurance that an investigative method is suitable for its purpose and that its implementation can be shown to meet that purpose; ISO/IEC 27042 covers the analysis and interpretation of digital evidence, and ISO/IEC 27043 sets out the principles and processes that an investigation should follow and document across its lifecycle. In court, the record may be challenged by other parties, and it may need to remain verifiable long after the underlying analysis was conducted.
+
+
+\textbf{R3.} Governance and Organizational Control:
+LEA collaboration follows hierarchical and inter-agency governance structures. The system must support explicit governance mechanisms that define roles, responsibilities, and decision-making authority, including the management of participation, the control of model dissemination, and the enforcement of organizational policy. A key difference from consortium-based FL in other domains is that participation may be constrained by statutory competence rather than being determined solely by contractual agreement. An agency may be legally unable to contribute to a given aggregate, however willing it is. R3 is the requirement this paper concentrates on: the architecture in Sec.~\ref{Federated Forensics: A Reference Architecture for Law Enforcement Collaboration} is derived from it, and the policy gate implements it.
+
+\textbf{R4.} Explainability and Interpretability:
+Models may inform investigative decisions and, indirectly, judicial proceedings. Investigators must be able to reason about model behavior, limitations, and error sources, since outputs that cannot be interpreted have limited operational and legal use \citep{solanke2022explainable,michelet2026gptoss}. The required level of explainability may depend on how the output is used. Where outputs serve only as investigative intelligence and the resulting evidence is verified independently, it remains unclear to what extent the model itself must be explainable to a court. Where outputs feed into a legal assessment, technical transparency alone is not sufficient; the reasoning must follow the structure of the legal evaluation it supports \citep{herrmann2026siak,herrmann2026embedding}. Black-box decision-making may also raise concerns under the fair trial guarantees of Article 6 ECHR and Article 47 of the Charter of Fundamental Rights \citep{echr_art6,cfreu_art47}, and the EU AI Act emphasizes transparency for high-risk AI systems used in law enforcement \citep{euaiact2024}.
+
+\textbf{R5.} Interoperability and Extensibility: LEAs run heterogeneous technical environments. The system must work with existing forensic toolchains and data formats and must accommodate changing investigative needs without architectural change. A relevant constraint in this setting is that forensic IT environments are typically separated, physically or logically, from operational networks. Federated learning therefore requires controlled mechanisms for transferring model updates across these boundaries without compromising the isolation of the forensic environment.
+
+\textbf{R6.} Integration with Forensic Workflows:
+FL should extend established workflows rather than disrupt them. The system must fit evidence management, case handling, and analytical pipelines, and must allow incremental adoption where that is useful. Integration must also preserve the distinction between intelligence and evidence. A model output may direct the collection of evidence following the forensic procedures described in ISO/IEC 27037, but it does not replace that collection.
+
+\textbf{R7.} Usability and Operational Practicality:
+The system must be usable by non-specialists within normal agency resource constraints. This includes deployment: installation, configuration, and maintenance must be feasible for an agency IT department without specialist machine learning support, because a system that cannot be set up will not be adopted, whatever its properties. Excessive complexity is also more than an adoption barrier in this setting. It can make the system harder to operate reliably and its behavior more difficult to explain or review. This is particularly relevant where model outputs influence investigative decisions and may later require scrutiny.
+
+\begin{table}[th]
+\caption{Additional demands placed on each requirement by the forensic setting, relative to its formulation in federated learning for healthcare and finance.}
+\label{tab:domain_contrast}
+\centering
+\scriptsize 
+\begin{tabular}{@{}p{0.03\linewidth}p{0.35\linewidth}p{0.52\linewidth}@{}}
+\toprule
+\textbf{Req.} & \textbf{Formulation in regulated domain FL} & \textbf{Additional demand in the forensic setting} \\
+\midrule
+
+R1 & Raw data remains local; secure aggregation and differential privacy protect individual records against an aggregator with no claim to them. & Purpose limitation may apply at the level of the individual investigation; the protection required may therefore differ by layer depending on the applicable legal and operational requirements \citep{gdpr_article5,directive2016680}. \\
+\addlinespace
+R2 & Logging for reproducibility, model governance and regulatory reporting. & The record must remain verifiable over time and withstand independent or critical examination (ISO/IEC 27041 and 27043). \\
+\addlinespace
+R3 & Consortium agreements between voluntarily cooperating institutions. & Participation may be constrained by statutory competence rather than determined solely by voluntary agreement. \\
+\addlinespace
+R4 & Explanations addressed to domain experts and regulators. & Explainability requirements may extend beyond the system operator where model outputs influence investigative or judicial processes; the required level of court-facing explainability remains context-dependent \citep{echr_art6,cfreu_art47}. \\
+\addlinespace
+R5 & Integration with existing institutional data infrastructure. & Integration across networks that are deliberately separated from operational infrastructure for security reasons. \\
+\addlinespace
+R6 & Integration with clinical or business processes. & Preservation of the boundary between intelligence and evidence; outputs may direct evidence collection following established forensic procedures rather than replacing it (ISO/IEC 27037). \\
+\addlinespace
+R7 & Usability for domain specialists. & System complexity must remain manageable for reliable operation, review, and explanation, particularly where outputs influence investigative decisions. \\
+
+
+
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+
+\subsection{Tensions between requirements}
+\label{subsec:req_tensions}
+
+The requirements cannot be met independently of one another; three tensions arise:
+
+One conflict is between R1 and R2. Differential privacy adds calibrated noise to model updates so that individual contributions cannot be inferred, and secure aggregation hides individual updates from the aggregator. Both degrade exactly the property that R2 needs, namely the ability to attribute a contribution to a specific participant afterwards. In healthcare and finance, this tension stays latent, because no external party has an interest in contesting the provenance of one institution's contribution.
+
+The conflict is narrower than it looks because R1 is interpreted differently at each layer. It only appears where a privacy mechanism is needed, and it may become particularly relevant where the aggregate leaves the jurisdiction. Inside a jurisdiction the aggregating body may itself be a competent authority, but the protection required still depends on the purpose and legal basis of the processing and on what information is necessary for that purpose. Privacy-preserving mechanisms can minimize the information disclosed, but they do not replace the legal basis required for the underlying processing. The open question is therefore not how to reconcile privacy and auditability in general. It is whether attribution can be kept across those aggregation steps where additional privacy protection is needed. We raise the question here and do not answer it. Designing an audit mechanism that satisfies both requirements is a problem of its own and is treated in separate work.
+
+Two further tensions are less severe but relevant for deployment. R4 partly opposes R1, because explanations of model behavior can themselves disclose information about the training data. R2 also conflicts with R7, as comprehensive audit trails burden agencies already short of resources.
+
+\subsection{Federated learning framework landscape: Screening and forensic readiness}
+\label{subsec:Federated Learning Framework Landscape: Maturity and Forensic Readiness}
+
+The architecture in Sec.~\ref{Federated Forensics: A Reference Architecture for Law Enforcement Collaboration} needs hierarchical aggregation and a point to inspect contributions before forwarding. Most maintained FL frameworks offer the first, and the second can be built wherever aggregation is user-definable, so the architecture is not tied to one framework.
+
+For completeness, we screened twelve widely used open-source frameworks on maintenance indicators taken from public repository metadata, and then assessed one of them, Flower, against R1 to R7. The screening procedure, the statistics, the reasons for choosing Flower, and the assessment itself are in Appendix~\ref{appendix:maturity} and Appendix~\ref{appendix:flower}. Its indicators measure public community activity, a poor proxy when adopting organizations do not contribute publicly, and they also depend on project age and the developer community's location.
+
+One finding from that assessment belongs here, because it bears on the argument and not on the framework. Flower provides secure aggregation and differential privacy, but both are configured globally rather than per aggregation step, which reflects the flat deployment model the framework assumes. As argued under R1, the question for a forensic deployment is which protection is required at each layer based on the applicable legal and operational requirements. A framework with a single privacy setting for all aggregation steps cannot express it, and enabling either mechanism everywhere may trigger the conflict with auditability described in Sec.~\ref{subsec:req_tensions} at layers where the same level of protection is not required.
+
+
+The remaining findings agree: several frameworks are mature, but none offers inter-agency governance, forensic-grade audit trails, or case-management integration. Standard FL frameworks were not designed for the hierarchies, oversight, and accountability demands of law enforcement, and this mismatch motivates the architecture in the next section.
+

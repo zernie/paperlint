@@ -1,0 +1,90 @@
+\begin{tikzpicture}[
+  x=1cm, y=1cm,
+  sq/.style={draw=black, line width=0.5pt},
+  hd/.style={font=\footnotesize\bfseries, anchor=south, align=center, text width=1.95cm, inner sep=1pt},
+  gl/.style={font=\scriptsize, text=black!60, anchor=north, align=center, text width=1.95cm, inner sep=1pt},
+  ex/.style={font=\fontsize{6.5}{7.5}\selectfont\itshape, anchor=base, align=center},
+  rl/.style={font=\small, anchor=north west, inner sep=1pt},
+  rg/.style={font=\scriptsize, text=black!60, anchor=north west, text width=3.15cm, inner sep=1pt},
+  ct/.style={font=\scriptsize\bfseries, text=black!60, anchor=south east},
+  tt/.style={font=\small\bfseries, anchor=east},
+  lg/.style={font=\scriptsize, anchor=west},
+  band/.style={font=\scriptsize, text=black!60},
+]
+\def\xz{3.4} \def\cw{2.1} \def\pad{0.18} \def\pitch{0.19} \def\sqs{0.15}
+\def\rtA{0}    \def\rhA{1.6}
+\def\rtB{-1.6} \def\rhB{1.4}
+\def\rtC{-3.0} \def\rhC{0.9}
+\def\gb{-3.9}
+\colorlet{pass}{green!10}
+\colorlet{fail}{red!10}
+\colorlet{lens}{black!6}
+
+\newcommand{\cell}[4]{%
+  \ifnum#3>0
+    \pgfmathtruncatemacro{\nmax}{#3-1}
+    \foreach \k in {0,...,\nmax}{
+      \pgfmathtruncatemacro{\r}{floor(\k/9)}
+      \pgfmathtruncatemacro{\c}{mod(\k,9)}
+      \pgfmathsetmacro{\px}{\xz+#1*\cw+\pad+\c*\pitch}
+      \pgfmathsetmacro{\py}{#2-\pad-\r*\pitch}
+      \ifnum\k<#4 \draw[sq] (\px,\py) rectangle ++(\sqs,-\sqs);
+      \else \fill[black] (\px,\py) rectangle ++(\sqs,-\sqs); \fi
+    }
+  \fi
+}
+\newcommand{\cellcount}[3]{\node[ct] at (\xz+#1*\cw+\cw-\pad, #2+0.08) {#3};}
+
+\fill[pass] (\xz, 2.00)    rectangle (\xz+\cw,   2.50);
+\fill[fail] (\xz+\cw, 2.00) rectangle (\xz+5*\cw, 2.50);
+\node[band] at (\xz+0.5*\cw, 2.25) {\textbf{real task}};
+\node[band, align=center, text width=8.2cm] at (\xz+3*\cw, 2.25)
+  {\textbf{artificially constructed task} (no real prediction problem)};
+\foreach \i/\cname/\cdef/\exm in {
+  0/{}/{answers the source question}/{FordA},
+  1/{toy task}/{staged or simulated}/GunPoint,
+  2/{metadata as label}/{a recording attribute}/ItalyPowerDemand,
+  3/{instance identity as label}/{which source produced it}/CinCECGTorso,
+  4/{redefined task}/{task swapped by the archive}/HouseTwenty}{
+  \node[hd] at (\xz+\i*\cw+0.5*\cw, 1.2) {\cname};
+  \node[gl] at (\xz+\i*\cw+0.5*\cw, 1.15) {\cdef};
+  \node[ex] at (\xz+\i*\cw+0.5*\cw, 0.15) {\exm};
+}
+
+\fill[pass] (0,\rtA) rectangle (\xz-0.1, \rtA-\rhA);
+\fill[lens] (0,\rtB) rectangle (\xz-0.1, \rtB-\rhB);
+\fill[lens] (0,\rtC) rectangle (\xz-0.1, \gb);
+\fill[pass] (\xz,\rtA) rectangle (\xz+\cw, \rtA-\rhA);
+
+\draw[black!50, line width=0.4pt] (0,\rtA) -- (\xz+5*\cw,\rtA);
+\draw[black!20, line width=0.3pt] (0,\rtB) -- (\xz+5*\cw,\rtB);
+\draw[black!20, line width=0.3pt] (0,\rtC) -- (\xz+5*\cw,\rtC);
+\draw[black!20, line width=0.3pt] (0,\gb)  -- (\xz+5*\cw,\gb);
+\foreach \i in {1,...,4}{\draw[black!20, line width=0.3pt] (\xz+\i*\cw,\rtA) -- (\xz+\i*\cw,\gb);}
+
+\node[rl] at (0.1,\rtA-0.18) {\textbf{temporal}};
+\node[rg] at (0.1,\rtA-0.55) {sampled over time $\cdot$ 71};
+\node[rl] at (0.1,\rtB-0.18) {\textbf{ordered, non-temporal}};
+\node[rg] at (0.1,\rtB-0.55) {e.g. wavelength, contour $\cdot$ 49};
+\node[rl] at (0.1,\rtC-0.18) {\textbf{synthetic}};
+\node[rg] at (0.1,\rtC-0.55) {generated $\cdot$ 8};
+
+\cell{0}{\rtA}{38}{10} \cellcount{0}{\rtB}{38}
+\cell{1}{\rtA}{4}{2}   \cellcount{1}{\rtB}{4}
+\cell{2}{\rtA}{11}{6}  \cellcount{2}{\rtB}{11}
+\cell{3}{\rtA}{10}{8}  \cellcount{3}{\rtB}{10}
+\cell{4}{\rtA}{8}{3}   \cellcount{4}{\rtB}{8}
+\cell{0}{\rtB}{38}{7}  \cellcount{0}{\rtC}{38}
+\cell{2}{\rtB}{2}{1}   \cellcount{2}{\rtC}{2}
+\cell{3}{\rtB}{4}{3}   \cellcount{3}{\rtC}{4}
+\cell{4}{\rtB}{5}{1}   \cellcount{4}{\rtC}{5}
+\cell{1}{\rtC}{8}{0}   \cellcount{1}{\gb}{8}
+
+\node[font=\scriptsize, text=black!60, anchor=west] at (0.1, \gb-0.3) {\dots of all 128 datasets};
+\foreach \i/\n in {0/76, 1/12, 2/13, 3/14, 4/13}{\node[tt] at (\xz+\i*\cw+\cw-\pad, \gb-0.3) {\n};}
+
+\fill[black] (\xz+0.08, \gb-1.02) rectangle ++(\sqs,\sqs);
+\node[lg] at (\xz+0.42, \gb-0.94) {no leakage found};
+\draw[sq]    (\xz+3.68, \gb-1.02) rectangle ++(\sqs,\sqs);
+\node[lg] at (\xz+4.02, \gb-0.94) {dataset contains leakage};
+\end{tikzpicture}

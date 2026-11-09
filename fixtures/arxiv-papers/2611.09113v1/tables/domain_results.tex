@@ -1,0 +1,25 @@
+% Table 3: Drift rate by application domain (pooled across models).
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.9}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{l r r r r}
+\toprule
+\textbf{Domain} & \textbf{TSR} $\uparrow$ & \textbf{DR} $\downarrow$ & \textbf{CSR} $\uparrow$ & \textbf{CCSR} $\uparrow$ \\
+\midrule
+Productivity \& Workspace      & 0.733 & \textbf{0.495} & 0.316 & 0.626 \\
+Security                       & 0.781 & 0.411 & 0.433 & 0.724 \\
+Finance \& E-Commerce          & 0.774 & 0.403 & 0.417 & 0.699 \\
+Personal \& Lifestyle          & 0.666 & 0.394 & 0.391 & 0.645 \\
+IT \& Cloud                    & \textbf{0.802} & 0.341 & \textbf{0.497} & \textbf{0.755} \\
+Social \& Communication        & 0.751 & 0.324 & 0.472 & 0.699 \\
+Data \& Research               & 0.738 & \textbf{0.321} & 0.484 & 0.712 \\
+\bottomrule
+\end{tabular}
+}
+\caption{Drift rate by domain, pooled across all evaluated models and individual runs. Productivity, Security, and Finance show the highest DR; their lower CCSR than TSR indicates that successful task completion is relatively less frequent among compliant runs.}
+\label{tab:domain_results}
+% \vspace{-4mm}
+\end{table}

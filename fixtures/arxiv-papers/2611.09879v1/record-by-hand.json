@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "cispa_defaults.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "cpu_names.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "usenix.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "plots/llc-slices.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/precision_ht.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/precision.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/wasm.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "7cc1c99cec61921288d383ef171f3b9a7de367e79e7ecd9e1139c544dae58ff2",
+    "cispa_defaults.sty": "7456c2a5bdb705b509e7fb402520121ded073b60849bfd9487c7c7ec5ad3df09",
+    "cpu_names.sty": "1328519bd34968fa1a5ac4e3af21116cd213d5e1a4f777d86c3d9f1960bc3ec1",
+    "usenix.sty": "b21dad1245c2cdcc76e39b12613cb4e499614d001b784e11ae2d3452ee54f174",
+    "plots/llc-slices.tex": "27edcae7e6fec76da443d7e7b2c9768faf39823b96e3723622b4f4c2574715f7",
+    "tables/precision_ht.tex": "a8be55fff7db87e504c89e1dce541bd53e80653d3ec7a8a50a0f4ce298d194b6",
+    "tables/precision.tex": "01235fa8f67d6e1117b2274370f2f2010c38dab840919bccb84bf5e40807ba28",
+    "tables/wasm.tex": "94d334ba5fc916f0bbd393cf77c6d17e94f26b3d0e77a6a1b3e92a7eee402372"
+  }
+}

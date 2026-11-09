@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "tmlr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "graphs/graph.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/cmnist_dino_jan2.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/cam_results_jan.tex",
+      "role": "body"
+    },
+    {
+      "path": "gaussians.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "e240bc46b3a11af7d85ab14e0e1b5a0587763d60888d9b5d5197dd25532081cb",
+    "fancyhdr.sty": "3d2922548e0e5f1a6c5676eda6ebb6dc20d7d305b4d8c2be5f1c833fb1084e6d",
+    "tmlr.sty": "816214ff5919aa457b6b443bee52b15d9561421417b7f8a50cc84651519f0002",
+    "math_commands.tex": "90473c4d0542070db244cea73ef962d6cddc5b2a746757e6a40ddf5fdfb90ba9",
+    "graphs/graph.tex": "aa86818fb631e9a0105c1cc898bcee4c1ff53aef06f9e28cae994f9cff31e6fd",
+    "tables/cmnist_dino_jan2.tex": "265ebc198ba4fa9e2de9d56e2cbdd5373ecfe3535ef2d465e3526c3a73f30bb8",
+    "tables/cam_results_jan.tex": "45077f7693527ff952ebba7c05f20ddd473bbb28c52af3bf204154a76768709c",
+    "gaussians.tex": "efd27c7f842717dd79f6f811b0312cb0ea5225b797618ffebc5fcb07e0a7a779"
+  }
+}

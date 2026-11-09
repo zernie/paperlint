@@ -1,0 +1,40 @@
+\section{Federated learning and digital forensics: Context and gaps}
+\label{Federated Learning and Digital Forensics: Context and Gaps}
+
+This section reviews current federated learning and identifies which of its assumptions fail in law enforcement and matter for the architecture.
+
+
+\subsection{Federated learning in privacy-sensitive domains}
+
+In FL, participants share model updates instead of data, and an aggregator combines them into a global model. Raw data stays local, so FL fits domains where regulation or ethics prevent central collection. 
+In healthcare, ten institutions jointly trained models that reached 99\% of the performance of a centrally trained model and generalized to external institutions \citep{sheller2020federated}. Similar deployments exist in finance \citep{FL_bank} and in cybersecurity, notably intrusion and IoT malware detection \citep{hernandez2025intrusion,jsan14040078}.
+%
+The standard way to combine updates is Federated Averaging (FedAvg), which takes a weighted average of them \citep{mcmahan2017communication}. FedAvg assumes that all participants behave honestly. Otherwise, a single manipulated update can distort the shared model, so robust methods discard updates that deviate too far from the rest \citep{NIPS2017_Krum,FedTrimmedAvg}.
+Further work deals with participants whose data differs strongly from one another, with reducing how much is sent per round \citep{konevcny2016federated}, and with hiding individual updates from the aggregator.
+%
+Consequently, one can say that FL is technically mature, but it rests on assumptions. Most research assumes cooperative participants, homogeneous governance, and evaluation aimed at model performance \citep{riedel2024comparative}, scalability, and privacy. Organizational accountability, legal admissibility, evidentiary traceability, and procedural transparency are often outside the scope of framework design. This follows from the settings FL was built for, with assumed trust, cooperative data owners, and flat governance, none of which holds in multi-agency law enforcement.
+
+
+
+\subsection{Hierarchical federated learning}
+\label{subsec:Hierarchical Federated Learning}
+
+Multi-tier federated learning is well established. \cite{9148862} introduced the client-edge-cloud design, in which edge servers aggregate before a cloud server produces the global model. Related designs distribute aggregation across heterogeneous cellular networks \citep{abad2020hierarchical} or cluster clients by update similarity to reduce the effect of non-IID data \citep{briggs2020hierarchical}.
+%
+In all of these designs, the middle tier exists for engineering reasons. Edge aggregation reduces uplink traffic to the cloud, exploits locality and latency, lowers the frequency of expensive global synchronization, and improves convergence under heterogeneous data. The intermediate aggregator is therefore a performance optimization. It is assumed to be cooperative; it is not an authority, and it forwards whatever it has aggregated.
+%
+Our topology is therefore not novel; what differs is why the middle tier exists and what it must therefore be able to do. If the middle tier is placed where legal authority over a jurisdiction sits, it must be able to restrict, scope, or withhold what it forwards, and it must be able to justify that decision afterwards. Neither capability has a counterpart in designs built for communication efficiency, because there an intermediate aggregator never has a reason to refuse. We develop this in Sec.~\ref{Federated Forensics: A Reference Architecture for Law Enforcement Collaboration} and evaluate it in Sec.~\ref{subsec:empirical_results}.
+
+
+
+\subsection{Federated learning in digital forensics and law enforcement}
+
+Digital investigations differ from other FL domains. Law enforcement agencies (LEAs) must preserve evidence integrity, maintain the chain-of-custody, and keep analytical processes defensible in court. Organizational hierarchies, jurisdictional boundaries, and legal mandates shape their workflows.
+
+FL has been proposed for forensic-adjacent tasks, but only on research data.
+\cite{Parra2022InterpretableFT} presented an interpretable federated transformer for threat detection and triage in cloud environments, and \cite{10.1145/3579375.3579387} proposed an FL framework for IoT forensics analysis, evaluated on IoT attack data and silent on FL process governance and auditability. \cite{dangi2025lift} introduced LIFT for live memory forensics and real-time malware detection, with little attention to explainability, legal admissibility, or multi-agency governance. None of these works show FL used by LEAs on evidentiary material in an investigation.
+
+A second line of work helps law enforcement and judicial authorities access cross-border electronic evidence, for example, Europol and the SIRIUS\footnote{\url{https://www.europol.europa.eu/how-we-work/sirius-project}} project. These initiatives support lawful access, provide standardized cooperation guidelines, and enable knowledge sharing. They concern data access and exchange rather than collaborative model training.
+
+Both lines come close without covering our problem. Forensic FL work targets single tasks and assumes equal, cooperative participants; evidence-exchange initiatives govern access to data, not joint model training. In both, the law is something to comply with afterwards rather than something that shapes the design. What is missing is an FL architecture in which jurisdictional rules are part of training itself.
+

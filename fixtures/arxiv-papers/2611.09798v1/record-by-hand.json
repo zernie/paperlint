@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "arxiv.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "include.tex",
+      "role": "body"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/tab_normal_gain.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/tab_k10.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "6563331fb5bd04c5a55d913af98b988418c30847b52028bdd71ae8bdd2c95fc4",
+    "arxiv.cls": "2e69320376239ed99ecfff5686de08be293767a2815f3b46bf76404dfc5a9aaf",
+    "include.tex": "3320804474b5947b123741d672836586bbb33dae0ada9f676e725cbea51aae4f",
+    "math_commands.tex": "90473c4d0542070db244cea73ef962d6cddc5b2a746757e6a40ddf5fdfb90ba9",
+    "tables/tab_normal_gain.tex": "be268b0c4f9ef71b08445c0578d95d47ebe9b7ab43479d934c3a98be6ccfd4a7",
+    "tables/tab_k10.tex": "679d45812b3f346b6ae6896dd15109cc3dac8bfc2cc6138011e9ce3fb19146e7"
+  }
+}

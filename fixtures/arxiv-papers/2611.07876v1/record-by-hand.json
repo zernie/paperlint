@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/problem_setting.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/methods.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/setup.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "generated/tab_verdict_summary.tex",
+      "role": "body"
+    },
+    {
+      "path": "generated/tab_language_detail_verdict.tex",
+      "role": "body"
+    },
+    {
+      "path": "generated/tab_program_summary.tex",
+      "role": "body"
+    },
+    {
+      "path": "generated/tab_genprobe.tex",
+      "role": "body"
+    },
+    {
+      "path": "generated/tab_problem_level.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/threats.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "dddd31ff1a6e3ead6f50e9af2180fe0ed2056a4a663253c7c6a9680df040460c",
+    "sections/introduction.tex": "49f884c68606278e0eea3fc6fa7dc04f9285a9f290eac974656bd91e78c5839d",
+    "sections/related_work.tex": "ef1e7240ceba5adc917aa83da9d856590b72f438a702e291c386335853e7c140",
+    "sections/problem_setting.tex": "631900c339fc28ef8c0a9d3e309883092120a8e8359cf54c8abf851a5150907b",
+    "sections/methods.tex": "5929085800c37d6be117f50cfecdaab6fcefc23cfffe3c5f86c4465fa824958d",
+    "sections/setup.tex": "dc07799be9677e3c2361ac9277d0e812f5c95908fa4542955fd63cf6abb2c67f",
+    "sections/experiments.tex": "c9b46c311c7fbd6889085864bb99bd7548ad86b2322d8407d2aa38083a1506b3",
+    "generated/tab_verdict_summary.tex": "6b713d7c56b0d8d5d134c567efda7ed1ccdf2df47eb59dcf459168494e3a3c25",
+    "generated/tab_language_detail_verdict.tex": "7e9d170c9818a71dc3fa443b59e833dc9a1a6baa30c4ddb9ba137e348eb0e5ed",
+    "generated/tab_program_summary.tex": "ecf4941c67a2f084875e97bfd0c407fc3d783e56c6787c92133bac284019813b",
+    "generated/tab_genprobe.tex": "90f129c146f296bb9e3c0fceb67dd13e522ecea556ca4495e437c96c99538d3b",
+    "generated/tab_problem_level.tex": "084a43f7d4e4c3fc61177cbb19bcb499fd248e6706a286ac425d8f5d64bf85f8",
+    "sections/discussion.tex": "a89539aa76282b87bc45aef602313e3571b04c9f76fd06d2203db277b0bab69c",
+    "sections/threats.tex": "558d252c1ef409266efa63c380e5a6eccd358a6fd0d9940d152998d93a4d6e99"
+  }
+}

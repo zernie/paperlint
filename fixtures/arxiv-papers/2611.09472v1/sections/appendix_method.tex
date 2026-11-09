@@ -1,0 +1,36 @@
+\section{Controller and Training Details}
+\label{app:method}
+\subsection{Consolidation configuration}
+Algorithm~\ref{alg:engram} specifies the general multi-round controller. The scaled SFT experiments use a single batch update followed by per-skill verification and deployment; replay from earlier consolidation rounds is empty in this setting. Historical multi-round runs and their configurations are reported separately.
+
+\subsection{Trajectory construction}
+Acquisition targets low-mastery skills. A strong teacher executes action sequences through the same environment interface. The environment's reported target outcome determines demonstration success. For achievement-based environments, the stored segment ends at the action that unlocks the achievement, and a target-directed episode can stop once that event occurs. This alignment retains the action that caused success rather than an arbitrary prefix of the rollout.
+
+Teacher demonstrations complement student successes and teacher-written failure corrections. A correction enters action training only if it supplies a valid action for an aligned observation. Source tags distinguish demonstrations, corrections, and student traces.
+
+\subsection{Training configuration}
+Examples from admitted skills are combined with available training-only replay:
+\begin{equation}
+ \dataset_t=\bigcup_{s:u_{t,s}=1}\dataset_{t,s},\qquad
+ \widetilde{\dataset}_t=\dataset_t\cup
+ \operatorname{Sample}(\replay_t,\rho).
+\label{eq:dataset}
+\end{equation}
+
+The replay fraction $\rho$ is limited by archive availability. Each example contains task input, training context, and the target action. The scaled SFT runs include ETG context and optimize the action-token likelihood in Eq.~\eqref{eq:loss}; their candidates restart from the base model. Optional regularization adds
+\begin{equation}
+\beta\,\mathbb{E}_{(x,c,a)\sim\widetilde{\dataset}_t}
+\operatorname{KL}\!\left(\pi_{\theta_0}(\cdot\mid x,c)\,\|\,\pi_\theta(\cdot\mid x,c)\right)
+\end{equation}
+at supervised response positions. This optional term is not part of the scaled SFT objective. Candidate loading precedes verification, and failures preserve existing approvals and external records.
+
+\paragraph{Admission and probe settings.}
+The demonstration threshold $d_{\min}=2$ counts successful records, not independent teacher episodes. QA probes use an answer-score threshold of 0.5; final EM and F1 are reported separately. Probe construction and episode separation follow Appendix~\ref{app:protocol}. Only records with valid training participation are eligible for release, with up to $k_{\mathrm{res}}$ recent residual records retained per memory category.
+
+\paragraph{Retrieval-store accounting.}
+If $A_t$ records arrive and $E_t$ eligible records are released, retrieval occupancy obeys
+\begin{equation}
+|\memory_{t+1}|=|\memory_t|+A_t-E_t.
+\label{eq:occupancy}
+\end{equation}
+Retrieval storage stabilizes when departures keep pace with arrivals. Replay and any retained archives are accounted for separately; removing retrieval records does not by itself imply a reduction in total storage.

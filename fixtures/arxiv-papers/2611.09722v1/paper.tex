@@ -1,0 +1,91 @@
+\documentclass{article}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,backgrounds,calc,fit,positioning}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{xspace}
+\usepackage[hyphens]{url}
+\usepackage{placeins}
+\usepackage[caption=false,font=footnotesize]{subfig} %
+\usepackage{hyperref}
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+\usepackage[accepted]{preprint}
+
+\usepackage{cleveref}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\dblfloatpagefraction}{0.80}
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\textfraction}{0.12}
+
+\newcommand{\sys}{FOSCAR\xspace} %
+\newcommand{\ie}{i.e.,\xspace}
+\newcommand{\eg}{e.g.,\xspace}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\smax}{\mathrm{softmax}}
+\definecolor{ptblue}{HTML}{4477AA}
+\definecolor{ptcyan}{HTML}{66CCEE}
+\definecolor{ptgreen}{HTML}{228833}
+\definecolor{ptyellow}{HTML}{CCBB44}
+\definecolor{ptred}{HTML}{EE6677}
+\definecolor{ptpurple}{HTML}{AA3377}
+\definecolor{ptgrey}{HTML}{BBBBBB}
+
+\Crefname{figure}{Fig.}{Figs.}
+\Crefname{section}{Sec.}{Secs.}
+\Crefname{algorithm}{Algo.}{Algos.}
+\Crefname{equation}{Eq.}{Eqs.}
+
+\papertitlerunning{FOSCAR}
+
+\begin{document}
+
+\twocolumn[
+\papertitle{FOSCAR: Accelerating Decode Attention over 2- and 4-Bit KV Caches through Affine Folding}
+
+\begin{paperauthorlist}
+\paperauthor{Donglin Zhuang}{together,usyd}
+\paperauthor{Pragaash Ponnusamy}{together}
+\paperauthor{Xiaoxia Wu}{together}
+\paperauthor{Shuaiwen Leon Song}{usyd}
+\paperauthor{Zhongzhu Zhou}{together,usyd}
+\end{paperauthorlist}
+
+\paperaffiliation{together}{Together AI}
+\paperaffiliation{usyd}{University of Sydney}
+
+\papercorrespondingauthor{Donglin Zhuang}{donglinzhuang@outlook.com}
+
+\paperkeywords{KV cache quantization, decode attention, GPU kernels, Tensor Cores}
+
+\vskip 0.3in
+
+\input{src/abstract}
+]
+
+\printAffiliationsAndNotice{}
+
+\input{src/0-intro}
+\input{src/1-background}
+\input{src/2-analysis}
+\input{src/3-design}
+\input{src/4-serving}
+\input{src/5-evaluation}
+\input{src/6-related}
+\input{src/7-conclusion}
+
+\FloatBarrier
+\bibliography{refs}
+\bibliographystyle{preprint}
+
+\clearpage
+\label{appendix-start}
+\input{src/8-appendix}
+
+\end{document}

@@ -1,0 +1,28 @@
+\begin{wraptable}[]{r}{0.5\textwidth}
+\vspace{-20pt}
+\centering\small
+\caption{Qwen3.5-9B component ablations.}
+\label{tab:q9-mechanism}
+\begingroup
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{0.96}
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+Task & Condition & HV & Span 1 & Span 2\\
+\midrule
+PKU-SafeRLHF & LambdaMix & 0.8735 & 1.9310 & 1.9820\\
+ & Mixture-only & 0.8144 & 0.1163 & 0.1084\\
+ & Weight-only & 0.7960 & 0.1382 & 0.1745\\
+ & Both fixed & 0.8203 & 0.1169 & 0.1685\\
+\midrule
+GSM8K-IF & LambdaMix & 0.810 & 0.287 & 0.110\\
+ & Mixture-only & 0.662 & 0.050 & 0.020\\
+ & Weight-only & 0.632 & 0.017 & 0.017\\
+\midrule
+SynthPAI & LambdaMix & 0.3858 & 0.0497 & 0.0721\\
+ & Mixture-only & 0.3240 & 0.0013 & 0.0180\\
+ & Weight-only & 0.3240 & 0.0005 & 0.0090\\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{wraptable}

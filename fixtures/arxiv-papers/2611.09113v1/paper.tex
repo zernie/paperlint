@@ -1,0 +1,150 @@
+\documentclass[11pt]{article}
+
+% =========================
+% ACL style base
+% =========================
+% \usepackage[review]{acl}
+\usepackage[final]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xurl}
+\usepackage{enumitem}
+\usepackage{tabularx}
+% \usepackage[table]{xcolor}
+\usepackage[table,dvipsnames]{xcolor}
+
+% =========================
+% Layout
+% =========================
+\usepackage{geometry}
+\geometry{margin=1in}
+
+% =========================
+% Code + boxes
+% =========================
+\usepackage{listings}
+\usepackage[breakable, skins]{tcolorbox}
+\usepackage{caption}
+\usepackage{fvextra}
+
+% =========================
+% Minted
+% =========================
+\usepackage{minted}
+\setminted{
+    breaklines,
+    bgcolor=gray!7,
+    fontsize=\small,
+    frame=none
+}
+
+% =========================
+% 附录颜色和样式
+% =========================
+
+% ── Colour palette ────────────────────────────────────────────────
+\definecolor{codebackground}{RGB}{250,250,252}
+\definecolor{keywordblue}{RGB}{0,90,200}
+\definecolor{stringgreen}{RGB}{0,128,60}
+\definecolor{commentgray}{RGB}{120,120,120}
+\definecolor{triggeramber}{RGB}{200,100,0}
+\definecolor{triggerred}{RGB}{220,80,0}
+\definecolor{driftred}{RGB}{180,30,30}
+\definecolor{compliantblue}{RGB}{0,80,160}
+\definecolor{rulecolor}{RGB}{160,160,160}
+
+% ── JSON listing style ────────────────────────────────────────────
+\lstdefinelanguage{JSONX}{
+  sensitive=true,
+  morestring=[b]",
+  literate=
+    % boundary_type values — red
+    *{"Data minimization"}  {{\textcolor{driftred}{"Data minimization"}}}  {18}
+     {"Implicit red line"}  {{\textcolor{driftred}{"Implicit red line"}}}  {18}
+     {"Purpose limitation"} {{\textcolor{driftred}{"Purpose limitation"}}} {19}
+     % drift_type values — orange
+     {"data\_drift"}  {{\textcolor{triggerred}{"data\_drift"}}}   {12}
+     {"scope\_drift"} {{\textcolor{triggerred}{"scope\_drift"}}}  {13}
+     {"time\_drift"}  {{\textcolor{triggerred}{"time\_drift"}}}   {12}
+     {"tool\_drift"}  {{\textcolor{triggerred}{"tool\_drift"}}}   {12}
+}
+
+\lstdefinestyle{jsonstyle}{
+  language=JSONX,
+  basicstyle=\ttfamily\fontsize{6.4}{7.8}\selectfont,
+  backgroundcolor=\color{codebackground},
+  frame=none,
+  xleftmargin=4pt, xrightmargin=4pt,
+  breaklines=true, breakatwhitespace=true,
+  stringstyle=\color{stringgreen},
+  keywordstyle=\color{keywordblue},
+  commentstyle=\color{commentgray}\itshape,
+  showstringspaces=false,
+  tabsize=2,
+  aboveskip=2pt, belowskip=2pt,
+}
+
+% ── Python listing style ──────────────────────────────────────────
+\lstdefinestyle{pystyle}{
+  language=Python,
+  basicstyle=\ttfamily\fontsize{6.4}{7.8}\selectfont,
+  backgroundcolor=\color{codebackground},
+  frame=none,
+  xleftmargin=4pt, xrightmargin=4pt,
+  breaklines=true, breakatwhitespace=true,
+  keywordstyle=\color{keywordblue}\bfseries,
+  stringstyle=\color{stringgreen},
+  commentstyle=\color{triggeramber}\itshape,
+  showstringspaces=false,
+  tabsize=2,
+  aboveskip=2pt, belowskip=2pt,
+  moredelim=[is][\color{triggeramber}\bfseries]{@}{@},
+}
+
+% =========================
+% Title
+% =========================
+\title{Authorization Drift in LLM Agents: \\Evaluating Boundary Compliance in Multi-Step Tool Use}
+% \title{Authorization Drift in LLM Agents: \\Benchmarking Authorization Boundaries and Legal Risks}
+% \author{Anonymous ACL Submission}
+
+\author{Chuxue Cao$^{1}$\thanks{Equal Contribution; $^\dag$Corresponding author.}, 
+Jingru Zeng$^{2*}$, 
+Boqin Yin$^{1*}$, 
+Yujin Zhou$^{1*}$, 
+Yidan Huang$^1$ \\
+\textbf{Sujin Chen$^3$, 
+Jinluan Yang$^4$,
+Haoran Li$^1$, Yike Guo$^{1\dag}$, Sirui Han$^{1\dag}$} \\
+$^1$Hong Kong University of Science and Technology \\
+$^2$South China University of Technology \\
+$^3$Suzhou University~~~~$^4$Zhejiang University \\
+\texttt{ccaoai@connect.ust.hk}
+}
+
+
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/related-work}
+\input{sections/methods}
+\input{sections/experiments}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\bibliography{references}
+\input{sections/appendix}
+
+\end{document}

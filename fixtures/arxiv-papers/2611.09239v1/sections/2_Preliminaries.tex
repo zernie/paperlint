@@ -1,0 +1,189 @@
+% \section{Preliminaries}
+% \label{sec:preliminaries}
+
+% \textbf{BDLM Inference.}
+% \label{sec:preliminaries}
+% DLMs generate text through iterative denoising rather than left-to-right autoregressive decoding. We consider BDLM inference, where generation proceeds one block at a time. Let $P$ denote the length of the already generated prefix and $B$ the size of the current generation block. At denoising step $s$, the input sequence is
+% \begin{equation}
+% \mathbf{x}^{(s)}
+% =
+% \left(
+% \underbrace{x_1,\ldots,x_P \vphantom{x_{P+B}^{(s)}}}_{\text{Prefix}},
+% \underbrace{x_{P+1}^{(s)},\ldots,x_{P+B}^{(s)}}_{\text{Block}}
+% \right).
+% \label{eq:dlm_input}
+% \end{equation}
+% After the final layer, the model applies its decoding policy to the current-block representations and resolves a subset of positions, while the unresolved positions are processed again in subsequent denoising steps. Once all positions in the block are resolved, the decoded block is appended to the historical prefix and generation proceeds to the next block.
+
+% Within a generation block, the historical prefix remains fixed while the current-block representations evolve across denoising steps. Therefore, historical prefix KV states can be cached and reused, whereas the $B$ current-block positions are repeatedly passed through the Transformer~\citep{wu2025fastdllm,wu2025fastdllmv2}. At layer $l$ and step $s$, we denote the current-block queries by
+% $\mathbf{Q}^{(l,s)}\in\mathbb{R}^{B\times H_q\times d_h}$ and the
+% cached historical keys and values by
+% $\mathbf{K}_{P}^{(l)},\mathbf{V}_{P}^{(l)}
+% \in\mathbb{R}^{P\times H_{kv}\times d_h}$.
+% Suppressing the head dimension and constant factors, each layer and denoising step performs $O(BP)$ query--key interactions with the historical prefix, in addition to $O(B^2)$ current-block attention and token-wise Transformer computation over $B$ positions. For $S$ denoising steps, the context-dependent historical-attention term is therefore repeated across both steps and layers, scaling as
+% \begin{equation}
+% O(S L \cdot B P \cdot d_h).
+% \label{eq:dlm_prefix_cost}
+% \end{equation}
+% This computation exposes two complementary reduction opportunities: reducing the number of historical KV states attended by each query, and reducing the number of current-block query rows propagated through deep Transformer layers.
+
+
+% \textbf{Prefix-Sparse Attention.}
+% \label{sec:preliminaries_prefix_sparse}
+% We first consider sparsity along the historical-prefix dimension. For
+% clarity, consider a single attention head and omit layer and denoising
+% step superscripts. Let $\mathbf{q}_i\in\mathbb{R}^{d_h}$ be a
+% current-block query and
+% $\mathbf{K}_{P},\mathbf{V}_{P}\in\mathbb{R}^{P\times d_h}$ be the
+% historical prefix KV states. Dense prefix attention computes
+% \begin{equation}
+%     \mathbf{o}_i^{P}
+%     =
+%     \operatorname{softmax}
+%     \left(
+%         \frac{
+%             \mathbf{q}_i\mathbf{K}_{P}^{\top}
+%         }{\sqrt{d_h}}
+%     \right)
+%     \mathbf{V}_{P}.
+%     \label{eq:dense_prefix_attention}
+% \end{equation}
+
+% Prefix-sparse attention instead retains only a subset
+% $\mathcal{S}_{P}\subseteq\{1,\ldots,P\}$ of historical positions and
+% computes
+% \begin{equation}
+%     \widetilde{\mathbf{o}}_i^{P}
+%     =
+%     \operatorname{softmax}
+%     \left(
+%         \frac{
+%             \mathbf{q}_i
+%             \mathbf{K}_{P}[\mathcal{S}_{P}]^{\top}
+%         }{\sqrt{d_h}}
+%     \right)
+%     \mathbf{V}_{P}[\mathcal{S}_{P}],
+%     \label{eq:sparse_prefix_attention}
+% \end{equation}
+% where $[\mathcal{S}_{P}]$ denotes gathering the KV rows indexed by
+% $\mathcal{S}_{P}$. If a compact prefix subset is shared by the current
+% block, the historical-attention interaction is reduced from $BP$ to
+% $B|\mathcal{S}_{P}|$. Prefix sparsity therefore directly targets the
+% context-length-dependent component of BDLM inference, which becomes
+% increasingly important as $P$ grows.
+
+
+% \textbf{Query-Sparse Deep Computation.}
+% \label{sec:preliminaries_query_sparse}
+% BDLM inference also repeatedly propagates all $B$ current-block positions through the Transformer, even though only a subset of positions may be relevant to the current denoising update. We denote by $\mathcal{S}_{Q}^{(l,s)}\subseteq\{1,\ldots,B\}$ the active current-block positions at layer $l$ and denoising step $s$. Unlike prefix sparsity, which reduces only the historical attention context, query sparsity removes inactive token rows from subsequent Transformer computation. For layers where query sparsity is applied, the number of processed token rows is reduced from $B$ to $|\mathcal{S}_{Q}^{(l,s)}|$, reducing not only query-side attention computation but also the corresponding feed-forward, MoE, projection, and other token-wise layer computation.
+
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=\linewidth]{figures/overview.pdf}
+%     \caption{\textbf{Overview of Duet.} \textbf{(A) Block-level prefix selection:} Duet selects a compact historical prefix subset independently for each layer and reuses the resulting KV cache across all denoising steps within the generation block. \textbf{(B) Step-wise query selection:} at each denoising step, Duet identifies active query rows at an early selection layer and propagates only these rows through the remaining Transformer layers, reducing redundant computation in both attention and FFN/MoE. Active and bypassed states are then recombined for the next denoising step.}
+%     \label{fig:overview}
+% \end{figure}
+
+% When query and prefix sparsity are applied jointly, the historical prefix-attention interaction in the affected layers is reduced from
+% \begin{equation}
+%     B P
+%     \quad\longrightarrow\quad
+%     |\mathcal{S}_{Q}^{(l,s)}|\,
+%     |\mathcal{S}_{P}^{(l,s)}|.
+%     \label{eq:two_dim_sparse}
+% \end{equation}
+% Thus, the two forms of sparsity target different dimensions of the same block-wise inference process: prefix sparsity reduces the historical KV context, while query sparsity reduces the number of current-block positions receiving deep computation. The next section describes how our method exploits both dimensions during BDLM decoding.
+
+
+
+
+
+\section{Preliminaries}
+\label{sec:preliminaries}
+
+\textbf{BDLM Inference.}
+DLMs generate text through iterative denoising rather than left-to-right autoregressive decoding. We consider BDLM inference, where generation proceeds one block at a time. Let $P$ denote the length of the currently generated prefix and $B$ the size of the current generation block. At denoising step $s$, the input sequence is
+\begin{equation}
+\mathbf{x}^{(s)}
+=
+\left(
+\underbrace{x_1,\ldots,x_P \vphantom{x_{P+B}^{(s)}}}_{\text{Prefix}},
+\underbrace{x_{P+1}^{(s)},\ldots,x_{P+B}^{(s)}}_{\text{Block}}
+\right).
+\label{eq:dlm_input}
+\end{equation}
+After the final layer, the model applies its decoding policy to the current-block representations and resolves a subset of positions, while the unresolved positions are processed again in subsequent denoising steps. Once all positions in the block are resolved, the decoded block is appended to the historical prefix and generation proceeds to the next block.
+
+Within a generation block, the historical prefix remains fixed while the current-block representations evolve across denoising steps. Therefore, historical prefix KV states can be cached and reused, whereas the $B$ current-block positions are repeatedly passed through the Transformer~\citep{wu2025fastdllm,wu2025fastdllmv2}. At layer $l$ and step $s$, we denote the current-block queries by
+$\mathbf{Q}^{(l,s)}\in\mathbb{R}^{B\times H_q\times d_h}$ and the
+cached historical keys and values by
+$\mathbf{K}_{P}^{(l)},\mathbf{V}_{P}^{(l)}
+\in\mathbb{R}^{P\times H_{kv}\times d_h}$.
+Each current-block query attends to the $P$ cached prefix positions and the $B$ positions in its own block. Suppressing head counts and constant factors, the per-layer, per-step costs of dense attention and the feed-forward (FFN) or mixture-of-experts (MoE) module are
+\begin{equation}
+T_{\mathrm{attn,dense}}^{(l)}
+=O\!\left(B(P+B)d_h+B c_{\mathrm{proj}}^{(l)}\right),
+\qquad
+T_{\mathrm{ff,dense}}^{(l)}
+=O\!\left(B c_{\mathrm{ff}}^{(l)}\right),
+\label{eq:dense_layer_cost}
+\end{equation}
+where $c_{\mathrm{proj}}^{(l)}$ is the per-row attention projection cost and $c_{\mathrm{ff}}^{(l)}$ is the per-row cost of the FFN or activated MoE experts, including routing. The first attention term accounts for query--key interactions and value aggregation. These costs expose two complementary reduction opportunities: attending to fewer historical KV states and propagating fewer current-block query rows through deep Transformer layers.
+
+
+\textbf{Prefix-Sparse Attention.}
+\label{sec:preliminaries_prefix_sparse}
+We first consider sparsity along the historical-prefix dimension. For
+clarity, consider a single attention head and omit layer and denoising
+step superscripts. Let $\mathbf{q}_i\in\mathbb{R}^{d_h}$ be a
+current-block query and
+$\mathbf{K}_{P},\mathbf{V}_{P}\in\mathbb{R}^{P\times d_h}$ and
+$\mathbf{K}_{B},\mathbf{V}_{B}\in\mathbb{R}^{B\times d_h}$ be the
+historical-prefix and current-block KV states, respectively. Dense attention computes
+\begin{equation}
+    \mathbf{o}_i
+    =
+    \operatorname{softmax}
+    \left(
+        \frac{
+            \mathbf{q}_i[\mathbf{K}_{P};\mathbf{K}_{B}]^{\top}
+        }{\sqrt{d_h}}
+    \right)
+    [\mathbf{V}_{P};\mathbf{V}_{B}].
+    \label{eq:dense_prefix_attention}
+\end{equation}
+
+Prefix-sparse attention instead retains only a subset
+$\mathcal{S}_{P}\subseteq\{1,\ldots,P\}$ of historical positions and
+computes
+\begin{equation}
+    \widetilde{\mathbf{o}}_i
+    =
+    \operatorname{softmax}
+    \left(
+        \frac{
+            \mathbf{q}_i
+            [\mathbf{K}_{P}[\mathcal{S}_{P}];\mathbf{K}_{B}]^{\top}
+        }{\sqrt{d_h}}
+    \right)
+    [\mathbf{V}_{P}[\mathcal{S}_{P}];\mathbf{V}_{B}],
+    \label{eq:sparse_prefix_attention}
+\end{equation}
+where the semicolon concatenates along the KV sequence dimension and
+$[\mathcal{S}_{P}]$ gathers the indexed historical rows. The original attention
+mask, when present, applies to both expressions. Only the historical KV
+portion changes; prefix sparsity does not remove the current-block KV states.
+Prefix sparsity therefore targets the context-length-dependent component of
+BDLM inference, which becomes increasingly important as $P$ grows.
+
+
+\textbf{Query-Sparse Deep Computation.}
+\label{sec:preliminaries_query_sparse}
+BDLM inference also repeatedly propagates all $B$ current-block positions through the Transformer, even though only a subset may require deep computation at a given denoising step. We denote the active block positions at step $s$ by $\mathcal{S}_{Q}^{(s)}\subseteq\{1,\ldots,B\}$ and their number by $Q_s=|\mathcal{S}_{Q}^{(s)}|$. Query sparsity omits the inactive query rows from subsequent layers: these rows do not incur deep attention projections or query-side attention, nor the corresponding FFN/MoE computation. The current block still provides its KV states to the active queries.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/overview.pdf}
+    \caption{\textbf{Overview of Duet.} \textbf{(A) Block-level prefix selection:} After the first dense step, Duet selects a compact historical prefix subset for each sparse suffix layer and reuses the resulting KV cache within the generation block. \textbf{(B) Step-wise query selection:} in subsequent denoising steps, Duet identifies active query rows at an early selection layer and propagates only these rows through the remaining Transformer layers, reducing redundant computation in both attention and FFN/MoE. Active and bypassed states are then recombined for the next denoising step.}
+    \label{fig:overview}
+\end{figure}
+Thus, prefix sparsity reduces the historical KV context, while query sparsity reduces the number of current-block positions receiving deep computation. The next section describes how Duet combines them during BDLM decoding.

@@ -1,0 +1,309 @@
+\begin{proof}\textbf{of Theorem~\ref{thm: PTF MSE lower bound}.}
+For each $i$, we can still define the minimum norm interpolant as
+\[
+g_i
+=
+\argmin_{g\in\mathcal H_K}
+\left\{
+\|g\|_{\mathcal H_K}:
+g(t_j)=f_i(t_j),\ j=1,\ldots,T
+\right\},
+\]
+and its transformed coefficients as in the proof for Theorem~\ref{thm: FTP MSE RKHS}:
+\[
+\mathbf \beta_i
+:=
+K_T^{-1/2}\mathbf f_i,\quad
+\|g_i\|_{\mathcal H_K} = \|\beta_i\|_2\le B.
+\]
+Denote $a_j = \sqrt{K(t_j,t_j)}$, by the RKHS reproducing property, 
+\[
+|f_i(t_j)|
+\leq
+\|f_i\|_{\mathcal{H}_K}\sqrt{K(t_j,t_j)}
+\leq
+Ba_j
+\leq 
+B' a_j.
+\]
+Since we are considering the noiseless case $\sigma_0=0$ and $x_i = \mathbf{f}_i$, with
+\[
+c_j = B'a_j.
+\]
+the clipping operation $\operatorname{clip}(x_{ij},c_j)$ is inactive and
+\[
+\bar x^{(\mathrm{clip})}
+=
+\bar{x}
+=
+\dfrac{1}{n}\sum_{i=1}^n x_i
+=
+\bar{\mathbf{f}}.
+\]
+It follows that the released private vector can be written as
+\[
+\widetilde x
+=
+\bar{\mathbf{f}}+Z
+=
+K_T^{1/2}\bar{\beta} + Z
+,
+\]
+where
+\[
+Z\sim N(0,\tau^2W^{-1}),
+\quad
+\tau^2=\frac{4B'^2T}{n^2\mu^2},
+\quad
+W = \mathrm{diag}\{a_1^{-2},\ldots,a_T^{-2}\}.
+\]
+By the representer theorem, the constrained estimator has the form
+\[
+\hat f_{\mathrm{PTF}}^{(c)}(t)
+=
+\sum_{j=1}^T
+(\hat\alpha^{(c)})_jK(t_j,t),
+\]
+\[
+\hat\alpha_{\mathrm{PTF}}^{(c)}
+=
+\argmin_{\alpha^\top K_T\alpha\le {B'}^2}
+\dfrac{1}{T} 
+(\widetilde{x} - K_T\alpha)^\top W (\widetilde{x} - K_T\alpha).
+\]
+Denote $\beta = K_T^{1/2}\alpha$, we can rewrite the constrained problem as
+\[
+\hat\beta_{\mathrm{PTF}}^{(c)}
+=
+\argmin_{\|\beta\|_2\le B'}
+(\widetilde{x} - K_T^{1/2}\beta)^\top W (\widetilde{x} - K_T^{1/2}\beta),
+\quad 
+\hat\beta_{\mathrm{PTF}}^{(c)} = K_T^{1/2}\hat\alpha_{\mathrm{PTF}}^{(c)}.
+\]
+We then analyze the corresponding unconstrained WLS estimator.\\
+Define 
+\[
+\Phi:=K_T^{1/2},
+\quad
+M:=\Phi^\top\Phi = K_T,
+\quad
+A:= \Phi^\top W\Phi
+=K_T^{1/2}WK_T^{1/2}.
+\]
+By
+definition, the unconstrained problem is:
+\[
+\hat{\beta}_{\mathrm{PTF}}^{(u)}
+=
+\argmin_{\beta\in \R ^T} (\widetilde{x} - K_T^{1/2}\beta)^\top W (\widetilde{x} - K_T^{1/2}\beta).
+\]
+with the solution
+\[
+\widetilde\beta_{\mathrm{PTF}}^{(u)}
+=
+A^{-1}\Phi^\top W\widetilde x
+=
+\Phi^{-1}\widetilde{x}.
+\]
+Substituting 
+$\widetilde x=K_T^{1/2}\bar{\beta} + Z= \Phi\bar\beta + Z$ gives $\widetilde\beta_{\mathrm{PTF}}^{(u)}=\bar\beta+\xi$, where $\xi:=\Phi^{-1}Z$.\\
+Since $Z\sim \mathcal{N}(0,\tau^2W^{-1})$, we obtain
+\[
+\xi
+\sim
+\mathcal{N} (0,\tau^2 \Phi^{-1}W^{-1}\Phi^{-1})
+\overset{d}{=}
+\mathcal{N}(0,\tau^2 A^{-1}).
+\]
+Hence
+\begin{equation}
+\mathbb E
+\left\|
+\xi
+\right\|_2^2
+=
+\tau^2\operatorname{tr}(A^{-1}),\quad
+\mathbb E
+\left\|
+Z
+\right\|_2^2
+=
+\tau^2\operatorname{tr}(W^{-1}).
+\label{eq: PTF unconstrained MSE_RKHS}
+\end{equation}
+We next account for the constraint $\|\beta\|_2\le B'$. 
+Let $\mathcal A=\{\|\widetilde\beta_{\mathrm{PTF}}^{(u)}\|_2>B'\}$ denote the event that the unconstrained estimator violates the constraint. On the complementary event $\mathcal A^c$, the unconstrained estimator is feasible and hence
+$\widetilde\beta_{\mathrm{PTF}}^{(c)}
+=
+\widetilde\beta_{\mathrm{PTF}}^{(u)}$. Therefore
+\[
+\begin{aligned}
+\mathbb E\|\Phi(\widetilde\beta_{\mathrm{PTF}}^{(c)}-\bar\beta)\|_2^2
+&=
+\mathbb E[
+\|\Phi(\widetilde\beta_{\mathrm{PTF}}^{(u)}-\bar\beta)\|_2^2
+\mathbf 1_{\mathcal A^c}]
++
+\mathbb E[
+\|\Phi(\widetilde\beta_{\mathrm{PTF}}^{(c)}-\bar\beta)\|_2^2
+\mathbf 1_{\mathcal A}]
+\\
+&\geq
+\mathbb E[
+\|\Phi\xi\|_2^2
+\mathbf 1_{\mathcal A^c}]
+\\
+&=
+\mathbb E\|Z\|_2^2
+-
+\mathbb E[
+\|Z\|_2^2
+\mathbf 1_{\mathcal A}].
+\end{aligned}
+\]
+Thus, by Equation~\eqref{eq: PTF unconstrained MSE_RKHS},
+\begin{equation}
+\begin{aligned}
+    \operatorname{MSE}_{\mathrm{PTF}}
+    =
+    \dfrac{1}{T}\mathbb{E} 
+    \|\widetilde{\mathbf{f}}_{\mathrm{PTF}} - \bar{\mathbf{f}}\|_2^2
+    =
+    \dfrac{1}{T}\mathbb{E} 
+    \|\Phi(\widetilde\beta_{\mathrm{PTF}}^{(c)}-\bar\beta)\|_2^2
+    \geq
+    \dfrac{1}{T}\SqBra{\tau^2\operatorname{tr}(W^{-1})
+    -
+    R_{\mathrm{PTF}}},
+\end{aligned}
+\label{eq: PTF remainder decomposition_RKHS}
+\end{equation}
+where
+\[
+R_{\mathrm{PTF}}
+=
+\mathbb E[
+\|Z\|_2^2
+\mathbf 1_{\mathcal A}].
+\]
+It remains to bound the remainder term. Since
+\[
+\|\bar\beta\|_2\le \dfrac{1}{n}\sum_{i=1}^n\|\beta_i\|_2\leq B,
+\]
+the event $\mathcal A$ implies
+\[
+\|\xi\|_2
+=
+\|\widetilde\beta_{\mathrm{PTF}}^{(u)}-\bar\beta\|_2
+\geq
+\|\widetilde\beta_{\mathrm{PTF}}^{(u)}\|_2-\|\bar\beta\|_2
+>
+B'-B.
+\]
+Consequently,
+\[
+\mathcal A
+\subseteq
+\left\{
+\|\xi\|_2>B'-B
+\right\}.
+\]
+Write $\xi=\tau A^{-1/2}z,\ z\sim N(0,I_T)$. Since
+\[
+\|A^{-1/2}z\|_2^2
+\leq
+\lambda_{\max}(A^{-1})\|z\|_2^2
+=
+\frac{\|z\|_2^2}
+{\lambda_{\min}(A)},
+\]
+we obtain
+\[
+\Pr(\mathcal A)
+\leq
+\Pr\left(
+\|z\|_2^2
+>
+\frac{(B'-B)^2\lambda_{\min}(A)}
+{\tau^2}
+\right).
+\]
+Because $\|z\|_2^2\sim\chi_T^2$, apply the chi-square tail bound in Equation~\eqref{eq: chi_square bound}, we get
+\begin{equation}
+\Pr(\mathcal A)
+\leq
+\exp\left[
+-\frac12
+\left\{
+\frac{(B'-B)\sqrt{\lambda_{\min}(A)}}{\tau}
+-\sqrt T
+\right\}^2
+\right].
+\label{eq: PTF active probability_RKHS}
+\end{equation}
+Finally, by the Cauchy--Schwarz inequality,
+\[
+R_{\mathrm{PTF}}
+\leq
+\left(
+\mathbb E\|Z\|_2^4
+\right)^{1/2}
+\Pr(\mathcal A)^{1/2}.
+\]
+For a centered Gaussian vector with covariance
+$\tau^2W^{-1}$,
+\[
+\mathbb E\|Z\|_2^4
+=
+\tau^4
+\left[
+\{\operatorname{tr}(W^{-1})\}^2
++
+2\operatorname{tr}(W^{-2})
+\right]
+\le 
+\tau^4 [3\{\operatorname{tr}(W^{-1})\}^2].
+\]
+Therefore
+\[
+\left(
+\mathbb E\|Z\|_2^4
+\right)^{1/2}
+\leq
+\tau^2
+\sqrt{3}\operatorname{tr}(W^{-1}).
+\]
+Combining this inequality with Equation~\eqref{eq: PTF active probability_RKHS}
+and Equation~\eqref{eq: PTF remainder decomposition_RKHS}, we prove 
+Equation~\eqref{eq: PTF MSE lower bound}.
+\end{proof}
+
+\begin{proof}
+\textbf{of Corollary~\ref{col: MSE ratio in RKHS}.}
+Write $\tau_n = \tau =2B_n'\sqrt T/(n\mu)$. Since $B_n'$ is a non-decreasing sequence  satisfying $B_n'>B$ for sufficiently large $n$, we have
+\[
+\frac{B_n'-B}{\tau_n}
+=
+\frac{n\mu}{2\sqrt T}
+\left(1-\frac{B}{B_n'}\right)
+\longrightarrow\infty.
+\]
+Thus, the radius condition in Theorem~\ref{thm: PTF MSE lower bound} holds for all
+sufficiently large $n$, and its exponential remainder tends to zero. Combining that lower bound with the exact noiseless FTP error in Theorem~\ref{thm: FTP MSE RKHS} gives
+\[
+\limsup_{n\to\infty}
+\frac{\operatorname{MSE}(\widetilde f_{\mathrm{FTP}})}
+     {\operatorname{MSE}(\widetilde f_{\mathrm{PTF}})}
+\le
+\frac{\operatorname{tr}(K_T)}
+     {T\operatorname{tr}(W^{-1})}.
+\]
+By the definition
+$W=\operatorname{diag}\{K(t_j,t_j)^{-1}:j=1,\ldots,T\}$,
+\[
+\operatorname{tr}(W^{-1})
+=\sum_{j=1}^T K(t_j,t_j)
+=\operatorname{tr}(K_T).
+\]
+Hence, we get the claimed bound of $1/T$.
+\end{proof}

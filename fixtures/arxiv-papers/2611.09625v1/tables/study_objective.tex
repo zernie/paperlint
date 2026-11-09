@@ -1,0 +1,16 @@
+\begin{table}[ht]
+    \caption{Ablation study on Test-Time Optimization objective.}
+    \centering
+    \setlength{\tabcolsep}{4.5pt}
+    \hfill \break
+    \begin{tabular}{lccccc}
+    \toprule
+    \textbf{Method} & \textbf{PAD} & \textbf{TT-MBRL} & \textbf{w/o KL loss} & \textbf{w/o rwd-cont loss} & \textbf{w/o actor-critic loss} \\
+    \midrule
+    DreamerV3 & $\hphantom{0}25.5$ & $185.0$ & $\hphantom{0}12.3$ & $\mathbf{187.9}$ & $\hphantom{0}47.8$ \\
+    TWISTER & $\hphantom{0}35.5$ & $240.1$ & $\hphantom{0}12.9$ & $\mathbf{240.9}$ & $\hphantom{0}50.2$  \\
+    R2I & $\hphantom{0}42.3$ & $\mathbf{244.3}$ & $\hphantom{0}14.9$ & $242.7$ & $158.5$ \\
+    \bottomrule
+    \end{tabular}
+    \label{table:study_objective}
+\end{table}

@@ -1,0 +1,51 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{Baseline choice.}
+Ensemble MC dropout provides a consistently strong neural reference, but its best average rank does
+not establish an advantage over the other ensemble pipelines. LightGBM's many individual wins and
+poor results elsewhere show why consistency across a benchmark and performance on a particular
+assay can differ. The per-dataset comparisons identify where one method has a clear advantage and
+where several alternatives cannot be ruled out as best. A comparison using only one baseline family
+can therefore give an incomplete picture of a new method's performance. Both LightGBM and an
+ensemble neural baseline should be included when evaluating new molecular predictors, including
+pretrained models.
+
+\paragraph{Variation across evaluations.}
+Evaluation introduces uncertainty of its own. Changing which compounds enter training and testing
+can change the apparent leader, and averaging model seeds on one fold leaves variation between
+chemical partitions unexplored. At the same number of fold-score evaluations, completing
+cross-validation gives a more stable full rank ordering than repeating seeds on one fold. A compact
+evaluation can help screen methods; a claim of improvement should be checked across multiple
+chemical partitions. Paired comparisons account for the variation in method differences, while
+multiplicity adjustment limits spurious claims of a difference when several methods are compared.
+
+Shared training compounds weaken the independence assumption behind the per-dataset tests. Some
+endpoint families also share compounds, and only nine datasets contribute to the cross-dataset
+interval-score comparison. Its unresolved differences deserve caution: the absence of a detected
+difference gives little reason to prefer one method over another on statistical grounds alone.
+
+\paragraph{Tuning and computational cost.}
+Validation data affect the comparison before test scores are calculated. A single validation split
+often selects a different configuration from five-fold selection, and those choices perform worse
+across the five validation folds. Authors proposing a new model should give simple baselines a fair
+chance through careful hyperparameter and stopping-point selection. Their competitiveness here makes
+that tuning part of establishing an improvement, including for expensive pretrained architectures.
+
+Ensembles require additional model fits, while other UQ methods add posterior sampling or last-layer
+optimization. We made the full benchmark feasible by sharing MLP hyperparameter and checkpoint
+selection across UQ methods. These choices optimize point prediction. Selecting the final
+ensemble or using a calibrated validation score could favor different hyperparameters or stopping
+epochs \citep{ranjan2024posthoc,fredsgaard2025joint}. The rankings consequently describe the complete
+pipelines evaluated here, including their selection procedures and additional computation.
+
+\paragraph{Using the uncertainty estimates.}
+The relevant score depends on what the predictions will be used for. Brier score assesses
+probabilities through both calibration and refinement without separating epistemic and aleatoric
+uncertainty. The regression results depend on the calibration maps and Gaussian assumptions used to
+construct the intervals. An application that uses uncertainty mainly to rank candidates would also
+need to assess that ranking.
+
+Claims of improvement should be supported by comparisons with both carefully tuned baselines.
+Reporting the size of the gain and its variation across chemical partitions helps readers judge
+its practical value.

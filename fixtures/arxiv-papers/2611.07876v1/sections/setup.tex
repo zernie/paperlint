@@ -1,0 +1,211 @@
+
+\section{Study Design}
+% RQ subsection removed 2026-10-29: the RQs are stated in the introduction.
+We evaluate the methods of Section~\ref{sec:methods} on both targets of
+Section~\ref{sec:problem}, verdict and code correctness, in distribution and under benchmark and language
+shift. RQ1--RQ3 judge single candidates, RQ4 whole problems.
+% \subsection{Research Questions}
+% \label{sec:setup-rqs}
+% We ask which execution-free signals of correctness survive benchmark and
+% language shift, whether causal localization makes them more robust, and what explains the signals that survive. To answer this, we compare
+% the methods of Section~\ref{sec:methods} on the verdict and program target of
+% Section~\ref{sec:problem}, in distribution and under benchmark and language
+% shift (Section~\ref{sec:problem-shift}). RQ1 compares the methods on the
+% verdict target, RQ2 examines what the causal methods' predictions rest on,
+% RQ3 asks whether the same readouts predict program correctness, and RQ4 moves
+% from candidates to problems.
+
+% \smallskip\noindent\textbf{RQ1:} \emph{How well can execution-free methods
+% tell whether the model's own verdict can be trusted, in distribution and under
+% shift?} A predictor for the verdict target tells whether the model's
+% judgment can be trusted or must be checked by execution. %It is the target the causal methods were designed for~\cite{Huang2025Internal}.
+% We train the probe and the two causal methods on one benchmark or language
+% and evaluate them, together with confidence, there and on the others. 
+
+% \smallskip\noindent\textbf{RQ2:} \emph{Which part of the causal methods
+% carries their signal, and what does the learned subspace encode?} Each causal
+% method combines a subspace learned at one layer, an intervention through it,
+% and a readout of the model's answer token. We separate these parts, replace
+% the learned subspace by random ones of the same dimension, and ask whether the
+% subspace encodes the model's verdict or the correctness of the program. %We examine this where RQ1 finds the causal methods ahead of the non-causal ones, with the other cases as the contrast.
+
+% \smallskip\noindent\textbf{RQ3:} \emph{Do the same readouts tell whether the
+% program is correct?} A predictor for the program target tells whether a
+% candidate can be accepted without running it. This target coincides with the
+% verdict target only where the model judges correctly, and it is the target
+% most prior work addresses. A subspace that encodes the model's verdict can
+% predict program correctness only as far as the verdict does. If RQ2 finds
+% that the subspace encodes the verdict, the causal methods should offer no
+% advantage on this target. We test this with the same readouts
+% and evaluate every single-pass method, including LAT, under the same shifts.
+
+% \smallskip\noindent\textbf{RQ4:} \emph{Which problems will the model solve?
+% A single pass against agreement across samples.} A problem-level prediction
+% tells where to spend testing effort, or whether to sample more candidates.
+% When several candidates are sampled for a problem, their agreement is a
+% further signal that needs no labels and no training, so unlike the trained
+% methods of RQ1 and RQ3 it cannot lose under shift. We compare EigenScore~\cite{Chen24Eigenscore}
+% with the single-pass methods at problem level and at equal sampling cost, and
+% with a probe that reads the model before it generates anything.
+
+
+\subsection{Models and Data}
+\label{sec:setup-data}
+
+\paragraph{Models}
+We study two open-weight models, \texttt{Qwen3-Coder-30B-A3B-Instruct} and
+OpenAI \texttt{gpt-oss-20b}. Each model generates candidate programs and judges its own candidates, so generation, verdicts and hidden states come from the same model. 
+Qwen3-Coder answers the judging prompt directly. 
+Since gpt-oss is a reasoning model, we prefill its final channel so that it also answers directly. 
+Preliminary experiments showed that reasoning would cost about 1{,}100 generated tokens per candidate (median at medium effort) instead of a single forward pass, and its varying
+length would shift the position at which the methods read the hidden state.
+Judging without reasoning costs gpt-oss some accuracy (Section~\ref{sec:threats}).
+
+\paragraph{Benchmarks}
+We construct our datasets from LiveCodeBench~\cite{Jain2025Livecodebench} (\texttt{release\_v6}) and BigCodeBench~\cite{Zhuo2025BCB}, both written in Python. 
+%and HumanEval~\cite{chen2021humaneval}, all in Python. 
+To evaluate  language shift we use 454 LiveCodeBench problems released between October 2024 and May 2025. We use the original Python versions, together with corresponding C++ versions from the LiveCodeBench-CPP dataset (\texttt{v6\_2408\_2505})\footnote{\url{https://huggingface.co/datasets/nvidia/LiveCodeBench-CPP}} and Java versions sourced from the original AtCoder and LeetCode platforms. We refer to these datasets as LCB-Python, LCB-C++, and LCB-Java, respectively. LCB-Python is the subset of our LCB data on these problems.
+
+
+
+\paragraph{Candidates and labels}
+For each problem, each model samples $n = 10$ candidates at temperature $t=1$. We discard generations from which no code candidate can be extracted, candidates whose judging prompts exceed 2048 tokens, and duplicate generations.
+% TODO hier?
+EigenScore compares $m$ non-empty candidates per problem: $m = 5$ on LCB and
+the language sets, where some generations are empty, and all ten on BCB,
+where almost none are. Problems with fewer non-empty candidates are left out
+of the problem-level comparison for every method (93--100\% of the problems
+are kept for Qwen3-Coder, 76--94\% for gpt-oss).
+
+We obtain program-correctness labels by executing each candidate against the respective benchmark's test suite. To obtain verdict-correctness labels, we prompt the generating model to judge each candidate and compare its verdict with the execution-based correctness label
+(Section~\ref{sec:problem}).
+
+\paragraph{Splits}
+We split each benchmark by problem into training, validation and test sets (60/20/20), so all candidates of a problem fall into the same split. 
+For the language sets, with fewer than 90 test problems each, we evaluate on validation and test together. 
+We repeat every experiment on three partitions of the
+problems with disjoint test sets and report the mean over the partitions.
+
+
+Table~\ref{tab:datasets} summarizes the evaluation sets of the first
+partition and reports the fraction of candidates that pass the tests, the
+fraction accepted by the model, and the balanced accuracy of the model's
+verdict against program correctness. The models' balanced accuracy ranges from
+57.2\% to 74.4\%, so the models misjudge many of their own candidates, and
+knowing which verdicts to trust matters.
+
+\begin{table}[t]
+\centering
+\caption{Evaluation sets of the first partition. \emph{Problems}: number of distinct problems; \emph{Cand.}: number
+of scored candidates; \emph{Pass}: percentage of candidates that pass the tests; \emph{Yes}: percentage of candidates accepted by the model;
+\emph{Judge acc.}: balanced accuracy of the model's verdict against program correctness (mean of the acceptance rate on passing and the rejection rate on failing candidates). }
+\label{tab:datasets}
+\begin{tabular}{l rrrrr}
+\toprule
+Benchmark & Problems & Cand. & Pass & Yes & Judge acc. \\
+\midrule
+\multicolumn{6}{l}{\emph{Qwen3-Coder-30B}} \\
+LiveCodeBench & 208 & 1646 & 55.3 & 58.3 & 74.4 \\
+BigCodeBench  & 456 & 3240 & 40.2 & 71.7 & 58.3 \\
+LCB-Python    & 178 & 1423 & 41.7 & 44.1 & 73.8 \\
+LCB-C++       & 175 & 1448 & 24.0 & 32.5 & 63.8 \\
+LCB-Java      & 179 & 1486 & 37.5 & 31.2 & 64.4 \\
+\midrule
+\multicolumn{6}{l}{\emph{gpt-oss-20b}} \\
+LiveCodeBench & 189 & 1588 & 80.4 & 44.6 & 62.8 \\
+BigCodeBench  & 456 & 4533 & 45.8 & 42.6 & 61.7 \\
+LCB-Python    & 150 & 1140 & 76.8 & 37.6 & 62.2 \\
+LCB-C++       & 147 & 1116 & 68.4 & 35.1 & 57.2 \\
+LCB-Java      & 141 & 1069 & 59.8 & 38.6 & 65.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Training and Selection}
+\label{sec:setup-training}
+% For the replication package, not the paper (checked 2026-10-24):
+% - probe: LogisticRegression C=0.05 (src/probe.py); --sample-counts 512 =
+%   per class (run_probe_sweep.py).
+% - LAT: src/lat.py build_pairs, pairs_per_problem 1; stimulus prompt of
+%   ../ribeiro_correctness.
+% - DAS: --dims 6 --lrs 1e-4 --sample-counts 1024 --epochs 2
+%   --early-stop-patience 6 (window 250 steps, min delta 0.01, on training
+%   IIA; src/das_training.py). No run entered epoch 2 (Viola). Pairs: all
+%   ordered pairs of the first 1024 judge-correct training candidates, base !=
+%   source, same or different problem and verdict, shuffled, capped at 20,480
+%   (causal_data_utils.load_intervention_data); target = source verdict; no
+%   label balancing. IIA monitored on training bases x validation sources.
+% - Counterfactual simulation: --num-verified-eval 16, --eval-bases head = the
+%   first 16 judge-correct training candidates in file order (about two
+%   problems, one verdict; DAS_EVAL_VALIDITY.md).
+% - Value probe: LogisticRegression C=0.05 on R^T h of 1024 judge-correct
+%   training candidates (run_value_probe_sweep.py).
+% - Confidence: temperature grid differs by task (Qwen LCB and Python-control
+%   verdict 0.5-4.5; LCB/BCB program 1.0, 2.0; else 1.0-2.0).
+% - Selection: crossfit_layers.py (5 folds, 20 repeats);
+%   score_layer.restrict_to_shared (candidates per partition).
+% - Layer numbering: probe/LAT by hidden-state index (L = block L-1), DAS by
+%   block (FINDINGS §10).
+\paragraph{Fitting}
+The probe is a logistic regression on the hidden state of one layer, trained
+on 512 candidates per class. LAT uses the stimulus prompt of Ribeiro et
+al.~\cite{ribeiro2026repe} and is fitted on one pair of a passing and a
+failing candidate per training problem that has both. DAS learns a
+$k {=} 6$-dimensional subspace per layer, a size chosen in a preliminary sweep
+and in line with evidence that correctness is encoded in few
+dimensions~\cite{cho2026confidencemanifold}. It is trained on pairs of 1024
+correctly judged training candidates, in at most one pass over 20,480 pairs
+with early stopping on the training IIA. The value probe is a logistic
+regression on the projections of the same training candidates onto the subspace.
+Counterfactual simulation uses a fixed set of $B {=} 16$ correctly judged
+training candidates as bases. The generation probes of RQ3 apply the probe to
+the hidden states of the model's own generation, replayed token by token, at
+the last token of the code or of the prompt; they are trained on the same
+candidates and program labels as the probe. Detailed settings can be found in the replication package\footnote{\url{https://anonymous.4open.science/r/FORGE-PCCuDS}}.
+
+\paragraph{Selection}
+Each method comes with one free parameter: the layer, or --
+for confidence -- the temperature. The probe and LAT are fitted on every layer, while DAS
+is trained at a subset (every second layer of L33--L43 for Qwen3-Coder and of L11--L23 for gpt-oss), since each subspace takes several GPU hours.
+Layers are chosen in distribution, via cross-fitting over problems.
+The selection is made on four fifths of the evaluation problems and read on the
+remaining fifth, over 20 random splits. Under shift, the choice made on all
+in-distribution rows is read on the shifted set, so no shifted row enters
+selection. %\orange{The best layer on the shifted rows, which no selection rule can find in advance, appears only as a reference (Figure~\ref{fig:verdict-profile})}.
+%We do not select on a separate validation split: on the language sets it is part of the evaluation set, which doubles the number of evaluation problems, and on LCB and BCB it stays unused so that one rule holds for all benchmarks; apart from measuring IIA it plays no role.
+
+\subsection{Evaluation Protocol}
+\label{sec:setup-protocol}
+% Within-problem AUROC: make_latex_results.within_problem, all (positive,
+% negative) pairs of the same problem pooled, ties 1/2; ID per held-out fold
+% of the cross-fit, pair-weighted, mean over repeats (crossfit_layers.py).
+\paragraph{Metrics}
+
+At candidate level (RQ1--RQ3) we report the area under the receiver operating characteristic curve (AUROC)
+over all candidates in an evaluation set, as is common for correctness prediction~\cite{he2026usingsemanticdistanceestimate,he2026codecircuit,bouchard2026functional,shi2026codemorethantext}, using either verdict correctness or program correctness as the positive label. AUROC measures how well a score ranks positive examples above negative ones, with 0.5 corresponding to chance and 1.0 to perfect ranking.
+Because candidates from different problems are pooled, this metric reflects both the ability to distinguish candidates within a problem and the ability to rank problems by how often the model produces positive outcomes. Where this distinction matters, we additionally report within-problem AUROC, computed over pairs of candidates from the same problem with different labels. It equals the pairwise accuracy of~\cite{ribeiro2026robustness} and is on the same scale as the pooled AUROC.
+The gap between the two is the part of the pooled AUROC that comes from ranking problems.
+At problem level (RQ4), a problem is
+considered as solved if at least half of its candidates pass, and the
+single-pass methods are averaged over the candidates that EigenScore uses.
+
+\paragraph{Significance}
+
+We compare methods using a paired, problem-clustered bootstrap with 2,000 resamples. Each resample draws whole problems and evaluates all methods on the same examples, accounting for within-problem dependence while preserving paired comparisons. For language-shift results, we average differences over the six language pairs and three partitions, using shared resamples across language pairs because they share problems. We combine the bootstrap standard error (SE) with between-partition variability to account for variation due to training and layer selection. We consider a difference significant if $|\Delta| > 1.96\,\mathrm{SE}$ and report $\Delta \pm 1.96\,\mathrm{SE}$.
+
+
+
+% Methods are compared on identical candidates with a paired, problem-clustered bootstrap: each of 2000 draws resamples problems and
+% evaluates every compared method on the same draw. Resampling whole problems
+% accounts for candidates of one problem not being independent; evaluating all
+% methods on the same draw makes the comparison paired. On the language sets,
+% we compare means over the six language pairs, averaged over the three
+% partitions. The standard error (SE) of such a difference combines the
+% bootstrap standard error with the spread of the difference between
+% partitions, which reflects training and layer selection; the bootstrap alone,
+% with the chosen layer fixed, does not capture this. A difference is
+% considered significant if $|\Delta| > 1.96\,\mathrm{SE}$, and we report
+% $\Delta \pm 1.96\,\mathrm{SE}$. Where only one partition exists (LCB, BCB and
+% RQ4), a difference is considered significant if its 95\% bootstrap interval
+% excludes zero. Results for individual language pairs are descriptive.
+

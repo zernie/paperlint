@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Planner settings. True return of uniform averaging (no search) and of standard MPPI with the learned scorer at $\lambda=3$ and $0.01$, for proposal noise $\sigma$ and horizon $H$; mean $\pm$ standard error over 10 runs (default row: all runs of the main experiments); successes in parentheses.}
+\label{tab:sens}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{Cheetah} & \multicolumn{3}{c}{Drawer, 500 labels} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+& none & $\lambda=3$ & $0.01$ & none & $\lambda=3$ & $0.01$ \\
+\midrule
+$\sigma=0.5$, $H=20$ (default) & 233\,{\scriptsize$\pm$78} & 480\,{\scriptsize$\pm$38} & 262\,{\scriptsize$\pm$25} & 852\,{\scriptsize$\pm$1} (10/10) & 707\,{\scriptsize$\pm$41} (18/20) & 504\,{\scriptsize$\pm$74} (11/20) \\
+$\sigma=0.25$ & 411\,{\scriptsize$\pm$113} & 451\,{\scriptsize$\pm$100} & 517\,{\scriptsize$\pm$39} & 890\,{\scriptsize$\pm$1} (10/10) & 880\,{\scriptsize$\pm$4} (10/10) & 719\,{\scriptsize$\pm$71} (8/10) \\
+$\sigma=1$ & 3\,{\scriptsize$\pm$2} & 20\,{\scriptsize$\pm$17} & 3\,{\scriptsize$\pm$24} & 667\,{\scriptsize$\pm$3} (10/10) & 125\,{\scriptsize$\pm$4} (0/10) & 122\,{\scriptsize$\pm$2} (0/10) \\
+$H=10$ & 278\,{\scriptsize$\pm$91} & 481\,{\scriptsize$\pm$54} & 328\,{\scriptsize$\pm$36} & 852\,{\scriptsize$\pm$1} (10/10) & 833\,{\scriptsize$\pm$8} (10/10) & 375\,{\scriptsize$\pm$80} (4/10) \\
+$H=40$ & 157\,{\scriptsize$\pm$76} & 443\,{\scriptsize$\pm$75} & 173\,{\scriptsize$\pm$23} & 851\,{\scriptsize$\pm$2} (10/10) & 508\,{\scriptsize$\pm$76} (5/10) & 369\,{\scriptsize$\pm$76} (3/10) \\
+\bottomrule
+\end{tabular}
+\end{table}

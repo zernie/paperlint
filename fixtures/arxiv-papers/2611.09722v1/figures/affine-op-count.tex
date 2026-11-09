@@ -1,0 +1,12 @@
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{assets/affine-op-count-legend.pdf}
+  \par
+  \subfloat[Token-wise quantization.\label{fig:affine-op-token}]{%
+    \includegraphics[width=0.49\columnwidth]{assets/affine-op-count-token.pdf}}
+  \hfill
+  \subfloat[Channel-wise quantization.\label{fig:affine-op-channel}]{%
+    \includegraphics[width=0.49\columnwidth]{assets/affine-op-count-channel.pdf}}
+  \caption{Scalar scale and offset operations per stored K or V value for affine folding versus element-wise $sq+z$ reconstruction (dashed).}
+  \label{fig:affine-op-count}
+\end{figure}

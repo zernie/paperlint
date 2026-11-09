@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Accuracy (\%) by model family.}
+Averages over the models in each group: Korean (K-EXAONE, A.X K1, Solar Open), multilingual (Aya Expanse 32B), open-weight (GLM-4.7, Qwen3.5), and proprietary (Claude Sonnet 5.5, GPT-6.1 Sol).}
+\label{tab:by_family}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & \multicolumn{3}{c}{\textbf{A2}} & \multicolumn{3}{c}{\textbf{A3}} \\
+\cmidrule(lr){2-4} \cmidrule(l){5-7}
+\textbf{Family} & \textbf{Closed} & \textbf{+K} & \textbf{+K+A} & \textbf{Closed} & \textbf{+K} & \textbf{+K+A} \\
+\midrule
+Korean       & 49.1 & 86.8 & 92.7 & 37.0 & 67.6 & 81.3 \\
+Multilingual & 25.6 & 47.4 & 59.0 & 23.4 & 36.8 & 50.7 \\
+Open-weight  & 70.5 & 92.9 & 96.8 & 64.6 & 81.1 & 87.6 \\
+Proprietary  & 91.7 & 99.4 & 99.4 & 87.1 & 91.9 & 95.7 \\
+\bottomrule
+\end{tabular}
+\end{table}

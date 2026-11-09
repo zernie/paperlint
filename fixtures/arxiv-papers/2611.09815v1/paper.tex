@@ -1,0 +1,221 @@
+\documentclass{article}
+
+\usepackage[final,sglblindworkshop]{neurips_2026}
+\workshoptitle{AI Foundations for Power Grids}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{acronym}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+\newcommand{\results}[1]{\input{tables/#1}}
+
+\title{The Cost of Coverage: Conformalising Native\\Forecast Uncertainty for GB Wind Power}
+
+\author{Carl Somers \\ University College London \\ \texttt{carl.somers.24@ucl.ac.uk}}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Uncertainty bands on wind forecasts help inform reserve sizing and commitments, but often fail to deliver their stated coverage. We apply conformal prediction to native bands to see what it adds and what it costs, comparing six forecasters, from ARIMA to a tabular foundation model, at two wind farms in Great Britain (GB) under operational conditions. We show that calibration repairs empirical marginal coverage with little or no Winkler Score penalty, but this apparent success conceals under-coverage in high winds. Calibrating by forecast wind regime turns marginal coverage into regime-level coverage, cutting day-ahead out-of-band volume in high winds by over 40\% relative to pooled calibration while narrowing bands overall.
+\end{abstract}
+
+
+\section{Introduction}
+
+Wind became Great Britain’s largest source of electricity in 2024, supplying 30\% of generation and marking a major milestone in the shift from fossil fuels to renewable power \citep{neso_2024_review}. At the site level, generation volume is settled every half-hour against contracted positions with deviations cashed out at the balancing price, which rises sharply when the system is short. On the 8th of January 2025, a shortfall in forecast wind helped push prices to \pounds2,900/MWh and contributed to a single-day balancing cost of \pounds21M \citep{neso_margins_8jan}. Prediction intervals are central to decision making under this weather uncertainty, but remain useful only if they achieve their stated coverage without becoming too wide.
+
+Modern machine learning forecasting pipelines output native prediction intervals, yet these are often miscalibrated and routinely under- or over-cover nominal targets. Parametric and Bayesian methods rely on distributional assumptions, while quantile regression depends on fit. Conformal Prediction (CP) \citep{vovk2005algorithmic} offers finite-sample, distribution-free marginal coverage (averaged over all forecasts) around an arbitrary base forecaster. This guarantee rests on exchangeability, an assumption wind violates through autocorrelation and seasonal non-stationarity. The literature responds through re-weighting \citep{barber2023conformal}, residual modelling \citep{xu2023conformal}, and online adaptation \citep{gibbs2021adaptive}.
+
+Conformal methods have reached renewables, including conformalised quantile regression for wind \citep{jonkers2024novel}, conformal predictive distributions for wind speed \citep{althoff2023evaluation}, context-aware weighted calibration of renewable forecasts \citep{moradi2025enhanced}, and in solar nowcasting, a comparative benchmark of CP techniques over wrapped point forecasts \citep{NAM2025100573}. We ask what conformal calibration adds to the native uncertainty band a forecaster already publishes, and what it costs under realistic operational conditions.
+
+
+We contribute three things: (i) a native-versus-wrapped measurement, scoring six forecaster classes against their conformalised counterparts on the same held-out sample in coverage, width and Winkler Score; (ii) an open operational benchmark with two wind farms, across three horizons, purged refits and weather data delays, with the full pipeline released; (iii) an account of how missed energy varies with wind regime and direction.
+
+\section{Benchmark}
+
+\paragraph{Data.} We use open supervisory control and data acquisition (SCADA) data from two operational GB farms, Kelmarsh (6 turbines, 12.3 MW) and Penmanshiel (14 turbines, 28.7 MW) at 30-minute settlement-period resolution \citep{plumley_2025_16807304, plumley_2025_16807551}. The target is the farm capacity factor (CF), output as a fraction of the reporting turbines' rated capacity, formed where at least half the farm reports, excluding stopped, curtailed or de-rated turbine observations. Numerical Weather Prediction (NWP) comes from the 31-member NOAA GEFS at 0.25 degrees ($20$km) via dynamical.org \citep{noaa_gefs_dynamical}, with wind speed at the 80m level closest to hub height. The ensemble mean drives the point forecast and the spread is kept as a feature. Realised weather for retrospective audit comes from ERA5 re-analysis \citep{hersbach2020ERA5}.
+
+\paragraph{Training regime.} Models are refit on an expanding window with at least one year of training context, every 30 days. We evaluate three horizons ($h \in \{30\text{min}, 3\text{h}, 24\text{h}\}$) targeting 90\% out-of-sample coverage, spanning near-delivery balancing, intraday adjustments and day-ahead commitments. To replicate operational conditions we: (i) purged expanding refits by dropping training rows within one horizon of the window boundary, whose targets were not yet observed; (ii) added a 6-hour publication lag on GEFS forecasts to account for dissemination delays; and (iii) held each conformity score in a queue until its outcome is known, preventing leakage.
+
+\paragraph{Forecasting Models.} The six models produce native bands by different mechanisms (Table~\ref{tab:subjects}), with persistence as a baseline. Appendix~\ref{app:rmse} reports point-forecast root mean squared error (RMSE).
+
+\begin{table}[htbp]
+\caption{The six native-UQ classes and the mechanism each uses to produce its own band.}
+\label{tab:subjects}
+\centering
+\small
+\setlength{\tabcolsep}{5.5pt}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Forecaster & Reference(s) & Class & Native Uncertainty Band \\
+\midrule
+Persistence & - & Empirical residual & Expanding-window residual quantiles \\
+ARIMA & \citet{box2015time} & Parametric & State-space Gaussian forecast interval \\
+LightGBM-QR & \citet{ke2017lightgbm} & Direct quantile & Pinball-optimised quantile interval \\
+Bootstrap ensemble & \citet{breiman1996bagging} & Ensemble spread & Out-of-bag residual quantiles \\
+TabPFN v3 & \citet{grinsztajn2026tabpfn} & Amortised Bayesian & Posterior predictive distribution \\
+GEFS power curve & \citet{gneiting2005calibrated} & NWP ensemble & Censored EMOS over member scatter \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Conformal Calibration.} Conformal prediction can be used to correct an interval using its recent errors on a calibration set. We adjust the native band $[\ell_t, u_t]$ by taking the Conformalised Quantile Regression (CQR) score \citep{romano2019conformalized} for observation $y_t$,
+\[ s_t = \max(\ell_t - y_t,\; y_t - u_t). \]
+The corrected band becomes $[\ell_t - Q_t, u_t + Q_t]$, where $Q_t$ is the $\lceil (n+1)(1-\alpha)\rceil/n$ quantile of the $n \le 1000$ latest observed scores. This Online Sequential Split Conformal Prediction (OSSCP) guarantees coverage only under exchangeability \citep{lei2018distribution}, so for wind we evaluate coverage empirically \citep{oliveira2024split}. We also test Adaptive Conformal Inference (ACI), which dynamically adjusts the target miscoverage rate ($\alpha$) online as
+\[ \alpha_{t+1} = \alpha_t +\gamma(\alpha - \mathbb{1}\{y_t \notin \hat C_t\}), \] 
+with step size $\gamma$ \citep{gibbs2021adaptive}, and $\hat{C}_t$ the estimated interval at time $t$. We test OSSCP with Mondrian binning, whereby we bucket calibration by forecasted wind regime (0-5, 5-11, 11+ m/s) to improve conditional coverage, the coverage within each regime \citep{vovk2005algorithmic}. We also evaluate Aggregated ACI (AgACI) \citep{zaffran2022adaptive}, Dynamically Tuned ACI (DtACI) \citep{gibbs2024conformal} and NexCP \citep{barber2023conformal}.
+
+\paragraph{Metrics.} We measure coverage (\% of predictive intervals containing the observed value) and mean width of those intervals. The Winkler Score \citep{winkler1972decision} \[ W_t = (u_t - \ell_t) + \frac{2}{\alpha}[(\ell_t - y_t)_+ + (y_t - u_t)_+], \]jointly penalises width and misses in CF units, so lower is better. The \emph{cost of coverage} is the change in width and Winkler Score that wrapping causes. We also express misses as the energy outside the band, $q_t = 0.5 \cdot C\,[(\ell_t - y_t)_+ + (y_t - u_t)_+]$ MWh per settlement period, with fixed installed capacity $C$ (MW), split into over- ($y_t > u_t$) and under-production ($y_t < \ell_t$).
+
+\section{Results}
+Kelmarsh is evaluated over 27-01-2024 to 30-12-2024 and Penmanshiel from 20-03-2023 to 31-12-2023. Full scorecards are in Appendix~\ref{app:scorecards}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/figure1_coverage_width.pdf}
+\caption{The width cost of restoring marginal coverage. Each marker is one forecaster; the grey segment runs from its native band (light) to its OSSCP band (dark), at three horizons and both farms.}
+\label{fig:width}
+\end{figure}
+
+\paragraph{Marginal coverage is repaired.} Conformal calibration brings native coverage close to the 90\% target across both farms and all horizons (Figure~\ref{fig:width}). Native bands near the target change little, while overly wide bands can narrow. At 24 hours, LightGBM-QR and the bootstrap ensemble require roughly 10–25\% wider bands to correct under-coverage. Winkler Scores are maintained or improved in 30 of 36 comparisons, with increases below 0.3\% in the remainder.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figure_width_by_wind.pdf}
+\caption{OSSCP versus Mondrian-OSSCP day-ahead coverage and width (CF), both farms pooled, by \emph{forecast} wind regime. Percentages show regime frequency. Markers follow Figure~\ref{fig:width}.}
+\label{fig:wind}
+\end{figure}
+
+\paragraph{Adaptive gains diminish with forecast horizon.} Selecting the best rule in hindsight for each farm, model, and horizon improves OSSCP's Winkler Score by 3.5\% on average at 30 minutes (up to 8.6\%), but this advantage narrows to 1.2\% at 3 hours and reverses to $-1.0\%$ at 24 hours (Appendix~\ref{app:scorecards}).
+
+
+\paragraph{Average coverage hides the regimes.} At 24\,h, every OSSCP band covers close to the 90\% target overall, but by wind regime several models over-cover in low winds, offsetting under-coverage in high winds (Figure~\ref{fig:wind}). Mondrian binning brings every model to 87-92\% in forecast high winds, with mean width overall 2-4\% narrower than OSSCP's. Operationally, however, Mondrian can only bin by the \emph{forecast} regime. An audit against ERA5 \emph{realised} wind speed \citep{hersbach2020ERA5} shows that in the 16\% of realised high-wind periods that GEFS forecast as average wind, coverage falls to about 0.55 for native, OSSCP and Mondrian bands alike (Figure~\ref{fig:regime}). High-wind periods are rare but account for over a third of OSSCP's missed energy, almost all above the upper bound. Across all high-wind periods, Mondrian cuts missed energy by over 40\% relative to OSSCP.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figure2_realised_regime.pdf}
+\caption{Day-ahead coverage by \textit{realised} wind regime, both farms and models pooled, split by whether the GEFS regime forecast matched ERA5.}
+\label{fig:regime}
+\end{figure}
+
+\section{Discussion}
+
+\paragraph{Practical Guidelines.} For day-ahead forecasts, calibrating within forecast wind regimes (Mondrian-OSSCP) is a sensible default, restoring the high-wind coverage hidden by the pooled score, with narrower bands on average. Adaptive rules are worth considering for online or short-horizon forecasts. Native bands and those calibrated using pooled or Mondrian methods all show substantial under-coverage when the weather forecast misclassifies high winds, so generators should check coverage against both forecast and realised conditions rather than relying on the headline score alone. Calibration also adds little when native bands are already reliable, as seen for TabPFN across the day-ahead forecast regimes at both farms.
+
+\paragraph{Scoring Rules vs. Grid Reality.} The Winkler Score treats equal-sized misses alike, although their financial consequences depend on direction and system conditions. Our high-wind misses are mostly above the upper bound (over-production). If this output is uncontracted and the system is also in surplus, it may earn little or even incur charges at negative imbalance prices. Smaller shortfalls during scarcity can be more expensive, as illustrated by the high imbalance prices on the 8th of January 2025. Our missed energy metric captures volume alone, while the financial value of reliable bands requires evaluating the commitment decisions and returns they produce within a trading optimiser.
+
+\paragraph{Limitations \& Extensions.} We study two onshore GB farms, so generalisation to offshore sites, other markets and other years remains open. Curtailed periods are excluded, so the target is not the settled metered output. As curtailment is most common in high winds, this motivates a specific classification layer for it. Realised regimes come from ERA5 reanalysis rather than on-site measurements. Extensions include multi-step joint calibration \citep{wang2024online}, context weighting \citep{moradi2025enhanced} and soft regime probabilities. AI weather forecasts \citep{bonev2025fourcastnet,weyn2026aurora, alet2026operational} could also be compared with GEFS to test whether improved regime prediction reduces high-wind under-coverage.
+
+\clearpage
+\section*{Domain Checklist}
+
+\begin{enumerate}
+\item \textbf{Physics feasibility.} AC/DC power flow not applicable as we forecast generation rather than network states or power flows. Though our capacity factors can fall slightly outside [0, 1] due to parasitic draw or over-rating, we retain these observations.
+\item \textbf{Out-of-distribution evaluation.} Each pipeline is fit on its own farm, so the second farm is a replication with a different region, layout and evaluation year rather than a transfer experiment (see Figure~\ref{fig:farms}). All evaluations are run out-of-sample, and the misclassified-regime audit (Figure~\ref{fig:regime}) measures coverage when the forecast wind regime is wrong.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\linewidth]{figure3_farms.png}
+\caption{Farm layouts and corresponding Grid Supply Point (GSP) groups. Kelmarsh: 6 turbines, 12.3 MW, East Midlands, evaluated in 2024. Penmanshiel: 14 turbines, 28.7 MW, South of Scotland, evaluated in 2023.}
+\label{fig:farms}
+\end{figure}
+\end{enumerate}
+
+
+\begin{enumerate}
+\setcounter{enumi}{2}
+\item \textbf{Failure modes.} Coverage falls as low as 0.55 in high winds when the forecast regime is wrong, a failure hidden by common aggregate coverage diagnostics.
+\item \textbf{System-level effect.} Reserve requirements depend on forecast uncertainty. Measuring each miss by volume and direction shows the hardest regime to cover (high wind) misses mostly on the upside and has the largest mean missed energy per forecast - conditional calibration cuts that energy by over 40\%. However, system-level effects are not evaluated directly. We report missed energy by volume and direction as operational diagnostics, without modelling reserve requirements or trading decisions.
+\item \textbf{Data and code.} Penmanshiel \citep{plumley_2025_16807304} and Kelmarsh \citep{plumley_2025_16807551} SCADA are open under CC-BY-4.0. NOAA GEFS via dynamical.org's public Zarr store \citep{noaa_gefs_dynamical}. All pipeline code \& Marimo notebooks open at \url{https://github.com/CSomers3/uq4wind}.
+\end{enumerate}
+
+\section*{Acknowledgments} 
+The author thanks Dr F Javier Rubio (UCL) for introducing him to conformal prediction and for draft feedback.
+
+\section*{Generative-AI / LLM Use Statement} 
+LLMs assisted in coding and reviewing the pipeline evaluation and in reviewing drafts of the paper.
+
+
+\newpage
+\bibliographystyle{plainnat}
+\bibliography{ref}
+
+\clearpage
+\appendix
+\raggedbottom
+
+
+\section{Full Scorecards}
+\label{app:scorecards}
+
+\begin{table}[H]
+\caption{Full scorecard, Kelmarsh 2024 ($N$ = 5,652-5,911 per cell, target $1-\alpha = 0.90$).}
+\label{tab:kelmarsh}
+\centering
+\resizebox{\linewidth}{!}{\results{table_scorecard_kelmarsh.tex}}
+\end{table}
+
+\begin{table}[H]
+\caption{Full scorecard, Penmanshiel 2023 ($N$ = 6,668-6,746 per cell, target $1-\alpha = 0.90$).}
+\label{tab:penmanshiel}
+\centering
+\resizebox{\linewidth}{!}{\results{table_scorecard_penmanshiel.tex}}
+\end{table}
+
+\clearpage
+
+
+\section{Conditional Coverage}
+\label{app:conditional}
+
+\begin{table}[H]
+\caption{Coverage by forecast wind band at 24 hours, native versus wrapped, both farms.}
+\label{tab:bands}
+\centering
+\resizebox{\linewidth}{!}{\results{table_coverage_by_band.tex}}
+\end{table}
+
+\section{Missed Energy}
+\label{app:exposure}
+
+\begin{table}[H]
+
+\caption{Day-ahead \textit{missed energy} outside the uncertainty bands during realised high winds
+($\geq 11$\,m/s), pooled over six models. MWh is the mean per high-wind
+forecast, including zeros for covered periods.}
+\label{tab:exposure}
+\centering
+\small
+\results{table_missed_energy.tex}
+% \resizebox{\linewidth}{!}{\results{table_missed_energy.tex}}
+\end{table}
+
+
+
+\section{Point Accuracy}
+\label{app:rmse}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figure4_point_accuracy.pdf}
+\caption{Out-of-sample RMSE of each forecaster's point forecast (its predictive mean) at each horizon, over 2024 for Kelmarsh and 2023 for Penmanshiel, in capacity-factor units.}
+\label{fig:rmse}
+\end{figure}
+
+\end{document}

@@ -1,0 +1,59 @@
+\documentclass[acmsmall,review,screen]{acmart}
+\citestyle{acmnumeric}
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+\setcopyright{none}
+\acmDOI{}
+\acmISBN{}
+\acmYear{2026}
+\copyrightyear{2026}
+\usepackage{tabularx}
+\usepackage{subcaption}
+\usepackage{array}
+\usepackage{enumitem}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\sys}[1]{\textsc{#1}}
+
+\author{Chijin Zhou}
+\affiliation{
+  \department{Shanghai Key Laboratory of Trustworthy Computing, Software Engineering Institute}
+  \institution{East China Normal University}
+  \city{Shanghai}
+  \country{China}
+}
+\author{Quan Zhang}
+\affiliation{
+  \department{Shanghai Key Laboratory of Trustworthy Computing, Software Engineering Institute}
+  \institution{East China Normal University}
+  \city{Shanghai}
+  \country{China}
+}
+\authornote{Quan Zhang is the corresponding author.}
+
+\begin{document}
+\title{Rethinking Access Control for AI Agents: Recent Advances and Open Challenges}
+\authorsaddresses{}
+\begin{abstract}
+Large language model agents access data, invoke tools, and act on users' behalf. Keeping these actions within authorized bounds is challenging because agents choose their own execution paths while permissions and operating conditions may change. This paper surveys recent advances in agent access control across four areas: policy specification and derivation, identity and delegation, action and resource enforcement, and information-flow control. We compare their control objects, enforcement boundaries, and assumptions to examine what individual mechanisms achieve and how they can work together. Building on this analysis, we rethink four aspects of authorization: plan selection shapes permission requirements; contextual information can inform decisions without itself granting authority; restrictions must retain their meaning across system interfaces; and authorization must be reassessed as workflows evolve. These insights motivate open challenges and future directions, together with concrete research questions and evaluation criteria. In particular, evaluation should examine both observed agent behavior and the unauthorized effects that remain enabled. Our analysis connects existing mechanisms to the requirements for preserving authorization throughout an agent workflow.
+\end{abstract}
+\ccsdesc[500]{Security and privacy~Access control}
+\ccsdesc[300]{Computing methodologies~Intelligent agents}
+\keywords{LLM agents, access control, least privilege, information-flow control}
+\maketitle
+\pagestyle{plain}
+\thispagestyle{plain}
+\raggedbottom
+\input{sections/01_introduction}
+\input{sections/02_background}
+\input{sections/03_advances}
+\input{sections/04_rethinking}
+\input{sections/05_challenges}
+\input{sections/06_related}
+\input{sections/07_conclusion}
+\label{main-text-end}
+\clearpage
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+\end{document}

@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\small
+\caption{\textbf{Construction configurations.}
+Model and reasoning effort used at each stage of the pipeline.}
+\label{tab:construction_config}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Stage} & \textbf{Model} & \textbf{Effort} \\
+\midrule
+Anchor knowledge extraction & GPT-5.5    & high \\
+Contrast generation         & GPT-5.5    & high \\
+LLM-based auditing          & GPT-5.5    & high \\
+Proxy difficulty screening  & GPT-5-nano & high \\
+Self-revision               & GPT-5.5    & high \\
+Human-guided revision       & GPT-5.5    & high \\
+\bottomrule
+\end{tabular}
+\end{table}

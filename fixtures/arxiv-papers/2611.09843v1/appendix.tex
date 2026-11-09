@@ -1,0 +1,161 @@
+\section{Provenance Audit Protocol}
+\label{app:protocol}
+
+We describe how the six audit fields of Figure~\ref{fig:pipeline} were filled
+for the 128 UCR datasets, which sources were admitted as evidence, how the checks on the data were run, and how agentic systems were used in the setup.
+
+\begin{figure}[ht]
+  \centering
+  \input{figures/audit_pipeline}
+  \caption{The six audit fields, two per stage of a dataset's life. Green marks the value that passes, red a value that fails or flags leakage, grey a value the verdict does not read.}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{The six fields}
+\label{app:fields}
+
+Each dataset is followed through three stages of its life, with two fields per stage
+(Figure~\ref{fig:pipeline}). Fields (i) and (v) are free text and carry the evidence; the
+other four take a value from a fixed vocabulary, and only those four feed the counts in
+Section~\ref{sec:audit}.
+
+\begin{description}\setlength{\itemsep}{1pt}
+  \item[(i) Source publication.] The paper, thesis, competition or data release the
+  series come from, with the passages read.
+  \item[(ii) Original task.] Whether the source study posed a classification task of its
+  own: \emph{real task} (a stakeholder outside the paper needed the prediction),
+  \emph{toy task} (data staged or generated to demonstrate a method), or \emph{none}
+  (the source collected data but posed no classification target).
+  \item[(iii) Data origin.] What the series index is: \emph{temporal} (sampled over
+  physical time), \emph{ordered, non-temporal} (wavelength, contour arc-length, spatial
+  position, entity index), or \emph{synthetic} (a generator's step).
+  \item[(iv) Label origin.] How the archive's class relates to (ii): \emph{source task}
+  (the same target, possibly coarsened), \emph{metadata} (a recording attribute such as
+  season, date, lead or device), \emph{instance identity} (which subject, sensor or
+  actor produced the series), or \emph{redefined} (a target the archive defined where the
+  source posed none or a different one).
+  \item[(v) Split provenance.] Who built the default train/test split and by what rule,
+  where this is documented at all.
+  \item[(vi) Split leakage.] Whether the test set is independent of the training set:
+  \emph{Separated} (no duplicates, and the unit a deployed model would face differs between the sets, as documented for the split or by construction because each series is a distinct event or object with no known grouping above that unit), \emph{Concern} (at least one test series is value-identical to a
+  training series, or the unit a deployed model would face appears on both
+  sides), \emph{Unclear} (the information needed to check separation of that unit is missing), \emph{Related periods} (different days or windows of the same
+  ongoing process), or \emph{Generated} (synthetic tasks, not assessed by source separation).
+\end{description}
+
+A dataset fails on task construction (Section~\ref{sec:construction}) when (ii) is
+\emph{toy task} or \emph{none}, or (iv) is \emph{metadata}, \emph{instance identity} or \emph{redefined}. It fails
+on leakage (Section~\ref{sec:leakage}) when (vi) is \emph{Concern}.
+\emph{Unclear} is never counted as a pass on leakage. The four datasets whose original task or label origin is \emph{undocumented} are counted with the real tasks. Field (iii) is recorded for every
+dataset but does not enter either verdict (Section~\ref{sec:open-questions}).
+
+\subsection{Admissible evidence}
+\label{app:evidence}
+
+Four kinds of evidence were admitted, and every value in the released audit carries a tag
+saying which kind supports it.
+
+\begin{itemize}\setlength{\itemsep}{1pt}
+  \item \textbf{[S] Source text.} A passage of the source publication, the archive's own
+  briefing document~\cite{dau2019ucr}, the donor's documentation, or the dataset page on
+  \texttt{timeseriesclassification.com}, cited by section and page and quoted where the
+  claim is decisive. Dead donor links were recovered through the Internet Archive where
+  possible; a link that points to an unrelated resource is itself recorded as evidence of
+  weak provenance.
+  \item \textbf{[D] Shipped data.} A property computed on the archive's own files: the
+  duplicate check of Appendix~\ref{app:leakage}, and one-line sanity checks used during
+  drafting (sign of the values, whether the series length equals a
+  count of entities in the source, whether split sizes reconcile with the source's
+  arithmetic).
+  \item \textbf{[R] Inference.} A conclusion the auditor drew from [S] or [D] rather than
+  read in a source, such as identifying which of several challenges a vaguely described
+  dataset comes from.
+  \item \textbf{[I] Intended deployment.} An inference about intended deployment, such as
+  which unit a deployed model would face.
+\end{itemize}
+
+Where the sources do not answer a question, the field is set to \emph{unknown} or
+\emph{undocumented} and the record says what is missing. A fluent but unsupported account
+of a dataset's origin was treated as a defect, not a filled field.
+
+\subsection{Language-model assistance}
+\label{app:llm}
+
+The audit followed a five-stage pipeline: scripted scaffolding, agentic drafting, agentic review, an agentic fact-check of the released CSV against the records, and human verification. The prompts and protocols for each stage are released together with the audit.
+
+\paragraph{Scaffolding.} A script scrapes the archive page of each dataset and fills the identity fields (split sizes, series length, number of classes, archive type tag). All judgment fields are left as placeholders.
+
+\paragraph{Drafting.} An agent follows the archive's source links, reads the source publication, fills fields (i) to (v) according to the evidence rules of Appendix~\ref{app:evidence}, and runs the data checks. The protocol forbids filling fields from prior knowledge, requires the load-bearing sentence to be quoted with its location, and instructs the agent to lower the confidence field and state what is missing rather than infer unstated values.
+
+\paragraph{Review.} A second, independent agentic pass, run under a separate protocol, fetches and reads every listed reference before inspecting the draft. For each decisive claim it records one of \emph{confirmed with quote}, \emph{quote mismatch}, \emph{not found}, \emph{contradicted}, or \emph{omitted by draft}, re-derives the field values from the verified evidence, and re-runs the duplicate check.
+
+\paragraph{Fact-check.} Two independent agents (Claude Opus and GPT Astra) re-derived every verdict and fact column of the released CSV from the records, keeping the existing value where a record is silent, and a third agent reconciled the two.
+
+\paragraph{Human verification.} The authors decided every verdict on which the agents disagreed or which the reconciling agent rated as low-confidence. For contested datasets, the authors re-read the cited sources themselves, and corrected records were re-checked.
+
+
+
+
+
+
+
+
+
+\subsection{Leakage checks}
+\label{app:leakage}
+
+\paragraph{Duplicates.} For every dataset we loaded the shipped train and test files with
+their original lengths and missing values, and hashed each series as a byte string of its
+64-bit values with missing values mapped to a fixed sentinel, so that identical padding
+hashes identically. Two series are duplicates when their hashes agree. We report, per
+dataset, the number of test series whose values appear in the training set, the number of
+distinct series overall, the duplicate-group size histogram, and whether any duplicate group
+carries more than one label. 
+\paragraph{Group overlap.} Duplicates are not the only way a test set can depend on the training set.
+When the same subject, device or recording session contributes series to both sides of the split, a model can pass by recognizing the source rather than the class. We marked a split as leaking when the archive, the source or the released data establish such sharing, as clean when they document that it is absent, or when each series is a distinct event or object with no known grouping above it, and as unknown otherwise.
+
+\subsection{Release}
+\label{app:release}
+
+The repository \url{https://github.com/automl/ucr-provenance-audit} contains the audit CSV with a column guide, one YAML record per dataset, the drafting, review and fact-check protocols, the duplicate-check script with its output, and the browser page at \browserurl. %
+
+\clearpage
+\section{Artificial Task Construction}\label{app:labels}
+Tables~\ref{tab:labels-metadata}–\ref{tab:labels-toy} list all 52 datasets that fail task construction, because their label differs from the source task or the source task is a toy, grouped by the mechanism described in Section~\ref{sec:construction}. There are 57 entries for 52 datasets; five datasets fall under two mechanisms and appear in both tables. The column ``Source target or purpose'' states the question the source study stposed, or notes that no classification target was documented. A derived label does not by itself make a task invalid; the tables record what is being evaluated and who defined it.
+{\footnotesize\setlength{\tabcolsep}{3pt}
+\subsection{Metadata as Label (13)}\input{tables/labels_metadata}
+\subsection{Instance Identity as Label (14)}\input{tables/labels_identity}
+\clearpage\subsection{Task Replacement, Derivation or Subsetting (13)}\input{tables/labels_replacement}
+\clearpage\subsection{Toy Source Tasks (17)}\input{tables/labels_toy}}
+
+\clearpage
+\section{Split Provenance}\label{app:split} 
+The 41 UCR datasets assigned the \texttt{Concern} label, comprise 17 with at least one exact cross-split match and 24 more with a documented or data-verified shared source but no exact match. 
+
+\subsection{Train/Test leakage or inconsistent labels}\label{app:duplicates}      
+
+Table~\ref{tab:duplicates} reports the datasets with the duplicates and split matches. A test
+series whose exact values already appear in training can be answered by recall rather than
+by generalisation, so the two accuracy columns split each test set in two: \emph{acc.\
+dup.} covers the test series that have an identical training counterpart, \emph{acc.\
+rest} the remainder. The gap between them is large and one-directional. MiniRocket answers the repeated cases almost perfectly while scoring far lower on the rest of the same test set. Two datasets run the other way, \emph{ElectricDevices} (\accDupElectricDevices against \accRestElectricDevices) and \emph{Strawberry} (\accDupStrawberry against \accRestStrawberry), because some repeated series carry conflicting labels and no classifier can satisfy every copy.
+  {\footnotesize\setlength{\tabcolsep}{3pt}\input{tables/duplicates}}             
+
+
+  \subsection{Split Concerns Against Evaluation}
+  Table~\ref{tab:splits} examines whether each split supports the intended evaluation. A new instance means a case from a new source at the relevant level: for example, a new patient, a new physical sample or a fresh recording of a familiar person. Another window from the same recording is a different case, but does not provide a new recording occasion. We assign one verdict per dataset:       
+  \begin{itemize}[leftmargin=*,itemsep=2pt,topsep=3pt]                                                   
+  \item \emph{Concern} (41 datasets) identifies either a relevant source unit shared across the split that the archive, its description paper, the source study or the released data establish, or at least one test series value-identical to a training series. Documented source sharing can let accuracy benefit from familiar recording or sample characteristics, while same-label exact matches permit memorisation.
+  \item \emph{Unclear} (65 datasets) means that the information needed to check separation is missing. 
+
+  \item \emph{Separated} (7 datasets) means that the relevant sources differ between the sets, as documented or by construction when each series is a distinct event or object with no known grouping above that unit, supporting evaluation at that level. Separate sessions of familiar users, for example, do not establish performance on new users.
+
+  \item \emph{Related periods} (7 datasets) identifies different days or windows from the same ongoing process, which may share seasons, events or operating conditions. Random assignment does not establish performance in a later period.
+
+  \item \emph{Generated} (8 datasets) marks tasks not assessed here by patient, sample or recording separation. Their independence must instead be checked from how the examples were generated.
+
+  \end{itemize}
+
+  Overall, 106 of 128 datasets (82.8\%) either receive a \texttt{Concern} label because of a documented or data-verified shared source or an exact cross-split match, or lack sufficient information to verify source separation. Each verdict applies to the setting described in its row and qualifies what the score can be taken to demonstrate. Rows marked ``same as'' share the named explanation.
+
+  {\footnotesize\setlength{\tabcolsep}{3pt}\input{tables/split_audit}}

@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "color-edits.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/experimental_design.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/limitations_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/estimators.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/trajectory_uncertainty.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/experimental_details.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/retail_features.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/toolsandbox_features.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/steering_features.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/detailed_effects.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "76359bb5694e1d93e781a03c31480377e22742d3ab7d1f20c1e33f31aca9548f",
+    "color-edits.sty": "8168a25d12d58bbc26f696f89f45a28386d3940b8d6320bc58505a52156208bb",
+    "sections/abstract.tex": "d194c7f8c525e57b4df2219bbaf86085d86ae6ad2f30f10404bc672adb71adfa",
+    "sections/introduction.tex": "3dc438cd9b22142d3d56286bcda5b1aafe175fe75cc0fee910f0e9a0707ece13",
+    "sections/experimental_design.tex": "311f7c0253998466444af50b7cbb6eb9fe666aa2570a895ebe0ecfcac543de08",
+    "sections/experiments.tex": "86f588ace424fe939c6df2bf700402bf60258e86d190d5cdddb74183cb845d2c",
+    "sections/limitations_conclusion.tex": "28203ba419a693c2251837eb845c8bb1044fcee2e41275bea4a07c0ade91bb0e",
+    "appendix/estimators.tex": "f8c53261becf389cee9b374d2c0665ce784f9de1f71e6e0a305045c8089aa595",
+    "appendix/trajectory_uncertainty.tex": "2c1f1ce6e13bb1599abcc2e7821d578c5a94a3bf25e1206517124cfefa26f28f",
+    "appendix/experimental_details.tex": "436572702f2d33d0e51d1a91743b1479d9acd4d3588a2e4d2788a14d322ba250",
+    "appendix/retail_features.tex": "cff0c1c5f30ed6bbb055abe774322cf9d2f49f181dd66f150c85a939fc40fab5",
+    "appendix/toolsandbox_features.tex": "6fa6230afe81794dcc2151537ad9c280b1d993f3dc6c51b5e7ba79bbeec65a84",
+    "appendix/steering_features.tex": "bb44b16b5eebcaefebfa620ec581d48c364d575a9cb09ba222f625036a138b45",
+    "appendix/detailed_effects.tex": "ef7c26170770b964036b768bea3019c0c767cdca518578eb73ca41fdc4f79de9"
+  }
+}

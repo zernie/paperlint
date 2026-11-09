@@ -1,0 +1,29 @@
+\begin{table}[t]
+\centering
+\caption{\textbf{Mechanisms for agent evolution.} W: updates to the acting LLM's weights. M: persistent external experience, skills, or prompts retrieved during training or deployment. A dash indicates that the mechanism is not part of the reported design.}
+\label{tab:comparison}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccp{8cm}@{}}
+\toprule
+Method & W & M & Adaptation mechanism\\
+\midrule
+RISE \citeyearpar{rise2024} & $\checkmark$ & -- & Learning multi-turn revision\\
+Agent-Pro \citeyearpar{agentpro2024} & -- & $\checkmark$ & Updating beliefs and behavioral policies\\
+SEAL \citeyearpar{seal2025} & $\checkmark$ & -- & Generating self-edits for parameter updates\\
+EvolveR \citeyearpar{evolver2025} & $\checkmark$ & $\checkmark$ & Distilling strategic principles and learning the policy\\
+AgentEvolver \citeyearpar{agentevolver2025} & $\checkmark$ & $\checkmark$ & Generating tasks and reusing experience for policy learning\\
+MAGE \citeyearpar{yang2026mage} & -- & $\checkmark$ & Updating skills, graph memory, and strategies\\
+MemRL \citeyearpar{memrl2026} & -- & $\checkmark$ & Learning utilities for episodic retrieval\\
+MemSkill \citeyearpar{memskill2026} & -- & $\checkmark$ & Refining memory routines and learning their selector$^{\dagger}$\\
+SkillRL \citeyearpar{skillrl2026} & $\checkmark$ & $\checkmark$ & Joint policy learning and skill-library refinement\\
+EDGE \citeyearpar{xie2026edge} & $\checkmark$ & $\checkmark$ & Gain-gated distillation and utility-based experience pruning\\
+Memento-Skills \citeyearpar{mementoskills2026} & -- & $\checkmark$ & Developing reusable skills and updating stateful prompts$^{\dagger}$\\
+EvolveMem \citeyearpar{evolvemem2026} & -- & $\checkmark$ & Adapting memory and retrieval configurations\\
+\midrule
+\textbf{\method} & $\checkmark$ & $\checkmark$ & \textbf{Demonstration-aware training and verified memory release}\\
+\bottomrule
+\end{tabular}
+\par\smallskip\raggedright
+$^{\dagger}$Training a memory controller or skill router does not count as updating the acting LLM. M excludes task-local blackboards, archives used only for gradient updates, and fixed factual corpora.
+\end{table}

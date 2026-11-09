@@ -56,6 +56,16 @@ inputs:
       such rule, set this to "false" and save the apt fetch.
     required: false
     default: "true"
+  check-hooks:
+    description: >-
+      Fail the job when the Claude Code hooks in `.claude/settings.json` are partly wired or wired
+      twice, by running `paperlint doctor` after the lint. Off by default: the hooks are an
+      in-editor guard, and a project that never ran `paperlint init` (or ran it with `--no-hooks`)
+      has no reason to fail CI over them. Turn it on to catch an upgrade that added a hook the
+      project has not wired. `doctor` also fails the job on its other findings: a papers directory
+      the CLI and the hooks disagree on, or a `paperlint.json` it cannot use.
+    required: false
+    default: "false"
   working-directory:
     description: Directory to run in.
     required: false
@@ -119,3 +129,11 @@ runs:
           --max-warnings="$PAPERLINT_MAXWARN" --json > "$RUNNER_TEMP/paperlint-report.json" || RC=$?
         node "$GITHUB_ACTION_PATH/scripts/eslint-report-guard.mjs" \
           "$RUNNER_TEMP/paperlint-report.json" "$RC" "$PAPERLINT_PATHS" "${PAPERLINT_CONFIG:-paperlint.json}"
+
+    # `paperlint doctor` exits 2 for hooks that are partly wired or wired twice (and 0 for none at
+    # all: `--no-hooks` is a choice). It runs AFTER the lint so a red doctor never hides the report.
+    - name: paperlint doctor (hooks fully wired)
+      if: inputs.check-hooks == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npx paperlint doctor

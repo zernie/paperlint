@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "numbers.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/symbols.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/composition-figure.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/audit_pipeline.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/labels_metadata.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/labels_identity.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/labels_replacement.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/labels_toy.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/duplicates.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/split_audit.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "2173eef517d920a5f70a4e6e2ac60f1fdf2b588213fafbab6a89cba559ec6a28",
+    "neurips_2026.sty": "c3fc2894e83d2517ca18b66741d6c595986d97957dc08ec08bb2125a7ec4555a",
+    "numbers.tex": "11230196c1aec2f0aea5cf030505f12710ac0e33484b9898df743a59ebcc9e0f",
+    "tables/symbols.tex": "19de98d3ea260b634f26f181b7b9dae379af824e02d295bc84734c2af710ca8e",
+    "figures/composition-figure.tex": "1c7c9992414a127ed0a3640381ddfe2e9b745d6b2346ed5312a115609354a775",
+    "appendix.tex": "f1b33ae07f13f1cd0a8f446237711ecc9e7716c60bca2c0783d98774fbb1e323",
+    "figures/audit_pipeline.tex": "ee5159600a6aedeb7f7fc9d058162597bc7dfd05e211a912cdb6ca1f80b5e25b",
+    "tables/labels_metadata.tex": "1f9b2e477e7b13baeca18fce3e769e5effa1867125d364bf5a352f0fd5ce53c0",
+    "tables/labels_identity.tex": "35b18534c907f083f5fbf4c23803ee893bcae0fbfdcb6485433e753349d2ea9a",
+    "tables/labels_replacement.tex": "a28ad2401c2e12c5d074b81ea39af4e41cf1482bff2ab409206461c2ebd5425c",
+    "tables/labels_toy.tex": "25130f943682629e765671f68f123744d5b3b7ed6667216b308a3deb465b236b",
+    "tables/duplicates.tex": "c0c65a6b622ef99686e38922d922c2353c20f6be00ffe55af2072cf29d5bf2cb",
+    "tables/split_audit.tex": "ea9bd33c40dbcd126467c6451b5ebcc2f532c072d50c208adb847cfa393f460e"
+  }
+}

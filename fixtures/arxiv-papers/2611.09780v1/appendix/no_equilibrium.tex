@@ -1,0 +1,41 @@
+\section{Situations Where an Equilibrium Doesn't Exist}
+\label{app:no_equilibrium}
+We note that an equilibrium is not guaranteed to exist if $\sigma$ is close to the step function. 
+For example, suppose that 
+\[
+f_i(x_i)=x_i, \qquad c(x_i)=\alpha x_i, \qquad \sigma_\tau(z)=\frac{1}{1+e^{-\tau z}}, \qquad \tau > 4 \alpha.
+\]
+Here, $u_i(x_i;x_j)=\sigma_\tau(x_i-x_j)-\alpha x_i$, where $\tau$ controls how sharply the evaluator distinguishes between developers; as $\tau\rightarrow\infty$, $\sigma_\tau$ approaches a step function.
+
+We first show that no symmetric candidate equilibrium, $x_1=x_2=x$ exists when $\tau  > 4\alpha$. 
+At such a profile,
+\[ 
+\frac{\partial u_i}{\partial x_i}=\sigma_\tau'(0)-\alpha=\frac{\tau}{4}-\alpha > 0.
+\] 
+Thus, holding the opposing developer's investment fixed, each developer can increase its utility by slightly increasing its own investment. 
+We note that investments above $\bar{x}$ cannot be optimal, and so no symmetric profile can be a Nash equilibrium.
+This is because, beyond $\bar{x}$, each developer achieves negative utility, and so would prefer to deviate. 
+
+
+Next, we demonstrate that an asymmetric equilibrium cannot exist either. 
+Suppose without loss of generality that $x_1>x_2$. 
+When a developer is behind, we have \(\sigma_\tau''(x_2-x_1)>0\), so its utility is strictly convex in its own investment. 
+As a result, the losing developer cannot have an interior optimum strictly below its competitor. 
+Therefore, any asymmetric equilibrium must, up to relabeling, take the form \((x,0)\) for some \(x>0\).
+Since $x$ is optimal for the winning developer against zero, it satisfies
+\[
+u_1'(x;0)=\sigma_\tau'(x)-\alpha=0.
+\]
+Moreover, since $\tau>4\alpha$, we have $u_1'(0;0)=\tau/4-\alpha>0$. 
+Since $\sigma_\tau'(y)$ is strictly decreasing for $y>0$, it follows that $u_1'(y;0)>0$ for every $y\in[0,x)$. Hence
+\[
+u_1(x;0)=\sigma_\tau(x)-\alpha x>u_1(0;0)=\frac12.
+\]
+We now show that such a solution cannot be an equilibrium. 
+If developer $2$ deviates from $0$ to $2x$, its gain is
+\[
+u_2(2x;x)-u_2(0;x)
+=\sigma_\tau(x)-2\alpha x-\sigma_\tau(-x)
+=2\left(\sigma_\tau(x)-\alpha x-\frac12\right)>0,
+\]
+where the final inequality follows from \(u_1(x;0)>1/2\). Thus, developer 2 strictly prefers to leapfrog developer 1, so \((x,0)\) cannot be an equilibrium. Therefore, no pure-strategy Nash equilibrium exists.

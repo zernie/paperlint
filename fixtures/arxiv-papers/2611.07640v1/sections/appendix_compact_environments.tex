@@ -1,0 +1,39 @@
+\section{Environments}
+\label{app:environments}
+
+The benchmark has three environments (Table \ref{tab:environments}), with
+25 agent-facing tools and
+91 actions in total. Each environment is one shared sandbox: a set
+of records that the environment's tools read and write. Every run starts from a fresh copy of the same template, so all cases
+in an environment see the same world. A case varies only the user request,
+the content planted in that world, and the checks that score the run.
+
+\begin{table}[H]
+\centering
+\caption{Environments. Each environment is one shared sandbox; cases differ in the task, the planted content and the checks, not in the world. \emph{Tools} and \emph{Actions} count the agent-facing tools and their actions. \emph{Pairs} are retained case--target pairs and \emph{Instances} their retained single-primitive variants; the compound variant is not counted.}
+\label{tab:environments}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lrrp{5.0cm}rrr@{}}
+\toprule
+\textbf{Environment} & \textbf{Tools} & \textbf{Actions} & \textbf{Shared sandbox resources} & \textbf{Cases} & \textbf{Pairs} & \textbf{Instances} \\
+\midrule
+Productivity & 6 & 27 & 10 emails, 15 documents, 8 calendar events, 11 contacts, 1 policy document & 28 & 139 & 407 \\
+DevOps & 11 & 41 & 14 issues, 11 pull requests, 24 repository files, 4 pipeline runs, 2 CI workflows, 2 deployments, 3 deployment environments, 9 users, 2 deploy keys, 2 access tokens, 3 webhooks, 1 policy document & 31 & 163 & 468 \\
+Marketplace & 8 & 23 & 22 disputes, 22 orders, 22 message threads, 30 evidence items, 15 listings, 12 users, 2 policy documents & 31 & 164 & 468 \\
+\midrule
+Total & 25 & 91 &  & 90 & 466 & 1343 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+Planted content enters through named placeholders in the sandbox records.
+Before the agent starts, the harness fills the case's placeholder with the
+instance's injection text. Every other placeholder is left empty, so the
+surrounding records are identical across cases and instances. The harness
+invokes \texttt{configure\_injections} and \texttt{sandbox\_reset} internally to plant content
+and restore the sandbox; these setup operations are not exposed as tools to
+the agent or the defenses.
+
+

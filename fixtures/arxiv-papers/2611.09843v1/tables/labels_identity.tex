@@ -1,0 +1,31 @@
+\begin{longtable}{@{}P{3.2cm} P{3.2cm} P{4.4cm} P{1.6cm}@{}}
+\caption{Task-construction cases in the current audit: identity. None means no classification target is documented, not that the source data had no scientific purpose. $^\dagger$ also listed under another mechanism.}\label{tab:labels-identity} \\
+\toprule
+Dataset & Benchmark target & Source target or purpose & Label by \\
+\midrule
+\endfirsthead
+\multicolumn{4}{l}{\emph{(continued)}} \\
+\toprule
+Dataset & Benchmark target & Source target or purpose & Label by \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\emph{continues}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\ds{PigAirwayPressure} & Which of 52 pigs & Before vs during induced bleeding & Curators \\
+\ds{PigArtPressure} & Which of 52 pigs & As PigAirwayPressure & Curators \\
+\ds{PigCVP} & Which of 52 pigs & As PigAirwayPressure & Curators \\
+\ds{CinCECGTorso} & Which of four people & Infarct extent and location & Curators \\
+\ds{MelbournePedestrian} & Which of ten sensor locations & Pedestrian monitoring; no class target & Curators \\
+\ds{SemgHandSubjectCh2} & Which of five subjects & Six hand-grasp types & Curators \\
+\ds{Yoga}$^\dagger$ & Which of two actors, from silhouettes & Actor discrimination, posed by the collectors as a demo task & Collectors (=~curators) \\
+\ds{GunPointMaleVersusFemale}$^\dagger$ & Actor sex; confounded with identity (two actors) & Gun-draw vs pointing action & Collectors (=~curators) \\
+\ds{MoteStrain} & Which source stream: humidity vs temperature & Unsupervised stream correlation tracking; no class target & Curators \\
+\ds{FreezerRegularTrain} & Which of two freezers in one house & REFIT load monitoring; no class target & Curators \\
+\ds{FreezerSmallTrain} & As FreezerRegularTrain; smaller training split & As FreezerRegularTrain & Curators \\
+\ds{FaceAll}$^\dagger$ & Which of 14 graduate students, from head profile & Head profiles recorded at UCR; no applied problem & Collectors (=~curators) \\
+\ds{FacesUCR}$^\dagger$ & As FaceAll; rotation-aligned, different split & As FaceAll & Collectors (=~curators) \\
+\ds{Haptics} & Which of five users entered the passgraph & None documented; passgraph entry on a touchscreen & Unknown \\
+\end{longtable}

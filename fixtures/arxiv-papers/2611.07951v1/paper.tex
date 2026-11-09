@@ -1,0 +1,875 @@
+\documentclass[sigconf,nonacm]{acmart}
+\settopmatter{printacmref=false}
+%\documentclass[conference]{IEEEtran}
+%\IEEEoverridecommandlockout
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+%\usepackage{cite}
+%\usepackage{amssymb}
+\usepackage{amsmath,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\usepackage{hyperref}
+
+\newif\ifshownotes
+\shownotestrue
+\newcommand{\gnote}[1]{\ifshownotes{\color{blue}\textbf{[G:} #1\textbf{]}}\fi}
+\newcommand{\rnote}[1]{\ifshownotes{\color{red}\textbf{[R:} #1\textbf{]}}\fi}
+\newcommand{\isnote}[1]{\ifshownotes{\color{purple}\textbf{[IS:} #1\textbf{]}}\fi}
+\newcommand{\csnote}[1]{\ifshownotes{\color{orange}\textbf{[CS:} #1\textbf{]}}\fi}
+
+
+\usepackage[most]{tcolorbox}
+\newtcolorbox{Finding}{
+    colback=yellow!20,
+    colframe=yellow!20,
+    boxrule=0pt,
+    sharp corners,
+    boxsep=0pt,
+    left=8pt,
+    right=8pt,
+    top=6pt,
+    bottom=6pt,
+    width=\linewidth,
+    before skip=8pt,
+    after skip=8pt}
+
+\begin{document}
+
+\title{Requirements Nobody Wrote Down: Emergence in a Public-Sector ML Pipeline}
+
+%\author{\IEEEauthorblockN{Anonymous Author(s)}
+%\IEEEauthorblockA{Anonymous Institution}}
+
+\author{Ronivaldo Ferreira}
+\affiliation{%
+  \institution{Federal University of Par\'a}
+  \city{Bel\'em}
+  \state{PA}
+  \country{Brazil}}
+\email{ronivaldo.junior@icen.ufpa.br}
+
+\author{Vinicius Costa Girard}
+\affiliation{%
+  \institution{Federal University of Par\'a}
+  \city{Bel\'em}
+  \state{PA}
+  \country{Brazil}}
+\email{vinicius.girard@icen.ufpa.br}
+
+\author{Cleidson de Souza}
+\affiliation{%
+  \institution{Federal University of Par\'a}
+  \city{Bel\'em}
+  \state{PA}
+  \country{Brazil}}
+\email{cdesouza@ufpa.br}
+
+\author{Igor Steinmacher}
+\affiliation{%
+  %\department{RESHAPE LAB}
+  \institution{Northern Arizona University}
+  \city{Flagstaff}
+  \state{AZ}
+  \country{USA}}
+\email{igor.steinmacher@nau.edu}
+
+\author{Carla Aguiar}
+\affiliation{%
+  \institution{University of Bras\'{\i}lia (UnB)}
+  \city{Bras\'{\i}lia}
+  \state{DF}
+  \country{Brazil}}
+\email{caguiar@unb.br}
+
+\author{Filipe Roseiro Cogo}
+\affiliation{%
+  \institution{Queen's University}
+  \city{Kingston}
+  \state{ON}
+  \country{Canada}}
+\email{filipe.cogo@queensu.ca}
+
+\author{Gustavo Pinto}
+\affiliation{%
+  \institution{Federal University of Par\'a}
+  \city{Bel\'em}
+  \state{PA}
+  \country{Brazil}}
+\email{gpinto@ufpa.br}
+
+\renewcommand{\shortauthors}{Ferreira et al.}
+
+\begin{abstract}
+Governments increasingly use machine learning (ML) to handle data volumes beyond their analytical capacity, yet little is known about how requirements arise and evolve as an ML experiment moves toward operational use. Requirements Engineering (RE) for ML often assumes that requirements can be elicited upfront; in the public sector, however, demands arrive vague, stakeholders speak different professional languages, and what counts as a ``good'' result is unknown in advance. We report a 15-month case study of a thematic classification pipeline for Brazil's national digital participation platform, which holds over 60,000 citizen proposals, triangulating 43 project artifacts with interviews of six project participants. Institutional demands arrived as broad goals, endorsed but not sponsored, and only 40\% of the 95 reconstructed requirements and criteria were ever formalized. The pipeline's key requirements emerged largely from experiments, model outputs, and integration work, shaped by technical decisions and institutional constraints; the central one, the classification categories, was settled by a government taxonomy chosen for its institutional legitimacy. Acceptance relied on technical metrics, domain judgment, and political assessment, without shared thresholds or validation of usefulness in practice. In public-sector ML, technical and institutional artifacts thus act as elicitation instruments, and experimentation and integration belong to the requirements process.
+\end{abstract}
+
+\keywords{Requirements Engineering, ML-Enabled Systems, Public Sector, Text Classification, Case Study}
+
+\maketitle
+
+\section{Introduction}
+Machine learning (ML) is making its way into the public sector. Governments use it to triage citizen requests, detect fraud, and analyze text volumes that would take months to read manually~\cite{wirtz2019}. Digital participation platforms are a prominent case: by opening consultations to any citizen, they collect thousands of free-text contributions that agencies must read, organize, and answer. Brazil's national platform has received over 60,000 proposals across 117 participatory processes and two assemblies since 2023, on topics from national planning to climate and cultural policy. At this scale, manual analysis exceeds the agencies' capacity, making ML a precondition for taking citizen input seriously.
+
+Building such solutions is not only a modeling problem but a requirements problem. A request such as ``classify the proposals by theme'' leaves open what counts as a theme, whose vocabulary the themes should follow, how good the classification must be before managers rely on it, and who judges it. In conventional software, Requirements Engineering (RE) answers these questions by eliciting and specifying stakeholder needs before or alongside implementation. ML-enabled systems challenge this practice: their behavior is learned from data, their quality is expressed in metrics whose thresholds are rarely known in advance, and their requirements depend on data that may not yet exist or be labeled~\cite{vogelsang2019,horkoff2019}. These differences reshape software engineering practice~\cite{amershi2019} and create friction between data scientists and their teams~\cite{nahar2022}.
+
+The RE for ML community has characterized how data scientists perceive requirements~\cite{vogelsang2019}, mapped the challenges of non-functional requirements~\cite{horkoff2019}, studied RE in safety-critical perception systems~\cite{habibullah2023}, and identified gaps in human-centered AI~\cite{ahmad2023}; secondary studies have mapped the field~\cite{villamizar2021}. This literature has two blind spots. First, most studies capture RE as practitioners \emph{report} it at one point in time~\cite{vogelsang2019,alves2023}, rarely following a system long enough to see its requirements \emph{emerge, shift, and become operational}. Second, the public sector is largely absent. There, demands arrive through administrative instruments, stakeholders come from different professions, and success is defined by institutional accountability.
+
+%\isnote{Sugiro reformular em condições de engenharia -- não há product owner que concentre decisões, quem escreve a entrada não é quem consome a saída, a infraestrutura de produção é de terceiros, o sucesso é prestação de contas, não adoção. Você já escreveu essas quatro condições la na frente.} \csnote{isto tem na linha 96}
+
+Consider the thematic classifier we studied. The team first clustered proposals with topic modeling, and no requirement named a vocabulary. When the team asked for one, the Controlled Vocabulary of Electronic Government (VCGE), a taxonomy used across the federal administration, was suggested, and the team began seeding the model with its terms. What started as a point of comparison became the criterion for judging topics and helped motivate supervised classification, so that categories matched the nomenclature managers use to report on public policy. No requirements document recorded this shift; it surfaced in scripts, presentations, and meeting notes. Such episodes suggest that, in public-sector ML, requirements may be \emph{discovered} through experimentation and institutional artifacts as much as elicited from stakeholders.
+
+We report a qualitative case study of this pipeline over 15 months (January 2025 to March 2026). Rather than assume that requirements existed upfront, we ask how they came into being and what role they played:
+
+\smallskip
+\noindent\textbf{RQ1: How did institutional demands become requirements for the ML pipeline?} We examine where requirements originated, who formulated them, and whether they were elicited upfront or surfaced over time.
+
+\smallskip
+\noindent\textbf{RQ2: How did requirements and technical decisions shape each other over time?} We ask whether requirements drove the main technical decisions, emerged from them, or both.
+
+\smallskip
+\noindent\textbf{RQ3: How was the acceptability of the pipeline's results established?} We examine which criteria were used, who applied them, and how technical metrics, domain judgment, and institutional concerns combined.
+
+\smallskip
+We first analyzed all 43 project artifacts, normalizing 95 requirements and criteria and reconstructing a trajectory of 17 episodes. We then interviewed six participants, using the episodes to prompt recall and challenge our reconstruction, coded the transcripts deductively and inductively, and consolidated the episodes. The resulting seven patterns, triangulated with the episodes, answer our RQs.\footnote{Replication package: \href{https://doi.org/10.6084/m9.figshare.34867212}{\nolinkurl{doi.org/10.6084/m9.figshare.34867212}}.}
+
+Our main findings are:
+
+\begin{itemize}
+\item Requirements existed but were rarely written down: only 40\% of the 95 requirements and criteria we reconstructed were ever formalized.
+\item Institutional demands arrived as broad goals. AI was the team's offer, endorsed but never sponsored, and the team itself wrote down its requirements.
+\item Most requirements emerged from experiments, model outputs, and integration after modeling had started. The central one, the classification categories, had no owner and was settled by a government taxonomy chosen for legitimacy and distant from citizens' language.
+\item Acceptance relied on technical metrics, domain judgment, and political assessment, with no shared threshold and no evaluation in use.
+\end{itemize}
+
+%\csnote{replicable mesmo?}
+
+%\rnote{\href{https://github.com/RE4ML-code/RE4ML_BP}{Link Github}}
+%\rnote{\href{https://drive.google.com/drive/folders/1H1HWCazkiBKu-jcorGbtdv4XSP2E6AN8?usp=sharing}{Link Google Drive (atualizado)}}
+
+\section{Study Context}
+\label{sec:context}
+
+Brazil's national digital participation platform runs on Decidim, an open-source platform for participatory democracy~\cite{barandiaran2024}. Federal agencies use it for participatory processes on public policies such as the Multi-Year Plan (PPA), the Climate Plan, and the National Culture Plan. In each process, the agency opens a consultation, citizens and organizations submit and vote on proposals, managers analyze them, and the agency responds formally to society. By our count of the database, over 60,000 proposal records had accumulated across 117 processes and two assemblies by March 2026, before cleaning. For comparison, a single planning process received 8,254 proposals~\cite{jardim2024ppa}, and a semantic clustering study analyzed 10,022 proposals from three processes~\cite{ferreira2025semantic}.
+
+\subsection{Actors and ML Initiatives}
+
+On the government side, a national body for social participation requests the work and owns the platform, ministries run the processes and receive the contributions, and a state-owned IT company hosts the infrastructure and data. On the delivery side, a team funded through a public-sector cooperation agreement (a legal instrument by which a government body funds another public entity, such as a university, to carry out a work plan) develops and maintains the platform. It has a \emph{product team}, the main interface with the requesting body; a \emph{data team}, which extracts data from an anonymized replica of the production database; an \emph{AI team} of data scientists, which builds models on these data; and a \emph{moderation team} of political scientists and lawyers, which moderates content and analyzes proposals thematically. AI work was not in the work plan: the delivery team proposed the AI fronts, which were endorsed outside the agreed deliverables (Section~\ref{sec:pa}). Fig.~\ref{fig:actors} shows these actors and how demands and dependencies reached the AI team, the team we studied.
+
+%\csnote{isto é verdade?}. \rnote{preciso confirmar essas informações - isso é uma interpretação do que foi dito nas entrevistas)}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{images/actors.pdf}
+\caption{Actors and demand paths. Solid: formal path from the requesting body through the work plan to the product team. Dashed: AI fronts proposed by the delivery team and endorsed outside the work plan. Dotted: the AI team's data and deployment dependencies.}
+\label{fig:actors}
+\end{figure}
+
+The AI team was created to explore how ML could support the participatory cycle, starting from proposals written in citizens' own words, often far from the administration's vocabulary. Its initial goals were to flag content that violates the terms of use, classify proposals by theme so managers could systematize them and produce reports and formal responses, and recommend proposals and processes to citizens. We focus on the thematic classifier, which served the last two goals and thus two potential consumers: managers and citizens. Over the study period, the team moved from topic modeling with BERTopic, to seeding it with VCGE terms, to supervised classification on an adaptation of this vocabulary, and finally to a service with inference, training, and model-publishing routines whose deployment depended on the state-owned company's infrastructure. We draw on other fronts, such as a retrieval-augmented generation (RAG) system for reports and a Climate Plan prototype built on commercial APIs, when they help explain the classifier.
+
+\subsection{Researcher Positionality}
+\label{sec:posicao}
+
+This is an insider study. The first author has been an ML engineer in the AI team since January 2025, working on data preparation, model training, and validation. This position gave us access to participants and artifacts; some presentations and meeting notes came from the first author's files and were included without selection. It also means that the interviewer was a team member and that the first author analyzed decisions they took part in (Section~\ref{sec:threats}). To mitigate this, we kept reflective memos, let participants confirm, correct, or contest the reconstructed episodes, consolidated them under a protocol fixed in advance (Section~\ref{sec:consolidacao}), and had the second author review all coding and the candidate patterns (Section~\ref{sec:codificacao}).
+
+% \section{O Brasil Participativo}
+% O Brasil Participativo é a plataforma digital de participação social do governo federal brasileiro, construída sobre o software livre Decidim e acessada por login GovBR. Nela, órgãos federais abrem processos participativos sobre políticas públicas, como o Plano Plurianual (PPA), o Plano Clima e o Plano Nacional de Cultura. Cada processo segue um ciclo: o órgão abre a consulta, cidadãos e organizações enviam e votam propostas, gestores analisam as contribuições e o órgão dá uma devolutiva à sociedade. A escala é considerável: desde o lançamento, em 2023, a plataforma recebeu quase 100 mil propostas. O público-alvo não é um segmento de mercado, mas potencialmente qualquer cidadão.
+
+% \subsection{Estrutura organizacional}
+% Do lado do governo, a Secretaria Nacional de Participação Social é a demandante e a responsável pela plataforma. Os ministérios conduzem os processos de suas áreas e recebem as contribuições, e a Dataprev, empresa pública de tecnologia, hospeda a infraestrutura e os dados. Do lado da execução, uma equipe vinculada por um Termo de Execução Descentralizada (TED) desenvolve e mantém a plataforma. As entregas do plano de trabalho do TED são desdobradas em um backlog anual com a Secretaria.
+
+% A equipe executora tem quatro times. O time de produto é a principal interface com a Secretaria e transforma suas demandas em funcionalidades. O time de dados extrai os dados de uma réplica anonimizada do banco, conforme a LGPD, e os disponibiliza aos demais. O time de IA, uma frente de inovação formada por cientistas de dados, desenvolve modelos a partir desses dados. O time de moderação, com formação em ciência política e direito, modera os conteúdos e faz a análise temática das propostas. Os times se coordenam em reuniões entre seus líderes e em reuniões periódicas com a Secretaria.
+
+% \subsection{Iniciativas de ML na plataforma}
+% A frente de IA foi criada para explorar como o aprendizado de máquina poderia apoiar o ciclo participativo. Seu principal insumo são os textos das propostas, escritos por cidadãos em linguagem própria, muitas vezes distante do vocabulário da administração pública. As primeiras iniciativas tinham três objetivos. O primeiro era apoiar a moderação, sinalizando conteúdos contrários aos termos de uso. O segundo era classificar tematicamente as propostas, para ajudar gestores a sistematizar grandes volumes de contribuições e a produzir relatórios e devolutivas, uma tarefa que excedia a capacidade de análise dos órgãos em processos como o PPA. O terceiro era recomendar aos cidadãos outras propostas e processos de seu interesse, já que a maioria entrava na plataforma apenas para votar em uma proposta. Este estudo se concentra no classificador temático, que servia aos dois últimos objetivos.
+
+%\csnote{replicable mesmo?}
+
+%\rnote{\href{https://github.com/RE4ML-code/RE4ML_BP}{Link Github}}
+%\rnote{\href{https://drive.google.com/drive/folders/1H1HWCazkiBKu-jcorGbtdv4XSP2E6AN8?usp=sharing}{Link Google Drive (atualizado)}}
+
+
+% \section{O Brasil Participativo}
+% O Brasil Participativo é a plataforma digital de participação social do governo federal brasileiro, construída sobre o software livre Decidim e acessada por login GovBR. Nela, órgãos federais abrem processos participativos sobre políticas públicas, como o Plano Plurianual (PPA), o Plano Clima e o Plano Nacional de Cultura. Cada processo segue um ciclo: o órgão abre a consulta, cidadãos e organizações enviam e votam propostas, gestores analisam as contribuições e o órgão dá uma devolutiva à sociedade. A escala é considerável: desde o lançamento, em 2023, a plataforma recebeu quase 100 mil propostas. O público-alvo não é um segmento de mercado, mas potencialmente qualquer cidadão.
+
+% \subsection{Estrutura organizacional}
+% Do lado do governo, a Secretaria Nacional de Participação Social é a demandante e a responsável pela plataforma. Os ministérios conduzem os processos de suas áreas e recebem as contribuições, e a Dataprev, empresa pública de tecnologia, hospeda a infraestrutura e os dados. Do lado da execução, uma equipe vinculada por um Termo de Execução Descentralizada (TED) desenvolve e mantém a plataforma. As entregas do plano de trabalho do TED são desdobradas em um backlog anual com a Secretaria.
+
+% A equipe executora tem quatro times. O time de produto é a principal interface com a Secretaria e transforma suas demandas em funcionalidades. O time de dados extrai os dados de uma réplica anonimizada do banco, conforme a LGPD, e os disponibiliza aos demais. O time de IA, uma frente de inovação formada por cientistas de dados, desenvolve modelos a partir desses dados. O time de moderação, com formação em ciência política e direito, modera os conteúdos e faz a análise temática das propostas. Os times se coordenam em reuniões entre seus líderes e em reuniões periódicas com a Secretaria.
+
+% \subsection{Iniciativas de ML na plataforma}
+% A frente de IA foi criada para explorar como o aprendizado de máquina poderia apoiar o ciclo participativo. Seu principal insumo são os textos das propostas, escritos por cidadãos em linguagem própria, muitas vezes distante do vocabulário da administração pública. As primeiras iniciativas tinham três objetivos. O primeiro era apoiar a moderação, sinalizando conteúdos contrários aos termos de uso. O segundo era classificar tematicamente as propostas, para ajudar gestores a sistematizar grandes volumes de contribuições e a produzir relatórios e devolutivas, uma tarefa que excedia a capacidade de análise dos órgãos em processos como o PPA. O terceiro era recomendar aos cidadãos outras propostas e processos de seu interesse, já que a maioria entrava na plataforma apenas para votar em uma proposta. Este estudo se concentra no classificador temático, que servia aos dois últimos objetivos.
+
+% \section{Research Questions}
+% Our goal is to understand how institutional demands shaped the evolution of an ML pipeline in a public-sector setting, from exploratory experiments to a service ready for deployment. RE for ML research typically assumes that requirements are elicited from identifiable stakeholders and then drive design and evaluation~\cite{vogelsang2019,habibullah2023}. Our setting challenges each link of this chain (Section~\ref{sec:context}), so we do not assume that requirements existed upfront; we ask how they came into being and what role they played.
+
+% \smallskip
+% \noindent\textbf{RQ1: How did institutional demands become requirements for the ML pipeline?}
+% Data scientists rarely receive explicit requirements, and customers struggle to state what they need from an ML component~\cite{vogelsang2019,habibullah2023}, but this evidence comes mostly from single-point-in-time accounts. RQ1 examines where the pipeline's requirements originated, who formulated them, and whether they were elicited upfront or surfaced over time.
+
+% \smallskip
+% \noindent\textbf{RQ2: How did requirements and technical decisions shape each other over time?}
+% Technical decisions in ML components are constrained by hard-to-specify quality requirements and trade off against each other~\cite{horkoff2019}, and moving a model into a product exposes requirements that modeling did not anticipate~\cite{nahar2022}. RQ2 traces the pipeline's main technical decisions and asks whether requirements drove them, emerged from them, or both.
+
+% \smallskip
+% \noindent\textbf{RQ3: How was the acceptability of the pipeline's results established?}
+% Acceptance thresholds for ML metrics are rarely known upfront, and domain stakeholders often cannot interpret these metrics~\cite{vogelsang2019}; in the public sector, acceptability also depends on accountability to society. RQ3 examines which criteria were used, who applied them, and how technical metrics, domain judgment, and institutional considerations combined.
+
+\section{Methodology}
+\label{sec:method}
+
+We conducted an exploratory single-case study~\cite{runeson2009,yin2018}. The \emph{case} is the thematic classification pipeline (Section~\ref{sec:context}); the \emph{unit of analysis} is the trajectory of its requirements and evaluation criteria from January 2025 to March 2026. The case is \emph{revelatory}~\cite{yin2018}: the first author's insider position (Section~\ref{sec:posicao}) gave us access to all project artifacts and to participants on both the delivery and government sides, which is rare for public-sector ML systems. The design is longitudinal in its unit of analysis and retrospective in data collection, with two stages (Fig.~\ref{fig:method}): we reconstructed a preliminary trajectory from the artifacts, then used it to support interviews and consolidated it with their evidence. Artifacts show what was recorded and when, since they were produced to do the work and dated before outcomes were known; interviews show the motivations, negotiations, and tacit expectations that the artifacts left out~\cite{runeson2009}.
+
+%\isnote{I changed this parag. Check if still makes sense}
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{images/method.jpg}
+    \caption{Research method: (1) artifact analysis and construction of 17 preliminary episodes; (2) six semi-structured interviews covering five themes, each supported by preliminary episodes; (3) deductive and inductive coding; and (4) consolidation of the episodes and synthesis of patterns.}
+    \label{fig:method}
+\end{figure*}
+
+\subsection{Operational Definition of Requirement}
+\label{sec:req-def}
+Lacking a specification, we needed a definition broad enough for requirements never written as such. A \emph{requirement} is any condition the solution had to satisfy to be accepted, integrated, or used, documented or not. \emph{Formalized} requirements were recorded as such in some project instrument; \emph{tacit} ones guided decisions without being recorded. Across both, we mark \emph{environmental constraints}: conditions imposed by hardware, contracts, or data governance that the team treated as requirements. Following RE for ML terminology~\cite{vogelsang2019,habibullah2023}, we separate functional (FR) and non-functional requirements (NFR) from three kinds of criteria: acceptance criteria (AC), stating when an output or deliverable was accepted; evaluation criteria (EC), stating how the solution was assessed; and success criteria (SC), stating what made the initiative worthwhile.
+%\gnote{moved from Results, delete it there. is my AC/EC/SC definition right?}
+
+\subsection{Artifact Collection}
+\label{sec:collection}
+In June and July 2026, we collected every artifact produced for the pipeline during the study period, without filtering: 10 issues and 15 commits from the project's GitLab repository, 6 Google Colab notebooks, and 5 presentations and 7 meeting notes from the authors' files, 43 in total. We cataloged each with an identifier, type, date, description, and phase.
+%\gnote{only 15 commits and 10 issues in 15 months? what was the inclusion criterion?} \rnote{Sim! Adicionamos todos os artefatos encontrados e disponíveis}
+
+\subsection{Artifact Analysis and Preliminary Trajectory}
+\label{sec:artifact-analysis}
+We analyzed each artifact with guiding questions for its type: issues and scripts for demands, requirements, and criteria; commits, presentations, and meeting notes for the context, motivations, and results of technical decisions. We cross-referenced artifacts so that one could complete or corroborate another (e.g., an issue announces a task, a script implements it, and a presentation reports its results). The first author conducted this analysis alone.
+
+\subsubsection{Normalizing requirements and criteria}
+The same need often appeared in different words across artifacts and phases. We merged equivalent formulations into canonical items, each with an identifier, a definition, and links to its original formulations and artifacts; for example, ``saving'', ``publishing'', and ``loading'' the model became the FR \emph{Manage the model lifecycle and availability}. We created a new item only when a formulation fit no existing one, yielding 21 FRs, 12 NFRs, 23 ACs, 22 ECs, and 17 SCs.
+
+%\gnote{who did this? anyone reviewed it?} \rnote{Somente o primeiro autor. Sem revisão de um segundo autor!} \csnote{como é um estudo qualitativo, pessoalmente não vejo problema nisto, ainda mais considerando que o Roni era membro do projeto. Mas, isto pode ser mencionado no texto.}
+
+\subsubsection{Preliminary episodes}
+\label{sec:episodes}
+A \emph{preliminary episode} (EP) is a significant delivery, turning point, or change of approach or tooling where normalized requirements or criteria first appeared, reappeared, were refined, or were operationalized. For each EP, we recorded the demand, requirements, criteria, technical decisions, results, and supporting artifacts, so the same requirement can be followed across episodes. This produced 17 EPs in six phases: (1)~exploration and feasibility; (2)~unsupervised modeling and categorization; (3)~validation, alignment, and scale; (4)~transition to supervised classification; (5)~operationalization and deployment; and (6)~pipeline governance. For example, EP07, \emph{VCGE becomes the institutional reference}, links an issue requesting high-level categories, a script seeding BERTopic with VCGE terms, and two presentations of results to five requirements and seven criteria.
+
+%\csnote{Este conceito foi de outro lugar? é uma abordagem qualitativa interessante, mas seria bom ter uma referência aqui se possível.} \rnote{nenhum lugar especifico!}
+
+\subsection{Semi-Structured Interviews}
+\label{sec:interviews}
+
+\paragraph{Participants}
+Through purposive sampling~\cite{runeson2009}, we interviewed the six stakeholders most involved with the pipeline, covering the origin of demands, their translation into requirements, technical decisions, and evaluation (Table~\ref{tab:participants}): two political scientists, one of whom directed the requesting body; two software engineers; a data engineer; and an electrical engineer in ML leadership. For a single, bounded pipeline, we favored depth of involvement over the number of participants.
+
+%%\gnote{why 6 is enough? anyone declined? No ministry manager? we need to write about this in the limitation section} \rnote{entrevistamos os stakeholders mais envolvidos com o caso.} \isnote{No managers may be seen as fishy, because RQ3 is about acceptance... Also, report how many codes appeared in the last two interviews so we know if things were still emerging}
+
+\begin{table}[t]
+\centering
+\caption{Interview participants from the delivery and government sides. Min.: interview length in minutes.}
+\label{tab:participants}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}llllr@{}}
+\hline
+\textbf{ID} & \textbf{Background} & \textbf{Role in the project} & \textbf{Side} & \textbf{Min.} \\
+\hline
+E01 & Political sci. & Product and domain & Delivery & 48 \\
+E02 & Electrical eng. & ML leadership & Delivery & 73 \\
+E03 & Political sci. & Director, req.\ body & Government & 66 \\
+E04 & Software eng. & Product eng., AI team & Delivery & 92 \\
+E05 & Software eng. & Delivery coordination & Delivery & 69 \\
+E06 & Data eng. & Data engineering & Delivery & 64 \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Protocol}
+The first author conducted all interviews remotely, in Brazilian Portuguese, between August 21 and September 18, 2026 (mean: 68 minutes). Three pilot interviews, excluded from the analysis, refined the guide, which covered five themes: (1)~origin of the demand and the participant's role; (2)~from demands to requirements; (3)~from requirements to technical decisions; (4)~acceptance, evaluation, and success; and (5)~evolution, negotiation, and priorities. After the open questions, we showed three to five EPs chosen by the participant's role and asked them to confirm, complete, or correct each one (\emph{episode-supported elicitation}). We transcribed the interviews with WhisperX (Whisper large-v3), and the first author wrote a reflective memo after each.
+
+%\gnote{3 EPs here, but 3 to 5 in the consolidation. which one?} \rnote{3 to 5}
+
+%\gnote{missing: language, remote?, dates, duration, how transcribed, pilot? also say we translated the quotes} \rnote{pt-br, remote, 21/ago - 31/ago - 01/set - 4/set - 17/set - 18/set, transcript com modelo local (WhisperX + large-v3 no Google colab), 3 entrevistas piloto, ainda não traduzi quotes.} \rnote{Sei que os comentários são pra serem resolvidos. Só estou adiantando a informação.}
+
+\subsection{Interview Analysis}
+\label{sec:codificacao}
+We coded the interviews in two cycles~\cite{saldana2009coding}: deductive and inductive coding, then pattern coding that combined both. Interviews were always coded in the same order, starting with those richest in project context.
+
+%\gnote{are we still confronting patterns vs.\ artifacts? if not, remove it from intro and positionality too} \rnote{estamos triangulando os padrões com o episódios consolidados (que antes eram episódios preliminares) para responder as RQs}
+
+\subsubsection{Deductive codebook}
+We derived 23 codes in six dimensions (Table~\ref{tab:deductive-codebook-short}) from four RE for ML works chosen for their complementary coverage: data scientists' practices~\cite{vogelsang2019}, safety-critical systems~\cite{habibullah2023}, human-centered AI~\cite{ahmad2023}, and NFRs~\cite{horkoff2019}. Each code has a definition, application criteria, and supporting quotes from its source.
+
+\begin{table}
+\centering
+\caption{Deductive codebook: 23 codes in six dimensions,
+  with the works each dimension draws on.}
+\label{tab:deductive-codebook-short}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\newcommand{\dimrow}[2]{%
+  \addlinespace[3pt]\textbf{#1} & #2 \\}
+\newcommand{\coderow}[1]{%
+  \multicolumn{2}{@{\hspace{1em}}%
+  p{\dimexpr\columnwidth-1em\relax}@{}}%
+  {\raggedright #1} \\}
+\begin{tabular*}{\columnwidth}%
+  {@{\extracolsep{\fill}}l r@{}}
+\toprule
+\textbf{Dimension and codes} & \textbf{Sources} \\
+\midrule
+\dimrow{D1. Requirement types}
+  {\cite{vogelsang2019,habibullah2023,%
+  ahmad2023,horkoff2019}}
+\coderow{1.1~Quantitative targets
+  \textperiodcentered{} 1.2~Explainability
+  \textperiodcentered{} 1.3~Discrimination/bias
+  \textperiodcentered{} 1.4~Legal/regulatory
+  \textperiodcentered{} 1.5~Data/annotations}
+\dimrow{D2. RE process}
+  {\cite{vogelsang2019,habibullah2023}}
+\coderow{2.1~Elicitation
+  \textperiodcentered{} 2.2~Analysis
+  \textperiodcentered{} 2.3~Specification
+  \textperiodcentered{} 2.4~Continuous V\&V}
+\dimrow{D3. Data scientists' challenges}
+  {\cite{vogelsang2019,habibullah2023,ahmad2023}}
+\coderow{3.1~Communication gap
+  \textperiodcentered{} 3.2~Paradigm shift
+  \textperiodcentered{} 3.3~Training vs.\ operational performance}
+\dimrow{D4. RE topics for ML}
+  {\cite{habibullah2023}}
+\coderow{4.1~Scenarios
+  \textperiodcentered{} 4.2~Requirements breakdown
+  \textperiodcentered{} 4.3~Traceability}
+\dimrow{D5. Human-centered AI}
+  {\cite{ahmad2023}}
+\coderow{5.1~User needs
+  \textperiodcentered{} 5.2~Model needs
+  \textperiodcentered{} 5.3~Feedback/control
+  \textperiodcentered{} 5.4~Graceful failure
+  \textperiodcentered{} 5.5~Tool gap
+  \textperiodcentered{} 5.6~Ethics}
+\dimrow{D6. NFRs for ML}
+  {\cite{horkoff2019}}
+\coderow{6.1~NFR trade-offs
+  \textperiodcentered{} 6.2~NFR redefinition}
+\addlinespace[2pt]
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsubsection{First coding cycle}
+\paragraph{Deductive coding}
+The first author assigned each excerpt one \emph{primary} code (the dominant interpretation), optional \emph{secondary} codes, a confidence level, and an analytic memo. Of the 23 codes, 18 were applied as primary codes in 177 entries, three only as secondary codes, and two (discrimination/bias and feedback/control) never.
+
+\paragraph{Inductive coding}
+The first author also coded inductively, without a starting codebook. After the fourth interview, we consolidated the codes, refined their definitions, anchored each in a representative quote, and applied later codes retroactively to earlier interviews. A final LLM-assisted check added six excerpts to existing codes (Section~\ref{sec:llm}). This yielded 20 inductive codes with 78 applications across 77 excerpts. By the number of interviews in which each appeared, nine codes were \emph{consolidated} (three or more), seven \emph{moderate} (two), and four \emph{provisional} (one). Two codes appeared only in the last two interviews (one in each), so we do not claim saturation.
+
+\paragraph{Second-author review}
+The second author reviewed the annotated transcripts of all six interviews, assessing the deductive and inductive code assignments and searching for missed applications and new codes. The review raised 41 items (10 additions, nine removals, and 22 modifications), discussed in two reconciliation meetings, after the third and the sixth interviews. By consensus, 19 items changed the final coding, sometimes differently from the original proposal.
+
+\subsubsection{Second coding cycle}
+Using \emph{pattern coding}~\cite{saldana2009coding}, the first author grouped inductive codes that jointly explained a phenomenon into nine overlapping groups, checking each relation against the excerpts themselves. We crossed each group with the primary deductive codes on the same excerpts, classifying each relation as \emph{complements}, \emph{adds a dimension}, \emph{contrasts}, or \emph{no sustained relation}; all 18 primary codes related to at least one group. Merging groups with the same interpretation produced six candidate patterns, each a claim traceable to its excerpts. In a joint session (Google Meet and a Miro board), the second author reviewed the nine groups and then the six patterns, discussing their interpretations, overlaps, and boundaries, and the authors consolidated them by consensus. While writing the manuscript, the first author identified a seventh pattern, on requirements emerging in response to model outputs, from previously coded excerpts. Each of the seven patterns (A--G) documents its supporting participants and divergent evidence.
+
+%\isnote{hmmmm.... o padrão nasceu na escrita e coincide com a reconstrucao dos artefatos. O fix sugerido nas ameaças ta leagal... o segundo autor revisa os sete padrões contra os trechos... se o padrão sobreviver, o problema some} 
+
+\subsection{Episode Consolidation}
+\label{sec:consolidacao}
+
+We consolidated the 17 EPs with a three-step protocol fixed on October 27, 2026. Each step used a separate LLM session, and the first author reviewed all outputs. First, the LLM located 94 discussion segments and extracted 106 candidate utterances with their preceding questions and suggested effects (\emph{confirms}, \emph{complements}, \emph{corrects}, \emph{contests}, or \emph{does not remember}). Only participants' statements counted as evidence; agreeing with a leading question did not. Twenty-one utterances informed only the gap analysis, and the first author revised 13 effects and one coverage classification. Second, we compared this evidence with five documentary analyses and the normalized items. The LLM proposed mergers, reformulations, and 59 candidate gaps, of which the first author kept 49 as complements or associations. Mergers required evidence of a shared transformation, not just thematic similarity.
+
+Third, the LLM drafted consolidated episodes and proposed confirmation levels: \emph{high} (direct, specific support without unresolved contradiction), \emph{medium} (partial or qualified support), \emph{low} (weak, indirect, or contradictory support), and \emph{not assessable} (insufficient interview coverage). Documentary evidence could not raise these levels. The first author revised 10 of 13 drafts and raised C5, C8, and C10 from medium to high after restricting their claims to direct, uncontradicted evidence, although C10 relies mainly on one participant. The result is 12 sequential episodes (C1--C12) in five phases plus one cross-cutting episode (T1). Three mergers combined EP03+EP05, EP06+EP07, and EP12+EP14+EP15, and the first two phases became Phase~I; all 17 EPs remain traceable.
+
+\subsection{Use of Large Language Models}
+\label{sec:llm}
+We used Claude Opus~5.5 (Anthropic), with maximum reasoning effort, for coding review (October 28, 2026) and episode consolidation (October 29, 2026). After inductive coding, it suggested six additional excerpts for existing codes, all accepted after review. During consolidation, it located segments, extracted utterances, suggested effects, cross-referenced documents, identified gaps, proposed mergers, and drafted episodes and confirmation levels. It also helped produce the trajectory figure (Fig.~\ref{fig:trajectory}) and the consolidation memo from the final spreadsheet. The first author reviewed all outputs and made all final decisions. A script checked quotations against the transcripts. Names were removed before the coding review, and all reported quotations are anonymized. 
+
+\subsection{Ethical Considerations and Data Availability}
+\label{sec:ethics}
+All participants consented to recording and to the use of anonymized quotations. Names were removed before the LLM-assisted review, although context may still permit identification. Project artifacts and full transcripts cannot be released for confidentiality reasons. The replication package includes the interview guide, codebooks, normalized items, preliminary and consolidated episodes, the dated protocol, LLM prompts, and shareable analysis records.
+
+
+
+%\isnote{hmmmm.... o padrão nasceu na escrita e coincide com a reconstrucao dos artefatos. O fix sugerido nas ameaças ta leagal... o segundo autor revisa os sete padrões contra os trechos... se o padrão sobreviver, o problema some} 
+
+
+\section{Results}
+\label{sec:results}
+
+The pipeline's requirements existed but were never written down: ``We never formalized this at any point'' (E02). Artifacts recorded features, criteria, and constraints, but no integrated specification, so we reconstructed the requirements from the documented demands, decisions, and results (Section~\ref{sec:req-def}).
+
+Fig.~\ref{fig:trajectory} shows the consolidated trajectory: 12 sequential episodes (C1--C12) in five phases, from unsupervised exploration through institutional references and supervised classification to integration and governance, plus a cross-cutting episode (T1) on the recurring need to validate LLM-produced labels, whose systematic execution we could not confirm. Interview support was \emph{high} for C5, C8, and C10; \emph{medium} for C2, C11, and C12; \emph{low} for C1, C3, C6, and T1; and \emph{not assessable} for C4, C7, and C9. These levels measure neither documentary evidence nor implementation success.
+
+\begin{figure*}
+  \centering
+  \includegraphics[width=0.9\textwidth]{images/consolidated-trajectory.pdf}
+  \caption{Consolidated trajectory of requirements evolution in the ML project, reconstructed from documentary artifacts and interviews.}
+  \label{fig:trajectory}
+\end{figure*}
+
+We report the seven patterns (A--G) by RQ (Table~\ref{tab:padroes}); they describe related aspects of one process, not a causal sequence. Patterns A and B rest mainly on inductive codes, whereas G matches the deductive codes from the RE for ML literature most closely. We flag evidence from other AI fronts or from a single interview, and mark with~\textsuperscript{\dag} excerpts in which the participant addresses the first author (Section~\ref{sec:posicao}). The replication package traces patterns to codes and evidence.
+
+Table~\ref{tab:profile} profiles the 95 requirements and criteria reconstructed from the artifacts. Only 38 (40\%) were formalized in an issue or meeting note; the rest were tacit. Two thirds first appear in Phases~I and~IV, when issues framed the work; Phases~II and~III left few records, and the requirements tied to the institutional reference were never formalized (Pattern~C). Six of the seven environmental constraints come from one Phase~IV issue on the production database; hardware and contracts appear only in passing (Pattern~F). No success criterion was formalized (Pattern G), and the interviews add 14 requirements, four of them environmental, and 7 criteria beyond the 95.
+
+\begin{table}
+\centering
+\caption{Requirements and criteria reconstructed from the artifacts.}
+\label{tab:profile}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrrrrr}
+\hline
+ & & & & & \multicolumn{5}{c}{Phase of first appearance} \\
+\cline{6-10}
+ & $n$ & Form. & Tacit & Env. & I & II & III & IV & V \\
+\hline
+FR    & 21 & 13 &  8 & 1 &  7 &  4 & 2 &  7 & 1 \\
+NFR   & 12 &  6 &  6 & 2 &  5 &  3 & 1 &  2 & 0 \\
+AC    & 23 & 13 & 10 & 2 &  9 &  3 & 2 &  8 & 1 \\
+EC    & 22 &  6 & 16 & 1 &  9 &  4 & 3 &  6 & 0 \\
+SC    & 17 &  0 & 17 & 1 &  6 &  2 & 1 &  6 & 1 \\
+\hline
+Total & 95 & 38 & 57 & 7 & 36 & 16 & 9 & 29 & 3 \\
+\hline
+\end{tabular*}
+\par\smallskip
+\parbox{\columnwidth}{\footnotesize Form.: stated explicitly in an issue or meeting note; Tacit: all others. Env.: environmental constraints, marked across formalized and tacit items (Section~\ref{sec:req-def}). One NFR (RNF12) and one SC (CS05) have no consolidated episode.}
+\end{table}
+
+% \begin{table*}[t]
+% \centering
+% \caption{Patterns, the research question each one answers, and the consolidated episodes used for triangulation.}
+% \label{tab:padroes}
+% \small
+% \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}clcl@{}}
+% \hline
+% \textbf{Pattern} & \textbf{Summary} & \textbf{RQ} & \textbf{Episodes} \\
+% \hline
+% A & AI entered as the team's offer, before its use was defined & RQ1 & C1, C2, C3 \\
+% B & Endorsement did not become sponsorship & RQ1 & C10, C11, C12 \\
+% C & The classification reference had no convergent owner and reoriented the task & RQ1 & C3, C5, C8 \\
+% D & Values and resources acted as tacit requirements, met unevenly & RQ2 & C1, C5, C8, C10 \\
+% E & Classification requirements surfaced in reaction to concrete outputs & RQ2 & C2, C3, C5, C7, C8, C9 \\
+% F & Operational requirements surfaced in development and integration & RQ2 & C10, C11, C12 \\
+% G & Acceptance rested on judgment, and evaluation in use was missing & RQ3 & C5, C7, C10, T1 \\
+% \hline
+% \end{tabular*}
+% \end{table*}
+
+\begin{table}
+\centering
+\caption{Patterns by research question and the consolidated episodes used for triangulation.}
+\label{tab:padroes}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}c>{\raggedright\arraybackslash}p{0.63\columnwidth}l@{}}
+\toprule
+ & \textbf{Pattern} & \textbf{Episodes} \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{RQ1: from demands to requirements}} \\
+A & AI entered as the team's offer, before its use was defined & C1--C3 \\
+B & Endorsement did not become sponsorship & C10--C12 \\
+C & The classification reference had no convergent owner and reoriented the task & C3, C5, C8 \\
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{RQ2: requirements and technical decisions}} \\
+D & Values and resources acted as tacit requirements, met unevenly & C1, C5, C8, C10 \\
+E & Classification requirements surfaced in reaction to concrete outputs & C2, C3, C5, C7--C9 \\
+F & Operational requirements surfaced in development and integration & C10--C12 \\
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{RQ3: acceptability}} \\
+G & Acceptance rested on judgment, and evaluation in use was missing & C5, C7, C10, T1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%% =====================================================================
+\subsection{RQ1: How Institutional Demands Became Requirements}
+\label{sec:rq1}
+
+\subsubsection{Pattern A: AI entered as the team's offer, before its use was defined}
+\label{sec:pa}
+
+The need to analyze citizen contributions at scale was recognized but did not translate into an institutional demand for AI. According to the requesting body's director, AI ``does not enter at the level of political definition'' and was absent from the first work plan; it was a team initiative that the body welcomed (E03). The product team called AI a ``self-contained'' demand, unlike features frequently validated with the requesting body (E04). Work advanced from opportunities the team identified: facing the broad goal of increasing engagement, E02 proposed to ``break it into parts'' and explore solutions, and the coordination linked proposal classification to other Decidim deployments (E05). Moderation is an exception: the need was acknowledged, although the team translated it into an ML solution (E04, E05).
+
+Endorsement did not settle who would consume each output. E03 reported an external expectation that the platform have AI, ``almost a certificate that you are riding the wave,'' and said the technical team chose the tools and the body ``just gave the OK.'' Intended uses included informing managers and recommending proposals to citizens, but the feedback to citizens was never designed, the topics came to be seen as ``maybe'' useful to managers (E02), and the classification was evaluated before anyone defined how a service would display it (E01). The trajectory shows the same precedence: the onboarding (C1) mapped data, tools, and environment constraints while the model's goal and integration remained underspecified; topic extraction was assessed with technical metrics before any service or acceptance threshold existed (C2); and extraction and categorization were integrated into a pipeline with no evidence that the categories helped managers (C3). C1 and C3 have low interview support, so this part rests mainly on technical records. For the coordination, classification and RAG-based reporting became clearer products only at a workshop ``almost two years later'' (E05).
+
+The artifacts point the same way. Tracing each FR and NFR to the earliest artifact that states it, all were first recorded by delivery-side technical roles: ML leadership dominated Phase~I (8 of 12 entries), the AI team led Phases~II and~III, and data and infrastructure roles joined only in Phases~IV and~V, with deployment. None was first recorded by the requesting body, the product team, or moderation, although this partly reflects a corpus without government-side artifacts (Section~\ref{sec:threats}). Authorship shows who wrote a requirement down, not who conceived it, but it matches the interviews: the team formulated requirements for a use others had only endorsed. The finding is not an absence of purpose but an inversion between component and service: exploring an ML capability preceded a precise definition of its use and recipients.
+
+% Traceability (A): CI-01, CI-17, CI-07; CD 2.1, 5.1, 5.2, 3.3, 4.2, 3.1.
+% Triangulation: C1 (Issue#1, Notes#1--3), C2 (Issue#2, Notebook#1, Presentation#1),
+% C3 (Issues#2 and #4, Notebooks#2--3, Note#4, Presentation#1).
+% Interview support: C1 low, C2 medium, C3 low.
+
+\subsubsection{Pattern B: Endorsement did not become sponsorship}
+\label{sec:pb}
+
+We distinguish \emph{endorsement}, approving an initiative, from \emph{sponsorship}, the continued action of someone who can prioritize deliveries and remove institutional obstacles. AI was endorsed but stayed peripheral. ``Machine learning was not a political priority'' next to keeping the platform running and migrating it (E04); the product ``doesn't need AI to work'' (E02); and even as an official front, AI ``never came in as a delivery priority'' (E05). For the former director, the main concerns were other features and security, while AI was still ``very much running in the lab'' (E03).
+
+Priority also varied with politics. E04 associated stronger delivery pressure with an administration that emphasized innovation, but E03, part of that administration, said AI was not central to it; the accounts do not support stable sponsorship even then. Later, the platform's turn to participatory budgeting reduced AI's space (E02), and the electoral calendar blocked the deployment of a solution the team considered ready (E01), although this readiness was never measured.
+
+The infrastructure dependency shows the consequences. The coordination reported a long negotiation to obtain GPUs from the state-owned company that hosts the platform, contrasting it with the WhatsApp integration, which reportedly secured a contract quickly once it became a new administration's ``top priority'' (E05). For E05, AI lacked the political interest needed to unlock it; E02 likewise called for someone to bridge AI and the product. This link comes mainly from an interested party and does not show that the obstacles were only political. Still, the accounts converge on a mechanism: ML delivery depended on decisions, resources, and teams over which the technical team had little authority, and approval did not ensure that these dependencies would be resolved. Patterns~F and~G show how they constrained operation and evaluation in use.
+
+% Traceability (B): CI-03, CI-10, CI-12, CI-17; CD 2.3, 3.2, 1.5, 5.1, 2.1, 3.3, 3.1, 1.1, 1.4.
+% Triangulation: C10 (Issues#6, #8--#10, Note#7, Presentation#5, Commits#12--14),
+% C11 (Issue#7, E06), C12 (Commit#15).
+% Interview support: C10 high, C11 medium, C12 medium.
+
+\subsubsection{Pattern C: The classification reference had no convergent owner and reoriented the task}
+\label{sec:pc}
+
+Defining the categories was a constitutive requirement: without deciding what each class represented, there was no shared reference for labeling proposals, training the model, or interpreting its outputs. According to E05, the category dictionary ``went through several hands'' (the requesting body, the team, and moderation) and, when it seemed close to done, was rejected: ``that's not at all what I want, from a business point of view.'' The reference requested from the domain side also arrived slowly (E05). The problem was not only insufficient labels but disagreement about what the categories were for and who had the authority to define them. In C3, the semantic-mapping and integration experiments show that the technical coverage of the associations did not establish whether the categories fit the domain.
+
+The VCGE offered an institutional way out. E03 stated that the requesting body suggested it when the team asked for a vocabulary, without considering it good, only ``the best parameterized one available at that moment.'' E01 also claimed to have suggested it, since a reference valid ``for any agency, on any topic'' was missing. The interviews do not establish who suggested it first, but they reveal distinct justifications: availability (E03), generality across the platform (E01, E05), legitimacy to explain where the themes came from (E01), and managers' familiarity with the nomenclature (E04). The team did not create the VCGE but appropriated and adapted it. C5 documents the comparison with human classifications and the later VCGE guidance as distinct functions, joined by the pursuit of alignment with public policy. E04 gathered classifications from several people, harmonized the codes, and added public-policy elements the VCGE lacked. In a different front, hate-speech detection, E02 described relabeling ``100\%'' of a dataset because annotators disagreed; this is not the thematic dataset, but it shows a similar mechanism of technically constructing the reference.
+
+The institutional reference then helped reorient the method. E04 linked the move to supervised learning to tying results to a nomenclature managers knew; E02 stressed the difficulty of objectively evaluating unsupervised clusters and the possibility of computing metrics against reference labels. These justifications are complementary, not a single trigger, and C8 documents the transition to supervised classifiers and predictive metrics without an exclusive cause or evidence of multi-label output. E01 added that the VCGE ``doesn't change the way of evaluating'' on the domain side; it mainly helped to ``unlock the project.'' The taxonomy thus provisionally settled legitimacy and output specification without showing that its categories suited the language of those who wrote the proposals. The difficulty of establishing shared classes echoes specification problems in RE for ML~\cite{habibullah2023}; here, the reference also had to confer institutional legitimacy.
+
+% Traceability (C): CI-20, CI-11, CI-08, CI-06, CI-02; CD 1.5, 5.2, 2.1, 3.1, 1.2.
+% Triangulation: C3 (Issues#2 and #4, Notebooks#2--3), C5 (Issue#5, Notebooks#4--5),
+% C8 (Notebook#6, Commits#9--10, Presentation#4).
+% Interview support: C3 low, C5 high, C8 high.
+
+% \begin{Finding}
+% \textbf{RQ1 (Patterns A--C).} Institutional demands did not reach the ML work as requirements. They arrived as broad goals and as endorsement of possibilities the team proposed and wrote down (A), without the sponsorship needed to prioritize them or resolve their dependencies (B). The central requirement, the classification categories, did not converge and was provisionally stabilized around an existing institutional taxonomy, chosen for its availability, generality, legitimacy, and familiarity rather than its fit with citizens' language (C). Requirements were thus not elicited upfront; most surfaced along the way (RQ2).
+% \end{Finding}
+
+
+%% =====================================================================
+\subsection{RQ2: How Requirements and Technical Decisions Shaped Each Other}
+\label{sec:rq2}
+
+The relationship ran in both directions. Values and resources constrained decisions from the outset (D), while classification criteria surfaced from model outputs (E) and operational requirements from development and integration (F).
+
+\subsubsection{Pattern D: Values and resources acted as tacit requirements, met unevenly}
+\label{sec:pd}
+
+The political guideline on technology, stated by E03, was to avoid coupling a ``ready-made market solution'' to the platform. Grounded in open knowledge, data control, and technological autonomy, it favored an in-house, ``small-scale'' model trained on project data (E03). This choice bounded the solution and required infrastructure able to run an open stack, tying the pipeline to the dependency in Pattern~B. C1 records these environment limitations early, though never as formalized NFRs; Pattern~F shows how they became a CPU-inference requirement. The principle was applied unevenly: in another front, a prototype built on commercial APIs set the benchmark for the in-house models (Pattern~E).
+
+Other conditions came from the purposes of participation. Outputs had to be intelligible to managers and society: E01 called for ``less bureaucratic language'' and ``more citizen language,'' and E03 criticized the VCGE as ``the language of the administration, not the language of the citizen.'' C5 records the adoption of the institutional reference with the caveat that its fit to citizens' language remained contested. The classification also had to cut across processes and agencies, since Decidim offered no global categorization (E05), and to represent proposals spanning several policies: ``almost every proposal involves several policies'' (E03). Yet the team limited the output to two categories for simplicity, although a proposal could belong to ``three, four categories'' (E04), and C8 shows no multi-label output. These conditions competed: autonomy and generality drove effective choices, citizens' language stayed in tension with the taxonomy, and transversality was only partly met. No interview reports validation with citizens.
+
+% Traceability (D): CI-18, CI-05, CI-12, CI-04, CI-08, CI-19; CD 5.2, 2.1, 1.1, 3.3, 5.1, 1.5.
+% Triangulation: C1 (Issue#1, Notes#1--3), C5 (Issue#5, Notebooks#4--5),
+% C8 (Notebook#6, Commits#9--10), C10 (Issues#6, #8--#10, E05--E06).
+% Interview support: C1 low, C5 high, C8 high, C10 high.
+
+\subsubsection{Pattern E: Classification requirements surfaced in reaction to concrete outputs}
+\label{sec:pe}
+
+Participants could not always anticipate what would make the classification useful; some expectations became explicit only when they examined concrete results. The rejected category dictionary (Pattern~C) exposed disagreement about what made a category useful. In the unsupervised approach, the team realized that the generated themes could impose ``a very large cognitive load'' on managers (E04), which strengthened the need for understandable, stable categories and contributed to the move to supervised learning. In C2 and C3, experiments already exposed trade-offs among the coherence, diversity, and number of topics, and between coverage and over-association, with no institutional criterion to resolve them. When domain experts examined a sample, they judged the classification ``still very far off'' (E04), a verdict that identified inadequacies but set no threshold. C7 and C9, not discussed in the interviews, show the same: C7 compared internal and external metrics with no institutional threshold (Pattern~G), and in C9 class reorganizations improved metrics without confirmed usefulness to the domain, while synthetic data augmentation brought no relevant gain.
+
+Reactions could also define positive references. In the Climate Plan systematization, reported only by E01, the ministry's agreement with the themes of a prototype built on commercial APIs turned that output into a target for the in-house models: ``our models have to at least handle this.'' This suggests specification by example, in tension with the autonomy principle (Pattern~D), though it does not confirm the mechanism for the thematic classification.
+
+One interview showed both the role of examples and a methodological limit. Facing a table shown by the interviewer, E03 questioned the single label (``But do they only accept one tag?''), examined how ``domestic violence'' related to ``gender violence,'' and lacked ``clarity on how it would be used.'' Since E03 said multi-label output had been discussed before, the reaction shows a concrete output letting an existing expectation be discussed and tested, possibly influenced by the interviewer.
+
+Overall, outputs judged inadequate prompted revisions, and outputs judged ``plausible'' could become benchmarks. The episodes document successive adjustments of criteria and approaches, without formal validation cycles. This pattern concerns classification criteria; Pattern~C covers their reference and Pattern~F operational requirements.
+
+% Traceability (E): E05-TI04/E05-TD05, E04-TD24/E04-TD25/E04-TI14,
+% E01-TI05/E01-TD18, E03-TI07/E03-TD23/E03-TD26, E02-TD34.
+% Triangulation: C2 (Notebook#1), C3 (Notebooks#2--3), C5 (Notebooks#4--5),
+% C7 (Notebook#5, Presentation#3), C8 (Notebook#6, Commits#9--10), C9 (Notebook#6, Commit#11, Notes#6--7, Presentation#4).
+% Interview support: C2 medium, C3 low, C5 high, C7 not assessable, C8 high, C9 not assessable.
+
+\subsubsection{Pattern F: Operational requirements surfaced in development and integration}
+\label{sec:pf}
+
+Operational requirements surfaced when the component met data, teams, and environments. According to E06, requests reached development without enough technical analysis, and refinement ``happened at the development level'' whenever a problem required ``going back to the definition.'' In data preparation, business rules ``unknown to us and even to the product team'' had been applied inconsistently and required extra cleaning (E06). The model was trained on CSV files delivered before automated ingestion matured, and E06 stated that, ``the way it was done,'' the training data was not traceable; later pipelines may differ.
+
+In the integration with engineering, discussions focused on inputs, outputs, and formats: ``The inner logic of how you did it wasn't that necessary'' (E06\textsuperscript{\dag}). In one mismatch, the product expected three categories with their scores but received one category with three scores (E06). In the RAG front, an architecture designed ``at the algorithmic level'' had to be reworked to run as a service (E05). Dependencies among teams also shaped what became deliverable: to avoid another bottleneck, the ML team began to expose the model as an API and to handle part of its integration (E04). C10 documents hand-off, documentation, training, publishing, and inference as requirements of a service for other teams.
+
+The environment added further requirements. Inference had been developed on lab GPUs, but the external production infrastructure had none, so deployment required CPU inference (E06), which the coordination also saw as a way to avoid amending the contract (E05); this is a hardware and governance constraint, with no evidence of degraded accuracy. Classifying proposals at creation time also meant classifying existing ones, which required writing results to an auditable production table for which the team lacked credentials (E06); C11 makes this need explicit, with no evidence that the update took place. Since the feedback service to citizens was never designed, it remained unclear how participants could be contacted under data-protection law and whether one or three suggested categories would serve better (E02). Later, C12 documents the adoption of Airflow and MLflow for orchestration, versioning, and traceability, which still did not reach the production database governed by another organization.
+
+Part of the requirements thus became visible only when the solution met real data, interfaces, and resources managed by other actors. Some changes during development, however, corrected defects, inconsistencies, or insufficiently refined decisions and were not emergent requirements.
+
+% Traceability (F): CI-15, CI-16, CI-13, CI-12; CD 2.3, 4.2, 1.5, 2.1, 3.1, 4.3, 1.4, 3.3.
+% Triangulation: C10 (Issues#6, #8--#10, Commits#12--14), C11 (Issue#7, E06), C12 (Commit#15).
+% Interview support: C10 high, C11 medium, C12 medium.
+
+% \begin{Finding}
+% \textbf{RQ2 (Patterns C--F).} Requirements and technical decisions shaped each other in both directions. Values and resources acted as tacit requirements that drove decisions from the outset: technological autonomy led to an in-house model and moved feasibility onto the available public infrastructure, and simplicity limited the output to two categories (D). The institutional reference, adopted for several complementary reasons, reoriented the task toward supervised classification (C). In the opposite direction, model outputs made classification criteria explicit, mostly through rejection (E), and development and integration revealed operational requirements: input--output formats, CPU inference, classification of existing proposals, database access, and traceability (F).
+% \end{Finding}
+
+%% =====================================================================
+\subsection{RQ3: How Acceptability Was Established}
+\label{sec:rq3}
+
+\subsubsection{Pattern G: Acceptance rested on judgment, and evaluation in use was missing}
+\label{sec:pg}
+
+We found no shared quantitative threshold for accepting the classification. E01 expected ``a high hit rate'' but admitted that ``we hadn't defined what that would be,'' and E04 observed that presenting ``the F1'' did not tell stakeholders what the result meant. Domain-side assessment examined examples, asking ``does this proposal really belong to this theme? Does it make sense?'' (E01); it could involve samples and several people, but never became a measurable readiness criterion (E04). For E02, the difficulty of objectively evaluating clusters was one more reason to adopt supervised learning, where metrics against reference labels became possible. C7, not discussed in the interviews, shows that a comparative protocol of internal and external metrics did not by itself yield an institutional acceptance criterion.
+
+The artifacts show the same imbalance (Fig.~\ref{fig:criteria-profile}). Most of their 61 criteria are functional or operational checks and technical metrics; only one records a domain judgment, none an institutional condition, and all criteria first appearing in Phases~IV and~V are operational checks. Judgment-based criteria surface mainly in the interviews, and none of the 17 success criteria was formalized. What decided acceptance thus went largely unrecorded.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{images/criteria_profile.pdf}
+  \caption{Nature of the acceptance, evaluation, and success criteria:
+  (a)~artifact criteria by phase of first appearance; (b)~criteria found
+  only in interviews. SC05 has no consolidated episode and is omitted.}
+  \label{fig:criteria-profile}
+\end{figure}
+
+Judgment took different forms. The technical team checked coherence and compared results with human classifications; managers assessed whether the categories made sense for the domain; and the political assessment weighed whether the solution was ``mature enough'' to enter production without compromising the platform's credibility (E05). These expectations could diverge: E03 wanted to review proposals individually, while E04 described a classification that still needed revision after expert testing. Verification also covered input data, as people familiar with the business rules spotted inconsistencies (E06). T1, with low interview support, records human validation of automatic labels as a recurring concern but shows no systematic review of LLM-produced labels.
+
+Evaluation in final use remained limited. In moderation, the team expected to compare predictions with moderators' decisions, but ``we never got feedback from them'' (E02); for the classification, E01 stated that the feature's usefulness was never evaluated. ``Production'' also meant different things: running in the lab differed from being incorporated into the platform maintained by the state-owned company, with access to its database (E02, E06). Neither C10 nor C12 shows that the supervised classifier was deployed in production. Our claim is therefore limited: neither the interviews nor the episodes show the classification's usefulness being validated by its end recipients, in part because of the unresolved dependencies of Pattern~B. The difficulty of turning metrics into criteria that customers understand resembles the problem described by Vogelsang and Borg~\cite{vogelsang2019}; here, political endorsement added an acceptance condition beyond predictive performance.
+
+% Traceability (G): CI-02, CI-05, CI-16; CD 1.1, 5.2, 1.5, 3.1.
+% CI-09 (LLM annotation) remains provisional, supported only by E01; do not generalize.
+% Triangulation: C5 (Issue#5, Notebooks#4--5), C7 (Notebook#5, Presentation#3),
+% C10 (Issues#6, #8--#10, Commits#12--14), T1 (Presentations#1--3 and #5, Note#5, E01).
+% Interview support: C5 high, C7 not assessable, C10 high, T1 low.
+
+\subsubsection{What did not appear: bias and citizens}
+\label{sec:ausencias}
+
+Two absences bound these results. First, we found no substantive discussion of performance differences across groups of citizens or ways of writing proposals. The bias and discrimination code (1.3) was never applied, and ethics (5.6) appeared only as a secondary code. In E04, the mention of ``bias'' concerned possible bias in the human judgment of outputs, not discrimination by the system. Because the interview guide did not specifically address algorithmic bias or discrimination, this absence does not show that such risks were ignored in the project.
+
+Second, citizens were not interviewed and, in the coded excerpts, do not help define or evaluate the categories. Their perspective appears only indirectly, through concerns in understandable language (E01, E03), multiple categories (E03), and feedback to society (E01, E03); E05 also mentioned using the classification to guide managers and recommend activities to citizens. The accounts do not show that the categories or the results were validated by the people who submitted the proposals. This absence is limited to the evidence analyzed and cannot be extended to other project activities.
+
+% Absences: CD 1.3 = 0; CD 5.6 = 3 secondary applications;
+% E04-TI07 (bias in human judgment). CI-04 (E01, E03); CI-19 (E03); E05-TD14.
+
+% \begin{Finding}
+% \textbf{RQ3 (Pattern G).} A shared quantitative threshold did not establish acceptability. Model metrics coexisted with domain experts' plausibility judgments, the technical team's comparison with human labels, and a political assessment of the risk that deployment posed to the platform's credibility, and these layers did not always agree. The taxonomy enabled technical evaluation against labels but did not settle what the categories meant to the domain (Pattern~C). Usefulness in practice was never assessed: without sponsorship and with incomplete integration (Patterns~B and~F), no evidence shows the classifier reached its end recipients, and neither citizens nor bias entered the acceptance criteria.
+% \end{Finding}
+
+%% =====================================================================
+% \subsection{Synthesis}
+% \label{sec:sintese}
+
+% The patterns describe related aspects of a single process but do not form a causal sequence; the consolidated episodes place them along the trajectory (Table~\ref{tab:padroes}) without establishing a uniform causal relation.
+
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=\columnwidth]{images/patterns-phases.pdf}
+%   \caption{Patterns A--G across the five phases, placed by the consolidated episodes that triangulate them. Episode styles indicate interview support; the cross-cutting episode T1 is not shown.}
+%   \label{fig:patterns}
+% \end{figure}
+
+% \begin{Finding}
+% \textbf{Overarching goal.} In the case studied, institutional demands shaped the evolution of the ML pipeline less through pre-specified requirements than through approval, legitimacy conditions, values, choices of reference, and the capacity to prioritize. The content of the classification was negotiated over examples and disagreements; its feasibility was bounded by data, interfaces, hardware, and governance. Requirements engineering for ML in this setting took place partly \emph{during} experimentation and integration, not only before them.
+% \end{Finding}
+
+
+% \section{Results}
+% \label{sec:results}
+
+% Os requisitos existiram, mas não foram escritos como requisitos formais. Como afirmou um participante, ``A gente não chegou a formalizar isso em nenhum momento'' (E02). Embora issues, notebooks, commits, notas e apresentações registrassem funcionalidades, critérios e restrições, não havia uma especificação integrada. Os requisitos foram, portanto, reconstruídos a partir das demandas, decisões e resultados documentados ao longo do projeto.
+
+% A análise documental identificou 17 episódios preliminares, consolidados após as entrevistas em 12 episódios sequenciais (C1--C12), distribuídos em cinco fases, e um transversal (T1), conforme a Fig.~\ref{fig:trajectory}. Três consolidações reuniram movimentos relacionados: mapeamento semântico e integração do primeiro pipeline (C3, EP03+EP05); incorporação de referências humanas e da taxonomia VCGE (C5, EP06+EP07); e operacionalização dos serviços de treinamento e inferência, incluindo documentação (C10, EP12+EP14+EP15). A trajetória abrange a exploração não supervisionada, a adoção de referências institucionais, a classificação supervisionada e os esforços de integração e governança. T1 representa a necessidade transversal de validação humana dos rótulos produzidos por LLM, cuja execução sistemática não foi comprovada.
+
+% \begin{figure*}
+%   \centering
+%   \includegraphics[width=\textwidth]{images/consolidated-trajectory.pdf}
+%   \caption{Consolidated trajectory of requirements evolution in the ML project, reconstructed from documentary artifacts and interviews.}
+%   \label{fig:trajectory}
+% \end{figure*}
+
+% Os níveis de confirmação expressam o suporte das entrevistas à interpretação central de cada episódio: \emph{alto} (C5, C8, C10), com confirmação direta; \emph{médio} (C2, C11, C12), com confirmação parcial ou ressalvas; e \emph{baixo} (C1, C3, C6, T1), com apoio indireto ou limitado. C4, C7 e C9 foram classificados como \emph{não avaliáveis}, por não terem sido discutidos de modo específico nas entrevistas. Esses níveis não medem a força da evidência documental nem o sucesso da implementação.
+
+
+% A síntese analítica das entrevistas resultou em sete padrões (A--G), apresentados na Tabela~\ref{tab:padroes} e confrontados com os episódios consolidados. A rastreabilidade entre padrões, códigos e evidências está no pacote de replicação. Os entrevistados atuaram em produto e domínio (E01), ML (E02), direção do órgão demandante (E03), engenharia de produto (E04), coordenação (E05) e engenharia de dados (E06). Evidências de outras frentes de IA são identificadas no texto.
+
+% Os padrões abordam as condições institucionais da iniciativa (A--B), a evolução dos requisitos durante o desenvolvimento (C--F) e a avaliação e aceitação da solução (G). A e B emergiram principalmente de códigos indutivos, enquanto G apresentou maior correspondência com os códigos dedutivos derivados da literatura de RE para ML~\cite{vogelsang2019,horkoff2019,habibullah2023,ahmad2023}.
+
+
+
+% \begin{table*}[t]
+% \centering
+% \caption{Summary of patterns and episodes used for triangulation.}
+% \label{tab:padroes}
+% \small
+% \begin{tabular}{p{0.07\textwidth}p{0.60\textwidth}p{0.20\textwidth}}
+% \hline
+% \textbf{Pattern} & \textbf{Summary} & \textbf{Episodes} \\
+% \hline
+% A & AI exploration preceded a sufficiently precise definition of its intended uses and users. & C1, C2, C3 \\
+% B & Institutional endorsement did not ensure sustained prioritization or the resolution of dependencies. & C10, C11, C12 \\
+% C & Defining the classification reference reshaped the task and the ML approach. & C3, C5, C8 \\
+% D & Institutional values and resource constraints shaped the solution, with varying degrees of fulfillment. & C1, C5, C8, C10 \\
+% E & Experimental results contributed to clarifying and reformulating requirements and quality criteria. & C2, C3, C5, C7, C8, C9 \\
+% F & Development and integration revealed operational requirements related to services, data, and governance. & C10, C11, C12 \\
+% G & Technical metrics coexisted with human and institutional judgments, without sufficient evidence of acceptance in actual use. & C5, C7, C10, T1 \\
+% \hline
+% \end{tabular}
+% \end{table*}
+
+% \subsection{Padrão A -- A IA entrou como oferta da equipe antes de um uso suficientemente definido}
+% \label{sec:pa}
+
+% A necessidade de analisar contribuições cidadãs em escala era reconhecida, mas não se traduziu inicialmente em uma demanda institucional especificada por IA. Segundo a representante do ministério, o uso de IA ``não entra num nível de definição política'' e não constava da primeira versão do termo de execução descentralizada (TED). Foi uma iniciativa da equipe, à qual o órgão respondeu positivamente (E03). A equipe de produto descreveu a IA como demanda ``autocontida'', diferente de outras funcionalidades que passavam por validações frequentes com o órgão demandante (E04). O trabalho também avançou a partir de possibilidades identificadas pela equipe. Diante do objetivo amplo de aumentar o engajamento, E02 propôs ``quebrar em partes'' e explorar diferentes soluções. A classificação das propostas foi associada, pela coordenação, a uma oportunidade conhecida por meio de outras experiências com o Decidim (E05). A moderação constitui uma ressalva importante, pois aparece como necessidade já reconhecida, embora sua tradução em uma solução de ML tenha partido da equipe (E04, E05).
+
+% O endosso não significava que estivesse definido quem consumiria cada saída. E03 relatou uma expectativa externa de que a plataforma tivesse IA, ``quase um atesto de você estar na crista da onda'', e descreveu a escolha das ferramentas como algo trazido pela equipe técnica, a que o ministério ``só deu o ok''. Na trajetória documental, o onboarding (C1) identificou dados, ferramentas e restrições do ambiente, enquanto o objetivo do modelo e sua integração à plataforma ainda não estavam suficientemente especificados. Existiam intenções de uso, como produzir informações para gestores e devolver conteúdo ou recomendar propostas aos cidadãos. Entretanto, a devolutiva textual às pessoas não chegou a ser desenhada. Os tópicos produzidos passaram a ser vistos como algo que ``talvez'' fosse útil aos gestores (E02). A classificação também era avaliada antes de se definir como seria exibida em um serviço (E01). Essa precedência da experimentação técnica também aparece em C2, no qual a extração de tópicos já era avaliada por métricas técnicas, mas ainda sem um serviço completo ou limiar institucional de aceitação. Em C3, a extração e a categorização já haviam sido integradas em um pipeline, sem demonstração da utilidade das categorias para os gestores. C1 e C3 têm apoio limitado nas entrevistas, e essa reconstrução se sustenta sobretudo nos registros técnicos. Na percepção da coordenação, a classificação e a geração de relatórios com RAG só se tornaram produtos mais claros em um workshop ocorrido ``depois de quase dois anos'' (E05). O achado não é ausência absoluta de finalidade, mas uma inversão entre componente e serviço. A exploração da capacidade de ML precedeu a definição suficientemente precisa de seu uso e de seu destinatário.
+
+% % Rastreabilidade (A). CI-01, CI-17, CI-07, CD 2.1, 5.1, 5.2, 3.3, 4.2, 3.1.
+% % Triangulação. C1 (Issue#1, Notes#1--3), C2 (Issue#2, Notebook#1, Presentation#1),
+% % C3 (Issue#2 e #4, Notebooks#2--3, Note#4, Presentation#1).
+% % Suporte das entrevistas à interpretação central dos episódios. C1 baixo, C2 médio, C3 baixo.
+
+% \subsection{Padrão B -- O endosso não se converteu em patrocínio sustentado para resolver dependências}
+% \label{sec:pb}
+
+% Distinguimos \emph{endosso}, entendido como aprovação da iniciativa, de \emph{patrocínio}, entendido como a atuação continuada de quem pode priorizar entregas e remover obstáculos institucionais. Embora a IA tenha recebido endosso, ocupou uma posição periférica no produto. ``Machine learning não era uma prioridade política'' diante da necessidade de fazer a plataforma funcionar e realizar sua migração (E04). O produto ``não precisa de IA para funcionar'' (E02). Mesmo após se tornar frente oficial, a IA, segundo a coordenação, ``não entrou nunca como uma prioridade de entrega'' (E05). Para a ex-dirigente do ministério, as preocupações principais eram outras funcionalidades e a segurança da plataforma, enquanto as soluções de IA continuavam ``muito rodando no laboratório'' (E03).
+
+% A prioridade também variou com o contexto político. E04 associou maior pressão por entregas a uma gestão que enfatizava inovação. E03, que participou dessa gestão, afirmou, porém, que a IA não era central em suas preocupações. As perspectivas não permitem afirmar que tenha existido um patrocínio estável naquele período. Em outros momentos, a reorientação da plataforma para o orçamento participativo reduziu o espaço da IA (E02), e o calendário eleitoral impediu a implantação de uma solução que sua equipe considerava pronta (E01). Este último relato diz respeito a uma \emph{percepção} de prontidão, não a um limiar de aceitação comprovado.
+
+% A dependência de infraestrutura explicita as consequências dessa posição. A coordenação relatou uma negociação prolongada para dispor de GPU na infraestrutura da empresa pública responsável pela plataforma e comparou o impasse com a integração do WhatsApp. Depois de se tornar ``prioridade máxima'' de uma nova gestão, esta teria obtido contrato rapidamente (E05). Para E05, faltava interesse político capaz de destravar a IA. E02 também defendeu a necessidade de alguém que fizesse a ponte com o produto. Na trajetória consolidada, C10 registra a preparação dos serviços e a restrição de inferência em CPU para o ambiente externo. C11 mostra que a atualização das propostas antigas dependia de acesso e governança do banco produtivo, sem execução comprovada. C12 documenta avanços na orquestração e no versionamento, mas não demonstra a entrada do classificador supervisionado em produção. Essa interpretação exige cautela. A associação direta entre ausência de patrocínio e atraso do contrato provém principalmente da coordenação, parte interessada na iniciativa, e não demonstra, sozinha, que os entraves fossem exclusivamente políticos. Ainda assim, os relatos convergem em um mecanismo. A entrega de ML dependia de decisões, recursos e equipes sobre os quais o time técnico tinha pouca autoridade, sem que a aprovação inicial assegurasse sua resolução.
+
+% % Rastreabilidade (B). CI-03, CI-10, CI-12, CI-17, CD 2.3, 3.2, 1.5, 5.1, 2.1, 3.3, 3.1, 1.1, 1.4.
+% % Triangulação. C10 (Issues#6, #8--#10, Note#7, Presentation#5, Commits#12--14),
+% % C11 (Issue#7, E06), C12 (Commit#15).
+% % Suporte das entrevistas à interpretação central dos episódios. C10 alto, C11 médio, C12 médio.
+
+% \subsection{Padrão C -- A referência classificatória, sem definição convergente, reorientou a tarefa}
+% \label{sec:pc}
+
+% A definição das categorias era um requisito constitutivo da classificação. Sem decidir o que cada classe representava, não havia uma referência compartilhada para rotular propostas, treinar o modelo ou interpretar suas saídas. Segundo E05, o dicionário de categorias ``passou por diversas mãos'' (integrantes do órgão demandante, da equipe e da moderação) e, quando parecia próximo de uma solução, foi rejeitado com a afirmação ``não é nada disso que eu quero, do ponto de vista de negócio''. A equipe também relatou que a referência solicitada ao lado do domínio demorou a chegar (E05). Não se tratava apenas de rótulos insuficientes, mas de desacordo sobre a finalidade das categorias e sobre quem teria autoridade para defini-las. Em C3, os experimentos documentados de mapeamento semântico e integração indicam que a cobertura técnica das associações não estabelecia a adequação das categorias ao domínio.
+
+% O VCGE ofereceu uma saída institucional para essa indefinição. E03 afirmou que o ministério sugeriu o VCGE quando a equipe pediu um vocabulário, embora a própria entrevistada não o considerasse uma boa solução, apenas ``o melhor parametrizado que tinha disponível naquele momento''. E01 também reivindicou ter sugerido seu uso, porque faltava uma referência válida ``para qualquer órgão, de qualquer tema''. As entrevistas, portanto, não permitem estabelecer quem fez a primeira sugestão. Permitem, porém, identificar justificativas distintas para a escolha, como disponibilidade (E03), generalidade para toda a plataforma (E01, E05), legitimidade institucional para explicar a origem dos temas (E01) e familiaridade dos gestores com a nomenclatura (E04). O VCGE não foi criado pela equipe. Ela se apropriou de uma referência existente e a adaptou ao problema. C5 documenta a comparação com classificações humanas e a posterior orientação pelo VCGE como funções distintas, reunidas pela busca de alinhamento à política pública.
+
+% Na classificação temática, E04 relatou ter reunido classificações de várias pessoas, harmonizado os códigos e incorporado elementos relevantes à política pública que não constavam do VCGE. Em uma experiência relacionada, mas diferente, de detecção de discurso de ódio, E02 descreveu a re-rotulação integral de uma base devido à discordância entre anotadores. Essa re-rotulação de ``100\%'' \emph{não} se refere à base de classificação temática das propostas e, por isso, é evidência de um mecanismo semelhante de construção técnica da referência, não uma etapa da mesma trajetória.
+
+% A referência institucional contribuiu, então, para reorientar a escolha do método. E04 relacionou a passagem ao supervisionado à possibilidade de associar os resultados a uma nomenclatura conhecida dos gestores. E02 destacou a dificuldade de avaliar objetivamente os agrupamentos não supervisionados e a possibilidade de obter métricas com rótulos de referência. São justificativas complementares, não um gatilho único. C8 documenta a transição para classificadores supervisionados e métricas preditivas, sem identificar uma causa exclusiva ou comprovar implementação multirrótulo. E01 afirmou ainda que a escolha do VCGE ``não muda a forma de avaliar'' do lado do domínio. A escolha ajudava sobretudo a ``destravar o projeto''. Assim, a taxonomia resolveu provisoriamente uma questão de legitimidade e de especificação da saída, sem demonstrar que suas categorias fossem as mais adequadas à linguagem de quem produziu as propostas. A dificuldade de estabelecer classes compartilhadas dialoga com problemas de especificação já descritos em RE para ML~\cite{habibullah2023}, mas aqui a referência também precisava oferecer legitimidade institucional.
+
+% % Rastreabilidade (C). CI-20, CI-11, CI-08, CI-06, CI-02, CD 1.5, 5.2, 2.1, 3.1, 1.2.
+% % Triangulação. C3 (Issue#2 e #4, Notebooks#2--3), C5 (Issue#5, Notebooks#4--5),
+% % C8 (Notebook#6, Commits#9--10, Presentation#4).
+% % Suporte das entrevistas à interpretação central dos episódios. C3 baixo, C5 alto, C8 alto.
+
+% \subsection{Padrão D -- Valores e recursos atuaram como requisitos tácitos, com atendimento desigual}
+% \label{sec:pd}
+
+% A diretriz política sobre a tecnologia, explicitada por E03, era não acoplar uma ``solução pronta de mercado'' à plataforma. A justificativa envolvia conhecimento aberto, controle dos dados e autonomia tecnológica, favorecendo um modelo próprio, ``de pequena escala'', especializado e treinado com dados do projeto (E03). Essa escolha delimitava a solução, mas também exigia infraestrutura capaz de executar uma pilha tecnológica aberta. Na interpretação da coordenação, a dependência de contratos e de infraestrutura pública limitava a implantação, e fazer inferência apenas em CPU passou a ser uma alternativa para usar um ambiente já administrado pela equipe (E05). E06 distinguiu a GPU disponível no laboratório da ausência desse recurso no ambiente de produção sob gestão externa. Os registros de C1 documentam o reconhecimento inicial das limitações do ambiente, sem que isso correspondesse a requisitos não funcionais formalizados. Em C10, a compatibilidade com o ambiente externo sem GPU passou a condicionar o serviço de inferência. Trata-se de uma restrição de hardware e de governança, não de evidência de que a acurácia do modelo se deteriorasse em produção.
+
+% O caso mostra também uma tensão entre o princípio de autonomia e a forma de estabelecer o desempenho desejado. Na sistematização do Plano Clima, E01 descreveu um protótipo produzido com APIs comerciais, cujos temas foram considerados adequados pelo ministério. O resultado virou patamar para os modelos próprios. Nas palavras de E01, ``nossos modelos têm que dar conta minimamente disso aqui''. Era uma referência concreta, e não uma meta quantitativa. Essa evidência é de outra frente de IA e de uma única entrevista, de modo que não permite generalizar o procedimento para toda a classificação temática.
+
+% Outras condições vieram das finalidades da participação. A saída deveria ser inteligível tanto para gestores quanto para a sociedade. E01 defendeu ``menos linguagem da burocracia'' e ``mais linguagem do cidadão'', enquanto E03 criticou o VCGE por ser ``uma linguagem da administração, não é uma linguagem do cidadão''. C5 registra a adoção dessa referência institucional, mas também a ressalva de que sua adequação à linguagem cidadã permanecia contestada. A classificação precisava ainda ser geral o suficiente para atravessar diferentes processos e órgãos, pois o Decidim não oferecia uma categorização global nativa (E05), e representar propostas que envolvem várias políticas, uma vez que ``Quase toda proposta envolve diversas políticas'' (E03). Segundo E04, a equipe limitou a saída a duas categorias por simplicidade, embora uma proposta pudesse pertencer a ``três, quatro categorias''. A mudança para o supervisionado (C8) não comprova, contudo, que a capacidade multirrótulo tenha sido implementada. Os relatos, portanto, mostram condições concorrentes. A autonomia e a generalidade orientaram escolhas efetivas, enquanto a linguagem cidadã permaneceu em tensão com a taxonomia adotada e a transversalidade foi atendida apenas parcialmente. Não há, nessas entrevistas, uma validação direta com cidadãos que permita aferir o efeito dessas escolhas sobre a compreensão da saída.
+
+% % Rastreabilidade (D). CI-18, CI-05, CI-12, CI-04, CI-08, CI-19, CD 5.2, 2.1, 1.1, 3.3, 5.1, 1.5.
+% % Triangulação. C1 (Issue#1, Notes#1--3), C5 (Issue#5, Notebooks#4--5),
+% % C8 (Notebook#6, Commits#9--10), C10 (Issues#6, #8--#10, E05--E06).
+% % Suporte das entrevistas à interpretação central dos episódios. C1 baixo, C5 alto, C8 alto, C10 alto.
+
+% \subsection{Padrão E -- Requisitos da classificação foram explicitados em reação a saídas concretas}
+% \label{sec:pe}
+
+% Os participantes nem sempre conseguiam antecipar o que tornaria a classificação útil, e algumas expectativas só se tornaram explícitas quando examinaram resultados concretos. Na definição das categorias, a presidência rejeitou um dicionário que a equipe considerava encaminhado (E05), expondo uma divergência sobre o significado de uma categoria útil. Na abordagem não supervisionada, a equipe percebeu que os temas gerados poderiam impor aos gestores uma ``carga cognitiva muito grande'' (E04). A necessidade de categorias compreensíveis e estáveis ganhou força nesse confronto com a saída e contribuiu para a passagem ao supervisionado (Padrão~C). Nos episódios C2 e C3, os experimentos já expunham trade-offs entre coerência, diversidade e quantidade de tópicos e entre cobertura e excesso de associações, sem critério institucional que resolvesse esses trade-offs. Em outro teste, E04 relatou que, após examinar uma amostra com pessoas do domínio, a conclusão foi que a classificação ``ainda está muito distante''. A avaliação apontou inadequações, mas não estabeleceu um limiar quantitativo de aceitação. C5 registra a incorporação de referência humana e do VCGE, enquanto C8 documenta a adoção posterior de classificação supervisionada, sem que se possa atribuir essa transição a um único resultado.
+
+% As reações também podiam definir referências positivas. Na frente de sistematização do Plano Clima, relatada somente por E01, a concordância do ministério com os temas de um protótipo baseado em APIs comerciais transformou aquela saída em meta para os modelos próprios. Isso indica uma forma de especificação a partir de exemplos, mas não oferece uma confirmação independente desse mecanismo na classificação temática.
+
+% Uma situação ocorrida durante a própria entrevista torna visível o papel dos exemplos e, ao mesmo tempo, o limite metodológico da evidência. Diante de uma tabela apresentada pelo pesquisador, E03 questionou o rótulo único (``Mas eles só aceitam um tag?''), examinou a relação entre ``violência doméstica'' e ``violência de gênero'' e afirmou não ter ``clareza de como seria utilizado'' o resultado. A participante disse que o multirrótulo já havia sido discutido anteriormente. Assim, essa reação não comprova que o requisito tenha surgido naquela entrevista, mas mostra como uma saída concreta permitiu discutir e testar uma expectativa que já existia. Essa reação também pode ter sido influenciada pela intervenção do pesquisador.
+
+% C7, não avaliado especificamente nas entrevistas, registra a sistematização de métricas internas e externas em um protocolo comparativo, ainda sem limiar institucional de aceitação. Em C9, também não avaliado especificamente nas entrevistas, os testes de aumento sintético de dados não trouxeram ganho relevante, e reorganizações de classes melhoraram métricas sem confirmar sua utilidade para o domínio. Os relatos indicam que a análise dos resultados ajudou a esclarecer expectativas sobre a classificação. Saídas consideradas inadequadas motivaram revisões, enquanto resultados avaliados como ``plausíveis'' puderam servir de referência para o desempenho esperado. Os episódios documentam ajustes sucessivos de critérios, referências e abordagens, mas não demonstram que cada mudança tenha resultado de um ciclo formal de validação com stakeholders. O padrão distingue \emph{o aparecimento dos critérios de classificação} da definição de sua referência (Padrão~C) e dos requisitos de operação (Padrão~F).
+
+% % Rastreabilidade (E). E05-TI04/E05-TD05, E04-TD24/E04-TD25/E04-TI14,
+% % E01-TI05/E01-TD18, E03-TI07/E03-TD23/E03-TD26, E02-TD34.
+% % Triangulação. C2 (Notebook#1), C3 (Notebooks#2--3), C5 (Notebooks#4--5),
+% % C7 (Notebook#5, Presentation#3), C8 (Notebook#6, Commits#9--10),
+% % C9 (Notebook#6, Commit#11, Notes#6--7, Presentation#4).
+% % Suporte das entrevistas à interpretação central dos episódios. C2 médio, C3 baixo, C5 alto, C7 não avaliável, C8 alto, C9 não avaliável.
+
+% \subsection{Padrão F -- Requisitos de operação apareceram no desenvolvimento e na integração}
+% \label{sec:pf}
+
+% Enquanto os critérios da classificação eram ajustados a partir da análise das saídas, os requisitos de operação surgiam no contato com os dados, as equipes e os ambientes. Segundo E06, as solicitações chegavam à execução sem análise técnica suficiente, e o refinamento ``acontecia a nível de desenvolvimento'', quando algum problema exigia ``voltar na definição''. No preparo dos dados, regras de negócio ``desconhecidas por nós e até mesmo pela equipe de produto'' eram aplicadas de modo inconsistente e exigiram limpeza adicional (E06). O modelo foi treinado a partir de dados entregues em CSV, em um momento em que a ingestão automatizada e a rastreabilidade não estavam suficientemente maduras. E06 afirmou que, ``na forma como foi feita'', não houve rastreabilidade dos dados usados naquele treinamento. Isso não equivale a afirmar que nenhum pipeline posterior tenha adquirido rastreabilidade.
+
+% Na integração com a engenharia, as discussões se concentravam nas entradas, saídas e formatos, mais do que no funcionamento interno do algoritmo. Segundo E06, ``A lógica por dentro de como vocês faziam isso, ela não era tão necessária''. Um desencontro ilustra o ponto. O produto esperava três categorias com suas pontuações, mas recebia uma categoria acompanhada de três pontuações (E06). Na frente de RAG, distinta do classificador temático, a arquitetura inicialmente pensada em nível algorítmico também precisou de reformulações para funcionar como serviço (E05). A dependência entre equipes não significava apenas atraso. Ela determinava o formato do que se tornava entregável. Para evitar outro gargalo, a equipe de ML passou a disponibilizar o modelo como API e a cuidar de parte de sua integração (E04). C10 reúne documentalmente o repasse, a documentação, o treinamento, a publicação e a inferência como requisitos de um serviço consumível por outras equipes.
+
+% Embora a inferência tivesse sido desenvolvida com GPU no laboratório, a implantação na infraestrutura externa exigia considerar o uso de CPU (E06). A coordenação também apontou essa alternativa como forma de contornar a necessidade de uma alteração contratual (E05). Se o serviço classificasse as propostas no momento de sua criação, seria necessário classificar também as propostas já existentes. Isso exigiria registrar os resultados em uma tabela auditável do banco de produção, mas a equipe não tinha as credenciais necessárias (E06). C11 explicita essa necessidade retroativa como consequência do gatilho de classificação de novas propostas, sem comprovar que a atualização no banco produtivo tenha ocorrido. Esses requisitos de processamento, classificação das propostas antigas, auditabilidade e acesso foram identificados durante a integração. Também havia indefinições sobre o uso dos resultados. Como o serviço de devolutiva aos cidadãos não chegou a ser desenhado, permaneceram em aberto questões sobre o contato com os participantes, considerando a LGPD, e sobre a utilidade de considerar apenas a categoria mais provável ou até três categorias sugeridas pelo modelo (E02).
+
+% O padrão evidencia que parte dos requisitos não estava apenas ausente dos documentos, mas só teve sua necessidade identificada quando a solução encontrou dados reais, interfaces e recursos administrados por outros atores. Em momento posterior, C12 documenta a adoção de Airflow e MLflow para orquestração, versionamento e rastreabilidade. Isso não demonstra a atualização do banco de produção, que permanecia sob outra governança. Isso não significa que toda mudança durante o desenvolvimento representasse um requisito emergente. Algumas mudanças decorreram da correção de defeitos, inconsistências ou decisões técnicas insuficientemente refinadas.
+
+% % Rastreabilidade (F). CI-15, CI-16, CI-13, CI-12, CD 2.3, 4.2, 1.5, 2.1, 3.1, 4.3, 1.4, 3.3.
+% % Triangulação. C10 (Issues#6, #8--#10, Commits#12--14),
+% % C11 (Issue#7, E06), C12 (Commit#15).
+% % Suporte das entrevistas à interpretação central dos episódios. C10 alto, C11 médio, C12 médio.
+
+% \subsection{Padrão G -- A aceitação foi negociada por julgamentos, sem avaliação suficiente em uso}
+% \label{sec:pg}
+
+% Não encontramos nas falas um limiar quantitativo compartilhado para decidir a aceitação da classificação. E01 esperava ``uma taxa de acerto alta'', mas admitiu que ``a gente não tinha definido qual que seria isso''. E04 observou que apresentar ``o F1'' não esclarecia para os stakeholders o que o resultado significava. A avaliação do lado do domínio se concentrava no exame de exemplos, perguntando ``essa proposta é mesmo desse tema? Faz sentido?'' (E01). Ela podia envolver amostras e várias pessoas, mas a existência desse procedimento não o transformava em um critério mensurável de prontidão (E04). A falta de objetividade na avaliação dos agrupamentos foi, para E02, mais uma razão para buscar o supervisionado, no qual métricas sobre rótulos de referência seriam possíveis. C5 distingue a comparação com classificações humanas do alinhamento ao VCGE. C7, não avaliado especificamente nas entrevistas, documenta que a sistematização das métricas internas e externas não produziu, por si só, um critério institucional de aceitação.
+
+% O julgamento ocorria de diferentes formas. A equipe técnica verificava a coerência dos resultados e os comparava com classificações humanas. Os gestores avaliavam se as categorias faziam sentido para o domínio. Já a avaliação política considerava se a solução estava ``madura o suficiente'' para entrar em produção sem comprometer a credibilidade da plataforma (E05). As expectativas podiam divergir. E03 queria conferir as propostas individualmente e relacioná-las a mais de um tema, enquanto E04 descreveu uma classificação que ainda precisava ser revista após testes com especialistas. A verificação também envolvia os dados de entrada, pois E06 relatou que pessoas familiarizadas com as regras de negócio identificavam inconsistências em seu conteúdo. Esses julgamentos, portanto, não representavam uma única medida de qualidade. T1, com apoio limitado nas entrevistas, registra a validação humana dos rótulos automáticos como preocupação recorrente, mas não comprova uma revisão sistemática posterior dos rótulos produzidos por LLM.
+
+% A avaliação do modelo durante seu uso final permaneceu limitada nos relatos. Na moderação, a equipe esperava comparar as predições com as decisões dos moderadores, mas E02 disse que ``a gente nunca teve feedback deles''. Para a classificação, E01 afirmou que a utilidade da funcionalidade não chegara a ser avaliada. O termo ``produção'' também designava realidades distintas. A execução interna em laboratório não equivalia à incorporação à plataforma mantida pela empresa pública e ao acesso a seu banco de dados (E02, E06). C10 documenta a construção de serviços integráveis, mas não comprova a implantação efetiva do classificador supervisionado em produção. Por isso, a afirmação sustentada não é que nenhuma solução de IA tenha sido utilizada, mas que as entrevistas e os episódios consolidados não demonstram a validação da utilidade da classificação temática por seus destinatários finais. A passagem do juízo de plausibilidade à avaliação de utilidade permaneceu incompleta. A dificuldade de transformar métricas técnicas em critérios compreensíveis ao cliente aproxima-se do problema descrito por Vogelsang e Borg~\cite{vogelsang2019}. Neste caso, o aval político acrescentava uma condição de aceitação distinta do desempenho preditivo.
+
+% % Rastreabilidade (G). CI-02, CI-05, CI-16, CD 1.1, 5.2, 1.5, 3.1.
+% % CI-09 (anotação com LLM) permanece provisório, sustentado só por E01, não generalizar.
+% % Triangulação. C5 (Issue#5, Notebooks#4--5), C7 (Notebook#5, Presentation#3),
+% % C10 (Issues#6, #8--#10, Commits#12--14), T1 (Presentations#1--3 e #5, Note#5, E01).
+% % Suporte das entrevistas à interpretação central dos episódios. C5 alto, C7 não avaliável, C10 alto, T1 baixo.
+
+% \subsection{O que não apareceu nos dados analisados}
+% \label{sec:ausencias}
+
+% Duas ausências delimitam os resultados. Primeiro, não identificamos discussões substantivas sobre diferenças de desempenho da classificação entre grupos de cidadãos ou formas de expressão das propostas. O código de viés e discriminação (CD 1.3) não foi aplicado, enquanto os requisitos éticos (CD 5.6) apareceram apenas como código secundário. Em E04, a menção a ``viés'' tratava de possíveis vieses no julgamento humano das saídas, não de discriminação pelo sistema. Como o roteiro não abordava especificamente viés algorítmico ou discriminação, essa ausência não permite concluir que tais riscos tenham sido desconsiderados no projeto.
+
+% Segundo, cidadãos não foram entrevistados nem aparecem, nos trechos codificados, como participantes da definição ou avaliação das categorias. Sua perspectiva surgiu indiretamente nas preocupações com linguagem compreensível (E01, E03), múltiplas categorias (E03) e devolutivas à sociedade (E01, E03). E05 também mencionou o uso da classificação para orientar gestores e recomendar atividades aos cidadãos. Os relatos, porém, não demonstram que as categorias ou os resultados tenham sido validados pelas pessoas que submetem as propostas. Essa ausência se limita às evidências analisadas e não pode ser estendida a outras atividades do projeto.
+
+% % Ausências: CD 1.3 = 0; CD 5.6 = 3 aplicações secundárias;
+% % E04-TI07 (viés no julgamento humano).
+% % CI-04 (E01, E03); CI-19 (E03); E05-TD14.
+
+% \subsection{Síntese: respostas às questões de pesquisa}
+% \label{sec:sintese}
+
+% \begin{Finding}
+% \textbf{RQ1 (padrões A, C, D, E e F).} As demandas institucionais foram traduzidas inicialmente em possibilidades propostas pela equipe, e não em uma especificação completa de ML. As categorias, requisito central da classificação, não convergiram entre os atores e foram estabilizadas provisoriamente em torno de uma referência institucional. Outros critérios foram explicitados ao examinar saídas concretas, ao passo que condições de operação emergiram na preparação dos dados e na integração. A linguagem cidadã e a representação de múltiplas políticas também surgiram como expectativas, sem o mesmo grau de realização.
+% \end{Finding}
+
+% \begin{Finding}
+% \textbf{RQ2 (padrões C, D e F).} A seleção do VCGE e a passagem ao supervisionado combinaram considerações de generalidade, legitimidade, familiaridade dos gestores e avaliação técnica, sem um único fator decisivo demonstrável. A autonomia tecnológica delimitou a escolha dos modelos e deslocou a viabilidade para a infraestrutura disponível. Entradas e saídas, inferência em CPU, classificação das propostas já existentes, acesso ao banco e rastreabilidade foram condicionados pelo encontro entre o componente e o ambiente de operação.
+% \end{Finding}
+
+% \begin{Finding}
+% \textbf{RQ3 (padrões B, C e G).} A aceitação não foi orientada por um limiar quantitativo comum. Métricas do modelo coexistiram com julgamentos de plausibilidade por especialistas, adequação ao uso pretendido e avaliação política dos riscos de implantação. A taxonomia ofereceu rótulos para avaliação técnica, mas não resolveu o desacordo sobre o significado das categorias. A ausência de patrocínio sustentado e a integração incompleta limitaram as oportunidades de avaliar a utilidade da classificação em uso.
+% \begin{Finding}
+% \textbf{RQ3 (padrões B, C e G).} A aceitação não foi orientada por um limiar quantitativo comum. Métricas do modelo coexistiram com julgamentos de plausibilidade por especialistas, adequação ao uso pretendido e avaliação política dos riscos de implantação. A taxonomia ofereceu rótulos para avaliação técnica, mas não resolveu o desacordo sobre o significado das categorias. A ausência de patrocínio sustentado e a integração incompleta limitaram as oportunidades de avaliar a utilidade da classificação em uso.
+% \end{Finding}
+
+% Os sete padrões descrevem aspectos relacionados do processo, mas não estabelecem uma sequência causal. A iniciativa técnica avançou antes de haver um uso suficientemente definido, e a equipe assumiu parte da definição dos requisitos (A). O avanço da solução foi condicionado por prioridades e dependências institucionais (B), enquanto a escolha das categorias e os valores associados ao processo participativo influenciaram decisões (C e D). A análise das saídas e o trabalho de integração tornaram mais explícitos critérios de classificação e requisitos operacionais (E e F). A aceitação dependeu principalmente de julgamentos dos envolvidos, com avaliação em uso limitada (G). Os episódios consolidados situam essas manifestações ao longo da trajetória, sem demonstrar uma sequência causal única entre os padrões (Tabela~\ref{tab:padroes}).
+
+% \begin{Finding}
+% \textbf{Questão central.} No caso estudado, as demandas institucionais orientaram a evolução do pipeline de ML menos por requisitos previamente especificados do que por aprovação, condições de legitimidade, valores, escolhas de referência e capacidade de priorização. O conteúdo da classificação foi negociado diante de exemplos e desacordos; sua viabilidade foi delimitada por dados, interfaces, hardware e governança. O caso sugere que a engenharia de requisitos de ML nesse contexto ocorreu, em parte, \emph{durante} a experimentação e a integração, e não apenas antes delas; os episódios consolidados documentam sua manifestação em diferentes momentos da trajetória, sem estabelecer uma relação causal uniforme entre eles.
+% \end{Finding}
+
+\section{Discussion}
+\label{sec:discussion}
+
+\textbf{Requirements were not missing; they were distributed.} RE for ML has documented that data scientists rarely receive explicit requirements~\cite{vogelsang2019}. Our case suggests a different reading of that absence: the pipeline's requirements existed, but they were spread across issues, notebooks, presentations, and people, and only 40\% were ever formalized. They took shape less through elicitation than through approval, legitimacy, values, choices of reference, and the capacity to prioritize. Experiments and model outputs acted as elicitation instruments: stakeholders who could not state what a useful category was could reject one when they saw it (Pattern~E), and a plausible prototype became a target. This suggests treating experimentation as part of the requirements process, as agile RE does with prototyping and as requirements and architecture co-evolve~\cite{cao2008,nuseibeh2001}. In practice, this means recording requirements where they surface, for instance as an explicit ``requirement revealed'' field in experiment reports, so that the 57 tacit items we had to reconstruct are captured as they appear. It also suggests that artifact mining, as we did here, can recover requirements that no one wrote down.
+
+\textbf{Public-sector ML adds requirements that RE for ML catalogs do not name.} The central requirement, the classification categories, had no owner, and the taxonomy that filled the gap was chosen for its availability and institutional legitimacy, and it never reflected citizens' language (Pattern~C). Legitimacy thus behaved as a quality requirement of its own, absent from current NFR agendas for ML~\cite{horkoff2019}, and it competed with intelligibility for citizens, the people who write the input but do not consume the output. Endorsement without sponsorship (Pattern~B) left this and other trade-offs unresolved and every dependency on third-party infrastructure unowned. Human-centered RE for AI calls for eliciting user needs~\cite{ahmad2023}; in this setting, a prior question is \emph{who} the users are and who has the authority to decide for them. Public-sector ML projects could make these roles explicit before modeling starts: an owner for the reference vocabulary, a sponsor for deployment dependencies, and a channel for those who produce the input.
+
+\textbf{Acceptance needs to be engineered.} As in industrial settings~\cite{vogelsang2019,nahar2022,paleyes2022}, metrics did not translate into stakeholder judgment, and moving the model into the product exposed requirements that modeling had not anticipated. Our case adds two layers: a political judgment of the risk to the platform's credibility, and an ambiguous notion of ``production'' tied to infrastructure and contracts outside the team's control (Patterns~F and~G). With no shared threshold and no evaluation in use, the pipeline could be \textit{technically ready and institutionally unaccepted} at the same time. A lightweight remedy is to agree early on a sample-based review protocol with domain experts, possibly expressed as behavioral tests~\cite{ribeiro2020}, with an explicit acceptance threshold and a plan for evaluation in use. For researchers, the gap between single-point accounts and what we observed over 15 months argues for more longitudinal studies of ML requirements, and for including the managers and citizens our study could not reach.
+
+
+\subsection{Limitations}
+\label{sec:threats}
+Our study has several limitations. First, the requirements, criteria, and episodes were not recorded as such; we reconstructed them, and others might have segmented them differently, although each item links to its original artifacts. The deductive codebook may also have drawn our attention toward what its four sources describe, which inductive coding offsets. Second, showing episodes to participants may have steered their answers, so an utterance confirmed an episode only if it added the participant's own elements (Section~\ref{sec:consolidacao}); only one reaction in Pattern~E occurred in an interview. Third, the study is retrospective and prone to recall bias, and seven of the 13 consolidated episodes rest mainly on artifacts, in which the government side is underrepresented; participants may also have softened criticism of the government or colleagues before an interviewer from the team. Fourth, the first author was a team member who conducted the interviews and most of the analysis; the second author reviewed all coding (19 of 41 items led to changes; we report no agreement coefficient, as the review aimed to refine the interpretation) and the six candidate patterns, but not the seventh, and we did no member checking. LLM outputs may not be reproducible, although the first author reviewed every suggestion. Fifth, we did not interview citizens or ministry managers, and the guide did not ask about algorithmic bias, so both absences (Section~\ref{sec:ausencias}) may partly reflect our design. Finally, this is a single case: we aim at analytical generalization~\cite{yin2018} to public-sector ML projects with similar conditions, namely no product owner, input producers distinct from output consumers, and third-party infrastructure. Quotes were translated from Portuguese, and artifacts and transcripts cannot be released, which limits independent verification.
+
+
+\section{Related Work}
+\label{sec:related}
+
+\textbf{RE for ML.} Data scientists rarely receive explicit requirements, and customers struggle to state performance targets~\cite{vogelsang2019}; practitioners of ML-based perception systems cannot specify requirements upfront and rely on operational design domains instead~\cite{habibullah2023,habibullah2024}. A survey of 188 practitioners found that RE for ML is done mostly by project leaders and data scientists, that notebooks are the main documentation format, and that unclear goals and low customer engagement are common problems~\cite{alves2023}. Research agendas cover non-functional~\cite{horkoff2019} and human-centered requirements~\cite{ahmad2023}, and mapping studies rank specification, explainability, and the gap between ML engineers and end users as the most prevalent challenges~\cite{villamizar2021,habiba2024}.  These studies capture RE at one point in time, through interviews and surveys, or treat it as a specification step before modeling. Our findings agree with theirs, notebooks included~\cite{alves2023}, but we follow one pipeline for 15 months and reconstruct from dated artifacts \emph{when} and \emph{from what} each requirement surfaced: most emerged from experiments and integration after modeling had started, which neither single-point accounts nor upfront specification can observe.
+
+\textbf{SE challenges of ML systems.} Industrial studies and reviews catalog challenges across the ML workflow, from data management to deployment and maintenance~\cite{amershi2019,lwakatare2019,lwakatare2020,paleyes2022}, including hidden technical debt such as glue code and undeclared consumers~\cite{sculley2015}, friction between data scientists and software engineers when models enter products~\cite{nahar2022}, and data cascades caused by undervaluing data work in high-stakes domains~\cite{sambasivan2021}. Our operational requirements (Pattern~F), from mismatched output formats to untraceable training data, resemble these challenges. These works, however, treat them as engineering problems that follow requirements; we show them as a \emph{source} of requirements and add institutional causes, such as contracts, third-party infrastructure, and missing sponsorship, that industrial settings rarely face.
+
+\textbf{AI in the public sector.} Public administration research has mapped AI applications and challenges for governments~\cite{wirtz2019,desousa2019}, called for a prior debate with society on the use of AI~\cite{desousa2019}, and shown that stakeholders frame the challenges of adopting AI differently~\cite{sun2019}. These studies take a policy view and treat the AI system as given. We look inside the engineering of one system and show how such divergent framings become concrete requirements: a taxonomy chosen for legitimacy, a political judgment of credibility as an acceptance criterion, and citizens absent from defining the categories.
+
+
+
+
+
+%\gnote{can we do member checking with 2--3 participants before submission? would make this much stronger}
+
+\section{Conclusion}
+\label{sec:conclusion}
+RE for ML often assumes that requirements are elicited upfront and then drive design and evaluation. Following a public-sector ML pipeline for 15 months, we found that its requirements existed but nobody wrote them down. AI entered as the team's offer, endorsed but never sponsored; the classification categories had no owner and were settled by a government taxonomy; and most requirements surfaced from model outputs and from integration with data, teams, and third-party infrastructure. Acceptance rested on layers of judgment, with no shared threshold or evaluation in use. Experiments, model outputs, and institutional artifacts were how these requirements came to exist.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "arxiv.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/1_Introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/2_Preliminaries.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/3_Method.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/4_Experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/5_Related_Work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6_Conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7_Appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "d093ea88e85f71b284ea5b06b42404a34aeb64328d1547aa584e8a03790925fb",
+    "arxiv.sty": "90b76fbdba12aa1a8ccf06a214ba6f178b3f1219fdc174c1ad6897690f5d6992",
+    "math_commands.tex": "90473c4d0542070db244cea73ef962d6cddc5b2a746757e6a40ddf5fdfb90ba9",
+    "sections/1_Introduction.tex": "7c75755ae774e6f3b754fdf2e8688115ad83c8ab9653d1d9769b12a04408a1b1",
+    "sections/2_Preliminaries.tex": "5fd265017c6d5ec29b130fe43785c9d11b3611e2efb1de970bc6dcac1699cce1",
+    "sections/3_Method.tex": "da016a2d2a9d092d4b1cf54ea55506f67e68d28b9e706514fbe20137481796c9",
+    "sections/4_Experiments.tex": "a7dee7f88ff3bf828231af9be15c53f4a47850324400e6d5d0c0d77e0d1d03bf",
+    "sections/5_Related_Work.tex": "800fbba2305cb0ff2daf8a446524578dfb3d0c9d46cbe4bc3b949ad3ee1a6633",
+    "sections/6_Conclusion.tex": "558e4357e2e6c5ff3cd657d9eb1afbe2c5f89421f2a3748a5796f7f6396e91a5",
+    "sections/7_Appendix.tex": "702b26cf50d025d8f85b867cc411e1e548738c834d76a64dcd24a7b7fc56543b"
+  }
+}

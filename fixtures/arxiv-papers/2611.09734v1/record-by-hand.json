@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "zhanggroup.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "cd717011bb08d9c6a5bc66dccfc8e287e554738caa5cb2ca180842f2deb88486",
+    "zhanggroup.sty": "60fed0f05ea08727aadf5ac428ad794c59f5e71d0cceb14fd3df12693d5661fb"
+  }
+}

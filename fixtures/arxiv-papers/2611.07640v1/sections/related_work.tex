@@ -1,0 +1,75 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Indirect prompt injection.}
+
+Prompt injection inserts malicious text that causes an LLM to deviate from its
+assigned objective \citep{perez2022ignore, willison2022pi}; in \emph{indirect} prompt
+injection, the text is placed in third-party data that an application
+retrieves \citep{greshake2023ipi}. The predominant
+formulation of indirect prompt injection is \emph{instruction injection}: the
+attacker embeds an instruction in external data, and the model follows it as
+an instruction rather than treating it as data \citep{liu2024formalizing, yi2024bipia, debenedetti2024agentdojo}.
+
+\paragraph{IPI benchmarks.}
+
+IPI benchmarks measure whether adversarial content encountered during a
+legitimate task can change an LLM application's output or an agent's behavior.
+Benchmarks have moved from single-generation applications \citep{yi2024bipia}
+and single tool calls \citep{zhan2024injecagent} to stateful, multi-step
+environments with separate utility and attack checks
+\citep{debenedetti2024agentdojo}, including dynamic tasks in which agents follow
+benign third-party instructions \citep{li2026agentdyn}, and to web, computer-use,
+and visual surfaces \citep{evtimov2025wasp, kuntz2025osharm, cao2026vpibench}.
+Across these settings, evaluated payloads are mostly malicious instructions that
+redirect the agent to attacker-chosen tasks; task information, if used, mainly
+guides placement or coarse tailoring.
+
+A more recent line couples injected content to the runtime decision it targets,
+including attacks on tool selection, arguments, conditions, reasoning, and
+delegation, as well as attacks propagated through memory, handoffs, skills,
+and workflows \citep{wang2026agentpi, weng2026argus}. Once content is pertinent to
+that decision, neither its relevance nor its wording separates an attack from
+legitimate task evidence; what makes it an injection is that its source lacks
+the authority, assigned by the system or user, to determine the decision. We
+therefore make this authority explicit in every case: the user's request
+designates which source determines the affected decision
+(Section \ref{sec:threat}).
+
+\paragraph{Defenses.}
+
+Prompt-injection defenses differ in how they limit untrusted influence.
+Prompting defenses such as Sandwich and Spotlighting
+\citep{debenedetti2024agentdojo, hines2024spotlighting} and training methods such
+as Instruction Hierarchy, StruQ, and SecAlign \citep{wallace2024instruction, chen2024struq, chen2025secalign} shape how the model treats trusted
+instructions versus external data. These methods rely on the model to apply
+the intended boundary and do not independently constrain the calls it emits.
+
+Detection-based defenses instead classify or remove suspected injections
+before they influence the agent \citep{li2025piguard, shi2025promptarmor}.
+Their coverage therefore depends on the injection being recognizable from
+the content that carries it or the wider observed trajectory.
+
+Plan- and policy-based defenses constrain proposed actions against a
+task-derived action space. AgentDojo's Tool Filter \citep{debenedetti2024agentdojo},
+Progent \citep{shi2025progent}, and DRIFT \citep{li2025drift} check calls against a tool
+set, policy, or plan, respectively; DRIFT also uses an LLM-based isolator to
+mask tool-output instructions that conflict with the user request. These
+systems enforce conformity to the represented plan or policy, whose coverage
+depends on how completely that policy captures the task. The policy or plan generally does
+not constrain the content of free-text arguments.
+
+Architectural isolation and information-flow control constrain how content can
+reach agent components and actions. IsolateGPT and ACE
+\citep{wu2025isolategpt, li2025ace} isolate applications or execution steps, while
+CaMeL and FIDES \citep{debenedetti2025defeating, costa2025securing} track
+provenance labels on values and enforce policies at tool calls. These systems
+enforce component, source, and flow policies; they do not by themselves
+establish the truth or topic-specific authority of content admitted by those
+policies.
+
+Evidence- and authorization-based defenses check whether benign runtime
+evidence entails an action, as in ARGUS \citep{weng2026argus}, or whether its
+parameters come from sources authorized by the request, as in AuthGraph
+\citep{authgraph2026}; ARGUS still relies on judging which content is benign, and
+AuthGraph on the authorization graph it derives from the request.

@@ -1,0 +1,36 @@
+\section{Threats to Validity}
+\label{sec:threats}
+% Restructured 2026-10-29 (construct / internal / external). Reasoning numbers:
+% same 498 samples for both settings, none on LCB-Java; low effort (median 150
+% tokens) gives balanced accuracy 63.9% (not reported). Removed: "each
+% comparison uses one machine" (rule dropped) and the prose-program-rows
+% sensitivity sentence (Viola, 2026-10-29). Python header: FINDINGS
+% 2026-09-22, effect not measured.
+\paragraph{Construct validity}
+Correctness is defined by the benchmarks' tests, which can miss errors. The
+judging prompt asks for a single token without reasoning; gpt-oss, a
+reasoning model, judges moderately  better with reasoning: on 498 program-target
+candidates of the language sets, medium-effort reasoning (median 1{,}101
+tokens) raises its balanced accuracy from 62.4\% to 67.8\% and the AUROC of its
+\texttt{Yes} probability from 0.68 to 0.73, still below the trained internal
+methods (Table~\ref{tab:program-summary}), at the cost of the reasoning
+tokens. %The judging prompt introduces every task as a Python task, also for the C++ and Java sets; this may lower the judge's accuracy there, but all methods except LAT read the same judging pass, so the comparison between methods is unaffected. LAT reads its published stimulus prompt (Section~\ref{sec:methods}). 
+%EigenScore is computed on non-empty generations only; keeping the (trivial) empty generations raises it to 0.597 on LCB and 0.610--0.646 on the language sets for Qwen3-Coder and to 0.719 on LCB for gpt-oss, still below the best single-pass method in each of these cells.
+
+\paragraph{Internal validity}
+The trained methods choose among different numbers of layers: the probe and
+LAT among all 25--49, the causal methods among the 4--7 layers at which DAS
+was trained, since each subspace takes several GPU hours. 
+A wider choice can find a better layer, but under shift the layer best in distribution need not transfer, so the effect can go either way. Under shift, however, the causal checkpoints often lie above the probe even at the probe's best layer (Figure~\ref{fig:verdict-profile}).
+Counterfactual simulation uses one fixed set of 16 bases;
+drawing them from different problems changed the AUROC of one checkpoint by at
+most 0.01 AUROC. 
+Reruns of the same configuration on different machines differ by up to 0.02 AUROC on identical rows, so we do not interpret smaller differences between single cells.
+EigenScore needs five non-empty generations per problem (ten on BCB), so the problem-level
+comparison leaves out the problems with fewer: 40 for Qwen3-Coder, none of them
+solved, and 143 for gpt-oss, 47 of them solved.
+
+\paragraph{External validity}
+We study two open-weight models on competitive-programming problems from LiveCodeBench, on a subset of the same problems in Python, C++ and Java, which
+isolates the language, and on more practical Python tasks from BigCodeBench.
+Other models, sampling settings or repository-level tasks may behave differently.

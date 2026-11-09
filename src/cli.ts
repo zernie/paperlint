@@ -207,6 +207,17 @@ import {
   folderLayoutRules,
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
+import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
+import {
+  NOTICE_HOOKS,
+  collector,
+  lintLine,
+  mergeNotice,
+  noticeText,
+  notYetTold,
+  recordTold,
+} from "./hooks-notice.ts";
+import { unwiredHooks } from "./hooks-settings.ts";
 import {
   lintEditedHook,
   type LintResult,
@@ -1389,7 +1400,194 @@ export function runHook(
   name: string | undefined,
   {
     err = console.error,
-    run = spawnSync,
+    stdin = defaultStdin,
+    out = defaultOut,
+    ...rest
+  }: HookOptions = {},
+): number | Promise<number> {
+  const io = { ...rest, err, stdin, out };
+  if (name === undefined || !NOTICE_HOOKS.includes(name))
+    return runHookPlain(name, io);
+  const notice = pendingNotice(io);
+  return notice === null
+    ? runHookPlain(name, io)
+    : runHookWithNotice(name, notice, io);
+}
+
+/** `HookOptions` with the three streams resolved. */
+type ResolvedHookOptions = HookOptions &
+  Required<Pick<HookOptions, "err" | "stdin" | "out">>;
+
+/** The first line of a message, for the one stderr line a failure here gets. */
+const firstLine = (message: string): string => message.split("\n", 1).join("");
+
+/** What `runHook` takes; every effect is injectable, so a test stages none of them. */
+interface HookOptions {
+  readonly err?: typeof console.error;
+  /** Runs the hook with the terminal's streams: `spawnSync` is one. Only its status and stdout are read. */
+  readonly run?: (
+    file: string,
+    args: readonly string[],
+    options: {
+      readonly stdio:
+        "inherit" | readonly ["pipe", "pipe" | "inherit", "inherit"];
+      readonly input?: string;
+      readonly encoding?: "utf8";
+    },
+  ) => { readonly status: number | null; readonly stdout?: string | null };
+  readonly resolve?: (spec: string) => string;
+  /** The hook's payload, as Claude Code sends it on stdin. */
+  readonly stdin?: () => string;
+  /** Where an in-process hook's output goes: stdout, which Claude Code reads. */
+  readonly out?: (text: string) => void;
+  /** The project the hooks are wired in; Claude Code sets `CLAUDE_PROJECT_DIR`, else the cwd. */
+  readonly projectDir?: string;
+  /** The installed paperlint version the notice names. */
+  readonly version?: string;
+}
+
+const defaultStdin = (): string => readFileSync(0, "utf8");
+const defaultOut = (text: string): void => {
+  process.stdout.write(text);
+};
+
+/** The real spawner, narrowed to what `runHook` asks of it. */
+export const spawnHook: NonNullable<HookOptions["run"]> = (file, args, o) => {
+  const r =
+    o.stdio === "inherit"
+      ? spawnSync(file, [...args], { stdio: "inherit" })
+      : spawnSync(file, [...args], {
+          stdio: [...o.stdio],
+          input: o.input,
+          encoding: "utf8",
+        });
+  return {
+    status: r.status,
+    stdout: typeof r.stdout === "string" ? r.stdout : null,
+  };
+};
+
+/** The project root the hooks are anchored to. */
+const hookRoot = (io: HookOptions): string =>
+  io.projectDir ?? process.env["CLAUDE_PROJECT_DIR"] ?? process.cwd();
+
+/** This package's version, as its own manifest says. */
+const packageVersion = (): string =>
+  z
+    .object({ version: z.string() })
+    .parse(
+      JSON.parse(
+        readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+      ),
+    ).version;
+
+interface Pending {
+  readonly text: string;
+  readonly root: string;
+  readonly version: string;
+}
+
+/**
+ * The notice this hook owes the project, or null. Never throws and never speaks twice for one
+ * version: whatever goes wrong here is one stderr line and the hook runs as if nothing were due.
+ */
+function pendingNotice(io: ResolvedHookOptions): Pending | null {
+  try {
+    const root = hookRoot(io);
+    const { missing, byHand } = unwiredHooks(root);
+    const version = io.version ?? packageVersion();
+    return missing.length === 0 || !notYetTold(nodeFiles, root, version)
+      ? null
+      : { text: noticeText(version, missing, byHand), root, version };
+  } catch (e) {
+    io.err(
+      `paperlint: the unwired-hooks check did not run: ${firstLine(messageOf(e))}`,
+    );
+    return null;
+  }
+}
+
+/** Whether the payload names a file inside a paper folder. */
+const touchesAPaper = (payload: string): boolean => {
+  try {
+    const file = writtenPath(JSON.parse(payload));
+    return file !== null && paperFolderOf(file, nodeFiles) !== null;
+  } catch {
+    return false;
+  }
+};
+
+/** `paperlint lint`'s one stderr line when the project's hooks are only partly wired. Never throws. */
+function hooksLine(root: string, err: typeof console.error): void {
+  try {
+    const { missing } = unwiredHooks(root);
+    if (missing.length > 0) err(lintLine(packageVersion(), missing));
+  } catch {
+    // The report above is the verdict; this line is advice, and a broken settings read is not worth a second one.
+  }
+}
+
+const after = (
+  code: number | Promise<number>,
+  then: (code: number) => number,
+): number | Promise<number> =>
+  typeof code === "number" ? then(code) : code.then(then);
+
+/**
+ * The hook as always, with the notice added to what it printed — when its payload is about a paper's
+ * file. The payload is read once and handed on; anything outside a paper, or unreadable, runs the hook
+ * untouched and leaves the notice for the next edit that is about a paper.
+ */
+function runHookWithNotice(
+  name: string,
+  notice: Pending,
+  io: ResolvedHookOptions,
+): number | Promise<number> {
+  const text = ((): string | null => {
+    try {
+      return io.stdin();
+    } catch {
+      return null;
+    }
+  })();
+  if (text === null) return runHookPlain(name, io);
+  const fed = { ...io, stdin: () => text, feed: text };
+  if (!touchesAPaper(text)) return runHookPlain(name, fed);
+  const printed = collector();
+  return after(
+    runHookPlain(name, {
+      ...fed,
+      out: printed.write,
+      capture: true,
+    }),
+    (code) => {
+      const said = printed.text();
+      const merged = code === 0 ? mergeNotice(said, notice.text) : null;
+      // Remembered BEFORE it is said: a state that cannot be written must not make the notice repeat on every edit.
+      io.out(merged !== null && remember(notice, io) ? merged : said);
+      return code;
+    },
+  );
+}
+
+/** Records that the notice was given; false, with one stderr line, when it cannot be. */
+function remember(notice: Pending, io: ResolvedHookOptions): boolean {
+  try {
+    recordTold(nodeFiles, notice.root, notice.version);
+    return true;
+  } catch (e) {
+    io.err(
+      `paperlint: the unwired-hooks notice was not recorded: ${firstLine(messageOf(e))}`,
+    );
+    return false;
+  }
+}
+
+function runHookPlain(
+  name: string | undefined,
+  {
+    err = console.error,
+    run = spawnHook,
     // The resolver is injected so that "the runtime was not found" is checked by an assert and not
     // by deleting node_modules: a failure must be reproducible, not staged.
     // 🔴 WE RESOLVE THE PACKAGE, NOT A FILE INSIDE IT. `require.resolve("vigiles/dist/cli.js")`
@@ -1401,23 +1599,15 @@ export function runHook(
     // the very file the package itself declares as its `bin`.
     resolve = (spec: string): string =>
       createRequire(import.meta.url).resolve(spec),
-    stdin = (): string => readFileSync(0, "utf8"),
-    out = (text: string): void => {
-      process.stdout.write(text);
-    },
-  }: {
-    err?: typeof console.error;
-    /** Runs the hook with the terminal's streams: `spawnSync` is one, and only its status is read. */
-    run?: (
-      file: string,
-      args: readonly string[],
-      options: { readonly stdio: "inherit" },
-    ) => { readonly status: number | null };
-    resolve?: (spec: string) => string;
-    /** The hook's payload, as Claude Code sends it on stdin. */
-    stdin?: () => string;
-    /** Where an in-process hook's output goes: stdout, which Claude Code reads. */
-    out?: (text: string) => void;
+    stdin = defaultStdin,
+    out = defaultOut,
+    feed,
+    capture = false,
+  }: HookOptions & {
+    /** The payload already read from stdin, handed to a spawned hook on its stdin. */
+    readonly feed?: string;
+    /** Collect a spawned hook's stdout into `out` instead of letting it reach the terminal. */
+    readonly capture?: boolean;
   } = {},
 ): number | Promise<number> {
   if (!name) {
@@ -1446,13 +1636,16 @@ export function runHook(
     );
     return 0;
   }
-  const r = run(
-    process.execPath,
-    [runtime, "hook-runtime", "run-program", program],
-    {
-      stdio: "inherit",
-    },
-  );
+  const args = [runtime, "hook-runtime", "run-program", program];
+  const r =
+    feed === undefined
+      ? run(process.execPath, args, { stdio: "inherit" })
+      : run(process.execPath, args, {
+          stdio: ["pipe", capture ? "pipe" : "inherit", "inherit"],
+          input: feed,
+          encoding: "utf8",
+        });
+  if (capture && typeof r.stdout === "string") out(r.stdout);
   return r.status ?? 0;
 }
 
@@ -2194,6 +2387,7 @@ export async function run(
       .map((d) => join(d, MAIN))
       .filter((f) => existsSync(f)),
   });
+  hooksLine(root, err);
   // On stderr, so `--json` leaves stdout a clean array.
   timingLines({
     files: results.length,

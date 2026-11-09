@@ -1,0 +1,31 @@
+\section{Essential Prompt Interfaces}
+\label{app:prompts}
+Training and deployment share the benchmark's task interface. The layouts below retain the task fields and output constraints; benchmark-specific environment rules are omitted for readability.
+
+\lstdefinestyle{engprompt}{basicstyle=\ttfamily\footnotesize,breaklines=true,breakatwhitespace=true,columns=fullflexible,keepspaces=true,showstringspaces=false,frame=single,rulecolor=\color{draftgray},framesep=5pt,xleftmargin=6pt,xrightmargin=6pt,aboveskip=8pt,belowskip=8pt}
+\lstset{style=engprompt}
+
+\paragraph{Task execution.}
+Sequential tasks provide the goal, current observation, valid actions, and recent interaction history. The model returns one executable action. Supervised examples pair this pre-action input with the recorded action; the resulting state supplies outcome evidence.
+\begin{lstlisting}
+Goal: {task goal}
+Observation: {current environment state}
+Valid actions: {admissible actions}
+Recent history: {observations and executed actions}
+Output exactly ONE action on its own line.
+\end{lstlisting}
+
+QA uses the same question and evidence in training, verification, and matched evaluation arms. The context is omitted in the question-only control.
+\begin{lstlisting}
+Answer the following question based on the provided context. Think step by step, then give your final answer after 'Answer:'.
+
+Context: {evidence}
+Question: {question}
+Let's think step by step:
+\end{lstlisting}
+
+\paragraph{Experience acquisition and retrieval.}
+Teacher acquisition adds the selected skill and its target outcome to the task brief. Successful demonstrations retain their executed actions and observed outcomes. When ETG retrieval is enabled, the task input also contains relevant successful traces or corrections, including their conditions of use. A correction contributes a supervised action only when it has a valid target for an aligned observation.
+
+\paragraph{Verification.}
+The two probe arms receive identical task inputs and targets. The candidate arm uses the updated adapter with episodic retrieval disabled; the reference arm uses the base model with ETG retrieval enabled. Both use the same output parser and benchmark-specific probe criterion. Eq.~\eqref{eq:evict} determines release eligibility from these scores and valid training participation.

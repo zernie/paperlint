@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "appendix_lexical_inventory.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "d7ffee494fe6ff77a8d1f70ff63cddaf0ffa857cf0da16c3161fda97373eb557",
+    "acl.sty": "19dfeddc2c0e448f3926a0bef048a9db3f3611b46265b760caabd7ada4f361de",
+    "appendix_lexical_inventory.tex": "d38913ab461c7d7a474e5f791c8ca08c22233e09a67b1c02097766badf74723e"
+  }
+}

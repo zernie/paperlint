@@ -1,0 +1,255 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2026
+\PassOptionsToPackage{square, numbers}{natbib}
+
+% The authors should use one of these tracks.
+% Before accepting by the NeurIPS conference, select one of the options below.
+% 0. "default" for submission
+% \usepackage[dblblindworkshop, draft]{neurips_2026}
+\usepackage[final]{neurips_2026}
+
+\PassOptionsToPackage{square, numbers}{natbib}
+
+\renewcommand{\ttdefault}{pcr}
+
+\makeatletter
+\renewcommand{\@noticestring}{Workshop on Who Verifies the Agents? Toward Reliable Agent Development, NeurIPS 2026.}
+\makeatother
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+% custom
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{bold-extra}
+\usepackage{amsmath}
+\usepackage{yhmath}
+\usepackage{placeins}
+
+
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
+% \title{Pdb or Not to Be: A Budget-Matched Comparison of Execution Interfaces for Software Agents}
+\title{Pdb or Not to Be: \\ Comparing Debugging Interfaces With Pass$_{X}$@$k$}
+\workshoptitle{Who Verifies the Agents?}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  Ryan Magnuson \\
+  Code Metal \\
+  \And
+  Ellie Kitanidis \\
+  Code Metal \\
+  \And
+  Ariel Lee \\
+  Code Metal \\
+  \AND \\
+  \texttt{\{ryan.magnuson, ellie, ariel.lee\}@codemetal.ai} }
+
+\begin{document}
+
+
+\maketitle
+
+
+\begin{abstract}
+Interactive debuggers are indispensable to human software development, yet coding agents overwhelmingly rely on edit-execute-observe loops, using common bash tools, test scripts, and print statements to debug via repeated shell commands. Stepping through a debugger provides live access to runtime state, which may enable different problem-solving capabilities. However, prior work typically introduces the debugger as an additional tool or through a new subagent, making its individual contribution difficult to isolate from the associated scaffold changes. To address this, we compare a debugger-only agent against a bash-only agent on all 500 SWE-bench Verified instances, holding the rest of the scaffold fixed. We evaluate both architectures on two models, GPT-OSS-120B and Nemotron-3-Ultra-550B, with three independent runs per architecture $\times$ model configuration. Crucially, to distinguish interface specialization from expanded coverage under repeated sampling, we introduce pass$_X$@$k$, a cross-agent pass@$k$ that provides an unbiased estimator of the probability that at least one of $k$ agents is successful. Although the bash and debugger agents solve partially disjoint subsets of the benchmark in any single pair of runs, our pass$_X$@$2$ estimator reveals that this is largely due to run-to-run variance rather than tool complementarity. Across both models, we find that two bash rollouts outperform the combination of one bash and one debugger rollout. Our findings highlight the importance of accounting for stochastic variance in evaluating agent and tool diversity, and we hope that pass$_X$@$k$ will serve as a useful framework for the community.
+
+\end{abstract}
+
+\section{Introduction}
+Most coding agents, including production-grade assistants \cite{anthropic_claudecode,openai_codex,github_copilot}, debug programs primarily through a shell: inserting print statements, executing code, and parsing outputs or exception stack traces. Although several works have demonstrated benefits from execution state inspection for agentic program repair \cite{zhong2024ldb, xiang2026adi, schuler2026tracegate}, live debuggers remain underexplored as an observation and execution-control interface, despite offering a direct path to runtime state information---live stack frames, bound values, and controlled stepping---that shell-only workflows typically must reconstruct through instrumentation and run artifacts. A central question is whether this interface enables qualitatively different debugging capabilities, or merely provides an alternative way to access information that a shell-only agent can already recover. Existing debugger-enabled agents typically attach the debugger to an existing scaffold by incorporating it as a first-class tool \citep{yuan2025debuggym, liu2025agenttd, liu2026swepdb} or as part of a multi-agent system \citep{wang2025inspectcoder, garg2026debug2fix, guo2026swedoctor}. Because the debugger is additive in these studies, it is difficult to disentangle the value of the debugger's runtime evidence from the complex impact that expanding the tool-call action space or multi-agent framework can have on the policy as a whole \citep{xu2026devil}. Comparative studies are further limited by the fact that agent performance is commonly reported for a single rollout \citep{zhang2024dei, wang2025inspectcoder, garg2026debug2fix}, despite the fact that membership in the solved task set can shift dramatically under repeated sampling of the same architecture \citep{mustahsan2025stochasticity, bjarnason2026randomness}. To distinguish potential specialization between tools from stochastic variance between runs, we define pass$_X$@$k$, a cross-agent equivalent of pass@$k$ that combines $n$ runs of each of $k$ agents into a single unbiased estimator of their combined solve rate. With this metric in hand, we ask: given a live debugger \emph{instead of} a shell, how is the agent's performance impacted, and is there evidence that the two interfaces provide complementary capabilities?
+
+To answer this, we compare an agent equipped with an interactive Python debugger (\textbf{pdb-agent}) against one equipped with a general bash tool for debugging (\textbf{bash-agent}) on SWE-bench Verified \cite{jimenez2024swebench,openai2024swebenchverified}, with the model, prompts, budgets, sandbox, and all other tools held fixed. A single run of each agent misleadingly suggests that \textbf{pdb-agent} solves problems \textbf{bash-agent} misses. However, as Figure~\ref{fig:overlap} shows, the debugger-only agent's exclusive solves shrink in a repeat analysis with three runs per agent, indicating that much of its apparent specialization is sampling variance. Figure~\ref{fig:relay-curves} illustrates that two \textbf{bash-agent} rollouts outperform the combination of one \textbf{bash-agent} plus one \textbf{pdb-agent} rollout at every relay budget and under both models evaluated, while an ablation demonstrating that simultaneous access to both tools provides no apparent benefit to \textbf{bash-agent} is deferred to Appendix~\ref{app:pdb_shell}. Both the size of the performance gap and the token efficiency of the architecture are model-dependent, as shown in Figure~\ref{fig:token-budget}, with GPT-OSS paying roughly twice as much per solved problem under pdb. That said, the shell's generality cuts both ways; an interface that can execute anything is also difficult to contain, and in Section~\ref{sec:observations} we report an early run in which shell access exposed a benchmark leak. Taken together, our results provide a controlled, budget-matched comparison showing that, for these models, a live debugger neither matches a shell nor adds complementary coverage to one. We also contribute the pass$_X$@$k$ estimator, which lets any such cross-agent comparison be made with an unbiased, variance-aware statistic.
+
+\section{Related work}
+
+\textbf{Live debuggers for code repair agents.}
+Prior work has demonstrated that exposing internal execution state to an agent, either through captured evidence \cite{zhong2024ldb, schuler2026tracegate} or agent-queryable interfaces \citep{xiang2026adi}, can improve its performance at program repair. Recently, several studies have explored integrating conventional suspended-process debuggers into agent scaffolds. Debug-gym \citep{yuan2025debuggym} compares an agent with ordinary code execution capabilities against the same agent with additional pdb capabilities, finding that even the strongest models struggle to fully leverage pdb commands. A concurrent work to ours, SWE-PDB~\cite{liu2026swepdb}, also reports low utilization of runtime inspection commands in base models with pdb access, while training significantly improves both effective tool use and performance. Debug2Fix \citep{garg2026debug2fix} retains a shell-capable repair agent and delegates pdb or JDB interaction to a specialized subagent equipped with a fixed set of debugger tools. Its ablations show that exposing the debugger tools directly to the main agent is ineffective, whereas delegation improves repair performance. SWE-Doctor \citep{guo2026swedoctor} uses a dedicated debugging agent to produce structured runtime diagnoses that guide a separate patch-generation agent. InspectCoder \citep{wang2025inspectcoder} similarly separates runtime diagnosis from patch generation, assigning pdb inspection and runtime perturbation to a specialized inspector agent. The authors report 33 benchmark instances solved by InspectCoder but by none of four baselines lacking live debugger access, though this comparison is based on a single trajectory per system, making it unclear if the exclusivity of these solves is robust to stochastic variation across independent runs.
+
+\textbf{Tool and agent diversity.} Several recent works have proposed frameworks to take advantage of tool diversity through heterogeneous tool-use strategies \citep{chen2025tumix} or multi-tool aggregation \citep{yao2025multitag}. However, the effectiveness of an added tool depends not only on the new capabilities it provides, but also on how each tool is exposed and presented to the agent. \citep{xu2026devil} examines six different tool architectures with similar underlying capabilities and finds substantial differences in agent behavior, efficiency, and consistency between architectures. Our work provides an orthogonal analysis: we compare two tools with potentially different capabilities in an otherwise shared agent harness. Since each tool defines a distinct agent configuration in this setting, our analysis also relates to studies of agent diversity. \citep{zhang2024dei} compares the joint performance of $k$ different coding agents against $k$ runs of the same coding agent on SWE-bench Lite, and argues that inter-agent diversity leads to more uniquely solved instances than intra-agent sampling. However, the collective inter-agent performance of the $k$ agents relies on a single public leaderboard submission per agent rather than combining repeated independent runs per agent into an unbiased estimator.
+
+\textbf{Using pass@\(k\) for agent trajectories.} Pass@\(k\) \cite{chen2021codex}, originally defined to evaluate single-shot code generation, estimates the probability that at least one of \(k\) sampled candidates is correct. In an agentic setting, each candidate is a complete interaction trajectory rather than a single completion. Repeated sampling can therefore be used to characterize performance in long-horizon software-engineering agents \cite{yang2024sweagent,pan2025swegym, bjarnason2026randomness, zhai2026doesrlexpandcapability}. \cite{zhai2026doesrlexpandcapability} furthermore introduces pass@$(k,T)$, which generalizes agentic pass@$k$ to condition also on interaction depth $T$. We define a similar depth-conditioned estimator in Section~\ref{sec:agent-evals} and extend the pass@$k$ formalism to describe the concept of a {cross-agent} pass$_X$@$k$. 
+
+
+\section{Methods and experiments}
+
+\subsection{Experimental setting}
+We evaluate on all 500 instances of SWE-bench Verified, the human-validated subset of SWE-bench \cite{jimenez2024swebench}. Each instance specifies a repository at a base commit, an issue description, and two test sets: \texttt{\textbf{FAIL\_TO\_PASS}} (F2P), which the repair must fix, and \texttt{\textbf{PASS\_TO\_PASS}} (P2P), which must not regress. Test files are restored to their benchmark state before grading to prevent solutions through test modification. We retain known problematic instances and count them as failures rather than filtering them \cite{openai2026swebench}.
+
+We select GPT-OSS-120B \citep{openai2025gptoss} and Nemotron-3-Ultra-550B \citep{nvidia2026nemotron3ultra} as open-weight models we can deploy in secure environments. Each model is evaluated through vLLM using its default sampling configurations and medium reasoning effort. Each rollout executes in an isolated Podman container initialized from the same SWE-bench base repository state with git metadata sanitized to prevent access to the reference patch or commit history. Full provisioning, isolation, and infrastructure details are provided in Appendix~\ref{app:infra}.
+
+\subsection{Agent architectures and rollout protocol}
+
+\begin{figure}[h]
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.05\textwidth]{figs/debugger_pipeline.png}}
+    \caption{\textbf{Controlled execution interface comparison.}  The two upper bands are identical across arms: models, sampling, prompts, relay and turn budgets, sandbox, repository snapshot, and a shared substrate of navigation, testing, and editing tools. Only the execution interface differs. The \textbf{bash-agent} runs arbitrary shell commands. The \mbox{\textbf{pdb-agent}} trades the shell for a debugger session plus a scoped script runner for setup, and its edit tools stay locked until one debugger command succeeds in the current relay. The gate is the one enforced constraint in the study, added after pilot runs showed the pdb arm editing blindly without ever inspecting state.}
+    \label{fig:interfaces}
+\end{figure}
+
+We construct two matched agent architectures, \textbf{bash-agent} and \textbf{pdb-agent}, on a common harness, illustrated in Figure~\ref{fig:interfaces}. Across each architecture $\times$ model arm, we hold fixed the sampling configuration, budget, prompt scaffold, repository snapshot, sandboxes, a shared substrate of tools for navigation, testing, and editing, and a precomputed codebase map generated once per instance. 
+
+The \textbf{bash-agent} executes arbitrary shell commands through \texttt{run\_bash}. The prompt requests observation before editing, but the harness does not enforce this constraint. The \textbf{pdb-agent} has no arbitrary shell access. It retains restricted Python execution for setup and interacts with a persistent debugger. Following the tool-limiting strategy of Debug2Fix \cite{garg2026debug2fix}, which disables file editing until the debugger has been called at least once, the \textbf{pdb-agent's} \texttt{replace\_text} is unavailable until at least one debugger command succeeds in the current relay. We adopted the gate after early pdb runs showed a recurring failure mode: the agent edited files without ever inspecting program state, then thrashed between the failing tests and successive blind edits until the relay budget was exhausted. Requiring one successful debugger observation before the first edit of each relay reduced this behavior in our pilot runs. We preferred the tool-level gate over stronger prompt instructions because it leaves the shared prompt scaffold lean and identical across arms. The \textbf{bash-agent} has no enforced equivalent beyond prompting. Each rollout consists of at most 10 relays, each containing at most 50 agent turns. At a relay boundary, a handoff step summarizes the current progress and initializes a fresh model context. As with standard compaction, workspace edits persist, but message history does not. We reinstate the edit gate at each relay in an effort to help prevent the flailing blind edits in the \textbf{pdb-agent}.
+
+\subsection{Evaluating and comparing agents}
+\label{sec:agent-evals}
+
+For agent (architecture $\times$ model) $m$, task $j$, and run $i \in \{1,\dots,n\}$, we let
+
+\begin{equation}
+C_{ijm}
+=
+\mathbf{1}
+\{
+\text{run } i \text{ of agent } m \text{ is correct on task } j \}
+\end{equation}
+
+and define the usual pass@$k$ estimator, 
+
+\begin{equation}
+\widehat{\text{pass@}k} = 1 - \frac{\binom{n-c_{jm}}{k}}{\binom{n}{k}}, \ c_{jm} = \sum_{i=1}^n C_{ijm},
+\end{equation}
+
+which estimates the probability that at least one out of $k$ runs of agent $m$ will succeed on task $j$ (estimated by sampling $n \geq k$ runs of the same architecture). 
+
+To evaluate the benefits of a diverse agent portfolio of $k$ agents against a baseline where the same compute is allocated to $k$ runs of a single agent, we define the \textbf{cross-pass-at-k} estimator, pass$_X$@$k$:
+
+\begin{equation}
+\widehat{\text{pass}_{X}\text{@}k} = 1 - \prod_{m=1}^k \frac{\binom{n-c_{jm}}{1}}{\binom{n}{1}} = 1 - \frac{1}{n^k}\prod_{m=1}^k ({n-c_{jm}}),
+\label{eq:cross-pass-at-k}
+\end{equation}
+
+where the second term is the probability that all $k$ agents fail on task $j$. Appendix~\ref{app:unbiased_estimator} establishes unbiasedness under iid sampling within, and mutual independence between, each agent's set of runs.
+
+In our work, we compare two agents and sample three runs per agent, so $n=3$\footnote{Our definition explicitly assumes each agent is sampled an equal number of times.} and $k=2$, and the intra- and inter-agent pass@2 are, respectively,
+
+\begin{align}
+    \widehat{\text{pass@2}}_{mm} &= 1 - \frac{\binom{3-c_{jm}}{2}}{3}  \label{eq:intra-pass2}\\
+    \widehat{\text{pass}_{X}\text{@}2}_{mm^\prime} &= 1 - \frac{(3-c_{jm})(3-c_{jm^\prime})}{9},
+    \label{eq:special-case}
+\end{align}
+
+where the latter captures the probability that a pair of (bash, pdb) runs will solve task $j$.
+
+
+We can also threshold these statistics by the number of relays $r$, letting $C_{ijm} \rightarrow S_{ijm}(r)$:
+
+\begin{align}
+S_{ijm}(r) &= \mathbf{1} \{ \text{run } i \text{ of agent } m \text{ is correct on task } j \text{ and } R_{ijm} \leq r \}
+\label{eq:eqn_6} \\
+s_{jm}(r) &= \sum_{i=1}^n S_{ijm}(r)
+\label{eq:eqn_7}
+\end{align}
+
+where $R_{ijm}$ is the number of relays used by this observed run \cite{zhai2026doesrlexpandcapability}.
+
+\section{Results}
+
+
+\subsection{Overall performance by model and architecture}
+\label{sec:performance}
+
+The final scores of each model $\times$ architecture arm is given in Table~\ref{tab:main} and plotted as a function of relay budget in Figure~\ref{fig:relay-curves}. With three independent runs for each of the four arms, we report pass@$k$ and its complement (pass\^{}$k$, the probability that all $k$ draws succeed) for $k=2$ and $k=3$. For pass@1, which is equivalent to the mean over the three runs, we also report the standard deviation.
+
+\begin{table}[h!]
+  \caption{Correctness rates by model and architecture, averaged over the entire dataset and with a maximum budget of $10$ relays. For pass@$1$ (i.e. the mean over three runs), we also report st. dev.}
+  \label{tab:main}
+  \centering
+  \small
+  \begin{tabular}{llccccc}
+    \toprule
+    \textbf{Model} & \textbf{Arch} & \textbf{pass@1}
+      & \textbf{pass@2} &  \textbf{pass@3} & \textbf{pass\^{}2} & \textbf{pass\^{}3} \\
+    \midrule
+    \multirow{3}{*}{Nemotron-3-Ultra ($n{=}500$)}
+        & bash & 56.7 $\pm$ 1.2 & 62.7 & 65.4 & 50.7 & 47.4 \\
+        & pdb  & 49.6 $\pm$ 1.4 & 55.9 & 59.2 & 43.3 & 40.4 \\
+        & cross & - & 60.3 & - & - & - \\
+      \midrule
+      \multirow{3}{*}{GPT-OSS-120B ($n{=}500$)}
+        & bash & 56.7 $\pm$ 0.6 & 64.7 & 68.8 & 48.7 & 44.8 \\
+        & pdb  & 40.3 $\pm$ 0.8 & 47.8 & 51.2 & 32.7 & 28.6 \\
+        & cross & - & 60.0 & - & - & - \\
+      \bottomrule
+  \end{tabular}
+\end{table}
+
+Figure~\ref{fig:relay-curves} shows substantial performance gains from scaling sampling breadth $k$, an effect that remains consistent across observed relay depths and all architecture $\times$ model arms. Furthermore, \textbf{bash-agent} demonstrates a substantial lead over \textbf{pdb-agent} under both models, which perform comparably under this architecture. However, when only pdb tools are available, Nemotron-3-Ultra substantially outperforms GPT-OSS, and this margin is consistent across sampling breadth and relay depth. 
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.6\linewidth]{figs/pass_by_tokens_linear.png}
+  \caption{Share of runs solved at or under a given per-run spend threshold for each of the four arms.}
+  \label{fig:token-budget}
+\end{figure}
+
+Analyzing performance as a function of token spend in Figure~\ref{fig:token-budget}, we see highly model-dependent efficiency curves, which may also inform the observed asymmetry in the pdb vs. bash gap between models. Nemotron's token spend is greater than GPT-OSS's (its median solved run costs several times more tokens) and scales similarly for either agent architecture, whereas the debugger agent roughly doubles the token cost per solved problem for GPT-OSS, which is able to exploit the bash tool relatively cheaply but quickly plateaus in performance as the token budget is increased.
+
+\subsection{Cross-architectural performance by model}
+\label{sec:cross-performance}
+
+We also ask whether the two interfaces are complementary: for a given model, are there classes of problems where a debugger or a shell is the higher-leverage tool? In Figure~\ref{fig:relay-curves}, we see that the combination of a bash run and a pdb run (green triangles) consistently performs worse than two bash runs (red circles), a result that holds for both models and across all relay budgets.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figs/relay_curves.png}
+\caption{Cumulative solve rate as a function of relay budget. Dotted curves are pass@1, with the shaded envelope spanning the three seeds. Solid curves are pass@2. Two bash rollouts (solid red) dominate the pass$_X$@2 of one bash + one pdb rollout (green, dashed) at every relay threshold. The oracle reranker (gray, dotted) unions all six runs at $3\times$ the budget and is plotted as a ceiling.}
+  \label{fig:relay-curves}
+\end{figure}
+
+\FloatBarrier
+
+Figure~\ref{fig:overlap} highlights how the subset of instances that are seemingly solved by one agent but not the other shrinks substantially once all three seeds per arm are pooled. We conclude that any apparent specialization is mostly sampling variance between runs rather than a difference in what the two interfaces can solve. As an additional ablation, we test whether pass@1 is affected when adding the debugger alongside the shell, finding it fails to improve performance (see Appendix~\ref{app:pdb_shell}).
+
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{figs/overlap.png}
+  \caption{Who solved it. Top row: what a single-seed comparison sees (mean over all nine pairings). Bottom row: comparing the unions of the full three runs per architecture.}
+  \label{fig:overlap}
+\end{figure}
+
+
+\subsection{Additional observations}
+\label{sec:observations}
+
+\paragraph{Complexity strata.} We stratify instances by gold-patch size (files touched and lines changed) as a rough proxy for bug complexity. As discussed in Appendix~\ref{app:strata}, pass rates fall under both arms as patches grow, but the bash--pdb gap shows no consistent trend. Most gold patches are small, with only 22 of the 500 instances in the 3+ file bucket and eight in the $>$100-line bucket, which limits our ability to conclusively determine whether debuggers help solve more complex bugs.
+
+\paragraph{Shell access leak.} In an early run, the bash agent (Nemotron) used \texttt{git} to traverse the repository's commit history until it found the gold patch and then applied it. We subsequently sanitized every workspace (remotes removed, all refs but \texttt{HEAD} deleted, reflog expired) and added a tool-level guard on \texttt{git} invocations (see Appendix~\ref{app:infra}). The episode illustrates a structural property of the comparison: an unstructured shell exposes the entire environment, including artifacts the benchmark assumes hidden, so containment must be added piecemeal. 
+
+\paragraph{Tool-name aliasing.} A recurring tool-use failure mode was the model calling a tool by a plausible name it does not have e.g. reaching for \texttt{search\_replace} when the registered tool is \texttt{replace\_text}. Registering aliases that map the names models actually reach for onto the intended tool converted these failed calls into successful ones at no cost to the interface, eliminating a class of wasted rounds. 
+
+\section{Conclusions, limitations, and future work}
+We investigate the effect of replacing, rather than adding, a bug-fixing agent's shell-based debugging channel with a live debugger, while holding all else equal. Despite the initial appearance of interface complementarity under a single-seed, Debug2Fix-style pilot study (described in more detail in Appendix~\ref{app:prelim}), we find that allocating a rollout to each architecture performs worse than allocating two rollouts to the \textbf{bash-agent} when evaluated under a budget-matched pass$_X$@$2$. However, our study is limited to two open-weight reasoning models and a single debugger; different models and debugging interfaces may yield different performance curves. An important confounding factor is the unknown extent to which each underlying model has been trained on particular tools, and on the benchmark itself: the Nemotron-3-Ultra technical report lists SWE-bench Verified among the public seed sets for its agentic post-training data, without specifying the split \cite{nvidia2026nemotron3ultra}, so some of its bash familiarity may be instance-specific rather than general. Additionally, SWE-bench Verified is a Python-only benchmark whose instances may under-represent the long-horizon, state-dependent failures that often necessitate execution-state inspection. SWE-bench Verified's complexity strata are too sparse at the hard end ($n{=}22$ for 3+ files, $n{=}8$ for $>$100 lines) to draw robust conclusions about relative performance on this sub-class of problems. In future work, we plan to expand our evaluation to more diverse tasks featuring stateful runtime failures, and to explore how our results change after fine-tuning the models on general pdb tool use.
+
+\FloatBarrier
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\newpage
+
+\appendix
+\input{appendix} 
+
+
+\end{document}

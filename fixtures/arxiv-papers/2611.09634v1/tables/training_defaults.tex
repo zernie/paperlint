@@ -1,0 +1,39 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Default hyperparameters for online training.}
+\label{tab:impl-defaults}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Setting & Value \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Optimization}} \\
+Optimizer & AdamW \\
+Learning rate & $10^{-6}$ \\
+Learning rate schedule & Cosine decay \\
+Adam $(\beta_1,\beta_2)$ & $(0.9,0.999)$ \\
+Adam $\epsilon$ & $10^{-8}$ \\
+Weight decay & $0$ \\
+Maximum gradient norm & $1$ \\
+Precision & BF16 \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Online updates}} \\
+Optimizer updates & $500$ \\
+Responses per prompt & $8$ \\
+Responses per optimizer update & $64$ \\
+Lower and upper clipping offsets & $(0.20,0.28)$ \\
+Reference KL coefficient & $0.2$ \\
+Advantage normalization $\epsilon$ & $10^{-4}$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Adapters}} \\
+Rank per adapter & $8$ \\
+LoRA scaling $\alpha$ & $128$ \\
+LoRA dropout & $0$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Training generation}} \\
+Temperature & $0.6$ \\
+Top-$p$ & $0.95$ \\
+Maximum response tokens & $1{,}024$ - $512$ \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,22 @@
+\begin{table}[ht]
+    \caption{Impact of updating encoder/decoder using the reconstruction loss on performance and evaluation time. \textit{Frozen} denotes our default TT-MBRL setting where encoder and decoder parameters are fixed at test time; \textit{Unfrozen} allows them to be updated. We report the evaluation time per episode.}
+    \centering
+    \setlength{\tabcolsep}{11pt}
+    \begin{tabular}{lccccc}
+    \toprule
+    \textbf{Method} & \textbf{w/o TT-MBRL} & \multicolumn{2}{c}{\textbf{Episode Score}} 
+      & \multicolumn{2}{c}{\textbf{Eval. Time (hours)}} \\
+    \cmidrule(lr){3-4} \cmidrule(lr){5-6}
+    & & \textbf{Frozen} & \textbf{Unfrozen} & \textbf{Frozen} & \textbf{Unfrozen} \\
+    \midrule
+    \multicolumn{6}{l}{\textit{Memory Maze 2D 15$\times$15}}\\ 
+    DreamerV3 & $\hphantom{0}46.2$ & $\mathbf{185.0}$ & $181.4$ & $\mathbf{0.31}$ & $0.35$ \\
+    TWISTER   & $\hphantom{0}72.0$ & $240.1$ & $236.4$ & $\mathbf{0.25}$ & $0.27$ \\
+    R2I       & $171.6$ & $244.3$ & $\mathbf{247.5}$ & $\mathbf{0.06}$ & $0.06$ \\
+    \midrule
+    \multicolumn{6}{l}{\textit{Memory Maze 15$\times$15}}\\ 
+    R2I       & $42.0$ & $\mathbf{54.1}$ & $53.8$ & $\mathbf{0.65}$ & $1.04$ \\
+    \bottomrule
+    \end{tabular}
+    \label{table:freezing}
+\end{table}

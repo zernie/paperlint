@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "meta.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/model.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/equilibrium.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/monoculture.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/identification.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/empirical.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/related.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/disclosure.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/acknowledgements.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/win_rate.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/no_equilibrium.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/experimental_details.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/ablations.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix/equilibrium_proofs.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "1c6eff4ac99abdc10bf83423f37772d13499527eac1b48a23ed308db3b59d381",
+    "meta.tex": "363a1c3a5b3e203057236056632e0aa79ad9445e6420c04a20ab9871f9572d8c",
+    "sections/abstract.tex": "b028b2fc6fe09cd4782a29d35d7a23558f7b94f8f362bdd2ab0b6054857a92b1",
+    "sections/introduction.tex": "996703e71185afd9f65d7ca62c1c693353af20aadece46261c126e6139dc1d20",
+    "sections/model.tex": "2c0a4f18bae6cd6ec96e14e8aaf19a5b3601e0e35fca89d6c2fbf75df9e72e2e",
+    "sections/equilibrium.tex": "fa5ca2b68cfdc03c168d08ac82742a5f37888bc32170c275b1793c4bc689d51c",
+    "sections/monoculture.tex": "c924839ff00afb210eac32d5e6e0752d253cd78f164e782d58c710b024fd098c",
+    "sections/identification.tex": "abdf1bdbcabde191c47b8ed1f37f0fb5eddc01fd092ceb0d1ab21aef260ce691",
+    "sections/empirical.tex": "fae4b89e55df4229a08757a51a2adab03e7d05f622192ac0340e8302725c4921",
+    "sections/discussion.tex": "7973ea86a3c6031b45bd1ea92543e97019d69d7f6cfa5e48567d55fcec6d227c",
+    "sections/related.tex": "4829a9b00e021e8d4b09f1028024e5e6230fcc579ecb8d628cef9d91eb34cbfc",
+    "sections/conclusion.tex": "0ea908cf4c24f8c281005e54c884a33a9f279be6aee1e037b801db9e0cc49388",
+    "sections/disclosure.tex": "d83a62515b43a553e2e08335925020b0e20779437eba27802455b4512c3f2cc2",
+    "sections/acknowledgements.tex": "5308de8659aed9fc6dcb57768499d74570ee46d76327dab9e5e69d9407817a4a",
+    "appendix/win_rate.tex": "37249b1e6cc4ee0df110a697dc62730aecdceeae0eea8bf03fff2a5772bdd088",
+    "appendix/no_equilibrium.tex": "7757ce63804ec985c465b82d1ce1220fe00b31c1e23f178dd7c16cc4e7059306",
+    "appendix/experimental_details.tex": "b39fa60967c77940edda79c530aac61af1db267c802859b32c46bb1de219e9af",
+    "appendix/ablations.tex": "9703a42cbcbe214f2583e4011f127d905b8b0458049e44c236ced60411609c33",
+    "appendix/equilibrium_proofs.tex": "1b2391bdbdd1c0a330ed320d86a74967098e14ffa16e09aac027c766b930ac1e"
+  }
+}

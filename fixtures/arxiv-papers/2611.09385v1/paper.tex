@@ -1,0 +1,28 @@
+\documentclass[]{fairmeta}
+
+\title{Against All Likelihood}
+
+\author[1]{David Lopez-Paz}
+
+\affiliation[1]{FAIR at Meta}
+
+\abstract{Maximum likelihood is the dominant training principle for large language models, yet likelihood is neither necessary nor sufficient for truth. Unlikely events happen every day, and frequently repeated statements can be false. Drawing on a philosophical tradition that ties objectivity to invariance rather than probability (from Nozick's account of objective facts and Wigner's principles of invariance to the structural realism of Poincar\'e and Cassirer), we argue that the truth of a statement should be judged not by its probability under a single distribution, but by its invariance across relevant transformations of the environment. We connect this view to machine learning literature on out-of-distribution generalization and invariant learning, sketch how invariance could be tested at inference time with language models, and discuss implications for continual learning.}
+
+\date{\today}
+
+\usepackage{amsmath,amssymb}
+\usepackage{etoolbox}\AtBeginEnvironment{quote}{\small}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\begin{document}
+
+\maketitle
+
+\input{aal}
+
+\clearpage
+\newpage
+\bibliographystyle{assets/plainnat}
+\bibliography{references}
+
+\end{document}

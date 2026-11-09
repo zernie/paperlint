@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "tab/inverse_convergence.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "bdbdba55b99cbdaefb7773683e8ed1419c96e87649d4f37758821322908b1ca3",
+    "math_commands.tex": "7937fec6091c7ccc105f2fc43ff22c1679ca27a82c2a4ea88b154e298f4d4eed",
+    "tab/inverse_convergence.tex": "f353f6ecc759d4fe77102497ab9f0da19530ac0a58edf84711642746006c46e8"
+  }
+}

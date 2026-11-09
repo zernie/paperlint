@@ -1,0 +1,13 @@
+\begin{figure*}[t]
+\centering
+\subfloat[H100: \texttt{WG0} issues the tile copies using TMA, and two consumer warpgroups alternate even and odd tiles.\label{fig:arch-hopper}]{%
+  \includegraphics[width=\textwidth]{assets/fig_arch_timeline_sm90.pdf}}
+
+\subfloat[B200: \texttt{WG0} issues the tile copies and \texttt{tcgen05} matrix instructions, while \texttt{WG1}--\texttt{WG3} prepare KV operands, apply affine folding, and compute softmax on CUDA Cores.\label{fig:arch-blackwell}]{%
+  \includegraphics[width=\textwidth]{assets/fig_arch_timeline_sm100.pdf}}
+\caption{\sys{}'s Hopper and Blackwell pipelines.
+$\mathrm{FP}(X)$ constructs $X$'s floating-point Tensor Core operand from packed integers (\Cref{sec:design-unpack}).
+\texttt{corr.}\ denotes the output correction, and \texttt{WG}$x$ \texttt{W[}$y$\texttt{]} denotes warpgroup $x$, warp $y$.
+Dashed boxes execute only for the corresponding K or V quantization axis.}
+\label{fig:arch-timeline}
+\end{figure*}

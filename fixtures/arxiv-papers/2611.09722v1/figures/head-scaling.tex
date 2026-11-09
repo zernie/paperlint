@@ -1,0 +1,13 @@
+\begin{figure}[t]
+  \centering
+  \captionsetup[subfloat]{farskip=2pt}
+  \includegraphics[width=\columnwidth]{assets/head-scaling-legend.pdf}
+  \par
+  \subfloat[Batch 1.\label{fig:head-scaling-b1}]{%
+    \includegraphics{assets/head-scaling-b1.pdf}}
+  \hfill
+  \subfloat[Batch 8.\label{fig:head-scaling-b8}]{%
+    \includegraphics{assets/head-scaling-b8.pdf}}
+  \caption{\sys{} INT2 speedup over FlashInfer BF16 across $H_{KV}$ at 128K context ($H_Q=32$, $D=128$).}
+  \label{fig:head-scaling}
+\end{figure}

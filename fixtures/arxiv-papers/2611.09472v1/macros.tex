@@ -1,0 +1,23 @@
+\newcommand{\method}{\textsc{Engram}}
+\newcommand{\memory}{\mathcal{M}}
+\newcommand{\replay}{\mathcal{R}}
+\newcommand{\skills}{\mathcal{S}}
+\newcommand{\dataset}{\mathcal{D}}
+\newcommand{\probe}{\mathcal{V}}
+\newcommand{\ind}{\mathbb{I}}
+\newcommand{\emptyresult}{\phantom{00.00}}
+\newcommand{\na}{\textnormal{n/a}}
+\newcommand{\weights}{\mathrm{W}}
+\newcommand{\external}{\mathrm{M}}
+\newif\ifdraftpaper
+\draftpaperfalse
+\definecolor{draftgray}{HTML}{666666}
+\definecolor{engblue}{HTML}{EAF2FC}
+\definecolor{engpurple}{HTML}{F1ECF7}
+\definecolor{enggreen}{HTML}{EAF3E8}
+\definecolor{engyellow}{HTML}{FFF4DA}
+\definecolor{engred}{HTML}{FAEAE8}
+\newcommand{\pending}[1]{\ifdraftpaper\textit{#1}\fi}
+
+\newcommand{\bestresult}[1]{\cellcolor{enggreen}{\bfseries\boldmath #1}}
+\newcommand{\secondresult}[1]{\cellcolor{engyellow}{#1}}

@@ -1,0 +1,420 @@
+% \clearpage
+
+% \section{Illustration for Lemma \ref{CoTAmplification}} \label{app:padding-outline}
+
+% \begin{center}
+%   \resizebox{\linewidth}{!}{\input{proof-outline}}
+%   \captionof{figure}{Padding argument for Lemma \ref{CoTAmplification}. Write $m=|X|$ and $N=m+f(m)$, with $f$ chosen as in the proof. The transformer $T'$ simulates $T$ on a padded input with essentially the same absolute CoT budget. The assumed class equality yields a transformer $S$ with budget $O(r(N))$. Finally, $R$ generates the padding using CoT and simulates $S$. Dashed vertical lines separate supplied input from generated tokens; gray blocks denote padding. Bar lengths are schematic.}
+%   \label{fig:padding-outline}
+% \end{center}
+
+
+\section{Transformer Definition} \label{sec:transformer def}
+
+A transformer is a neural network and a function $\Sigma^* \to \Sigma$. In this paper, we work with \textit{decoder-only} transformer. We define the model and its components below. We then explain assumptions for our constructions. 
+
+\begin{definition}
+    A decoder-only transformer with $H$ heads, $L$ layers, model dimension $d$ consists of the following components:
+    
+    \begin{enumerate}
+        \item \textbf{Embedding function:}
+        \[
+        e : \Sigma \times \mathbb{N} \to \R^d.
+        \]
+        where for $a \in \Sigma$, $t \in \N$, input length $n$, we define:  
+        \begin{equation}
+            e(a, t) = \WE(a) + \PE_n(t).
+        \end{equation}
+        $\WE, \PE_n$ are a word embedding function and a positional encoding function, respectively, where
+        \begin{align*}
+            &\text{WE} : \Sigma \to \R^d \\ 
+            &\text{PE}_n : [n] \to \R^d \text{ for $n \in \N$}.
+        \end{align*}
+        In particular, positional encoding is dependent on the length of the input string (see \cite{Strobl_2024} for remarks on this). 
+        
+        \item \textbf{Attention heads:} 
+        For each layer $\ell \in [L]$ and head $k \in [H]$:
+        \begin{align*}
+            s_k^\ell &: \R^d \times \R^d \to \R 
+            \quad \text{(similarity / score function)}, \\
+            v_k^\ell &: \R^d \to \R^d
+            \quad \text{(value function)}.
+        \end{align*}
+    
+        \item \textbf{Activation block (feedforward + skip-connection):}
+        For each layer $\ell \in [L]$,
+        \[
+        f^\ell : (\R^d)^{H} \times \R^d \to \R^d \quad\text{(activation function)}.
+        \]
+    
+        \item \textbf{Output function:}
+        \[
+        \gamma : \R^d \to \R^d.
+        \]
+    \end{enumerate}
+
+\end{definition}
+\begin{definition}  
+    Given an input sequence $x = (x_1, \dots, x_n) \in \Sigma^n$. We define one decoding step $\Sigma^n \to \Sigma$ of a decoder-only transformer as follows. 
+    
+    \begin{enumerate}
+        \item \textbf{Embeddings:} 
+        \[
+        \x_i^{(0)} = e(x_i, i) \quad \text{for } i \in [n].
+        \]
+
+        \item \textbf{Multihead Self-attention:} For each layer $\ell \in [L]$ and each position $i \in [n]$, we compute $H$ attention heads. For head $k \in [H]$, we compute:  
+        \begin{equation*}
+            \a_{i}^{\ell, k} = \sum_{j=1}^{c(i)} \frac{s_k^\ell(\x_i^{(\ell-1)}, \x_j^{(\ell - 1)})}{Z_i^{\ell, k}} \cdot v_k^\ell(\x_j^{(\ell - 1)}), \quad\text{where } Z_{i}^{\ell, k} = \sum_{j=1}^{c(i)} s_k^\ell(\x_i^{(\ell - 1)}, \x_{j}^{(\ell - 1)}),
+        \end{equation*}
+        where $c(i)$ is $i$ for causal attention. 
+
+        We define $s = s_k^\ell$ and $v = v_k^\ell$ as follows (note that we drop $\ell, k$ for conciseness). $s$ has two affine linear transformations $\R^d \to \R^d$ parametrized by $(\W_q, \b_q)$ (for queries) and $(\W_k, \b_k)$ (for keys) as parameters. Likewise, $v$ has one affine linear transformation $(\W_v, \b_v)$ (for values) as parameter.  
+    
+        \begin{align}
+            &s(\x_i, \x_j) = \exp\bigg(\frac{\q_i^T \mathbf{k}_j}{\sqrt{d}} + \mask(i,j)\bigg), \\
+            &v(\x_j) = \W_v \bar{\x_j} + \b_v
+        \end{align}
+        where $\bar{\x}_i = \mathcal{N}_1(\x_i)$, where $\mathcal{N}_1 = \Ncal_1(\ell)$ is either a multi-layernorm (defined below) or an identity function,
+        \begin{align}
+            &\q_i = \W_q \bar{\x_i} + \b_q \\
+            &\k_i = \W_k \bar{\x_i} + \b_k, 
+        \end{align}
+        and $\mask$ is the attention masking function (defined below).
+
+        Attention mask function, denoted $\mask : \N \times \N \to \{-\infty, 0\}$, decides whether keys get attended to or not. $\mask$ takes a query and a key as inputs and returns $-\infty$ if the key is forbidden from the query. $\mask$ returns $0$ otherwise. For instance, attention mask function for (standard) causal masking is: 
+        \begin{equation*}
+            \mask(i,j) = \begin{cases}
+                0 &\text{if $j \leq i$}, \\ 
+                -\infty &\text{otherwise.}
+            \end{cases}
+        \end{equation*}
+        Different mask functions are studied (for example, see \cite{Swietojanski23}).
+
+        \item \textbf{Activation block:} 
+
+        The activation function $f = f^\ell$ first aggregates attention heads' outputs, and then feeds the results through a feedforward network (with skip-connection).
+
+        For each position $i$, $f$ takes as input attention heads' outputs $\a_{i,1}, \dots, \a_{i, H} \in \R^d$ and the previous layer value $\x_i = \x_i^{(\ell -1)}$.  
+
+        First $f$ sums up outputs for heads, yielding \begin{equation}
+            \a_i = \sum_{k = 1}^H \a_{i,k}.
+        \end{equation}
+        $\a_i$ is then passed through a linear transformation, and then a two layer feedforward (FFW) network (with a multi-layernorm (or identity), a non-linearity, and skip-connections in between) as follows 
+        \begin{align}
+            &\o_i =  \W_0 \a_i + \b_0 + \x_i \\ 
+            &\bar{\o}_i = \mathcal{N}_2(\o_i) \\
+            &\x'_i = \W_2 \,\ReLU(\W_1 \bar{\o}_i + \b_1) + \b_2 + \o_i.  
+        \end{align} 
+        Then, we get that $\x_i^{(\ell)} = \x'_i$.
+
+        \item \textbf{Output:}
+        The final output at position $i$ is
+        \[
+        \y_i = \gamma(\x_i^{(L)}), 
+        \]
+        where $\gamma$ is an affine linear transformation from $\R^d \to \R^d$, parametrized by $(\W, \b)$. 
+    \end{enumerate}
+\end{definition}
+
+
+\begin{remark}
+    With the definition above, parameters for a decoder-only transformer, denoted $T$, include:
+
+    \begin{itemize}
+        \item Embedding dimension ($d$), number of heads ($H$), number of layers ($L$). 
+        \item Word embedding function $\WE$ and positional encoding functions $\PE_n$ (for $n \in \N$). 
+        \item Attention mask function. Default to be causal mask.
+        \item For each attention head: 3 affine linear transformations $(\W_q, \b_q), (\W_k, \b_k), (\W_v, \b_v)$, where $\W$ denotes the linear transformation, and $\b$ denotes the affine part. 
+        \item For each layer: 2 multi-layernorms $\Ncal_1$ and $\Ncal_2$ (which can be identity); an affine linear transformation $(\W_0, \b_0)$; a 2-layer FFW network (parametrized by $(\W_1, \b_1)$ and $(\W_2, \b_2)$).
+        \item For output function: an affine linear transformation $(\W, \b)$. 
+    \end{itemize}
+\end{remark}
+
+\begin{remark}
+    For \textit{saturated attention} (also known as \textit{ average-hard attention}), we modify multihead self-attention as follows 
+    \begin{align}
+        &\a_i^{\ell, k} = \sum_{j=1}^{c(i)} \alpha_{i,j}^{\ell, k} v_k^\ell(\x_j^{(\ell - 1)}),
+    \end{align}
+    where $(\alpha_{i,j})_{j=1}^{c(i)} = \hardmax(s(\x_i, \x_1), s(\x_i, \x_2), \dots, s(\x_i, \x_{c(i)}))$. We define $\hardmax$ to take as input a vector of real numbers, and return a probability distribution (of the same dimension) whose weights are equally distributed between the maximum positions, and $0$ elsewhere. 
+
+    Based on current theoretical results, saturated attention appears to be computationally equivalent to softmax attention, in the sense that no separation between them is known (see Table 1 of \cite{Strobl_2024}). From a practical point of view, trained softmax systems usually exhibit attention concentrated almost equally on a few dominant positions. Thus, the work of \cite{merrill2022saturated} argues that average hardmax is a realistic approximation of how Transformers behave in practice. This motivates average hardmax as a reasonable and mathematically simple abstraction of softmax attention.
+\end{remark}
+    
+\begin{definition}[Multi-layernorm, \cite{merrill2023expressive}]
+    Layernorm is defined as 
+    \begin{equation}
+        \layernorm(\x) = \frac{\x'}{||\x'||},
+    \end{equation}
+    where $\x' = \x - \text{mean}(\x)$, where $\text{mean}(\x)$ computes the mean of vector $\x$. 
+
+    Then, let $\M : \R^d \to \R^d$ be a parameter matrix that projects vectors from $\R^d$ to $\R^d$. Then projected pre-norm is defined as 
+    \begin{equation}
+        \text{proj\_layer\_norm}(\v, \M) = \layernorm(\M \v).
+    \end{equation}
+    If context is clear, we write $\text{proj\_layer\_norm}(\v)$.
+
+    Next, let $d$ be divisible by $k \in \N$. For $1 \leq i \leq k$, let $\M_i : \R^d \to \R^{d/k}$ be a parameter projection matrix. let $\langle\cdot\rangle_{i=1}^k$ denote iterated concatenation. The multi-pre-norm of $\v \in \R^d$ is defined as 
+    \begin{equation}
+        \text{multi\_layer\_norm}(\v, \M_1, \dots \M_k) = \langle \text{proj\_pre\_norm}(v, M_i)\rangle_{i=1}^k.
+    \end{equation}
+    There is a result that says (compositions of) projected pre-norm can simulate multi-pre-norm. We use multi\_layer\_norm in our transformer model (we denote it by $\Ncal$).
+\end{definition}
+
+\begin{remark} \label{rmk:assumptions for our model}
+    Our constructions of decoder-only transformers assume the following: 
+    \begin{itemize}
+        \item Positional encoding (PE):
+        \begin{itemize}
+            \item PE uses the number $i$ to encode position $i$. In addition, PE may contain other fixed numbers independent of $i$ (such as those dependent on the input length).  
+    
+            \item Without loss of generality (WLOG), we assume that our transformers have PE for generated tokens. That is, $\x_i$ (for any $i > n$ where $n$ is the input length) has $i$ as PE. 
+    
+            (This can be implemented easily by just using the output function $\gamma$ to add $1$ to PE $j$ (for $\x_j$). If $j \leq n-1$, then this does not change anything, as the output is not taken to be the next token. If $j \geq n$, then that makes the PE for $\x_{j+1}$ exactly $j+1$.)
+    
+            \item By Lemma \ref{lem:i gives 1/i easily}, WLOG, we can use $1/i$ as a positional encoding value for $\x_i$. 
+        \end{itemize} 
+    
+        \item Attention: We use saturated attention.
+        \item Precision: We assume precision as in \cite{merrill2023expressive}. That is, for input of length $n$ and $r(n)$ intermediate decoding steps, precision is $O(\log(n + r(n)))$.
+        \item Attention mask: We allow slightly tailored attention mask. That is, we forbid some CoT steps from attending to a certain portion of past CoT steps. 
+        
+        Note that this is to help with writing concise proofs rather than a necessary condition.
+        \item Attention head's dimension: We don't follow the exact definition of attentions in \cite{merrill2023expressive}, as they consider dimension $d/H$ for each head. But, their model and ours can simulate each other easily. 
+        \item Layernorm: We allow the possibility of applying or not applying multi-layernorm. 
+    \end{itemize}
+
+    In particular, Theorem \ref{thm:hierrachy TIME vs CoT in MS23} still holds under our assumptions.
+\end{remark}
+
+\begin{remark}
+    Attention mask is not required for our constructions. Yet, we use attention mask to simplify our construction. We explain how to ``simulate" attention mask in Remark \ref{rmk:simulate attn mask}.
+\end{remark}
+
+\section{Primitives for Manipulating Transformers}\label{sec:manipulate}
+
+
+In this subsection we list and prove computations that we will perform with transformers in our main proofs. The following lemma is implicit in \cite{chiang2022overcoming}.  We write it in a form that we will use. 
+It essentially says that transformers can check equality between integers and a given integer.
+
+\begin{lemma} \label{lem:tran checks if c_i = t}
+    Let current prefix be $\x_1 \x_2 \dots \x_c$, where each $\x_i \in \R^6$, $\x_i = \begin{bmatrix}c_i & t & 0 & 0 & 0 & 0\end{bmatrix}^T$, for $c_i, t \in \Z$. Then, there exists a decoder-only transformer with 1 layer (which has 1 head) that, for any $\x_i$, computes $\1(c_i = t)$ and saves into dimension $6$. That is, there exists a decoder-only transformer that returns $\begin{bmatrix}
+        c_i &t &0 &0 &0 &\1(c_i = t)
+    \end{bmatrix}^T$.    
+\end{lemma}
+
+\begin{proof}
+
+    We design a transformer $T$ as follows: 
+    \begin{itemize}
+        \item Dimension: $6$; number of layers: $1$; number of heads per layer: $1$. 
+        \item $\WE$, $\PE$: not applied, since inputs are already given to vector form. 
+        \item For layer $1$: put $\Ncal_1 = \Ncal_2 = \identity$; put $\W_0^{1} = \I$ and $\b_0 = \0_{6 \times 1}$. We specify $(\W_1^1, \b_1^1)$ and $(\W_2^1, \b_2^1)$ below. 
+        \item For the head in layer $1$: put $\W_v^{1,1} = \0_{6 \times 6}$ and $\b_v^{1,1} = \0_{6 \times 1}$. The effect of this is to make head output $\a_i^{1,1} = \0_{6 \times 1}$ for all $1 \leq i \leq c$. That means, we do not want this head to have any effects. 
+        \item Output function: we put $\W = \I_{6 \times 6}$ and $\b = \0_{6 \times 1}$. 
+    \end{itemize}
+    
+    Now, fix a position $i$, with input $\x_i^{(0)} = \begin{bmatrix}c_i & t & 0 & 0 & 0 & 0\end{bmatrix}^T$.  
+
+    Consider layer $1$. The head produces $\a_i^{1,1} =  \0_{6 \times 1}$. Since there is only one head $\a_i^1 = \a_i^{1,1}$. Since we know we talk about layer $1$, we can drop the superscript $1$, and just write $\a_i = \0_{6 \times 1}$. Then, since $\W_0^1 = \I$ and $\b_0 = \0_{6 \times 1}$, we yield that $\o_i = \x_i^{(0)}$. Next, since $\Ncal_2 = \identity$, we have that $\bar{\o}_i = \x_i$. 
+
+    Now, let 
+    \begin{equation*}
+        \W_1^1 = \begin{bmatrix}
+            0 &0 &0 &0 &0 &0 \\
+            0 &0 &0 &0 &0 &0 \\ 
+            1 &-1 &0 &0 &0 &0 \\
+            1 &-1 &0 &0 &0 &0 \\
+            1 &-1 &0 &0 &0 &0 \\
+            0 &0 &0 &0 &0 &0
+        \end{bmatrix}, \qquad \b_1^1 = \begin{bmatrix}
+            0 \\0 \\-1 \\0 \\1 \\-1
+        \end{bmatrix}. 
+    \end{equation*}
+    We yield 
+    \begin{equation*}
+        \ReLU(\W_1^1 \x_i + \b_1) = \begin{bmatrix}
+            0 \\0 \\\max\{0, c_i - t-1\} \\\max\{0, c_i - t\} \\\max\{0, c_i - t +1\} \\ 0 
+        \end{bmatrix}.
+    \end{equation*}
+
+    Now, observe that since $c_i, t \in \Z$, we have 
+    \begin{equation*}
+        \1(c_i = t) = \max\{0, c_i - t - 1\} - 2\max\{0, c_i - t\} + \max\{0, c_i - t+1\}.
+    \end{equation*}
+    
+    Therefore, we let 
+    \begin{equation*}
+        \W_2^1 = \begin{bmatrix}
+            0 & 0 &0 &0 &0 &0 \\
+            0 & 0 &0 &0 &0 &0 \\
+            0 & 0 &0 &0 &0 &0  \\
+            0 & 0 &0 &0 &0 &0 \\
+            0 & 0 &0 &0 &0 &0 \\
+            0 &0 &1 &-2 &1 &0
+        \end{bmatrix}, \qquad \b_2^1 = \0_{6 \times 1}.
+    \end{equation*}
+    We obtain that $\x_i^{(1)} = \begin{bmatrix}
+        c_i &t &0 &0 &0 &\1(c_i = t)
+    \end{bmatrix}$, as desired. 
+    
+\end{proof}
+
+\begin{remark}
+    Some notes on how we use different components of transformers to build desired properties:
+    \begin{itemize}
+        \item Placeholder dimensions: we call dimensions $3$ to $5$ (informally) as placeholder dimensions. Their purpose is to save results of auxiliary calculations.  
+        \item Dimensions to save results: dimension $6$ is a dimension to save results. 
+        \item Effects of 2-layer FFW network: multiply by constants, add constants, perform ReLU, move numbers between dimensions.
+        \item Effects of skip-connection: keep original values. That is, values $c_i$ and $t$ in dimensions $1$ and $2$ are kept intact in $\x_i^{(1)}$ thanks to skip connections. 
+        \item For dimensions that we do not want to change, we can make our heads and linear transformations ignore them by ignoring respective rows/columns. Or, we can make values of the dimensions be $0$ during calculations, and then recover their original values using skip-connections.  
+    \end{itemize}
+\end{remark}
+
+
+%\begin{lemma} \label{lem:tran checks if c_i = t}
+ %   Let current prefix be $\x_1, \dots \x_c$, where each $\x_i \in \R^6$, $\x_i = \begin{bmatrix}c_i & t & 0 & 0 & 0 & 0\end{bmatrix}^T$, for $c_i, t \in \Z$. Then, there exists a decoder-only transformer with 1 layer, 1 head or the layer that, for any $\x_i$, computes $\1(c_i = t)$ and save into dimension $6$. That is, there exists a transformer that returns $\begin{bmatrix}
+%        c_i &t &0 &0 &0 &\1(c_i = t)
+%    \end{bmatrix}^T$.    
+%\end{lemma}
+
+
+
+
+We obtain the following corollary for checking if an integer $x$ is between 2 integers $t_1$ and $t_2$. 
+
+\begin{corollary} \label{cor:check t_1 <= x <= t-2}
+    Say $\x = \begin{bmatrix}
+        x &t_1 & t_2 
+    \end{bmatrix}$ where $x \in \Z$ and $t_1, t_2 \in \Z$. There exists two nested 2-layer feedforward networks (with ReLU) that compute $\1(t_1 \leq x \leq t_2)$. 
+\end{corollary}
+
+\begin{proof}
+    First, use an affine linear transformation and a ReLU (of the first feedforward network) to compute 
+    $f(x) := \ReLU(t_1 -x) + \ReLU(x - t_2).$
+    Note that $f(x) = 0$ iff $t_1 \leq x \leq t_2$. Next, use a second feedforward network to compute if $\1(f(x) = 0) \equiv \1(t_1 \leq x \leq t_2)$. 
+\end{proof}
+
+\begin{remark}
+    We can implement the nested feedforward networks of the above corollary using a transformer with $2$ layers and $3$ additional dimensions ($2$ as placeholder dimensions, and $1$ as result-saving dimension).
+\end{remark}
+
+Next, we have the following lemma for checking if $x = t$, where $t \in \R$ is given, and $x \in \R$. Note that we state our result for feedforward networks, but similar to Lemma \ref{lem:tran checks if c_i = t}, we can transfer feedforward networks to transformers by making attention heads silent and using additional dimensions (to avoid effects of skip-connections).  
+
+\begin{lemma} \label{lem: check if 2 reals equal}
+    Consider $\x = \begin{bmatrix}
+        x &t &0 &0 
+    \end{bmatrix}$ where $x, t \in \R$. Then, there exists two nested 2-layer feedforward networks (with $\ReLU$) that return $\begin{bmatrix}
+        \_ &\_ &\_ &\1(x = t)
+    \end{bmatrix}$.
+\end{lemma}
+\begin{proof}
+    First, use an affine linear transformation to get $x - t$ and $t -x $ (saved in dimensions $3$ and $4$). Then, use $\ReLU$ to get $\ReLU(x-t)$ and $\ReLU(t-x)$. Then use an affine linear transformation to get $\ReLU(x-t) + \ReLU(t-x) = |x-t|$ (saved in dimension $4$).  Next, the second 2-layer feedforward network, compute $\ReLU(1 - \infty |x-t|)$ (saved in dimension 5), where $\infty$ is a scalar. We get $1$ if $x = t$, and $0$ otherwise. 
+\end{proof}
+
+\begin{remark}
+    We can implement the two nested feedforward networks as in Lemma \ref{lem: check if 2 reals equal} by using 2 layers of a transformer, with 2 placeholder dimensions and 1 result-saving dimension. 
+\end{remark}
+
+Next, we have the following lemma from \cite{perez2021attention}. We generalize so that it works for our case. The lemma essentially says that transformer can do ``if" clauses (under some assumptions). We make an assumption that $0 \cdot \infty = 0$.
+
+\begin{lemma} \label{lem:if clause for non-neg entries}
+    Let $\x \in \R^m$ and $\y, \z \in \R_{\geq 0}^n$, and let $b \in \{0, 1\}$. There exists a two-layer feedforward network $f : \R^{m + 2n +1} \to \R^{m+n}$ such that
+    \begin{equation*}
+        f([\x, \y, \z, b]) = \begin{cases}
+            [\x, \y] &\text{if $b=0$} \\
+            [\x, \z] &\text{if $b=1$}.
+        \end{cases}
+    \end{equation*}    
+\end{lemma}
+
+\begin{proof} (Sketch)
+    Let $\vec{\infty}$ be the vector of dimension $n$ whose entries are all $\infty$'s.  
+
+    We utilize the 2-layer feedforward network to compute the following:
+    $$\ReLU(\y - b \cdot \vec{\infty}) + \ReLU(\z - (1-b) \vec{\infty}),$$
+    which equals $\y$ if $b = 0$ and $\z$ if $b = 1$.
+\end{proof}
+
+\begin{remark}
+    We can implement the feedforward network in the lemma using $2n+1$ additional dimensions (say we use $n$ dimensions to save $\y - b \vec{\infty}$, $n$ dimensions to save $\z - (1-b) \vec{\infty}$, and $1$ to save $1-b$). There can be more optimal usage of dimensions, but we don't need that. 
+\end{remark}
+
+Next, we have a lemma that essentially says transformer can multiply a vector $\x$ with a number $a \in \{0, 1\}$. 
+
+\begin{lemma} \label{lem:mult vect by 0 or 1}
+    Let $\x \in \R^d$ and $a \in \{0, 1\}$ together in a vector, denoted $\begin{bmatrix}
+        \x &a &\0_d &\0_d
+    \end{bmatrix}^T$. Then, there exists a 2-layer feedforward network (with ReLU) that returns $\begin{bmatrix}
+        \0_d &\_ &(\_)_d &a \x
+    \end{bmatrix}$. 
+\end{lemma}
+
+\begin{proof}
+    First, use the first affine linear transformation to get $$\begin{bmatrix}
+        \0_{d} &a &\x - \vec{\infty}(1-a) &-\x - \vec{\infty}(1-a)    
+    \end{bmatrix}^T.$$ 
+    Next, after ReLU, we get $$\begin{bmatrix}
+        \0_d &a &\ReLU(\x -\vec{\infty} (1-a)) &\ReLU(-\x - \vec{\infty} (1-a))
+    \end{bmatrix}.$$ Then, we use the second linear transformation to get 
+    \begin{equation*}
+        \ReLU(\x -\vec{\infty} (1-a)) - \ReLU(-\x - \vec{\infty} (1-a)) = \begin{cases}
+            1 \cdot \x &\text{if $a=1$} \\
+            0 \cdot \x &\text{if $a=0$}.
+        \end{cases}
+    \end{equation*}
+    Thus, we yield $\begin{bmatrix}
+        \0_d &\_ &(\_)_d &a \x
+    \end{bmatrix}$, 
+    as desired. 
+\end{proof}
+
+\begin{remark} We have some remarks on the previous lemma:
+    \begin{itemize}
+        \item Above, we could have done calculation on the first $d$ dimensions, but we will leave them equal to zero, and do calculations in some $d$ placeholder dimensions. The reason is that when we use feedforward network in a transformer, after all calculations, the transformer performs a skip-connection to add the original vector into the resulting vector. In our case, the first $d$ dimensions will be added by $\x$ in the end, and that may alter the results we want. Thus, we perform calculations in placeholder dimensions, which are unaltered by skip-connections.
+        
+        \item So, to multiply $\x$ by $a$, we have used $2d$-placeholder dimensions ($d$ of which are used to save the results, too).
+    \end{itemize}
+\end{remark}
+
+Next, we have a lemma that says if each $\x_i$ has $i$ as positional encoding, then for $\x_i$, we can calculate number $\frac{1}{i}$ (using a transformer). 
+
+\begin{lemma} \label{lem:i gives 1/i easily}
+    Let $\x_1, \dots, \x_n$ such that $\x_i = \begin{bmatrix}
+        i &0 &0
+    \end{bmatrix}$. Then, there exists a transformer with 2 layers that returns $\y_i = \begin{bmatrix}
+        i &\_ &\frac{1}{i}
+    \end{bmatrix}$. 
+\end{lemma}
+
+\begin{proof} 
+    Let us just write in terms of $3$ dimensions for conciseness. Let's be understood we may need to use more than $3$ dimensions for the purpose of place-holding. Say we are considering query $\x_i$.
+    
+    First, by Lemma \ref{lem:tran checks if c_i = t}, we use a layer (layer $1$) to get $\x_i^{(1)} = \begin{bmatrix}
+        i &\1(i=1) &0
+    \end{bmatrix}$. 
+Next, use a head in layer $2$ to attend uniformly over all tokens (with causal mask) with value $\1(j = 1)$. From this, we get $\frac{1}{i}$ as the result, hence obtaining $\x_i^{(2)} = \begin{bmatrix}
+        i &\_ &\frac{1}{i}
+    \end{bmatrix}$.  
+\end{proof}
+
+
+\begin{remark}
+    By Lemma \ref{lem:i gives 1/i easily}, if we have $i$ as a positional encoding for $\x_i$, we can easily obtain $\frac{1}{i}$ for $\x_i$. Thus, WLOG, we can assume $\frac{1}{i}$ as a number given from positional encoding, too.
+\end{remark}
+
+% Next, we have a lemma that says, essentially, that transformers can keep track of indices if they are given the input length. \textcolor{blue}{No need now. Probably need if want to keep track of i^2...} 
+
+% \begin{lemma}
+%     Let (embeded) inputs be $\x_1, \dots, \x_n$, where $\x_i = \begin{bmatrix}
+%         i &0 &n
+%     \end{bmatrix}^T$ (that is, PE gives the input length to each vector). Then, there exists a decoder-only transformer with ... layers, ... heads per layer that produces, for any position $i \geq n+1$, the generated token for this position is $\x_i = \begin{bmatrix}
+%         i &n &... & 
+%     \end{bmatrix}^T$. 
+% \end{lemma}
+
+
+
+
+
+

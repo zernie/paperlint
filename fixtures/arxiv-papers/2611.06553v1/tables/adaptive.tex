@@ -1,0 +1,34 @@
+\begin{table}[htbp]
+    \centering
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.9}
+    \small
+    \caption{Attack success rate (ASR) against adaptive attackers with increasing iteration budgets, comparing no defense vs.\ our method.}
+    \label{tab:adaptive_attack}
+    
+    % \begin{tabular}{l cccc}
+    %     \toprule
+    %     \textbf{Model} & \textbf{ASR@5} & \textbf{ASR@10} & \textbf{ASR@15} & \textbf{No Def.} \\
+    %     \midrule 
+        
+    %     Gemma-2-2B-it           & 0.18 & 0.21 & 0.22 & 0.70 \\
+    %     Llama-3-8B-Instruct     & 0.22 & 0.31 & 0.31 & 0.80 \\
+    %     Llama-3.2-3B-Instruct   & & &  &  \\
+    %     Qwen-3-4B               & & & &  \\
+        
+    %     \bottomrule
+    % \end{tabular}
+
+    \begin{tabular}{l cccc}
+        \toprule
+        \textbf{Model} & \textbf{ASR@5} & \textbf{ASR@10} & \textbf{ASR@15} & \textbf{No Def.} \\
+        \midrule 
+        
+        Gemma-2-2B-IT           & 0.23 & 0.26 & 0.27  & 0.71 \\
+        Llama-3-8B-Instruct     & 0.11 & 0.25  & 0.25 & 0.81  \\
+        Llama-3.2-3B-Instruct   & 0.33 & 0.38 & 0.39  & 0.74 \\
+        Qwen-3-4B               & 0.13 & 0.22 & 0.29  & 0.79 \\
+        
+        \bottomrule
+    \end{tabular}
+\end{table}

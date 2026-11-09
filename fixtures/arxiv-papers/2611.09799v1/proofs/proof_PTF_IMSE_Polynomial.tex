@@ -1,0 +1,243 @@
+\begin{proof}\textbf{of Theorem~\ref{thm: PTF IMSE lower}.}
+Denote $a_j=\|\phi(t_j)\|_2$, when $\sigma_0=0$, $x_i=\Phi\theta_i$.
+Since $\| \theta_i\|_2\le B<B', i=1,\ldots,n$, we have
+\[
+|x_{ij}|
+=
+|\phi(t_j)^\top\theta_i|
+\leq
+Ba_j
+<
+B'a_j:=c_j.
+\]
+Therefore the clipping $\operatorname{clip}(x_{ij},c_j)$ is inactive and
+\[
+\bar x^{(\mathrm{clip})}
+=
+\bar{x}
+=
+\dfrac{1}{n}\sum_{i=1}^n x_i
+=
+\Phi\bar\theta.
+\]
+It follows that the released private vector can be written as $\widetilde x
+=
+\Phi\bar\theta+Z$, where
+\[
+Z\sim N(0,\tau^2W^{-1}),
+\quad
+\tau^2=\frac{4B'^2T}{n^2\mu^2},
+\quad
+W = \mathrm{diag}\{a_1^{-2},\ldots,a_T^{-2}\}.
+\]
+We first analyze the corresponding unconstrained WLS estimator. By
+definition,
+\[
+\widetilde\theta_{\mathrm{PTF}}^{(u)}
+=
+A^{-1}\Phi^\top W\widetilde x.
+\]
+Substituting $\widetilde x=\Phi\bar\theta+Z$ gives
+\[
+\widetilde\theta_{\mathrm{PTF}}^{(u)}
+=
+\bar\theta+
+A^{-1}\Phi^\top WZ.
+\]
+Since $\operatorname{Cov}(Z)=\tau^2W^{-1}$, we obtain
+\[
+\begin{aligned}
+\operatorname{Cov}
+\left(
+\widetilde\theta_{\mathrm{PTF}}^{(u)}
+\right)
+&=
+A^{-1}\Phi^\top W
+(\tau^2W^{-1})
+W\Phi A^{-1}\\
+&=
+\tau^2
+A^{-1}\Phi^\top W\Phi A^{-1}\\
+&=
+\tau^2A^{-1}.
+\end{aligned}
+\]
+Hence $\widetilde\theta_{\mathrm{PTF}}^{(u)}-\bar\theta
+\sim
+N(0,\tau^2A^{-1})$, and therefore
+\begin{equation}
+\mathbb E
+\left\|
+\widetilde\theta_{\mathrm{PTF}}^{(u)}
+-\bar\theta
+\right\|_2^2
+=
+\tau^2\operatorname{tr}(A^{-1}).
+\label{eq: PTF unconstrained MSE}
+\end{equation}
+We next account for the constraint $\|\theta\|_2\le B'$. Let $\mathcal A=\{\|\widetilde\theta_{\mathrm{PTF}}^{(u)}\|_2>B'\}$ denote the event that the unconstrained estimator violates the
+constraint. On the complementary event $\mathcal A^c$, the
+unconstrained estimator is feasible and hence
+$\widetilde\theta_{\mathrm{PTF}}^{(c)}
+=
+\widetilde\theta_{\mathrm{PTF}}^{(u)}$.
+Therefore
+\[
+\begin{aligned}
+\mathbb E\|\widetilde\theta_{\mathrm{PTF}}^{(c)}-\bar\theta\|_2^2
+&=
+\mathbb E[
+\|\widetilde\theta_{\mathrm{PTF}}^{(u)}-\bar\theta\|_2^2
+\mathbf 1_{\mathcal A^c}]
++
+\mathbb E[
+\|\widetilde\theta_{\mathrm{PTF}}^{(c)}-\bar\theta\|_2^2
+\mathbf 1_{\mathcal A}]
+\\
+&\geq
+\mathbb E[
+\|\widetilde\theta_{\mathrm{PTF}}^{(u)}-\bar\theta\|_2^2
+\mathbf 1_{\mathcal A^c}]
+\\
+&=
+\mathbb E\|\widetilde\theta_{\mathrm{PTF}}^{(u)}-\bar\theta\|_2^2
+-
+\mathbb E[
+\|\widetilde\theta_{\mathrm{PTF}}^{(u)}-\bar\theta\|_2^2
+\mathbf 1_{\mathcal A}].
+\end{aligned}
+\]
+Thus, by Equation~\eqref{eq: PTF unconstrained MSE}, we get
+\begin{equation}
+\operatorname{IMSE}_{\mathrm{PTF}}
+\geq
+\tau^2\operatorname{tr}(A^{-1})
+-
+R_{\mathrm{PTF}},
+\label{eq: PTF remainder decomposition}
+\end{equation}
+where $R_{\mathrm{PTF}}
+=
+\mathbb E[
+\|\widetilde\theta_{\mathrm{PTF}}^{(u)}-\bar\theta\|_2^2
+\mathbf 1_{\mathcal A}]$. It remains to bound the remainder term. Let $\xi=\widetilde\theta_{\mathrm{PTF}}^{(u)}-\bar\theta$. Then $\xi\sim N(0,\tau^2A^{-1})$. Since $\|\bar\theta\|_2\le B$, the event $\mathcal A$ implies
+\[
+\|\xi\|_2
+=
+\|\widetilde\theta_{\mathrm{PTF}}^{(u)}-\bar\theta\|_2
+\geq
+\|\widetilde\theta_{\mathrm{PTF}}^{(u)}\|_2-\|\bar\theta\|_2
+>
+B'-B.
+\]
+Consequently,
+\[
+\mathcal A
+\subseteq
+\left\{
+\|\xi\|_2>B'-B
+\right\}.
+\]
+Write $\xi=\tau A^{-1/2}z,
+\ 
+z\sim N(0,I_m)$. Since
+\[
+\|A^{-1/2}z\|_2^2
+\leq
+\lambda_{\max}(A^{-1})\|z\|_2^2
+=
+\frac{\|z\|_2^2}
+{\lambda_{\min}(A)},
+\]
+we obtain
+\[
+\Pr(\mathcal A)
+\leq
+\Pr\left(
+\|z\|_2^2
+>
+\frac{(B'-B)^2\lambda_{\min}(A)}
+{\tau^2}
+\right).
+\]
+Because $\|z\|_2^2\sim\chi_m^2$, apply the chi-square tail bound in Equation~\eqref{eq: chi_square bound}, we get
+\begin{equation}
+\Pr(\mathcal A)
+\leq
+\exp\left[
+-\frac12
+\left\{
+\frac{(B'-B)\sqrt{\lambda_{\min}(A)}}{\tau}
+-\sqrt m
+\right\}^2
+\right].
+\label{eq: PTF active probability}
+\end{equation}
+Finally, by the Cauchy--Schwarz inequality,
+\[
+R_{\mathrm{PTF}}
+\leq
+\left(
+\mathbb E\|\xi\|_2^4
+\right)^{1/2}
+\Pr(\mathcal A)^{1/2}.
+\]
+For a centered Gaussian vector with covariance
+$\tau^2A^{-1}$,
+\[
+\mathbb E\|\xi\|_2^4
+=
+\tau^4
+\left[
+\{\operatorname{tr}(A^{-1})\}^2
++
+2\operatorname{tr}(A^{-2})
+\right]
+\le 
+\tau^4 [3\{\operatorname{tr}(A^{-1})\}^2].
+\]
+Therefore,
+\[
+\left(
+\mathbb E\|\xi\|_2^4
+\right)^{1/2}
+\leq
+\tau^2
+\sqrt{3}\operatorname{tr}(A^{-1}).
+\]
+Combining this inequality with Equation~\eqref{eq: PTF active probability}
+and Equation~\eqref{eq: PTF remainder decomposition} gives
+Equation~\eqref{eq: PTF lower bound}.
+\end{proof}
+
+\begin{proof}
+\textbf{of Corollary~\ref{col: IMSE Ratio for Polynomials}.}
+Write $\tau_n=\tau=2B_n'\sqrt T/(n\mu)$. Since $B_n'$ is a non-decreasing sequence  satisfying $B_n'>B$ for sufficiently large $n$, we have 
+\[
+\frac{B_n'-B}{\tau_n}
+=
+\frac{n\mu}{2\sqrt T}
+\left(1-\frac{B}{B_n'}\right)
+\longrightarrow\infty.
+\]
+Thus, the radius condition in Theorem~\ref{thm: PTF IMSE lower} holds for all sufficiently large $n$, and its exponential remainder tends to zero. Combining that lower bound with the exact noiseless FTP error in Theorem~\ref{thm: FTP IMSE} gives
+\[
+\limsup_{n\to\infty}
+\frac{\operatorname{IMSE}(\widetilde f_{\mathrm{FTP}})}
+     {\operatorname{IMSE}(\widetilde f_{\mathrm{PTF}})}
+\le
+\frac{m}{T\operatorname{tr}(A^{-1})}.
+\]
+
+Define $u_j=\phi(t_j)/\|\phi(t_j)\|_2\in\mathbb R^m$ and $A_j=u_ju_j^\top$. Then $A_j$ is a rank-one orthogonal projector with $\operatorname{tr}(A_j)=1$. By the definition of $W$, $A=\Phi^\top W\Phi=\sum_{j=1}^T A_j$, so $\operatorname{tr}(A)=T$. Let $\lambda_1,\ldots,\lambda_m>0$ be the eigenvalues of $A$. Then
+\[
+\frac{m}{T\operatorname{tr}(A^{-1})}
+=
+\frac{m}{T\sum_{k=1}^m\lambda_k^{-1}}
+\le
+\frac{\sum_{k=1}^m\lambda_k}{Tm}
+=
+\frac1m.
+\]
+The inequality follows from the harmonic mean--arithmetic mean inequality, with equality if and only if all $\lambda_k$ are equal.
+\end{proof}

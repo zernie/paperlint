@@ -1,0 +1,11 @@
+\begin{figure}[t]
+  \centering
+  \subfloat[Peak throughput across GPU generations, normalized to H100 (labels show Rubin).\label{fig:machine-balance}]{%
+    \includegraphics[width=0.49\columnwidth]{assets/machine-balance.pdf}}
+  \hfill
+  \subfloat[Instruction-issue demand per packed KV byte on H100 and B200. INT$\to$FP for converting packed integers to floating-point values; Affine is for apply scale and offset.\label{fig:ops-per-byte}]{%
+    \includegraphics[width=0.49\columnwidth]{assets/ops-per-byte.pdf}}
+  \caption{GPU throughput scaling and per-byte instruction-issue demand for operand construction and affine evaluation (\sys{} shown at four query heads per KV head and group size $128$).
+  }
+  \label{fig:reconstruction-demand}
+\end{figure}

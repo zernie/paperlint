@@ -1,0 +1,74 @@
+% Figure for Sec. 4: update flow, policy gate, and return path, flat vs. gated.
+% Preamble needs:  \usepackage{tikz}  \usetikzlibrary{positioning,calc}
+\begin{figure}[t]
+% \centering
+\scriptsize
+\begin{tikzpicture}[
+  scale=0.65,
+  transform shape,
+  ag/.style={draw, rounded corners=1pt, minimum width=11mm, minimum height=6mm, font=\scriptsize},
+  hub/.style={draw, thick, rounded corners=1pt, minimum width=26mm, minimum height=7mm, font=\scriptsize, align=center},
+  chip/.style={draw, minimum width=4.2mm, minimum height=3.4mm, font=\tiny, inner sep=1pt},
+  chipr/.style={chip, fill=gray!35},
+  lbl/.style={font=\scriptsize\itshape, align=center, text width=64mm},
+  elbl/.style={font=\tiny},
+  up/.style={->, >=stealth},
+  down/.style={->, >=stealth, densely dashed, gray},
+  bnd/.style={densely dotted, thick}
+]
+%================ (a) FLAT ================
+\begin{scope}
+\node[ag] (fa1) at (0,0) {A1};
+\node[ag] (fa2) at (2.0,0) {A2};
+\node[ag] (fa3) at (4.0,0) {A3};
+% data chips
+\node[chip, below=1mm of fa1.south, xshift=-2.6mm] (fg1) {g};
+\node[chipr, right=0.8mm of fg1] (fr1) {r};
+\draw[red!55!black, semithick] (fr1.south west) -- (fr1.north east);
+\node[chip, below=1mm of fa2.south] {g};
+\node[chip, below=1mm of fa3.south] {g};
+% global server above the boundary
+\node[hub] (fg) at (2.0,2.9) {Global server};
+\draw[bnd] (-1.2,1.7) -- (5.4,1.7);
+\node[elbl, gray, anchor=east, align=right] at (-0.25,2.0) {jurisdictional\\boundary};
+% updates
+\draw[up] (fa1.north) -- node[elbl, left=1pt, pos=0.35] {$U_g$} (fg.south -| fa1.north);
+\draw[up] (fa2.north) -- node[elbl, left=1pt, pos=0.35] {$U_g$} (fg.south);
+\draw[up] (fa3.north) -- node[elbl, left=1pt, pos=0.35] {$U_g$} (fg.south -| fa3.north);
+% return
+\draw[down] (fg.east) .. controls (5.6,2.6) and (5.6,1.0) .. (fa3.east);
+\node[elbl, gray, anchor=east, align=right] at (5.25,1.25) {global\\model};
+\node[lbl] at (2.0,-1.55) {(a) Flat federation: A1's restricted data (r) is excluded from training and improves no model.};
+\end{scope}
+%================ (b) GATED ================
+\begin{scope}[xshift=75mm]
+\node[ag] (ha1) at (0,0) {A1};
+\node[ag] (ha2) at (2.8,0) {A2};
+\node[chip, below=1mm of ha1.south, xshift=-2.6mm] (hg1) {g};
+\node[chipr, right=0.8mm of hg1] {r};
+\node[chip, below=1mm of ha2.south] {g};
+% hub, boundary, national
+\node[hub] (hr) at (1.4,2.0) {Regional hub\\[-1pt]\tiny policy gate $\cdot$ regional model $(g{+}r)$};
+\draw[bnd] (-1.2,3.15) -- (4.5,3.15);
+\node[elbl, gray, anchor=east, align=right] at (-0.25,3.45) {jurisdictional\\boundary};
+\node[hub] (hn) at (1.4,4.35) {National server};
+% updates up
+\draw[up] (ha1.north) -- node[elbl, left=1pt, pos=0.4] {$U_g,\,U_r$} (hr.south -| ha1.north);
+\draw[up] (ha2.north) -- node[elbl, right=1pt, pos=0.4] {$U_g$} (hr.south -| ha2.north);
+% outward contribution crosses the line; r stops at it
+\draw[up] ([xshift=5mm]hr.north) -- node[elbl, right=1pt, pos=0.62, align=left] {outward\\contribution $(g)$} ([xshift=5mm]hn.south);
+\draw[up, -] ([xshift=-7mm]hr.north) -- node[elbl, left=1pt] {$U_r$} ([xshift=-7mm]hr.north |- 0,3.15);
+\draw[thick] ([xshift=-8.6mm]hr.north |- 0,3.15) -- ([xshift=-5.4mm]hr.north |- 0,3.15);
+% return path
+% \draw[down] (hn.east) .. controls (5.0,4.0) and (5.0,2.6) .. (hr.east);
+\draw[down] (hn.east) .. controls (4.4,4.0) and (4.4,2.6) .. (hr.east);
+\node[elbl, gray, anchor=west, align=left] at (3.9,4.0) {global\\model};
+\draw[down] ([xshift=-8mm]hr.south) -- ([xshift=-8mm]hr.south |- ha1.north);
+\draw[down] ([xshift=10mm]hr.south) -- ([xshift=10mm]hr.south |- ha2.north);
+\node[elbl, gray, align=center] at (1.4,0.88) {combined\\model};
+\node[lbl] at (1.4,-1.55) {(b) Policy-gated hierarchy: r improves the regional model, the gate stops $U_r$ at the boundary, and agencies start the next round from the combined model.};
+\end{scope}
+\end{tikzpicture}
+\caption{Update ($U$) flow and return path for a restricted contribution. Agency A1 holds material of a global scope ($g$) and of a restricted scope ($r$) and trains one update per scope. In a flat federation (a), compliance forces A1 to exclude $r$ from training entirely. In the gated hierarchy (b), $U_r$ enters the regional model, the policy gate withholds it from the outward contribution at the jurisdictional boundary, and the returned model, national combined with regional, is the starting point of the next round.}
+\label{fig:gate_comparison}
+\end{figure}

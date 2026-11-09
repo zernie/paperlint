@@ -1,0 +1,11 @@
+\section*{Ethical Considerations Statement}
+
+\textbf{Data.} We use narratives from the CFPB public Consumer Complaint Database, which consumers consented to publish and which the CFPB scrubs of personal information before release \cite{cfpb2015,cfpbpia2023}. The CFPB states that scrubbing minimises, but does not eliminate, re-identification risk. No new data were collected from people, and no attempt was made to re-identify complainants. Rewritten guises and edits are synthetic.
+
+\textbf{Representing groups through stereotyped style.} Matched-guise designs necessarily write in the stereotyped style of a group. We use these texts as measurement instruments, not as portraits, and release them with that caveat. We recommend that they not be used to train or prompt systems that infer demographics from writing.
+
+\textbf{Anticipated adverse impacts.} We identify three. The first is misreading ``small'': a finding that average group gaps are small could be cited as clearance to deploy. It is not. The same systems are unstable for individuals (§5.2), and our results cover one task, three systems and stylised guises. The second is loss of voice. Standardisation changes how a complainant's own words reach the decision-maker. Used carelessly, it could erase signals of distress or vulnerability, or let an organisation describe a complaint in terms the complainant did not choose. We recommend standardising only the input to an automated decision, keeping the original text for the record and for human review, and auditing the standardiser itself. The third is gaming. Knowing that delivery moves decisions, or which facts move them most, could help complainants to present their cases more effectively. This arguably narrows existing advantages, but it could also help firms tune systems towards outcomes that favour them while passing group-rate audits. Reporting arbitrariness alongside profiling makes the latter more difficult.
+
+\textbf{Pre-registration and disclosure.} Every confirmatory claim was pre-registered and tested once, and every deviation is disclosed in the analysis record in the public repository (\coderepo; chronology in Appendix~\ref{app:prereg}).
+
+

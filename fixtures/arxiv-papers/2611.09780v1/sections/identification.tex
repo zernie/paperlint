@@ -1,0 +1,125 @@
+\section{Competitive Dynamics}
+\label{sec:dynamics}
+Section~\ref{sec:monoculture} characterized when developers' equilibrium capability profiles exhibit monoculture or specialization. 
+We now turn from the direction of capabilities at equilibrium to the evolution of performance levels over time. 
+In particular, we ask when competing developers become closer in performance as investment accumulates, even if differences in their capability profiles persist.
+
+Let $\mathbf{X}_{i,t} = \sum_{s=1}^t \mathbf{x}_{i,s}$
+denote developer $i$'s cumulative investment through time $t$.
+Additionally, let $\boldsymbol{\theta}_i^t = F_i(\mathbf X_i^t)$ denote developer $i$'s capability vector at time $t$.
+At each time step $t$, each developer chooses $\mathbf{x}_{i,t}$ to maximize its current-period utility:
+\[
+\frac{1}{N-1}
+\sum_{i'\neq i}\sum_k
+w_k
+\sigma\!\left(
+F_i(\mathbf{X}_{i,t-1}+\mathbf{x}_{i,t})_k
+-
+F_{i'}(\mathbf{X}_{i',t-1}+\mathbf{x}_{i',t})_k
+\right)
+-
+c(\|\mathbf{x}_{i,t}\|_1).
+\]
+This abstraction isolates how repeated investment changes relative performance without introducing intertemporal strategic considerations. 
+We ask whether developers’ relative performance converges over time.
+We do not expect competition to guarantee convergence: developers may remain separated because their cumulative investments diverge or because differences in their production functions persist at scale.
+Rather than characterize the full dynamic equilibrium, we isolate conditions on investment trajectories and production functions under which relative performance must converge.
+
+\begin{restatable}[Catch-Up and Long-Run Crowding]
+{proposition}{AsymptoticBunching}
+\label{prop:AsymptoticBunching}
+
+Let $\boldsymbol{\theta}_i^t = F_i(\mathbf{X}_i^t)$ denote developer $i$'s capability vector at time $t$, and define its category-specific gap to the frontier as $g_{i,k}^t=\max_j \theta_{j,k}^t-\theta_{i,k}^t.$
+Let $\mathbf g^t\in\mathbb R_+^{NK}$ stack these gaps across developers and
+categories at timestep $t$, and let
+\[
+\Delta\boldsymbol{\theta}^t
+=
+\left(
+\boldsymbol{\theta}_1^{t+1}-\boldsymbol{\theta}_1^t,
+\ldots,
+\boldsymbol{\theta}_N^{t+1}-\boldsymbol{\theta}_N^t
+\right)
+\in\mathbb R^{NK}.
+\]
+
+Suppose each $F_i$ is continuously differentiable with
+\[
+\max_{\ell\in[K]} \left\| \frac{\partial F_i(\mathbf x)}{\partial x_\ell} \right\|_2 \to 0 \qquad \text{as }\|\mathbf x\|_1\to\infty, \quad \forall i.
+\]
+Suppose there exists $\beta>0$ such that, for sufficiently large $t$, $\left\langle
+\mathbf g^t,\Delta\boldsymbol{\theta}^t
+\right\rangle
+\ge
+\beta\|\mathbf g^t\|_2^2$.
+Then we have that $\|\mathbf g^t\|_2\to 0$, and $\max_{i'}\theta_{{i'},k}^t-\theta_{i,k}^t
+\to 0$ for all developers $i$ and categories $k$. 
+\end{restatable}
+
+The competitive dynamics generate a sequence of relative performance gaps and per-period investments that decrease over time, while the catch-up condition requires improvements to be directed toward those gaps (proof in Appendix~\ref{app:AsymptoticBunching}).
+
+We next give one set of sufficient conditions under which diminishing returns and competitive incentives generate catch-up. 
+The key additional requirement is that a developer that trails in a capability retains marginal capacity to improve that capability at a rate related to the size of its gap.
+Intuitively, lagging capabilities retain greater marginal capacity for improvement, while competition creates incentives for developers to perform well in lagging capabilities.
+
+\begin{restatable}[Sufficient conditions for capability catch-up]{proposition}{PrimitiveCatchup}
+\label{prop:PrimitiveCatchup}
+Suppose each $F_i$ is continuously differentiable and coordinatewise
+nondecreasing, each coordinate function $[F_i(\cdot)]_k$ is concave, and
+$F_i$ is $L$-Lipschitz with respect to $\ell_1$.
+Additionally, suppose $w_k>0$ with $w_{\mathrm{min}} = \min\limits_{k \in [K]} w_k$, and $c$ is twice continuously differentiable with $c'(0)=0$ and $0\le c''(s)\le M$. 
+Assume that each developer is playing a pure-strategy Nash equilibrium $\mathbf{x}^*_{i,t}$ at each timestep.  
+
+For each developer $i$, category $k$, and investment state $\mathbf x$, define
+\[
+    m_{i,k}(\mathbf x)
+    :=
+    \min_{\ell\in[K]}
+    \frac{\partial [F_i(\mathbf x)]_k}{\partial x_\ell}.
+\]
+Suppose there exists $\mu>0$ such that, for every pair of developers
+$i,i'$, category $k$, and relevant investment states $\mathbf x,\mathbf y$,
+whenever $[F_i(\mathbf x)]_k \le [F_{i'}(\mathbf y)]_k$, we have
+\[ 
+    m_{i,k}(\mathbf x)^2
+    \ge
+    \mu\left(
+        [F_{i'}(\mathbf y)]_k-[F_i(\mathbf x)]_k
+    \right).
+\] 
+Define
+\[
+    \underline p
+    :=
+    w_{\mathrm{min}}
+    \min_{|z|\le \frac{L^2}{\mu}}\sigma'(z)>0.
+\]
+Then, for every developer $i$, category $k$, and period $t$,
+\[
+    \Delta\theta_{i,k}^t
+    \ge
+    \beta g_{i,k}^t,
+    \qquad
+    \beta
+    :=
+    \frac{\underline p\,\mu}
+         {M+\underline p\,\mu}
+    >0.
+\] 
+\end{restatable}
+
+Proposition~\ref{prop:PrimitiveCatchup} illustrates how diminishing returns and competitive incentives can jointly generate catch-up. 
+The parameter \(\mu\) captures how much marginal production capacity a developer retains relative to its capability gap, while \(\underline{p}\) lower-bounds the competitive value of improving a capability. 
+As a result, the catch-up guarantee is stronger when lagging capabilities retain greater marginal production capacity, competitive evaluation places greater marginal value on improvement, and marginal investment costs grow more slowly. 
+The diminishing returns assumption is plausible when capability gaps are bounded and lagging developers have not exhausted the channels available for improving that capability; it becomes restrictive when some investment inputs have little or no effect on a capability or when large gaps coexist with very small marginal returns. 
+Diminishing returns allows lagging capabilities greater remaining capacity for improvement, while competition gives developers an incentive to exploit this capacity. 
+
+The proof combines the lower bound on marginal production capacity with the developers' first-order conditions to obtain a lower bound on the capability improvement of a trailing developer (Appendix~\ref{app:PrimitiveCatchup}).
+Because the cost function aggregates investment across dimensions, the equilibrium conditions determine the total amount of investment but not, absent solving the equilibrium, how that investment is distributed across inputs. 
+A uniform catch-up guarantee therefore requires a lower bound that holds for every possible active investment direction, which leads naturally to the minimum marginal effect across dimensions.
+Relaxing this assumption therefore requires a different cost function that places more structure on how investment is allocated across dimensions, or additional assumptions about which investment dimensions are active at equilibrium. 
+As a result, this condition should be interpreted as a sufficient primitive condition for catch-up, rather than as a necessary condition for catch-up.
+
+Sections~\ref{sec:monoculture} and~\ref{sec:dynamics} characterize two dimensions of convergence. 
+Developers may become similar in their capability profiles (monoculture), or in their overall performance levels (crowding). 
+Our empirical analysis asks how these two forms of convergence evolve over a finite period, and whether frontier crowding can coexist with persistent differences in relative capability profiles. 

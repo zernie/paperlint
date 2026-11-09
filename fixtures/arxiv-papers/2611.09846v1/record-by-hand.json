@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "1-introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "2-background.tex",
+      "role": "body"
+    },
+    {
+      "path": "3-approach.tex",
+      "role": "body"
+    },
+    {
+      "path": "4-evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "6-conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "7-appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "935dfd2afe7bb3e7e4af89a94d391269635f3074118315e9ef177bb9ed6188d0",
+    "1-introduction.tex": "3a6849d7d283dfaf29030335c3cd22248ae644343d6d21c628920a863f96f724",
+    "2-background.tex": "3356195d155125da76db7f61c210944c63173d31a9e571655c15a62dde1e7a05",
+    "3-approach.tex": "51069113543161a2fa9083552f8d8884935e4987b90a01398ec3a1be1e6a0e66",
+    "4-evaluation.tex": "0db00563748ae7357ceddab76a6c60e7721b8d2ffd505ff42c64336bb1f3c5d1",
+    "6-conclusion.tex": "4a3da60cdd88dd7557b3fec19370b86d23708cb0c0ccc58e03e02c90f80c65fd",
+    "7-appendix.tex": "2731e2ab23cb0c61ccb03047e23c2873ea57f66b925d78fb2d5e08ee605e32f9"
+  }
+}

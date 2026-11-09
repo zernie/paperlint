@@ -1,0 +1,71 @@
+\begin{table}[H]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\caption{The 33 tools available across scenarios and their grouping used as
+model inputs.}\label{tab:toolsandbox-tools}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.22\textwidth}>{\raggedright\arraybackslash}p{.75\textwidth}@{}}
+\toprule Family suffix & Tool names\\\midrule
+
+\feat{settings_read} & \feat{get_low_battery_mode_status}, \feat{get_location_service_status}, \feat{get_cellular_service_status}, \feat{get_wifi_status}, \feat{get_current_location}\\
+\feat{settings_write} & \feat{set_low_battery_mode_status}, \feat{set_location_service_status}, \feat{set_cellular_service_status}, \feat{set_wifi_status}\\
+\feat{contact_lookup} & \feat{search_contacts}\\
+\feat{contact_edit} & \feat{add_contact}, \feat{modify_contact}, \feat{remove_contact}\\
+\feat{message_search} & \feat{search_messages}\\
+\feat{message_send} & \feat{send_message_with_phone_number}\\
+\feat{reminder_read} & \feat{search_reminder}\\
+\feat{reminder_write} & \feat{add_reminder}, \feat{modify_reminder}, \feat{remove_reminder}\\
+\feat{utility} & \feat{get_current_timestamp}, \feat{timestamp_to_datetime_info}, \feat{datetime_info_to_timestamp}, \feat{shift_timestamp}, \feat{timestamp_diff}, \feat{seconds_to_hours_minutes_seconds}, \feat{unit_conversion}, \feat{calculate_lat_lon_distance}, \feat{search_holiday}\\
+\feat{web_search} & \feat{search_lat_lon}, \feat{search_location_around_lat_lon}, \feat{search_weather_around_lat_lon}, \feat{search_stock}, \feat{convert_currency}\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[!htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\caption{The 45 ToolSandbox SNMM inputs, used for all continuations. Each input
+is one when its condition holds and zero otherwise.}\label{tab:toolsandbox-snmm}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.34\textwidth}r>{\raggedright\arraybackslash}p{.56\textwidth}@{}}
+\toprule Input & Count & Meaning\\\midrule
+Progress phases (\feat{phase:}) & 3 & Before any successful tool result; after a success but before a successful write; after a successful write. Only one is active.\\
+Proposed tools (\feat{tool:}) & 33 & One input for each tool in Table~\ref{tab:toolsandbox-tools}: whether the current proposal includes that tool.\\
+\feat{prior_error} & 1 & An earlier tool result contained an exception.\\
+\feat{prior_state_error} & 1 & An earlier exception began with \texttt{ConnectionError} or \texttt{PermissionError}.\\
+\feat{retry_tool} & 1 & At least one proposed tool was executed earlier.\\
+\feat{prior_verification} & 1 & An earlier proposal was assigned review.\\
+\feat{prior_correction} & 1 & An earlier review changed a proposal.\\
+\feat{precondition_unmet} & 1 & A proposed call breaks a device-state rule.\\
+\feat{write_x_prior_error} & 1 & The proposal contains a write, and an earlier tool result contained an exception.\\
+\feat{scrambled} & 1 & The scenario name contains \texttt{\_scrambled}.\\
+\feat{distractors} & 1 & The scenario name contains \texttt{distraction\_tools} or ends in \texttt{\_all\_tools}.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A write changes device settings, edits contacts, sends a message, or changes
+reminders. We set \feat{precondition_unmet} to one for messaging with cellular off; web search
+with Wi-Fi off; coordinate-based search without latitude when location is off;
+current-location lookup with location off; setting a toggle to its existing
+value; or enabling Wi-Fi, cellular, or location in low-battery mode.
+
+\begin{table}[!htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\caption{The 90  features used for the ToolSandbox nuisance models.}\label{tab:toolsandbox-nuisance}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.34\textwidth}r>{\raggedright\arraybackslash}p{.56\textwidth}@{}}
+\toprule Inputs & Count & Meaning\\\midrule
+Proposed tools (\feat{tool:}) & 33 & The same 33 tool inputs as in Table~\ref{tab:toolsandbox-snmm}.\\
+Current tool families (\feat{current:}) & 10 & For each family in Table~\ref{tab:toolsandbox-tools}, whether the proposal includes a tool from that family.\\
+Earlier successful families (\feat{used:}) & 10 & For each family, whether an earlier call from that family succeeded.\\
+Earlier events and device rules & 6 & \feat{prior_error}, \feat{prior_state_error}, \feat{retry_tool}, \feat{prior_verification}, \feat{prior_correction}, and \feat{precondition_unmet}, defined above.\\
+\feat{unknown_tool}, \feat{malformed_arguments} & 2 & The execution tool name is outside the catalog; the arguments do not decode to a JSON object.\\
+\feat{n_prior_errors}, \feat{n_prior_tools}, \feat{n_prior_verifications}, \feat{n_proposed_tools}, \feat{n_user_turns} & 5 & Numbers of earlier exception results, traced tool calls, review assignments, calls in the current proposal, and observed user turns, respectively.\\
+Device settings (\feat{setting:}) & 4 & Whether \feat{cellular}, \feat{wifi}, \feat{location_service}, and \feat{low_battery_mode} are on.\\
+Database sizes (\feat{rows:}) & 3 & Numbers of rows in \feat{CONTACT}, \feat{MESSAGING}, and \feat{REMINDER}.\\
+Scenario categories (\feat{category:}) & 15 & All tools available; zero, three, or ten distractor tools; scrambled argument descriptions, argument types, tool descriptions, or tool names; single or multiple tool calls; single or multiple user turns; canonicalization; insufficient information; state dependency. Categories can overlap.\\
+Scenario variants (\feat{variant:}) & 2 & The \feat{scrambled} and \feat{distractors} inputs defined above.\\
+\bottomrule
+\end{tabular}
+\end{table}

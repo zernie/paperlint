@@ -1,0 +1,370 @@
+\begin{table*}[!t]
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{l c c c c c c c c}
+        \toprule
+        \multirow{3}*{\textbf{Model}} & \multicolumn{4}{c}{\textbf{DocRED}} & \multicolumn{4}{c}{\textbf{Re-DocRED}} \\
+        \cmidrule(r){2-5}
+        \cmidrule(r){6-9}
+         &\multicolumn{2}{c}{\textbf{Dev}} & \multicolumn{2}{c}{\textbf{Test}}&\multicolumn{2}{c}{\textbf{Dev}} & \multicolumn{2}{c}{\textbf{Test}}\\
+        \cmidrule(r){2-3}
+        \cmidrule(r){4-5}
+        \cmidrule(r){6-7}
+        \cmidrule(r){8-9}
+         & $F_1$ & Ign $F_1$ & $F_1$ & Ign $F_1$ & $F_1$ & Ign $F_1$ & $F_1$ & Ign $F_1$ \\
+        \midrule
+        
+        ATLOP \citep{zhou2021document}          & 63.42 & 61.57 & 63.48 & 61.43 & 74.34 & 73.62 & 74.23 & 73.53 \\
+        DocuNet \citep{zhang2021document}       & 64.35 & 62.66 & 64.00 & 61.93 & 76.22 & 75.50 & 75.35 & 74.61 \\
+        NCRL \citep{zhou2022none}               & 63.87 & 61.65 & 63.45 & 60.98 & 75.85 & 74.91 & 75.90 & 75.00 \\
+        CAST* \citep{tan2023class}              & -     & -     & -     & -     & -     & -     & 74.67 & 73.32 \\
+        VaeDiff-DocRE* \citep{tran2025vaediff}   & -     & -     & -     & -     & 75.89 & 74.96 & 75.07 & 74.13 \\
+        SSR-PU \citep{wang2022unified}          & 63.00 & 60.43 & 62.66 & 59.80 & 76.83 & 75.57 & 76.23 & 74.96 \\
+        KD-NA \citep{tan2022document}           & 64.17 & 62.18 & 64.12 & 61.77 & 76.14 & 75.25 & 76.00 & 75.12 \\
+        KD-DocRE \citep{tan2022document}        & 64.81 & 62.62 & 64.76 & 62.56 & 76.47 & 75.30 & 76.14 & 74.97 \\
+        DURE* \citep{feng2024dure}              & -     & -     & -     & -     & -     & -     & 76.84 & 75.32 \\
+        UGDRE \citep{sun2023uncertainty}         & 65.71 & 63.62 & 65.58 & 63.26 & 78.28 & 77.32 & 78.14 & 77.24 \\
+        \midrule
+        \textbf{\model \, (Ours)}               & \textbf{66.09\small{$\pm$0.17}} & \textbf{63.88\small{$\pm$0.2}} & \textbf{66.14}\textsuperscript{\textdagger} & \textbf{63.66}\textsuperscript{\textdagger} & \textbf{79.53\small{$\pm$0.21}} & \textbf{78.28\small{$\pm$0.23}} & \textbf{79.40\small{$\pm$0.22}} & \textbf{78.16\small{$\pm$0.22}}\\
+        \bottomrule
+    \end{tabular}}
+    \caption{Experimental results on DocRED and Re-DocRED datasets. Baseline results are from \citet{sun2023uncertainty}. \textsuperscript{\textdagger} indicates the best single run; * denotes results reported directly from original papers.}
+    \label{tab:exp-results}
+\end{table*}
+
+\section{Experiments}
+In this section, we present a series of experiments to assess the effectiveness of our proposed framework. We begin by outlining the experimental setup, followed by empirical analyses aimed at addressing the following research questions (RQs):
+\begin{itemize}[noitemsep]
+    \item \textbf{RQ1:} How effective is the overall framework in different datasets?
+    \item \textbf{RQ2:} How well does the method handle long-tailed relation distributions?
+    \item \textbf{RQ3:} How effective is each of the proposed components?
+    \item \textbf{RQ4:} How resource-efficient is the proposed approach compared to existing baselines?
+    \item \textbf{RQ5:} How is \model\ effective when using with other DocRE architectures?
+    % \item \textbf{RQ5:} How is runtime-performance trade-off managed?
+\end{itemize}
+
+
+\subsection{Datasets}
+\label{subsec:experimental-setup}
+We conducted evaluations on five widely used publicly available benchmarks for the DocRE task. More details are shown in Table \ref{tab:datasets-statistics} in Appendix \ref{appendix:experimental-details}.
+
+\noindent
+\textbf{DocRED.} \ DocRED contains 96 predefined relation types, curated from Wikipedia and Wikidata. It includes 3,053 training, 1,000 validation, and 1,000 test documents. A distantly supervised version with 101,873 documents was also released by \citet{yao2019docred}.
+
+\noindent
+\textbf{Re-DocRED.} \ Re-DocRED is a refined variant of DocRED that addresses annotation incompleteness by adding previously overlooked relational facts. It consists of 3,053 training, 500 development, and 500 test documents.
+
+\noindent
+\textbf{HacRED.} \ HacRED is a Chinese document-level relation extraction dataset designed to address challenging cases. It defines 27 difficult relation types and is split into 6,231/1,500/1,500 instances for training, validation, and test sets.
+
+\noindent
+\textbf{CDR.} \ CDR is a human-annotated biomedical dataset containing 500 training documents. The task is to predict binary interactions between chemical and disease entities.
+
+\noindent
+\textbf{GDA.} \ GDA is a large-scale biomedical dataset comprising 29,192 training articles. The task is to predict binary interactions between gene and disease entities. Dataset splits follow \citet{christopoulou2019connecting} and \citet{zhou2021document}. \\
+
+\noindent
+Since HacRED, CDR, and GDA do not provide unlabelled data, we treat their validation sets as unlabelled and avoid pretraining on their original labels to ensure a fair evaluation.
+
+\subsection{Experiment Setup}
+\subsubsection{Evaluation Metrics}
+We adopt the micro-averaged $\mathbf{F_1}$ score as the primary evaluation metric across all five datasets. Following \citet{yao2019docred}, we also report the \textbf{Ignored} $\mathbf{F_1}$, which omits relational facts overlapping between the training and test sets for the DocRED and Re-DocRED datasets. Additionally, to assess model performance across relation frequency levels in Re-DocRED, we include \textbf{Freq} $\mathbf{F_1}$ (for the 10 most frequent relations) and \textbf{LT} $\mathbf{F_1}$ (for the remaining 86), as introduced by \citet{tan2022revisiting}.
+
+\subsubsection{Baselines}
+We compare \model\, with several competitive baselines that generate pseudo-labels to augment human-labeled data. \textit{KD-DocRE} \citep{tan2022document} leverages knowledge distillation to produce soft pseudo-labels. \textit{UGDRE} \citep{sun2023uncertainty} uses uncertainty-aware, multi-phase training to produce hard pseudo-labels. \textit{VaeDiff-DocRE} \citep{tran2025vaediff} creates pseudo-representations for entity pairs using data augmentation. \textit{DURE} \citep{feng2024dure} generates pseudo-labels for unlabelled data via controllable text generation conditioned on relation triplets.
+
+\subsubsection{Implementation Details}
+% We used BERT-base-cased \citep{devlin2019bert}, XLM-RoBERTa-Large \cite{conneau2020unsupervised} and SciBERT \cite{beltagy2019scibert} as the encoders and trained all models with AdamW optimiser \citep{loshchilov2019decoupled}. For the models in Section \ref{sec:baseline-models}, we adopted official implementations from their public GitHub code repositories. During the Pre-training phase ($\S$\ref{sec:pre-training-stage}), we preserved their original hyperparameters that are detailed in Table \ref{tab:hyper-params-pretrain-ugdre} and \ref{tab:hyper-params-pretrain-kddocre} of Appendix \ref{appendix:baseline-structures}. During the Fine-tuning phase ($\S$\ref{sec:fine-tuning-stage}), EMA update rates were set to 0.995 (UGDRE) and 0.999 (KD-DocRE), with updates beginning after 10 steps and applied every 5 steps. We kept learning rates unchanged from pre-training. Fine-tuning ran for 25 epochs on Re-DocRED and 7 on DocRED, with 16 unlabelled documents sampled per step. The warm-up phase spanned 15 and 5 epochs respectively. For the Cross-supervision step, we used a step interval $m = 6$, and loss weights $\lambda_{ul} = 0.1$ and $\lambda_2 = 0.5$.
+We use BERT-base-cased \citep{devlin2019bert}, XLM-RoBERTa-Large \cite{conneau2020unsupervised}, and SciBERT \cite{beltagy2019scibert} as encoders, and train all models with AdamW \citep{loshchilov2019decoupled}, adopting official implementations for baselines. Pre-training follows original hyperparameters (Appendix \ref{appendix:baseline-structures}), while in fine-tuning, EMA rates are set to 0.995 (UGDRE) and 0.999 (KD-DocRE), starting after 10 steps and updating every 5 steps, with unchanged learning rates. Fine-tuning runs for 25 epochs on Re-DocRED and 7 on DocRED, sampling 16 unlabelled documents per step, with warm-up lasting 15 and 5 epochs, respectively. For cross-supervision, we set $m = 6$, $\lambda_{ul} = 0.1$, and $\lambda_2 = 0.5$. Our experiments were conducted on a server equipped with an NVIDIA H100 GPU (80GB).
+
+\subsection{Overall Performance}
+\subsubsection{General-domain Datasets}
+\paragraph{DocRED and Re-DocRED.}
+To address \textbf{RQ1}, we evaluate \model\ on DocRED and Re-DocRED using the student architectures described in $\S$\ref{subsec:student-nets}, with results in Table~\ref{tab:exp-results}; all improvements are statistically significant ($p < 0.01$) under the paired test of \citet{dror2018hitchhiker}. Results with other student architectures are reported in Section \ref{subsec:result-diff-models}.
+
+% Two key findings emerge from the results:
+
+% Firstly, \textbf{\model\ significantly outperforms all baselines when compared to state-of-the-art pseudo-labelling approaches}. Specifically, relative to UGDRE, our method achieves consistent gains of +0.38 F1 on the DocRED development set and +0.56 on the test set. Compared to KD-DocRE, the improvements are even larger: +1.28 F1 on the development set and +1.38 on the test set. On Re-DocRED, \model\ surpasses UGDRE by +1.25 (dev) and +1.26 (test) F1, and outperforms KD-DocRE by +3.06 and +3.26 F1, respectively.
+
+% Secondly, \textbf{pseudo-labelling approaches demonstrate greater robustness, leading to a wider performance gap between \model\ and augmentation-based baseline methods}. Specifically, \model\ achieves a +2.56 F1 improvement over DURE on the Re-DocRED test set. Against VaeDiff-DocRE, it yields gains of +3.64 F1 on the development set and +4.33 on the test set. These results underscore the effectiveness of our pseudo-label-driven strategy in leveraging unlabelled data without relying on explicit text or embedding synthesis.
+\model\ significantly outperforms all baselines, particularly pseudo-labelling approaches, while also demonstrating greater robustness than augmentation-based methods. Compared to UGDRE, our method achieves consistent gains of +0.38/+0.56 F1 on the DocRED development/test sets, and larger improvements over KD-DocRE of +1.28/+1.38 F1. On Re-DocRED, \model\ surpasses UGDRE by +1.25/+1.26 F1 and KD-DocRE by +3.06/+3.26 F1 (dev/test). In addition, \model\ achieves notable gains over augmentation-based baselines, including +2.56 F1 over DURE (test) and +3.64/+4.33 F1 over VaeDiff-DocRE (dev/test), highlighting the effectiveness and robustness of our pseudo-label-driven strategy without relying on explicit text or embedding synthesis.
+
+\paragraph{HacRED.}
+From Table \ref{tab:hacred-perf}, \model\ significantly outperforms state-of-the-art baselines on challenging non-English cases. In particular, \model\ achieves average F1 gains of +0.61 and +0.23 over the baselines. These improvements could be further amplified with additional unlabelled documents, which are inexpensive to obtain in practice.
+\begin{table}[!ht]
+    \centering
+    \resizebox{0.78\linewidth}{!}{%
+    \begin{tabular}{lc}
+    \toprule
+    \textbf{Model}                                 & \multicolumn{1}{c}{\textbf{Test F1}} \\ \midrule
+    SSAN \cite{xu2021entity}                       & 61.00                           \\
+    LSR \cite{nan2020reasoning}                    & 68.41                           \\
+    GAIN \cite{zeng2020double}                     & 76.09                           \\
+    ATLOP \cite{zhou2021document}                  & 77.63                           \\
+    KD-DocRE \cite{tan2022document}                & 78.75                           \\
+    DAATF+ATL \cite{wei2025document}               & 79.03                           \\
+    DAATF+AFL \cite{wei2025document}               & 79.42                           \\ \midrule
+    \textbf{\model\ (Ours)}                         & \textbf{79.64\small{$\pm$0.1}}                  \\ \bottomrule
+    \end{tabular}%
+    }
+    \caption{Experimental results on HacRED dataset. Baseline results are from \citet{wei2025document}.}
+    \label{tab:hacred-perf}
+    \vspace{-5mm}
+\end{table}
+
+\subsubsection{Biomedical Datasets}
+To evaluate our framework in the biomedical domain, we conducted experiments on the CDR and GDA datasets using ATLOP and DocuNet as baselines, with results reported in Table \ref{tab:cdr-gda-perf}.
+\begin{table}[!ht]
+\centering
+\resizebox{0.8\columnwidth}{!}{%
+\begin{tabular}{lcc}
+\toprule
+\multirow{2}{*}{\textbf{Model}} & \multicolumn{2}{c}{\textbf{Test F1}} \\ \cmidrule(l){2-3} 
+                                & \textit{CDR}      & \textit{GDA}     \\ \midrule
+SSAN \cite{xu2021entity}                        & 68.7                  & 83.7                      \\
+ATLOP \cite{zhou2021document}                   & 69.4                  & 83.9                      \\
+DGI \cite{wang2023denoising}                    & 70.1                  & 84.1                      \\
+SE-REPI \cite{liu2025document}                  & 73.3                  & 84.8                      \\
+DAATF \cite{wei2025document}                    & 71.62                 & 85.04                     \\
+DocuNet \cite{zhang2021document}                & 76.3                  & 85.3                      \\ \midrule
+\textbf{\model\ (Ours)}                         & \textbf{84.77}        & \textbf{85.45}            \\ \bottomrule
+\end{tabular}%
+}
+\caption{Model performance on CDR and GDA datasets.}
+\label{tab:cdr-gda-perf}
+\vspace{-5mm}
+\end{table}
+
+As shown in the table, \model\ achieves state-of-the-art performance on both biomedical DocRE datasets. Notably, it improves the F1 score on the CDR dataset by 8.47 points over the best baseline. On the GDA dataset, a smaller yet consistent improvement of +0.15 in F1 score is also observed.
+
+\subsection{Performance on Long-tailed Relations}
+% To address \textbf{RQ2}, we evaluate \model's performance in the long-tailed setting by focusing on rare relation types using the Re-DocRED dataset. As shown in Table~\ref{tab:long-tailed-result}, our method surpasses two generation-based baselines: \textit{VaeDiff-DocRE}, which synthesises entity pair embeddings, and \textit{DuRE}, which generates pseudo-text. By making more effective use of unlabelled data, \model\ achieves notable LT $F_1$ improvements of +2.02 and +3.78 over VaeDiff-DocRE and DuRE, respectively. These results highlight that \textbf{\model\ handles infrequent relations robustly by producing high-quality pseudo-labels without relying on explicit text generation}. Consequently, our approach can naturally augment training data at scale with reliable pseudo-labels, enhancing the performance of downstream DocRE systems.
+To address \textbf{RQ2}, we evaluate \model\ on rare relations in Re-DocRED (Table~\ref{tab:long-tailed-result}). \model\ outperforms generation-based baselines, achieving LT $F_1$ gains of +2.02 over \textit{VaeDiff-DocRE} and +3.78 over \textit{DuRE}. These results show that \model\ robustly handles infrequent relations by generating high-quality pseudo-labels without explicit text generation, enabling scalable data augmentation for improved DocRE performance.
+
+\begin{table}[!ht]
+\centering
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Model}                           & \textbf{Freq $\mathbf{F_1}$}           & \textbf{LT $\mathbf{F_1}$}            \\ \midrule
+        ATLOP \citep{zhou2021document}           & 75.92                                  & 67.46                                 \\
+        SSR-PU \citep{wang2022unified}           & 78.41                                  & 68.32                                 \\
+        CREST \citep{wei2021theoretical}         & 77.93                                  & 68.68                                 \\
+        CAST \citep{tan2023class}                & 78.53                                  & 69.34                                 \\
+        VaeDiff-DocRE \citep{tran2025vaediff}    & 79.18                                  & 71.12                                 \\
+        DuRE \citep{feng2024dure}                & 79.81                                  & 72.88                                 \\ \midrule
+        \textbf{\model}                          & \textbf{82.42\small{$\pm$0.26}}        & \textbf{74.90\small{$\pm$0.23}}       \\ \bottomrule
+    \end{tabular}%
+    }
+    \caption{Experimental results in long-tailed settings on Re-DocRED's test set.}
+    \label{tab:long-tailed-result}
+    \vspace{-5mm}
+\end{table}
+
+\subsection{Ablation Study}
+% To address \textbf{RQ3} and \textbf{RQ4}, we conduct an ablation study on the Re-DocRED dataset, as shown in Table~\ref{tab:ablation-study} and reveal several key insights. All results are reported from the best-performing models.
+
+% Firstly, \textbf{our proposed Self-supervised step plays a crucial role, yielding substantial performance gains over the baselines}. Removing this component -- denoted as "\textit{w/o ST}" -- leads to a marked drop in performance. On the development set, $F_1$ and Ign $F_1$ decrease by 0.41 and 0.29 points, respectively, while the test set shows corresponding drops of 0.22 and 0.14 points.
+
+% Secondly, \textbf{the Disagreement-based Cross-supervision strategy is essential for mitigating confirmation bias during the Self-supervised step}, thereby further enhancing DocRE performance. When this component is removed -- "\textit{w/o Cross-sup}" -- and only Self-supervised is applied, \model\ underperforms compared to its full setup. Notably, on the development set, $F_1$ and Ign $F_1$ drop by 0.14 and 0.10 points, respectively.
+To address \textbf{RQ3}, we conduct an ablation study on Re-DocRED (Table~\ref{tab:ablation-study}), reporting results from the best-performing models.
+
+The Self-supervised step is critical, as removing it ("\textit{w/o ST}") leads to clear drops (dev: $-0.41/-0.29$, test: $-0.22/-0.14$ in $F_1$/Ign $F_1$).
+
+The Disagreement-based Cross-supervision further improves performance by mitigating confirmation bias; removing it ("\textit{w/o Cross-sup}") results in additional declines (dev: $-0.14/-0.10$), highlighting the importance of both components.
+
+\begin{table}
+    \centering
+    \resizebox{0.95\linewidth}{!}{
+    \begin{tabular}{l c c c c}
+    \toprule
+    \multirow{2}{*}{\textbf{Model}} & \multicolumn{2}{c}{\textbf{Dev}} & \multicolumn{2}{c}{\textbf{Test}} \\
+    \cmidrule(r){2-3} \cmidrule(r){4-5}
+     & $F_1$ & Ign $F_1$ & $F_1$ & Ign $F_1$ \\
+    \midrule
+    \textbf{\model}               & \textbf{79.93} & \textbf{78.74} & \textbf{79.50} & \textbf{78.35} \\
+    \textit{- w/o Cross-sup}      & 79.79 & 78.64 & 79.48 & 78.31 \\
+    \textit{- w/o ST}             & 79.52 & 78.45 & 79.28 & 78.21 \\ \midrule
+    UGDRE                         & 78.28 & 77.32 & 78.14 & 77.24 \\
+    KD-DocRE                      & 76.47 & 75.30 & 76.14 & 74.97 \\
+    \bottomrule
+    \end{tabular}}
+    \caption{Ablation study on the Re-DocRED's development set.}
+    \label{tab:ablation-study}
+    \vspace{-3mm}
+\end{table}
+
+\subsection{Efficiency Analysis}
+To answer \textbf{RQ4}, we compare training time and data usage of \model\ against the previous state-of-the-art baselines and the performance of \model\ with different sizes of human-annotated set under the Re-DocRED dataset.
+
+\subsubsection{Training time and Unlabelled Document Quantity}
+We reported the training time and data usage of \model\ in Table~\ref{tab:train-time}.
+\begin{table}[!ht]
+    \centering
+    \resizebox{\columnwidth}{!}{%
+    \begin{tabular}{lcc} 
+        \toprule 
+        \textbf{Model}      & \textbf{Training Time}    & \textbf{\# of Unlabelled Documents}   \\ \midrule 
+        UGDRE               & 55 hours                  & 101,873                               \\
+        \textbf{\model\ (ours)}     & 26 hours                  & 30,480                                \\\bottomrule 
+    \end{tabular}% 
+    }
+    \caption{Comparison of Training Time and Unlabelled Data Usage Between \model\ and UGDRE.}
+    \label{tab:train-time}
+    \vspace{-3mm}
+\end{table}
+
+Our model completes training in just 26 hours, less than half the time required by UGDRE. Additionally, it achieves superior performance using only 30,480 unlabelled documents, in contrast to the 101,873 required by UGDRE. This demonstrates that our approach is significantly more resource-efficient, both in terms of computation and data consumption. Thus, \model\ is effective and resource-efficient, scaling with unlabelled data for more generalisable gains in real-world DocRE.
+
+% Finally, this resource-efficient property and superior performance collectively highlight the effectiveness and robustness of our proposed framework, demonstrating that \textbf{\model\ can scale more naturally with additional unlabelled data, leading to more scalable and generalisable improvements in the real-world DocRE scenarios}, where high-quality labelled data is scarce.
+
+\subsubsection{Labelled Document Quantity}
+To further demonstrate the robustness of our method, we evaluate \model\ with different sizes of human-annotated datasets during the warm-up stage, illustrated in Table \ref{tab:labelled-docs-quant}.
+\begin{table}[!h]
+    \centering
+    \resizebox{0.95\columnwidth}{!}{%
+    \begin{tabular}{lccccc}
+        \toprule
+        \textbf{\# of Labelled Docs} & \textbf{100} & \textbf{200} & \textbf{300} & \textbf{400} & \textbf{600} \\ \midrule
+        \textbf{Dev F1}                  & 69.5         & 71.64        & 74.3         & 74.97        & 75.71        \\ \bottomrule
+    \end{tabular}
+    }
+\caption{Performance vs. Labelled Document quantity}
+\label{tab:labelled-docs-quant}
+\vspace{-3mm}
+\end{table}
+
+The results show that \model\ is not highly sensitive to the size of the annotated warm-up set: with only 400 documents ($\sim$13.1\%), it achieves performance comparable to VaeDiff-DocRE \cite{tran2025vaediff}, and with 600 documents, it surpasses KD-DocRE \cite{tan2022document}. Even with 300 documents ($\sim$9.8\%), the model reaches 73.58 Dev F$_1$ during warm-up and improves to 74.28 Dev F$_1$ afterwards, demonstrating that strong performance can be achieved with minimal annotations, highlighting the practicality of our framework in low-resource DocRE scenarios.
+
+
+% The results show that \model\ is not highly sensitive to the size of the annotated warm-up set. With only 400 documents ($\sim$13.1\% of the full set), it achieves an F1 score comparable to the augmentation-based VaeDiff-DocRE \cite{tran2025vaediff}. With 600 documents, it surpasses the original performance of KD-DocRE \cite{tan2022document}. At 300 documents, the model reaches 73.58 during warm-up and further improves to 74.28 afterwards, suggesting that as few as 300 annotated documents ($\sim$9.8\% of the dataset) combined with unlabelled data are sufficient to achieve strong performance while reducing annotation effort for DocRE.
+
+% \textbf{These findings highlight the practicality of our framework in low-resource scenarios, where large-scale human annotations are costly or infeasible}.
+
+\subsection{Result with Different Models}
+\label{subsec:result-diff-models}
+To answer the \textbf{RQ5}, we further conducted experiments with 2 extra models, ATLOP \cite{zhou2021document} and DocuNet \cite{zhang2021document}, alongside KD-DocRE and UGDRE and report the results in Table \ref{tab:per-diff-models}:
+\begin{table}[!h]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccc}
+\toprule
+\textbf{Models}                             & \textbf{Component} & \textbf{Dev F1} & \textbf{Test F1} \\ \midrule
+ATLOP                                       &                    & 74.34           & 74.23            \\ 
+DocuNet                                     &                    & 76.22           & 75.35            \\ 
+\multirow{2}{*}{Syn2DRE (ATLOP + DocuNet)}  & \textit{ATLOP}     & 75.41           & 75.12            \\ 
+                                            & \textit{DocuNet}   & 78.20           & 77.62            \\ 
+Syn2DRE (ATLOP + KD-DocRE)                  & \textit{ATLOP}     & 76.18           & 75.99            \\ 
+Syn2DRE (ATLOP + UGDRE)                     & \textit{ATLOP}     & 76.34           & 76.04            \\
+Syn2DRE (DocuNet + KD-DocRE)                & \textit{DocuNet}   & 78.54           & 77.84            \\ 
+Syn2DRE (DocuNet + UGDRE)                   & \textit{DocuNet}   & 78.13           & 77.73            \\\bottomrule
+\end{tabular}%
+}
+\caption{Performance with different models. Results of ATLOP and DocuNet are reported from \citet{sun2023uncertainty}.}
+\label{tab:per-diff-models}
+\vspace{-5mm}
+\end{table}
+
+% As shown in the table, both ATLOP and DocuNet achieve substantial performance gains when trained within our proposed framework. Table \ref{tab:per-diff-models} further demonstrates that adopting stronger architectures yields higher performance. Moreover, Table  \ref{tab:per-diff-models} demonstrates that co-training with a model of a different architecture provides additional benefits. In particular, ATLOP, a transformer-based model, performs better when paired with UGDRE, a graph-based model, than when paired with KD-DocRE, another transformer-based model. A similar trend is observed for DocuNet, which attains higher performance when paired with KD-DocRE rather than UGDRE.
+As shown in Table \ref{tab:per-diff-models}, both ATLOP and DocuNet achieve notable gains within our framework, with stronger architectures yielding better performance. The results also show that co-training with a different architecture is beneficial: ATLOP performs better when paired with the graph-based UGDRE than with the transformer-based KD-DocRE, while DocuNet shows the opposite trend.
+
+
+% \subsection{Analysis of update frequency and unlabelled document quantity vs. performance}
+
+% % To address \textbf{RQ5}, we examine the trade-offs between performance and two key factors: \textit{update frequency in the Cross-supervision strategy} and the \textit{number of unlabelled documents in Self-supervised training step}. Results are shown in Figure~\ref{fig:performance-tradeoff}. For each trade-off analysis, we fix the other variable to its optimal value based on sub-figures (a) and (b), respectively.
+
+% % Sub-figure (a) shows that performance improves as the update frequency increases from 4 to around 6, but degrades beyond that point. This pattern stems from two factors: (1) frequent cross-supervision may cause the networks to overfit to unreliable pseudo-labels before convergence; (2) infrequent updates can lead the model to overfit the human-annotated data, which may suffer from false negatives.
+
+% % Sub-figure (b) shows that increasing the number of unlabelled documents generally enhances performance. This improvement is likely due to the model's ability to benefit from correct pseudo-labels early in training, before overfitting to noisy labels occurs, consistent with the memorisation effect \citep{arpit2017closer,han2018co,yu2019does,liu2020early}.
+
+% % In conclusion, our findings reveal \textbf{a clear Pareto frontier of update frequency and amount of unlabelled data versus performance that enables strong generalisation with minimal computational overhead}.
+% To address \textbf{RQ5}, we analyse the trade-offs between performance and two factors: \textit{update frequency in Cross-supervision} and the \textit{number of unlabelled documents in Self-supervised training}. Results are shown in Figure~\ref{fig:performance-tradeoff}, where each variable is fixed to its optimal value in sub-figures (a) and (b), respectively.
+
+% Sub-figure (a) shows that performance improves as the update frequency increases from 4 to around 6, then declines beyond that point. This pattern arises because (1) overly frequent updates can cause overfitting to noisy pseudo-labels, while (2) infrequent updates lead to overfitting on human-annotated data that may include false negatives.
+
+% Sub-figure (b) demonstrates that using more unlabelled documents generally improves performance, as the model benefits from correct pseudo-labels early in training before overfitting to noise occurs, consistent with the memorisation effect \citep{arpit2017closer,han2018co,yu2019does,liu2020early}.
+
+% Overall, these results reveal \textbf{a clear Pareto frontier between update frequency and unlabelled data that enables strong generalisation with minimal computational cost}.
+
+% \begin{figure*}[!ht]
+% \centering
+
+% % Shared Legend on top
+% \begin{tikzpicture}
+% \begin{axis}[
+%     hide axis,
+%     xmin=0, xmax=1,
+%     ymin=0, ymax=1,
+%     legend columns=2,
+%     legend style={
+%         font=\footnotesize,
+%         column sep=1ex,
+%         draw=black, % Optional: border around legend
+%         fill=none,
+%         at={(0.5,1.0)},
+%         anchor=south
+%     }
+% ]
+% \addlegendimage{blue, mark=square}
+% \addlegendentry{Dev F$_1$}
+% \addlegendimage{red, mark=square}
+% \addlegendentry{Test F$_1$}
+% \end{axis}
+% \end{tikzpicture}
+
+% \vspace{-15em} % Space between legend and plots
+
+% % First plot
+% \begin{minipage}{0.3\linewidth}
+% \centering
+% \begin{tikzpicture}
+% \begin{axis}[
+%     title style={font=\scriptsize},
+%     xlabel={Steps},
+%     ylabel={$\text{F}_1$},
+%     xmin=4, xmax=8,
+%     ymin=79.2, ymax=80,
+%     tick label style={font=\scriptsize},
+%     label style={font=\footnotesize},
+%     grid=both,
+%     width=\columnwidth
+% ]
+% \addplot[color=blue,mark=square] coordinates {
+%     (4,79.82)(5,79.91)(6,79.94)(7,79.78)(8,79.77)
+% };
+% \addplot[color=red,mark=square] coordinates {
+%     (4,79.4)(5,79.46)(6,79.50)(7,79.29)(8,79.42)
+% };
+% \end{axis}
+% \end{tikzpicture}
+% \caption*{\footnotesize(a) Update Frequency vs. Performance}
+% \end{minipage}
+% % \hspace{0.06\columnwidth}
+% % Second plot
+% \begin{minipage}{0.3\linewidth}
+% \centering
+% \begin{tikzpicture}
+% \begin{axis}[
+%     title style={font=\scriptsize},
+%     xlabel={\# of unlabelled docs},
+%     ylabel={$\text{F}_1$},
+%     xmin=12, xmax=16,
+%     ymin=79.2, ymax=80,
+%     tick label style={font=\scriptsize},
+%     label style={font=\footnotesize},
+%     grid=both,
+%     width=\columnwidth
+% ]
+% \addplot[color=blue,mark=square] coordinates {
+%     (12,79.69)(13,79.65)(14,79.75)(15,79.75)(16,79.94)
+% };
+% \addplot[color=red,mark=square] coordinates {
+%     (12,79.22)(13,79.28)(14,79.38)(15,79.33)(16,79.4)
+% };
+% \end{axis}
+% \end{tikzpicture}
+% \caption*{\footnotesize(b) Unlabelled Docs vs. Performance}
+% \end{minipage}
+% % \vspace{0.2em} % Space between plots and caption
+% \caption{Performance of DocRE in Re-DocRED dataset with varying update frequency in Cross-supervision step and number of unlabelled documents in Self-supervised step.}
+% \label{fig:performance-tradeoff}
+% \end{figure*}

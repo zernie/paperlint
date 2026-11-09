@@ -1,0 +1,24 @@
+\section{Conclusions and Open Problems} %\todo{CONT HERE}
+
+
+We established a hierarchy theorem for chain-of-thought reasoning, identifying the number of decoding steps as a fundamental computational resource. Our results raise an important open question of obtaining a hierarchy theorem that is as tight as classical time and space hierarchies in the Turing machine model. In particular, can we show that
+\[
+\CoT(r(n)) \subsetneq \CoT(r(n)\,\mathrm{polylog}(r(n)))?
+\]
+
+Our proof relies on simulations of transformers with Turing machines combined with padding. 
+The known simulations incur quadratic blow-up, and it is unclear whether near-linear time simulations of $\CoT(r(n))$ are possible. In particular, can we show
+\[
+\CoT(r(n)) \subseteq \mathrm{TIME}(r(n)^{1+o(1)})?
+\]
+Moreover, due to the use of the padding technique, we only get Theorem \ref{thm:main theorem} for $r(n) \geq n$. The case $r(n) < n$ is an open question for saturated-attention transformers. We expect a positive answer.
+
+Finally, the full computational power of chain-of-thought reasoning is not yet well understood and is a promising research theme. 
+
+\begin{ack}
+% We thank [names] for helpful discussions.
+
+N. V. Vinodchandran and Thanh Le were supported in part by NSF awards 2342244, 2413848, and a UNL Grand Challenges Grant.
+A. Pavan was supported in part by NSF awards 2342245 and 2413849.
+\end{ack}
+

@@ -1,5 +1,14 @@
 import { defineConfig } from "vitest/config";
 
+/** What no project runs: dependencies, build output, scratch, and the files that are linted, not run. */
+const EXCLUDE = [
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/.tmp*/**",
+  ".claude/**",
+  "test/fixtures/**",
+];
+
 // Unit tests (`*.test.ts`, project `unit`) and the end-to-end runs (`*.e2e.ts`, one project per
 // environment they need). Agent tests (`*.harness.*`) run under `vigiles test`, not here.
 // vitest exits 1 when no file matches, so an empty run is never a pass.
@@ -21,19 +30,29 @@ export default defineConfig({
     experimental: { viteModuleRunner: false },
     // `test/fixtures/` holds files that are LINTED, not run: the layer fixtures include `*.test.ts`
     // cases because a test file is one of the categories the layer rules classify.
-    exclude: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/.tmp*/**",
-      ".claude/**",
-      "test/fixtures/**",
-    ],
+    exclude: EXCLUDE,
     // One project per environment a test needs. A new e2e file is found by its directory and its
     // `.e2e.ts` suffix — no list of files exists in package.json, scripts/check.ts or CI.
     projects: [
       {
         extends: true,
-        test: { name: "unit", include: ["**/*.test.ts", "**/*.test.mjs"] },
+        test: {
+          name: "unit",
+          include: ["**/*.test.ts", "**/*.test.mjs"],
+          // The real papers have a project of their own and a CI job of their own: not repeated on
+          // the macOS shards or under coverage.
+          exclude: [...EXCLUDE, "fixtures/real-papers.test.ts"],
+        },
+      },
+      // Every real paper of the corpus in one run of the CLI, with its baseline (fixtures/arxiv-papers/README.md).
+      {
+        extends: true,
+        test: {
+          name: "real-papers",
+          include: ["fixtures/real-papers.test.ts"],
+          testTimeout: 10 * 60_000,
+          hookTimeout: 10 * 60_000,
+        },
       },
       // The package as users install it: `npm pack`, then npm and pnpm. Needs both managers.
       {

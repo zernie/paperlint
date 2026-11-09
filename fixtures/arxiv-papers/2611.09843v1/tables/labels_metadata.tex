@@ -1,0 +1,30 @@
+\begin{longtable}{@{}P{3.2cm} P{3.2cm} P{4.4cm} P{1.6cm}@{}}
+\caption{Task-construction cases in the current audit: metadata. None means no classification target is documented, not that the source data had no scientific purpose. $^\dagger$ also listed under another mechanism.}\label{tab:labels-metadata} \\
+\toprule
+Dataset & Benchmark target & Source target or purpose & Label by \\
+\midrule
+\endfirsthead
+\multicolumn{4}{l}{\emph{(continued)}} \\
+\toprule
+Dataset & Benchmark target & Source target or purpose & Label by \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{\emph{continues}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\ds{ItalyPowerDemand} & Cold season (Oct--Mar) vs warm season (Apr--Sep) & None; utility demand records & Curators \\
+\ds{PowerCons} & Warm vs cold season & None; EDF consumption records & Curators \\
+\ds{Chinatown} & Weekend vs weekday & None; Melbourne pedestrian counts & Curators \\
+\ds{DodgerLoopDay} & Day of week & Unsupervised event detection; no class target & Curators \\
+\ds{DodgerLoopGame} & Whether a Dodgers home game took place that day & Unsupervised detection of game traffic events; schedule used as validation ground truth & Curators \\
+\ds{DodgerLoopWeekend} & Weekend vs weekday & As DodgerLoopDay & Curators \\
+\ds{ECGFiveDays} & Which of two dates, five days apart & None documented; one subject's clinical ECG & Curators \\
+\ds{GunPointOldVersusYoung}$^\dagger$ & Recording session: 2003 vs 2018 & Gun-draw vs pointing action & Collectors (=~curators) \\
+\ds{SemgHandGenderCh2} & Sex of five subjects & Six hand-grasp types & Curators \\
+\ds{TwoLeadECG} & Which of two ECG leads & None used; one long-term ECG record & Curators \\
+\ds{Rock} & Four rock types & ASTER spectral-library metadata; no defined task & Curators \\
+\ds{Worms} & Worm strain: wild type or one of four mutants & Unsupervised discovery of behavioural motifs; no class target & Curators \\
+\ds{WormsTwoClass} & Wild type vs mutant & As Worms & Curators \\
+\end{longtable}

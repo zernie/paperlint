@@ -1,0 +1,21 @@
+\begin{table}[t]
+  \centering
+  \scriptsize
+  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc@{}}
+    \toprule
+    Mapping & $q\to y$ & $y$ & $(\alpha,\beta)$ & ALU/elem. \\
+    \midrule
+    \multicolumn{5}{@{}l}{\emph{Hopper}} \\
+    \cmidrule(lr){1-5}
+    INT4$\to$BF16 & $\texttt{0x4300}\,|\,q$ & $q+128$ & $(1,128)$ & 1.00 \\
+    INT2$\to$BF16 & $\texttt{0x4300}\,|\,q$ & $q+128$ & $(1,128)$ & 1.00 \\
+    \multicolumn{5}{@{}l}{\emph{Blackwell}} \\
+    \cmidrule(lr){1-5}
+    INT4$\to$E4M3 & $q$ & $q\cdot2^{-9}$ & $(2^{-9},0)$ & 0.38 \\
+    INT2$\to$E2M1 & $q$ & $q/2$ & $(1/2,0)$ & 0.19 \\
+    \bottomrule
+  \end{tabular*}
+  \caption{Tensor Core operand mappings and their static ALU costs per stored value.
+  The $q{\to}y$ column gives the bit-level construction of $y$ from $q$.}
+  \label{tab:operand-construction}
+\end{table}

@@ -1,0 +1,27 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Evaluated models and inference settings.}
+\textit{Max.} is the limit on output tokens, including reasoning.
+Sampling is given as temperature / top-$p$; \textit{default} denotes the default settings of the API.
+$^\dagger$Top-$k$ is set to 50.}
+\label{tab:eval_models}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lllllr@{}}
+\toprule
+\textbf{Model} & \textbf{Identifier} & \textbf{Access} & \textbf{Reasoning} & \textbf{Sampling} & \textbf{Max.} \\
+\midrule
+K-EXAONE          & \texttt{LGAI-EXAONE/K-EXAONE-236B-A23B} & vLLM       & Enabled & 1.0 / 0.95           & 28,672 \\
+A.X K1            & \texttt{skt/A.X-K1}                     & vLLM       & Enabled & 0.6 / 0.95           & 45,056 \\
+Solar Open        & \texttt{upstage/Solar-Open-100B}        & vLLM       & High    & 0.8 / 0.95$^\dagger$ & 28,672 \\
+\midrule
+Aya Expanse 32B   & \texttt{c4ai-aya-expanse-32b}           & Cohere     & None    & 0.3                  & 4,000  \\
+\midrule
+GLM-4.7           & \texttt{z-ai/glm-4.7}                   & OpenRouter & High    & default              & 32,000 \\
+Qwen3.5           & \texttt{qwen/qwen3.5-397b-a17b}         & OpenRouter & High    & default              & 32,000 \\
+\midrule
+Claude Sonnet 5.5 & \texttt{claude-sonnet-5-5}              & Anthropic  & High    & default              & 32,000 \\
+GPT-6.1 Sol       & \texttt{gpt-6.1-sol}                    & OpenAI     & High    & default              & 32,000 \\
+\bottomrule
+\end{tabular*}
+\end{table*}

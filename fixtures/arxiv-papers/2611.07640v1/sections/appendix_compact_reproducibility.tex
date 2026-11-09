@@ -1,0 +1,70 @@
+\section{Models and Run Configuration}
+\label{app:reproducibility}
+
+All 5 agent models were called through
+Amazon Bedrock at temperature 0
+(Table \ref{tab:models}).
+
+\begin{table}[H]
+\centering
+\caption{Models. Agent models are above the rule; below it is the judge of the LLM-predicate checks (Appendix \ref{app:evaluation}).}
+\label{tab:models}
+\begingroup
+\tablefont
+\begin{tabular}{@{}p{2.0cm}lr@{}}
+\toprule
+\textbf{Model} & \textbf{Model ID} & \textbf{Temp.} \\
+\midrule
+DeepSeek V3.1 & \texttt{deepseek.v3-v1:0} & 0.0 \\
+Kimi K2.5 & \texttt{moonshotai.kimi-k2.5} & 0.0 \\
+Sonnet 4 & \texttt{us.anthropic.claude-sonnet-4-20250514-v1:0} & 0.0 \\
+Sonnet 4.5 & \texttt{us.anthropic.claude-sonnet-4-5-20250929-v1:0} & 0.0 \\
+GLM-5 & \texttt{zai.glm-5} & 0.0 \\
+\midrule
+Predicate judge (3 votes) & \texttt{us.anthropic.claude-sonnet-4-20250514-v1:0} & 0.0 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+The carrier-only detection probe uses DeepSeek V3.2
+(\texttt{deepseek.v3.2}) at temperature 0. Trajectory annotation uses Claude
+Opus 4.6 (\texttt{global.anthropic.claude-opus-4-6-v1}) at temperature 0.
+
+Each run is a single episode of a ReAct-style tool-calling agent
+(Table \ref{tab:run-config}). The episode ends when the model replies without
+a tool call or reaches 500 messages. Every
+run starts from a fresh copy of the environment's sandbox, and every
+configuration runs once.
+The agent receives no environment system prompt. Without a prompt defense it
+has no system message at all; Spotlight and the two trust-hierarchy prompts
+supply one; the trust-hierarchy prompts are in
+Appendix \ref{app:trust-hierarchy}.
+
+\begin{table}[H]
+\centering
+\caption{Run configuration shared by all agent runs. Model and temperature are in Table \ref{tab:models}.}
+\label{tab:run-config}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lp{9.0cm}@{}}
+\toprule
+\textbf{Setting} & \textbf{Value} \\
+\midrule
+Agent loop & ReAct-style tool-calling loop (Inspect AI); the run ends when the model replies without a tool call \\
+Message limit & 500 \\
+Sandbox & fresh copy of the environment template per run \\
+System message & none without a prompt defense; the trust-hierarchy prompts are in Appendix \ref{app:trust-hierarchy} \\
+Runs per configuration & 1 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+
+
+
+
+
+
+

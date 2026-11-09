@@ -1,0 +1,283 @@
+\section{Baseline Structures}
+\label{appendix:baseline-structures}
+
+\subsection{UGDRE}
+\label{sec:ugdre}
+\paragraph{Architecture.}
+We briefly describe the architecture of the UGDRE model proposed by \citet{sun2023uncertainty}.
+
+UGDRE begins by constructing a document-level graph to model non-local dependencies among entities. In this graph, each node corresponds to a token in the document. Edges are established based on the following heuristic rules: (1) tokens within the same mention are connected to preserve mention semantics, (2) tokens from different mentions of the same entity are connected to model cross-mention interactions, and (3) tokens of entities co-occurring in the same sentence are connected to capture sentence-level interactions.
+
+Graph inference is performed using Graph Convolutional Networks (GCNs), defined as:
+\begin{equation} 
+    g_i = \rho\left(\sum_{j=1}^n A_{ij} W z_j + b\right) 
+\end{equation} 
+where $W \in \mathbb{R}^{d \times d}$ and $b \in \mathbb{R}^d$ are learnable parameters, $z_j$ is the contextual representation of the $j$-th token, $A_{ij}$ is the document graph’s adjacency matrix, and $\rho$ is a non-linear activation function.
+
+Each token’s final representation $h_i$ is obtained by concatenating its contextual and graph-enhanced embeddings: 
+\begin{equation} 
+    h_i = [z_i, g_i] 
+\end{equation}
+
+Entity representations ${e_i}_{i=1}^q$ are computed via \texttt{logsumexp} pooling over token representations. To predict the relation between a pair of entities $(e_i, e_j)$, UGDRE applies a group bilinear operator to generate the probability distribution over all relation types.
+
+\paragraph{Pre-training Phase Hyperparameters.}
+Table \ref{tab:hyper-params-pretrain-ugdre} represents the hyper-parameters used when training UGDRE during Pre-training Phase (Section \ref{sec:pre-training-stage}).
+\begin{table}[!th]
+  \centering
+  \begin{tabular}{lc}
+    \toprule
+    \textbf{Hyper-parameters}           & \textbf{Value}\\
+    \midrule
+    Train batch size                    & 8             \\
+    Test batch size                     & 8             \\
+    Dropout rate                        & 0.25          \\
+    Warmup ratiors                      & 6\%           \\
+    Train epochs                        & 10            \\ 
+    Encoder learning rate               & $5e-5$        \\
+    Classifier learning rate            & $1e-4$        \\
+    Maximum gradient norm               & 1.0           \\  \bottomrule
+  \end{tabular}
+  \caption{Hyper-parameter settings for pre-training UGDRE \citep{sun2023uncertainty}.}
+  \label{tab:hyper-params-pretrain-ugdre}
+\end{table}
+
+\subsection{KD-DocRE}
+\label{sec:kddocre}
+\paragraph{Architecture.}
+We provide an overview of the KD-DocRE model proposed by \citet{tan2022document}.
+
+To highlight entity mentions, KD-DocRE inserts a special token ``*'' before and after each mention $m_j^i$ of an entity $e_i$, and encodes the full document using a pre-trained language model. Entity representations are then computed via \texttt{logsumexp} pooling over the mention representations, where each mention is represented by the embedding of its starting ``*'' token. The representation of an entity pair $(e_h, e_t)$ is computed as follows:
+\begin{equation}
+    \boldsymbol{p}_{h,t} = \text{tanh}\left(\boldsymbol{W}_p[\boldsymbol{e}_h;\boldsymbol{e}_t;\boldsymbol{c}_{h,t}] + \boldsymbol{b}_p\right)
+\end{equation}
+where $\boldsymbol{W}_p$ and $\boldsymbol{b}_p$ are trainable parameters, $[\,;\,]$ denotes concatenation, and $\boldsymbol{c}_{h,t}$ is the localised context embedding for the entity pair \citep{zhou2021document}.
+
+To capture structured interactions among entities, KD-DocRE introduces Axial Attention \citep{ho2019axial}. Specifically, an entity-level table is constructed where each row and column corresponds to an entity in the document. Self-attention \citep{vaswani2017attention} is then applied independently along both the row (height) and column (width) axes to model inter-entity dependencies.
+
+For training, \citet{tan2022document} propose an enhanced version of Adaptive Thresholding Loss \citep{zhou2021document} by incorporating Focal Loss \citep{lin2017focal}:
+\begin{equation}
+    \mathcal{L} = \sum_{r_i \in \mathcal{P}_T}\left( 1 - P(r_i)\right)^\gamma \log\left(P(r_i)\right) + \log\left(P(r_{\text{TH}})\right)
+\end{equation}
+where $\mathcal{P}_T$ denotes the set of positive relations for the entity pair $(e_h, e_t)$, $P(r_i)$ is the predicted probability for relation $r_i$, and $P(r_{\text{TH}})$ is the predicted probability for the threshold relation \textit{TH}.
+ 
+\paragraph{Pre-training Phase Hyperparameters.}
+Table \ref{tab:hyper-params-pretrain-kddocre} represents the hyper-parameters used when training KD-DocRE during Pre-training Phase (Section \ref{sec:pre-training-stage}).
+\begin{table}[!h]
+  \centering
+  \begin{tabular}{lc}
+    \toprule
+    \textbf{Hyper-parameters}           & \textbf{Value}\\
+    \midrule
+    Train batch size                    & 8             \\
+    Test batch size                     & 8             \\
+    $\gamma$ in AFL loss function       & 0.5           \\
+    Warmup ratiors                      & 6\%           \\
+    Train epochs                        & 5             \\ 
+    Encoder learning rate               & $3e-5$        \\
+    Classifier learning rate            & $1e-4$        \\
+    Maximum gradient norm               & 1.0           \\  \bottomrule
+  \end{tabular}
+  \caption{Hyper-parameter settings for pre-training KD-DocRE \citep{tan2022document}.}
+  \label{tab:hyper-params-pretrain-kddocre}
+\end{table}
+
+\section{Experimental Details}
+\label{appendix:experimental-details}
+\subsection{Dataset Statistics}
+\label{appendix:dataset-statistics}
+Table \ref{tab:datasets-statistics} provides the statistics of datasets used in this paper. All datasets are publicly available.
+\begin{table}[!ht]
+  \centering
+  \resizebox{\columnwidth}{!}{
+    \begin{tabular}{l c c}
+        \toprule
+        \textbf{Datasets}   & \textbf{\# Documents}     \\
+        \midrule
+        DocRED-Train                & 3,053                     \\
+        DocRED-Dev                  & 1,000                     \\
+        DocRED-Test                 & 1,000                     \\
+        DocRED Distantly Supervised        & 101,873            \\ \midrule
+        Re-DocRED-Train             & 3,053                     \\
+        Re-DocRED-Dev               & 500                       \\ 
+        Re-DocRED-Test              & 500                       \\ \midrule
+        HacRED-Train                & 6,231                     \\
+        HacRED-Dev                  & 1,500                     \\
+        HacRED-Test                 & 1,500                     \\ \midrule
+        CDR-Train                   & 500                       \\
+        CDR-Dev                     & 500                       \\
+        CDR-Test                    & 500                       \\ \midrule
+        GDA-Train                   & 23,353                    \\
+        GDA-Dev                     & 5,839                     \\
+        GDA-Test                    & 1,000                     \\ \bottomrule
+      \end{tabular}
+  }
+  \caption{Statistics of the datasets in experiments.}
+  \label{tab:datasets-statistics}
+\end{table}
+
+\section{Derivation of Eq. (\ref{ema-backprop})}
+\label{sec:eq-5-derivation}
+In this section, we detail how the EMA update can be reorganised in the form of back-propagation. Equation (\ref{eq:student-params-updates}) defines the update rule for the student parameters $\theta_s$ using standard back-propagation at the $j$-th iteration, while Equation (\ref{eq:ema-teacher-update-appendix}) presents the EMA update for the teacher parameters $\theta_t$.
+
+\begin{equation}
+    \label{eq:student-params-updates}
+    \theta_s^j = \theta_s^{j-1} - \gamma \cdot \pdv{\mathcal{L}}{\theta_s^{j-1}}
+\end{equation}
+
+\begin{equation}
+    \label{eq:ema-teacher-update-appendix}
+    \theta_t^j = \alpha \cdot \theta_t^{j-1} + (1-\alpha) \cdot \theta_s^j
+\end{equation}
+
+By substituting Equation (\ref{eq:student-params-updates}) into Equation (\ref{eq:ema-teacher-update-appendix}), we can express the teacher parameter $\theta_t$ at iteration $j$ as:
+{
+\footnotesize
+\begin{align}
+\theta^j_t &= \alpha \cdot \theta^{j-1}_t + (1-\alpha) \cdot \theta^{j}_s \nonumber\\
+&= \hspace{1mm} \alpha^{j} \cdot \theta^{0}_t + \alpha^{j-1}(1-\alpha)\left(\theta^{0}_s - \gamma \cdot  \frac{\partial \mathcal{L}}{\partial \theta^{0}_s}\right) + \dots \\ 
+& \hspace{5mm} + (1-\alpha)\left(\theta^{j-1}_s - \gamma \cdot \frac{\partial \mathcal{L}}{\partial \theta^{j-1}_s}\right) \nonumber \\
+&= \hspace{1mm} \alpha^{j} \cdot \theta^{0}_t + (1-\alpha) \sum_{i=0}^{j-1}\alpha^{i} \cdot \theta^{0}_s  \\
+& \hspace{5mm} - \gamma(1-\alpha) \sum_{i=0}^{j-1}\sum_{k=0}^{j-1-i} \alpha^{k} \cdot \frac{\partial \mathcal{L}}{\partial \theta_s^i} \nonumber\\
+&= \alpha^j \cdot \theta^0_t + \theta^0_s - \alpha^j \cdot \theta^0_s - \gamma \sum_{i=0}^{j-1}\left(1 - \alpha^{j-i}\right) \cdot \frac{\partial \mathcal{L}}{\partial \theta_s^i} \nonumber\\
+&= \theta^0_s - \gamma \sum_{i=0}^{j-1}\left(1 - \alpha^{j-i}\right) \cdot \frac{\partial \mathcal{L}}{\partial \theta_s^i} \nonumber\\
+&= \bar{\theta} - \gamma \sum_{i=0}^{j-1}\left(1 - \alpha^{j-i}\right) \cdot \frac{\partial \mathcal{L}}{\partial \theta_s^i} \nonumber\\
+&\text{where} \quad \theta^0_s = \theta^0_t = \bar{\theta}
+\end{align}
+}
+
+Thus, the teacher parameter at the $(j{-}1)$-th iteration becomes:
+\begin{equation}
+\theta^{j-1}_t = \bar{\theta} - \gamma \sum_{i=0}^{j-2}\left(1 - \alpha^{j-1-i}\right) \cdot \frac{\partial \mathcal{L}}{\partial \theta_s^i}
+\end{equation}
+
+To express the EMA update in the form of back-propagation, consider the gradient step:
+
+$$
+\theta_t^j = \theta_t^{j-1} - \nabla
+$$
+
+Then,
+\begin{align}
+\nabla &= \theta_t^{j-1} - \theta_t^j \nonumber \\
+&= \hspace{1mm} \gamma \sum_{i=0}^{j-1}\left(1 - \alpha^{j-i}\right) \cdot \frac{\partial \mathcal{L}}{\partial \theta_s^i} \\ 
+& \hspace{5mm} - \gamma \sum_{i=0}^{j-2}\left(1 - \alpha^{j-1-i}\right) \cdot \frac{\partial \mathcal{L}}{\partial \theta_s^i} \nonumber\\
+&= \gamma (1 - \alpha) \sum_{i=0}^{j-1} \alpha^{j-1-i} \cdot \frac{\partial \mathcal{L}}{\partial \theta_s^i}
+\end{align}
+
+Substituting back, we obtain the back-propagation form of the EMA update:
+\begin{equation}
+\theta^j_t = \theta^{j-1}_t - \gamma (1 - \alpha) \sum_{i=0}^{j-1} \alpha^{j-1-i} \cdot \frac{\partial \mathcal{L}}{\partial \theta_s^i}
+\end{equation}
+
+Here, $\gamma$ is the learning rate and $(1 - \alpha)$ is typically a small value, as $\alpha$ is generally close to 1 (e.g., 0.995). This formulation reveals that the EMA update corresponds to applying a scaled, weighted sum of historical gradients from the student model. The conservative and smoothing nature of this update makes EMA particularly effective for producing stable and reliable teacher models.
+
+% \newpage
+% \section{Pseudo-code of Unified Training Procedure}
+% \label{appendix:pseudo-code-unified-training}
+% Algorithm \ref{algo:unified-training-procedure} illustrate the pseudo-code for the Unified Training Procedure introduced in Section \ref{subsec:train-procedure}.
+
+
+% \begin{table*}[]
+% \centering
+% \resizebox{\textwidth}{!}{%
+% \begin{tabular}{lccccccc}
+% \hline
+% \textbf{Package} & axial\_attention & ema\_pytorch   & NumPy           & Optimised Einsum & PyTorch        & tqdm            & Transformers    \\ \hline
+% \textbf{Version} & \textit{0.6.1}   & \textit{0.5.2} & \textit{1.26.2} & \textit{3.3.0}   & \textit{2.1.2} & \textit{4.66.1} & \textit{4.62.1} \\ \hline
+% \end{tabular}%
+% }
+% \caption{}
+% \label{tab:package-config}
+% \end{table*}
+
+\subsubsection{Hardware and software configurations}
+\label{sec:hardware-software-config}
+The models were implemented using PyTorch \citep{paszke2019pytorch} and Huggingface Transformers \citep{wolf2020transformers}. For EMA\footnote{\href{https://github.com/lucidrains/ema-pytorch}{https://github.com/lucidrains/ema-pytorch}} and Axial Attention\footnote{\href{https://github.com/lucidrains/axial-attention}{https://github.com/lucidrains/axial-attention}}, we adopted publicly available repositories to construct teacher networks and implement KD-DocRE. Full software configuration details are provided in Table~\ref{tab:package-config}.
+\begin{table}[!ht]
+  \centering
+  \resizebox{0.6\linewidth}{!}{
+    \begin{tabular}{l c}
+        \toprule
+        \textbf{Package}            & \textbf{Version} \\
+        \midrule
+        axial\_attention            & 0.6.1       \\
+        ema\_pytorch                & 0.5.2       \\
+        numpy                       & 1.26.2       \\
+        opt\_einsum                 & 3.3.0       \\
+        PyTorch                     & 2.1.2         \\ 
+        tqdm                        & 4.66.1         \\
+        Transformers                & 4.32.1     \\  \bottomrule
+      \end{tabular}
+  }
+  \caption{Package configurations of our experiments.}
+  \label{tab:package-config}
+\end{table}
+
+% \begin{algorithm}[!ht]
+% \caption{Unified Training Procedure of \model}
+% \footnotesize
+% \label{alg:cotrain}
+% \begin{algorithmic}[1]
+% \REQUIRE Unlabelled Corpus $\mathcal{D}_{ul} = \{(x_i, y_i)\}_{i=1}^{N_{ul}}$; Distantly Supervised Corpus $\mathcal{D}_{ds} = \{(x_i, y_i)\}_{i=1}^{N_{ds}}$; Human-labelled Corpus $\mathcal{D}_{hl} = \{(x_j, y_j)\}_{j=1}^{N_{hl}}$; Two teacher-student networks ${\theta_{t_1}}, {\theta_{t_2}}, {\theta_{s_1}}, {\theta_{s_2}}$
+% \ENSURE The best model $\theta_{bst}$
+% \vspace{1.0em}
+% \STATE Pre-training $\theta_{s_1}$ and $\theta_{s_2}$ on $\mathcal{D}_{ds}$ \hfill \COMMENT{Pre-training Phase}
+% \STATE $\theta_{t_1} \leftarrow \theta_{s_1}$, $\theta_{t_2} \leftarrow \theta_{s_2}$
+
+% \vspace{0.8em}
+% \STATE $step \leftarrow 0$  \hfill  \COMMENT{Fine-tuning Phase}
+% \WHILE{\textit{not reach max training epochs}}
+%     \IF{$\textit{current epoch} \leq \textit{warmup\_epochs}$}
+%         \STATE \texttt{\textbf{// Warm-up Training Round}}
+%         \STATE Get a batch $(\boldsymbol{X}^{(hl)}, \boldsymbol{Y}^{(hl)})$ from $\mathcal{D}_{hl}$
+%         \STATE Update $\theta_{s_1}, \theta_{s_2}$ with $(\boldsymbol{X}^{(hl)}, \boldsymbol{Y}^{(hl)})$
+%         \STATE Update $\theta_{t_1}, \theta_{t_2}$ with Eq. (\ref{eq:ema-teacher-update})
+%     \vspace{0.8em}
+%     \ELSE
+%         \STATE Get a batch $(\boldsymbol{X}^{(hl)}, \boldsymbol{Y}^{(hl)})$ and $(\boldsymbol{X}^{(ul)}, \boldsymbol{Y}^{(ul)})$ from $\mathcal{D}_{hl}$ and $\mathcal{D}_{ul}$ 
+%         \vspace{0.7em}
+%         \STATE \texttt{\textbf{// Pseudo-labels Generation}}
+%         \STATE Get pseudo-labels via the teacher $\theta_{t_1}, \theta_{t_2}$: \\ $\tilde{\boldsymbol{Y}}_{t_1}^{(ul)} \leftarrow f(\boldsymbol{X}^{(ul)}; \theta_{t_1})$, $\tilde{\boldsymbol{Y}}_{t_2}^{(ul)} \leftarrow f(\boldsymbol{X}^{(ul)}; \theta_{t_2})$ 
+%         \vspace{0.7em}
+%         \STATE \texttt{\textbf{// Pseudo-labels Selection}}
+%         \STATE Get indices $\mathcal{I}_1, \mathcal{I}_2$ of top reliable pseudo-labels in $\tilde{\boldsymbol{Y}}_{t_1}^{(ul)}, \tilde{\boldsymbol{Y}}_{t_2}^{(ul)}$: \\ $\mathcal{I}^{\text{pos}}_1 \leftarrow \text{TopkPositiveSelection}(\tilde{\boldsymbol{Y}}_{t_1}^{(ul)})$, \\ $\mathcal{I}^{\text{neg}}_1 \leftarrow \text{TopkNegativeSelection}(\tilde{\boldsymbol{Y}}_{t_1}^{(ul)})$ \\
+%         $\mathcal{I}^{\text{pos}}_2 \leftarrow \text{TopkPositiveSelection}(\tilde{\boldsymbol{Y}}_{t_2}^{(ul)})$, \\ $\mathcal{I}^{\text{neg}}_2 \leftarrow \text{TopkNegativeSelection}(\tilde{\boldsymbol{Y}}_{t_2}^{(ul)})$ \\
+%         $\mathcal{I}_1 \leftarrow \mathcal{I}^{\text{pos}}_1 \cup \mathcal{I}^{\text{neg}}_1$ \\ $\mathcal{I}_2 \leftarrow \mathcal{I}^{\text{pos}}_2 \cup \mathcal{I}^{\text{neg}}_2$
+%         \vspace{0.7em}
+%         \STATE \texttt{\textbf{// Self-supervised Step}}
+%         \STATE Get students' predictions and compute Self-supervised loss:\\ 
+%         $\tilde{\boldsymbol{Y}}_{s_1}^{(ul)} \leftarrow f(\boldsymbol{X}^{(ul)}; \theta_{s_1})$, \\ 
+%         $\tilde{\boldsymbol{Y}}_{s_2}^{(ul)} \leftarrow f(\boldsymbol{X}^{(ul)}; \theta_{s_2})$ \\ 
+%         $\mathcal{L}_{st}^1 \leftarrow \text{Loss}(\tilde{\boldsymbol{Y}}_{s_1}^{(ul)}[\mathcal{I}_1], \tilde{\boldsymbol{Y}}_{t_1}^{(ul)}[\mathcal{I}_1])$ \\ 
+%         $\mathcal{L}_{st}^2 \leftarrow \text{Loss}(\tilde{\boldsymbol{Y}}_{s_2}^{(ul)}[\mathcal{I}_2], \tilde{\boldsymbol{Y}}_{t_2}^{(ul)}[\mathcal{I}_2])$
+%         \vspace{0.7em}
+%         \STATE \texttt{\textbf{// Unsupervised Synergistic Cross-supervision Step}}
+%         \STATE $\mathcal{L}_{css}^1 \leftarrow 0, \mathcal{L}_{css}^2 \leftarrow 0$
+%         \IF{$(step+1) \ \% \ Cross\_Update\_Step = 0$}
+%             \STATE Identify disagreement indices $\tilde{\mathcal{I}_1}$ and $\tilde{\mathcal{I}_2}$: \\ $\tilde{\mathcal{I}_1} = \mathcal{I}_1 \setminus \mathcal{I}_2$, \\ $\tilde{\mathcal{I}_2} = \mathcal{I}_2 \setminus \mathcal{I}_1$
+%             \vspace{0.7em}
+%             \STATE Compute Cross-supervision Loss in Eq. (\ref{eq:cross-stage-loss}): \\ $\mathcal{L}_{css}^1 \leftarrow \text{MSE}(\tilde{\boldsymbol{Y}}_{s_1}^{(ul)}[\tilde{\mathcal{I}_2}], \tilde{\boldsymbol{Y}}_{t_2}^{(ul)}[\tilde{\mathcal{I}_2}])$, \\ $\mathcal{L}_{css}^2 \leftarrow \text{MSE}(\tilde{\boldsymbol{Y}}_{s_2}^{(ul)}[\tilde{\mathcal{I}_1}], \tilde{\boldsymbol{Y}}_{t_1}^{(ul)}[\tilde{\mathcal{I}_1}])$   
+%         \ENDIF
+%         \vspace{0.7em}
+%         \STATE \texttt{\textbf{// Final Loss}}
+%         \STATE Compute the losses $\mathcal{L}^1_{ft}, \mathcal{L}^2_{ft}$ for $\theta_{s_1}, \theta_{s_2}$ by Eq. (\ref{eq:finetune-loss}).
+%         \STATE Compute the losses $\mathcal{L}^1_{sp}, \mathcal{L}^2_{sp}$ for $\theta_{s_1}, \theta_{s_2}$ with $(\boldsymbol{X}^{(hl)}, \boldsymbol{Y}^{(hl)})$.
+%         \STATE Compute the losses $\mathcal{L}_1, \mathcal{L}_2$ for $\theta_{s_1}, \theta_{s_2}$ by Eq. (\ref{eq:total-loss}).
+%         \vspace{0.7em}
+%         \STATE \texttt{\textbf{// Model Update}}
+%         \STATE Update $\theta_{s_1}, \theta_{s_2}$ with $\mathcal{L}_1, \mathcal{L}_2$
+%         \STATE Update $\theta_{t_1}, \theta_{t_2}$ by Eq. (\ref{eq:ema-teacher-update})
+%         \vspace{0.5em}
+%     \ENDIF
+%     \vspace{0.7em}
+%     \STATE \texttt{\textbf{// Model Evaluation}}
+%     \STATE Evaluate $\theta_{s_1}, \theta_{t_1}, \theta_{s_2}, \theta_{t_2}$ on Dev set and save the best parameters.
+%     \STATE $step \leftarrow step + 1$
+%     \vspace{0.3em}
+% \ENDWHILE
+% \vspace{0.7em}
+% \RETURN The best model $\theta_{bst} \in \{\theta_{t_1}, \theta_{t_2}, \theta_{s_1}, \theta_{s_2}\}$
+% \end{algorithmic}
+% \label{algo:unified-training-procedure}
+% \end{algorithm}

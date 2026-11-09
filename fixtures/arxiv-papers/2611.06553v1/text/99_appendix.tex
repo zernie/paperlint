@@ -1,0 +1,165 @@
+\appendix
+
+\renewcommand{\thesubsection}{\arabic{subsection}}
+
+\subsection{Training Details}
+\label{appendix:training}
+We train all the evaluated models for two epochs on 1,000 randomly selected sample from PKU-SafeRLHF~\cite{ji2024pku} dataset with a batch size of two. Following~\cite{zou2024circuit}, we observed that adding a small number of samples for retaining models' general capability is necessary. Therefore we follow Circuit Breaker and additionally use 850 samples from Alpaca~\cite{alpaca} and 150 benign samples from XSTest~\cite{rottger2024xstest} during training Llama-3-8B-Instruct and Llama-3.2-3B to retain the models' capability during fine-tuning. To create preference pairs for the retain part of the dataset, we use a set of fixed refusal answers for the dispreferred choice and each model's benign response for the preferred choice. Preference pairs for PKU-SafeRLHF are used directly from the dataset itself.
+
+Regarding ABS-Align's pruning strategy, we set pruning steps $t_p = 200$ and the pruning rate to 20\% such that every 200 steps safety neurons corresponding to one pruning iteration detected by TwinBreak are pruned. We use a linear cosine scheduler and AdamW as the optimizer for both models.
+
+
+For finetuning the Gemma-2-2B-IT model, we use a learning rate of $1e-5$ and we set the beta for DPO to 0.1. We set weight decay to 0 and warmup ratio to 0.1. For Finetuning Llama-3-8B-Instruct, we use a learning rate of 2e-5, beta of 0.1, and warmup ratio of 0.1. For Llama-3.2-3B we use a learning rate of 2e-4 and beta of 0.3 with a warmup ratio of 0.1. Finally, for Qwen-3-4B we use a learning rate of 2e-4, a beta of 0.1, and a warmup ratio of 0.05.
+
+\subsection{SORRY-Bench Black-box-style Adversarial Prompts}
+\label{appendix:sorry_bench}
+SORRY-Bench~\cite{xie2025sorrybench} has black-box twenty attack types in four categories namely writing style attacks, multi-languages, encoding and decryption, and presuasion techniques. We exclude multi-language and encoding and decryption attacks and select the ten categories in Table~\ref{tab:sorrybench_attacks} in our evaluations.
+
+
+\begin{table}[t]
+    \centering
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.9}
+    \caption{SORRY-Bench black-box attack transformations used in our evaluation.}
+    \label{tab:sorrybench_attacks}
+    \begin{tabular}{p{0.28\linewidth} p{0.64\linewidth}}
+        \toprule
+        \textbf{Attack Type} & \textbf{Description} \\
+        \midrule
+        Question & Harmful instruction rephrased as question \\
+
+        Slang & Rewrites the harmful prompt using colloquial language and slang. \\
+
+        Uncommon Dialects & Expresses the harmful request using less common dialects. \\
+
+        Technical Terms & Rephrases the request using technical terminology. \\
+
+        Role Play & Frames the harmful request within an assigned role or hypothetical persona. \\
+
+        Misspellings & Introduces spelling or grammatical errors into the request. \\
+
+        Authority Endorsement & Cites authoritative sources or institutions to support the request \\
+
+        Misrepresentation & Misrepresents the harmful purpose of the request as benign. \\
+
+        Evidence-based Persuasion & Uses facts to justify fulfilling the request. \\
+
+        Expert Endorsement & Invokes the opinion of an expert. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Full SORRY-Bench Results}
+\label{appendix:full_sorry_bench}
+We presented ASR over five attacks from SORRY-Bench and the average over all the selected ten attacks in Section~\ref{subsubsec:robustness_black_box}. Here we provide the full results over all the ten attacks for completeness. Table~\ref{tab:sorrybench_full_gemma} provides ASR for all the ten evaluated attacks for Gemma-2-2B-IT which shows that ABS-Align consistently improves robustness. Results for Llama-3-8B-Instruct, Llama-3.2-3B, and Qwen-3-4B show a similar trend as the numbers reported in Tables~\ref{tab:sorrybench_full_llama}, ~\ref{tab:sorrybench_full_llama3.2}, and ~\ref{tab:sorrybench_full_qwen} show.
+
+
+\begin{table}[t]
+    \centering
+    \setlength{\tabcolsep}{6pt}
+    \renewcommand{\arraystretch}{0.95}
+    \small
+    \caption{Attack success rate (\%) of Gemma-2-2B-IT across all ten SORRY-Bench black-box attacks used in our evaluation. Lower is better.}
+    \label{tab:sorrybench_full_gemma}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Attack} & \textbf{No Defense} & \textbf{ABS-Align} \\
+        \midrule
+        Question                    & 19.77 & \textbf{12.50} \\
+        Slang                       & 31.59 & \textbf{13.86} \\
+        Uncommon Dialects           & 27.95 & \textbf{12.50} \\
+        Technical Terms             & 24.09 & \textbf{8.86} \\
+        Role Play                   & 20.68 & \textbf{6.81} \\
+        Misspellings                & 30.90 & \textbf{12.04} \\
+        Authority Endorsement       & 65.45 & \textbf{20.45} \\
+        Misrepresentation           & 72.95 & \textbf{17.27} \\
+        Evidence-based Persuasion   & 55.68 & \textbf{11.81} \\
+        Expert Endorsement          & 66.81 & \textbf{16.36} \\
+        \midrule
+        \textbf{Average}            & \textbf{41.58} & \textbf{13.24} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.9}
+    \small
+    \caption{Attack success rate (\%) of Llama-3-8B-Instruct across all ten SORRY-Bench black-box attacks used in our evaluation. Lower is better.}
+    \label{tab:sorrybench_full_llama}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Attack} & \textbf{No Defense} & \textbf{ABS-Align} \\
+        \midrule
+        Question                    & 41.13 & \textbf{18.86} \\
+        Slang                       & 41.36 & \textbf{16.59} \\
+        Uncommon Dialects           & 41.36 & \textbf{11.36} \\
+        Technical Terms             & 46.36 & \textbf{20.00} \\
+        Role Play                   & 36.36 & \textbf{15.90} \\
+        Misspellings                & 43.18 & \textbf{18.40} \\
+        Authority Endorsement       & 60.90 & \textbf{22.50} \\
+        Misrepresentation           & 55.45 & \textbf{13.63} \\
+        Evidence-based Persuasion   & 56.59 & \textbf{22.04} \\
+        Expert Endorsement          & 60.68 & \textbf{18.63} \\
+        \midrule
+        \textbf{Average}            & \textbf{48.34} & \textbf{17.79} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+\begin{table}[t]
+    \centering
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.9}
+    \small
+    \caption{Attack success rate (\%) of Llama-3.2-3B across all ten SORRY-Bench black-box attacks used in our evaluation. Lower is better.}
+    \label{tab:sorrybench_full_llama3.2}
+    \begin{tabular}{lcc}
+    \toprule
+    \textbf{Attack} & \textbf{No Defense} & \textbf{ABS-Align} \\
+    \midrule
+    Question                    & 36.82 & \textbf{27.27} \\
+    Slang                       & 36.36 & \textbf{22.73} \\
+    Uncommon Dialects           & 35.23 & \textbf{20.91} \\
+    Technical Terms             & 43.18 & \textbf{27.95} \\
+    Role Play                   & 34.55 & \textbf{22.05} \\
+    Misspellings                & 34.77 & \textbf{20.00} \\
+    Authority Endorsement       & 79.77 & \textbf{49.09} \\
+    Misrepresentation           & 83.41 & \textbf{48.18} \\
+    Evidence-based Persuasion   & 71.14 & \textbf{46.36} \\
+    Expert Endorsement          & 75.45 & \textbf{45.68} \\
+    \midrule
+    \textbf{Average}            & \textbf{53.07} & \textbf{33.02} \\
+    \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{0.9}
+    \small
+    \caption{Attack success rate (\%) of Qwen-3-4B across all ten SORRY-Bench black-box attacks used in our evaluation. Lower is better.}
+    \label{tab:sorrybench_full_qwen}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Attack} & \textbf{No Defense} & \textbf{ABS-Align} \\
+        \midrule
+        Question                    & 44.09 & \textbf{6.81} \\
+        Slang                       & 55.90 & \textbf{9.54} \\
+        Uncommon Dialects           & 58.18 & \textbf{13.86} \\
+        Technical Terms             & 52.50 & \textbf{13.40} \\
+        Role Play                   & 52.04 & \textbf{7.04} \\
+        Misspellings                & 50.45 & \textbf{8.40} \\
+        Authority Endorsement       & 93.63 & \textbf{49.09} \\
+        Misrepresentation           & 92.95 & \textbf{58.18} \\
+        Evidence-based Persuasion   & 93.86 & \textbf{47.72} \\
+        Expert Endorsement          & 93.86 & \textbf{57.95} \\
+        \midrule
+        \textbf{Average}            & \textbf{68.75} & \textbf{27.20} \\
+        \bottomrule
+    \end{tabular}
+\end{table}

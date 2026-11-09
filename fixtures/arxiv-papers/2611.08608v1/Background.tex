@@ -1,0 +1,54 @@
+
+\vspace{-4.0mm}
+
+\section{Background}
+\label{sec:Background}
+\subsection{An Overview of AutoYara Design}
+\label{subsec:OverView}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=1\linewidth]{Figures/FrameWorks/AutoYaraFramework.pdf}
+    \vspace{-4.0mm}
+    \caption{The AutoYara system pipeline.}
+    \label{fig:yara pipeline}
+\end{figure}
+
+\noindent AutoYara~\cite{raff2020_auto_yara} generates rules based on byte patterns that are not frequent in goodware samples (to avoid FPs) and are frequent among the malware samples (to fingerprint them). AutoYara implements this logic via two steps: \textbf{(1)} creating a blacklist of goodware byte patterns during training; \textbf{(2)} identifying frequent malware-family patterns that are disjoint from previously seen goodware patterns during generation. Figure~\ref{fig:yara pipeline} provides a representation of the framework.
+AutoYara's training step uses KiloGrams~\cite{raff2019_kilograms} to extract the top-K byte N-grams from the dataset, producing Bloom filters~\cite{bloom1970_bloomfilter} to store the byte blacklists. Next, the generation step extracts new N-grams from the input files and biclusters using Spectral Co-Clustering~\cite{dhillon2001_spectralcoclustering}
+(details in Appendix~\ref{app:biclustering})
+ with VBGMM~\cite{corduneanu2001_vbgmm}. This reveals distinct byte groups that are filtered using heuristics (e.g., coverage, cluster size, low FP, etc.) and merged into a disjunction of \textit{soft} conjunctions. The disjunctions have the form \textit{at least X conditions match}, where each string corresponds to an extracted N-gram and each condition to a bicluster. AutoYara ships pretrained BFs for the top 1M frequent bytes from EMBER~\cite{anderson2018emberopendatasettraining}.
+
+
+\subsection{A critical review of AutoYara Clustering}
+
+\noindent AutoYara employs unsupervised clustering~\cite{jain1999_clustering_review} to group byte patterns, reducing FPs by requiring simultaneous signature matches. It aims to organize N-gram candidates into the fewest clusters covering the most samples. While the literature offers various Hard~\cite{lloyd1982_kmeans, ergun2022_learningaugmentedkmeansclustering, ester1996_DBSCAN} and Soft~\cite{bezdek1984_fuzzycmeans, reynolds2009_gaussianmixture, corduneanu2001_vbgmm} clustering approaches, AutoYara utilizes Gaussian Mixture Models (GMMs) as its soft clustering solution. Table~\ref{tab:clustering_comparison} contrasts AutoYara with other literature methods and our proposed approach. While AutoYara addresses the manual $k$ selection of K-Means using GMMs, it remains sensitive to initialization and assumes Gaussian distributions (often underfitting malware biclusters). Other methods like Augmented K-Means~\cite{ergun2022_learningaugmentedkmeansclustering} offer noise resistance, and DBSCAN~\cite{ester1996_DBSCAN} handles non-spherical data without a preset $k$. 
+
+\begin{table}[!htbp]
+\caption{Comparison of Clustering Methods}
+\vspace{-6mm}
+\begin{center}
+% Scales the table to exactly the width of the column
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Method} & \textbf{Type} & \textbf{Auto-$k$} & \textbf{Non-Gauss.$^\dagger$} & \textbf{Biclusters} \\ 
+\hline
+K-Means~\cite{lloyd1982_kmeans} & Hard & $\times$ & $\times$ & $\times$ \\
+C-Means~\cite{bezdek1984_fuzzycmeans} & Soft & $\times$ & $\times$ & $\times$ \\
+DBSCAN~\cite{ester1996_DBSCAN} & Density & \textcolor{green}{\checkmark} & \textcolor{green}{\checkmark} & $\times$ \\
+\textbf{AutoYara} & \textbf{Soft} & \textcolor{green}{\checkmark} & $\times$ & \textcolor{green}{\checkmark} \\ 
+\hline
+\textbf{AutoPYara (base)} & \textbf{Soft} & $\times$ & \textcolor{green}{\checkmark} & \textcolor{green}{\checkmark} \\
+\textbf{AutoPYara (heuristic)} & \textbf{Soft} & \textcolor{green}{\checkmark} & \textcolor{green}{\checkmark} & \textcolor{green}{\checkmark} \\
+\hline
+
+\multicolumn{5}{l}{$^\dagger$Handles non-spherical/non-Gaussian distributions.}
+\end{tabular}
+}
+\label{tab:clustering_comparison}
+\end{center}
+\vspace{-4mm}
+\end{table}
+
+\noindent \textbf{Hypothesis:} We propose combining the benefits of Soft clustering (Fuzzy C-Means~\cite{bezdek1984_fuzzycmeans}) with the density-based automatic $k$ determination of DBSCAN to overcome the initialization and distribution limitations of AutoYara.

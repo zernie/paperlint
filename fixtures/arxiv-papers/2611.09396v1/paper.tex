@@ -1,0 +1,74 @@
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+% \usepackage[submission]{sty/aaai2027}  % DO NOT CHANGE THIS
+\usepackage{sty/aaai2027}
+% The serif, sans-serif, and monospaced fonts are loaded automatically by
+% aaai2027.sty (newtxtext, helvet, courier). DO NOT add \usepackage{times},
+% \usepackage{helvet}, \usepackage{courier}, or any other font package.
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in} % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in} % DO NOT CHANGE THIS
+%
+% These are recommended to typeset algorithms but not required. See the subsubsection on algorithms. Remove them if you don't have algorithms in your paper.
+\usepackage[T1]{fontenc}
+\usepackage{ifthen}
+\usepackage{algorithm}
+\usepackage[noEnd=true,indLines=true,commentColor=black]{sty/algpseudocodex}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{cleveref}
+\usepackage{siunitx}
+\usepackage{makecell}
+\usepackage{multirow}
+\usepackage{sty/custom}
+
+\nocopyright
+
+%
+% These are recommended to typeset listings but not required. See the subsubsection on listing. Remove this block if you don't have listings in your paper.
+\usepackage{newfloat}
+\usepackage{listings}
+\DeclareCaptionStyle{ruled}{labelfont=normalfont,labelsep=colon,strut=off} % DO NOT CHANGE THIS
+\lstset{%
+	basicstyle={\footnotesize\ttfamily},% footnotesize acceptable for monospace
+	numbers=left,numberstyle=\footnotesize,xleftmargin=2em,% show line numbers, remove this entire line if you don't want the numbers.
+	aboveskip=0pt,belowskip=0pt,%
+	showstringspaces=false,tabsize=2,breaklines=true}
+\floatstyle{ruled}
+\newfloat{listing}{tb}{lst}{}
+\floatname{listing}{Listing}
+%
+% Keep the \pdfinfo as shown here. There's no need
+% for you to add the /Title and /Author tags.
+\pdfinfo{
+/TemplateVersion (2027.1)
+}
+
+\setcounter{secnumdepth}{2} %May be changed to 1 or 2 if section numbers are desired.
+\title{Travel Cost Calibration for Multi-Agent Target Assignment and Pathfinding}
+\author{Yu Kumagai$^{1,2}$, Ryohei Banno$^{1}$, Keisuke Okumura$^{2}$}
+\affiliations{
+  $^1$Hitotsubashi University, Japan
+  \\
+  $^2$National Institute of Advanced Industrial Science and Technology (AIST), Japan
+  \\
+  {yu.kumagai@aist.go.jp, r.banno@r.hit-u.ac.jp, okumura.k@aist.go.jp}
+}
+
+\begin{document}
+
+\maketitle
+
+\input{abs}
+\input{content}
+\input{ack}
+\bibliography{sty/ref-macro,ref}
+\input{appendix}
+
+\end{document}

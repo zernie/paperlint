@@ -1,0 +1,49 @@
+\section{ETG Records and Successful Deployment Cases}
+\label{app:cases}
+We follow two successful deployments from the completed WebShop and HotpotQA evaluations. Each case pairs the held-out result with an acquired ETG record, its training participation, and the skill's verification history. Figure~\ref{fig:etg-records} shows the key fields of the actual records.
+
+
+\subsection{WebShop: retained experience and approved weights complete one purchase}
+\label{app:case-webshop}
+\paragraph{Acquisition and consolidation.}
+A teacher successfully purchases a kelly-green hoodie in size 3x-large for less than \$60. The ETG associates the trajectory with \emph{option selection} and records its observations, executed actions, teacher source, and reward of 1. The first consolidation update includes this trace among 288 action-training examples. On the reserved option-selection probe, both the candidate without ETG and the base model with ETG match all three eligible target actions. The controller approves the adapter for this skill and releases eligible records, including the illustrated teacher record, while keeping residual experience.
+
+The same update retains query formulation, result selection, and purchase decision. A later candidate receives no new approval; deployment continues using the previously verified version for approved skills. This preserves useful weights and external traces across updates.
+
+\paragraph{Successful held-out execution.}
+A different goal requests a \emph{navy-blue} hoodie in size 3x-large for less than \$60. This exact goal is absent from the acquired graph snapshots. Table~\ref{tab:case-webshop-actions} shows the five executed actions. The initial search uses the base model with retained ETG guidance; the remaining four actions use the approved adapter with episodic retrieval disabled.
+
+\begin{table}[h]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{WebShop successful trajectory in a separate completed run. The search query is shortened for display; product identifiers and subsequent actions are preserved.}
+\label{tab:case-webshop-actions}
+\begin{tabular}{rll}
+\toprule
+Step & Executed action & Policy / experience access\\
+\midrule
+1 & \texttt{search[...navy blue 3x-large]} & Base + retained ETG\\
+2 & \texttt{click[b01hqtwl6s]} & Approved adapter; ETG off\\
+3 & \texttt{click[navy blue]} & Approved adapter; ETG off\\
+4 & \texttt{click[3x-large]} & Approved adapter; ETG off\\
+5 & \texttt{click[buy now]} & Approved adapter; ETG off\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The environment awards full purchase reward after five actions. Under the same goal and interface, Base repeatedly searches and inspects unsuitable products, exhausting 30 actions with reward 0. This separate 100-goal evaluation obtains 47 successes with \method\ and 44 with Base: 14 tasks change from failure to success, and 11 change in the opposite direction. This case exhibits the combined deployment path, with external guidance supporting the query and verified weights handling the subsequent interaction.
+
+\subsection{HotpotQA: a retained bridge trace is later released after verification}
+\label{app:case-hotpotqa}
+\paragraph{An ETG record with a reusable reasoning pattern.}
+A successful teacher example asks which actor appeared in both \emph{D.C. Cab} and \emph{Barney Miller}. The stored trace identifies Max Gail in the film cast and connects him to his television role. The record carries the teacher source tag, supplied evidence, answer, and \emph{bridge reasoning} skill association.
+
+The record contributes valid training data to both consolidation updates. After the first update, the weights arm passes 2 of 5 reserved bridge-reasoning probes and the memory arm passes 4 of 5; the record remains in ETG. After the second update, the scores become 3 of 5 and 2 of 5. The controller approves that skill's new adapter version and releases the illustrated record. Replay remains available for later training. Thus the record's release follows verified behavior after a later update, rather than the completion of its first training exposure.
+
+\paragraph{Successful reasoning without episodic retrieval.}
+The held-out question asks:
+\begin{quote}\small
+In which University is Richard Williams' former assistant a member of the Athletics Hall of Fame?
+\end{quote}
+Both models receive the same ten supplied paragraphs. The relevant evidence identifies Rick Stansbury as Williams' former assistant and states that Stansbury belongs to the Campbellsville University Athletics Hall of Fame. The base model answers \emph{Mississippi State}, the university where Williams coached. The approved adapter answers \emph{Campbellsville University}, matching the reference answer.
+
+The question is absent from the acquired ETG and reserved-probe records. The evaluated request uses the second approved adapter with no episodic retrieval. Its response follows the intermediate person to the requested affiliation, while Base selects the university associated with the first named person. The acquisition trace and this evaluation question involve different entities but share the bridge-reasoning skill.

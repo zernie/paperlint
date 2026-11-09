@@ -1,0 +1,24 @@
+\begin{table}[t]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\caption{Benchmark-specific SFT settings for Qwen3-8B in the scaled evaluations. Training examples count decisions for ALFWorld and WebShop, answers for WebQuestions, and decision windows from 32 training worlds for Crafter.}
+\label{tab:qwen-hyperparameters}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Setting & ALFWorld & WebShop & WebQuestions & Crafter\\
+\midrule
+Maximum training tokens & 16,384 & 8,192 & 8,192 & 8,192\\
+Data passes & 3 & 3 & 3 & 3\\
+Optimizer updates & 5,004 & 2,149 & 450 & 1,281\\
+Training seed & 42 & 42 & 42 & 42\\
+Learning rate & $2\times10^{-5}$ & $2\times10^{-5}$ & $2\times10^{-5}$ & $2\times10^{-5}$\\
+LoRA rank / scaling & 16 / 32 & 16 / 32 & 16 / 32 & 16 / 32\\
+LoRA dropout & 0.05 & 0.05 & 0.05 & 0.05\\
+Microbatch / accumulation & 1 / 4 & 1 / 4 & 1 / 4 & 1 / 4\\
+Weight decay & 0.01 & 0.01 & 0.01 & 0.01\\
+Warm-up fraction & 0.1 & 0.1 & 0.1 & 0.1\\
+Base-model KL coefficient & 0 & 0 & 0 & 0\\
+Training weight loading & 4 bit & 4 bit & 4 bit & 4 bit\\
+Initial retrieval records & 19 & 43 & 16 & 185\\
+\bottomrule
+\end{tabular}
+\end{table}

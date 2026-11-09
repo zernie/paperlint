@@ -1,0 +1,72 @@
+\section{Discussion and Analysis}
+\label{sec:discussion}
+
+Beyond the capability--drift association in Section~\ref{sec:main-results}, we examine four complementary aspects of authorization drift: its persistence across rollouts, its behavioural structure across domains and trajectory stages, its interaction with agent frameworks, and its potential legal implications. Together, these analyses clarify where drift concentrates and what effective mitigation must preserve.
+
+
+\subsection{Persistence Across Rollouts}
+\label{sec:persistence}
+
+
+Drift is persistent across rollouts and unlikely to be explained solely by sampling variability. Across four rollouts (Table~\ref{tab:persistence}), the run-to-run standard deviation is below $0.02$ for every model. For the three models with $\mathrm{DR}>0.50$, the persistence ratio $\mathrm{PR}=\mathrm{DR}_{\mathrm{sample}}/\mathrm{DR}_{\mathrm{run}}$ is $1.16$--$1.20$. Equivalently, among tasks exhibiting drift at least once, drift occurs in approximately $83$--$86\%$ of rollouts on average. The low-DR Llama-4-Maverick-17B×128E has a higher $\mathrm{PR}$ of $2.28$; because this model also rarely completes tasks, its persistence estimate should be interpreted alongside its low task engagement rather than as evidence of stronger boundary-keeping.
+
+\subsection{Behavioural Structure of Drift}
+\label{sec:domain-results}
+
+\input{tables/domain_results}
+
+% \textbf{Data drift consistently dominates the other three drift types, revealing that the primary failure mode is over-collection of context rather than privilege escalation.} The four drift-type columns of Table~\ref{tab:main_results} reveal a consistent hierarchy: Data drift dominates (up to $0.574$ for Qwen3.6-35B-A3B), Scope drift is second, and Time and Tool drift trail. For the strongest models, Data drift alone exceeds the sum of the other three types. The shared structure---a single dominant Data column---is the empirical fingerprint of the helpfulness incentive: spare capacity is spent gathering more context, not escalating privileges. Over-collection of data, not tool privilege escalation, is the modal failure mode.
+
+\textbf{Data over-collection is the modal failure mode.} Data drift is the largest component for every model (up to $0.574$ for Qwen3.6-35B-A3B), while Productivity, Security, and Finance have the highest domain-level DR (Table~\ref{tab:domain_results}). This ordering is consistent with a helpfulness-driven interpretation in which agents gather additional context, but the observational comparison does not by itself identify the cause of drift.
+
+\label{sec:drift-types}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/drift_position_by_type_kde.pdf}
+\caption{Kernel-density estimate of where each drift type occurs along the trajectory (normalized position $0\!\to\!1$; $0$ = first tool call, $1$ = last action). Data drift concentrates early-to-mid, Scope and Time drift shift to the second half, and Tool drift peaks latest.}
+\label{fig:drift-position-kde}
+\end{figure}
+
+
+\textbf{Drift timing distinguishes early context gathering from later task expansion.} Figure~\ref{fig:drift-position-kde} shows Data drift peaking early-to-mid ($0.2$--$0.5$), whereas Scope and Time drift shift to the second half ($0.6$--$0.8$) and Tool drift peaks after $0.7$. These positions motivate complementary safeguards, such as limits on early context-gathering calls and explicit completion-condition checks during later stages of task execution.
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.6\columnwidth]{figs/drift_types_correlation.pdf}
+\caption{Pairwise Pearson correlations between drift types across all trajectories. Time--Scope correlation is strongest ($r=0.30$); Tool co-occurs moderately with Scope and Time ($r\approx0.20$); and Data has the weakest correlations ($r=0.11$--$0.15$).}
+\label{fig:drift-correlation}
+\end{figure}
+
+\textbf{Co-occurrence patterns suggest partially distinct failure modes.} Time and Scope have the strongest correlation ($r=0.30$), Tool co-occurs moderately with both ($r\approx0.20$), and Data has weaker correlations ($r=0.11$--$0.15$; Figure~\ref{fig:drift-correlation}). Combined with their different trajectory positions, these patterns motivate complementary controls for early data collection and later task expansion, without establishing that the categories are causally independent.
+
+
+\subsection{Framework Trade-offs}
+\label{sec:frameworks}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/fig2_framework_collapse.pdf}
+\caption{Framework comparison on four representative models (bars: CCSR). As complexity increases from \textsc{Normal} to \textsc{ReAct} to \textsc{Planner--Executor}, compliant task competence declines, most sharply on the three higher-capability backbones.}
+\label{fig:framework-collapse}
+\end{figure}
+
+\textbf{Lower DR under heavier scaffolds coincides with substantial capability loss.} Relative to \textsc{Normal}, \textsc{Planner--Executor} lowers DR for three of four representative models: from $0.61$ to $0.08$ for Qwen3.6-35B-A3B, $0.43$ to $0.26$ for Qwen3.5-397B-A17B, and $0.39$ to $0.07$ for MiniMax-M2.7 (Appendix Table~\ref{tab:framework}). Over the same comparison, CCSR falls from $0.94$ to $0.23$, $0.93$ to $0.42$, and $0.70$ to $0.19$, respectively. For Llama-3.1-8B, DR instead rises from $0.12$ to $0.21$ while CCSR declines from $0.39$ to $0.24$. Thus, in the evaluated configurations, heavier scaffolds do not improve safety while preserving compliant completion; their apparent DR gains largely coincide with capability loss.
+
+
+\subsection{Potential Legal Implications}
+\label{sec:legal}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/legal_model_statute_top10.pdf}
+\caption{Provision-level drift rate $\mathrm{DR}_\ell$ (\% of runs) for the ten provisions with the highest mean rate across models. The full matrix over all 58 provisions is in Appendix~\ref{app:legal-results}.}
+\label{fig:legal-top10}
+\end{figure}
+
+\textbf{Drift maps most often to data-minimisation provisions across several jurisdictions.} GDPR Art.~5(1)(c) is the most frequently implicated provision for all 13 models and, with its Mainland China and Hong Kong counterparts (NDSR Art.~22(1), PDPO DPP1(1)(c)), forms the top three for 12 of them (Figure~\ref{fig:legal-top10}; $43/35/31\%$ for Claude Sonnet 4.6). Llama-3.3-70B is the exception: Data drift only slightly exceeds its Scope and Time drift, and GDPR Art.~5(1)(c) appears in $40\%$ of its legally grounded runs. Overall, $93.5\%$ of legally grounded drifting runs map to provisions from at least two jurisdictions. This indicates that the same behavioural overreach often corresponds to provisions across multiple regimes; it does not establish simultaneous applicability or a legal violation.
+
+\textbf{The mapping covers data-related drift more comprehensively than other types.} $\mathrm{DR}_{\mathcal{L}}$ stays within $6.2$ points of DR and preserves the model ranking in Table~\ref{tab:main_results}. Binding provisions cover $99.2\%$ of Data drift points, compared with $55.1\%$ of Scope, $49.6\%$ of Time, and $35.2\%$ of Tool points. This difference characterizes the coverage of our mapping and should not be interpreted as establishing that the remaining behaviours are unregulated under applicable law.
+
+Together, these findings motivate evaluating safeguards jointly on drift and compliant completion, with complementary controls for early data collection and later task expansion.

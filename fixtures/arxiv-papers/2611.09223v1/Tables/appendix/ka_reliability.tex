@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\small
+\caption{\textbf{Reliability of K/A annotations.}
+Linearly weighted Cohen's $\kappa$ on 60 questions, with exact agreement (\%) in parentheses.
+LLM--human values are averaged over the two human annotators.}
+\label{tab:ka_reliability}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+ & \textbf{K} & \textbf{A} \\
+\midrule
+Human--Human                & 0.63 (68.3) & 0.60 (56.7) \\
+LLM (with silver)--Human    & 0.56 (56.7) & 0.69 (69.2) \\
+LLM (without silver)--Human & 0.67 (68.3) & 0.47 (45.0) \\
+\bottomrule
+\end{tabular}
+\end{table}

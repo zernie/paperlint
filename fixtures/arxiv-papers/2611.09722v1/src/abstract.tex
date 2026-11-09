@@ -1,0 +1,15 @@
+\begin{abstract}
+Large-language-model decode attention streams the key--value (KV) cache for every generated token.
+Packing that cache into 2-bit or 4-bit quantized integers reduces memory traffic but does not automatically translate into latency saving.
+Existing 2-bit fused kernels only reach less than $31\%$/$15\%$ of peak HBM throughput on H100/B200.
+We identify that converting each value and applying its scale and offset before feeding Tensor Cores is a major bottleneck because instruction-issue throughput is a scarce resource on modern GPUs.
+\sys{} does not apply scale and offset to each value from the KV cache, but uses \emph{affine folding} to apply scale and offset to either the other operand or the output of matrix products in decode attention, depending on the quantization scheme (token-wise or channel-wise).
+This reduces scale-and-offset operations by up to two orders of magnitude while preserving the dequantized attention output in exact arithmetic.
+\sys{} includes carefully designed bit manipulation to feed KV operands to Tensor Cores efficiently, requiring only $1$ and $0.19$ ALU instructions per element for the INT2 KV cache on H100 and B200, respectively.
+Finally, \sys{} builds warp-specialized GPU pipelines for Hopper (H100) and Blackwell (B200), leveraging architecture-specific features such as \texttt{wgmma} and \texttt{tcgen05}.
+On H100, \sys{} INT2 and INT4 kernels achieve geo-mean speedups of $3.36\times$ and $2.83\times$ over FlashInfer BF16, and $2.03\times$ and $1.71\times$ over TensorRT-LLM FP8.
+On B200, the corresponding INT2 and INT4 speedups are $2.67\times$ and $2.30\times$ over FlashInfer BF16, $1.48\times$ and $1.28\times$ over TensorRT-LLM FP8, and $1.16\times$ and $1.00\times$ over TensorRT-LLM NVFP4.
+We integrate \sys{} into SGLang to benchmark serving efficiency.
+On long-context serving workloads, \sys{} increases peak aggregate throughput by up to $170\%$ and $341\%$ over 2-bit and 16-bit baselines, respectively.
+We open-source \sys{} as a kernel library at \url{https://github.com/FutureMLS-Lab/FOSCAR}.
+\end{abstract}

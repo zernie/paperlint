@@ -1,0 +1,30 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{\textbf{Closed-book accuracy (\%) by application level.}
+\textit{Matched} covers the 30 seeds that have both an A2 and an A3 contrast (40 and 43 questions), averaged over seeds.
+The numbers of A2 and A3 questions are 29 and 101 for CLIcK, 20 and 70 for KMMLU-Pro, and 29 and 38 for KMMLU-Redux.}
+\label{tab:matched}
+\begin{tabular}{@{}l|rrrrrrrr|rr@{}}
+\toprule
+ & & & \multicolumn{4}{c}{\textbf{KMMLU}} & & & & \\
+\cmidrule(lr){4-7}
+ & \multicolumn{2}{c}{\textbf{CLIcK}} & \multicolumn{2}{c}{\textbf{Pro}} & \multicolumn{2}{c}{\textbf{Redux}} & \multicolumn{2}{c}{\textbf{All}} & \multicolumn{2}{c}{\textbf{Matched}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(l){10-11}
+\textbf{Model} & \textbf{A2} & \textbf{A3} & \textbf{A2} & \textbf{A3} & \textbf{A2} & \textbf{A3} & \textbf{A2} & \textbf{A3} & \textbf{A2} & \textbf{A3} \\
+\midrule
+K-EXAONE          & 65.5  & 46.5 & 50.0  & 37.1 & 34.5 & 57.9 & 50.0 & 45.5 & 46.7 & 40.0 \\
+A.X K1            & 72.4  & 40.6 & 45.0  & 27.1 & 48.3 & 47.4 & 56.4 & 37.3 & 51.7 & 21.7 \\
+Solar Open        & 55.2  & 29.7 & 30.0  & 21.4 & 34.5 & 36.8 & 41.0 & 28.2 & 38.3 & 23.3 \\
+\midrule
+Aya Expanse 32B   & 31.0  & 26.7 & 25.0  & 21.4 & 20.7 & 18.4 & 25.6 & 23.4 & 33.3 & 20.0 \\
+\midrule
+GLM-4.7           & 75.9  & 67.3 & 55.0  & 48.6 & 58.6 & 63.2 & 64.1 & 60.3 & 65.0 & 56.7 \\
+Qwen3.5           & 82.8  & 72.3 & 75.0  & 68.6 & 72.4 & 60.5 & 76.9 & 68.9 & 76.7 & 58.3 \\
+\midrule
+Claude Sonnet 5.5 & 100.0 & 86.1 & 100.0 & 77.1 & 79.3 & 78.9 & 92.3 & 81.8 & 93.3 & 81.7 \\
+GPT-6.1 Sol       & 96.6  & 94.1 & 100.0 & 92.9 & 79.3 & 86.8 & 91.0 & 92.3 & 93.3 & 93.3 \\
+\bottomrule
+\end{tabular}
+\vspace{-0.1in}
+\end{table*}

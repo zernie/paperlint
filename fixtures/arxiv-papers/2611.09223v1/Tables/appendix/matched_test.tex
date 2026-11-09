@@ -1,0 +1,27 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Matched comparison of A2 and A3 in the \textit{Closed} condition.}
+Accuracy (\%) averaged over the 30 seeds with both contrasts, the number of seeds on which each level is more accurate, and the $p$-value of a two-sided sign test.}
+\label{tab:matched_test}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{\textbf{Accuracy}} & \multicolumn{2}{c}{\textbf{Seeds favoring}} & \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+\textbf{Model} & \textbf{A2} & \textbf{A3} & \textbf{A2} & \textbf{A3} & $p$ \\
+\midrule
+K-EXAONE          & 46.7 & 40.0 & 9  & 6 & .607 \\
+A.X K1            & 51.7 & 21.7 & 15 & 4 & .019 \\
+Solar Open        & 38.3 & 23.3 & 8  & 4 & .388 \\
+\midrule
+Aya Expanse 32B   & 33.3 & 20.0 & 8  & 4 & .388 \\
+\midrule
+GLM-4.7           & 65.0 & 56.7 & 7  & 3 & .344 \\
+Qwen3.5           & 76.7 & 58.3 & 10 & 3 & .092 \\
+\midrule
+Claude Sonnet 5.5 & 93.3 & 81.7 & 6  & 1 & .125 \\
+GPT-6.1 Sol       & 93.3 & 93.3 & 2  & 1 & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}

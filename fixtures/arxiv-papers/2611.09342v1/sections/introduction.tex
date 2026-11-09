@@ -1,0 +1,28 @@
+\section{Introduction}
+% Relation Extraction (RE) is the task of identifying semantic relationships between entity pairs within a given context. As a core component of information extraction, RE underpins various downstream applications such as Question Answering \cite{xu2016question}. Early research in RE has primarily focused on sentence-level contexts, where the model is restricted to information found within a single sentence. However, many real-world relations span multiple sentences, making the sentence-level setting insufficient. For instance, \citet{yao2019docred} found that over 40\% of relational facts in Wikipedia require cross-sentence reasoning. This has sparked growing interest in Document-level Relation Extraction (DocRE) \cite{xu2021document, zhang2021document, zhou2021document, tan2022document}, which seeks to identify relations across entire documents.
+Relation Extraction (RE) identifies semantic relationships between entity pairs and is fundamental to applications such as Question Answering \cite{xu2016question}. Early work focuses on sentence-level contexts, but many real-world relations span multiple sentences; for example, over 40\% of relational facts in Wikipedia require cross-sentence reasoning \cite{yao2019docred}. This limitation has led to growing interest in Document-level Relation Extraction (DocRE) \cite{xu2021document, zhang2021document, zhou2021document, tan2022document}, which models relations across entire documents.
+
+DocRE methods typically rely on deep neural networks, which require substantial amounts of annotated data for effective training. However, creating high-quality DocRE datasets is both time-consuming and error-prone \cite{tan2022revisiting, huang2022does}. For example, the widely-used DocRED dataset \cite{yao2019docred} contains an average of 19.5 entities per document, resulting in roughly 38,000 candidate triples to be annotated per document when considering 97 predefined relation types \cite{tan2022revisiting}.
+
+To reduce reliance on manual annotation, several studies \cite{tan2023class, feng2024dure, sun2023uncertainty} have explored pseudo-labelling \cite{lee2013pseudo} -- an approach that generates synthetic labels for unlabelled or noisily labelled data. This typically involves an iterative loop: generating pseudo-labels, incorporating them into the training set, retraining the model, and repeating the cycle. However, such methods are prone to confirmation bias \cite{arazo2020pseudo}, where low-quality pseudo-labels are reinforced over iterations, harming overall performance. Some recent works \cite{tan2022document, tan2023class, feng2024dure} use pseudo-labels without evaluating their reliability, further exacerbating this issue. To address this, \citet{sun2023uncertainty} proposed uncertainty-based selection to improve pseudo-label quality. While effective, their method relies on a single model and requires multiple rounds of training and denoising, significantly increasing computational cost and leaving confirmation bias largely unaddressed.
+
+In this work, we introduce the \textbf{Synergistic Dual Teacher-Student} approach (\model), a novel semi-supervised learning framework for DocRE that generates high-quality pseudo-labels in a single training run, eliminating the need for iterative denoising. To reduce training overhead, the teacher model is derived from the student using Exponential Moving Average (EMA) to produce more stable targets \cite{tarvainen2017mean}.
+
+While EMA-based pseudo-label generation enhances performance, it may still suffer from confirmation bias. To address this issue, we propose an unsupervised synergistic cross-supervision strategy inspired by Co-teaching \cite{blum1998combining, han2018co, yu2019does}. Specifically, two distinct teacher-student pairs exchange highly confident pseudo-labels on instances where their predictions diverge, promoting diverse learning signals and mitigating confirmation bias. Confidence is determined by evaluating the variance of prediction logits across multiple forward passes. Finally, we present a unified training framework that integrates both self-supervised learning and cross-supervision cohesively.
+
+We evaluate \model\ on three general-domain DocRE benchmark datasets -- DocRED \cite{yao2019docred}, Re-DocRED \cite{tan2022revisiting}, and HacRED \cite{cheng2021hacred} -- as well as two biomedical datasets, CDR \cite{li2016biocreative} and GDA \cite{wu2019renet}. Our framework consistently achieves state-of-the-art performance across these datasets.
+
+The main contributions of this work are as follows:
+\begin{itemize}[noitemsep]
+    \item \textbf{Novel semi-supervised DocRE framework:} We propose \model, a dual teacher-student framework that leverages both unlabelled and noisy data to boost DocRE performance.
+    \item \textbf{Self-supervised with Unsupervised Synergistic Cross-supervision:} \model\ combines EMA-based Pseudo-labelling step with Unsupervised Synergistic Cross-supervision strategy to reduce confirmation bias -- marking the first such integration in DocRE.
+    \item \textbf{Unified training process:} A unified training procedure integrates both steps in an end-to-end manner to enhance performance in DocRE.
+    \item \textbf{Superior empirical results:} Extensive experiments on popular DocRE datasets show that \model\ significantly outperforms existing semi-supervised baselines on standard DocRE benchmarks.
+\end{itemize}
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{figs/overall_framework.pdf}
+    \caption{An overview of the proposed \model\ method.}
+    \label{fig:overall-framework}
+\end{figure*}

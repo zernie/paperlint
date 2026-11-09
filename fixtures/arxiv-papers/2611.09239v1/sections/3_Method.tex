@@ -1,0 +1,180 @@
+
+% \section{Method}
+% \label{sec:method}
+
+% In this section, we present Duet, a training-free dual-sparse inference framework that reduces redundant computation in BDLM decoding through prefix KV sparsity and early query sparsity. We first provide an overview of Duet, and then describe the two sparsity mechanisms in detail.
+
+% \subsection{Overview}
+% \label{sec:method_overview}
+
+
+
+% As shown in Figure~\ref{fig:overview}, given a historical prefix of length $P$ and a current generation block of $B$ positions, Duet exploits two complementary forms of sparsity at different temporal granularities. At the beginning of each generation block, \emph{prefix KV sparsity} selects a compact subset of historical KV states independently for each Transformer layer and reuses the resulting cache throughout the block. At each denoising step, \emph{early query sparsity} processes the current block densely only up to an early selection layer $l_Q$, where Duet identifies the positions that still require deep computation.
+
+% For prefix sparsity, block queries and historical prefix keys are used to construct a layer-wise subset $\mathcal{S}_{P}^{(l)} \subseteq \{1,\ldots,P\}$. Since the historical prefix remains fixed within a generation block, the selected KV cache can be shared across its denoising steps. In contrast, query selection is performed dynamically at every step, producing an active query set $\mathcal{S}_{Q}^{(s)} \subseteq \{1,\ldots,B\}$ from the intermediate block representations. Only these active rows are propagated through layers $l_Q+1,\ldots,L$, while inactive rows bypass the deep computation and remain available for subsequent denoising steps.
+
+% Within the sparse deep layers, active queries attend to the compact historical prefix together with the current block KVs, reducing historical attention cost, while restricting computation to $\mathcal{S}_{Q}^{(s)}$ eliminates redundant query-row computation in both attention and FFN/MoE modules. The resulting active states are then scattered back to their original positions and recombined with the bypassed states to recover the full block state. This process repeats until the block is fully resolved, after which it is appended to the historical prefix and decoding proceeds to the next generation block.
+
+
+% \subsection{Prefix KV Sparsity}
+% \label{sec:method_prefix}
+
+% \textbf{Design intuition.}
+% Within a generation block, the historical prefix remains fixed while the current block is iteratively refined. Empirically, we observe that block queries concentrate a large fraction of their prefix-attention mass on a compact subset of historical tokens, and that this subset remains largely stable throughout the denoising steps within the same block. This motivates selecting a compact historical context once at the beginning of each generation block and reusing the resulting KV cache throughout that block. We validate this block-level stability in Section~\ref{sec:analysis_prefix}.
+
+
+% \textbf{Query--prefix similarity.}
+% Prefix selection is performed independently for each Transformer layer. For clarity, we describe a single attention head and omit the head index. At layer $l$, let $\mathbf{q}_{i}^{(l)} \in \mathbb{R}^{d_h}$ denote the query of the $i$-th current-block position and $\mathbf{k}_{j}^{(l)} \in \mathbb{R}^{d_h}$ the key of the $j$-th historical prefix position. We measure their similarity using the dot product
+% \begin{equation}
+%     a_{ij}^{(l)}
+%     =
+%     \left\langle
+%         \mathbf{q}_{i}^{(l)},
+%         \mathbf{k}_{j}^{(l)}
+%     \right\rangle .
+%     \label{eq:prefix_similarity}
+% \end{equation}
+% % \textbf{Block-shared prefix selection.}
+% % Rather than constructing a separate historical context for each query, Duet selects a single prefix subset shared by all queries in the current block. We aggregate the pairwise query--prefix similarity into a block-level score for each prefix position,
+% % \begin{equation}
+% %     r_j^{(l)}
+% %     =
+% %     \max_{i \in \{1,\ldots,B\}}
+% %     a_{ij}^{(l)},
+% %     \label{eq:prefix_aggregate_score}
+% % \end{equation}
+% % where $r_j^{(l)}$ captures the closest match between prefix position $j$ and any query in the block. Given a prefix budget $B_P$, Duet selects the $B_P$ prefix positions with the smallest aggregated distances,
+% % \begin{equation}
+% %     \mathcal{S}_{P}^{(l)}
+% %     =
+% %     \operatorname{TopK}_{j \in \{1,\ldots,P\}}
+% %     \left(r_j^{(l)}, B_P\right),
+% %     \label{eq:prefix_selection}
+% % \end{equation}
+% % yielding a layer-wise block-shared prefix set with $|\mathcal{S}_{P}^{(l)}| = \min(B_P,P)$.
+% % The selected indices are then used to gather the corresponding cached keys and values, $\widetilde{\mathbf{K}}_{P}^{(l)}=\mathbf{K}_{P}^{(l)}[\mathcal{S}_{P}^{(l)}]$ and $\widetilde{\mathbf{V}}_{P}^{(l)}=\mathbf{V}_{P}^{(l)}[\mathcal{S}_{P}^{(l)}]$. The resulting compact historical KV cache remains fixed within the current generation block and is reused across its denoising steps. When advances to the next generation block, Duet performs prefix selection again and constructs a new compact prefix cache. 
+% \textbf{Block-shared prefix selection.} Rather than constructing an independent historical context for each query, Duet aggregates query-level selections into a single prefix subset shared by the current block. The prefix budget is first evenly distributed across query positions and attention heads, with each query head receiving at least one candidate slot. Each query head then selects its most similar prefix positions according to the query--prefix scores $a_{ij}^{(l)}$, and the resulting candidates are merged across the block. To obtain a fixed-size block-level subset, we define an aggregated similarity score for each prefix position,
+% \begin{equation}
+%     r_j^{(l)}
+%     =
+%     \max_{i \in \{1,\ldots,B\}}
+%     a_{ij}^{(l)},
+%     \label{eq:prefix_aggregate_score}
+% \end{equation}
+% which captures the strongest match between prefix position $j$ and any query in the block. If the merged candidate set contains fewer than $B_P$ positions, Duet fills the remaining budget with the highest-scoring prefix positions according to $r_j^{(l)}$; if it exceeds the budget, only the top $B_P$ candidates are retained. This produces a layer-wise block-shared prefix set $\mathcal{S}_P^{(l)}$ with $|\mathcal{S}_P^{(l)}|=\min(B_P,P)$. In the multi-head implementation, candidate selection is performed independently for each query head before merging the selected positions.
+
+% The selected indices are used to gather the corresponding cached keys and values, $\widetilde{\mathbf{K}}_{P}^{(l)}=\mathbf{K}_{P}^{(l)}[\mathcal{S}_{P}^{(l)}]$ and $\widetilde{\mathbf{V}}_{P}^{(l)}=\mathbf{V}_{P}^{(l)}[\mathcal{S}_{P}^{(l)}]$. The resulting compact historical KV cache remains fixed throughout the current generation block and is reused across its denoising steps.
+
+
+% % \textbf{Progressive prefix reuse.} Duet further avoids repeatedly revisiting the entire historical prefix as generation proceeds. After a generation block is resolved, its tokens are merged with the compact prefix retained from the previous block, forming a reduced candidate context for the next round of prefix selection. Duet then selects a new compact subset from this updated context for the next generation block. In this way, the prefix cache evolves progressively with generation while remaining bounded by the target budget, amortizing selection over an increasingly long history. 
+
+% \subsection{Early Query Sparsity}
+% \label{sec:method_query}
+
+% \textbf{Design intuition.} At each denoising step, standard BDLM inference propagates all positions in the current generation block through every Transformer layer, even though only a subset of unresolved positions are ultimately selected for the current update. We observe that these update positions can already be predicted from early Transformer representations. This suggests that query selection can be performed before the final layer, allowing Duet to avoid redundant deep computation on positions unlikely to be updated. Accordingly, Duet designates an early Transformer layer $l_Q$ as the selection layer and propagates only the predicted active query rows through the remaining deep layers. We empirically validate this early predictability in Section~\ref{sec:analysis_query}.
+
+
+% \textbf{Early prediction of query positions.} At denoising step $s$, Duet evaluates layers $1,\ldots,l_Q$ densely over the current block and obtains the intermediate representations $\mathbf{H}^{(l_Q,s)}$. The model's original decoding rule is then applied to $\mathbf{H}^{(l_Q,s)}$ to estimate which masked positions are likely to be selected for the current update. Duet retains a ratio-controlled subset of these masked positions as active queries, while positions that have already been resolved are always kept in the active set. Together, these positions form the active query set $\mathcal{S}_Q^{(s)} \subseteq \{1,\ldots,B\}$, which is propagated through suffix layers. In this way, the retention ratio directly controls the amount of deep computation devoted to unresolved positions, while reusing the original decoding rule keeps early query selection consistent with the underlying BDLM inference procedure without introducing an additional learned predictor.
+
+% % \textbf{Confidence-based query selection.} Let $\mathcal{U}^{(s)}$ denote the unresolved positions at denoising step $s$, and let $c_i^{(s)}$ denote the confidence estimated from the shallow prediction for position $i \in \mathcal{U}^{(s)}$. Given a query retention ratio $\rho_Q$, we first retain the $\lceil \rho_Q |\mathcal{U}^{(s)}| \rceil$ unresolved positions with the highest confidence. To remain consistent with the underlying DLM decoding policy, if more positions already exceed the decoding confidence threshold, we retain all such positions instead. Together with positions that have already been resolved and whose states must be preserved, this produces the active query set $\mathcal{S}_Q^{(s)}$ for the current denoising step.
+
+% % \textbf{Sparse suffix computation.} After query selection, only the active unresolved positions in $\mathcal{S}_Q^{(s)}$ are propagated through Transformer layers $l_Q+1,\ldots,L$. Their queries attend to both the current-block KV states and the compact historical KV cache constructed by prefix sparsity. Unselected unresolved positions bypass the suffix layers and remain unchanged until a subsequent denoising step. Unlike conventional sparse attention, query sparsity therefore eliminates complete token rows from deep Transformer computation, reducing not only attention cost but also the associated projections, feed-forward or MoE modules, and other token-wise operations.
+
+% \textbf{Sparse suffix computation.} After query selection, at layer $l \ge l_Q + 1$, only the active queries rows in $\mathcal{S}_Q^{(s)}$ attend to the current block KV states together with the compact historical cache indexed by $\mathcal{S}_P^{(l)}$. For the historical-prefix portion of attention, combining query and prefix sparsity reduces the interaction from $BP$ in dense inference to $|\mathcal{S}_Q^{(s)}||\mathcal{S}_P^{(l)}|$. Beyond attention, restricting the suffix computation to active rows also reduces the number of positions processed by the remaining token-wise modules from $B$ to $|\mathcal{S}_Q^{(s)}|$, including the attention projections, FFN/MoE modules, and other token-wise operations. Query sparsity therefore saves computation throughout the deep Transformer stack rather than sparsifying attention alone.
+
+% \textbf{Position-preserving update.} Sparse suffix computation preserves the original block indices of all active query rows, allowing their updated representations to be written back to the corresponding positions after the deep layers. Unselected masked positions bypass the suffix computation and retain their previous states, while positions that have already been resolved remain unchanged. The updated active rows, bypassed masked rows, and previously resolved rows are then recombined to reconstruct the full block state for the next denoising step. Query selection is repeated as the block evolves until all positions are resolved. Once the current block is fully decoded, it is appended to the historical context, and Duet proceeds to the next generation block with an updated prefix.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Method}
+\label{sec:method}
+
+In this section, we present Duet, a training-free dual-sparse inference framework that reduces redundant computation in BDLM decoding through prefix KV sparsity and early query sparsity. We first provide an overview of Duet, and then describe the two sparsity mechanisms in detail.
+
+\subsection{Overview}
+\label{sec:method_overview}
+
+
+
+As shown in Figure~\ref{fig:overview}, Duet applies two complementary forms of sparsity to a generation block of $B$ positions conditioned on a prefix of length $P$. The first denoising step ($s=0$) runs densely, providing the block queries and the full historical KV states needed for prefix selection. Duet then constructs a compact prefix cache from these states without an additional dense model forward. In subsequent steps, it processes the block densely through an early query-selection layer $l_Q$ and propagates only active positions through the remaining layers. We use zero-based indices for layers and denoising steps.
+
+For each suffix layer $l>l_Q$, \emph{prefix KV sparsity} uses block queries and historical keys to construct a subset $\mathcal{S}_{P}^{(l)}\subseteq\{1,\ldots,P\}$. This subset remains fixed within the current block; at the next block, selection is repeated over the full historical KV cache. Layers $0,\ldots,l_Q$ retain the full prefix KV states. At each subsequent step $s\geq1$, \emph{early query sparsity} identifies an active set $\mathcal{S}_{Q}^{(s)}\subseteq\{1,\ldots,B\}$ at layer $l_Q$. Only these $Q_s$ rows traverse layers $l_Q+1,\ldots,L-1$, while the other rows bypass the suffix computation.
+
+Within the sparse suffix, active queries attend to the selected historical KV states together with the current block KVs. Restricting the suffix to $\mathcal{S}_{Q}^{(s)}$ also avoids attention projections and FFN/MoE computation for inactive rows. The resulting active states are scattered back to their original block positions and combined with the bypassed states. The process repeats until the block is resolved, after which it is appended to the historical prefix.
+
+
+\subsection{Prefix KV Sparsity}
+\label{sec:method_prefix}
+
+\textbf{Design intuition.}
+Within a generation block, the historical prefix remains fixed while the current block is iteratively refined. Empirically, we observe that block queries concentrate a large fraction of their prefix-attention mass on a compact subset of historical tokens, and that this subset remains largely stable throughout the denoising steps within the same block. This motivates selecting a compact historical context once at the beginning of each generation block and reusing the resulting KV cache throughout that block. We validate this block-level stability in Section~\ref{sec:analysis_prefix}.
+
+
+\textbf{Query--prefix similarity.}
+Prefix selection is performed for each suffix layer $l>l_Q$, using queries captured during the first dense step. Let $\mathbf{q}_{h,i}^{(l,0)}\in\mathbb{R}^{d_h}$ be the attention-space query at block position $i$ and query head $h$, and let $\mathbf{k}_{g(h),j}^{(l)}\in\mathbb{R}^{d_h}$ be the historical key at position $j$ in its corresponding KV head $g(h)$ under grouped-query attention. We measure their similarity by
+\begin{equation}
+    a_{hij}^{(l)}
+    =
+    \left\langle
+        \mathbf{q}_{h,i}^{(l,0)},
+        \mathbf{k}_{g(h),j}^{(l)}
+    \right\rangle .
+    \label{eq:prefix_similarity}
+\end{equation}
+\textbf{Block-shared prefix selection.} Rather than constructing a separate historical context for each query, Duet selects one prefix subset shared across the block and query heads. Given a target budget $B_P$, each of the $BH_q$ query-head rows selects its $m=\max(1,\lceil B_P/(BH_q)\rceil)$ highest-scoring historical positions, and the candidates are merged. We score each historical position across all block queries and query heads by
+\begin{equation}
+    r_j^{(l)}
+    =
+    \max_{\substack{1\leq i\leq B\\1\leq h\leq H_q}}
+    a_{hij}^{(l)},
+    \label{eq:prefix_aggregate_score}
+\end{equation}
+which captures the strongest match to any query-head row. If the candidate union contains fewer than $\min(B_P,P)$ distinct positions, we fill it with the highest-scoring remaining positions according to $r_j^{(l)}$; if it contains more, we retain the $\min(B_P,P)$ highest-scoring candidates. Thus, under a strict prefix budget, the shared set has size $K_l=|\mathcal{S}_P^{(l)}|=\min(B_P,P)$. Ranking by the unscaled dot product is equivalent to ranking by the scaled attention logit for a fixed head dimension. Scoring the full prefix costs $O(BP d_h)$ per suffix layer, suppressing head counts, and is performed once per generation block.
+
+The selected indices gather the cached keys and values, $\widetilde{\mathbf{K}}_{P}^{(l)}=\mathbf{K}_{P}^{(l)}[\mathcal{S}_{P}^{(l)}]$ and $\widetilde{\mathbf{V}}_{P}^{(l)}=\mathbf{V}_{P}^{(l)}[\mathcal{S}_{P}^{(l)}]$. This compact cache is reused throughout the current block; the full historical cache remains available for selection at the next block.
+
+
+\subsection{Early Query Sparsity}
+\label{sec:method_query}
+
+\textbf{Design intuition.} At each denoising step, standard BDLM inference propagates all positions in the current generation block through every Transformer layer, even though only a subset of unresolved positions are ultimately selected for the current update. We observe that these update positions can already be predicted from early Transformer representations. This suggests that query selection can be performed before the final layer, allowing Duet to avoid redundant deep computation on positions unlikely to be updated. Accordingly, Duet designates an early Transformer layer $l_Q$ as the selection layer and propagates only the predicted active query rows through the remaining deep layers. We empirically validate this early predictability in Section~\ref{sec:analysis_query}.
+
+
+\textbf{Early prediction of query positions.} At a subsequent denoising step $s\geq1$, Duet evaluates layers $0,\ldots,l_Q$ densely over the current block, including attention to the full historical prefix, and obtains the intermediate representations $\mathbf{H}^{(l_Q,s)}$. The model's original decoding rule is then applied to $\mathbf{H}^{(l_Q,s)}$ to estimate which masked positions are likely to be selected for the current update. Let $\mathcal{U}^{(s)}$ denote the unresolved positions at step $s$. The query retention ratio $\rho_Q$ sets a nominal target of
+$\lceil \rho_Q |\mathcal{U}^{(s)}| \rceil$ active unresolved queries,
+selected according to the model's decoding policy (confidence-based for
+LLaDA and in block order for sequential SDAR); previously resolved
+positions are always retained as well. Together, these positions form $\mathcal{S}_Q^{(s)}$, whose $Q_s$ rows are propagated through the suffix layers. In this way, the retention ratio controls the amount of deep computation devoted to unresolved positions, while reusing the original decoding rule keeps early query selection consistent with the underlying BDLM inference procedure without introducing an additional learned predictor.
+
+% \textbf{Confidence-based query selection.} Let $\mathcal{U}^{(s)}$ denote the unresolved positions at denoising step $s$, and let $c_i^{(s)}$ denote the confidence estimated from the shallow prediction for position $i \in \mathcal{U}^{(s)}$. Given a query retention ratio $\rho_Q$, we first retain the $\lceil \rho_Q |\mathcal{U}^{(s)}| \rceil$ unresolved positions with the highest confidence. To remain consistent with the underlying DLM decoding policy, if more positions already exceed the decoding confidence threshold, we retain all such positions instead. Together with positions that have already been resolved and whose states must be preserved, this produces the active query set $\mathcal{S}_Q^{(s)}$ for the current denoising step.
+
+% \textbf{Sparse suffix computation.} After query selection, only the active unresolved positions in $\mathcal{S}_Q^{(s)}$ are propagated through Transformer layers $l_Q+1,\ldots,L$. Their queries attend to both the current-block KV states and the compact historical KV cache constructed by prefix sparsity. Unselected unresolved positions bypass the suffix layers and remain unchanged until a subsequent denoising step. Unlike conventional sparse attention, query sparsity therefore eliminates complete token rows from deep Transformer computation, reducing not only attention cost but also the associated projections, feed-forward or MoE modules, and other token-wise operations.
+
+\textbf{Sparse suffix computation.} For $s\geq1$ and $l>l_Q$, only the $Q_s$ active query rows attend to the compact historical KV cache indexed by $\mathcal{S}_P^{(l)}$ and the $B$ current-block KV positions. The first dense step initializes the current-block KV cache at all $B$
+positions. Subsequent sparse steps update the selected entries and reuse
+the others, so active queries still attend to all $B$ block positions. Using the cost conventions of Equation~\ref{eq:dense_layer_cost}, the per-layer sparse costs are
+\begin{equation}
+T_{\mathrm{attn,sparse}}^{(l,s)}
+=O\!\left(Q_s(K_l+B)d_h+Q_s c_{\mathrm{proj}}^{(l)}\right),
+\qquad
+T_{\mathrm{ff,sparse}}^{(l,s)}
+=O\!\left(Q_s c_{\mathrm{ff}}^{(l)}\right).
+\label{eq:sparse_layer_cost}
+\end{equation}
+Compared with dense computation, the suffix attends over $K_l+B$ rather than $P+B$ KV positions and processes $Q_s$ rather than $B$ rows through attention projections and FFN/MoE. These expressions apply only after the first dense step and beyond $l_Q$; the first step and the preceding layers retain the dense costs of Equation~\ref{eq:dense_layer_cost}. Because selection at the next block revisits the full prefix, the shorter attended KV sequence does not imply a reduction in the stored full historical KV cache.
+
+\textbf{Position-preserving update.} Sparse suffix computation preserves the
+original block indices of all active query rows, allowing their updated
+representations to be written back to the corresponding positions after the
+deep layers. At the final decoding stage, the original decoding rule is
+applied only to the active unresolved positions
+$\mathcal{S}_Q^{(s)}\cap\mathcal{U}^{(s)}$. Unselected unresolved positions
+bypass the suffix computation, remain masked at this step, and are
+reconsidered at the next step. Thus, the per-step update set may differ from
+dense decoding. The updated active rows, bypassed unresolved rows, and
+previously resolved rows are recombined to reconstruct the full block state
+for the next denoising step. Query selection is repeated until all positions
+are resolved. Once the current block is fully decoded, it is appended to the
+historical context, and Duet proceeds to the next generation block with an
+updated prefix.

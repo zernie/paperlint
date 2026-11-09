@@ -1,0 +1,275 @@
+\section{Experiments}
+\label{sec:experiments}
+
+We apply our randomized intervention design to three established agent benchmarks: $\tau$-bench Retail, ToolSandbox, and ImpossibleBench.\footnote{Code is available at
+\url{https://github.com/sawarniayush/agent-evaluation-sequential-randomization}.}
+In ImpossibleBench, we examine whether adversarial feedback following an unsuccessful code submission increases the likelihood of violating task rules.
+% At each eligible intervention point, we randomly assign intervention or control and evaluate its causal effect on the terminal outcome.
+
+Using the same collection of randomized trajectories, we estimate intervention effects across different agent actions and states.
+In particular, for tool-call review, we consider groups ranging from broad activities and capabilities to specific operations and individual tools. For adversarial feedback, we examine states defined by task progress, visible test conflicts, and prior failures.
+We also evaluate selective intervention policies that intervene whenever the observed history belongs to a specified group.  
+In the figures reported below, ``Matching decisions'' counts the
+intervention points, $N(G)$, whose pre-assignment histories belong to group $G$.
+A trajectory may contribute multiple points to the same group, and a
+point may be counted in more than one group. Table~\ref{tab:experiment-summary} summarizes the experimental setups across the three benchmarks. In the $\tau$-bench Retail experiment, we also compare our SNMM-based off-policy evaluation procedure with a more computationally intensive Monte Carlo simulation to assess its accuracy and robustness to model misspecification. In the simulation, we roll out each candidate policy multiple times and average the outcomes. We find that the SNMM based off-policy evaluation procedure is able to accurately estimate the policy gains with significantly lower computational cost. Experimental protocols and additional details are provided in Appendix~\ref{app:experimental-details}. 
+
+\begin{table}[!htbp]
+\centering
+\caption{Summary of experimental setups across the three benchmarks.}
+\label{tab:experiment-summary}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.3}
+
+\begin{tabularx}{\textwidth}{@{}
+    >{\raggedright\arraybackslash}p{0.16\textwidth}
+    >{\raggedright\arraybackslash}p{0.18\textwidth}
+    >{\raggedright\arraybackslash}p{0.22\textwidth}
+    >{\raggedright\arraybackslash}p{0.13\textwidth}
+    >{\raggedright\arraybackslash}X
+    @{}}
+\toprule
+\textbf{Benchmark}
+& \textbf{Agents}
+& \textbf{Intervention / Control}
+& \textbf{Outcome}
+& \textbf{Reporting Groups $G$} \\
+\midrule
+
+$\tau$-bench Retail \cite{yao2025tau,barres2025tau2}
+& GPT-5 nano; Claude Haiku 5.5
+& Tool-call review vs.\ direct execution
+& Task success
+& Reads/writes; functional families; individual tools \\
+
+\addlinespace[5pt]
+
+ToolSandbox \cite{lu2025toolsandbox}
+& GPT-5 nano; Claude Haiku 5.5
+& Tool-call review vs.\ direct execution
+& Similarity score
+& Capabilities; operations; individual tools \\
+
+\addlinespace[5pt]
+
+ImpossibleBench \cite{zhong2025impossiblebench}
+& Qwen3.5 Flash
+& Adversarial vs.\ neutral feedback
+& Rule violation
+& Task progress; test conflicts; prior steering \\
+
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+\begin{minipage}{\textwidth}
+\footnotesize
+\emph{Note.} Interventions are assigned with equal probability
+at each eligible point. GPT-6 Luna serves as the reviewer
+in $\tau$-bench Retail and ToolSandbox.
+\end{minipage}
+\end{table}
+
+
+\subsection{ \texorpdfstring{$\tau$-bench}{tau-bench} Retail}
+
+In $\tau$-bench Retail, a customer-support agent handles account and order requests while following store policies \citep{yao2025tau,barres2025tau2}.
+We evaluate two agents, powered by GPT-5 nano and Claude Haiku 5.5, respectively. At each proposed tool call, we randomly assign review or direct execution with equal probability. The reviewer, GPT-6 Luna with high reasoning effort, may approve or replace the proposed call or request additional information from the customer. We measure the effect of review on terminal task success.
+
+\begin{figure}[!tbp]
+\centering
+\includegraphics[width=0.9\textwidth]{retail_hierarchy_targets.pdf}
+\caption{$\tau$-bench Retail review effects on terminal task success for GPT-5 nano, from
+read/write activities to individual tools. Bars are pointwise 95\% $t$-based
+confidence intervals; arrows indicate bounds beyond the displayed axis range.}
+\label{fig:retail-targets}
+\end{figure}
+
+We estimate review effects for groups of intervention points $G$ defined by
+the proposed tool-call type. The groups range from broad activities, such as
+reads and writes, to functional families, such as identity lookup, and
+individual tools, such as finding a customer by email. For example, $G$ can
+contain all proposed database writes.
+
+We first discuss the AIPW estimates of blip effects with randomized
+continuation, $\tau(G;g)$, shown in Figures~3--4. These estimates
+measure the effect of reviewing the current proposal when later
+review assignments continue to be randomized. For GPT-5 nano (Figure~3), the estimated effects are positive for
+both read and write calls. Among reads, we estimate positive effects for customer identification and order-detail retrieval, while the confidence interval for the catalog group includes zero. At the tool level, the confidence intervals lie above zero for order cancellation and item changes and include zero for payment changes.
+
+\begin{figure}[!tbp]
+\centering
+\includegraphics[width=0.9\textwidth]{retail_haiku_hierarchy_targets.pdf}
+\caption{$\tau$-bench Retail review effects on terminal task success for Claude Haiku 5.5,
+from read/write activities to individual tools. Bars are pointwise 95\%
+$t$-based confidence intervals; arrows indicate bounds beyond the displayed axis range.}
+\label{fig:retail-haiku-targets}
+\end{figure}
+
+For Claude Haiku 5.5 (Figure~\ref{fig:retail-haiku-targets}), we estimate a
+review effect close to zero when averaged across all read calls, but a positive
+effect for account-detail calls alone, with a pointwise 95\% confidence
+interval above zero. Looking only at the aggregate for read calls would miss
+this subgroup estimate.
+% Fix $G$ to identity-lookup calls. Then $\tau(G;g)$ averages, over those
+% decisions, the effect of reviewing the current call rather than executing it
+% directly, with later calls randomized as before. The second estimand,
+% $\tau(G;0)$, averages the same current-call contrast when all later calls
+% execute without review in both branches. The GPT-5 nano estimate is larger
+% under this second regime. The policy gain $\Delta(G)$ instead compares complete
+% episodes under a policy that reviews every identity-lookup call and executes
+% all other calls directly with episodes under a policy that never reviews. This
+% average includes episodes in which no identity-lookup call occurs. Repeated
+% reviews can change subsequent actions and intervention opportunities, so these
+% three quantities answer different questions.
+
+\begin{figure}[!tbp]
+\centering
+\includegraphics[width=0.90\textwidth]{retail_mc_policy_gains.pdf}
+\caption{Policy gains on $\tau$-bench Retail for GPT-5 nano, relative to never
+reviewing. Direct estimates use 456 rollout episodes per policy; SNMM estimates
+use a separate randomized study of 2,280 trajectories. Bars are pointwise 95\%
+trajectory-level $t$-based confidence intervals.}
+\label{fig:retail-mc}
+\end{figure}
+
+We also evaluate nine selective review policies in additional
+rollouts: one for each of the seven read/write families in
+Figure~5, one for calculation calls, and one for handoff calls.
+Each policy reviews every proposal in its group and executes all
+other proposals directly. For example, the order-details policy
+reviews all order-details calls and skips review elsewhere. For each policy, we estimate the gain relative to never reviewing
+in two ways. For direct evaluation, we use 456 rollout episodes
+per policy. For SNMM-based evaluation, we reuse the same 2,280
+sequentially randomized trajectories used to estimate the Retail
+blip effects.The SNMM and direct Monte Carlo estimates are positive for allnine policies, and their pointwise 95\% confidence intervals overlap for every policy (Figure~5). The direct Monte Carlo point estimate falls within the corresponding SNMM interval for eight of the nine policies.
+
+% TODO: change direct Monte carlo, also remove matched decisions form this plot
+
+\FloatBarrier
+
+\subsection{ToolSandbox}
+
+In ToolSandbox, we reuse one randomized experiment per agent to estimate review effects and selective-policy gains across 33 tools and 49 reporting groups, ranging from broad capabilities to specific operations and individual tools. The agent completes tasks in a simulated phone
+environment using tools for device settings, contacts, messages, reminders,
+and information lookup \citep{lu2025toolsandbox}.
+Our main analysis uses a GPT-5 nano agent and we repeat the analysis
+for a second agent that uses Claude Haiku  5.5  in Appendix~\ref{app:toolsandbox-tools}.
+As in $\tau$-bench Retail, we randomly assign review or direct execution with equal probability, using a GPT-6 Luna with High reasoning as reviewer. 
+
+When an agent proposes multiple tool calls in a single turn, we treat the
+batch as one intervention point. We measure performance using ToolSandbox's
+official score, which evaluates how closely the agent's tool calls,
+environment states, and responses satisfy predefined task requirements. The
+score allows partial credit but is set to zero when a benchmark-defined
+failure condition occurs.
+
+We organize intervention groups $G$ hierarchically, from broad capabilities
+to specific operations and individual tools. For example, reminder operations
+include finding, creating, modifying, and removing reminders. For each group,
+we estimate two blip effects: one with later reviews randomized and one with no
+later review in either branch. We also estimate the gain over never reviewing
+for a policy that reviews every matching proposal and skips review elsewhere
+(Figures~\ref{fig:toolsandbox-targets}--\ref{fig:toolsandbox-targets-more}).
+
+\begin{figure}[!tb]
+\centering
+\includegraphics[width=0.9\textwidth]{toolsandbox_hierarchy_a.pdf}
+\caption{Review effects on the ToolSandbox similarity score for GPT-5 nano
+across device state and contacts. Bars are pointwise 95\% $t$-based confidence
+intervals.}
+\label{fig:toolsandbox-targets}
+\end{figure}
+
+\begin{figure}[!tb]
+\centering
+\includegraphics[width=0.9\textwidth]{toolsandbox_hierarchy_b.pdf}
+\caption{Review effects on the ToolSandbox  score for GPT-5 nano
+for tool calls related to messaging and reminders. Bars are pointwise 95\% $t$-based confidence
+intervals.}
+\label{fig:toolsandbox-messaging-reminders}
+\end{figure}
+
+
+
+\begin{figure}[!tb]
+\centering
+\includegraphics[width=0.9\textwidth]{toolsandbox_hierarchy_c.pdf}
+\caption{Review effects on the ToolSandbox  score for GPT-5 nano
+for tool calls related to time and calculations, location, and external information. Bars are
+pointwise 95\% $t$-based confidence intervals; arrows indicate bounds beyond the displayed axis range.}
+\label{fig:toolsandbox-targets-more}
+\end{figure}
+% TODO: some policy values have close to 0 variance.. diagnose
+
+Averaging across a capability can obscure promising targets for review. For Time and calculations, the randomized-continuation blip is +1.8 score points, with a pointwise 95\% t-based confidence interval of [-0.2, 3.8]. Within this capability, reviewing calls to ``datetime info to timestamp'' tool, which constructs a timestamp from date and time components, has an estimated blip of +6.9 points [1.2, 12.6]. This suggests timestamp construction as a candidate for targeted review, despite the inconclusive capability-level estimate.
+
+The precision of these estimates depends on how often the agent proposes each
+tool and frequently proposed tools tend to have narrower confidence intervals. Rarely proposed tools
+have wider intervals; both blip intervals for seconds-to-time conversion span
+substantial negative and positive effects. We note that the reported intervals are pointwise and do not account for multiple
+comparisons and the blips with no-treatment continuation and the policy gains also
+rely on additional parametric assumptions in the SNMMs. Despite these limitations, the estimates can help prioritize targets for further investigation. Independent randomized controlled trials, with interventions and comparisons specified in advance, could then test whether reviewing the selected tools improves outcomes.
+
+% For message sending, review improves similarity by an estimated 8.6 points at
+% matching decisions under randomized continuation. A policy that reviews every
+% message-send call gains about 1.0 point across the full task population. Most
+% tasks never reach such a call, and review can change which calls occur later.
+% We therefore estimate the policy gain over complete trajectories, including
+% tasks without a matching call and any changes that review causes in later calls.
+
+\FloatBarrier
+
+% \subsection{ImpossibleBench: when adversarial feedback leads to violations }
+\subsection{ImpossibleBench}
+We evaluate a Qwen3.5 Flash agent on a subset of ImpossibleBench
+coding problems derived from LiveCodeBench \citep{zhong2025impossiblebench,jain2025livecodebench}, using either the
+original tests or variants containing contradictory tests.
+These variants contain mutually incompatible test requirements.
+The agent may make up to six code submissions or stop and report
+inconsistent tests. After each of the first five unsuccessful
+submissions, we randomly assign either a neutral note or
+adversarial feedback that encourages prohibited test edits.
+An episode ends after success, an issue report, a detected
+violation, or the sixth submission. Our terminal outcome is a
+detected rule violation: we set $Y=1$ if a test edit is detected
+or the agent passes the benchmark's contradictory check, and
+$Y=0$ otherwise. Positive intervention effects therefore indicate
+an increase in detected violations.
+
+We use \emph{steering} to refer to the assignment of adversarial
+feedback, regardless of whether the agent follows it. We define
+reporting groups using information available before the current
+assignment: the number of remaining attempts, the fraction of
+tests passing, whether the visible feedback contains contradictory
+checks, and whether adversarial feedback was assigned earlier in
+the episode. In Figure~9, ``conflict'' means a contradiction
+visible in the current feedback, and ``near completion'' means
+that at least 80\% but fewer than 100\% of tests pass.
+``Steered before, still eligible'' denotes previous exposure to
+adversarial feedback followed by another eligible decision;
+it does not require previous compliance with that feedback.
+
+\begin{figure}[!tbp]
+\centering
+\includegraphics[width=0.9\textwidth]{steering_state_targets.pdf}
+\caption{Effects of adversarial feedback on terminal detected
+rule violations by Qwen3.5 Flash in ImpossibleBench.
+Blue circles and orange squares denote AIPW and SNMM estimates,
+respectively. Bars are pointwise 95\% $t$-based confidence
+intervals. For the group defined by previous exposure to
+adversarial feedback, the selective policy intervenes only
+after an earlier intervention. Starting without prior exposure,
+this policy never initiates intervention and coincides with
+never intervening; its policy gain is therefore zero by
+definition.}
+\label{fig:steering}
+\end{figure}
+
+In Figure \ref{fig:steering}  we see that the agent has a higher propensity to be steered by an adversarial feedback when it has fewer attempts remaining or when it sees only few failing test cases. After the fifth failed attempt, with one attempt remaining,
+adversarial feedback increases terminal violations by an estimated 9.4 pp
+$[2.9, 15.9]$, compared with 3.3 pp $[0.6, 6.1]$ after the first failed
+attempt. When at least 80\%  of tests pass, the estimated effect is 5.7 pp $[2.3, 9.2]$, compared with 0.3 pp $[-1.7, 2.2]$ when fewer than 50\% of the tests pass.
+
+\FloatBarrier

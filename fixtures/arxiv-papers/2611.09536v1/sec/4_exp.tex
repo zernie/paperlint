@@ -1,0 +1,150 @@
+
+\section{Experiment}
+\label{sec:exp}
+
+\subsection{Experimental Setup}
+
+\subsubsection{Datasets and Evaluation}
+
+We conducted extensive experiments on the ShanghaiTech\citep{a-luo2017revisit} and UCF-Crime\citep{a-sultani2018real} datasets and compared many previous state-of-the-art methods\citep{a-wu2022self,a-li2022self,a-tian2021weakly,a-sultani2018real,a-zhong2019graph, a-zaheer2020claws,a-feng2021mist,a-lv2023unbiased, a-chen2023mgfn,a-wan2020weakly, a-wu2021learning,a-pu2022locality}. We use the area under the frame-level receiver operating characteristic curve (AUC) as the evaluation metric for all methods.
+
+\subsubsection{Data Processing}
+
+We use I3D\citep{a-carreira2017quo} to extract RGB and optical flow features from videos, and BLIP\citep{a-li2022blip} to generate frame descriptions, which are processed according to our approach. We generate textual prior knowledge for each of the two datasets using GPT-3\citep{a-brown2020language} and encode all text data using BART\citep{a-lewis2019bart}.
+
+\subsubsection{Hyperparameter and Training}
+
+We generate 5,000 normal and anomalous priors separately for each dataset and compress them into a 256-dimensional tensor using dictionary learning. All textual content is embedded as a 2048-dimensional tensor. We also set the number of convolutional groups in the attention module, $N$, to 8. Upsampling is performed using bilinear interpolation, and the channel dimensions are adjusted using a $1 \times 1$ convolution. For the last dilated convolution, we empirically set the dilation coefficient to 4. All experiments are conducted on an NVIDIA RTX 3090 GPU. Each model is trained for 15,000 iterations with a learning rate of 0.001. A more detailed experimental setup can be found in the Appendix.
+
+\subsection{Comparison With State-of-the-Art Methods}
+
+As shown in Tables \ref{tab:sht} and \ref{tab:ucf}, our method outperforms other state-of-the-art methods, including semi-supervised and weakly supervised works, on the ShanghaiTech and UCF-Crime datasets. 
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{images/vis_compare.png}
+\caption{Visualization of models' performance on UCF-Crime. The results show that our model has better accuracy and stability.}
+\label{fig:compare}
+\end{figure}
+
+Specifically, our method improves performance by 7\% over AR-Net\citep{a-wan2020weakly}, which also uses optical flow information. Furthermore, our method achieves the best performance among all methods using I3D features. We believe this is because the visual and textual modalities complement each other during multimodal training, allowing the model to use the features more effectively. S3R\citep{a-wu2022self} also uses dictionary learning to clean up normal features to guide the model to better discriminate abnormal features. Unlike them, we use dictionary learning to compress the prior knowledge and let the model optimize the features for the scene under the guidance of the prior knowledge to improve performance. In Figure \ref{fig:compare}], we can see that our method performs better than other methods in terms of stability and accuracy, especially the results between adjacent normal frames are more continuous and stable. This may be because we maintain the consistency of text modalities across similar frames. More visualizations can be found in the Appendix.
+
+Due to space limitations, please refer to the Appendix for more experimental details and visualizations.
+
+\begin{table}[htb]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l|lll}
+\hline
+Supervision                         & Method   & Feature         & AUC (\%) \\ \hline
+\multirow{3}{*}{Semi-supervised}    & Mem-AE   & -               & 71.2    \\
+                                    & DLAN-AC  & -               & 74.7    \\
+                                    & SVD-GAN  & -               & 78.42   \\ \hline
+\multirow{11}{*}{Weakly-supervised} & MIL-Rank & $C3D_{rgb}$       & 86.3    \\
+                                    & GCN      & $TSN_{rgb}$       & 84.44   \\
+                                    & CLAWS    & $C3D_{rgb}$       & 89.67   \\
+                                    & AR-Net   & $I3D_{rgb+flow}$  & 91.24   \\
+                                    & MIST     & $I3D_{rgb}$       & 94.83   \\
+                                    & CRFD     & $I3D_{rgb}$       & 97.48   \\
+                                    & RTFM     & $I3D_{rgb}$       & 97.21   \\
+                                    & MSL      & $VideoSwin_{rgb}$ & 97.32   \\
+                                    & S3R      & $I3D_{rgb}$       & 97.48   \\
+                                    & UML      & $XCLIP_{rgb}$    & 96.78   \\ \cline{2-4} 
+                                    & \textbf{Ours}     & $I3D_{rgb+flow}$  & \textbf{98.17}   \\ \hline
+\end{tabular}%
+}
+\caption{Performance comparison of state-of-the-art methods on the ShanghaiTech dataset.}
+\label{tab:sht}
+\end{table}
+
+
+\begin{table}[htb]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l|lll}
+\hline
+Supervision                         & Method   & Feature         & AUC (\%) \\ \hline
+\multirow{3}{*}{Semi-supervised}    & Conv-AE  & -               & 50.6    \\
+                                    & S-SVDD   & -               & 58.5    \\
+                                    & GODS     & $TCN_{rgb}$       & 70.46   \\ \hline
+\multirow{11}{*}{Weakly-supervised} & MIL-Rank & $C3D_{rgb}$       & 75.41   \\
+                                    & GCN      & $TSN_{rgb}$       & 82.12   \\
+                                    & MIST     & $I3D_{rgb}$       & 82.3    \\
+                                    & RTFM     & $I3D_{rgb}$       & 84.3    \\
+                                    & DDL      & $I3D_{rgb}$       & 85.12   \\
+                                    & MSL      & $I3D_{rgb}$       & 85.3    \\
+                                    & S3R      & $I3D_{rgb}$       & 85.99   \\
+                                    & MGFN     & $VideoSwin_{rgb}$ & 86.67   \\
+                                    & MGFN     & $I3D_{rgb}$       & 86.98   \\
+                                    & UML      & $XCLIP_{rgb}$    & 86.75   \\ \cline{2-4} 
+                                    & \textbf{Ours}     & $I3D_{rgb+flow}$  & \textbf{87.11}   \\ \hline
+\end{tabular}%
+}
+\caption{Performance comparison of state-of-the-art methods on the UCF-Crime dataset.}
+\label{tab:ucf}
+\end{table}
+
+
+\subsection{Ablation Studies}
+
+We also conducted a series of ablation experiments to study the effects of different modules and parameter settings on our method.
+
+Table \ref{tab:module} shows the performance impact of the different modules in our method. When only Text-Visual Attention is used, performance improves significantly. However, when Knowledge Traction is introduced without Visual-Text Attention, performance deteriorates. We believe this is because the output of Text-Visual Attention is largely a visual feature and does not fit well with the textual prior knowledge. In contrast, after introducing Visual-Text Attention, the text modality participates more in feature fusion through attention, so the final fused features are better aligned with the textual prior knowledge and Knowledge Traction plays a leading role.
+
+We also investigate the effect of the number of prior knowledge items generated by the LLM. As shown in Table \ref{tab:know}, we conduct experiments with different numbers of prior knowledge items and also investigate model performance when the amounts of normal and abnormal knowledge are unbalanced. The results show that when the amount of prior knowledge is small, performance degrades, possibly because the Knowledge Traction module cannot optimize the features correctly. On the other hand, if the amount of prior knowledge is too large, performance decreases slightly. We found that when too much prior knowledge is generated, many descriptions are repetitive, which introduces noise and affects model performance. In addition, the results show that unbalanced amounts of normal and abnormal knowledge negatively affect the model. Clearly, the Knowledge Traction module is also sensitive to this imbalance. Based on these results, we set the number of generated prior knowledge items to 5,000.
+
+Table \ref{tab:nn} presents our exploration of the number of convolutions in the attention module. Experiments show that our method achieves the best performance when $N = 8$. Too small a number can lead to insufficient feature fusion, while too large a number can lead to overfitting and reduced generalization.
+
+
+\begin{table}[htb]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llll|ll}
+\hline
+Baseline & VTA & TVA & KT & ShanghaiTech   & UCF-Crime      \\ \hline
+\ding{52}        & \ding{56}   & \ding{56}   & \ding{56}  & 92.36          & 83.31          \\
+\ding{52}        & \ding{56}   & \ding{52}   & \ding{56}  & 97.71          & 86.33          \\
+\ding{52}        & \ding{56}   & \ding{52}   & \ding{52}  & 93.04          & 82.69          \\
+\ding{52}        & \ding{52}   & \ding{52}   & \ding{56}  & 97.66          & 86.74          \\
+\ding{52}        & \ding{52}   & \ding{52}   & \ding{52}  & \textbf{98.17} & \textbf{87.11} \\ \hline
+\end{tabular}%
+}
+\caption{Impact of different modules of our approach on performance. VTA stands for Visual-Text Attention, TVA for Text-Visual Attention, and KT for Knowledge Traction.}
+\label{tab:module}
+\end{table}
+
+
+\begin{table}[htb]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{ll|ll}
+\hline
+Normal Count & Anomaly Count & ShanghaiTech   & UCF-Crime      \\ \hline
+2500         & 2500          & 97.41          & 85.97          \\
+2500         & 5000          & 97.83          & 86.59          \\
+5000         & 2500          & 97.28          & 86.41          \\
+5000         & 5000          & \textbf{98.17} & \textbf{87.11} \\
+10000        & 10000         & 97.95          & 86.93          \\ \hline
+\end{tabular}%
+}
+\caption{Influence of the number of prior knowledge items on performance.}
+\label{tab:know}
+\end{table}
+
+
+\begin{table}[htb]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l|ll}
+\hline
+Number of Convolutions & ShanghaiTech   & UCF-Crime      \\ \hline
+1                      & 96.23          & 84.89          \\
+2                      & 97.19          & 85.76          \\
+4                      & 97.64          & 86.88          \\
+8                      & \textbf{98.17} & \textbf{87.11} \\
+16                     & 97.78          & 86.72          \\ \hline
+\end{tabular}%
+}
+\caption{Effect of the number of convolutions in the attention module on performance.}
+\label{tab:nn}
+\end{table}

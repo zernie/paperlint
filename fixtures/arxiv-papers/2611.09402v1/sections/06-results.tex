@@ -1,0 +1,51 @@
+\section{Results}
+\label{sec:results}
+The resulting model comprises 613 lexical entries and supports retrieval in both the production and perception directions; under intact conditions, it correctly retrieves all eight entries tested in the present simulation corpus, with all 613 entries participating as candidates.
+
+\subsection{Representational structure}
+The model represents similarity relationships between lexical entries at both the conceptual and phonological levels. These relationships can be examined by comparing the corresponding vectors, providing an overview of the structure within the lexical inventory. Figure~\ref{fig:geometry} illustrates this structure for the eight selected entries by displaying their pairwise similarities at each of the three lexical levels.
+
+At the conceptual level, for example, \emph{Kanne}, \emph{Tasse}, and \emph{Topf} share a handle-related component in the lexical graph. This common component contributes to the overlap between their conceptual vectors. At the phonological level, shared form components likewise contribute to similarity, as illustrated by \emph{Kanne} and \emph{Katze}, which share the component \texttt{P\_St\_ka}. The lemma vectors, in contrast, provide independently generated lexical identities. The matrices thus make the similarity structure of the constructed representations visible before neural simulation; they do not measure human similarity judgments.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\textwidth]{figures/similarity.pdf}
+\caption{Within-level dot products for the eight selected words, extracted from the 613-entry vocabulary ($D=512$, vector seed 10). All vocabulary vectors are normalized. The shared color scale spans $-1$ to $1$. The matrices describe static geometry, not neural activity or retrieval probabilities.}\label{fig:geometry}
+\end{figure}
+
+\subsection{Retrieval in both directions}
+In the intact model, with no neurons ablated, all eight selected words are correctly retrieved in both directions under the stated full-lexicon criterion (Table~\ref{tab:baseline}). Production target scores range from 0.9464 to 0.9729; perception target scores range from 0.9481 to 0.9792. The smallest acceptance margin is 0.4110 in production and 0.4372 in perception. The result establishes successful transfer for these inputs in the archived realization. It is not an estimate of accuracy over the full lexical inventory.
+
+\begin{table}[htbp]
+\centering\small
+\input{tables/baseline}
+\caption{Baseline retrieval results for the sixteen trials in the simulation corpus, evaluated against all 613 candidates. Scores are mean final-state dot products over 0.45--0.70~s; margins are the differences between the largest and second-largest scores. Every listed trial retrieves the intended entry.}\label{tab:baseline}
+\end{table}
+\FloatBarrier
+
+\subsection{Activation dynamics in the two pathways}
+Figure~\ref{fig:traces} shows the stored \emph{Kanne} simulation traces for the perception and production tasks. Each column follows the processing direction through three state buffers and two associative memories. The state curves are the dot products defined in Eq.~\eqref{eq:activation}; the memory curves show decoded selection outputs. Shading identifies the interval during which the complete input vector is supplied.
+
+In the production benchmark, the highest-scoring non-target final-state candidate for \emph{Kanne} is \emph{Krone}, with a score of 0.5619, while the target score is 0.9729. \emph{Krone} is not among the eight words plotted in Figure~\ref{fig:traces}; its score comes from the numerical evaluation over the full lexicon. The red curve in both columns represents \emph{Katze}, as specified by the shared color legend in the upper-left panel. This example also shows why displaying only eight words would be insufficient for deciding retrieval success: the nearest output competitor can be outside the set of selected words. The reported decision includes all 613 entries.
+
+\begin{figure}[p]
+\centering\includegraphics[width=\textwidth]{figures/kanne-traces.pdf}
+\caption{Stored \emph{Kanne} simulations with 613 candidate entries. Left: perception; right: production. From top to bottom, each column shows the input-level state, WTA selection (competition) memory output, lemma state, thresholded transfer memory output, and final state. State panels show dot products with reference vectors; memory panels show decoded entry outputs. Shading marks the complete-vector input interval. The same eight entries are plotted in every panel, with the same color assignment in both columns; the legend in the upper-left panel applies throughout. In particular, the red curve represents \emph{Katze} in both perception and production. All 613 candidates participate in retrieval, but \emph{Krone}, the highest-scoring non-target candidate in the final production state, is not plotted; its score reported in the text comes from the full-lexicon numerical evaluation. The plotted export is rounded and sampled at approximately 10-ms intervals; its underlying simulation step is 1~ms.}\label{fig:traces}
+\end{figure}
+\FloatBarrier
+
+\subsection{Interpreting activation patterns at the three lexical levels}
+\label{sec:activation-interpretation}
+The curves in Figure~\ref{fig:traces} now provide a concrete basis for interpreting activity at the conceptual, lemma, and phonological levels. Each state curve shows how the decoded neural representation projects onto the stored vector of a particular lexical entry over time. It is a readout of the distributed population activity, while the memory panels report the outputs of the associative selection circuits. Reading these panels together helps distinguish the representation currently carried by a buffer from the lexical associations selected during retrieval.
+
+Representational overlap helps explain the patterns in the state panels. Because related lexical items share representational components, retrieving one item can produce positive scores for other items. For example, the conceptual representations of \emph{Kanne} and \emph{Tasse} share a handle-related component. A state representing only \emph{Kanne} can therefore yield a positive score for \emph{Tasse}. This score expresses overlap with the \emph{Tasse} vector; evidence that the \emph{Tasse} association has also been selected would come from the corresponding memory output. The same distinction between state projection and associative selection applies at all three lexical levels in both processing directions.
+
+The dot-product score in Eq.~\eqref{eq:activation} carries information about both signal amplitude and alignment with a stored vector. The decoded state varies in length over time, so this readout differs from the cosine similarity between unit-length vocabulary vectors in Eq.~\eqref{eq:similarity}. A score can exceed one; a negative score indicates a projection in the opposite direction to the reference vector and does not by itself identify an inhibitory neural population.
+
+The contribution of representational overlap can be stated mathematically. Suppose a state contains only a scaled target vector, $\hat{\mathbf x}(t)=a(t)\mathbf v_k$. Then
+\begin{equation}
+ A_i(t)=a(t)S_{ik}.
+ \label{eq:overlap}
+\end{equation}
+For positive target amplitude $a(t)$, all neighbors with positive target overlap will also have positive scores. These neighboring curves can thus arise from a single represented target. Equation~\eqref{eq:overlap} supplies a geometric baseline for assessing apparent coactivation in the plots.
+
+For a mean state $\bar{\mathbf x}$, an amplitude-matched target prediction uses $\hat a=\mathbf v_k^{\mathsf T}\bar{\mathbf x}$ and residual $\mathbf r=\bar{\mathbf x}-\hat a\mathbf v_k$. A nonzero residual can reflect decoding noise, dynamics, or other representational components; it is not by itself proof of competitor retrieval. Selection outputs $z_i$ and spike recordings provide complementary evidence. Moreover, with 613 candidate vectors in 512 dimensions, arbitrary lexical mixture coefficients cannot in general be recovered uniquely from the state vector alone.

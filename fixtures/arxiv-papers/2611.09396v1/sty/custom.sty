@@ -1,0 +1,78 @@
+\RequirePackage{xspace}
+\newcommand{\TODO}[1]{\textcolor{blue}{TODO: #1}}
+\newcommand{\n}[1]{{#1}\xspace}  % normal
+\newcommand{\m}[1]{\ensuremath{#1}\xspace}  % math
+\newcommand{\suf}[1]{^{\text{#1}}}
+\newcommand{\sub}[1]{_{\text{#1}}}
+
+% cleverref
+\Crefname{figure}{Figure}{Figures}
+\crefname{figure}{Fig.}{Fig.}
+\crefname{theorem}{Thrm.}{Thrm.}
+\Crefname{theorem}{Theorem}{Theorems}
+\Crefname{algorithm}{Algorithm}{Algorithms}
+\crefname{algorithm}{Alg.}{Alg.}
+\crefname{line}{Line}{Lines}
+\crefname{table}{Table}{Tables}
+\crefname{section}{Sec.}{Sec.}
+\Crefname{section}{Section}{Sections}
+\crefname{definition}{Def.}{Def.}
+\Crefname{definition}{Definition}{Definitions}
+\crefname{lemma}{Lemma}{Lemmas}
+\Crefname{lemma}{Lemma}{Lemmas}
+\crefname{proposition}{Prop.}{Prop.}
+\Crefname{proposition}{Proposition}{Propositions}
+\crefname{observation}{Observation}{Observations}
+\Crefname{observation}{Observation}{Observations}
+\crefname{equation}{Eq.}{Eq.}
+\Crefname{equation}{Equation}{Equations}
+\Crefname{part}{Part}{Parts}
+\crefname{part}{Part}{Parts}
+\Crefname{chapter}{Chapter}{Chapters}
+\crefname{chapter}{Chap.}{Chap.}
+\crefname{appendix}{Appendix}{Appendices}
+\Crefname{appendix}{Appendix}{Appendices}
+\makeatletter
+\AddToHook{env/algorithmic/before}{%
+  \def\@currentcounter{ALG@line}%
+}
+\makeatother
+\usepackage{cleveref}
+\crefalias{ALG@line}{line}
+
+% algorithm
+\algrenewcommand\algorithmicindent{1em}
+\newcommand{\IfSingle}[2]{\State \textbf{if}~#1~\textbf{then}~#2}
+\newcommand{\Input}[1]{\item[\textbf{input}:~#1]}
+\renewcommand{\Output}[1]{\item[\textbf{output}:~#1]}
+\newcommand{\true}{\m{\texttt{TRUE}}}
+\newcommand{\false}{\m{\texttt{FALSE}}}
+\newcommand{\failure}{\m{\texttt{FAILURE}}}
+\newcommand{\pop}{\m{\funcname{pop}}}
+\newcommand{\push}{\m{\funcname{push}}}
+\newcommand{\assignment}{\m{\mathcal{M}}}
+\newcommand{\CostMatrix}{\m{\mathcal{C}}}
+\newcommand{\solutions}{\m{\Pi}}
+\newcommand{\mymatrix}{\m{M}}
+\newcommand{\discrepancy}{\m{D}}
+\newcommand{\AgentsToReconsider}{\m{B}}
+\newcommand{\sampled}{\m{S}}
+\newcommand{\delay}{\m{d}}
+
+% utils
+\newcommand{\funcname}[1]{\m{\mathsf{#1}}}
+\newcommand{\mapname}[1]{\n{\textit{#1}}}
+\newcommand{\loc}[2]{\m{\pi_{#1}[#2]}}
+\newcommand{\neigh}[1]{\m{\funcname{neigh}(#1)}}
+\newcommand{\dist}{\m{\mathrm{dist}}}
+\newcommand{\cost}{\m{\mathrm{cost}}}
+\newcommand{\scenname}[1]{\n{\texttt{\uppercase{#1}}}}
+\newcommand{\scenHotspot}{\scenname{hotspot}}
+\newcommand{\scenRandom}{\scenname{random}}
+\newcommand{\scenEqdist}{\scenname{eq-dist}}
+\newcommand{\planner}{TACT\xspace}
+
+% math
+\newcommand{\defeq}{\mathrel{\mathop:}=}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}

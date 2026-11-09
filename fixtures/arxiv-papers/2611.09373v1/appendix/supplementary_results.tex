@@ -1,0 +1,198 @@
+\section{Calibration procedures and results}
+\label{app:calibration-details}
+
+Every calibrator is fitted on the dedicated calibration holdout inside the corresponding outer
+training split. Table~\ref{tab:calibration-map} summarizes how each form of uncertainty is
+calibrated. Figures~\ref{fig:binary-dataset-scores}, \ref{fig:appendix-native-binary-nll}, and
+\ref{fig:appendix-native-binary-ece} show Brier score, binary NLL, and ECE by dataset. Figures
+\ref{fig:regression-dataset-scores}, \ref{fig:appendix-native-regression-nll}, and
+\ref{fig:appendix-native-regression-coverage-error} show interval score, Gaussian NLL, and coverage
+error for regression.
+
+\begin{table*}[!htbp]
+\centering
+\caption{Calibration applied to each pipeline. A supplied scale is a standard deviation on the
+target used to train the model.}
+\label{tab:calibration-map}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.29\textwidth}
+  >{\raggedright\arraybackslash}p{0.31\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Pipelines & Supplied uncertainty & Calibration applied \\
+\midrule
+All eleven binary pipelines & Marginal event probability & One scalar temperature \\
+LightGBM; deterministic MLP & Point prediction only & Constant Gaussian residual scale \\
+MC dropout; SWAG; deep ensemble; ensemble MC dropout; MultiSWAG
+  & Stochastic-pass, posterior-draw, or ensemble-member spread
+  & Additive observation-noise variance \\
+Laplace; post-hoc VBLL; MoLA; ensemble post-hoc VBLL
+  & Total predictive standard deviation & Standard-deviation multiplier \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+For binary predictions, we choose the temperature that minimizes NLL on the calibration set and
+divide the probability logits by this value. If the calibration labels cannot support a finite
+temperature estimate, we set the temperature to one and keep the original probabilities.
+
+For regression pipelines with only a point prediction, the fitted constant scale is the
+root-mean-square calibration residual. For pipelines with a predictive standard deviation, the
+scale multiplier is the root-mean-square residual after division by that standard deviation. For
+pipelines supplying epistemic spread, we choose a non-negative observation-noise variance by
+minimizing Gaussian NLL on the calibration set and add it to the supplied variance. Central 90\%
+intervals extend 1.645 adjusted standard deviations on either side of the mean.
+
+The four log-trained endpoints are calibrated on the log target. Exponentiating the interval limits
+produces asymmetric intervals in the original units used for scoring. The appendix NLL values for
+these endpoints use the corresponding log-normal density in the original units.
+
+Figures~\ref{fig:calibration-brier-endpoints} and
+\ref{fig:calibration-interval-endpoints} show the full-grid mean score for each method and endpoint
+before and after calibration. Each point averages 250 outer-fold evaluations. LightGBM and the
+deterministic MLP supply only point predictions for regression, so their interval-score panels begin
+after the constant residual scale is fitted.
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth]{calibration_brier_paper_blue.pdf}
+  \caption{Full-grid mean Brier scores before and after temperature scaling for all 13 binary
+  datasets and eleven pipelines. Open markers show uncalibrated scores and filled markers show
+  calibrated scores. Lower is better.}
+  \label{fig:calibration-brier-endpoints}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth]{calibration_interval_paper_blue.pdf}
+  \caption{Full-grid mean 90\% interval scores before and after method-specific calibration for
+  all nine regression datasets. Open markers show native intervals and filled markers show
+  calibrated intervals. LightGBM and deterministic MLP supply no native interval, so only their
+  calibrated scores are shown. Axes are endpoint-specific; lower is better.}
+  \label{fig:calibration-interval-endpoints}
+\end{figure*}
+
+\section{Global rank comparisons}
+\label{app:global-rank-details}
+
+The Friedman test finds differences among methods for all three evaluation measures
+(Table~\ref{tab:global-rank-tests}).
+
+\begin{table*}[!htbp]
+\centering
+\caption{Cross-dataset Friedman tests. $Q$ is the tie-corrected Friedman statistic.}
+\label{tab:global-rank-tests}
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Evaluation measure & Datasets & $Q$ & $p$-value \\
+\midrule
+TDC leaderboard & 22 & 107.13 & $2.02\times10^{-18}$ \\
+Calibrated Brier & 13 & 45.75 & $1.59\times10^{-6}$ \\
+Calibrated interval score & 9 & 54.40 & $4.08\times10^{-8}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Table~\ref{tab:global-rank-holm} gives every mean rank and the Holm-adjusted comparison with ensemble
+MC dropout. The adjustment includes all 55 pairwise comparisons within each evaluation measure.
+
+\begin{table*}[!htbp]
+\centering
+\caption{Mean ranks and Holm-adjusted comparisons with ensemble MC dropout. Bold adjusted
+$p$-values indicate a significant difference at the 5\% level. The adjustment accounts for all 55
+pairwise method comparisons within each evaluation measure.}
+\label{tab:global-rank-holm}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& \multicolumn{2}{c}{TDC leaderboard} & \multicolumn{2}{c}{Brier} & \multicolumn{2}{c}{Interval score} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+Method & Rank & $p_{\mathrm{Holm}}$ & Rank & $p_{\mathrm{Holm}}$ & Rank & $p_{\mathrm{Holm}}$ \\
+\midrule
+LightGBM & 6.36 & \textbf{0.0097} & 4.23 & 1.0000 & 3.56 & 1.0000 \\
+Deterministic MLP & 8.70 & \textbf{$<0.0001$} & 8.38 & \textbf{0.0101} & 10.33 & \textbf{$<0.0001$} \\
+MC dropout & 7.91 & \textbf{$<0.0001$} & 7.69 & 0.0690 & 5.67 & 1.0000 \\
+SWAG & 7.32 & \textbf{0.0002} & 7.38 & 0.1431 & 7.78 & \textbf{0.0486} \\
+Laplace & 8.16 & \textbf{$<0.0001$} & 9.23 & \textbf{0.0007} & 9.22 & \textbf{0.0014} \\
+Post-hoc VBLL & 8.82 & \textbf{$<0.0001$} & 6.46 & 0.9364 & 8.33 & \textbf{0.0142} \\
+Deep ensemble & 4.20 & 1.0000 & 4.54 & 1.0000 & 6.00 & 1.0000 \\
+Ensemble MC dropout & 2.73 & -- & 3.54 & -- & 2.67 & -- \\
+MultiSWAG & 3.86 & 1.0000 & 5.46 & 1.0000 & 5.00 & 1.0000 \\
+MoLA & 3.20 & 1.0000 & 5.46 & 1.0000 & 3.44 & 1.0000 \\
+Ensemble post-hoc VBLL & 4.73 & 1.0000 & 3.62 & 1.0000 & 4.00 & 1.0000 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Computational scale}
+
+Let $U=22\times10\times5\times5=5{,}500$ denote the number of
+dataset--partition--model-seed--outer-fold units. Table~\ref{tab:compute-counts} counts shared
+neural sweeps and ensemble backbones once, irrespective of how many UQ readouts they produce.
+
+\begin{table}[!htbp]
+\centering
+\caption{Computation underlying the eleven-pipeline comparison.}
+\label{tab:compute-counts}
+\small
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+\toprule
+Computation & Count \\
+\midrule
+LightGBM inner-CV fits & 880,000 \\
+LightGBM outer refits & 5,500 \\
+Shared MLP inner-CV fits & 880,000 \\
+Single-model MLP outer refits & 5,500 \\
+Ensemble-member MLP refits & 55,000 \\
+\textbf{From-scratch model fits} & \textbf{1,826,000} \\
+Checkpoint-resumed SWAG continuations & 60,500 \\
+Post-hoc VBLL last-layer grid-point fits & 4,900,500 \\
+Calibration applications & 60,500 \\
+Outer-fold method evaluations & 60,500 \\
+Score evaluations across the three main measures & 121,000 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The 55,000 ensemble-member entries are full MLP refits. The larger post-hoc VBLL count consists of
+81 last-layer optimizations for each of 60,500 frozen feature maps, comprising 5,500 single models
+and 55,000 ensemble members. Each optimization fits one prior-scale and Wishart-scale pair without
+retraining the MLP backbone.
+\FloatBarrier
+
+\subsection{Additional evaluation measures}
+
+Figures~\ref{fig:binary-metric-rails}--\ref{fig:regression-uq-metric-rails} show mean ranks for the
+additional measures listed in Section~\ref{sec:methods}. Each score averages the same 250 outer-fold
+values as the main analysis. The corresponding values on each dataset's original scale appear in
+Figures~\ref{fig:appendix-native-binary-auroc}--\ref{fig:appendix-native-regression-coverage-error}.
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{appendix_binary_metric_rails.pdf}
+  \caption{Mean ranks for five binary evaluation measures after temperature scaling. Each measure
+  contains the same 13 datasets and eleven methods. The outlined marker identifies the lowest
+  observed mean rank; coincident points have equal mean ranks.}
+  \label{fig:binary-metric-rails}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth]{appendix_regression_point_metric_rails.pdf}
+  \caption{Mean ranks for regression point-prediction measures. Each measure contains the same nine
+  datasets and eleven methods. The outlined marker identifies the lowest observed mean rank;
+  coincident points have equal mean ranks.}
+  \label{fig:regression-point-metric-rails}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth]{appendix_regression_uq_metric_rails.pdf}
+  \caption{Mean ranks for interval score, Gaussian NLL, and absolute coverage error after
+  method-specific regression calibration. Each measure contains the same nine datasets and eleven
+  methods. The outlined marker identifies the lowest observed mean rank; coincident points have
+  equal mean ranks.}
+  \label{fig:regression-uq-metric-rails}
+\end{figure*}
+\FloatBarrier

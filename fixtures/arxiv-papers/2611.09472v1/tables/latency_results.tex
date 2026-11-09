@@ -1,0 +1,41 @@
+\begin{table}[!htbp]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Latency and serving work.} Means per task on paired ALFWorld and WebQuestions using Qwen3-8B. \colorbox{enggreen}{\textbf{Green}} and \colorbox{engyellow}{yellow}: highest and second-highest values. Lower is better for time, calls, and token counts; higher is better for SR/F1. Input/output tokens are in thousands. Reflexion includes up to three attempts and reflection calls. Dashes denote pending supplementary measurements.}
+\label{tab:latency}
+\begin{tabular}{@{}llrrrrr@{}}
+\toprule
+Benchmark & Method & Time (s) & Calls & Input (k) & Output (k) & SR / F1 (\%; $\Delta$ pp)\\
+\midrule
+ALFWorld & ReAct-style & \secondresult{50.27} & 36.50 & 73.64 & 1.95 & 57.0(-33.3) \\
+ & Reflexion & 167.86 & 104.33 & 252.86 & 6.92 & 42.7(-47.6)\\
+& Base + ETG
+& \bestresult{\textbf{43.76}}
+& 29.50
+& 81.24
+& 1.66
+& $82.1\,(-8.2)$\\
+& SFT, no inference ETG
+& 60.53
+& \bestresult{\textbf{22.58}}
+& \bestresult{\textbf{35.76}}
+& \bestresult{\textbf{1.30}}
+& \secondresult{$85.1\,(-5.2)$}\\
+ & \textbf{\method}
+& 65.91
+& \secondresult{25.50}
+& \secondresult{46.50}
+& \secondresult{1.51}
+& \bestresult{\textbf{90.3}\,$(+0.0)$}\\
+\midrule
+WebQuestions & CoT & 1.56 & \bestresult{\textbf{1.00}} & 1.74 & 0.07 & 37.8(-15.9) \\
+ & Self-critique (3 calls) & 8.83 & \secondresult{3.00} & 5.61 & 0.43 & 40.6(-13.1)\\
+ & Base + ETG & 1.67 & \bestresult{\textbf{1.00}} & 1.78 & 0.07 & 50.6(-3.1)\\
+ & SFT, no inference ETG & \bestresult{\textbf{0.86}}
+& \bestresult{\textbf{1.00}}
+& \bestresult{\textbf{1.74}}
+& \bestresult{\textbf{0.02}}
+& \secondresult{$51.5\,(-2.2)$}\\
+ & \method & \secondresult{1.26} & \bestresult{\textbf{1.00}} & \secondresult{1.75} & \secondresult{0.04} & \bestresult{\textbf{53.7}\,$(+0.0)$} \\
+\bottomrule
+\end{tabular}
+\end{table}

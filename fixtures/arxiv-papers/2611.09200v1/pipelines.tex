@@ -1,0 +1,123 @@
+% Editable vertical comparison of published EDM and two internal branches.
+% Arrows follow the comparison protocol, including explicit candidate alignment.
+% Both final selectors use candidates and ranking scores from the proposed ranker.
+% OOF score generation is training-only and is not an inference ensemble.
+% Color denotes design provenance, not identical implementations or models.
+\begingroup%
+\definecolor{drillInk}{HTML}{3B3B3B}%
+\definecolor{drillLine}{HTML}{B9B9B9}%
+\definecolor{drillRule}{HTML}{D6D6D6}%
+\definecolor{drillGray}{HTML}{F7F7F7}%
+\definecolor{drillLegalFill}{HTML}{DDEFE4}%
+\definecolor{drillLegalInk}{HTML}{246346}%
+\definecolor{drillBlueLine}{HTML}{80AAC8}%
+\definecolor{drillBlueFill}{HTML}{EAF2FA}%
+\definecolor{drillBlueInk}{HTML}{2D5E80}%
+\definecolor{drillAdaptFill}{HTML}{FFF0D8}%
+\definecolor{drillAdaptInk}{HTML}{8C5C17}%
+\newcommand{\drillBadge}[3]{\begingroup\setlength{\fboxsep}{1.3pt}%
+  \colorbox{#1}{\textcolor{#2}{\textbf{#3}}}\endgroup}%
+\newcommand{\drillModule}[8]{%
+  \node[drillBox,#6,minimum width=#4cm,minimum height=#5cm]
+    (#1) at (#2,#3) {};
+  \node[drillTitle] at ([yshift=-.20cm]#1.north) {\mbox{#7}};
+  \draw[drillDivider]
+    ([xshift=.13cm,yshift=-.38cm]#1.north west)--
+    ([xshift=-.13cm,yshift=-.38cm]#1.north east);
+  \node[drillBody,anchor=north,text width=\dimexpr #4cm-8pt\relax]
+    at ([yshift=-.46cm]#1.north) {#8};
+}%
+\begin{tikzpicture}[
+  x=1cm,y=1cm,
+  font=\normalfont\rmfamily\fontsize{7.4}{8.8}\selectfont,
+  text=drillInk,
+  every node/.style={inner sep=0pt,outer sep=0pt,align=center},
+  drillBox/.style={draw=drillLine,fill=drillGray,line width=.55pt,
+    rounded corners=2pt},
+  drillBlue/.style={draw=drillBlueLine,fill=drillBlueFill},
+  drillTitle/.style={font=\normalfont\rmfamily\bfseries\fontsize{7.4}{8.8}\selectfont},
+  drillBody/.style={font=\normalfont\rmfamily\fontsize{7.4}{8.8}\selectfont},
+  drillPanel/.style={font=\normalfont\rmfamily\fontsize{8.6}{10}\selectfont\bfseries},
+  drillDivider/.style={draw=drillRule,line width=.35pt},
+  drillFlow/.style={-{Latex[length=1.6mm,width=1.1mm]},draw=drillInk,
+    line width=.55pt,shorten <=.4pt,shorten >=.4pt}
+]
+
+% Three compact vertical lanes. Hyperparameters are reported in the text.
+\node[drillPanel] at (1.80,.03) {(a) Published EDM};
+\node[drillPanel] at (6.10,.03) {(b) Internal control};
+\node[drillPanel] at (10.40,.03) {(c) Proposed method};
+\draw[drillDivider] (0,-.19)--(3.60,-.19);
+\draw[drillDivider] (4.30,-.19)--(7.90,-.19);
+\draw[drillDivider] (8.60,-.19)--(12.20,-.19);
+\node[drillBody] at (1.80,-.43) {LLM: Qwen2.5-72B-Instruct};
+\node[drillBody] at (8.25,-.43) {Inputs are shared within each run};
+\draw[drillDivider] (3.95,-.62)--(3.95,-8.98);
+
+% Published EDM. Pairwise LLM scoring and the second tree ranker are grouped.
+\drillModule{edmOffline}{1.80}{-1.05}{3.60}{.85}{}
+  {Offline preparation}{LLM descriptions}
+\drillModule{edmHybrid}{1.80}{-2.30}{3.60}{1.05}{drillBlue}
+  {Retrieval: Top-500}{BM25 + dense + HyDE\\+ citation expansion}
+\drillModule{edmFirst}{1.80}{-3.55}{3.60}{.85}{drillBlue}
+  {LambdaMART ranker}{EDM features, Top-100}
+\drillModule{edmSecond}{1.80}{-4.80}{3.60}{1.05}{}
+  {LLM-assisted reranking}{100 LLM pair scores\\Tree ranker $\to$ Top-10}
+\drillModule{edmFinalLLM}{1.80}{-6.15}{3.60}{1.05}{drillBlue}
+  {Final LLM evidence}{Top-10: 10 pair scores\\+ 1 collective judgment}
+\drillModule{edmSelector}{1.80}{-7.40}{3.60}{.85}{drillBlue}
+  {Pointwise tree selector}{Scores and threshold}
+\node[drillBox,minimum width=3.60cm,minimum height=.45cm,fill=white]
+  (edmOutput) at (1.80,-8.75) {Selected Article set};
+\foreach \a/\b in {edmOffline/edmHybrid,edmHybrid/edmFirst,
+  edmFirst/edmSecond,edmSecond/edmFinalLLM,
+  edmFinalLLM/edmSelector,edmSelector/edmOutput}
+  \draw[drillFlow] (\a.south)--(\b.north);
+
+% Both rankers inherit the conventional EDM feature design.
+\drillModule{sharedPool}{8.25}{-1.15}{7.90}{1.05}{drillBlue}
+  {Shared retrieval: Top-500}
+  {BM25 + BGE-M3 + HyDE + citation expansion\\
+   \textbf{Same candidate pool for both branches}}
+\drillModule{controlRanker}{6.10}{-2.75}{3.60}{1.50}{drillBlue}
+  {Control ranker}
+  {EDM feature set\\Top-500 $\to$ Top-100}
+\drillModule{proposedRanker}{10.40}{-2.75}{3.60}{1.50}{drillBlue}
+  {Proposed ranker}
+  {EDM feature set\\
+   \drillBadge{drillLegalFill}{drillLegalInk}{Added legal evidence}\\
+   Top-500 $\to$ Top-100}
+\draw[drillFlow] (sharedPool.south -| controlRanker.north)--(controlRanker.north);
+\draw[drillFlow] (sharedPool.south -| proposedRanker.north)--(proposedRanker.north);
+
+% Alignment is an explicit comparison-protocol step, not a merge of rankings.
+% Its text makes the proposed ranking the sole source of final candidates.
+\drillModule{alignment}{8.25}{-4.40}{7.90}{1.05}{fill=white}
+  {Shared Top-10 for selection}
+  {\textbf{Top-10 prefix of proposed Top-100}\\Same candidate IDs and ranking scores}
+\draw[drillFlow] (controlRanker.south)--(controlRanker.south |- alignment.north);
+\draw[drillFlow] (proposedRanker.south)--(proposedRanker.south |- alignment.north);
+
+\drillModule{sharedFinal}{8.25}{-5.80}{7.90}{1.10}{drillBlue}
+  {\textcolor{drillBlueInk}{Top-10 listwise LLM evidence}}
+  {\drillBadge{drillAdaptFill}{drillAdaptInk}{One collective judgment}\\
+   Qwen2.5-72B-Instruct}
+\draw[drillFlow] (alignment.south)--(sharedFinal.north);
+
+\drillModule{controlSelector}{6.10}{-7.40}{3.60}{1.40}{drillBlue}
+  {Control selector}
+  {EDM-based selection\\features}
+\drillModule{proposedSelector}{10.40}{-7.40}{3.60}{1.40}{drillBlue}
+  {Proposed selector}
+  {EDM-based selection\\features\\
+   \drillBadge{drillLegalFill}{drillLegalInk}{Added legal evidence}}
+\draw[drillFlow] (sharedFinal.south -| controlSelector.north)--(controlSelector.north);
+\draw[drillFlow] (sharedFinal.south -| proposedSelector.north)--(proposedSelector.north);
+\node[drillBox,minimum width=3.60cm,minimum height=.45cm,fill=white]
+  (controlOutput) at (6.10,-8.75) {Article set $S_q^{(0)}$};
+\node[drillBox,minimum width=3.60cm,minimum height=.45cm,fill=white]
+  (proposedOutput) at (10.40,-8.75) {Article set $S_q^{(1)}$};
+\draw[drillFlow] (controlSelector.south)--(controlOutput.north);
+\draw[drillFlow] (proposedSelector.south)--(proposedOutput.north);
+\end{tikzpicture}%
+\endgroup%

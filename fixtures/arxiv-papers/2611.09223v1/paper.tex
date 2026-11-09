@@ -1,0 +1,89 @@
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[preprint]{acl}
+\usepackage{tcolorbox}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{xspace}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{pifont}
+\usepackage{amsmath}
+\usepackage{subfigure}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{subcaption}
+\usepackage{lineno}
+\usepackage{makecell}
+\usepackage{CJKutf8}
+\usepackage{inconsolata}
+\usepackage{adjustbox}
+\usepackage{colortbl}
+\usepackage{tabularx}
+\usepackage{kotex}
+\SetHangulFonts{nanummj}{nanumgt}{nanumgt}
+\usepackage{fvextra}
+\newcommand{\promptfile}[1]{\VerbatimInput[fontsize=\scriptsize, breaklines=true, frame=single, framesep=1.5mm]{#1}}
+\fvset{breaksymbolleft={}, breaksymbolindentleft=0pt}
+\usepackage{placeins}
+
+\definecolor{darkblue}{rgb}{0, 0, 0.5}
+\hypersetup{colorlinks=true, citecolor=darkblue, linkcolor=darkblue, urlcolor=darkblue}
+\newcommand{\cir}[2]{\begin{tikzpicture}
+\node[draw,scale=0.7,circle,{#1},{#2}] at (0,0) {}; 
+\end{tikzpicture}}
+
+\def
+\name{\textsc{KLEAR}\xspace}
+
+\definecolor{mycolor}{RGB}{33, 95, 154}
+\definecolor{custom_red}{RGB}{228, 54, 54}
+
+
+\title{KLEAR: Knowledge-Matched LLM Evaluation in Korean across \\ Application Requirements via Controlled Benchmark Transformation}
+
+\author{
+\textbf{Seoyeon Kim}$^{1}$ \quad
+\textbf{Jeonghyun Kang}$^{2}$ \quad
+\textbf{Hamin Koo}$^{1}$ \\
+\textbf{Barom Kang}$^{2}$ \quad
+\textbf{Heondeuk Lee}$^{2,\dagger}$ \quad
+\textbf{Jaehyung Kim}$^{1,\dagger}$ \\[3pt]
+$^{1}$Yonsei University \qquad
+$^{2}$DATUMO INC. \\[3pt]
+\texttt{\{yeon\_04, jaehyungk\}@yonsei.ac.kr} \\
+\texttt{heondeuk.lee@selectstar.ai}
+}
+
+\begin{document}
+\maketitle
+\begingroup
+\renewcommand{\thefootnote}{$\dagger$}
+\footnotetext{Equal supervision and corresponding authorship.}
+\endgroup
+
+\input{0_abstract}
+\input{1_intro}
+\input{2_related}
+\input{3_motivation}
+\input{4_klear}
+\input{5_construction}
+\input{6_utility}
+\input{7_conclusion}
+
+\bibliography{custom}
+\appendix
+\input{8_appendix}
+
+\end{document}

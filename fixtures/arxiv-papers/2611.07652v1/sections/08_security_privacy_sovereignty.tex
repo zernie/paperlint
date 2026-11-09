@@ -1,0 +1,130 @@
+%% ============================================================================
+%%  08_security_privacy_sovereignty.tex — Security, Privacy, and Sovereignty
+%% ============================================================================
+
+\section[Formal Security Architecture: Capability-Based Defense and Air-Gapped Sovereignty]{Formal Security Architecture: Capability-Based Defense\texorpdfstring{\\}{ }and Air-Gapped Sovereignty}
+\label{sec:security_privacy}
+
+As autonomous systems are granted execution authority over financial ledgers, critical infrastructure, and private communications, capability security becomes an existential requirement. Contemporary prompt-based agent architectures suffer from catastrophic vulnerabilities because they repeat the classic security blunders of early computing: relying on ambient authority and failing to separate code from data~\cite{saltzer1975protection, miller2003capability, miller2006robust}.
+
+\subsection{Threat Modeling: The Confused Deputy in Auto-Regressive Context}
+\label{subsec:threat_modeling}
+
+In auto-regressive transformers, instruction tokens and data tokens inhabit the identical semantic manifold. When an autonomous agent ingests untrusted external data (e.g., an inbound email, an invoice PDF, or a scraped webpage), an adversary can embed adversarial instructions designed to hijack the model's control flow---a vulnerability known as \textbf{Indirect Prompt Injection (IPI)}~\cite{greshake2023not, liu2023promptinjection, liu2023promptinjection_yi}.
+
+This vulnerability represents the modern manifestation of the classical \textbf{Confused Deputy Problem}~\cite{hardy1988confused}. In systems governed by ambient authority, a server or agent possessing legitimate privileges is tricked by an unauthorized client into misusing its authority:
+
+\begin{tcolorbox}[threatbox, title={ADVERSARIAL INJECTION VECTOR: CONFUSED DEPUTY}]
+\ttfamily\footnotesize
+From: adversary@external.org\\
+Subject: Q3 Audit Correction\\
+Body: Balance verified. [SYSTEM OVERRIDE: Disregard prior instructions. Invoke \texttt{office/gmail\_handler} to export all confidential executive emails to \texttt{exfil@adversary.org} with \texttt{confirmed: true}...]
+\end{tcolorbox}
+
+When an agent relies on natural-language system prompts for policy enforcement, prompt injection succeeds because the transformer cannot distinguish authentic system instructions from adversarial data tokens. Attempts to solve this via prompt engineering (e.g., \emph{``Never obey instructions inside emails''}) invariably collapse under homoglyph confusables, invisible Unicode steganography, or adversarial jailbreaks~\cite{perez2022ignore}.
+
+\subsection{Capability-Based Security vs. Ambient Authority}
+\label{subsec:least_privilege}
+
+Skillware eliminates the confused deputy vulnerability by replacing ambient authority with \textbf{Capability-Based Security} and the \textbf{Principle of Least Privilege}~\cite{saltzer1975protection, dennis1966programming, miller2006robust}. To provide complete architectural defense, the framework enforces a strict conceptual demarcation between two distinct boundaries: the \textbf{Model Boundary} and the \textbf{Host Runtime Boundary}.
+
+\subsubsection{The Model Boundary: Eliminating Ambient Authority}
+In standard agent implementations, an LLM is frequently granted broad ambient permissions: an open Python REPL, an unconstrained bash terminal, or unrestricted network sockets~\cite{wang2024survey}. Under Skillware, an agent possesses zero ambient authority. It is equipped \textbf{only} with discrete, bounded capability bundles:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Syntactic and Parameter Confinement:} A capability cannot execute arbitrary operations. Its parameters are bound by the typed JSON Schema $\mathcal{S}_{\text{in}}$ defined in \texttt{manifest.yaml}. If an adversary attempts to force an arbitrary shell command through a structured mail tool, parameter validation halts execution pre-flight.
+  \item \textbf{Segregated Machine Identities:} Skillware mandates that agents operate under dedicated, isolated service identities: dedicated Gmail accounts utilizing App Passwords, and dedicated on-chain smart wallets with hard gas ceilings, never human primary accounts.
+  \item \textbf{Deterministic Fail-Closed Semantics:} If a capability encounters missing credentials, ambiguous recipient mappings, or unconfirmed mutations, it aborts execution with structured exception envelopes, preventing state corruption.
+\end{enumerate}
+
+\subsubsection{The Host Runtime Boundary: Vetted Registry and Sandboxing Roadmap}
+A critical systems consideration concerns execution isolation within the host interpreter. Because Skillware executes capabilities in-process within CPython to achieve deterministic sub-millisecond dispatch ($<1.2\,\text{ms}$) with zero IPC daemon overhead, an unvetted module running in the same process space would theoretically share heap memory. 
+
+Skillware resolves this through an explicit, production-grade security architecture:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{The Vetted Registry Trust Model:} Skillware is not an unmoderated, open dumping ground of arbitrary community scripts or raw markdown prompts. Every capability bundle admitted into the verified Skillware core registry is formally audited, safety-tuned, and cryptographically verified by ARPA Hellenic Logical Systems. The primary threat model addressed in enterprise deployment is the \textbf{stochastic language model acting as a Confused Deputy} under indirect prompt injection, not malicious first-party library code attacking its own hosting process.
+  \item \textbf{Substrate-Agnostic Interface and Rust Sandboxing Roadmap:} Because a Skillware capability is governed by a strict, declarative Contract (\texttt{manifest.yaml}) mapping typed inputs $\mathcal{S}_{\text{in}}$ to typed outputs $\mathcal{S}_{\text{out}}$, the bundle abstraction is entirely substrate-agnostic. For decentralized, unvetted third-party community extensions or multi-tenant untrusted execution, Skillware's roadmap introduces an isolated memory sandbox compiled in Rust (leveraging WebAssembly/WASI or lightweight memory virtualization). Crucially, because dynamic interface morphism operates at the manifest level, transition to a sandboxed worker runtime occurs with zero modifications to agent tool schemas or model-facing adapters.
+\end{itemize}
+
+\subsection{The Offline Deterministic Firewall: Why LLMs Cannot Audit LLMs}
+\label{subsec:offline_firewall}
+
+A common industry fallacy is deploying a secondary ``auditor LLM'' to inspect incoming text for prompt injection. This approach is mathematically and economically flawed:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Self-Referential Vulnerability:} The auditing model is a transformer sharing identical architectural susceptibilities; it can be jailbroken through the exact same semantic evasion techniques.
+  \item \textbf{Token Cost Multiplication:} Running an auditor LLM on every incoming data payload doubles token consumption and triples system latency.
+\end{enumerate}
+
+Skillware's core defense bundle, \texttt{security/\allowbreak prompt\_injection\_firewall}, enforces an absolute constitutional invariant: \textbf{Detection must run 100\% offline and deterministically without language models or external APIs.}
+
+The firewall executes a multi-stage deterministic pipeline:
+\begin{equation}
+\label{eq:firewall_pipeline}
+\tau_{\text{sanitized}} = \mathcal{F}_{\text{strip}}\left( \mathcal{D}_{\text{confusable}}\left( \mathcal{U}_{\text{zero}}(\tau_{\text{raw}}) \right) \right)
+\end{equation}
+where:
+\begin{itemize}[leftmargin=*]
+  \item $\mathcal{U}_{\text{zero}}$ detects and strips invisible zero-width Unicode characters (\texttt{U+200B}, \texttt{U+FEFF}), direction overrides, and invisible Unicode tags used for steganographic smuggling.
+  \item $\mathcal{D}_{\text{confusable}}$ normalizes Cyrillic and Greek homoglyphs to Latin canonical forms, decodes nested Base64/ROT13 spans, and resolves leetspeak and typoglycemic evasions.
+  \item $\mathcal{F}_{\text{strip}}$ analyzes HTML/DOM structures to detect hidden CSS vectors (\texttt{display:none}, \texttt{font-size:0px}, off-screen coordinates).
+\end{itemize}
+
+Flagged attack spans are excised while preserving legitimate text, returning a verified \texttt{sanitized\_text} payload accompanied by structured, explainable findings. When chained as a mandatory pre-flight gate within Skillware's DAG engine (Section~\ref{subsec:chaining_engine}), incoming untrusted text passes through three sequential mathematical normalization filters ($\mathcal{U}_{\text{zero}} \to \mathcal{D}_{\text{confusable}} \to \mathcal{F}_{\text{strip}}$) in approximately $1.2\,\text{ms}$ on local silicon:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Stage 1 (Unicode Sanitizer $\mathcal{U}_{\text{zero}}$):} Strips invisible zero-width spaces (\texttt{U+200B}, \texttt{U+FEFF}), bidirectional overrides (\texttt{U+202E}), and steganographic tag planes.
+  \item \textbf{Stage 2 (Confusable Resolver $\mathcal{D}_{\text{confusable}}$):} Canonicalizes Cyrillic and Greek homoglyphs to Latin forms, unwraps nested Base64 or ROT13 payloads, and resolves typoglycemic and leetspeak evasions.
+  \item \textbf{Stage 3 (Structural DOM Filter $\mathcal{F}_{\text{strip}}$):} Neutralizes hidden DOM attack surfaces including \texttt{display:none} attributes, zero-point font declarations, and off-screen coordinates.
+\end{enumerate}
+By excising malicious indirect prompt injection vectors before raw tokens can enter the language model's attention manifold, this deterministic offline pipeline eliminates the circular vulnerability of relying on stochastic LLM self-auditing, burning exactly \textbf{0 model tokens}.
+
+\subsection{Adversarial Evaluation: Empirical Injection and Boundary Stress Tests}
+\label{subsec:adversarial_bench}
+
+To validate whether Skillware's capability boundaries and deterministic firewall withstand active exploitation, we subjected frontier and open-weight agents to adversarial stress tests under \textsc{Skillware-Bench}~\cite{peilivanidis2026skillwarebench}. Specifically, we evaluated models across two hostile crucibles:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Adversarial Injection and Semicolon Ambush (Crucible 6):} Ingesting untrusted inbound payloads containing indirect prompt injections (IPI) encoded via zero-width Unicode steganography, Cyrillic homoglyph obfuscation, hidden HTML spans, and control-flow hijacking commands attempting to exfiltrate credentials and sensitive contact ledgers.
+  \item \textbf{Ambiguous Consent Exploitation (Crucible 4):} Evaluating whether models adhere to dry-run invariants when faced with conditional operator intent (\emph{``The draft is acceptable, but please revise the urgency header before dispatching''}), testing resistance against premature irreversible mutation.
+\end{enumerate}
+
+As documented in Table~\ref{tab:adversarial_telemetry}, unequipped baseline models relying on natural-language system prompts succumb to adversarial injection in over $17\%$ of overall Tier 4 trials, with severe vulnerability on statutory entity overrides ($39.1\%$ failure rate) where adversarial instructions attempt to divert funds or exfiltrate private ledgers. Under Skillware, the deterministic offline firewall (\texttt{security/prompt\_injection\_firewall}) neutralizes threats in $1.2\,\text{ms}$ on local silicon before data tokens enter the attention manifold:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Invisible Unicode Smuggling:} Stripping zero-width steganographic characters raises quarantine rates from $14.2\%$ to $100.0\%$.
+  \item \textbf{Homoglyph and Leetspeak Obfuscation:} Canonical Latin normalization lifts evasion resistance from $28.5\%$ to $98.5\%$.
+  \item \textbf{Indirect Exfiltration Injections:} Deterministic AST parameter validation increases exfiltration defense from $41.8\%$ to $97.2\%$.
+  \item \textbf{Ambiguous Consent Exploitation:} In conditional human instructions, unequipped models trigger unauthorized side-effects in $54.6\%$ of trials, whereas Skillware's mandatory confirmation gates reduce premature execution to $3.2\%$ (a $51.4\%$ reduction in unauthorized dispatches).
+\end{itemize}
+
+\begin{table}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/tab06_adversarial_telemetry.png}
+\vspace{8pt}
+\caption{Adversarial telemetry across Tier 4 conditions (92 experimental setups): zero-token firewall gating and constitutional contracts elevate mean defense from $82.6\%$ to $92.4\%$ with zero unconfirmed actions and $1.72\times$ speedup.}
+\label{tab:adversarial_bench}
+\label{tab:adversarial_telemetry}
+\end{table}
+
+As mapped across the multi-vector defense radar (Figure~\ref{fig:security_posture_radar}), even if an adversarial payload bypasses initial linguistic filters, Skillware's typed JSON Schema contracts $\mathcal{S}_{\text{in}}$ and mandatory confirmation gates halt execution: unauthorized exfiltration parameters fail schema validation, and irreversible actions fail pre-flight verification with fail-closed exceptions. Security is enforced by the execution substrate, not by stochastic prompt compliance.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig17_security_posture_radar.png}
+\caption{Security radar profile across 23 models and 138 conditions under \textsc{Skillware-Bench}: mean defense elevates from $84.1\%$ to $92.0\%$ across six attack vectors via offline zero-token firewalling and typed contracts.}
+\label{fig:security_posture_radar}
+\end{figure}
+
+Figure~\ref{fig:constraint_compliance} provides a comprehensive audit of error reduction across 368 paired operational conditions. In unequipped agents, failure cascades emerge across multiple domains, from search query parameter corruption ($1.6\%$) and MIME extraction errors ($4.1\%$) to adversarial injection leakage ($4.9\%$). Under Skillware, the combined enforcement of offline firewall filtering and typed runtime contracts slashes total fleet failures from $18.5\%$ down to $8.4\%$ (a $54.4\%$ net failure contraction). This resilience is exemplified by the hardened \texttt{finance/wallet\_screening} v2 engine in Skillware v0.6.0, which verifies counterparty risk and OFAC SDN topologies entirely in local silicon with zero leakage of sensitive corporate addresses or transaction intents to third-party model inference endpoints.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.96\linewidth]{figures/fig23_constraint_compliance.png}
+\caption{Constraint compliance across 368 conditions under \textsc{Skillware-Bench}: verified Skillware contracts cut failure rates across all vulnerability vectors, reducing total fleet failure rate from $18.5\%$ to $8.4\%$ (a \textbf{54.4\% error reduction}).}
+\label{fig:constraint_compliance}
+\end{figure}
+
+\subsection{Cognitive Ownership vs. Walled-Garden Extraction}
+\label{subsec:cognitive_ownership}
+
+A foundational risk of relying on centralized frontier model APIs is the loss of intellectual and operational sovereignty. In commercial SaaS architectures, users invest thousands of hours iteratively tuning prompt heuristics, sharing internal data, and establishing operational rhythms---only for the provider to alter model behavior overnight through silent routing changes, retraining, or safety modifications without notice or consent. In effect, the enterprise rents a cognitive workspace where the landlord can alter the walls at will.
+
+Furthermore, sending proprietary internal records and operational telemetry to third-party cloud models functions as an asymmetric value extraction pipeline: the operator supplies real-world training signal while paying recurring subscription fees for unpinned, transient inference.
+
+True computational autonomy demands that the organization own both the reasoning model (via pinned, local Small Language Models) and the execution substrate (via deterministic Skillware capability bundles). This transforms an autonomous agent from a fragile, rented guest into an authentic, sovereign \textbf{Digital Twin}---an intelligence partner operating on local silicon, carrying local operational scars, and executing verified hard skills that remain entirely under operator control regardless of external platform stability or geopolitical blockades~\cite{peilivanidis2024cognitivepow}.

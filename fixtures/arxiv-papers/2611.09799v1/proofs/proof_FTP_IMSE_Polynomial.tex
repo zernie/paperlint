@@ -1,0 +1,458 @@
+\begin{proof}\textbf{of Theorem~\ref{thm: FTP IMSE}.}
+Denote $d=\overline{\hat{\theta}^{(c)}}-\bar{\theta}\in \R^m$. Since $\Phi$ has full column rank, $M=\Phi^\top \Phi$ is positive
+definite. Notice that the true coefficient vectors satisfy
+$\|\theta_i\|_2 \leq B, \ i=1,\ldots,n$. Define the constraint set
+\[
+\mathcal C_{B'}
+:=
+\left\{
+\theta\in\mathbb R^m:\|\theta\|_2\leq B'
+\right\}.
+\]
+For each individual $i$, first consider the unconstrained least-squares
+estimator
+\[
+\hat{\theta}_i^{(u)}
+:=
+\arg\min_{\theta\in\mathbb R^m}
+\|x_i-\Phi\theta\|_2^2.
+\]
+We denote the following notations for convenience:
+\begin{equation*}
+    \begin{aligned}
+        e_i = \hat{\theta}_i^{(c)} - \theta_i, &&
+        \xi_i = \hat{\theta}_i^{(u)} - \theta_i, &&
+        r_i = \hat{\theta}_i^{(c)} - \hat{\theta}_i^{(u)}, &&
+        b_i = \E e_i.
+    \end{aligned}
+\end{equation*}
+It follows that $e_i = \xi_i + r_i$. Since $M=\Phi^\top\Phi$ is positive definite, $\hat{\theta}_i^{(u)} = M^{-1}\Phi^\top x_i$. Using $x_i=\Phi\theta_i+\epsilon_i$, we obtain $\xi_i = \hat{\theta}_i^{(u)}-\theta_i = M^{-1}\Phi^\top\epsilon_i$. Because $\epsilon_i\sim N(0,\sigma_0^2I_T)$, it follows that $\xi_i\sim N(0,\sigma_0^2M^{-1})$. Consequently,
+\begin{align}
+\mathbb E
+\left\|
+\xi_i
+\right\|_2^2
+=
+\operatorname{tr}
+\left[
+\operatorname{Cov}
+\left(
+\xi_i
+\right)
+\right]
+=
+\sigma_0^2\operatorname{tr}(M^{-1}).
+\label{eq:unconstrained_mse}
+\end{align}
+We next express the constrained estimator as a metric projection.
+\[
+\hat{\theta}_i^{(c)}
+=
+\arg\min_{\theta\in\mathcal C_{B'}}
+\|x_i-\Phi\theta\|_2^2.
+\]
+Using $\Phi^\top x_i=M\hat{\theta}_i^{(u)}$, we can complete the square:
+\begin{align*}
+\|x_i-\Phi\theta\|_2^2
+&=
+x_i^\top x_i
+-2\theta^\top\Phi^\top x_i
++\theta^\top M\theta\\
+&=
+x_i^\top x_i
+-2\theta^\top M\hat{\theta}_i^{(u)}
++\theta^\top M\theta\\
+&=
+C_i+
+(\theta-\hat{\theta}_i^{(u)})^\top
+M
+(\theta-\hat{\theta}_i^{(u)}),
+\end{align*}
+where 
+$C_i = x_i^\top x_i - \hat{\theta}_i^{(u)\top} M\hat{\theta}_i^{(u)}$ 
+does not depend on $\theta$. Hence
+\begin{equation}
+\hat{\theta}_i^{(c)}
+=
+\arg\min_{\theta\in\mathcal C_{B'}}
+(\theta-\hat{\theta}_i^{(u)})^\top
+M
+(\theta-\hat{\theta}_i^{(u)}).
+\label{eq:constrained_projection}
+\end{equation}
+Define an inner product on $\mathbb R^m$ by 
+$\langle u,v\rangle_M:=u^\top M v,\ u,v\in\mathbb R^m$,
+and let 
+$\|u\|_M:=\sqrt{\langle u,u\rangle_M}=\sqrt{u^\top Mu}$ denote the corresponding norm. Then $(\mathbb R^m,\langle\cdot,\cdot\rangle_M)$ is a Hilbert space since $M$ is positive definite. Equation~\eqref{eq:constrained_projection} can therefore be written as
+\begin{equation}
+\hat{\theta}_i^{(c)}
+=\argmin_{\theta\in \mathcal{C}_{B'}} 
+\left\|
+\theta-\hat{\theta}_i^{(u)}
+\right\|_{M}^2
+=
+P_{\mathcal C_{B'}}^{M}
+\left(
+\hat{\theta}_i^{(u)}
+\right),
+\label{eq:metric_projection}
+\end{equation}
+where $P_{\mathcal C_{B'}}^{M}$ denotes the metric projection onto
+$\mathcal C_{B'}$ with respect to the $M$-norm.\vspace{1em}\\
+The set $\mathcal C_{B'}$ is nonempty, closed, and convex. By
+Proposition~4.16 of \citet{bauschke2017convexity},
+the metric projection onto a nonempty closed convex subset of a
+Hilbert space is firmly nonexpansive, and hence nonexpansive. Thus,
+in the Hilbert space
+$(\mathbb R^m,\langle\cdot,\cdot\rangle_M)$, for all $u,v\in\mathbb R^m$, we have
+\begin{equation}
+\left\|
+P_{\mathcal C_{B'}}^{M}(u)
+-
+P_{\mathcal C_{B'}}^{M}(v)
+\right\|_M
+\leq
+\|u-v\|_M.
+\label{eq:projection_nonexpansive}
+\end{equation}
+Since $\|\theta_i\|_2\leq B\leq B'$, we have
+$\theta_i\in\mathcal C_{B'}$. Therefore, $P_{\mathcal C_{B'}}^{M}(\theta_i)=\theta_i$. Applying~\eqref{eq:projection_nonexpansive} with $u=\hat{\theta}_i^{(u)},\ v=\theta_i$, and using~\eqref{eq:metric_projection}, we obtain
+\begin{align}
+\left\|
+e_i\right\|_M
+=
+\left\|
+\hat{\theta}_i^{(c)}-\theta_i
+\right\|_M
+=
+\left\|
+P_{\mathcal C_{B'}}^{M}
+\left(
+\hat{\theta}_i^{(u)}
+\right)
+-
+P_{\mathcal C_{B'}}^{M}(\theta_i)
+\right\|_M
+\leq
+\left\|
+\hat{\theta}_i^{(u)}-\theta_i
+\right\|_M
+=
+\left\|
+\xi_i\right\|_M.
+\label{eq:M_norm_nonexpansive}
+\end{align}
+Since $M$ is positive definite, for every $v\in\mathbb R^m$,
+\begin{equation}
+\lambda_{\min}(M)\|v\|_2^2
+\leq
+\|v\|_M^2
+\leq
+\lambda_{\max}(M)\|v\|_2^2.
+\label{eq: M_norm_to_l2}
+\end{equation}
+Consequently,~\eqref{eq:M_norm_nonexpansive} implies
+\begin{align*}
+\lambda_{\min}(M)
+\left\|
+e_i
+\right\|_2^2
+\leq
+\left\|
+e_i
+\right\|_M^2
+\leq
+\left\|
+\xi_i
+\right\|_M^2
+\leq
+\lambda_{\max}(M)
+\left\|
+\xi_i
+\right\|_2^2.
+\end{align*}
+Therefore,
+\begin{equation}
+\left\|
+e_i
+\right\|_2^2
+\leq
+\kappa(M)
+\left\|
+\xi_i
+\right\|_2^2,
+\label{eq:condition_number_bound}
+\end{equation}
+where $\kappa(M)=\lambda_{\max}(M)/\lambda_{\min}(M)$ is the spectral condition number of $M$.\\
+Taking expectations in~\eqref{eq:condition_number_bound} and applying
+\eqref{eq:unconstrained_mse}, we obtain
+\begin{equation}
+\mathbb E
+\left\|
+e_i
+\right\|_2^2
+\leq
+\kappa(M)\sigma_0^2
+\operatorname{tr}(M^{-1}).
+\label{eq:individual_constrained_bound}
+\end{equation}
+Denote $C = \kappa(M)\sigma_0^2
+\operatorname{tr}(M^{-1})$, notice that $e_i$'s are independent
+\begin{align}
+\mathbb E\|d\|_2^2
+=
+\dfrac{1}{n^2} \mathbb E \left\|\sum_{i=1}^n e_i\right\|_2^2
+=
+\dfrac{1}{n^2} \mathbb E \Bra{
+\sum_{i=1}^n \|e_i\|_2^2 + \sum_{i\ne j} e_i^\top e_j}
+=
+\dfrac{1}{n^2} \Bra{
+\sum_{i=1}^n \mathbb E \|e_i\|_2^2
++ \sum_{i\ne j} \mathbb E e_i^\top \mathbb E e_j
+}.
+\label{eq: direct expand d}
+\end{align}
+Recall Equation~\eqref{eq:individual_constrained_bound}, it follows that
+\begin{equation}
+\dfrac{1}{n^2} \sum_{i=1}^n \mathbb E \|e_i\|_2^2 
+\le 
+\dfrac{\kappa(M)\sigma_0^2
+\operatorname{tr}(M^{-1})}{n}.
+\label{eq: noise term}
+\end{equation}
+Then, we only need to bound the clipping bias term.\\
+Recall the definition of $\hat{\theta}_i^{(c)}$ given by Equation~\eqref{eq:metric_projection}, we have
+\begin{equation*}
+\|r_i\|_M
+=
+\left\|
+\hat{\theta}_i^{(c)} - \hat{\theta}_i^{(u)}
+\right\|_M
+\le 
+\left\|
+\theta_i - \hat{\theta}_i^{(u)}
+\right\|_M
+=
+\|\xi_i\|_M.
+\end{equation*}
+Combine with Equation~\eqref{eq: M_norm_to_l2}, we have $\|\hat{\theta}_i^{(c)} - \hat{\theta}_i^{(u)}\|_2^2 
+\le 
+\kappa(M) \|\hat{\theta}_i^{(u)} - \theta_i\|_2^2$. Since $\hat{\theta}_i^{(u)}$ is the unconstrained minimizer, we know that $r_i=0$ if $\|\hat{\theta}_i^{(u)}\|_2\le B'$. Therefore, we can rewrite 
+$r_i = \Bra{
+\hat{\theta}_i^{(c)} - \hat{\theta}_i^{(u)}
+}\cdot \mathbf{1} \Set{\|\hat{\theta}_i^{(u)}\|_2>B'}$.
+It follows that
+\begin{align*}
+\|r_i\|_2^2
+=\|\hat{\theta}_i^{(c)} - \hat{\theta}_i^{(u)}\|_2^2 \cdot \mathbf{1} \Set{\|\hat{\theta}_i^{(u)}\|_2>B'}
+\le
+\kappa(M) \|\hat{\theta}_i^{(u)} - \theta_i\|_2^2
+\cdot \mathbf{1} \Set{\|\hat{\theta}_i^{(u)}\|_2>B'}.
+\end{align*}
+Thus, we can obtain
+\begin{align}
+\|b_i\|_2^2
+=
+\| \mathbb E e_i \|_2^2
+=
+\| \mathbb E r_i \|_2^2
+\le
+\mathbb E \|r_i\|_2^2
+\le
+\kappa(M) \mathbb E \SqBra{
+\|\hat{\theta}_i^{(u)} - \theta_i\|_2^2
+\cdot \mathbf{1} \Set{\|\hat{\theta}_i^{(u)}\|_2>B'}
+}.
+\label{eq: clipping bias bound}
+\end{align}
+By the Cauchy--Schwarz inequality, we have
+\begin{align}
+\mathbb E \SqBra{
+\|\hat{\theta}_i^{(u)} - \theta_i\|_2^2
+\cdot \mathbf{1} \Set{\|\hat{\theta}_i^{(u)}\|_2>B'}
+}
+=
+\mathbb E \SqBra{
+\|\xi_i\|_2^2
+\cdot \mathbf{1} \Set{\|\hat{\theta}_i^{(u)}\|_2>B'}
+}
+\nonumber\\
+\le
+\sqrt{\mathbb E \|\xi_i\|_2^4} \sqrt{\operatorname{Pr}(\|\hat{\theta}_i^{(u)}\|_2>B')}.
+\label{eq: Cauchy--Schwarz inequality}
+\end{align}
+Since $\xi_i\overset{i.i.d.}{\sim} N(0,\Sigma)$ with $\Sigma = \sigma_0^2 M^{-1}$, we have
+\begin{equation}
+\sqrt{\mathbb E \|\xi_i\|_2^4}
+=
+\sqrt{(\operatorname{tr}\Sigma)^2 + 2\operatorname{tr}(\Sigma^{2})}
+\le \sqrt{3 (\operatorname{tr}\Sigma)^2}
+= \sqrt{3} \sigma_0^2 \operatorname{tr}(M^{-1}).
+\label{eq: 4th moment guassian bound}
+\end{equation}
+Recall $\|\theta_i\|_2\le B$, denote $\delta=B'-B$, then 
+$\Set{\|\hat{\theta}_i^{(u)}\|_2>B'}$ implies 
+$\Set{\|\hat{\theta}_i^{(u)}-\theta_i\|_2>\delta}$, which leads to
+\begin{align*}
+\operatorname{Pr}(\|\hat{\theta}_i^{(u)}\|_2>B')
+\le
+\operatorname{Pr}(\|\hat{\theta}_i^{(u)}-\theta_i\|_2>\delta)
+=\operatorname{Pr}(\|\xi_i\|_2>\delta).
+\end{align*}
+Let $\xi_i = \sigma_0 M^{-1/2}Z_i$, $Z_i\sim N(0, I_m)$, $\|Z_i\|_2^2\sim \chi^2_m$, we have
+\[
+\|\xi_i\|_2^2
+= 
+\sigma_0^2 Z_i^\top M^{-1} Z_i 
+\le 
+\sigma_0^2 \lambda_{\max}(M^{-1}) \|Z_i\|_2^2
+=
+\dfrac{\sigma_0^2}{\lambda_{\min}(M)} \|Z_i\|_2^2.
+\]
+Then, we can obtain
+\[
+\operatorname{Pr}(\|\xi_i\|_2>\delta)
+=
+\operatorname{Pr}(\|\xi_i\|_2^2>\delta^2)
+\le 
+\operatorname{Pr}\Bra{
+\dfrac{\sigma_0^2}{\lambda_{\min}(M)} \|Z_i\|_2^2>\delta^2
+}
+=\operatorname{Pr}
+\Bra{
+\chi^2_m > \dfrac{\delta^2 \lambda_{\min}(M)}{\sigma_0^2}
+}.
+\]
+By Lemma 1 from \citet{laurent2000adaptive},
+\begin{equation}
+\operatorname{Pr}(\chi^2_m > (\sqrt{m}+\sqrt{2x})^2)
+\le
+\operatorname{Pr}(\chi^2_m > m + 2\sqrt{mx} + 2x)\le \exp(-x).
+\label{eq: chi_square bound}
+\end{equation}
+By choosing $\sqrt{m}+\sqrt{2x} = \dfrac{\delta\sqrt{\lambda_{\min}(M)}}{\sigma_0}$ (when $\delta>\dfrac{\sqrt{m}\sigma_0}{\sqrt{\lambda_{\min}(M)}}$), we have
+\begin{align}
+\operatorname{Pr}(\|\hat{\theta}_i^{(u)}\|_2>B')
+&\le
+\operatorname{Pr}(\|\xi_i\|_2>\delta)
+\nonumber\\
+&\le
+\operatorname{Pr}
+\Bra{
+\chi^2_m > \dfrac{\delta^2 \lambda_{\min}(M)}{\sigma_0^2}
+}
+\nonumber\\
+&\le
+\exp\SqBra{
+-\dfrac{1}{2}\Bra{
+\dfrac{\delta\sqrt{\lambda_{\min}(M)}}{\sigma_0}
+- \sqrt{m}
+}^2
+}.
+\label{eq: clipping probability bound}
+\end{align}
+Combine Equation~\eqref{eq: clipping bias bound},~\eqref{eq: Cauchy--Schwarz inequality},~\eqref{eq: 4th moment guassian bound} and~\eqref{eq: clipping probability bound}, we obtain
+\begin{align}
+\|b_i\|_2^2
+&\le
+\kappa(M) \mathbb E \SqBra{
+\|\hat{\theta}_i^{(u)} - \theta_i\|_2^2
+\cdot \mathbf{1} \Set{\|\hat{\theta}_i^{(u)}\|_2>B'}
+}
+\nonumber\\
+&\le
+\kappa(M)
+\sqrt{\mathbb E \|\xi_i\|_2^4} \sqrt{\operatorname{Pr}(\|\hat{\theta}_i^{(u)}\|_2>B')}
+\nonumber\\
+&\le
+\kappa(M)
+\sqrt{3} \sigma_0^2 \operatorname{tr}(M^{-1})
+\exp\SqBra{
+-\dfrac{1}{4}\Bra{
+\dfrac{\delta\sqrt{\lambda_{\min}(M)}}{\sigma_0}
+- \sqrt{m}
+}^2
+}.
+\label{eq: individual_bias_term}
+\end{align}
+By the Cauchy--Schwarz inequality, we have
+\begin{equation}
+\dfrac{1}{n^2} \sum_{i\ne j} \mathbb E e_i^\top \mathbb E e_j
+=
+\dfrac{1}{n^2} \sum_{i\ne j} b_i^\top b_j
+\le
+\Bra{1-\dfrac{1}{n}} \max_{i} \|b_i\|^2_2.
+\label{eq: Cauchy--Schwarz}
+\end{equation}
+Combine Equation~\eqref{eq: direct expand d},~\eqref{eq: noise term},~\eqref{eq: individual_bias_term} and~\eqref{eq: Cauchy--Schwarz}, we get
+\begin{equation}
+\mathbb E\|d\|_2^2
+\leq
+\dfrac{\kappa(M)\sigma_0^2
+\operatorname{tr}(M^{-1})}{n}
++
+\Bra{1-\dfrac{1}{n}}
+\kappa(M)
+\sqrt{3} \sigma_0^2 \operatorname{tr}(M^{-1})
+\exp\SqBra{
+-\dfrac{1}{4}\Bra{
+\dfrac{\delta\sqrt{\lambda_{\min}(M)}}{\sigma_0}
+- \sqrt{m}
+}^2
+}.
+\label{eq:d_final_bound}
+\end{equation}
+Finally, since $\widetilde{\theta}_{\mathrm{FTP}}
+=
+\overline{\hat{\theta}^{(c)}}+Z
+=
+\bar{\theta}+d+Z$, and $\int_0^1\phi(t)\phi(t)^\top\,dt=I_m$, we have
+\begin{align*}
+\mathrm{IMSE}_{\mathrm{FTP}}
+=
+\mathbb E
+\int_0^1
+\left[
+{\widetilde{\theta}_{\mathrm{FTP}}}^\top\phi(t)
+-
+\bar{\theta}^\top\phi(t)
+\right]^2dt
+=
+\mathbb E\|d+Z\|_2^2.
+\end{align*}
+Because $Z\sim N(0,\sigma^2I_m)$ is independent of $d$ and
+$\mathbb E[Z]=0$,
+\[
+\mathbb E\|d+Z\|_2^2
+=
+\mathbb E\|d\|_2^2
++
+\mathbb E\|Z\|_2^2
+=
+\mathbb E\|d\|_2^2+m\sigma^2.
+\]
+With $\sigma=2B'/(n\mu)$, we have $m\sigma^2=4m{B'}^2/(n^2\mu^2)$.\\
+Combining this identity with~\eqref{eq:d_final_bound} yields
+\begin{equation}
+\begin{aligned}
+\mathrm{IMSE}_{\mathrm{FTP}}
+\leq
+&\frac{4m{B'}^2}{n^2\mu^2}
++
+\dfrac{\kappa(M)\sigma_0^2
+\operatorname{tr}(M^{-1})}{n}\\
+&+
+\Bra{1-\dfrac{1}{n}}
+\kappa(M)
+\sqrt{3} \sigma_0^2 \operatorname{tr}(M^{-1})
+\exp\SqBra{
+-\dfrac{1}{4}\Bra{
+\dfrac{(B'-B)\sqrt{\lambda_{\min}(M)}}{\sigma_0}
+- \sqrt{m}
+}^2
+}.
+\end{aligned}
+\label{eq: final_IMSE_FTP bound}
+\end{equation}
+When $\sigma_0=0$ and $B'\ge B$, the true coefficient vector is feasible and achieves zero fitting loss. Since $\Phi$ has full column rank, $\hat\theta_i^{(c)}=\theta_i$. Thus the estimation error consists only of the privacy perturbation, giving $\operatorname{IMSE}_{\mathrm{FTP}}=4m(B')^2/(n^2\mu^2)$.
+\end{proof}

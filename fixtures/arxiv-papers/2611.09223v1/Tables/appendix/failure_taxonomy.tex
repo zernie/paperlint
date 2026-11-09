@@ -1,0 +1,32 @@
+\begin{table}[t]
+\centering
+\small
+\caption{\textbf{Failure taxonomy.}
+Definitions of the 13 failure types and the number of incorrect responses with each primary type ($n=5{,}808$). One response fits none of the types and is counted under other errors.}
+\label{tab:failure_taxonomy}
+\begin{tabular}{@{}lp{0.68\columnwidth}r@{}}
+\toprule
+\multicolumn{2}{@{}l}{\textbf{Other errors}} & \textbf{650} \\
+\midrule
+T0 & Missing or invalid answer output & 262 \\
+T1 & Required material (passage, table, or figure) is absent & 45 \\
+T2 & Defective question (wrong gold answer, ambiguous or duplicate options, typo) & 342 \\
+\midrule
+\multicolumn{2}{@{}l}{\textbf{Knowledge failures}} & \textbf{3,422} \\
+\midrule
+T3 & Recalls a specific fact or value incorrectly & 2,425 \\
+T4 & Binds an entity, statute, or event to the wrong identity or attribute & 575 \\
+T5 & Required linguistic or structural rule is absent from the reasoning & 27 \\
+T6 & Never engages the specific knowledge required; reasoning stays generic & 395 \\
+\midrule
+\multicolumn{2}{@{}l}{\textbf{Application failures}} & \textbf{1,736} \\
+\midrule
+T7 & Correct formula and inputs, but incorrect computation & 2 \\
+T8 & Correct entities, but incorrect temporal or relational order & 23 \\
+T9 & Holds the relevant structural rule but misapplies it & 137 \\
+T10 & States the correct rule but misjudges its scope, condition, or exception & 1,401 \\
+T11 & Judges each option correctly but ignores the polarity of the question (e.g., ``not'', ``except'') & 170 \\
+T12 & Judges each proposition correctly but selects the wrong set in select-all questions & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}

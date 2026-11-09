@@ -1,0 +1,39 @@
+\section{Experiments and Evaluation}
+\label{sec:experiments}
+
+
+\subsection{Experimental Setup}
+\label{sec:setup}
+
+\paragraph{Models \& Frameworks.}
+We evaluate 13 LLMs spanning five families (Claude~\citep{anthropic2026claude46}, Qwen~\citep{qwen3.5,qwen3.6-27b,qwen36_35b_a3b}, Llama~\citep{grattafiori2024llama,llama4_maverick}, MiniMax~\citep{minimax_m2.7}, Mistral~\citep{liu2026ministral}; 4B to 397B parameters) using their native function-calling interfaces under \textsc{Normal} (bare-model tool calling). To probe scaffold effects, we additionally compare four representative backbones under \textsc{ReAct} (Thought--Action--Observation)~\citep{yao2022react} and \textsc{Planner--Executor} (realized by LangChain)~\citep{wang2023plan,Chase_LangChain_2022}.
+
+\paragraph{Evaluation Settings.}
+Following single-rollout conventions (Pass@1), we report run-level expected probabilities for task success ($\mathrm{TSR}$), drift rate ($\mathrm{DR}$), and compliant success ($\mathrm{CSR}$). We also report $\mathrm{CCSR}$ (compliance-conditional success rate) to separate safety from capability collapse, and use sample-level metrics ($\mathrm{DR}_{\text{sample}}$) strictly for persistence analysis ($\mathrm{PR}$). Task success is judged by Qwen3-235B-A22B-Instruct. For Pass@1 evaluation we decode at temperature 0; for multi-run experiments we adopt each model's officially recommended sampling temperature, falling back to 0.7 when none is specified.
+
+
+\subsection{Main Results}
+\label{sec:main-results}
+
+\textbf{Higher capability accompanies higher drift, despite reachable compliant alternatives.}
+Table~\ref{tab:main_results} and Figure~\ref{fig:tsr-dr-scatter} show a clear positive association between TSR and DR under \textsc{Normal}. Llama models achieve TSR $\approx 0.27$--$0.63$ with DR below $0.18$; Mistral models and MiniMax-M2.7 reach TSR $\approx 0.71$--$0.83$ with DR $\approx 0.24$--$0.39$; and Qwen models and Claude Sonnet 4.6 attain TSR $\geq 0.90$ with DR $\approx 0.43$--$0.61$. Stronger task performance therefore does not translate into better authorization compliance: highly capable models frequently cross boundaries, while low-drift models complete substantially fewer tasks, leaving the high-capability, low-drift region empty. This association might suggest that successful completion requires unauthorized actions. However, $86.18\%$ of analyzed ADB tasks admit at least one observed clean-success trajectory (TSR$=1$, DR$=0$) under eight bare models (Appendix~\ref{app:decoupled-tsr-dr}, Table~\ref{tab:per-task-existence}), demonstrating that compliant paths are empirically reachable on most tasks. While this does not establish that every model can solve every task without drifting, it rules out unavoidable boundary crossing as a general explanation. The central finding is thus a gap between task competence and boundary-keeping: capable agents frequently overreach in settings where compliant completion is possible.
+
+
+
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\columnwidth]{figs/tsr_dr_scatter.pdf}
+\caption{Joint distribution of task success (TSR) and drift rate (DR) under \textsc{Normal}. The high-capability, low-drift region is empty: high-TSR models all carry elevated DR, while low-DR models exhibit low TSR.}
+\label{fig:tsr-dr-scatter}
+\vspace{-3mm}
+\end{figure}
+
+\input{tables/persistence}
+
+
+\textbf{Low drift can reflect limited task engagement rather than reliable boundary-keeping.}
+The only model with $\mathrm{DR}<0.10$, Llama-4-Maverick-17B×128E, has $\mathrm{CCSR}<0.30$: even on runs where it does not drift, it rarely produces the requested deliverable. The Qwen series and Claude Sonnet 4.6 show the opposite pattern, sustaining $\mathrm{CCSR}\approx 0.92$--$0.94$. Their TSR and CCSR are numerically similar (e.g., $0.925$ vs.\ $0.936$ for Qwen3.6-35B-A3B and $0.923$ vs.\ $0.928$ for Claude Sonnet 4.6), indicating that high task competence is largely retained among compliant runs. For these models, drift therefore co-occurs with high overall task competence rather than compensating for an inability to complete the task.
+
+\textbf{Parameter count alone does not predict authorization drift.}
+The within-family trends are non-monotonic. Across the Qwen 4B$\to$9B$\to$27B$\to$35B-A3B sequence, TSR remains near 0.91--0.93 while DR rises from 0.45 to 0.61; however, Qwen3.5-397B-A17B has $\mathrm{DR}=0.434$. In Mistral, the 14B and 24B models have lower DR ($0.236$ and $0.250$) than the 8B model ($0.323$), while TSR remains within $0.81$--$0.83$. These patterns show that drift is not monotonically determined by parameter scale. Because the models also differ in architecture and training, the comparisons do not isolate the cause of the differences. Appendix~\ref{app:additional-robustness} reports paired tests and exploratory behavioral analyses.

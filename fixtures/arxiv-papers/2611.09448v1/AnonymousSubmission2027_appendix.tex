@@ -1,0 +1,705 @@
+\documentclass[letterpaper]{article}
+\usepackage[submission]{aaai2027}
+\usepackage[hyphens]{url}
+\usepackage{graphicx}
+\urlstyle{rm}
+\def\UrlFont{\rm}
+\usepackage{natbib}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\frenchspacing
+
+\pdfinfo{
+/TemplateVersion (2027.1)
+}
+
+\setcounter{secnumdepth}{0}
+\renewcommand{\theequation}{A\arabic{equation}}
+\renewcommand{\thetable}{A\arabic{table}}
+\renewcommand{\thefigure}{A\arabic{figure}}
+
+\title{Technical Supplement for ``Not All Entropy Is Equal: Reward-Conditioned Entropy Allocation in Reinforcement Learning with Verifiable Rewards''}
+\author{Anonymous Submission}
+\affiliations{}
+
+\begin{document}
+
+\maketitle
+
+\section{Scope and Reporting Conventions}
+
+This technical supplement supplies measurement definitions, implementation details, audit
+information, and extended endpoint summaries for the main paper.  It does not
+introduce additional claims.  We use \emph{successful} and \emph{failed} for
+the binary verifier outcome \(R\), and \emph{process-valid} only for a
+verifier-successful trajectory accepted by the frozen validity judge.  All
+reported entropies use natural logarithms.  Raw training step denotes prompt
+exposure: one 3B rollout contains eight prompt groups and one 7B rollout
+contains four, so one epoch ends at raw steps 4,000 and 8,000, respectively.
+Training-progress percentages are used whenever scales are compared.
+
+\section{Measurement and Estimation}
+\label{sec:sup-measurement}
+
+\subsection{Hierarchical Quantity Being Measured}
+
+Because \(R=f_x(Y)\), \(H(R\mid Y,x)=0\).  With
+\(p_+(x)=P(R=1\mid x)\), \(p_-=1-p_+\), and
+\(v_+(x)=P(V=1\mid R=1,x)\), repeated application of the chain rule gives
+\begin{equation}
+\begin{aligned}
+H(Y\mid x)
+={}&h_{\mathrm b}(p_+)+p_-H(Y\mid R=0,x)\\
+&+p_+\big\{h_{\mathrm b}(v_+)
++v_+H(Z\mid R=1,V=1,x)\\
+&\quad+v_+\mathbb E_Z[H(Y\mid Z,R=1,V=1,x)]\\
+&\quad+(1-v_+)H(Y\mid R=1,V=0,x)\big\}.
+\end{aligned}
+\label{eq:sup-hierarchical-decomposition}
+\end{equation}
+The identity separates reward uncertainty, failed-region diversity, validity
+uncertainty, between-mode diversity, within-mode realization diversity, and
+diversity among verifier-successful but process-invalid trajectories.  It is
+an accounting identity, not a claim that every component should be maximized.
+The experiments estimate reward-conditioned token and sequence statistics and
+successful-mode retention.  They do not estimate within-mode realization
+entropy or mode-stratified covariance.
+
+\subsection{Fixed-Probe Sampling}
+
+Let \(\mathcal X\) be the fixed 200-question diagnostic set.  At the base
+policy and at 25\%, 50\%, 75\%, and 100\% training progress, we draw
+\(K=64\) independent completions per \(x\in\mathcal X\) using temperature
+1.0 and top-\(p=1\).  The same questions, decoding rule, 2,048-token
+generation limit, and verifier are used at every checkpoint.  For completion
+\(i\), we store its verifier reward \(r_i\), completion length \(T_i\),
+truncation indicator, trajectory log probability
+\[
+\ell_i=\log\pi_{\theta_t}(y_i\mid x)
+      =\sum_{j=1}^{T_i}\log\pi_{\theta_t}
+       (y_{i,j}\mid x,y_{i,<j}),
+\]
+and trajectory-normalized token entropy
+\[
+\bar h_i=\frac{1}{T_i}\sum_{j=1}^{T_i}
+H\!\left(\pi_{\theta_t}(\cdot\mid x,y_{i,<j})\right).
+\]
+The end-of-sequence token is included when it is generated.  Sampled
+trajectories are replayed with teacher forcing so that token entropies and log
+probabilities are evaluated by the checkpoint that generated them.  We retain
+on-policy entropy logged during training as an optimization trace, but use the
+fixed probe for cross-objective conditional comparisons.
+
+Metrics are first computed within question and then macro-averaged.  This
+prevents an easy question with many successful samples from dominating an
+outcome-conditioned estimate.  For
+\(K_r(x)=\sum_i\mathbf 1(r_i=r)\), a conditional quantity is reported only
+when \(K_r(x)\geq8\); its prompt coverage is always reported.  Rare outcomes
+are omitted rather than assigned zero entropy.
+
+\subsection{Reward-Conditioned Estimators}
+
+The empirical reward probability and outcome entropy are
+\[
+\widehat p_r(x)=\frac{K_r(x)}{K},
+\qquad
+\widehat H_R(x)=h_{\mathrm b}(\widehat p_+(x)).
+\]
+The principal token statistic gives each trajectory equal weight:
+\begin{equation}
+\widehat{\mathcal H}_{\mathrm{tok},r}(x)
+=\frac{1}{K_r(x)}\sum_{i:r_i=r}\bar h_i.
+\label{eq:sup-token-estimator}
+\end{equation}
+We additionally retain the pooled-token average, mean response length, and
+truncation rate to identify length-induced discrepancies.  The
+sequence-level conditional entropy is estimated from the same on-policy
+samples.  Since
+\(\log\pi_\theta(y\mid R=r,x)=
+\log\pi_\theta(y\mid x)-\log p_r(x)\),
+\begin{equation}
+\widehat H_{\mathrm{seq},r}(x)
+=-\frac{1}{K_r(x)}\sum_{i:r_i=r}\ell_i
++\log\widehat p_r(x).
+\label{eq:sup-sequence-estimator}
+\end{equation}
+This estimator preserves the sequence-level meaning of the chain-rule
+decomposition but is length-sensitive and higher variance.  We therefore use
+it primarily as an accounting check and center the cross-objective analysis
+on Eq.~\eqref{eq:sup-token-estimator}.  Components constructed from the same
+samples reconstruct \(-K^{-1}\sum_i\ell_i\) and the unconditional token
+average up to floating-point error; the observed mean absolute residuals are
+\(2.74\times10^{-15}\) and \(7.63\times10^{-19}\), respectively.
+
+\subsection{Broad and Common-Question Comparisons}
+
+The broad ratio in the main paper is
+\[
+\rho_H=
+\frac{\operatorname{MacroAvg}_{x:K_-(x)\geq8}
+      \widehat{\mathcal H}_{\mathrm{tok},-}(x)}
+     {\operatorname{MacroAvg}_{x:K_+(x)\geq8}
+      \widehat{\mathcal H}_{\mathrm{tok},+}(x)}.
+\]
+Its numerator and denominator may cover different questions, which increases
+coverage but makes the comparison descriptive.  The paired analysis retains
+only questions satisfying \(K_+(x),K_-(x)\geq8\), computes
+\(d_x=\log\widehat{\mathcal H}_{\mathrm{tok},-}(x)-
+\log\widehat{\mathcal H}_{\mathrm{tok},+}(x)\), and reports
+\(\exp(|\mathcal X_{\mathrm{pair}}|^{-1}\sum_x d_x)\).  Its 95\% interval
+uses 10,000 paired question-bootstrap replicates.  This was a post-hoc
+robustness analysis and does not cover questions dominated by one reward
+outcome.
+
+\subsection{Semantic-Mode Estimation}
+
+For judge-accepted \(R=1,V=1\) trajectories, let \(n_{t,z}(x)\) be the count
+assigned to problem-local mode \(z\), with
+\(K_{+,V}(x)=\sum_z n_{t,z}(x)\).  We estimate
+\begin{equation}
+\begin{aligned}
+\widehat q_t(z\mid x)&=\frac{n_{t,z}(x)}{K_{+,V}(x)},\\
+\widehat H^+_{Z,t}(x)
+&=-\sum_z\widehat q_t(z\mid x)\log\widehat q_t(z\mid x),\\
+\widehat N^+_{\mathrm{eff},t}(x)
+&=\exp\!\left(\widehat H^+_{Z,t}(x)\right).
+\end{aligned}
+\label{eq:sup-mode-estimator}
+\end{equation}
+Mode retention is
+\begin{equation}
+\widehat{\mathrm{Ret}}^+_t(x)
+=\frac{\widehat N^+_{\mathrm{eff},t}(x)}
+       {\widehat N^+_{\mathrm{eff},0}(x)}.
+\label{eq:sup-mode-retention}
+\end{equation}
+Because plug-in entropy is downward biased and the number of accepted
+successes differs across checkpoints, each comparison is rarefied to a common
+accepted-success count before taking the ratio.  We then macro-average over
+reportable questions.  The set of reportable questions is method-dependent,
+so the resulting method-level association with MATH500 pass@64 is
+exploratory.  Retention is treated continuously.  A formal partial-collapse
+label would additionally require a predeclared retention threshold and
+suppression of a mode that was non-negligible under the base policy; the
+present paper does not instantiate that stronger label.
+
+\subsection{Covariance Attribution}
+
+The exact analysis evaluates the full vocabulary at identical prefixes under
+an old checkpoint and the checkpoint 50 raw steps later.  It uses 40 fixed
+questions, four sampled trajectories per question, and up to 64 eligible token
+positions per trajectory.  For each transition, full-vocabulary covariance is
+aggregated over sampled positions and compared with the directly observed
+finite entropy difference.  These 50-step differences test a local
+approximation over a short finite interval rather than an infinitesimal
+optimizer update.
+
+The reward-stratified analysis is separate.  At a selected endpoint it
+reconstructs the common binary group advantage and computes a chosen-token
+covariance proxy for every eligible prefix.  Within each reward stratum, q99
+means the set of values at or above that stratum's empirical 99th-percentile
+cutoff.  We report the fraction of positive covariance mass contained in this
+set.  Cutoffs are fitted separately for success and failure, so the statistic
+compares concentration rather than absolute covariance mass.  Ties are
+retained: for GTPO failed-prefix strata, the q99 set contains approximately
+58--59\% of token positions and is therefore not literally a top-1\% subset.
+The endpoint proxy neither apportions total entropy change between reward
+strata nor establishes causality.
+
+\subsection{Uncertainty and Failure Exclusion}
+
+Where intervals are reported, we use hierarchical resampling at the available
+question and trajectory levels.  With one training seed, these intervals
+reflect prompt and sampling uncertainty, not seed-to-seed variability.
+Smoothing parameters for training curves are fixed for visualization and are
+not selected using downstream accuracy.  The failed Clip-Cov-7B run is
+excluded from cross-method correlations and from the exact covariance fit,
+but its final endpoint is retained as a marked diagnostic case in the q99
+table.
+
+\section{Experimental Configuration}
+
+\subsection{Training Data and Shared Optimization}
+
+The 8,000 training examples are sampled once from Skywork-OR1-RL-Data
+\citep{skywork2025or1data} with dataset seed 42, after removing records
+without an extractable answer and prompts exceeding 10\% of the 2,048-token
+context.  The policy is instructed to reason step by step and place its final
+answer in \verb|\boxed{}|.  The binary reward is determined only by normalized
+equivalence of the extracted final answer.
+
+Training uses TRL \citep{vonwerra2020trl} and Transformers
+\citep{wolf2020transformers}, with vLLM \citep{kwon2023vllm} for colocated
+rollout generation.  All runs use seed 42, bfloat16 weights, gradient
+checkpointing, and LoRA \citep{hu2022lora} rank 32 with scale 64 on every
+attention and MLP projection.  Optimization uses 8-bit AdamW
+\citep{loshchilov2019adamw,dettmers2022eightbit}, learning rate
+\(5\times10^{-6}\), weight decay \(10^{-3}\), and 10\% linear warmup.  Four
+gradient-accumulation steps yield batches of 64 trajectories for 3B and 32 for
+7B.  We use four optimizer iterations per rollout, token-level importance
+ratios, no standard reference-policy KL penalty, and checkpoints every 50 raw
+steps.  Rollouts use eight completions per prompt at temperature 1.0 and
+top-\(p=0.95\).
+
+\subsection{Objective-Specific Settings}
+
+GRPO uses symmetric clipping at 0.2.  DAPO uses token-level loss
+normalization, asymmetric clipping \([0.2,0.28]\), dynamic removal of
+zero-variance groups, and soft overlong shaping over the final 20\% of the
+completion budget.  Clip-Cov selects the covariance tail at ratio
+\(2\times10^{-4}\), with lower and upper factors 1 and 5.  KL-Cov uses
+selection ratio \(2\times10^{-3}\) and coefficient 0.5.  EP-GRPO uses 10
+relative-position buckets, entropy-gate coefficient 3.0, progress weight 0.2,
+and process scale 1.0.  GTPO uses entropy coefficient 0.1 and threshold
+\(\log2\), with the initial completion entropy calibrated from the first
+on-policy batch.
+
+\subsection{Compute Infrastructure and Software Environments}
+
+\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{0.10\textwidth}p{0.20\textwidth}p{0.24\textwidth}p{0.11\textwidth}p{0.24\textwidth}@{}}
+\toprule
+Role & GPU & CPU & System memory & Execution pattern\\
+\midrule
+Training &
+1\(\times\) RTX PRO 6000 (96 GB) &
+25 vCPU, Xeon Platinum 8470Q &
+120 GB &
+One single-GPU training job\\
+Inference &
+8\(\times\) RTX 5090 D (32 GB each) &
+200 vCPU, Xeon Platinum 8470Q &
+496 GB &
+Up to eight independent workers\\
+\bottomrule
+\end{tabular}
+\caption{Compute infrastructure used for the reported experiments.  The
+eight inference GPUs execute independent single-GPU tasks; Qwen2.5-3B/7B do
+not use tensor parallelism.}
+\label{tab:sup-compute}
+\end{table*}
+
+The training server executes the twelve RLVR runs, whereas the inference
+server performs trajectory generation, teacher-forced entropy measurement,
+covariance diagnostics, and the local Qwen3.5 validity judge.  The
+Qwen3.7-Flash codebook stage uses a remote OpenAI-compatible API and is
+API-bound rather than GPU-bound.  Aggregation and frozen-data reproduction
+are CPU-only.
+
+Both experimental environments use the supplied Python 3.11.0 runtime record
+and Linux containers.  The training environment contains PyTorch 2.8.0,
+Transformers 4.57.6, TRL 0.29.0, vLLM 0.11.0, PEFT 0.18.1, and Datasets
+4.6.1.  The inference environment contains PyTorch 2.11.0, Transformers
+5.12.1, vLLM 0.23.0, PEFT 0.19.1, NumPy 2.3.5, and scikit-learn 1.9.0.
+Unmodified \texttt{pip freeze} snapshots for both servers are included in
+the Code and Data Supplement. 
+
+\subsection{Run Counts, Randomness, and Parameter Selection}
+
+Each method--scale entry is one training run: six objectives at two scales
+give 12 trained runs, all with training seed 42.  Base-policy rows require no
+training.  Dataset filtering and the 8,000-example draw use seed 42.  The
+fixed-probe sample uses seed 2027, and MATH500 pass@\(k\) uses inference
+seeds 0--63.  The validity judge uses temperature zero and seed 2027.
+Codebook ordering uses fixed seeds 2027, 2028, and 2029 for induction, merge,
+and final assignment; rarefaction and independent-audit sampling use seeds
+2030 and 2031.  API responses at temperature zero can still vary with the
+hosted implementation, so assignments are repeated twice and disagreements
+are reconciled rather than assumed deterministic.
+
+We did not conduct a systematic hyperparameter sweep for the reported
+comparison.  Shared optimization settings and published method defaults were
+fixed before formal benchmark evaluation; the final objective-specific
+values are listed above and are serialized in
+\texttt{configs/experiment.json}.  No test-set result is used to select among
+multiple training seeds.  The Code and Data Supplement contains preprocessing,
+training, measurement, aggregation, and plotting code plus a source-to-paper
+map.  Public datasets, model weights, checkpoints, external API service, and
+human annotation labor are not redistributed or automated.
+
+\subsection{Benchmark and Probe Inventory}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.1pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrl@{}}
+\toprule
+Dataset & Benchmark & Probe & Main use\\
+\midrule
+AMC23 & 40 & 20 & Greedy, probe\\
+AIME24 & 30 & 20 & Greedy, probe\\
+AIME25 & 30 & 20 & Greedy, probe\\
+MATH500 & 500 & 100 & Greedy, pass@\(k\), probe\\
+Minerva Math & 40 subset & 40 & Greedy, probe\\
+\bottomrule
+\end{tabular*}
+\caption{Evaluation inventory.  ``Probe'' is the number of fixed questions
+used for entropy and semantic-mode diagnostics.}
+\label{tab:sup-inventory}
+\end{table}
+
+Single-sample benchmark accuracy uses greedy decoding with a 2,048-token
+completion limit.  MATH500 is additionally evaluated at 20 equally spaced
+progress points; all five benchmarks are evaluated at 25\%, 50\%, 75\%, and
+100\% progress.  Final pass@\(k\), for
+\(k\in\{1,4,8,16,32,64\}\), uses 64 independently seeded samples per MATH500
+question at temperature 0.7 and top-\(p=0.95\), with the standard unbiased
+estimator \citep{chen2021codex}.  The ``Macro Average'' in the main table is
+the unweighted mean of the five benchmark accuracies; it does not weight
+datasets by their number of questions.
+
+\subsection{Checkpoint Selection and the Clip-Cov-7B Exception}
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lll}
+\toprule
+Main-paper artifact & Ordinary reporting point & Clip-Cov-7B treatment\\
+\midrule
+Training-entropy trace & Complete one-epoch trace & Complete trace; failure marked at step 4,000\\
+Main benchmark table & Final checkpoint & Step 2,000 pre-collapse milestone\\
+Broad/paired reward ratios & Final diagnostic checkpoint & Step 2,000 pre-collapse probe\\
+Exact covariance fit & Four adjacent 50-step transitions & All four transitions excluded\\
+Reward-stratified q99 table & Final endpoint proxy & Step 8,000 retained as failed diagnostic\\
+\bottomrule
+\end{tabular*}
+\caption{Checkpoint policy.  Different Clip-Cov-7B entries answer different
+questions and must not be interpreted as measurements of one common endpoint.}
+\label{tab:sup-checkpoints}
+\end{table*}
+
+For every nonfailed trained run, endpoint benchmark and probe results use the
+final checkpoint: raw step 4,000 for 3B and 8,000 for 7B.  Clip-Cov-7B is the
+only exception.  Its five greedy entries and Mode Retention in the main
+benchmark table use step 2,000, the last common five-benchmark milestone before
+the detected collapse; later performance checkpoints are excluded from the
+comparative ranking.  Pass@64 was not run at step 2,000 and is therefore
+unreported.  The reward-conditioned figures likewise use its step-2,000
+probe.  Conversely, the q99 table deliberately retains the step-8,000
+chosen-token endpoint proxy as a failure diagnostic.  This explains why its
+q99 row is not part of the numerical range quoted for trained, nonfailed
+methods.
+
+\section{Validity Filtering and Semantic Codebooks}
+
+\subsection{Process-Validity Judge}
+
+Verifier acceptance establishes only that the extracted final answer matches
+the reference.  A frozen Qwen3.5-9B judge
+\citep{alibaba2026modelstudio} therefore evaluates whether a
+verifier-successful trajectory contains a fatal reasoning error.  Calibration
+uses 600 blinded trajectories balanced for valid and invalid examples.  On a
+117-item held-out split, the judge obtains 95.7\% accuracy and macro-F1,
+94.9\% accepted-valid precision, 96.6\% valid recall, and complete coverage.
+An independent accepted-set check estimates accepted-valid precision at
+91.3\% and 89.1\% against two annotators.  These checks estimate precision
+within automatically accepted trajectories, not recall over all invalid
+trajectories.  We consequently use \emph{judge-accepted process-valid} rather
+than \emph{ground-truth valid}.
+
+Across all fixed-probe checkpoints and objectives, the rule-based verifier
+accepts 118,435 trajectories.  The judge retains 92,867 trajectories from 125
+questions.  Records are joined by a stable trajectory identifier, and
+provenance fields identifying method, model scale, checkpoint, and decoding
+seed are hidden from all codebook-induction prompts.
+
+\subsection{Question-Local Codebook Pipeline}
+
+Semantic modes are defined separately for each problem; trajectories from
+different problems are never clustered together.  Two trajectories share a
+mode when their decisive mathematical method and core sequence of operations
+are the same.  Differences in wording, notation, arithmetic detail, or order
+of exposition do not create a new mode unless they change the underlying
+solution method.
+
+Qwen3.7-Flash \citep{alibaba2026modelstudio} first induces local candidate
+modes from 3,941 blinded trajectory chunks.  The resulting 6,586 candidate
+definitions are merged question by question and frozen before final
+assignment.  The merge yields 125 codebooks and 307 initial modes (one to
+eight modes per question; median two).  Every accepted trajectory is then
+assigned twice against the frozen codebook in 15,604 batches.  A trajectory is
+sent to reconciliation when the local assignments disagree, the two final
+passes disagree, a special label is returned, or confidence is low.  This
+produces 7,726 disputed trajectories and 1,315 arbitration batches.  Nine
+provisional ``NEW'' assignments are reviewed in five question-level extension
+requests.  Confirmed extensions are added and the affected codebook is
+refrozen.  The final export contains 313 modes, 92,861 included trajectories,
+and six uncertain trajectories.
+
+The pipeline is intentionally not an embedding-threshold clustering method.
+It constructs explicit problem-local definitions, assigns against a frozen
+codebook, and reconciles disagreements.  This avoids treating one global
+cosine threshold as a ground-truth semantic boundary and prevents
+uncontrolled codebook drift from appearing as mode creation or disappearance.
+
+\subsection{Independent Partition Audit}
+
+The independent audit is question-disjoint from development labels and
+contains 29 questions and 4,526 within-question trajectory pairs.  Two
+annotators independently mark each pair as using the same or a different core
+strategy.  Before adjudication, human--human macro-F1 is 0.859; automatic
+agreement is 0.777 against annotator A and 0.894 against annotator B.  The
+preliminary discrepancy is driven primarily by different granularity in
+splitting same-strategy variants.
+
+The frozen rubric predeclares five requirements: human--human macro-F1 at
+least 0.85; automatic macro-F1 at least 0.85; an automatic-to-human gap no
+larger than 0.05; precision and recall for the ``different'' class each at
+least 0.80; and automatic trajectory coverage at least 0.95.  Disagreements
+are adjudicated under the frozen rubric rather than by changing model
+assignments after observing an endpoint result.  The final adjudicated
+comparison satisfies the predeclared gate and is the basis for the
+``audited'' terminology in the main paper.  The preliminary values are
+reported above because they show the annotator sensitivity that necessitated
+adjudication.  The audit validates a sampled partition; it does not amount to
+manual verification of all 92,861 included trajectories.
+
+\section{Extended Endpoint Diagnostics}
+
+\subsection{Reward-Conditioned Entropy}
+
+\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}llrrrr}
+\toprule
+Scale & Method & Broad \(\rho_H\) & Success/failure coverage &
+\(n_{\mathrm{paired}}\) & Paired ratio [95\% CI]\\
+\midrule
+3B & GRPO     & 1.642 & 43.5/82.5 & 52 & 1.216 [1.105, 1.345]\\
+3B & DAPO     & 1.699 & 42.0/80.5 & 45 & 1.189 [1.048, 1.332]\\
+3B & Clip-Cov & 1.526 & 44.5/83.5 & 56 & 1.225 [1.143, 1.321]\\
+3B & KL-Cov   & 1.457 & 43.5/85.0 & 57 & 1.209 [1.098, 1.329]\\
+3B & EP-GRPO  & 1.467 & 40.5/85.5 & 52 & 1.267 [1.079, 1.487]\\
+3B & GTPO     & 1.244 & 41.5/79.5 & 42 & 1.031 [0.969, 1.099]\\
+\midrule
+7B & GRPO     & 1.416 & 50.5/75.5 & 52 & 1.223 [1.133, 1.323]\\
+7B & DAPO     & 1.598 & 49.0/73.0 & 44 & 1.179 [1.091, 1.280]\\
+7B & Clip-Cov & 1.329 & 52.0/73.5 & 51 & 1.102 [1.039, 1.172]\\
+7B & KL-Cov   & 1.517 & 53.0/75.0 & 56 & 1.138 [1.079, 1.208]\\
+7B & EP-GRPO  & 3.512 & 49.5/79.0 & 57 & 2.204 [1.696, 2.909]\\
+7B & GTPO     & 1.391 & 47.5/72.5 & 40 & 1.061 [0.998, 1.130]\\
+\bottomrule
+\end{tabular*}
+\caption{Endpoint failed-to-successful token-entropy ratios.  Coverage is the
+percentage of the 200 probe questions satisfying \(K_r\geq8\).  Clip-Cov-7B
+uses the pre-collapse step-2,000 probe; all other trained runs use their final
+probe.}
+\label{tab:sup-reward-entropy}
+\end{table*}
+
+The broad estimate is above one at all 12 displayed endpoints, but its
+outcome-specific coverage sets differ.  The paired estimate controls question
+identity and is also above one at all endpoints; the intervals for GTPO at
+both scales overlap equality.  These are endpoint associations.  They do not
+show that high failed-region entropy causes failure, nor that reducing it
+would necessarily improve accuracy.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}llrrr@{}}
+\toprule
+Scale & Method & \(n\) & Failure higher & \(p\)\\
+\midrule
+3B & GRPO     & 52 & 71.2\% & 0.0016\\
+3B & DAPO     & 45 & 73.3\% & 0.0012\\
+3B & Clip-Cov & 56 & 80.4\% & \(2.7{\times}10^{-6}\)\\
+3B & KL-Cov   & 57 & 70.2\% & 0.0016\\
+3B & EP-GRPO  & 52 & 73.1\% & 0.0006\\
+3B & GTPO     & 42 & 50.0\% & 0.5612\\
+\midrule
+7B & GRPO     & 52 & 73.1\% & 0.0006\\
+7B & DAPO     & 44 & 65.9\% & 0.0244\\
+7B & Clip-Cov & 51 & 68.6\% & 0.0055\\
+7B & KL-Cov   & 56 & 76.8\% & \(3.7{\times}10^{-5}\)\\
+7B & EP-GRPO  & 57 & 82.5\% & \(<10^{-6}\)\\
+7B & GTPO     & 40 & 57.5\% & 0.2148\\
+\bottomrule
+\end{tabular*}
+\caption{Question-level direction check on the common-outcome subset.
+``Failure higher'' is the fraction with
+\(\widehat{\mathcal H}_{\mathrm{tok},-}(x)>
+\widehat{\mathcal H}_{\mathrm{tok},+}(x)\); \(p\) is the one-sided exact
+sign-test probability under an equal-direction null.}
+\label{tab:sup-reward-sign}
+\end{table}
+
+The paired ratios in Table~\ref{tab:sup-reward-entropy} could in principle be
+driven by a few large differences.  The direction check in
+Table~\ref{tab:sup-reward-sign} instead gives every eligible question one
+vote.  Failed entropy is higher for 65.9--82.5\% of questions and the
+one-sided sign test rejects equal directions at ten of the twelve endpoints.
+The two exceptions are GTPO, matching the paired-bootstrap intervals that
+overlap one.  Thus, the cross-question result strengthens the descriptive
+reward ordering without turning it into a causal statement.
+
+\subsection{Mode-Retention Uncertainty}
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}llrrr@{}}
+\toprule
+Scale & Method & Ret. & 95\% CI & \(n\)\\
+\midrule
+3B & GRPO     & 94.2\% & [89.2, 99.9] & 72\\
+3B & DAPO     & 91.1\% & [85.6, 96.7] & 72\\
+3B & Clip-Cov & 96.0\% & [90.1, 102.5] & 73\\
+3B & KL-Cov   & 94.8\% & [89.1, 100.6] & 72\\
+3B & EP-GRPO  & 99.9\% & [92.3, 108.1] & 72\\
+3B & GTPO     & 83.7\% & [77.4, 89.9] & 67\\
+\midrule
+7B & GRPO     & 89.6\% & [84.7, 94.5] & 81\\
+7B & DAPO     & 88.8\% & [83.7, 93.9] & 80\\
+7B & Clip-Cov & 93.5\% & [87.2, 100.7] & 82\\
+7B & KL-Cov   & 92.3\% & [87.7, 96.9] & 81\\
+7B & EP-GRPO  & 96.2\% & [89.5, 104.1] & 81\\
+7B & GTPO     & 85.9\% & [79.9, 92.0] & 77\\
+\bottomrule
+\end{tabular*}
+\caption{Question-bootstrap uncertainty for the published rarefied
+effective-mode retention.  Intervals use 10,000 resamples and condition on
+the frozen rarefaction draws and the single training seed.  Clip-Cov-7B uses
+step 2,000; other rows use final checkpoints.}
+\label{tab:sup-mode-bootstrap}
+\end{table}
+
+All twelve point estimates are below the base-policy reference of 100\%.
+Seven question-bootstrap intervals lie wholly below 100\%; the other five
+include equality because the question-level retention ratios are
+heterogeneous.  The result supports the aggregate contraction reported in
+the main paper, but not the stronger claim that every individual objective
+has independently significant contraction.  These intervals quantify
+question-sampling uncertainty only and do not substitute for additional
+training seeds.
+
+\subsection{Exact Covariance Fit}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.1pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrr}
+\toprule
+Scope & \(n\) & Sign & \(\rho_s\) & \(r\)\\
+\midrule
+All nonfailed & 44 & 95.5\% & 0.986 & 0.968\\
+3B & 24 & 95.8\% & 0.990 & 0.994\\
+7B nonfailed & 20 & 95.0\% & 0.937 & 0.962\\
+\bottomrule
+\end{tabular*}
+\caption{Finite-difference covariance fit by scale.  \(n\) counts adjacent
+50-raw-step transitions; \(\rho_s\) and \(r\) are Spearman and Pearson
+correlations.}
+\label{tab:sup-cov-fit}
+\end{table}
+
+Pooling the 44 nonfailed transitions gives slope 0.993, intercept
+\(4.37\times10^{-4}\), \(R^2=0.937\), median absolute error
+\(1.18\times10^{-4}\), and median relative error 12.7\%.  The 3B and
+nonfailed-7B slopes are 0.848 and 1.153, respectively.  The pooled near-unit
+slope supports the local approximation, while the scale-specific deviations
+and finite interval caution against interpreting it as an exact optimizer
+identity.
+
+\subsection{Covariance-Tail Sensitivity}
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.1pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrr@{}}
+\toprule
+Upper tokens & Success mass & Failure mass & Gap & Direction\\
+\midrule
+5.0\% & 25.3\% & 94.6\% & 69.3 pp & 12/12\\
+2.5\% & 13.9\% & 94.2\% & 80.3 pp & 12/12\\
+1.0\% & 5.6\% & 86.6\% & 81.0 pp & 12/12\\
+\bottomrule
+\end{tabular*}
+\caption{Sensitivity to the rank-defined upper-tail budget.  Mass columns
+macro-average the fraction of positive chosen-token covariance in each
+reward stratum; ``Direction'' counts endpoints with greater failed-stratum
+concentration.}
+\label{tab:sup-cov-sensitivity}
+\end{table}
+
+The q99 statistic in the main paper retains cutoff ties, which is important
+for reporting its literal empirical-quantile definition but can make the
+selected token fraction large when covariance values are tied.  As a
+tie-robust complement, Table~\ref{tab:sup-cov-sensitivity} fixes an
+equal-count rank budget at the upper 1\%, 2.5\%, and 5\% of tokens.  At every
+budget and all twelve comparative endpoints, failed prefixes allocate more
+positive covariance mass to the selected tail.  The mean failed-minus-success
+gap remains 69.3--81.0 percentage points.  The reward-stratified tail
+concentration is therefore not an artifact of choosing q99 or of the GTPO
+ties noted in the main analysis.
+
+\subsection{Clip-Cov-7B Failure Diagnosis}
+
+The failure detector is applied to every evaluated checkpoint in the dense
+MATH500 trace; the plotted cross-scale curve uses the 20-point common-progress
+grid.  The detector requires a peak accuracy of at least 30\%, an endpoint
+accuracy at most 5\%, and a peak-to-endpoint drop of at least 30 percentage
+points.  Only
+Clip-Cov-7B triggers the rule: the full dense evaluation attains 76.6\% at
+raw steps 1,000 and 2,400, with the last maximum at step 2,400 (30\%
+progress); it reaches 0.2\% at step 4,000 and ends at 0.2\% at step 8,000.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.8pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}rrrr}
+\toprule
+Raw step & Accuracy & Boxed rate & Mean length\\
+\midrule
+2,400 & 76.6\% & 99.6\% & 598.5\\
+3,600 & 60.8\% & 95.2\% & 431.5\\
+4,000 & 0.2\% & 1.0\% & 1,999.8\\
+8,000 & 0.2\% & 0.4\% & 2,040.0\\
+\bottomrule
+\end{tabular*}
+\caption{Dense MATH500 diagnostics for Clip-Cov-7B.  The generation limit is
+2,048 tokens.}
+\label{tab:sup-clip-failure}
+\end{table}
+
+The discontinuity is therefore a termination/length degeneration rather than
+a gradual loss of mathematical accuracy.  In the surrounding 45--55\%
+training window, only 21.0\% of sampled completions belong to prompt groups
+with nonzero reward variance, and the covariance mask selects no token on
+93.0\% of updates.  A plausible post-hoc explanation is that EOS/length drift
+entered a self-reinforcing near-all-failure regime: the sparse interval-based
+Clip-Cov intervention was usually inactive, while uniformly failed groups
+provided no recovery gradient.  This diagnosis is observational and should
+not be read as a causal ablation.
+
+\section{Interpretation Boundaries}
+
+The main paper's strongest empirical conclusions are the instability of
+global-entropy performance rankings, the reward-conditioned endpoint
+ordering, and the short-interval covariance fit.  The q99 result is a
+reward-stratified endpoint concentration proxy.  Mode retention is an audited
+but coverage-dependent diagnostic, and its association with MATH500 pass@64
+is method-level, cross-dataset, single-seed, and exploratory.  The experiments
+do not estimate within-mode realization entropy, mode-stratified covariance,
+out-of-distribution robustness, or the causal effect of preserving a
+particular mode.  Consequently, the paper reports continuous mode contraction
+and does not assign formal harmful-collapse labels.
+
+\bibliography{aaai2027}
+
+\end{document}

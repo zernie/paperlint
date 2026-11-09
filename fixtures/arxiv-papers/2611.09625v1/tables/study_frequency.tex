@@ -1,0 +1,16 @@
+\begin{table}[ht]
+    \caption{Study on test-time gradient update frequency.}
+    \centering
+    \setlength{\tabcolsep}{4pt}
+    \hfill \break
+    \begin{tabular}{lcccccccc}
+    \toprule
+    \textbf{Policy Step/Grad Step} & \textbf{w/o TT-MBRL} & \textbf{32} & \textbf{16} & \textbf{8} & \textbf{4} & \textbf{2} & \textbf{1}  & \textbf{1/2} \\
+    \midrule
+    DreamerV3 & $\hphantom{0}46.2$ & $\hphantom{0}79.9$ & $107.3$ & $132.1$ & $152.9$ & $165.7$ & $\mathbf{185.0}$ & $178.7$ \\
+    TWISTER & $\hphantom{0}72.0$ & $108.9$ & $139.8$ & $178.3$ & $198.5$ & $225.8$ & $240.1$ & $\mathbf{245.6}$ \\
+    R2I & $171.6$ & $182.3$ & $190.2$ & $205.8$ & $213.6$ & $230.9$ & $244.3$ & $\mathbf{251.8}$ \\
+    \bottomrule
+    \end{tabular}
+    \label{table:study_frequency}
+\end{table}

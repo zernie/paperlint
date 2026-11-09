@@ -1,0 +1,26 @@
+\section{Model and Preliminaries}
+\label{sec:model}
+Our model consists of $N$ model developers (e.g., OpenAI, Anthropic, DeepMind), each of which competes on $K$ dimensions (e.g., math, coding, science). 
+Developer $i$ has a production function $F_{i}: \mathbb{R}_{+}^{K} \rightarrow \mathbb{R}_{+}^{K}$, and investment $\mathbf{x}_i$, which produces capabilities $\bthetai := \Fi(\bxi)$. 
+Investment at level $\bxi$ results in a cost $c(\onenorm \bxi)$, where $c$ is a strictly increasing, differentiable, continuous, and unbounded cost function with $c(0) = 0$ (per-developer cost functions $c_i$ can be folded into the model without changing the equilibria; see Appendix~\ref{app:CommonCost_proof}). 
+We model each developer as maximizing its expected win rate.
+We use expected weighted pairwise win rate as a simplified objective for relative competitive performance, rather than assuming that developers literally optimize a particular public leaderboard.
+This objective directly corresponds to maximizing weighted category-level pairwise win probabilities under Bradley–Terry/Elo-style evaluation (see Appendix~\ref{app:elo}). 
+Here, win-rate is weighted according to $\bw \geq 0, \sum_{k} w_{k} = 1$.
+We define the utility as 
+\begin{equation}
+\label{eq:utility}
+u_{i}(\mathbf{x}) = \frac{1}{N-1} \sum_{i' \neq i} \sum_{k} w_{k} \sigma(\Fi(\bxi)_k - F_{i'}(\bx_{i'})_k)- c(\sum_{k} x_{i,k}).
+\end{equation}
+Here, $\sigma$ denotes the win-probability according to some pairwise preference model. 
+We assume $\sigma$ is strictly increasing, twice differentiable, bounded in $[0,1]$, $\sigma'(x)>0$, and symmetric where $\sigma(x)+\sigma(-x)=1$ (e.g., Bradley-Terry).
+Our model abstracts from the details of developers' internal R\&D processes and instead captures three features of model development: developers care about their capabilities relative to competitors, allocate costly investment across multiple capabilities, and differ in how effectively investment translates into capability improvements. 
+We do not require that developers directly optimize a particular leaderboard; tournament-style evaluation provides a tractable representation of competition based on relative model performance. 
+The model can also be viewed as a multidimensional contest, related to Colonel Blotto games~\citep{colonel_blotto}, in which investment is transformed into capabilities through heterogeneous production functions \(F_i\).
+
+Let $\mathbf{x} = (\mathbf{x}_1,\ldots,\mathbf{x}_{N})$ be a Nash equilibrium, and let $\Hij(\mathbf{x}) = \cos(\bthetai,\btheta_{i'})$ be the pairwise monoculture for developers $i$ and $i'$, with $\Hij(\mathbf{x})= 1$ indicating that $\bthetai$ and $\btheta_{i'}$ are parallel. 
+We can view $\btheta_i$ as consisting of a direction $\mathbf{d}^*_i \in S_{+}^{K-1}$ and a magnitude $\alpha^*_{i}$, with only the direction impacting $\Hij$. 
+We focus on cosine similarity here to capture capability profiles rather than capability levels; while two developers might differ in their overall level of output, they can still be similar if their relative category outputs are similar~\citep{monoculture_outcome}. 
+We return to similarity in the overall level of output in Section~\ref{sec:dynamics}. 
+We define overall monoculture as $H(\mathbf{x}) = \frac{1}{{N \choose 2}} \sum_{i<i'} \Hij(\mathbf{x})$, with $H=1$ indicating that all developers have parallel $\bthetai$. 
+When exactly one capability vector is zero we define $H_{i,i'}(\mathbf{x}^*)=0$, and when both are zero we define $H_{i,i'}(\mathbf{x}^*)=1$.

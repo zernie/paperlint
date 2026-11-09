@@ -1,0 +1,269 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2027_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{iclr2027/math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{xurl}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{subcaption}
+\captionsetup[subfigure]{labelformat=simple,skip=2pt,hypcap=true}
+\renewcommand{\thesubfigure}{(\alph{subfigure})}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+% Shared bullet-list layout for the introduction and main sections.
+\setlist[itemize]{
+  label=\textbullet,
+  leftmargin=1.3em,
+  labelwidth=0.7em,
+  labelsep=0.3em,
+  topsep=2pt,
+  itemsep=1pt,
+  parsep=0pt,
+  partopsep=0pt
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Shared editable diff rendering for harness case studies.
+\usepackage{listings}
+\usepackage{tcolorbox}
+\tcbuselibrary{listings,breakable,skins}
+\definecolor{diffadd}{HTML}{E6FFEC}
+\definecolor{diffdelete}{HTML}{FFEBE9}
+\definecolor{diffrule}{HTML}{D7E3E9}
+% Full-width line shading, after listings has advanced the source-line counter.
+\makeatletter
+\lst@Key{linebackgroundcolor}{}{\def\DiffLineColor{#1}}
+\lst@AddToHook{EveryPar}{%
+  \ifx\DiffLineColor\@empty\else
+    \rlap{\begingroup\DiffLineColor
+      \kern-5pt\rule[-\dp\strutbox]{\dimexpr\linewidth+10pt\relax}{\baselineskip}%
+    \endgroup}%
+  \fi}
+\newcommand{\DiffWrappedLine}{%
+  \ifx\DiffLineColor\@empty\else
+    \rlap{\begingroup\DiffLineColor
+      \kern-\lst@breakcurrindent%
+      \rule[-\dp\strutbox]{\dimexpr\linewidth+10pt\relax}{\baselineskip}%
+    \endgroup}%
+  \fi}
+\makeatother
+\lstdefinestyle{harnessdiff}{
+  basicstyle=\ttfamily\fontsize{8}{9.5}\selectfont,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  breakatwhitespace=true,
+  postbreak=\DiffWrappedLine,
+  showstringspaces=false,
+  aboveskip=5pt,
+  belowskip=5pt,
+  frame=tb,
+  abovecaptionskip=0pt,
+  rulecolor=\color{diffrule},
+  framerule=.35pt,
+  framesep=5pt,
+  xleftmargin=5pt,
+  xrightmargin=5pt,
+  numbers=none,
+  firstnumber=1,
+  numberblanklines=true,
+  tabsize=4,
+  upquote=true
+}
+% Line-index lists identify additions/removals in each selected diff.
+\ExplSyntaxOn
+\cs_generate_variant:Nn \clist_if_in:nnTF { neTF }
+\NewDocumentCommand{\DiffBackground}{mm}{
+  \clist_if_in:neTF {#1} {\int_eval:n{\value{lstnumber}}}
+    {\color{diffadd}}
+    {\clist_if_in:neTF {#2} {\int_eval:n{\value{lstnumber}}}
+      {\color{diffdelete}} {\color{white}}}
+}
+\ExplSyntaxOff
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\tl}[1]{{ \textcolor{magenta}{TL: #1}}}
+\newcommand{\tyh}[1]{{ \textcolor{teal}{TYH: #1}}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{\boxbox{}: Recursive Harness Self-Improvement for Long-Running Performance Optimization}
+
+\newcommand{\preprintauthorblock}{%
+\begin{minipage}{\textwidth}
+\centering
+\setlength{\parskip}{0pt}
+{\normalfont\fontsize{11}{15}\selectfont
+Yuhao~Tan\textsuperscript{1,\textdagger}\quad
+Hanyun~Jiang\textsuperscript{2,\textdagger}\quad
+Fangkai~Yang\textsuperscript{4,*}\quad
+Yuan~Yao\textsuperscript{1}\\
+Taolue~Chen\textsuperscript{3}\quad
+Bo~Qiao\textsuperscript{4}\quad
+Yu~Kang\textsuperscript{4}\quad
+Lu~Wang\textsuperscript{4}\\
+Pu~Zhao\textsuperscript{4}\quad
+Xiaoxing~Ma\textsuperscript{1,*}\quad
+Qingwei~Lin\textsuperscript{4}\par}
+\vspace{7pt}
+{\normalfont\fontsize{9}{12}\selectfont
+\textsuperscript{1}Nanjing University\quad
+\textsuperscript{2}Zhejiang University\\
+\textsuperscript{3}Birkbeck, University of London\quad
+\textsuperscript{4}Microsoft\par}
+\vspace{5pt}
+{\normalfont\small
+\texttt{yhtan@smail.nju.edu.cn},\quad
+\texttt{fangkaiyang@microsoft.com}\par
+\vspace{5pt}
+\textsuperscript{\textdagger}Work done at Microsoft.\quad
+\textsuperscript{*}Corresponding authors.\par
+\vspace{6pt}
+Project page: \url{http://aka.ms/boxbox}\par}
+\end{minipage}%
+}
+
+\author{\preprintauthorblock}
+
+% Fixed title-block spacing keeps the preprint author groups distinct.
+\makeatletter
+\renewcommand{\@maketitle}{%
+  \vbox{%
+    \hsize\textwidth
+    \parindent0pt
+    \parskip0pt
+    {\LARGE\scshape\@title\par}
+    \vskip10pt
+    \nointerlineskip
+    \noindent\@author\par
+    \vskip12pt
+  }%
+}
+\makeatother
+
+\hypersetup{
+  hidelinks,
+  pdftitle={BOXBOX: Recursive Harness Self-Improvement for Long-Running Performance Optimization},
+  pdfauthor={Yuhao Tan, Hanyun Jiang, Fangkai Yang, Yuan Yao, Taolue Chen, Bo Qiao, Yu Kang, Lu Wang, Pu Zhao, Xiaoxing Ma, Qingwei Lin}
+}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+% Shared method and benchmark names.
+\newcommand{\boxbox}{\textsc{BoxBox}}
+\newcommand{\he}{\textsc{HE}}
+\newcommand{\hs}{\textsc{HS}}
+\newcommand{\frozen}{\textsc{Frozen}}
+\newcommand{\perfrace}{\textsc{PerfRace}}
+\newcommand{\speedupat}[1]{\ensuremath{\mathrm{Speedup@}#1}}
+
+% Use the template's named-author layout for the public preprint.
+\iclrfinalcopy
+\begin{document}
+
+
+\maketitle
+% The preprint has no conference publication or review banner.
+\fancyhead{}
+\renewcommand{\headrulewidth}{0pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{src/1_abstract}
+
+% Keep the lead figure compact so surrounding text can paginate naturally.
+\begingroup
+\setlength{\intextsep}{6pt}
+\begin{figure}[H]
+  \centering
+  \captionsetup{skip=6pt}
+  % Source: artifacts/plot_boxbox_main_results.py.
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/boxbox-speedup-vs-time.pdf}
+    \caption{Task performance}
+    \label{fig:boxbox-main-results-time}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/boxbox-speedup-vs-cost.pdf}
+    \caption{Cost efficiency}
+    \label{fig:boxbox-main-results-cost}
+  \end{subfigure}
+  \caption{Performance of \boxbox{} and baselines on 50 \perfrace{} test tasks,
+  with three runs per method and task.
+  Curves show aggregate best-so-far correct speedup against
+  task time \subref{fig:boxbox-main-results-time} and mean cumulative
+  model cost per run \subref{fig:boxbox-main-results-cost},
+  sampled at matching task times, with shaded bands indicating
+  95\% fixed-task run-resampling intervals.
+  \boxbox{} achieves higher speedup with greater time and cost efficiency than the baselines.}
+  \label{fig:boxbox-main-results}
+\end{figure}
+\endgroup
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{src/2_introduction}
+\input{src/3_relatedwork}
+\input{src/4_perfrace}
+\input{src/5_boxbox}
+\input{src/6_experiment}
+\input{src/7_conclusion}
+
+% ===============================================================================
+\clearpage
+% \newpage
+
+
+% \subsection*{AI use statement}
+
+% The authors determined the research design, mathematical formulation, experimental methodology, and interpretation of results. In addition to the LLM agents studied in this work, we used generative AI tools to write implementation and data-analysis code and assist with benchmark construction. We also used these tools for literature search, language polishing, and figure production, including AI-generated illustrative assets. Benchmark tasks underwent the agent--human verification process described in Section~\ref{sec:perfrace-construction}. The authors take responsibility for the paper's content, including its claims, results, code, and other artifacts.
+
+% \subsection*{Ethics statement}
+
+% \perfrace{} is constructed from publicly available software projects and workload inputs. Curation includes checking the applicable modification and redistribution terms, with human review of workload provenance and permission to redistribute inputs (Appendix~\ref{app:perfrace}). The task catalog records source projects and licenses to acknowledge upstream contributions and support responsible reuse.
+
+% \subsection*{Reproducibility statement}
+
+% The repository for code and experimental artifacts is available at \url{https://anonymous.4open.science/r/BoxBox-1C35/}, with the following contents:
+% \begin{itemize}
+%   \item \textbf{Method implementations:} \boxbox{}, Frozen Harness, Harness Evolution, Harness Scaling, and the ablation variants.
+%   \item \textbf{Benchmark curation pipeline:} project discovery, automated filtering, and agent--human pair verification.
+%   \item \textbf{Tasks and evaluation:} task assets, environment setup, and correctness and performance evaluation utilities.
+%   \item \textbf{Experiment configurations:} model settings, task budgets, and instructions for running the methods.
+%   \item \textbf{Experimental artifacts:} harness revisions, training and validation results, and task-level performance and cost records.
+% \end{itemize}
+
+% \subsubsection*{Author Contributions}
+
+% \subsubsection*{Acknowledgments}
+
+
+% \newpage
+\bibliography{iclr2027_conference}
+\bibliographystyle{iclr2027_conference}
+
+\newpage
+\appendix
+\input{src/8a_experiment_appendix.tex}
+\clearpage
+\input{src/8b_perfrace_appendix.tex}
+\clearpage
+\input{src/8c_boxbox_appendix.tex}
+\clearpage
+\input{src/8d_prompt_and_skill.tex}
+
+
+\end{document}

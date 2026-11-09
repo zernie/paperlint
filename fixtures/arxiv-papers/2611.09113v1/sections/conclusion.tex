@@ -1,0 +1,15 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We formalize \textbf{authorization drift} across data, tool, scope, and time, and introduce ADB, a 648-sample dual-path benchmark constructed through execution-grounded SERS. Across 13 LLMs, with three-framework comparisons on four backbones, drift is persistent, compliant completion is empirically observed on most tasks, and data over-collection dominates; greater capability does not ensure boundary-keeping, and agentic scaffolds provide limited protection. Legal mappings across four jurisdictions connect these failures to potential harms to individuals and society. These findings motivate trajectory-level training and runtime authorization controls that preserve legitimate task completion without permitting overreach.
+
+
+\section{Limitations}
+
+The single-session, single-user framing leaves multi-agent authorization surfaces unaddressed. Delegated sub-agents, shared memory stores, cross-session persistence, and inter-agent trust propagation all introduce additional boundary-crossing risks that ADB does not yet measure. Drift detection uses tool-name and argument-subset matching against annotated \texttt{violation\_tool\_calls}; novel boundary-crossing patterns that fall outside the designed violation set are not captured. This may cause ADB to underestimate drift for highly capable models that discover unanticipated unauthorized paths not represented in the benchmark. Extending ADB to live deployment environments, multi-agent settings, and open-ended violation detection represents a natural direction for future work.
+
+
+\section{Ethics Statement}
+ADB is designed as a diagnostic tool to expose and measure a safety failure mode, not to enable attacks.
+All tasks use mock environments with no real user data; no production systems were queried during evaluation.
+We release the benchmark to support the research community in developing safer agents, and we encourage responsible disclosure if deployed systems are tested with ADB-derived scenarios.

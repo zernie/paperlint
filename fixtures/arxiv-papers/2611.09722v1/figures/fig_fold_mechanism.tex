@@ -1,0 +1,112 @@
+\input{figures/fold-mechanism-common}
+\def\fca{0.55}
+\def\fcb{0.34}
+\def\fcp{0.24}
+\def\fcc{0.57}
+\def\fcd{1.22}
+\def\frh{0.38}
+\def\dxs{3.56}
+\tikzset{
+  fdlab/.style={font=\scriptsize\sffamily, text=black!75, align=center, inner sep=1pt},
+}
+\providecommand{\fgrid}[6]{%
+  \foreach \gi in {1,...,#4}{\ifnum\gi<#4
+    \draw[mgrid] ({#1+\gi*#5},#2) -- ({#1+\gi*#5},{#2+#3*#6});\fi}%
+  \foreach \gj in {1,...,#3}{\ifnum\gj<#3
+    \draw[mgrid] (#1,{#2+\gj*#6}) -- ({#1+#4*#5},{#2+\gj*#6});\fi}%
+  \draw[mframe] (#1,#2) rectangle ({#1+#4*#5},{#2+#3*#6});}
+\providecommand{\ftint}[4]{%
+  \fill[ptblue!26] (#1,#2) rectangle ++(#3,#4);}
+\providecommand{\fcolvals}[4]{%
+  \foreach \t [count=\i from 0] in {#4}{%
+    \node[fcell] at ({#1+0.5*#3},{#2-(\i+0.5)*\frh}) {\t};}}
+\providecommand{\frowvals}[4]{%
+  \foreach \t [count=\i from 0] in {#4}{%
+    \node[fcell] at ({#1+(\i+0.5)*#3},{#2+0.5*\frh}) {\t};}}
+\providecommand{\foldbody}{%
+  \fgrid{-1.91}{0}{3}{3}{\fca}{\frh}%
+  \fgrid{0}{1.74}{3}{3}{\fcb}{\frh}%
+  \fgrid{0}{0}{3}{3}{\fcb}{\frh}%
+  \node[mname, anchor=south west] at (-1.91,1.22) {$A$};%
+  \node[mname, anchor=west] at (1.13,2.24) {$q$};%
+  \node[mname, anchor=south] at (0.51,1.22) {$C$};}
+\providecommand{\foldaxes}{%
+  \draw[axarrow] (-0.13,2.86) -- (-0.13,1.76);%
+  \node[axname, anchor=east] at (-0.21,2.31) {$K$};}
+\providecommand{\foldafull}{%
+  \frowvals{-1.91}{0.76}{\fca}{{$A_{11}$},{$A_{12}$},{$A_{13}$}}%
+  \frowvals{-1.91}{0.38}{\fca}{{$A_{21}$},{$A_{22}$},{$A_{23}$}}%
+  \frowvals{-1.91}{0.00}{\fca}{{$A_{31}$},{$A_{32}$},{$A_{33}$}}}
+\begin{figure}[t]
+\centering
+\subfloat[Operand-fold scales a column of $A$ and adds the offset correction to every output column (\Cref{eq:operand-fold}).\label{fig:fold-operand}]{%
+\begin{tikzpicture}[x=1cm, y=1cm, mname/.append style={inner sep=1pt},
+                    caselab/.append style={inner sep=1pt}]
+  \useasboundingbox (-1.94,3.30) rectangle (6.26,-0.64);
+  \ftint{0}{2.50}{1.02}{\frh}
+  \ftint{1.14}{2.50}{0.48}{\frh}
+  \fgrid{1.14}{2.50}{1}{2}{\fcp}{\frh}
+  \frowvals{1.14}{2.50}{\fcp}{{$s$},{$z$}}
+  \foldbody
+  \frowvals{0}{2.50}{\fcb}{{$q_1$},{$q_2$},{$q_3$}}
+  \fcolvals{-1.91}{1.14}{\fca}{{$A_1$},{$A_2$},{$A_3$}}
+  \foldaxes
+  \draw[grpout] (-0.03,2.47) rectangle (1.65,2.91);
+  \node[caselab, anchor=south] at (-0.13,3.00) {before fold};
+  \begin{scope}[shift={(\dxs,0)}]
+    \ftint{-1.91}{0}{\fca}{1.14}
+    \ftint{1.42}{0}{\fcc}{1.14}
+    \fgrid{1.42}{0}{3}{1}{\fcc}{\frh}
+    \fcolvals{1.42}{1.14}{\fcc}{{$zA_1$},{$zA_2$},{$zA_3$}}
+    \foldbody
+    \frowvals{0}{2.50}{\fcb}{{$q_1$},{$q_2$},{$q_3$}}
+    \fcolvals{-1.91}{1.14}{\fca}{{$sA_1$},{$sA_2$},{$sA_3$}}
+    \draw[flow] (1.35,0.57) -- (1.10,0.57);
+    \node[axname, anchor=south, inner sep=0.5pt] at (1.225,0.66) {$+$};
+    \draw[grpout] (-1.94,-0.03) rectangle (-1.33,1.17);
+    \draw[grpout] (1.39,-0.03) rectangle (2.02,1.17);
+    \node[fdlab, anchor=north] at (-1.085,-0.08) {fold into\\operand $A$};
+    \node[fdlab, anchor=north] at (1.705,-0.08) {output\\correction};
+    \node[caselab, anchor=south] at (0.055,3.00) {after fold};
+  \end{scope}
+  \draw[foldbig] (1.14,0.57) -- (1.51,0.57);
+\end{tikzpicture}}
+\\[-2pt]
+\subfloat[Acc-fold scales a partial output column and adds the offset-weighted row sums of $A$ (\Cref{eq:acc-fold}).\label{fig:fold-acc}]{%
+\begin{tikzpicture}[x=1cm, y=1cm, mname/.append style={inner sep=1pt},
+                    caselab/.append style={inner sep=1pt}]
+  \useasboundingbox (-1.94,4.16) rectangle (6.26,-1.14);
+  \ftint{0.68}{1.74}{\fcb}{1.14}
+  \ftint{0.68}{3.00}{\fcb}{0.76}
+  \fgrid{0.68}{3.00}{2}{1}{\fcb}{\frh}
+  \fcolvals{0.68}{3.76}{\fcb}{{$s$},{$z$}}
+  \foldbody
+  \fcolvals{0.68}{2.88}{\fcb}{{$q_1$},{$q_2$},{$q_3$}}
+  \foldafull
+  \foldaxes
+  \draw[grpout] (0.65,1.71) rectangle (1.05,3.79);
+  \node[caselab, anchor=south] at (-0.345,3.88) {before fold};
+  \begin{scope}[shift={(\dxs,0)}]
+    \ftint{0.68}{0}{\fcb}{1.14}
+    \ftint{0.68}{-0.50}{\fcb}{\frh}
+    \fgrid{0.68}{-0.50}{1}{1}{\fcb}{\frh}
+    \fcolvals{0.68}{-0.12}{\fcb}{{$s$}}
+    \ftint{1.42}{0}{\fcd}{1.14}
+    \fgrid{1.42}{0}{3}{1}{\fcd}{\frh}
+    \fcolvals{1.42}{1.14}{\fcd}{{$z\textstyle\sum_k A_{1k}$},{$z\textstyle\sum_k A_{2k}$},{$z\textstyle\sum_k A_{3k}$}}
+    \foldbody
+    \fcolvals{0.68}{2.88}{\fcb}{{$q_1$},{$q_2$},{$q_3$}}
+    \foldafull
+    \draw[flow] (1.35,0.57) -- (1.10,0.57);
+    \node[axname, anchor=south, inner sep=0.5pt] at (1.225,0.66) {$+$};
+    \draw[grpout] (0.65,-0.53) rectangle (1.05,1.17);
+    \draw[grpout] (1.39,-0.03) rectangle (2.67,1.17);
+    \node[fdlab, anchor=north] at (0.51,-0.58) {fold into\\accumulator};
+    \node[fdlab, anchor=north] at (2.03,-0.58) {output\\correction};
+    \node[caselab, anchor=south] at (0.38,3.88) {after fold};
+  \end{scope}
+  \draw[foldbig] (1.14,0.57) -- (1.51,0.57);
+\end{tikzpicture}}
+\caption{Affine folding of $C=A(sq+z)$, where $K$ is the reduction axis.}
+\label{fig:fold-mechanism}
+\end{figure}

@@ -1,0 +1,16 @@
+\begin{tabular}{lrrrr}\toprule
+Configuration & Std.\ ASR & Var.\ ASR & FPR & Resp. \\ \midrule
+Vanilla (guard prompt) & \textbf{27.9} & 7.6 & -- & 87.3 \\
+Combined mitigations & \textbf{13.6} & 2.9 & -- & 85.6 \\
+\midrule
+TF-IDF detector, drop $>$0.85 & 15.6 & -- & 1.1 & 89.4 \\
+Laya gate (HTML), drop $>$0.5 & 13.3 & -- & 19.9 & 79.0 \\
+Kev gate (HTML), drop $>$0.5 & 16.8 & 5.4 & 2.2 & 89.2 \\
+Kev gate (HTML), drop $>$0.35 & 10.2 & -- & 27.4 & 89.3 \\
+\midrule
+Combined + TF-IDF & 10.6 & -- & 1.1 & 84.8 \\
+Combined + Laya gate & 8.6 & -- & 19.9 & 73.7 \\
+Combined + Kev gate, drop $>$0.5 & \textbf{5.7} & 1.7 & \textbf{2.2} & \textbf{86.2} \\
+Combined + LLM judge (70B), drop $>$0.5 & \textbf{0.4} & -- & \textbf{18.3} & 86.6 \\
+Combined + Kev gate, drop $>$0.35 & 2.9 & -- & 27.4 & 85.8 \\
+\bottomrule\end{tabular}

@@ -1,0 +1,73 @@
+\begin{table}[htbp]
+    \centering
+    \caption{Performance of ABS-Align against other Sparsity-based Attacks.}
+    \label{tab:white_box_attacks}
+
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.7}
+    \small
+    % \begin{tabular}{ll cc c}
+    %     \toprule
+    %     \textbf{Model} & \textbf{Method} & \textbf{NS~\cite{wu2026neurostrike}} & \textbf{Rf-Dir~\cite{arditi2024refusal}} & \textbf{Average} \\
+    %     \midrule
+        
+    %     \multirow{2}{*}{Gemma-2-2B-IT}
+    %      & No Defense           & 0.57 &  0.80 & 0.685 \\
+    %      %& Baseline Defense    & 0.00 &  0.00 & 0.00 \\
+    %      & ABS-Align            & 0.02 &  0.34 & 0.18 \\
+    %     \midrule
+        
+    %     \multirow{2}{*}{Llama-3-8B-Instruct}
+    %      & No Defense           & 0.84 &  0.71 & 0.775 \\
+    %      %& Baseline Defense    & 0.00 &  0.00 & 0.00 \\
+    %      & ABS-Align            & 0.04 &  0.30 & 0.17 \\
+    %     \midrule
+        
+    %     \multirow{2}{*}{Llama-3.2-3B-Instruct}
+    %      & No Defense           &  &  &  \\
+    %      %& Baseline Defense    & 0.00  & 0.00 & 0.00 \\
+    %      & ABS-Align            &  &  &  \\
+    %     \midrule
+        
+    %     \multirow{2}{*}{Qwen-3-4B}
+    %      & No Defense           &  &   &  \\
+    %      %& Baseline Defense    & 0.00  & 0.00 & 0.00 \\
+    %      & ABS-Align            &  &  &  \\
+         
+    %     \bottomrule
+    % \end{tabular}
+
+    \begin{tabular}{ll cc c}
+        \toprule
+        \textbf{Model} & \textbf{Method} & \textbf{NS~\cite{wu2026neurostrike}} & \textbf{Rf-Dir~\cite{arditi2024refusal}} & \textbf{Average} \\
+        \midrule
+        
+        \multirow{2}{*}{Gemma-2-2B-IT}
+         & No Defense           & 0.50 & 0.80  & 0.65 \\
+         %& Baseline Defense    & 0.00 &  0.00 & 0.00 \\
+         & ABS-Align            & 0.05 & 0.08 & 0.06 \\
+        \midrule
+        
+        \multirow{2}{*}{Llama-3-8B-Instruct}
+         & No Defense           & 0.84 & 0.75 & 0.79  \\
+         %& Baseline Defense    & 0.00 &  0.00 & 0.00 \\
+         & ABS-Align            & 0.03 & 0.05 & 0.04 \\
+        \midrule
+        
+        \multirow{2}{*}{Llama-3.2-3B-Instruct}
+         & No Defense           & 0.79 & 0.57 & 0.68 \\
+         %& Baseline Defense    & 0.00  & 0.00 & 0.00 \\
+         & ABS-Align            & 0.37 & 0.30 & 0.33 \\
+        \midrule
+        
+        \multirow{2}{*}{Qwen-3-4B}
+         & No Defense           & 0.89 & 0.70 & 0.78  \\
+         %& Baseline Defense    & 0.00  & 0.00 & 0.00 \\
+         & ABS-Align            & 0.44 & 0.09 & 0.26 \\
+         
+        \bottomrule
+    \end{tabular}
+
+    
+\end{table}
+

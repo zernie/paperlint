@@ -1,0 +1,74 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{\textbf{Instructions for human validation.}
+Question and rating levels shown to annotators for each criterion, with our English translation.
+The first level of each criterion is the passing level.
+H5 is worded differently for A2 and A3 targets.}
+\label{tab:human_rubric}
+\begin{tabular}{@{}p{0.05\textwidth}p{0.44\textwidth}p{0.44\textwidth}@{}}
+\toprule
+ & \textbf{Korean} & \textbf{English translation} \\
+\midrule
+H1
+& 한국어 가독성: 문장 자체가 자연스럽고 의미가 명확한가?
+\newline \textsc{natural}: 한 번에 자연스럽게 읽힌다.
+\newline \textsc{minor\_issue}: 조금 어색하지만 의미는 분명하다.
+\newline \textsc{unnatural}: 어색함이나 모호함이 이해를 방해한다.
+& Korean readability: Are the sentences themselves natural and is their meaning clear?
+\newline \textsc{natural}: Reads naturally at once.
+\newline \textsc{minor\_issue}: Slightly awkward, but the meaning is clear.
+\newline \textsc{unnatural}: Awkwardness or ambiguity hinders understanding. \\
+\midrule
+H2
+& 출제 인위성: 실제 상황처럼 자연스럽게 읽히는가, 아니면 정답과 선택지를 만들기 위해 조건을 인위적으로 나열한 글처럼 읽히는가?
+\newline \textsc{natural}: 현실에서 있을 법한 자연스러운 상황으로 읽힌다.
+\newline \textsc{noticeable}: 인위적인 구성 흔적은 있지만 하나의 상황으로 읽힌다.
+\newline \textsc{contrived}: 실제 상황보다 문제 풀이를 위한 조건 나열처럼 읽힌다.
+& Construction artifice: Does the text read naturally like a real situation, or like a list of conditions arranged to produce the answer and the options?
+\newline \textsc{natural}: Reads as a natural situation that could occur in reality.
+\newline \textsc{noticeable}: Shows traces of construction but still reads as a single situation.
+\newline \textsc{contrived}: Reads as a list of conditions for solving the question rather than a real situation. \\
+\midrule
+H3
+& 표면적 정답 누출: 전문 내용을 몰라도 길이·문법·형식만으로 정답을 찾을 수 있는가?
+\newline \textsc{sound}: 표면 단서로 선택지를 줄이기 어렵다.
+\newline \textsc{narrowing}: 일부는 지워지지만 둘 이상 남는다.
+\newline \textsc{isolating}: 표면 단서만으로 정답 하나가 남는다.
+& Surface answer leakage: Can the answer be found from length, grammar, or format alone, without knowing the subject matter?
+\newline \textsc{sound}: The options are hard to narrow down with surface cues.
+\newline \textsc{narrowing}: Some options are eliminated, but two or more remain.
+\newline \textsc{isolating}: Surface cues alone leave only the gold answer. \\
+\midrule
+H4
+& 정답 근거 추적: 정답을 anchor와 사례만으로 뒷받침할 수 있는가?
+\newline \textsc{traceable}: 필요한 핵심 근거가 anchor에 있다.
+\newline \textsc{partial}: 관련 근거는 있지만 anchor 밖 지식이 더 필요하다.
+\newline \textsc{out\_of\_scope}: 핵심 근거를 anchor에서 찾을 수 없다.
+& Traceability of the answer: Can the gold answer be supported by the anchor and the case alone?
+\newline \textsc{traceable}: The key grounds needed are in the anchor.
+\newline \textsc{partial}: Relevant grounds exist, but knowledge outside the anchor is also needed.
+\newline \textsc{out\_of\_scope}: The key grounds cannot be found in the anchor. \\
+\midrule
+H5 (A2)
+& 목표 구조: 정확히 하나의 mapping이 적용되고, 조건 충족을 사례에서 추론해야 하는가?
+\newline \textsc{clear}: 하나의 mapping이 적용되고 조건 충족을 사례에서 분명히 추론해야 한다.
+\newline \textsc{borderline}: 추론은 있으나 조건이 거의 드러나 있거나 mapping 수가 다소 불분명하다.
+\newline \textsc{not\_met}: 직접 적용·조회이거나, 여러 mapping이 필요하거나, 사례로 결정할 수 없다.
+& Target structure: Does exactly one mapping apply, and must the satisfaction of its condition be inferred from the case?
+\newline \textsc{clear}: One mapping applies, and whether its condition is met must clearly be inferred from the case.
+\newline \textsc{borderline}: Inference is involved, but the condition is nearly stated or the number of mappings is somewhat unclear.
+\newline \textsc{not\_met}: The question is direct application or retrieval, requires several mappings, or cannot be decided from the case. \\
+\midrule
+H5 (A3)
+& 목표 구조: 둘 이상의 mapping이 실제로 경쟁하고, 선택에 따라 정답이 달라지는가?
+\newline \textsc{clear}: 둘 이상의 mapping이 사례에 근거하며, 지배 mapping에 따라 정답이 달라진다.
+\newline \textsc{borderline}: 두 번째 mapping은 있으나 근거가 약하거나 정답이 달라지는지 불분명하다.
+\newline \textsc{not\_met}: 실질적 경쟁이 없거나, mapping이 달라도 정답이 같거나, 결론을 정할 수 없다.
+& Target structure: Do two or more mappings genuinely compete, and does the answer change with the choice between them?
+\newline \textsc{clear}: Two or more mappings are grounded in the case, and the answer depends on which mapping governs.
+\newline \textsc{borderline}: A second mapping exists, but its grounds are weak or it is unclear whether the answer would change.
+\newline \textsc{not\_met}: There is no real competition, the answer is the same under either mapping, or the conclusion cannot be determined. \\
+\bottomrule
+\end{tabular}
+\end{table*}

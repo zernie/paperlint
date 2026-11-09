@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.9}
+    \small
+    \caption{Change in utility performance for each model.}
+    \label{tab:utility_diff}
+    
+    % \begin{tabular}{l cccccc}
+    %     \toprule
+    %     \textbf{Model} & \textbf{ARC} & \textbf{TQA} & \textbf{WG} & \textbf{MMLU} & \textbf{HS} & \textbf{GSM8K} \\
+    %     \midrule
+    %     Gemma-2-2B-it & -0.68 &  +11.07 & -1.34 & -3.06 & -5.77 &  +1.44 \\
+    %     Llama-3-8B-Instruct & +0.77 & +12.25 &  +4.97&  -3.32 & +4.07 & -6.29 \\
+    %     Llama-3.2-3B-Instruct & -1.71 & +11.81 & -2.13 & -2.95 & +1.78 & +0.45 \\
+    %     Qwen-3-4B &  &  &  &  &  & \\
+    %     \bottomrule
+    % \end{tabular}
+
+    \begin{tabular}{l ccccc}
+        \toprule
+        \textbf{Model} & \textbf{ARC} & \textbf{TQA} & \textbf{WG} & \textbf{MMLU} & \textbf{HS} \\
+        \midrule
+        Gemma-2-2B-IT & 0.00 & +9.14 & -1.50 & -1.77 & -2.25 \\
+        Llama-3-8B-Instruct & -3.67 & +14.26 & +3.00 & -0.37 & +2.32  \\
+        Llama-3.2-3B-Instruct & +0.60  & +13.78  & +1.03  & -3.15 & -2.02   \\
+        Qwen-3-4B & -0.09 & +11.75 & -0.79 & +0.69 & -1.18  \\
+        \bottomrule
+    \end{tabular}
+\end{table}

@@ -1,0 +1,20 @@
+%   Harness 会影响 agent performance
+%                       ↓
+%   现有 harness optimization 通常通过专门的优化过程，
+%   从任务轨迹和，对照明确的 reference 学习并改进 harness, 
+%   用预定义好的 success rate 或者 end-state outcome 进行评估
+%                       ↓
+%   但许多真实任务是 open-ended的
+%                       ↓
+%   提出 PerfRace，评价一个 run 内持续产生的进展
+%                       ↓
+%   我们进一步研究 harness optimization 能不能作为一种在长程任务中
+%   由 agent 控制的、递归的能力
+%                       ↓
+%   提出 BOXBOX (F1 赛车里面汽车进站维修的行为，我们用它来比喻 agent 可以一边跑一边“换轮子”)：
+%   agent-triggered、in-place、runtime harness optimization
+
+\begin{abstract}
+Automated harness optimization improves agents by learning from trajectories and task feedback. Existing offline methods use reference answers to optimize harnesses for reuse on held-out tasks. However, many real-world tasks are open-ended, while long runs expose new difficulties that offline-optimized harnesses may not address. To study harness optimization in these settings, we introduce \perfrace{}, a benchmark for long-running performance optimization of software projects, and investigate whether agents can use task-specific experience to recursively improve their harnesses during an ongoing task. To this end, we introduce \boxbox{}, which enables agent-triggered harness revision and kernel-managed hot reloading while preserving execution context. We evaluate \boxbox{} on \perfrace{} under matched test-time budgets, comparing it with Frozen Harness, offline Harness Evolution, and Harness Scaling. \boxbox{} achieves higher speedup with more efficient use of task time and model cost, reaching a \speedupat{4\mathrm{h}} of \(1.70\times\), compared with \(1.54\times\) for the strongest baseline.
+% Code is available at \url{https://anonymous.4open.science/r/BoxBox-1C35/}.
+\end{abstract}

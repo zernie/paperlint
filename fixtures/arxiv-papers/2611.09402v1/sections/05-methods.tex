@@ -1,0 +1,41 @@
+\section{Task Realization Using the Neural Architecture}
+\label{sec:tasks}
+The architecture described in Section~\ref{sec:architecture} provides the neural buffers and associative memories for two lexical retrieval tasks: perception and production. Task realization specifies which representation is supplied as input, when it is presented, which output is recorded, and how retrieval success is assessed. Both tasks use the eight selected words introduced in Section~3.1 and the complete 613-entry lexical inventory.
+
+\subsection{Inputs and trial procedure}
+\label{sec:task-procedure}
+In the \emph{perception task}, the complete phonological form vector of a selected word is supplied to the phonological buffer, and the pathway retrieves its associated concept through the lemma level. In the \emph{production task}, the complete conceptual vector is supplied to the concept buffer, and the pathway retrieves its associated phonological form through the lemma level. These tasks assess the transfer of already specified lexical representations. They do not include recognition of an acoustic waveform or inference of a concept from an image.
+
+Each trial lasts 1.1~s (1,100~ms). The simulator advances the neural dynamics in steps of 1~ms; this simulation step specifies the numerical time increment. The input interval extends from 150~ms to immediately before 750~ms after trial onset. During this interval, the selected word's input vector is supplied continuously; the external input is zero before and after it. The trial therefore includes an initial period, a period of sustained input, and a period following input offset.
+
+For each processing direction, one simulator is constructed, and its neural and filter state is reset between words. The input pointer changes from trial to trial, while the stored vectors, neural parameters, and associative mappings remain fixed. The vector and network seeds are those specified in Table~\ref{tab:parameters}. These are deterministic simulation runs for a fixed realization, not independent samples of a participant population.
+
+\subsection{Recording and retrieval criterion}
+\label{sec:task-evaluation}
+State and selection probes record the resulting signals through an additional low-pass filter with a 20-ms time constant. This observation filter provides moderate temporal smoothing, reducing rapid fluctuations and making the course of lexical activation easier to inspect and compare. It acts on the recorded readout, while neuronal activity and synaptic interactions within the network remain unchanged. The curves thus provide a smoothed view of the ongoing network computation. Brief transients and the apparent onset and decay of recorded activity reflect this additional filtering as well as the network's own dynamics.
+
+At each lexical level, the stored vocabulary vectors provide references against which the recorded neural state can be evaluated. For a recorded decoded state $\hat{\mathbf x}^{(L)}(t)$, the score for lexical entry $i$ is the dot product
+\begin{equation}
+ A_i^{(L)}(t)=(\mathbf v_i^{(L)})^{\mathsf T}\hat{\mathbf x}^{(L)}(t),
+ \label{eq:activation}
+\end{equation}
+where $\mathbf v_i^{(L)}$ is the stored vector for that entry at level $L$. The same readout is used at the conceptual, lemma, and phonological levels. These scores form the time-dependent similarity curves for the state buffers. The associative memories' decoded selection outputs $z_i(t)$ are recorded separately, as specified in Eq.~\eqref{eq:am}.
+
+The evaluation interval is the portion of the recorded trial used to assess retrieval. For the final state of each pathway, scores are averaged over $0.45\leq t<0.70$~s (450--700~ms) and evaluated against all 613 candidates. This window falls within the sustained-input period. A response is accepted if the largest score exceeds 0.3 and exceeds the second-largest score by more than 0.1. It is correct if the accepted candidate is the input word's associated lexical entry. These evaluation criteria determine whether the recorded response is accepted; the associative-memory match threshold in Table~\ref{tab:parameters} determines how the neural circuit processes candidate matches. Their shared numerical value of 0.3 serves these distinct purposes. Table~\ref{tab:task-settings} summarizes the trial, recording, and evaluation settings shared by the perception and production tasks.
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{ll}\toprule
+Quantity & Value\\\midrule
+Simulation time step & 1 ms\\
+Trial duration & 1,100 ms\\
+Input interval & $[150,750)$ ms\\
+Observation filter time constant & 20 ms\\
+Evaluation interval & $[450,700)$ ms\\
+Acceptance score threshold & 0.3 (strictly exceeded)\\
+Acceptance margin over second-ranked candidate & 0.1 (strictly exceeded)\\\bottomrule
+\end{tabular}
+\caption{Settings for realizing and evaluating both lexical retrieval tasks using the neural architecture. Intervals are measured from trial onset; $[a,b)$ includes the start time $a$ and ends immediately before $b$.}\label{tab:task-settings}
+\end{table}
+
+\FloatBarrier

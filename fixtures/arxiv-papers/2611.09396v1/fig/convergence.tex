@@ -1,0 +1,22 @@
+\begin{figure}[t!]
+    \centering
+    \begin{minipage}[c]{0.03\columnwidth}
+        \centering
+        \rotatebox{90}{\small $\leftarrow$ flowtime / LB}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.475\columnwidth}
+        \centering
+        {\small \mapname{random-64-64-20}, $n=400$}\\[1pt]
+        \includegraphics[width=\linewidth]{fig/raw/convergence/random-64-64-20_soc_n400.pdf}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.475\columnwidth}
+        \centering
+        {\small \mapname{Paris\_1\_256}, $n=800$}\\[1pt]
+        \includegraphics[width=\linewidth]{fig/raw/convergence/Paris_1_256_soc_n800.pdf}
+    \end{minipage}\\[2pt]
+    {\small runtime [s]}
+    \caption{
+    Anytime behavior of \planner, \planner with sequential evaluation~(seq-\planner), and DBS-Hungarian (D-H) for a \SI{30}{\second} budget in \scenHotspot.
+    }
+    \label{fig:convergence}
+\end{figure}

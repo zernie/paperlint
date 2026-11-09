@@ -1,0 +1,93 @@
+\section{Experimental Setup}
+\label{app:setup}
+
+\subsection{Metric definitions and uncertainty}
+
+\paragraph{Task metrics.}
+For Crafter, let $r_a$ denote the fraction of evaluated worlds
+in which achievement $a$ is attained. We report arithmetic
+achievement progress,
+\begin{equation}
+P_{\mathrm{Crafter}}
+=\frac{100}{22}\sum_{a=1}^{22}r_a.
+\end{equation}
+Peak Progress is the highest progress observed across evolution
+rounds. The geometric achievement score is a distinct metric,
+\begin{equation}
+S_{\mathrm{Crafter}}
+=\exp\left(
+\frac{1}{22}\sum_{a=1}^{22}\log(1+100r_a)
+\right)-1.
+\label{eq:crafter}
+\end{equation}
+These statistics are computed from achievement rates across
+worlds; averaging per-world geometric scores yields a different
+quantity.
+
+ALFWorld and WebShop use binary task success rate. WebShop's
+fractional reward, when reported, is listed separately.
+HotpotQA and WebQuestions use normalized answer exact match
+(EM) and token F1. Local FinQA evaluations use scale-normalized
+numeric-answer accuracy with a 1\% relative tolerance, which
+is distinct from program execution accuracy.
+
+\paragraph{Uncertainty.}
+We distinguish standard deviations across repeated runs from
+bootstrap uncertainty over evaluation instances. The local
+paired analyses use checkpoints trained with seed 42; their
+instance-level uncertainty does not measure variation across
+independently trained models. Paired bootstrap samples use the
+same resampled instances for all compared methods. For Crafter,
+we resample worlds with their complete achievement vectors and
+recompute the aggregate statistic in each draw.
+Appendix~\ref{app:protocol} specifies the resampling procedures,
+including hierarchical uncertainty where applicable.
+Published comparisons retain the uncertainty reported by
+their sources.
+
+\subsection{Memory, retention, and serving measurements}
+\label{app:costs}
+
+\paragraph{Memory accounting.}
+We distinguish retrievable ETG records, non-retrievable
+archived records, and separately stored training data,
+including replay when instantiated. For consolidation
+analyses, we report record counts and available byte
+measurements before and after the update. Moving records
+to an archive reduces the retrievable footprint but does
+not reduce total retained storage. Capability--footprint
+comparisons therefore identify which stores are included.
+For hard-cap configurations, rejected admissions and forced
+deletions are recorded separately from verified release.
+
+\paragraph{Retention.}
+In multi-round evaluations, let $t_s$ be the first round
+in which skill $s$ is consolidated and $R_{t,s}$ its rollout
+success at round $t$. We report final success $R_{T,s}$ and
+the decline from its best observed post-consolidation success,
+\begin{equation}
+D_{T,s}
+=\max_{t_s\leq t\leq T}R_{t,s}-R_{T,s}.
+\end{equation}
+These measurements use fresh evaluation episodes.
+Action-probe scores and training loss provide diagnostics;
+they do not replace rollout-based retention measurements.
+
+\paragraph{Acquisition and serving cost.}
+We account separately for student and teacher acquisition,
+verification probes, and training compute. Serving
+measurements report elapsed time, model calls, and input
+and output tokens per task, with retrieval tokens identified
+where available. Paired comparisons use the same evaluation
+tasks and distinguish weights-only, retrieval-assisted,
+and per-skill routed deployment. Token usage and wall-clock
+latency are reported separately because lower token usage
+does not necessarily imply faster execution.
+
+\paragraph{Release decisions.}
+A skill is approved for release only after satisfying its
+verification criterion. Candidate-adapter performance or
+evaluation with retained ETG alone does not authorize
+release. Development-probe approval and the resulting
+record movement are reported separately from held-out
+task performance after release.

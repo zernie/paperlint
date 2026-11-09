@@ -1,0 +1,298 @@
+%% 
+%% Copyright 2007-2020 Elsevier Ltd
+%% 
+%% This file is part of the 'Elsarticle Bundle'.
+%% ---------------------------------------------
+%% 
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%% 
+%% The list of all files belonging to the 'Elsarticle Bundle' is
+%% given in the file `manifest.txt'.
+%% 
+
+%% Template article for Elsevier's document class `elsarticle'
+%% with numbered style bibliographic references
+%% SP 2008/03/01
+%%
+%% 
+%%
+%% $Id: elsarticle-template-num.tex 190 2020-11-23 11:12:32Z rishi $
+%%
+%%
+%\documentclass[preprint,12pt]{elsarticle}
+
+%\documentclass[draft,5p,times,twocolumn,authoryear]{elsarticle}
+\documentclass[final,5p,times,twocolumn,authoryear]{elsarticle}
+
+%% Use the option review to obtain double line spacing
+%% \documentclass[authoryear,preprint,review,12pt]{elsarticle}
+
+%% Use the options 1p,twocolumn; 3p; 3p,twocolumn; 5p; or 5p,twocolumn
+%% for a journal layout:
+%% \documentclass[final,1p,times]{elsarticle}
+%% \documentclass[final,1p,times,twocolumn]{elsarticle}
+%% \documentclass[final,3p,times]{elsarticle}
+%% \documentclass[final,3p,times,twocolumn]{elsarticle}
+%% \documentclass[final,5p,times]{elsarticle}
+%% \documentclass[final,5p,times,twocolumn]{elsarticle}
+
+%% For including figures, graphicx.sty has been loaded in
+%% elsarticle.cls. If you prefer to use the old commands
+%% please give \usepackage{epsfig}
+
+%% The amssymb package provides various useful mathematical symbols
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{siunitx}
+\usepackage{lscape}
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{positioning,calc}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{svg}
+\usepackage{graphicx} 
+\usepackage[unicode,breaklinks=true]{hyperref}
+\hypersetup{
+	colorlinks=true,
+   	linkcolor=blue,
+   	citecolor=blue,
+    filecolor=blue,
+   	urlcolor=blue}
+\usepackage{colortbl}
+\usepackage{hhline}
+\usepackage{pdflscape}
+\usepackage{caption} 
+\captionsetup[table]{skip=5pt}
+\usepackage{graphicx,calc}
+\usepackage{makecell}
+
+
+
+% \usepackage{fontspec} 
+% \setmainfont{NotoSans-Regular}  
+
+% \newcommand\blfootnote[1]{%
+%   \begingroup
+%   \renewcommand\thefootnote{}\footnote{#1}%
+%   \addtocounter{footnote}{-1}%
+%   \endgroup
+% }
+
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+\usepackage{soul}
+\usepackage{color}
+    \definecolor{celadon}{rgb}{0.67, 0.88, 0.69}
+    \definecolor{flamingopink}{rgb}{0.99, 0.56, 0.67}
+    \definecolor{lovelygreen}{rgb}{0.54, 0.90, 0.60}
+\DeclareRobustCommand{\hlok}[1]{{\sethlcolor{celadon}\hl{#1}}}
+\DeclareRobustCommand{\hlupdate}[1]{{\sethlcolor{flamingopink}\hl{#1}}}
+
+
+\usepackage[figuresright]{rotating}
+\usepackage{pbox}
+\usepackage{makecell}
+\usepackage{appendix}
+\newcommand*{\todo}[1]{\textbf{({\color{red}TODO:} #1)}}
+\usepackage{footnote}
+\usepackage{tablefootnote}
+%\usepackage{amssymb}
+%\usepackage{amsbsy}
+
+%\usepackage{arabi}
+% \usepackage{CJKutf8}
+% \usepackage[LAE,T1,T2A]{fontenc}
+% \usepackage[utf8]{inputenc}
+%\usepackage[arabic,english]{babel}
+%\usepackage{arabi}
+
+
+
+\usepackage{graphicx}
+\usepackage{tabularray}
+\usepackage{xcolor}
+
+\definecolor{gray7}{HTML}{BFBFBF}
+\definecolor{gray9}{HTML}{E5E5E5}
+
+%\usepackage[utf8]{inputenc}
+%\usepackage{fontspec}
+
+%\usepackage{draftwatermark}
+%\SetWatermarkText{CONFIDENTIAL}
+%\SetWatermarkScale{.6}
+
+
+\usepackage{tabularray}
+
+\makesavenoteenv{tabular}
+\makesavenoteenv{table}
+\newcommand{\red}{\color{red}}
+\newcommand{\green}{\color{green!60!black}}
+\newcommand{\black}{\color{black}}
+
+
+%% The amsthm package provides extended theorem environments
+%% \usepackage{amsthm}
+
+%% The lineno packages adds line numbers. Start line numbering with
+%% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
+%% for the whole article with \linenumbers.
+%% \usepackage{lineno}
+
+\journal{DFRWS EU 2027}
+
+\begin{document}
+\emergencystretch 3em
+
+\begin{frontmatter}
+
+%% Title, authors and addresses
+
+%% use the tnoteref command within \title for footnotes;
+%% use the tnotetext command for theassociated footnote;
+%% use the fnref command within \author or \address for footnotes;
+%% use the fntext command for theassociated footnote;
+%% use the corref command within \author for corresponding author footnotes;
+%% use the cortext command for theassociated footnote;
+%% use the ead command for the email address,
+%% and the form \ead[url] for the home page:
+%% \title{Title\tnoteref{label1}}
+%% \tnotetext[label1]{}
+%% \author{Name\corref{cor1}\fnref{label2}}
+%% \ead{email address}
+%% \ead[url]{home page}
+%% \fntext[label2]{}
+%% \cortext[cor1]{}
+%% \affiliation{organization={},
+%%             addressline={},
+%%             city={},
+%%             postcode={},
+%%             state={},
+%%             country={}}
+%% \fntext[label3]{}
+
+\title{Federated Forensics: Jurisdictional constraints as a design driver for multi-agency federated learning}
+
+
+%% use optional labels to link authors explicitly to addresses:
+
+\author[label1]{Aruna Withanage\corref{cor1}}
+\ead{aruna.withanage@uni-a.de}
+\cortext[cor1]{Corresponding author}
+\author[label1,label2]{Jessica Herrmann}
+\ead{jessica.herrmann@uni-a.de}
+\author[label3]{Hudan Studiawan}
+\ead{hudan@its.ac.id}
+\author[label1]{Frank Breitinger}
+\ead{frank.breitinger@uni-a.de}
+
+
+\affiliation[label1]{organization={Chair for Cybersecurity, Institute of Computer Science, University of Augsburg},
+             % addressline={},
+             city={Augsburg},
+             % postcode={},
+             % state={},
+            country={Germany}}
+
+\affiliation[label2]{organization={Präsidium Technik, Logistik und Service der Polizei Baden-Württemberg},
+             city={Stuttgart}, 
+             country={Germany}}
+\affiliation[label3]{organization={Department of Informatics, Institut Teknologi Sepuluh Nopember},
+             % city={}, 
+             country={Indonesia}}
+
+
+
+
+\begin{abstract}
+
+Digital forensic investigations increasingly cross borders, and law enforcement agencies need to build analytical models together without centralizing their data. Federated Learning (FL) keeps data local, yet neither FL nor its frameworks enforce the jurisdictional, governance, and accountability rules that multi-agency forensic work requires.
+%
+This paper takes a design-first approach to that gap. First, we derive seven requirements that a federated learning system must meet in a forensic setting.  
+Second, we propose \emph{Federated Forensics}, a three-layer reference architecture whose middle layer, unlike in existing hierarchical FL designs, sits at a jurisdictional border and can use a model update locally while blocking it from crossing that border. Third, we build a prototype of the architecture and test it on a malware-family classification task.
+%
+In a prototype evaluation, the policy gate blocked every restricted update at the border with zero violations, and restricted-class accuracy rose from 0\% under today's compliant alternative to 93.0\%, only 4.4 points below ignoring the restriction.
+
+
+\end{abstract}
+
+
+
+\begin{keyword}
+Federated forensics \sep Federated learning \sep Digital forensics \sep Jurisdictional compliance  \sep Multi-agency  \sep Law enforcement
+\end{keyword}
+
+
+
+\end{frontmatter}
+
+%% \linenumbers
+
+%% main text 
+
+
+\input{sec/01_intro}
+\input{sec/02_context_and_gaps}
+\input{sec/03_requirements}
+\input{sec/05_architecture}
+\input{sec/06_prototype}
+
+
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+We asked which federated learning topologies allow a jurisdictional restriction to be enforced where it legally applies, and at what cost. Our answer is that the topology matters more than the algorithm. A flat federation can only enforce such a propagation restriction by discarding restricted material completely, and it leaves the decision either with each agency, where compliance cannot be shown, or with a global server that lacks the authority to decide. Only an aggregation layer placed at the boundary of legal competence can use restricted material inside a jurisdiction and stop it at the border. In our prototype, this recovered almost all of the capability that the flat alternative loses, 93.0\% instead of 0\% accuracy on the restricted families, at a cost of 4.4 points compared to ignoring the restriction, and without spreading restricted knowledge to other regions.
+
+This has consequences for practice. For agencies planning joint models, the first design question is not which framework or privacy mechanism to use, but where legal competence lies and whether an aggregation point coincides with it. For framework developers, the gap is concrete: 
+privacy protection and forwarding decisions must be configurable per aggregation step, rather than globally across the federation. Existing frameworks provide relevant building blocks, but do not directly support this combination of layer-specific, policy-driven controls.
+Where a propagation restriction applies and agencies must still collaborate across the boundary it defines, we therefore recommend \emph{Federated Forensics}, a policy-gated hierarchical architecture. It turns a complete loss into a small, measured cost; whether that cost is acceptable remains a policy decision.
+
+Our results come from a single-process simulation on public malware data, with honest agencies and self-declared labels, and the requirements have not yet been validated with investigators. Three steps follow: structured validation of the requirements with practitioners, an audit mechanism that keeps contributions attributable where privacy protection is needed, and a deployment across separate infrastructures with real jurisdictional rules. More broadly, this work shows that legal constraints in federated learning are not something to verify after the fact, but a design input that decides which systems can be built at all.
+
+\section*{CRediT authorship contribution statement}
+\textbf{Aruna Withanage:} Conceptualization, Methodology, Software, Investigation, Writing - Original Draft, Visualization. \textbf{Jessica Herrmann:} Conceptualization, Writing - Review \& Editing. \textbf{Hudan Studiawan:} Writing - Review \& Editing. \textbf{Frank Breitinger:} Conceptualization, Writing - Review \& Editing, Supervision.
+%%=====
+\section*{LLM usage statement}
+Some of the authors used Claude Opus 5.5 for language refinement and clarity improvement during the preparation of this manuscript. Figure~\ref{fig:gate_comparison} was also created with the assistance of Claude Opus 5.5. Claude Sonnet 5 was used for Python code improvement during prototype implementation. After using these tools, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.
+%%=====
+\section*{Declaration of interest}
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+
+%%=====
+\appendices
+\input{sec/90_appendix}
+\input{sec/91_flower}
+
+
+%%=====
+\bibliographystyle{model5-names}
+\bibliography{refs_cited}
+
+
+
+\end{document}
+
+\endinput
+%%
+%% End of file `elsarticle-template-num-names.tex'.

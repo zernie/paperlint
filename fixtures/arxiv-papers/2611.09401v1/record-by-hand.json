@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "iclr2027_conference.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "natbib.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/relatedwork.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/method.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "e74b827d9c6c68e5175e9b5e782c45f1f8dc0ebe8c18d5de3ea1bc5e14224f8a",
+    "fancyhdr.sty": "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
+    "iclr2027_conference.sty": "797deef41724e93761426ac0cbcca46279a91cc650dd1f0ce76a4f08d2098ea6",
+    "natbib.sty": "88bc70c0e48461934cab5b2accef06b74a8b3ac45ad03ccd3f2a6b7e0d6d530d",
+    "math_commands.tex": "90473c4d0542070db244cea73ef962d6cddc5b2a746757e6a40ddf5fdfb90ba9",
+    "section/introduction.tex": "c51b8df7b326856d8feede84b8f7cd48d77e1463b46d96eef47a6433656011ff",
+    "section/relatedwork.tex": "be2797f3831649fce5a4dca382f5329c3c44dfa9608da4a3c45d625eb610c7d5",
+    "section/method.tex": "6f1b2faa189ee0ef5b3811b25620555e38818de0c46202ab1eec18ef65f50ebd",
+    "section/experiment.tex": "bff9635c4f97446ab57e637ac26d69aa49ebd262146766665fb5a7057717967e",
+    "section/discussion.tex": "cd067aca8f39e9bfdd4b7f85182a1abb2a9a78042bd7767cea4d0aa821259fd0",
+    "section/appendix.tex": "577fb1a003ca8319ca5677039e79ad501740282c007ceb09a7fe867e47395227"
+  }
+}

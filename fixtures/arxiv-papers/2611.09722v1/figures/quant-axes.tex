@@ -1,0 +1,12 @@
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{assets/quant-axes-legend.pdf}
+  \par
+  \subfloat[H100.\label{fig:quant-axes-h100}]{%
+    \includegraphics[width=0.49\columnwidth]{assets/quant-axes-h100.pdf}}
+  \hfill
+  \subfloat[B200.\label{fig:quant-axes-b200}]{%
+    \includegraphics[width=0.49\columnwidth]{assets/quant-axes-b200.pdf}}
+  \caption{Decode kernel speed across channel-wise K and V quantization combinations relative to token-wise K and V ($1.0$, dashed line) at the same stored bit width and shape ($H_Q=32$, $H_{KV}=8$, $D=128$, group size $g=128$).}
+  \label{fig:quant-axes}
+\end{figure}

@@ -1,0 +1,16 @@
+\begin{tabular}{lccc}
+\toprule
+&\multicolumn{3}{c}{Worst Source Accuracy} \\
+Acquisition & 70\% & 80\% & 90\% \\
+\midrule
+SoftMax-SoftRank & \textbf{5 ± 0} & \textbf{29 ± 0} & 309 ± 22 \\
+Top1-SoftRank & 21 ± 5 & \textbf{27 ± 13} & \textbf{66 ± 22} \\
+ Uniform Sources & \textbf{5 ± 0} & 34 ± 0 & 464 ± 0 \\
+Entropy topk & 48 ± 11 & 102 ± 22 & 370 ± 59 \\
+BAIT & 15 ± 4 & 90 ± 33 & 322 ± 13 \\
+Core-set & 92 ± 1 & 108 ± 9 & — \\
+BADGE & 64 ± 30 & 232 ± 119 & — \\
+Random & 35 ± 7 & — & — \\
+Random g-DRO & 35 ± 0 & — & — \\
+\bottomrule
+\end{tabular}

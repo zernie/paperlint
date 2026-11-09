@@ -1,0 +1,222 @@
+\section{Methods}
+\label{sec:methods}
+% Rewritten 2026-10-29 after Adrian's comments (base/source introduced first,
+% training pairs explained for correctness first, intuition of counterfactual
+% simulation before the formulas, LAT labels and orientation, Table I single
+% column). Previous version: git show e509b60:paper/sections/methods.tex
+We compare six predictors from four families, grouped by the signal they read
+from the model: (1) its output token probabilities, (2) the consistency across
+sampled generations, (3) internal features of the hidden states, and (4)
+internal causal features, a subspace of the hidden states identified through counterfactual interventions. The first three families are established approaches to
+correctness prediction. The fourth was proposed for natural-language question
+answering by Huang et al.~\cite{Huang2025Internal}, who report that it is more robust under distribution shift. We adapt this approach to code generation %resulting in a new method for code correctness prediction 
+and describe it in more detail.
+
+
+\subsection{Output Token Probabilities (Confidence)}
+\label{sec:methods-output}
+The simplest predictor uses the probability the model assigns to an answer in the
+judging pass. It requires neither hidden states nor labeled training examples,
+and we refer to it as \emph{confidence}. For program correctness, we use the
+probability of \texttt{Yes}, $p_{\mathcal{M}}(\texttt{Yes} \mid x, c)$,
+following 
+%the P(True) approach of 
+Kadavath et
+al.~\cite{Kadavath2022LanguageM}. For verdict correctness, we use the
+probability of the emitted verdict, $p_{\mathcal{M}}(v(x, c) \mid x, c)$.
+%, regardless of the generated answer. 
+A model that is uncertain of its verdict should be
+wrong more often~\cite{Hendrycks2017Baseline}. Both come from a softmax over the full vocabulary, whose
+temperature is the only free parameter (Section~\ref{sec:setup-training}).
+
+\subsection{Consistency (EigenScore)}
+\label{sec:methods-consistency}
+Consistency based methods do not judge a single candidate but asks how consistent
+the model is across several generations for the same problem: a model that knows
+how to solve a problem should produce similar solutions, while diverging
+samples indicate uncertainty. 
+%Most consistency measures for code execute the
+% generated programs (Section~\ref{sec:related}) to determine similarity. 
+We use EigenScore~\cite{Chen24Eigenscore},
+which measures consistency in the hidden states. For a
+problem with $m$ sampled candidates, it takes the hidden state of the last
+layer at the last token of each candidate's generation and computes the
+log-determinant of their regularized covariance matrix, normalized by $m$: the
+more the states spread out, the higher this {\it Eigenscore}. We use the negated
+EigenScore as an indicatore that 
+%the score that the problem is solved. 
+instances from the candidate set solve the problem. 
+EigenScore is an unsupervised method, requiring no correctness labels. Unlike all other methods, it scores a problem rather than a candidate and does not rank the candidates of one problem. We compare it with the other methods at problem level (Section~\ref{sec:rq-problem}). 
+Its cost is $m$ generations per problem, which come for free wherever multiple candidates are sampled anyway.
+
+\subsection{Internal Features}
+\label{sec:methods-internal} 
+The third family reads correctness from the hidden states. We extract the
+hidden state $h_\ell(x, c) \in \mathbb{R}^d$ after a selected layer $\ell$ at the
+last token of the judging prompt, the position from which the verdict is
+generated. $h_\ell(x, c)$ serves as input for two probing methods:
+%Different layers have been found to encode different aspects of a computation~\cite{JinYHZWH0MMDYDZ25}, so the choice of layer can substantially affect predictive performance. We fit the following two methods at every layer and choose the best performing layer \orange{in distribution (d.h. auf dem Testset?)} (Section~\ref{sec:setup-training}).
+
+\paragraph{Correctness probe}
+We use linear probes~\cite{Alain2016Probes}, i.e. logistic regressors
+trained on $h_\ell$ with correctness labels~\cite{OrgadTGRSKB25,
+bui2025openia, Vu2026Autoprobe}: $y^{\mathrm{prog}}$ for program correctness and $y^{\mathrm{verd}}$ for verdict correctness. A probe's predicted probability of the positive class serves as the score. 
+Since the classifier is linear, it captures only linearly accessible information~\cite{park2024linear}, like the other hidden states methods.
+
+\paragraph{Linear Artificial Tomography (LAT)}
+% Reported LAT = stimulus "lat" of run_lat_sweep.py (Ribeiro et al.'s
+% task+code stimulus under its meta-prompt), all models, folds and benchmarks.
+% The judging-prompt variant (stimulus "verdict", method lat_verdict in the
+% artifact) exists for gpt-oss fold 0 on the language sets only: similar in
+% distribution, lower under shift (best ID layer, not cross-fitted; checked
+% 2026-10-29).
+LAT~\cite{ribeiro2026repe, Zou2023RepE} identifies a correctness direction:
+%without
+%fitting a classifier, but uses labels to construct and orient this direction. 
+For each training problem with both a passing and a failing candidate, it computes the difference
+of their hidden states and applies principal component analysis (PCA) to these difference vectors. 
+The first principal component defines the direction, whose sign is chosen so that passing candidates tend to have a higher projection than failing ones. 
+%The labels also fix its orientation: the direction is signed so that, in most training pairs, the passing candidate projects higher. 
+A candidate's score is its projection onto this direction.
+In the original method, hidden states are extracted using a dedicated stimulus prompt that presents the problem and candidate~\cite{ribeiro2026repe}. In a preliminary comparison, applying the same procedure to the judging pass did not improve performance, so we use the original prompt for fairness. LAT was designed to predict program correctness, and we evaluate it for this target only.
+
+
+\subsection{Internal Causal Features}
+\label{sec:methods-causal}
+These methods follow the tradition of causal interpretability, which identifies a
+causal representation by intervening on it~\cite{Geiger2021CausalAbstractions}. 
+Here, these approaches try to localize specific features within hidden states that causally determine a model's verdict rather than merely correlating with correctness. If a model judges code reliably when prompted, it presumably does so through a systematic internal
+computation. 
+We ask whether this computation can be localized 
+%on candidates the model judges correctly, 
+and whether it helps predicting correctness on new inputs.
+
+\paragraph{Localizing the verdict}
+We assume that the model computes an internal assessment of whether a given
+candidate is correct, a variable $V \in \{\texttt{Yes}, \texttt{No}\}$ that
+determines its verdict and is encoded in the hidden state at the last prompt
+token. To localize it, we use Distributed Alignment Search (DAS)~\cite{GeigerWPIG24DAS}, which can be understood by analogy to debugging: 
+Run a program on two inputs, pause both at a breakpoint, copy a variable's value from the second run into the first, and continue: if the first run now produces the expected output of the second, the variable {\it controls} the output. 
+The run that is modified is called the \emph{base} $b = (x_b, c_b)$, the run whose value is copied the \emph{source} $s = (x_s, c_s)$. 
+Note that both are usually sampled from different problems (Figure~\ref{fig:intervention}). 
+
+% Source: figures/fig_intervention.tex (standalone TikZ, 2026-10-29).
+\begin{figure}[t]
+\centering
+\includegraphics{generated/fig_intervention}
+\caption{(a) The judging pass: the model reads the problem, the candidate and
+the question and answers \texttt{Yes} or \texttt{No} at the last prompt token.
+The confidence baseline reads answer probabilities, the probe the hidden state
+$h_\ell$ of one layer, the value probe its projection onto the learned
+subspace. 
+(b) An interchange intervention: the subspace coordinates of a
+source example's hidden state replace those of a base example, and the base's forward pass continues. 
+DAS learns a subspace so that the base then answers like the source.
+Counterfactual simulation scores a candidate by making it the source for $B = 16$ fixed bases from the training set. A source state that firmly encodes its verdict should enforce it on the bases, one on which the model is unsure should not. The more consistently the bases adopt the candidate's verdict, the more likely it is correct. 
+%Counterfactual simulation repeats the intervention with $B {=} 16$
+%fixed bases and averages the probability that they answer like the source. \orange{Klarmachen warum/dass damit eine Prognose über das Label der *Source* getroffen wird?}
+}
+\label{fig:intervention}
+\end{figure}
+
+In an LLM there are no named variables whose values could be switched as in the debugging analogy, and a concept such as ``this program is correct'' is typically spread across many dimensions of $h_\ell$. 
+DAS therefore \emph{learns} where to look: a $k$-dimensional subspace, given by $R \in \mathbb{R}^{d \times k}$ with orthonormal columns. 
+The intervention replaces the  component of the base state's representation within this subspace with the corresponding component from the source
+% base's coordinates inside the subspace with the source's 
+and leaves the rest of the base's state untouched:
+\begin{equation}
+  h_\ell^{\,b\leftarrow s} \;=\; h_\ell(b) + R R^{\top}\bigl(h_\ell(s) - h_\ell(b)\bigr).
+\end{equation}
+The forward pass of $b$ then continues through all later layers from
+$h_\ell^{\,b\leftarrow s}$ instead of $h_\ell(b)$. Such a replacement is
+called an interchange intervention~\cite{Geiger2021CausalAbstractions}.
+
+\paragraph{Training}
+DAS is trained only on candidates the model judges correctly ($y^{\mathrm{verd}}{=}1$). 
+On these, the verdict coincides with program correctness $y^{\mathrm{prog}}$: \texttt{Yes} for the passing
+candidates, \texttt{No} for the failing ones. 
+A training pair combines two such candidates as base and source, from the same or different problems and with the same or different verdicts. 
+With the LLM frozen, $R$ is trained so that the intervened base outputs the source's verdict: Where the two verdicts differ, the intervention must flip the base's answer; where they agree, it
+must leave it unchanged. The share of held-out interventions that produce the
+intended verdict is the interchange intervention accuracy (IIA)~\cite{GeigerWPIG24DAS}. 
+It shows whether the subspace controls the verdict, not how well the verdict predicts correctness. We learn one subspace per layer and use it for both targets.
+
+\paragraph{Counterfactual Simulation}
+Counterfactual simulation~\cite{Huang2025Internal} asks whether a (source) candidate's
+state in the subspace is strong enough to impose its assessment on other
+(base) examples. The intuition here is that a source candidate whose state clearly encodes a verdict -- \texttt{Yes} or \texttt{No} --
+should do so, while one on which the model is unsure should not. 
+We fix a set $\mathcal{B}$ of $B {=} 16$ correctly judged training candidates as bases. 
+The candidate to be scored is the source $s$. 
+Let $p_{b \leftarrow s}(t)$ be the probability of answer $t$ in the intervened
+forward pass of base $b$. Averaged over the bases, we calculate two scores:
+\begin{align}
+\mathrm{cs}_{\mathrm{prog}}(s) &= \frac{1}{B}\sum_{b \in \mathcal{B}}
+p_{b \leftarrow s}(\texttt{Yes}), \\
+\mathrm{cs}_{\mathrm{verd}}(s) &= \frac{1}{B}\sum_{b \in \mathcal{B}}
+p_{b \leftarrow s}\bigl(v(s)\bigr).
+\end{align}
+The first measures how strongly the candidate's state pushes the bases' verdicts toward
+\texttt{Yes} and predicts program correctness. 
+The second measures how consistently the bases adopt the candidate's own verdict and predicts verdict
+correctness. Note that counterfactual simulation requires $B$ additional forward passes per candidate.
+
+\paragraph{Value Probe}
+The value probe~\cite{Huang2025Internal} utilizes the subspace $R$ for probing instead of
+intervening on it, so it needs no forward pass beyond the judging pass. Like the correctness probe (Section \ref{sec:methods-internal}), it uses logistic regression, but on
+the $k$-dimensional projection $R^{\top} h_\ell(x, c)$ of the candidate's hidden state onto subspace $R$. %trained to predict the
+% model's verdict on the correctly judged training candidates. On these, the
+% verdict equals the program label, so the probe learns which values of the
+% subspace go with correct and with incorrect programs when the model judges
+% right. Its probability of \texttt{Yes} scores program correctness; its
+% probability of the candidate's actual verdict scores verdict correctness. It
+% needs no forward pass beyond the judging pass.
+This probe is trained differently for the two targets:
+For the verdict target, it learns which verdict a subspace state encodes. It is trained on the same candidates as DAS, those the model judges correctly,
+to predict the model's verdict, which on these candidates equals $y^{\mathrm{prog}}$: \texttt{Yes} for passing and \texttt{No} for failing programs. Following Huang et al., the
+score is the probe's confidence in its own prediction, $|p(\texttt{Yes}) - \tfrac12|$. As in counterfactual simulation, a state that clearly reads as \texttt{Yes} or \texttt{No} indicates certainty and a probably correct verdict.
+For the program target, we train the probe on all training candidates to predict $y^{\mathrm{prog}}$, and its probability of \texttt{Yes} is the score. 
+%It is a correctness probe restricted to the subspace, which lets us compare the learned subspace with random subspaces of the same dimension (Section~\ref{sec:rq-subspace}). 
+
+
+
+% \paragraph{Adaptation to code}
+% Huang et al.~\cite{Huang2025Internal} study tasks with short prompts and strongly constrained answers in natural language. In our setting, base and source contain different problems and programs, so they differ in length, and positions do not correspond. 
+% The judging prompt provides one position that does: the last prompt token is identical in
+% every input, and the verdict is predicted from its hidden state. We therefore
+% intervene there only. At an intermediate layer, later layers can still read
+% the program tokens through attention, so the intervention controls the
+% verdict only insofar as the relevant information has already been gathered at
+% this position. The share of \texttt{Yes} and \texttt{No} verdicts in the
+% training pairs is set by the model and the benchmark; we do not rebalance it. \orange{Könnte man meiner Meinung nach stark kürzen.}
+
+
+
+% \begin{table}[t]
+% \centering\footnotesize
+% \setlength{\tabcolsep}{2.5pt}
+% \caption{What the methods require. \emph{Labels}: supervision used for
+% fitting; every method also uses labeled in-distribution data to choose its
+% layer or temperature. Correctly judged candidates are identified with the
+% execution labels. \emph{Extra cost}: beyond the judging pass.}
+% \label{tab:method-requirements}
+% \begin{tabular}{lllll}
+% \toprule
+% Method & Labels & Fitting & Extra cost & Scores \\
+% \midrule
+% Confidence & -- & -- & -- & candidate \\
+% EigenScore & -- & -- & $m$ samples & problem \\
+% \midrule
+% Probe & pass/fail & log.\ reg. & -- & candidate \\
+% LAT$^\dagger$ & pass/fail pairs & PCA & own prompt & candidate \\
+% \midrule
+% Counterf.\ sim. & correctly judged & DAS & $B$ passes & candidate \\
+% Value probe & correctly judged$^\ddagger$ & DAS + log.\ reg. & -- & candidate \\
+% \bottomrule
+% \end{tabular}
+% \par\smallskip
+% \parbox{\linewidth}{\scriptsize $^\dagger$Program target only; reads its own
+% stimulus prompt instead of the judging pass. $^\ddagger$The subspace is learned
+% on correctly judged candidates; the regression on it uses the correctly judged
+% candidates with their pass/fail labels for the verdict target and all candidates for the program target. Fitting is per layer for all hidden-state methods.}
+% \end{table}

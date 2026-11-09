@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/01_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/02_background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/03_advances.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/04_rethinking.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/05_challenges.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/06_related.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/07_conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "8cedd9444629fe29dcc8b50d93be79279a2494715d1ab922d2f5cf1fd97baaa0",
+    "sections/01_introduction.tex": "f6bea552e0010bb5bf1790943f2478dc0670b7d98261d145d31554809eb1f9a8",
+    "sections/02_background.tex": "4b10273e32a0e84646c66a19d272d6399bce3fbf788c9bfcec48a8b545f37515",
+    "sections/03_advances.tex": "263f6377492aad17c0dd62968ffc8e2bcf566e299164632b8286c6a1bfa660cc",
+    "sections/04_rethinking.tex": "d0a83aa555f77837f5ef72ecf7aa1e52e388458f937904619bb4da7d0fbc14d4",
+    "sections/05_challenges.tex": "83c9352b27852d213720dd134a8f0748f4ff6da82edd3107bf018c53cd9e2ef4",
+    "sections/06_related.tex": "0553bc27f603b9aaed46b20d7f4f92b38b5a3fe5f245d41b0f5068b65f688eda",
+    "sections/07_conclusion.tex": "c1e7ea68c14c878b01cdc599fdf4dffa7469c3a164a5afc39d452c786a373daa"
+  }
+}

@@ -1,0 +1,225 @@
+\section{Introduction}
+\label{sec:introduction}
+
+% Agentic AI systems are designed to complete complex, long-horizon tasks through sequences of actions and tool calls in interactive environments. Evaluating these systems typically involves benchmarks that specify tasks, environments, available tools, and criteria for assessing agent performance. For example, in $\tau^2$-bench, a customer-support agent interacts with simulated customers to collect account information, update order statuses through external tools, and respond to customer requests \citep{barres2025tau2,lu2025toolsandbox}.
+% % In such settings, task outcomes depend on the entire state-action trajectory generated through interactions between the agent and its environment, rather than on a single model-generated response.
+% In such settings, task outcomes depend on the entire state-action trajectory generated through interactions between the agent and the environment.
+
+Agentic AI systems are designed to solve complex, long-horizon tasks through a sequence of decisions and tool calls in interactive environments.
+Current evaluations of these systems typically rely on benchmarks, each of which fixes a set of tasks, an environment with its tools and instructions, and criteria for scoring the outcome \citep{jimenez2024swebench,zhou2024webarena,liu2024agentbench,yao2025tau,barres2025tau2}.
+For example, in $\tau$-bench Retail \citep{yao2025tau}, a customer-support agent interacts with simulated customers, retrieves account information, and manages orders through external tools.
+The task outcomes then depend on the entire trajectory of interactions between the agent and the environment.
+While a valuable source of data for characterizing agent capabilities and safety, benchmarks have significant limitations in guiding how we intervene during real-world use.
+
+% However, existing benchmarks primarily characterize agent behavior and performance under a given evaluation setting, rather than how interventions during execution might affect downstream outcomes \citep{jimenez2024swebench,zhou2024webarena,liu2024agentbench,yao2025tau,barres2025tau2,trivedi2024appworld,debenedetti2024agentdojo,zhong2025impossiblebench}.
+% In real-world deployments, humans often face decisions about whether to intervene at intermediate points in an agent's trajectory, such as verifying a proposed tool call, providing corrective feedback, or screening potentially adversarial content.
+% For example, would reviewing a proposed database write prevent a task failure, or would withholding an adversarial message prevent an agent from violating its instructions?
+% These decisions raise fundamentally causal questions: whether an intervention improves the final outcome depends on the agent's current context and environment, as well as how the intervention affects its subsequent behavior.
+% While existing benchmarks provide valuable information about agent capabilities and safety, they do not directly identify these dynamic causal effects.
+
+In real-world deployments, humans need to determine {\em within an agent's trajectory} whether or not to intervene, e.g., by verifying a proposed tool call, steering the agent toward a different action, or screening potentially adversarial content. This review process can correspond to either human review in high-stakes domains, or, in medium-stakes domains, to more costly (and more powerful) model supervision, or supervision via a more time-consuming agentic harness.
+% For instances,
+% Would reviewing a proposed database write prevent a task failure?
+% Would withholding an adversarial message prevent an agent from violating its instructions?
+% Such decisions are fundamentally {\em causal inference} questions: the user must determine whether applying an intervention would improve the final outcome.
+For instance, would reviewing a proposed database write prevent a task failure, or would withholding an adversarial message prevent an agent from violating its instructions?
+Such decisions are fundamentally {\em causal inference} questions: the user must determine whether applying an intervention would improve the final outcome.
+
+
+% These causal questions cannot be reliably answered by analyzing observed agent trajectories alone. While failed trajectories may reveal potential intervention points, an apparent mistake may be recoverable or unrelated to the eventual failure. Moreover, comparisons across observed trajectories can be confounded by the agent's evolving history. For example, agents receiving assistance after encountering errors may exhibit lower success rates simply because they face more difficult situations, rather than because the assistance is ineffective. 
+% The dynamic environment also introduces another complexity: intervening at one decision can alter system states, which in turn affect the agent's future actions and intervention opportunities.
+% Consequently, the causal effect of an intervention depends not only on where it is applied, but also on how the rest of the agent's trajectory unfolds.
+
+
+Estimating this causal effect is particularly challenging because it is a {\em dynamic treatment effect} problem.
+The impact of an intervention during task execution depends on the current context and environment, as well as the agent's future behavior under its policy.
+In particular, an intervention can change subsequent states, actions, and intervention opportunities, so its effect also depends on how later interventions are assigned.
+% Passively observed trajectories from benchmarks or trajectory-level randomized experiments (e.g., \cite{arena2026agentarena,camuffo2026beyond,lu2026agent}) do not fully resolve these questions.
+Neither observed benchmark trajectories nor data from trajectory-level randomized experiments (see, e.g., \cite{arena2026agentarena,camuffo2026beyond,lu2026agent}) fully resolve these questions.
+% An apparent mistake may be recoverable or unrelated to the eventual failure, and comparisons between assisted and unassisted trajectories can be confounded by the agent's evolving history.
+% For example, agents receiving help after errors may have lower success rates because they face more difficult situations, rather than because assistance is ineffective.
+While analyses of observed benchmark trajectories can reveal potential intervention points, they cannot by themselves identify the causal effects of intervening at those points.
+
+% In principle, a fully controllable simulator could compare interventions by restoring an agent to a checkpoint and running different continuations.
+% However, repeating these comparisons across many decisions can be expensive, and real-world interactions may not be replayable.
+% An episode-level A/B test could instead compare complete intervention policies, such as always intervening versus never intervening, but each such comparison addresses only the selected policies.
+% Even with $m$ fixed binary intervention opportunities, there are $2^m$ possible intervention schedules, before considering policies that adapt to the observed history.
+% A more flexible design is needed to study when interventions help across the range of situations an agent encounters.
+
+% 3. A reusable randomized design, causal targets, and empirical findings.
+In this paper, we develop a methodologically grounded framework for the causal evaluation of interventions in agentic AI.
+We show that conducting random interventions in a single trajectory can support the estimation of multiple causal estimands at different points during task execution.
+Building on the framework of micro-randomized trials \citep{klasnja2015mrt}, we randomize intervention assignments at each eligible decision within a trajectory.
+At each eligible decision point, the experimental harness records the agent's proposed action and observed history, randomly assigns intervention or control, and allows the agent to continue interacting with the environment (Figure~\ref{fig:design}). 
+% Earlier interventions may change the histories encountered later, but each new assignment remains randomized at the point where it is made.
+
+Despite its simplicity, this experimental design generates data that support causal evaluation of intervention policies beyond the randomized policy.
+% Under sequential randomization and positivity along the histories reached by a target policy, the data identify the effects of a rich class of intervention policies that depend on observable history.
+Under standard causal identification assumptions (discussed in Section~\ref{sec:estimation}), the data identify the causal effects of a rich class of intervention policies that depend on observable history.
+The same data also support comparisons across groups of intervention points defined by pre-assignment information, such as tool-call types, task stages, or patterns of prior failures.
+This analysis does not require access to the agent's internal state or a Markovian model of its interactions with the environment. It only requires black-box input-output access to the AI agent.
+% Identification, however, does not guarantee precise estimation for every policy, particularly over long trajectories.
+% {\color{purple} }
+
+We introduce three causal estimands to address different causal questions about interventions during agent execution, each with a corresponding estimation method:
+% For the first two estimands, we write $\tau(G;\pi)$, where $G$ is a group of intervention points and $\pi$ specifies the policy governing future interventions: 
+\begin{itemize}
+    \item {\em Blip with randomized continuation:} 
+    % The causal effect of intervening at a particular decision when future assignments follow the randomized collection policy $g$, denoted $\tau(G;g)$. 
+    The causal effect of intervening at a particular decision when future interventions continue to be randomized.
+    We estimate this effect using cross-fitted augmented inverse probability weighting (AIPW) with known assignment probabilities.
+    \item {\em Blip with no-treatment continuation:} 
+    % The causal effect of intervening at a particular decision when no further interventions are applied, denoted $\tau(G;0)$, where $\pi_0(h)\equiv 0$. 
+    The causal effect of intervening at a particular decision when no further interventions are applied for the remainder of the trajectory.
+    % {\color{blue} Tijana: Same here, it's not clear what $\pi_0(h)$ is referring to.} 
+    We estimate this effect using structural nested mean models (SNMMs) and g-estimation \citep{robins1994correcting,vansteelandt2014snmm,lewis2020double}.
+
+    \item {\em Policy gain (off-policy evaluation):} 
+    % The causal effect of following a history-dependent policy that intervenes whenever the observed history meets a specified criterion, relative to never intervening, denoted $\Delta(G)$. 
+    The causal effect of applying a target policy that intervenes based on the agent's observed history, relative to never intervening throughout the trajectory.
+    We estimate this gain using continuation-specific SNMMs and g-estimation.
+\end{itemize}
+These estimands are formally defined in Section~\ref{sec:estimands}, with the first two measuring blip effects under different continuation policies and the third evaluating the gain of a target intervention policy through off-policy evaluation.
+Estimating the latter two effects using our SNMM approach requires additional assumptions on the specification of the blip-effect models beyond experimental randomization.
+% We provide uncertainty quantification that accounts for dependence among decisions within each trajectory, together with diagnostics for group coverage and fitted-model stability.
+
+These blip effect estimands can also be useful as attribution tools, attributing risk or success to specific decisions in a trajectory. For example, if an agent fails to complete a task, the blip effect of intervening at a particular decision can indicate whether that decision was a key contributor to the failure. Conversely, if an agent succeeds, the blip effect can reveal whether intervening at a certain point would have improved the outcome even further. This attribution perspective can help users understand which decisions are most critical for task success or failure, guiding future interventions and policy design. These attribution effects can be estimated for individual decisions or averaged over groups of similar decisions, providing insights into the causal impact of specific actions within the agent's trajectory. At various levels of granularity, these blip effects can be reported to users in the form of a ``decision impact score,'' leaderboard, which quantifies the expected change in terminal outcome if an intervention were applied at that group of agentic decision. This score can help users prioritize interventions and understand the causal dynamics of the agent's behavior.
+
+We apply our framework to tool-call review in $\tau$-bench Retail \citep{yao2025tau,barres2025tau2} and ToolSandbox \citep{lu2025toolsandbox}, and to adversarial feedback in ImpossibleBench \citep{zhong2025impossiblebench}.
+In $\tau$-bench Retail, we estimate positive effects of tool-call review on task success for several order-handling groups.
+In ToolSandbox, the estimated effects of tool-call review vary across capabilities and agents.
+In ImpossibleBench, we estimate an increased probability of prohibited test edits following adversarial feedback in particular agent states, including near-completion states with contradictory tests.
+Across all three benchmarks, our experiments show how randomized interventions can identify decisions where tool-call reviews may improve or harm task performance, as well as states where adversarial feedback may increase safety violations.
+% They also illustrate the distinction between effects at individual decisions and the gains from applying an intervention policy throughout an trajectory.
+
+More broadly, our work shifts the focus of agent evaluation beyond static benchmark assessments toward the decisions users face during deployment: not only whether an agent succeeds or fails, but also whether intervening at a particular point would change the outcome.
+This perspective opens up a broader research agenda at the intersection of causal inference and agentic evaluation, with the long-term goal of enabling the reliable and safe deployment of agentic AI systems in the real world.
+
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize, >={Stealth[length=1.8mm]},
+  lab/.style={font=\footnotesize\bfseries, text=ink},
+  card/.style={draw=ink!45, rounded corners=2pt, minimum width=25mm, minimum height=7mm,
+               align=center, inner sep=2pt, fill=white, font=\scriptsize},
+  prop/.style={card, fill=sta!16, draw=sta!80!black, font=\ttfamily\scriptsize},
+  help/.style={card, minimum height=6mm, fill=trt!10, draw=trt!60},
+  skip/.style={card, minimum height=6mm, fill=ink!5},
+  coin/.style={circle, line width=.5pt, minimum size=5.2mm, inner sep=0pt, font=\scriptsize\bfseries},
+  heads/.style={coin, fill=trt, text=white, draw=trt!70!black},
+  tails/.style={coin, fill=white, text=ink, draw=ink!70},
+  flow/.style={->, draw=ink!65, line width=.6pt},
+  st/.style={circle, fill=sta, draw=sta!65!black, minimum size=8.6mm, inner sep=0pt, font=\small},
+  tr/.style={circle, fill=trt, draw=trt!65!black, text=white, minimum size=8.6mm, inner sep=0pt, font=\small},
+  ou/.style={circle, fill=out, draw=out!65!black, text=white, minimum size=9mm, inner sep=0pt, font=\small},
+  tk/.style={circle, fill=tsk, draw=tsk!65!black, text=white, minimum size=8.6mm, inner sep=0pt, font=\small},
+  un/.style={circle, fill=mute!20, draw=mute, dashed, minimum size=8.6mm, inner sep=0pt, text=ink, font=\small},
+  main/.style={->, line width=1.2pt, draw=sta!55!black},
+  act/.style={->, line width=.9pt, draw=trt!85!black},
+  elig/.style={->, line width=.5pt, draw=ink!55, densely dotted},
+  hid/.style={->, line width=.55pt, draw=mute},
+]
+% (a) One randomized episode.
+\node[lab] at (-1.1,1.5) {(a)};
+\node[card, minimum width=12mm, minimum height=21mm, fill=tsk!12, draw=tsk!70]
+  (task) at (0,0) {Task\\[1pt]$X$};
+\foreach \t/\x/\call/\side/\result in {
+  1/2.25/{find\_user\_id\\\_by\_email}/tails/{runs},
+  2/5.2/{get\_order\_details}/heads/{approved},
+  3/8.15/{cancel\_pending\\\_order}/heads/{reviewer suggestion},
+  4/11.1/{cancel\_pending\\\_order}/tails/{runs}} {
+  \node[prop] (p\t) at (\x,.75) {\call};
+  \node[\side] (c\t) at (\x,-.15) {\ifnum\pdfstrcmp{\side}{heads}=0 1\else 0\fi};
+  \ifnum\pdfstrcmp{\side}{heads}=0 \node[help] (r\t) at (\x,-.98) {\result};
+  \else \node[skip] (r\t) at (\x,-.98) {\result}; \fi
+  \draw[flow] (p\t) -- (c\t);
+  \draw[flow] (c\t) -- (r\t);
+  \node[font=\scriptsize, text=ink, anchor=east] at ($(c\t.west)+(-.04,0)$) {$A_{\t}$};
+  \node[font=\scriptsize, text=ink!75, anchor=south] at (p\t.north) {$L_{\t}$};
+}
+\node[card, minimum width=12mm, minimum height=21mm, fill=out!18, draw=out!80]
+  (y) at (13.25,0) {$Y=1$};
+\draw[flow] (task.east) -- ++(.22,0) |- (p1.west);
+\foreach \a/\b in {1/2,2/3,3/4} { \draw[flow] (r\a.east) -- ++(.2,0) |- (p\b.west); }
+\draw[flow] (r4.east) -- ++(.2,0) |- (y.west);
+% (b) The same design as a causal graph.
+\begin{scope}[yshift=-3.8cm]
+\node[lab] at (-1.1,1.5) {(b)};
+\node[tk] (X) at (0,0) {$X$};
+\foreach \a/\x in {1/2.05,2/4.35,3/6.65} {
+  \node[st] (L\a) at (\x,0) {$L_{\a}$};
+  \node[tr] (A\a) at (\x+1.15,1.05) {$A_{\a}$};
+}
+\node (dots) at (9.0,0) {$\cdots$};
+\node[st] (LT) at (10.3,0) {$L_T$};
+\node[tr] (AT) at (11.45,1.05) {$A_T$};
+\node[ou] (Y) at (13.25,0) {$Y$};
+\foreach \a in {1,2,3,T} {
+  \draw[elig] (L\a) -- (A\a);
+}
+\draw[main] (X) -- (L1);
+\draw[main] (L1) -- (L2);
+\draw[main] (L2) -- (L3);
+\draw[main] (L3) -- (dots);
+\draw[main] (dots) -- (LT);
+\draw[main] (LT) -- (Y);
+\draw[act] (A1) -- (L2);
+\draw[act] (A2) -- (L3);
+\draw[act] (A3) -- (dots);
+\draw[act] (AT) -- (Y);
+\node[un] (U) at (6.65,-1.4) {$U$};
+\foreach \n in {L1,L2,L3,LT,Y} { \draw[hid] (U) -- (\n); }
+\end{scope}
+\end{tikzpicture}
+\caption{Sequential randomization in $\tau$-bench Retail. Panel (a) assigns each
+eligible tool proposal to direct execution ($A_t=0$) or review ($A_t=1$); panel
+(b) shows the corresponding causal diagram, where $X$ is the task, $L_t$ is the
+current observed information, $Y$ is terminal success, and $U$ is unobserved agent state.}
+\label{fig:design}
+\end{figure}
+
+
+% \paragraph{Contributions.}
+% Our work makes three main contributions:
+% \begin{enumerate}
+%     \item \emph{Causal evaluation of agent trajectories.}
+%     We adapt micro-randomized trials to AI agent evaluation, enabling causal analysis of interventions at intermediate decision points using a single collection of randomized trajectories.
+
+%     \item \emph{Evaluation across agent actions and states.}
+%     We formulate three causal evaluation questions for agent interventions, distinguishing effects under different continuation rules from selective policy gains. We apply established causal inference methods, including AIPW and structural nested mean models (SNMM), to estimate these effects with uncertainty quantification.
+
+%     \item \emph{Empirical evaluation.}
+% TODO(AppWorld removal): Commented draft mentions/cites AppWorld; remove or update if reused.
+%     We apply this approach to tool-call review in $\tau$-bench Retail, code-block advice in AppWorld, and adversarial steering in ImpossibleBench. Our results reveal heterogeneous intervention effects across agent actions and states, while highlighting the statistical challenges of evaluating intervention policies over long trajectories.
+% \end{enumerate}
+
+
+
+% \paragraph{Related work.}
+% Our work relates to three strands of literature: sequential experiments, off-policy evaluation, and agent evaluation and safety.
+
+% \emph{Sequential experiments.}
+% Micro-randomized trials (MRTs) were developed to study interventions that are repeatedly randomized as an individual's context evolves \citep{klasnja2015mrt,qian2022mrt}. This design enables the estimation of causal effects at intermediate decision points, including how these effects vary across contexts and influence outcomes measured long after the intervention \citep{boruvka2018moderation,qian2025distal}. Applications in behavioral health and education use MRTs to study interventions that adapt to an individual's evolving state \citep{breitwieser2024education}. Our work extends this experimental approach to AI agents, where intervention opportunities arise during interactions with external environments. By randomizing interventions within agent trajectories, we can estimate their effects on terminal outcomes across different actions and states using a single collection of experiments.
+
+% \emph{Off-policy evaluation.}
+% Dynamic treatment regimes model sequential interventions as policies that map observed histories to treatment decisions \citep{murphy2003dtr,chakraborty2014dtr}. Sequential multiple assignment randomized trials provide experimental data for constructing and comparing such regimes \citep{murphy2005smart}. Relatedly, off-policy evaluation studies how to estimate the value of a target policy using trajectories generated under a different policy \citep{swaminathan2015crm,uehara2026ope}. A central challenge in these settings is that interventions affect subsequent states and decisions, so evaluating a policy requires accounting for their downstream consequences. Existing approaches include modeling future rewards through value functions and modeling the causal effects of individual actions through structural nested mean models \citep{schulte2014qlearning,vansteelandt2014snmm,lewis2021dynamic}. Our framework distinguishes the effect of intervening at a single decision under different continuation rules from the value of applying an intervention policy throughout an episode. We use augmented inverse probability weighting for effects under randomized continuation and structural nested mean models for alternative continuations and policy evaluation, without requiring a Markov representation of the agent's environment.
+
+% \emph{Agent evaluation and safety.}
+% Existing agent benchmarks primarily measure task-level performance or safety violations, while recent work has sought to provide more fine-grained analyses of agent behavior. For example, trajectory-based analyses classify agent failures into different categories \citep{cemri2025mast} or identify intermediate steps associated with eventual failures \citep{zhang2025whowhen}. Related work on agent safety evaluates vulnerabilities to adversarial instructions encountered during execution \citep{greshake2023indirect,debenedetti2024agentdojo} and specification-violating behavior in coding environments \citep{zhong2025impossiblebench}. These studies provide important insights into agent failures and potential intervention points, but observed trajectories alone cannot establish the causal effects of changing intermediate decisions. Our work complements these approaches by introducing randomized interventions during agent execution, allowing us to measure how targeted assistance or adversarial feedback affects downstream behavior and terminal outcomes.
+
+\paragraph{Related work.}
+{\em Agent evaluation and intervention-based analysis.}
+Existing benchmarks evaluate agent capabilities and safety across various interactive tasks \citep{yao2025tau,lu2025toolsandbox,debenedetti2024agentdojo,zhong2025impossiblebench}.
+Recent work extends these evaluations through trajectory-level failure analysis \citep{cemri2025mast,zhang2025whowhen} and intervention-based diagnosis using counterfactual replay or targeted re-execution \citep{ma2026dover,bonagiri2026causalflow,shah2026causalreplay,xiao2026harnesses}.
+Our paper complements these approaches by estimating the causal effects of interventions across different agent actions and states using randomized trajectories, without requiring counterfactual replay.
+
+{\em Randomized evaluation of AI agents.}
+Recent studies have used randomized controlled trials (RCTs) to evaluate AI systems by comparing different agent configurations, assistance systems, and interactive environments \citep{arena2026agentarena,camuffo2026beyond,lu2026agent}.
+These experiments primarily evaluate the effects of treatments assigned at the task or trajectory level.
+In contrast, we randomize interventions at {\em intermediate decision points}, enabling causal evaluation of individual interventions and history-dependent intervention policies from the same experimental data.
+
+{\em Sequential causal inference and policy evaluation.}
+Our framework builds on micro-randomized trials and distal causal excursion effects, which study the effects of repeated interventions as the observed context evolves \citep{klasnja2015mrt,boruvka2018moderation,qian2025distal}.
+Our work is also closely related to dynamic treatment regimes and off-policy evaluation, which study the causal effects of sequential intervention policies \citep{murphy2003dtr,jiang2016dr,uehara2026ope}.
+We use augmented inverse probability weighting and structural nested mean models with g-estimation \citep{robins1994correcting,vansteelandt2014snmm,lewis2020double} to estimate intervention effects and evaluate intervention policies.

@@ -1,0 +1,39 @@
+\section{Introduction}
+\label{sec:introduction}
+Leaderboards are one of the main ways in which large language models (LLMs) are measured and can influence how models are developed~\citep{benchmark_mineability}. 
+While benchmark-style leaderboards remain popular, newer head-to-head leaderboards compare models based on aggregated human preferences~\citep{chatbot_arena}.
+This changes strategic incentives for developers, as a model's rank depends on competitors' capabilities.
+
+A natural question is whether this competition pushes developers toward similar performance levels, capability profiles, or both.
+By providing developers with a common competitive target, shared evaluation may encourage them to invest in the same capabilities, potentially producing similar capability profiles or monoculture~\citep{monoculture_welfare}.
+By contrast, differences in developer strengths across capabilities can create incentives to specialize.
+At the same time, models might converge in performance levels, while still maintaining distinct capability profiles. 
+Understanding this phenomenon is important because leaderboards may shape not only the models that perform best, but also the direction of model development~\citep{training_test_task,leaderboard_incentives}. 
+Even if models become similarly competitive, differences in their capability profiles determine whether users have access to diverse alternatives or a homogeneous set of models. 
+
+In this work, we study how leaderboard competition shapes capability profiles and performance levels by modeling AI evaluation as a multidimensional contest where developers allocate investment across capabilities (Figure~\ref{fig:pull}).
+Our theoretical results characterize when similarities in production functions lead to monoculture and when diminishing returns can lead to convergence in performance.
+Empirically, we find that some developers maintain differentiated capability profiles over time, alongside an increasingly crowded competitive frontier. 
+Our results reveal that competition can lead to convergence in developer performance while still maintaining an ecosystem of meaningfully different models. 
+
+
+\begin{figure*}[t!]
+    \centering 
+    \includegraphics[width=\textwidth]{figures/pull_figure.pdf}
+    \caption{Head-to-head leaderboards compare models, creating incentives for developers to allocate investment across capabilities. How these incentives interact with developers' production functions can shape both the similarity of capability profiles and convergence in performance. In practice, we find persistent differences in developers' capability profiles alongside an increasingly crowded performance frontier.} 
+    \label{fig:pull}
+\end{figure*}
+
+Our paper connects to work in contest theory, monoculture, and LLM leaderboards. 
+Contest theory studies how competitors allocate effort in response to a common reward~\citep{contest_theory_book,colonel_blotto}, while algorithmic monoculture studies when shared algorithms lead to similar outcomes~\citep{monoculture_welfare,monoculture_matching}. 
+LLM leaderboards combine aspects of both settings: developers compete under a common evaluation, but allocate investment across multiple capabilities. 
+More recently,~\citet{leaderboard_incentives} studied strategic post-training and the resulting equilibria, while~\citet{aggregation_diversity} study how aggregation and evaluation affect producer incentives.
+Unlike~\citet{leaderboard_incentives} and~\citet{aggregation_diversity}, we explicitly model how production functions shape capability development, which allows us to characterize when common evaluation produces similar capability profiles.
+
+Our contributions include: 
+\begin{enumerate}
+    \item We characterize how multidimensional competition under shared evaluation produces similar or differentiated capability profiles. 
+    Similar production functions can induce monoculture, while comparative advantage can sustain differentiation and, in some settings, specialization.
+    \item We study how competition evolves over time and identify when diminishing returns can lead to convergence in performance. We find that convergence in performance can arise when competitors can quickly catch up in categories where they lag. 
+    \item We find that the performance frontier becomes increasingly crowded over time, even as developers retain persistent differences in their relative capability profiles. Along with crowding, we find increasingly dispersed model usage across developers. \footnote{Code found at \url{https://github.com/naveenr414/evaluation_monoculture}.} 
+\end{enumerate}

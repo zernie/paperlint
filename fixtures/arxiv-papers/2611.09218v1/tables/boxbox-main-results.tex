@@ -1,0 +1,19 @@
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \caption{Results on 50 test tasks with three four-hour runs per task, reporting \speedupat{4\mathrm{h}}, mean model cost per run, and mean task-level speedup per dollar.}
+  \label{tab:boxbox-main-results}
+  \begin{tabular}{lccc}
+    \toprule
+    Method & \(\speedupat{4\mathrm{h}}\) &
+    Mean model cost & Speedup/\$ $\uparrow$ \\
+    \midrule
+    % HE uses h24 and includes final delivery, consistent with Figure 1.
+    \frozen{}  & 1.442 & \$23.22 & 0.2142 \\
+    \he{}      & 1.281 & \$24.56 & 0.1243 \\
+    \hs{}      & 1.539 & \$12.98 & 0.2872 \\
+    \boxbox{}       & \textbf{1.702} & \$16.43 & \textbf{0.4886} \\
+    \bottomrule
+  \end{tabular}
+\end{table}

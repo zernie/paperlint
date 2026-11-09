@@ -1,0 +1,21 @@
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{6pt}
+
+  \caption{Ablation study of \boxbox{}.
+  We examine agent-controlled triggering and full-harness editing
+  in terms of task performance (\(\speedupat{4\mathrm{h}}\)), model cost,
+  and cost efficiency (Speedup/\$).}
+  \label{tab:boxbox-online-ablation}
+  \begin{tabular}{lccc}
+    \toprule
+    Method & \(\speedupat{4\mathrm{h}}\) & Mean model cost & Speedup/\$ \\
+    \midrule
+    w/o Agent Triggering & 1.508 & \$21.58 & 0.1338 \\
+    w/o Full Editing & 1.349 & \$16.07 & 0.1132 \\
+    % w/o Context Preservation & 1.460 & \$9.205 & 0.2894 \\
+    Full \boxbox{} & \textbf{1.584} & \$15.07 & \textbf{0.3452} \\
+    \bottomrule
+  \end{tabular}
+\end{table}

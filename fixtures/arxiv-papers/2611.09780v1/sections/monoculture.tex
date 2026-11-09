@@ -1,0 +1,277 @@
+\section{When Does Monoculture Arise?}
+\label{sec:monoculture}
+Given that a pure-strategy equilibrium exists, we next ask what determines whether developers produce similar capability profiles or specialize in different capabilities. 
+We first give interpretable sufficient conditions for monoculture and specialization, before a general characterization.
+
+\subsection{Similar Production Functions Can Induce Monoculture}
+A simple sufficient condition for monoculture is developers having identical production functions. 
+
+\begin{restatable}[Symmetric Developers]{lemma}{SymmetricDevelopers}
+\label{lem:SymmetricDevelopers}
+Suppose the conditions of Theorem~\ref{thm:EquilibriumExistence} hold. 
+If $F_i=F_{i'}$, then there exists a pure-strategy Nash equilibrium $\mathbf{x}^*$ such that $\bxi^*=\bx_{i'}^*$ and $\Hij(\mathbf{x}^*) = 1$. 
+Moreover, if $F_i=F$ for every developer $i$, then there exists a symmetric pure-strategy Nash equilibrium satisfying  $\mathbf{x}_1^*=\cdots=\mathbf{x}_N^*$, and at this equilibrium, $\theta_1^*=\cdots=\theta_N^*$, with $H(\mathbf{x}^*)=1$. 
+\end{restatable}
+Restricting attention to profiles with $\bx_i=\bx_{i'}$, the two developers have identical best-response correspondences; Kakutani's fixed-point theorem then gives the equilibrium (Appendix~\ref{app:SymmetricDevelopers_proof}).
+
+Next, we note that strict equality is not necessary for near-monoculture. 
+To establish this, we first introduce the \textit{pseudogradient} of the game, $G(\mathbf{x})$, which we define as 
+\[
+G(\bx)
+=
+\left(
+-\nabla_{\bx_1}u_1(\bx),
+\ldots,
+-\nabla_{\bx_N}u_N(\bx)
+\right).
+\]
+We next show that similarity in $F_i$ and $\nabla F_i$ induces similarity in outputs.
+\begin{restatable}[Similarity in Production Functions]{theorem}{SimilarFHomogeneity}
+\label{thm:SimilarFHomogeneity}
+Suppose the conditions of Theorem~\ref{thm:EquilibriumExistence} hold, while the production functions are $L$-Lipschitz, and the pseudogradient $G$ is $\mu$-strongly monotone, which ensures equilibrium stability to perturbations:
+\[
+\left(G(\bx)-G(\bx')\right)^\top(\bx-\bx')
+\geq
+\mu\lVert\bx-\bx'\rVert_2^2
+\qquad
+\forall \bx,\bx'.
+\]
+If developers $i$ and $i'$ have similar production functions in both value and gradient:
+\[
+\sup_{\bx_i\in\mathcal X_i}
+\left\|F_i(\bx_i)-F_{i'}(\bx_i)\right\|_2
+\leq \epsilon,
+\qquad
+\sup_{\bx_i\in\mathcal X_i}
+\left\|\nabla g_{i,k}(\bx_i)-\nabla g_{i',k}(\bx_i)\right\|_2
+\leq \epsilon
+\quad \forall k.
+\]
+then there exists an equilibrium $\bx^*$ that satisfies
+\[
+\lVert\bx_i^*-\bx_{i'}^*\rVert_2
+\leq
+O\left(\frac{\epsilon}{\mu}\right),
+\qquad
+\lVert F_i(\bx_i^*)-F_{i'}(\bx_{i'}^*)\rVert_2
+\leq
+O\left(\epsilon\left(1+\frac{L}{\mu}\right)\right).
+\]
+
+Moreover, if $\lVert\btheta_i^*\rVert_2,\lVert\btheta_{i'}^*\rVert_2\geq m>0$, then their pairwise monoculture satisfies
+\[
+H_{i,i'}(\mathbf{x}^*)
+\geq
+1-O\left(
+\frac{\epsilon^2}{m^2}
+\left(1+\frac{L}{\mu}\right)^2
+\right).
+\]
+\end{restatable}
+
+% TODO: Check this
+The strong-monotonicity condition holds when each developer's own investment has a sufficiently strong stabilizing effect on its incentives relative to the strategic interaction between developers. 
+Therefore, the result is most applicable to settings with a stable equilibrium in which small differences in developers' production technologies do not induce large changes in equilibrium investment.
+When developers have similar production functions, their equilibrium investments are similar.
+Evaluation coordinates developers and makes it possible for them to optimally respond in the same way. 
+The proof constructs a counterfactual game and uses strong monotonicity to translate perturbation in the pseudogradient into bounds on equilibrium outputs (Appendix~\ref{app:SimilarFHomogeneity}).
+
+\subsection{Comparative Advantage Can Induce Specialization}
+While similar production functions induce monoculture, comparative advantage, where developers' production functions favor different capabilities, can create incentives for specialization.
+We first illustrate a setting where comparative advantage can induce specialization. 
+
+\begin{example}[Comparative advantage can induce specialization]
+\label{ex:comparative_advantage}
+Suppose $N=K=2$, $w_1=w_2=\frac12$, and
+\[
+F_i([x_1,x_2])
+=
+[a_i\log(1+x_1),\,b_i\log(1+x_2)].
+\]
+The KKT conditions imply that a specialized equilibrium
+$\bx_1^*=[s_1,0]$, $\bx_2^*=[0,s_2]$ must satisfy
+\[
+\frac{a_1b_2}{a_2b_1}
+\geq
+(1+s_1)(1+s_2).
+\]
+Such equilibria exist. 
+For example, with logistic $\sigma$,
+\[
+a_1=b_2=1,\qquad
+a_2=b_1=\frac14,\qquad
+c(s)=\frac{s}{18},
+\]
+the profile
+\[
+\bx_1^*=[1,0],
+\qquad
+\bx_2^*=[0,1]
+\]
+is a Nash equilibrium. 
+Moreover, the conditions of Theorem~\ref{thm:EquilibriumExistence} hold, so each developer's payoff is concave in its own investment and the KKT conditions are sufficient.
+\end{example}
+
+This example illustrates how specialization can arise when production functions are sufficiently differentiated.
+We can generalize this idea by representing differences in developers' comparative advantages through differences in the marginal costs of producing capability profiles. 
+Using this, we show that sufficiently different marginal capability costs imply differentiated equilibrium outputs.
+When this separation cannot be explained solely by differences in overall capability levels, it also implies differentiation in capability profiles.
+
+\begin{restatable}[Marginal Cost Differences Induce Capability Differentiation]{theorem}{SpecializedFDifferentiation}
+\label{thm:SpecializedFDifferentiation}
+
+For developer $i$, define the minimum cost of producing capability
+profile $\theta$ as $C_i(\theta):= \min_{\mathbf x_i:\,F_i(\mathbf x_i)=\theta} c(\|\mathbf x_i\|_1)$.
+For a collection of rival capability vectors
+$Y=\{y_1,\ldots,y_{N-1}\}$, define
+\[
+V_Y(\theta)
+:=
+\frac{1}{N-1}
+\sum_{y\in Y}
+\sum_{k=1}^K
+w_k \sigma(\theta_k-y_k).
+\]
+
+Suppose there is a convex capability region
+$\Theta\subseteq\mathbb R_+^K$ containing all relevant best responses
+such that, for every developer $i$ and rival environment $Y$,
+\[
+\phi_{i,Y}(\theta)
+:=
+C_i(\theta)-V_Y(\theta)
+\]
+has a unique interior minimizer, is $\mu$-strongly convex, and has
+$L$-Lipschitz gradient on $\Theta$.
+
+Consider developers $i\neq i'$, and suppose their marginal capability
+costs satisfy
+\[
+\inf_{\theta\in\Theta}
+\|\nabla C_i(\theta)-\nabla C_{i'}(\theta)\|_2
+\ge \delta_{i,i'}>0.
+\]
+
+Let $\mathbf x^*$ be any pure-strategy Nash equilibrium, with
+$\theta_i^*=F_i(\mathbf x_i^*)$ and
+$\theta_{i'}^*=F_{i'}(\mathbf x_{i'}^*)$. Define
+\[
+\ell_\sigma:=\sup_{z\in\mathbb R}|\sigma''(z)|,
+\qquad
+\rho_N
+:=
+\frac{\ell_\sigma\|w\|_\infty}
+{\mu(N-1)}.
+\]
+Then
+\[
+\|\theta_i^*-\theta_{i'}^*\|_2
+\ge
+\frac{\delta_{i,i'}}{L(1+\rho_N)}.
+\]
+
+Consequently, if 
+$r_i=\|\theta_i^*\|_2>  0$ and $r_{i'}=\|\theta_{i'}^*\|_2 > 0$ then
+\[
+H_{i,i'}(\mathbf x^*)
+\le
+1-
+\frac{
+\left[
+\left(
+\frac{\delta_{i,i'}}{L(1+\rho_N)}
+\right)^2
+-(r_i-r_{i'})^2
+\right]_+
+}
+{2r_ir_{i'}}.
+\]
+\end{restatable}
+
+These conditions capture settings in which each developer has a stable capability-level best response and developers have persistent differences in their relative costs of producing capabilities. 
+Such an assumption is most natural when comparative advantages arise from durable differences in production technologies, so that developers' marginal production costs remain distinct throughout the relevant range of equilibrium outputs.
+When marginal capability costs are different, we can show that the resulting equilibria are also different. 
+When overall capability levels are also different, we can use this to show differences in the similarity $H_{i,i'}(\mathbf{x}^*)$.
+We prove this by constructing a counterfactual environment, where developer $i'$ responds to developer $i$'s environment, then bounding the difference in outputs (full proof Appendix~\ref{app:SpecializedFDifferentiation}). 
+
+\subsection{Characterizing Monoculture and Specialization Generally}
+While Theorem~\ref{thm:SimilarFHomogeneity} provides a sufficient condition, even drastically different production functions can result in monoculture.
+We present such an example below:
+\begin{example}
+\label{ex:monoculture_not_equal}
+    Consider a scenario with $N=K=2$, $\sigma(z)$ as the sigmoid function, and $c(\lVert \mathbf{x}_{i} \rVert _1) = \frac{0.15}{2} \lVert \mathbf{x}_i \rVert_1^{2}$. 
+    Let $F_i(\mathbf{x}_i)=A_i\log(\mathbf{x}_i+\mathbf{1})$,
+    where the logarithm is applied componentwise.
+    Let 
+    \[ A_1=
+    \begin{pmatrix}
+    0.50 & 0.05\\
+    0.10 & 0.75
+    \end{pmatrix},
+    \qquad
+    A_2=
+    \begin{pmatrix}
+    0.05 & 0.60\\
+    0.70 & 0.15
+    \end{pmatrix},
+    \qquad
+    \bw=(0.35,0.65).
+    \]
+        
+    Then numerically solving for the equilibrium yields 
+    \[
+    \bx_1^*=(0,\ 0.545), \qquad \bx_2^*=(0.518,\ 0),
+    \]
+    and the corresponding outputs are 
+    \[
+    \btheta_1^*\approx(0.022,\ 0.326),
+    \qquad
+    \btheta_2^*\approx(0.021,\ 0.292).
+    \]
+    Here, $H_{1,2}(\mathbf{x}^*) \approx 0.99999$, and so the outputs are near-parallel while the production functions are very different. 
+\end{example}
+
+This example also demonstrates why a general characterization of monoculture is difficult, as even dissimilar production functions can result in similar capability profiles. 
+Instead, we can characterize monoculture in terms
+of the local production incentives that must hold at equilibrium.
+We can formalize this observation using the equilibrium
+first-order conditions. 
+First, let $\btheta^*_{i} = \alpha^*_i d^*_{i}$.
+Then for a profile of candidate directions $\mathbf D=(\mathbf d_1,\ldots,\mathbf d_N)\in(S_+^{K-1})^N$ and $\boldsymbol{\alpha}\in\mathbb R_{+}^N$, define
+\[
+p_{i,k}(\mathbf D,\boldsymbol{\alpha}) = \frac{w_k}{N-1} \sum_{j\neq i} \sigma'\!\left( \alpha_i d_{i,k}-\alpha_j d_{j,k} \right).
+\]
+For a profile of output directions, $\mathbf{D}=(\mathbf d_1,\ldots,\mathbf d_N)\in(S_+^{K-1})^N$, we say that $\mathbf{D}$ is locally supportable if there exist
+$\boldsymbol{\alpha}\in\mathbb R_{+}^N$ and
+$\bx_i\in\mathbb R_+^K$ such that
+\[
+F_i(\bx_i)=\alpha_i\mathbf{d_i}\neq 0 \forall i, \quad \text{and} \quad \nabla F_i(\bx_i)^\top
+\mathbf{p}_i(\mathbf{D},\boldsymbol{\alpha})
+\leq
+c'(\|\bx_i\|_1)\mathbf 1 \forall i,
+\]
+with equality in coordinates $\ell$ when
+$x_{i,\ell}>0$.
+This definition essentially collects the KKT conditions relevant to the direction of each developer's output and provides a convenient way to
+state exactly which capability directions can be sustained at equilibrium.
+
+\begin{restatable}[Supportable Equilibrium Directions]
+{proposition}{DirectionalCharacterization}
+\label{prop:DirectionalCharacterization}
+Suppose that the conditions of Theorem~\ref{thm:EquilibriumExistence} hold.
+A profile of directions $\mathbf{D}=(\mathbf d_1,\ldots,\mathbf d_N)\in(S_+^{K-1})^N$
+is induced by a pure-strategy Nash equilibrium with nonzero outputs if and only if $\mathbf{D}$ is locally supportable.
+
+A pure-strategy equilibrium with monoculture exists if and only if $(\mathbf d,\ldots,\mathbf d)$ is locally supportable for some $\mathbf d\in S_+^{K-1}$, and a pure-strategy equilibrium with complete specialization exists if and only if there is a locally supportable profile $\mathbf{D}=(\mathbf d_1,\ldots,\mathbf d_N)$ with $\mathbf d_i^\top \mathbf d_{i'}=0$ for all $i \neq i'$.
+\end{restatable}
+
+Proposition~\ref{prop:DirectionalCharacterization} is a reformulation of the equilibrium first-order conditions, and demonstrates general requirements behind monoculture and specialization.
+The key insight is that monoculture does not require developers to have similar production functions, but rather that their production functions need only locally support the same output direction under the competitive incentives they face
+(details in Appendix~\ref{app:DirectionalCharacterization}).
+
+Shared evaluation makes the value of a capability improvement depend not only on a developer's production technology, but also on its performance relative to competitors. 
+In particular, the value of improving on capability $k$ depends on how well developer $i$ performs relative to rivals. 
+Because every developer is scored against the same category weights, these incentives can align developers' investment directions even when their production functions differ, providing a second route to monoculture beyond technological similarity. 
+This distinction explains why similarity in production functions is only a sufficient condition for monoculture (Lemma~\ref{lem:SymmetricDevelopers} and Theorem~\ref{thm:SimilarFHomogeneity}), whereas Proposition~\ref{prop:DirectionalCharacterization} gives a necessary-and-sufficient characterization.
+That is, monoculture occurs at equilibrium exactly when developers' production technologies support a common capability direction under these competitive marginal incentives.
+We next tackle whether performance levels converge over time even when developers retain different relative strengths across capabilities.

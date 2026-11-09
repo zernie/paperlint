@@ -1,0 +1,18 @@
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figs/figure2.pdf}
+  \caption{Overview of the SERS data construction pipeline. \textbf{Left}: raw agent skills across seven representative domains serve as input. \textbf{Middle}: Stage~1 (Designer) produces a structured drift scenario playbook; Stage~2 (Builder) translates it into executable environment code, tool schemas, and annotation files. Generated samples pass a structural smoke test, then enter a trajectory QC loop in which two probe models generate rollouts evaluated by an automated gate. Samples that fail the gate are revised by a Critic agent for up to three rounds; unresolved samples are escalated for human review. \textbf{Right}: the final dataset is evaluated across models and agent frameworks.}
+  \label{fig:sers-pipeline}
+\end{figure*}
+
+
+\section{Related Work}
+\label{sec:related-work}
+
+\subsection{Safety Boundaries in Agentic Systems}
+
+Agent safety research largely examines adversarial failures. InjecAgent~\citep{zhan2024injecagent} and AgentDojo~\citep{debenedetti2024agentdojo} study indirect prompt injection, while Agent Security Bench~\citep{zhang2025asb}, AgentHarm~\citep{andriushchenko2025agentharm}, and Agent-SafetyBench~\citep{zhang2024agentsafetybench} cover broader harmful behaviors. Beyond adversarial settings, MACHIAVELLI~\citep{pan2023rewards} and EU-Agent-Bench~\citep{lichkovski2025eu} examine deception and legal non-compliance under benign inputs. Complementary work studies execution isolation through IsolateGPT~\citep{wu2024isolategpt}, runtime privilege control through Progent~\citep{shi2025progent} and GrantBox~\citep{zhang2026privilegeusage}, and privacy violations through PrivacyLens~\citep{shao2024privacylens} and AgentDAM~\citep{zharmagambetov2026agentdam}. Building on least privilege~\citep{saltzer1975protection} and contextual integrity~\citep{nissenbaum2004privacy}, we focus on non-adversarial authorization expansion during task execution, evaluating whether agents reject useful unauthorized shortcuts when compliant alternatives remain available.
+
+\subsection{Agent Benchmark Construction}
+
+Agent benchmarks have evolved from API calling and tool manipulation, exemplified by ToolLLM~\citep{qin2024toolllm}, ToolBench~\citep{xu2023toolbench}, and BFCL~\citep{patil2025berkeley}, toward executable workflows in $\tau$-bench~\citep{yao2024tau}, AgentBench~\citep{liu2024agentbench}, and AppWorld~\citep{trivedi2024appworld}. Skill-based frameworks further motivate longer-horizon evaluation across tools, instructions, and memory~\citep{xu2026skills,openclaw}. Construction approaches include manual design, synthetic generation, and execution-driven refinement. Manually designed environments offer fidelity but limited scalability, whereas synthetic generation scales more readily but may sacrifice execution fidelity. Recent work therefore uses execution feedback to identify realistic failures~\citep{jones2026benign}. SERS extends this direction through staged task and environment generation, using real agent rollouts to validate executability, shortcut attractiveness, and compliant-path reachability rather than relying on LLM self-critique.

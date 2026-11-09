@@ -1,0 +1,19 @@
+\begin{table}[!htbp]
+\centering\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.05}
+\caption{\textbf{Ablation results.} Matched traces and task splits; metrics (\%) are Crafter Progress, ALFWorld/WebShop success, HotpotQA/WebQuestions F1, and FinQA numeric accuracy.}
+\label{tab:ablations}
+% \resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Variant & Crafter & ALFWorld & WebShop & HotpotQA & WebQ & FinQA\\
+\midrule
+Full \method & \textbf{34.2} & \textbf{90.3} & \textbf{83.4} & \textbf{71.5} & \textbf{53.7} & \textbf{69.3}\\
+Mastery-only admission & 30.5 & 85.8 & 79.6 & 68.3 & 51.8 & 66.6\\
+ETG with frozen weights & 26.9 & 82.1 & 75.0 & 64.2 & 50.6 & 64.0 \\
+Without activation gate & 32.7 & 87.3 & 80.8 & 70.1 & 52.6 & 68.1\\
+SFT, no inference ETG & 30.8 & 85.1 & 78.6 & 68.0 & 51.5 & 66.9\\
+\bottomrule
+\end{tabular}
+\end{table}

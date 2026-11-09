@@ -1,0 +1,71 @@
+\pdfoutput=1
+\documentclass{article}
+\PassOptionsToPackage{numbers,sort&compress}{natbib}
+\usepackage{lmodern}
+\usepackage[preprint]{neurips_2026}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,graphicx,booktabs,array,tabularx,xcolor}
+\definecolor{questioncolumn}{RGB}{237,243,248}
+\newsavebox{\relatedworktable}
+\usepackage[colorlinks=true,allcolors=blue!45!black]{hyperref}
+\usepackage{url}
+\renewcommand{\arraystretch}{1.12}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\model}[1]{\texttt{#1}}
+\newenvironment{introlist}{\begin{list}{\textbullet}{%
+  \setlength{\leftmargin}{1.1em}\setlength{\labelwidth}{.7em}\setlength{\labelsep}{.4em}%
+  \setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}%
+  \setlength{\itemsep}{2pt plus 1pt minus .5pt}\setlength{\parsep}{0pt}}}{\end{list}}
+\renewcommand{\bibfont}{\small}
+\setlength{\bibsep}{4pt plus 2pt minus 1pt}
+\input{results.tex}
+\input{workflow-results.tex}
+\input{tables/rfq-categories.tex}
+\input{tables/rfq-cases.tex}
+\input{tables/external-cases.tex}
+\input{tables/rfq-comparison.tex}
+\input{tables/rfq-paired-cases.tex}
+\input{tables/brief-paired-cases.tex}
+\input{tables/dashboard-update.tex}
+\hypersetup{pdftitle={DRAFT-Bench: Evaluating Frontier Agents Across the Professional Design Lifecycle},pdfauthor={Rong Pan; Jianqiang Wang}}
+\title{DRAFT-Bench: Evaluating Frontier Agents\\Across the Professional Design Lifecycle}
+\author{%
+  Rong Pan\thanks{Work done during an internship at Curify.} \\
+  University of Maryland, College Park
+  \And
+  Jianqiang Wang \\
+  curify-AI
+}
+\date{}
+
+\begin{document}
+\maketitle
+\suppressfloats[t]
+\begin{abstract}
+Can frontier general-purpose agents understand client intent, explore creative directions, execute revisions, and prepare production deliverables? We introduce DRAFT-Bench (Design Reliability Across Feedback and Tasks), a lifecycle-oriented evaluation of requirement elicitation, creative exploration, constrained editing, iterative revision, and production handoff. Its Requirement-to-Artifact framework links evolving requirements, protected properties, artifact versions, and delivery obligations. We compare native Codex/Astra and Claude Code across 35 design briefs under 43 conditions, alongside a separate 40-scenario RFQ track. Astra completes 43/43 design conditions and Claude 35/43. All scored core runs receive full structural credit, yet on the 28 core conditions scored for both systems, semantic checks flag violations in 11 for Astra and 5 for Claude; these are model judgments, not expert-confirmed failure rates. RFQ coverage is high, but success ordering changes across cohorts. SKU expansion, revision dependencies, and White ink files expose ambiguity among unmet obligations, missing inputs, and evaluator interpretations. These findings separate execution, requirement compliance, and professional acceptance. Unpaired tracks and different tools preclude claims of RFQ-to-delivery success, factory acceptance, or a pure model ranking.
+\end{abstract}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/design-lifecycle.pdf}
+\caption{Professional design lifecycle and DRAFT-Bench coverage. Human feedback can change requirements at every stage. Stages are evaluated through separate task protocols; RFQ and design execution are unpaired, and full RFQ-to-delivery execution is not yet tested.}
+\label{fig:lifecycle}
+\end{figure}
+
+\input{sections/01-introduction.tex}
+\input{sections/02-related-work.tex}
+\input{sections/03-tasks-data.tex}
+\input{sections/04-evaluation.tex}
+\input{sections/05-experiments.tex}
+\input{sections/06-results.tex}
+\input{sections/07-discussion.tex}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\clearpage
+\appendix
+\input{sections/08-appendix.tex}
+\end{document}

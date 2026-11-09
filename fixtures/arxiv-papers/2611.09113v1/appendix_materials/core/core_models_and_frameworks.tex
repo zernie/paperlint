@@ -1,0 +1,34 @@
+Table~\ref{tab:model-suite} lists the core models and frameworks adopted in our experimental pipeline.
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Core models and frameworks used in the experimental pipeline.}
+\label{tab:model-suite}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{p{4.5cm}p{2.2cm}p{2cm}X}
+\toprule
+Entity & Type & Instantiation & Role in experiment \\
+\midrule
+Claude Sonnet 4.6~\citep{anthropic2026claude46} & Generator/ Critic & Proprietary & Stage-I playbook generation, environment refinement, and trajectory QC gating \\
+\midrule
+Claude Sonnet 4.6~\citep{anthropic2026claude46} & Backbone model & Proprietary & Evaluated under \textsc{Normal} \\
+Qwen3.5-397B-A17B~\citep{qwen3.5} & Backbone model & Open-weight & Evaluated under all three reported frameworks \\
+Qwen3.6-35B-A3B~\citep{qwen36_35b_a3b} & Backbone model & Open-weight & Evaluated under all three reported frameworks; also used for trajectory QC during data generation \\
+Qwen3.6-27B~\citep{qwen3.6-27b} & Backbone model & Open-weight & Evaluated under \textsc{Normal} \\
+Qwen3.5-9B~\citep{qwen3.5} & Backbone model & Open-weight & Evaluated under \textsc{Normal} \\
+Qwen3.5-4B~\citep{qwen3.5} & Backbone model & Open-weight & Evaluated under \textsc{Normal} \\
+Mistral-Small-3.1-24B~\citep{liu2026ministral} & Backbone model & Open-weight & Evaluated under \textsc{Normal} \\
+Ministral-3-14B~\citep{liu2026ministral} & Backbone model & Open-weight & Evaluated under \textsc{Normal} \\
+Ministral-3-8B~\citep{liu2026ministral} & Backbone model & Open-weight & Evaluated under \textsc{Normal} \\
+MiniMax-M2.7~\citep{minimax_m2.7} & Backbone model & Proprietary & Evaluated under all three reported frameworks \\
+Llama-3.3-70B-Instruct~\citep{grattafiori2024llama} & Backbone model & Open-weight & Evaluated under \textsc{Normal}; also used for trajectory QC during data generation \\
+Llama-4-Maverick-17B$\times$128E~\citep{llama4_maverick} & Backbone model & Open-weight & Evaluated under \textsc{Normal} \\
+Llama-3.1-8B-Instruct~\citep{grattafiori2024llama} & Backbone model & Open-weight & Evaluated under all three reported frameworks \\
+\midrule
+\textsc{Normal} & Agent framework & Minimal baseline & Measures drift under the thinnest tool-use wrapper; isolates native boundary-keeping \\
+\textsc{ReAct}~\citep{yao2022react} & Agent framework & ReAct-style & Measures drift under iterative reasoning and observation feedback \\
+\textsc{Planner--Executor}~\citep{wang2023plan,Chase_LangChain_2022} & Agent framework & LangChain two-stage & Measures drift under explicit planning-execution decomposition \\
+\bottomrule
+\end{tabularx}
+\end{table*}

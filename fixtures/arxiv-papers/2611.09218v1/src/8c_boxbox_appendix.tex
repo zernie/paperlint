@@ -1,0 +1,168 @@
+\section{\boxbox{}: Method Details}
+\label{app:boxbox}
+
+Figure~\ref{fig:boxbox-pseudocode} summarizes the task and review loops.
+The following explains how harness revisions affect subsequent interactions
+and how review, hot reloading, and recovery preserve task continuity.
+
+\begin{figure}[H]
+  \centering
+\begingroup
+\small
+\definecolor{heading}{HTML}{385E8D}
+\setlength{\parindent}{0pt}
+\newenvironment{pseudocode}{%
+  \begin{list}{\color{gray}\scriptsize\arabic{enumi}}{%
+    \usecounter{enumi}
+    \setlength{\leftmargin}{1.7em}
+    \setlength{\labelwidth}{1.2em}
+    \setlength{\labelsep}{.5em}
+    \setlength{\itemsep}{1.5pt}
+    \setlength{\parsep}{0pt}
+    \setlength{\topsep}{4pt}}%
+}{\end{list}}
+\newcommand{\Line}[2]{\item\hspace*{#1em}#2}
+\newcommand{\kw}[1]{\textbf{#1}}
+\begin{minipage}{\linewidth}
+{\normalsize\bfseries\color{heading} \boxbox{}}
+\par\vspace{5pt}\hrule\vspace{6pt}
+\textbf{State:} harness $H$, runtime $R$, task environment $e$, task trajectory $\tau$.
+\par\textbf{Review state:} environment $e_r$ and separate trajectory $\tau_r$.
+\par\textbf{Budget:} shared task budget $B$.
+
+\begin{pseudocode}
+  \Line{0}{\kw{while} budget $B$ remains \kw{do}}
+  \Line{1}{$a \sim p_{\mathcal{M},H}(\cdot\mid\tau)$}
+  \Line{1}{\kw{if} $a=\texttt{boxbox()}$ \kw{then}}
+  \Line{2}{Yield control to the kernel; suspend task execution and preserve context}
+  \Line{2}{Prepare $(e_r,\tau_r)$ for independent review under $H$, with access to $\tau$}
+  \Line{2}{\kw{while true do}}
+  \Line{3}{$a_r \sim p_{\mathcal{M},H}(\cdot\mid\tau_r)$}
+  \Line{3}{\kw{if} $a_r=\texttt{commit}(H')$ \kw{then break}}
+  \Line{3}{$(e_r,o_r) \gets \operatorname{Execute}_H(e_r,a_r)$}
+  \Line{3}{$\tau_r \gets \tau_r\oplus(a_r,o_r)$}
+  \Line{2}{\kw{end while}}
+  \Line{2}{\kw{if} $H'\ne H$ \kw{then}}
+  \Line{3}{The kernel validates $H'$ and attempts activation of its runtime $R'$}
+  \Line{3}{\kw{if} successful \kw{then} select $(H,R)\gets(H',R')$}
+  \Line{3}{\kw{else} retain or restore the previous harness and runtime}
+  \Line{2}{\kw{end if}}
+  \Line{2}{Restore continuation context and return control to the selected runtime}
+  \Line{1}{\kw{else}}
+  \Line{2}{$(e,o) \gets \operatorname{Execute}_H(e,a)$}
+  \Line{2}{$\tau \gets \tau\oplus(a,o)$}
+  \Line{1}{\kw{end if}}
+  \Line{0}{\kw{end while}}
+\end{pseudocode}
+\vspace{4pt}\hrule
+\end{minipage}
+\endgroup
+  \caption{\textbf{\boxbox{} pseudocode.} Task execution and independent harness review form nested interaction loops, with kernel-managed hot reloading connecting them.}
+  \label{fig:boxbox-pseudocode}
+\end{figure}
+
+\subsection{Effects on Subsequent Interactions}
+\label{app:boxbox-update-effects}
+
+Equation~\ref{eq:boxbox-interaction} describes two ways a harness revision
+can affect subsequent execution while the language model $\mathcal{M}$ remains
+fixed. Changes to how the harness constructs model inputs can alter
+$p_{\mathcal{M},H_k}$, influencing the agent's next action. Changes to
+$\operatorname{Execute}_{H_k}$ can alter how that action is carried out and how
+its result is returned as an observation. A revision can affect either or
+both, so its influence extends to the trajectory generated after activation.
+
+The current harness also governs the review loop. Once a revision is
+activated, subsequent reviews use the updated implementation and can examine
+the experience accumulated under it. Harness changes can therefore affect
+both task execution and the process used to produce later revisions.
+Appendix~\ref{app:case-study} illustrates concrete changes to guidance,
+measurement, command polling, and context handling.
+
+\subsection{Review}
+\label{app:boxbox-agent-initiated}
+
+The task-solving agent requests review through \texttt{boxbox()} without
+having to propose a patch. The initial harness requires intervening task
+activity and a 30-minute cooldown after each completed review; once eligible,
+the agent decides whether and when to request another review.
+The kernel preserves the task conversation and launches a separate agent
+review session under the current harness. The reviewer can inspect task
+trajectories and Git history, but edits only the harness, treating project
+code as read-only. It may retain the current harness, add guidance, or modify
+executable behavior, committing any changes before ending review.
+The default review skill is provided in Appendix~\ref{app:boxbox-review-skill}.
+
+\subsection{Execution Context}
+\label{app:boxbox-execution-context}
+
+Execution context includes both runtime-owned state and the existing task
+environment. The former includes the task conversation, review history, and
+records of which trajectory entries have already been reviewed. These are
+exported as a state snapshot. The terminal session and project workspace
+remain in place: shell state, ongoing processes, and project files are
+preserved through the existing environment connection.
+
+When the agent calls \texttt{boxbox()}, the runtime yields control to the
+kernel, suspending the task interaction loop while review proceeds separately.
+This pauses the agent's task decisions, not the entire container or its
+processes. Before importing state into a candidate runtime, the kernel makes
+a separate copy, preserving the original snapshot for recovery if the
+candidate fails. This separates changing the agent implementation from
+restarting its task environment.
+
+\subsection{Hot Reloading}
+\label{app:boxbox-transition}
+
+Harness revisions are tracked as Git commits, while the kernel remains
+separate from the editable harness. Before switching, the kernel checks the
+committed candidate, loads its runtime, and verifies that it supports task
+execution and context transfer. The current runtime keeps its terminal
+connection until the candidate successfully imports the copied state.
+The kernel then transfers the same terminal session to the candidate and
+returns control to it, resuming task interaction from the preserved
+conversation in the same workspace. If activation fails, the kernel retains
+or restores the previous runtime and context.
+For agent-requested reviews, the reviewer can leave concise guidance on using
+new capabilities and continuing the task. This guidance is preserved across
+the update, and the resumed agent is prompted to read it before continuing.
+Task execution and review share the same budget and cost accounting.
+Table~\ref{tab:boxbox-continuation} summarizes how execution continues under
+each outcome.
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Task continuation across review and runtime-update outcomes.}
+  \label{tab:boxbox-continuation}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{.26\linewidth}X@{}}
+    \toprule
+    Outcome & Continuation \\
+    \midrule
+    No harness change &
+    Resume the current runtime with the preserved task context. \\
+    Successful update &
+    Continue under the revised harness with transferred context, the existing
+    terminal session, and the same project workspace. \\
+    Update fails &
+    Retain or restore the previous runtime and its preserved context. \\
+    Runtime fault &
+    Enter recovery and review using the retained execution records; restart
+    the terminal while preserving project files. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Recovery}
+\label{app:boxbox-validation}
+
+The kernel retains a recovery point across harness updates. A newly activated
+runtime remains provisional until it reaches the next agent-requested review
+without a runtime fault. If it fails before that boundary, the kernel restores
+the previous confirmed harness and state and initiates a review using the
+fault evidence. Faults in a confirmed runtime also trigger review.
+Runtime-fault recovery starts a fresh terminal, so shell-local state is lost,
+but project files, harness history, and execution records remain available.
+The retained records let subsequent reviews examine failed revisions and help
+the task-solving agent determine how to continue interrupted work.

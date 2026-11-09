@@ -1,0 +1,98 @@
+\section{Rethinking Agent Access Control}\label{sec:rethink}
+Preserving authorization throughout a workflow requires examining what authority is needed, how it is interpreted and enforced, and whether it remains valid as execution proceeds. Section~\ref{sec:rethink-plans} examines how plan selection determines the authority an agent needs. Section~\ref{sec:rethink-context} considers which contextual sources may resolve choices within a grant or authorize changes to it. Section~\ref{sec:rethink-representations} examines how approved restrictions retain their meaning across system interfaces. Section~\ref{sec:rethink-state} addresses how authorization remains valid across delegation, retries, and revocation. Together, these perspectives trace authorization from planning to ongoing execution, with concrete cases illustrated in Figures~\ref{fig:rethink} and~\ref{fig:state}.
+
+% Keep the rethink figures after the section opening.
+\suppressfloats[t]
+
+\begin{figure}[t]
+\centering
+\Description{Three agent-authorization thought experiments contrast the authority required by alternative plans, resolution of choices within a grant versus expansion of that grant, and preservation versus loss of recipient and content restrictions during policy translation.}
+\begin{subfigure}[t]{.3\linewidth}
+\centering\includegraphics[width=.92\linewidth]{figures/03a_plan.pdf}
+\caption{Plan-dependent authority}\label{fig:plan}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{.3\linewidth}
+\centering\includegraphics[width=.92\linewidth]{figures/03b_context.pdf}
+\caption{Resolution versus expansion}\label{fig:context}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{.3\linewidth}
+\centering\includegraphics[width=.92\linewidth]{figures/03c_representation.pdf}
+\caption{Preserving policy meaning}\label{fig:representation}
+\end{subfigure}
+\caption{Three perspectives on preserving authorization: (a) plans that satisfy the same task can require different authority; (b) contextual evidence may identify an authorized recipient without authorizing additional recipients; and (c) recipient and content restrictions must survive translation into credentials and execution checks. $S$ denotes the approved summary.}
+\label{fig:rethink}
+\end{figure}
+
+
+
+\subsection{Least Privilege Begins with Plan Selection}\label{sec:rethink-plans}
+A task's permission requirements depend on how the agent chooses to accomplish it; least privilege must therefore be considered during plan selection as well as permission allocation. Even an exact permission optimizer can allocate more authority than an adequate alternative plan would require if it starts from an unnecessarily intrusive strategy.
+
+The report task illustrates how a plan can require permissions that an adequate alternative avoids. Figure~\ref{fig:rethink}(\subref{fig:plan}) compares two plans for the report task: one processes approved records locally; the other retrieves a broader dataset and sends it to a hosted analysis service. Suppose both meet the user's requirements for accuracy and completeness. Every permission assigned to the second plan might be indispensable to its execution, even though the first plan completes the task with less disclosure. Presenting only the second plan conflates its permission requirements with those of the task, excluding the less intrusive alternative from consideration.
+
+Plan selection should therefore compare adequate alternatives against the current grant. Let $\Pi_q(g)$ denote candidate plans meeting a specified quality threshold $q$ for goal $g$, $A(\pi)$ the permissions required by plan $\pi$, and $G$ the permissions available under the currently valid grant. Planning under existing authority seeks
+\begin{equation}
+\pi \in \Pi_q(g) \quad\text{such that}\quad A(\pi)\subseteq G.
+\label{eq:planning}
+\end{equation}
+Among feasible plans, selection should consider the access and disclosure each plan requires (authority exposure), execution cost, and user effort. If the search finds none, the system can propose a scoped grant change, negotiate a reduced outcome, or seek clarification.
+
+Existing methods place permission reasoning at different stages of planning. MiniScope selects permissions for a proposed plan, while Prudentia uses policies and data labels to guide plan formation~\cite{miniscope,prudentia}. This distinction matters because reducing a fixed plan's permissions and selecting a less intrusive plan solve different problems. A planner can first seek alternatives within the current grant and then present any required expansion as a separate authorization decision.
+
+Comparing plans requires an explicit account of both task quality and authority exposure. One plan may need sensitive local access, while another requires disclosure to an external service; neither is necessarily preferable under every policy. Where these costs are incomparable, a useful result is a set of adequate plans with explicit authority tradeoffs. Evaluation should measure both how closely granted permissions match a fixed plan's needs and the quality--authority tradeoff across plans; fixing the plan in advance measures only the former.
+
+\subsection{Contextual Trust Must Be Tied to Decision Authority}\label{sec:rethink-context}
+Contextual information can guide an agent's actions without carrying authority to change its permissions; trust must therefore be assessed in relation to the decisions a source is authorized to influence.
+Resolving a permitted recipient and adding a new recipient require different authority. In Figure~\ref{fig:rethink}(\subref{fig:context}), a trusted directory identifies Alice as the partner contact permitted by the grant. A retrieved document asking the agent to also copy Bob instead proposes a different disclosure boundary. Both pieces of text are relevant to the task, but they play different roles: one supplies evidence for a permitted choice, while the other requests expanded authority.
+
+Context-control mechanisms need an explicit account of each source's decision role. Conseca's trusted-context boundary, CaMeL's separation of planning and data processing, and Fides's selective inspection provide mechanisms for controlling contextual influence~\cite{conseca,camel,fides}. The permitted influence depends on the source's role: a document may contribute facts to a summary, a directory may establish a resource identifier, and a designated approver may authorize release. Preserving these roles allows useful contextual adaptation within explicit limits.
+
+Restricting how a source expresses its response does not establish which decisions it may authorize. Suppose a workflow asks a source to answer only ``yes'' or ``no'' to ``is this draft approved for external release?'' The response carries little information but can determine whether confidential data leave the organization. Enforcing this format constrains the response, while authority to approve release must come from an applicable grant to the approver or an authorized decision procedure. Even a tightly constrained response therefore needs to be checked against the source's authorized role before it controls a consequential action.
+
+These distinctions call for separate handling of decisions that resolve choices within an existing grant and decisions that expand that grant. Resolution requires evidence appropriate to the permitted choice; expansion requires an authorized source of change. Progent makes the latter boundary explicit by requiring approval for policy expansion~\cite{progent}. A workflow can also authorize adaptation in advance, for example by permitting instructions from a manager's task list within a bounded set of actions. In each case, the system needs to retain the provenance and authorized role of the evidence. A conversation history that omits source roles and approval links obscures the basis for subsequent decisions.
+
+\subsection{Preserving Authorization across Policy Translation and Execution}\label{sec:rethink-representations}
+Individual components may enforce their local rules correctly even when restrictions are lost between them; preserving authorization therefore requires examining how an approved policy governs the resources accessed and actions performed during execution. The authority granted by a user may be expressed in a structured policy, carried by a credential, and checked when a tool invokes a service. The approved limits must remain enforced throughout this process, even when components describe resources and operations differently.
+
+Correct credential validation can still allow actions that the approved policy forbids. In Figure~\ref{fig:rethink}(\subref{fig:representation}), the user's grant permits sending summary $S$ to Alice, and the structured policy correctly records the permitted content and recipient. When issuing a credential, however, the system reduces these restrictions to a generic permission to send mail. If the mail service receives only this permission, it can validate the credential correctly while lacking the recipient and content restrictions needed to enforce the approved policy. Verifying the credential's authenticity does not recover these missing restrictions. They must be included in the service's checks or enforced before the request reaches it.
+
+Expressing the user's authorization correctly and preserving it during execution are separate obligations. The first concerns whether the policy captures what the user permits; the second concerns whether the implementation enforces that policy. In the mail example, the policy is correct, but its translation loses the recipient and content restrictions. When asking the user to approve a policy, the system should clearly show these limits and record the approved version, so that subsequent checks enforce the same policy.
+
+Enforcing a policy requires knowing which actual resources and service operations its restrictions refer to. AC4A~\cite{ac4a} relies on application-provided functions that identify the resource permissions sufficient for an API call, based on the requested operation and its arguments. ceLLMate~\cite{cellmate} links high-level actions, such as making a purchase, to the HTTP requests that carry them out. Fides~\cite{fides} uses trusted code around tool calls to assign or propagate labels describing the integrity and confidentiality of their results. These connections determine how policy restrictions apply to actual calls and data. Checking a rule correctly is insufficient if the check uses an incorrect description of the resources accessed, the action performed, or the data returned.
+
+Every resource access or external action allowed by the implementation must also be permitted by the approved policy. Let $P$ be an approved policy, $M(P)$ the credentials and enforcement rules used to implement it, $\mathcal{E}(M(P))$ the effects allowed by those controls, and $\alpha$ a mapping that expresses those effects in the terms used by the policy. Preserving the restrictions requires
+\begin{equation}
+\alpha\bigl(\mathcal{E}(M(P))\bigr)\subseteq\llbracket P\rrbracket,
+\label{eq:refinement}
+\end{equation}
+where $\llbracket P\rrbracket$ denotes the effects permitted by the approved policy. In the mail example, allowing delivery to Bob violates this condition even if the credential itself is valid. An implementation may block some operations that the policy permits, preserving its restrictions at the cost of useful work. Allowing an operation outside the policy, however, requires additional authorization. Checking this condition requires knowing what an operation can do and how those effects correspond to the policy's terms. For policies that constrain ordering or cumulative use, this correspondence must also account for execution history.
+
+One design direction is to use \emph{effect contracts}: explicit descriptions of the resources a tool operation may access, the data it may send, the recipients of those data, and the changes it may make to external systems. These contracts would allow an enforcement component to compare the possible effects of a tool call with the approved policy before permitting execution. If a contract lists effects that the tool cannot actually produce, checks based on that contract may block permitted work. If it omits possible effects, those checks may miss unauthorized behavior. The descriptions must also be updated when tool behavior changes. A tool that begins forwarding data to an external service introduces a new disclosure, even if its name and accepted arguments remain unchanged. The system therefore needs to reassess whether the existing grant permits the tool's changed behavior.
+
+\subsection{Authority Has State beyond Individual Credentials}\label{sec:rethink-state}
+A valid credential does not by itself establish whether an action is still authorized: another agent may have already spent the full amount authorized for the task, an earlier attempt to perform the same action may already have completed, or the grant may have been revoked. Authorization therefore depends on what has happened during execution, and on permissions originally granted.
+
+Delegation and retries can both reuse permission intended for a single purchase. Figure~\ref{fig:state}(\subref{fig:shared}) illustrates an agent authorized to purchase one item. It delegates to two purchasing agents, each permitted to buy one item. Each purchasing agent stays within its own limit, yet together they can buy two items. These individual limits do not preserve the task's overall limit. Retries create a similar risk across attempts: after a timeout, the original purchase may already have completed, so repeating it could buy a second item. Checking each agent or attempt independently misses the limit on their combined purchases.
+
+Existing mechanisms track changes that affect whether granted permissions remain usable. SAGA checks token validity and limits requests, MiniScope invalidates session tokens that depend on a revoked user authorization, and ceLLMate applies policies that account for execution state~\cite{saga,miniscope,cellmate}. Combining these mechanisms requires consistent records of the grant, how much of the task's limit remains available, and requests whose outcomes are still unknown. A credential can identify the grant or refer to these records, but checking it in isolation does not establish what the workflow is still permitted to do.
+
+Coordinating a shared limit requires recording which operations have reserved or used part of it. Before a purchase, the system can reserve part of the permitted quantity for that operation, making it unavailable to other agents. Checking the remaining quantity and reserving it must happen as one indivisible step, so two agents cannot both reserve the last item. In Figure~\ref{fig:state}(\subref{fig:shared}), Agent A reserves the right to buy the only permitted item, leaving none for Agent B. Retries also need an identifier that stays the same across attempts to perform the same operation. A service that supports duplicate detection can use this identifier to recognize a repeated request and avoid executing the operation twice. Recording the grant version that authorized the operation, and checking whether that grant has been revoked, connects these execution records to the applicable authorization. Together, these checks account for both permission changes and prior use of the shared limit.
+
+What revocation can prevent depends on how far an operation has progressed. Revoking access to a data source can block future reads, while information already stored by the workflow requires controls on its subsequent use and release. Once a request has been submitted, preventing its effect requires coordination with the service executing it; revoking the requesting agent's credential alone does not cancel that request. Information already delivered to a recipient cannot be recalled through access revocation. The intended effect of revocation therefore needs to be tied to the operation's current status.
+
+An unknown outcome affects both whether a request may be retried and whether the quantity reserved for its operation can be used elsewhere. Figure~\ref{fig:state}(\subref{fig:temporal}) shows a request whose outcome remains unknown after a timeout. Revoking its grant blocks a retry but does not establish whether the service completed the original request. A service may prevent duplicate execution when a retry is authorized without reporting whether the original request completed. Resolving that uncertainty requires querying the service about the original request or obtaining a record that confirms its outcome. Until then, the workflow should retain a record of the request, its unknown outcome, and the authorization under which it was submitted. For a purchase, this means keeping track of an item that may already have been bought, rather than assuming it remains available within the task's limit. Later authorization decisions can account for effects that may already have occurred.
+
+\begin{figure}[t]
+\centering
+\Description{Parallel purchasing agents share a one-item task allowance. A timeline separates grant changes, request submissions, and uncertain remote effects. Time proceeds downward; revocation blocks a retry without resolving the original operation's outcome.}
+\begin{subfigure}[t]{.43\linewidth}
+\centering\includegraphics[width=.92\linewidth]{figures/04a_shared.pdf}
+\caption{Coordinating a shared purchase limit}\label{fig:shared}
+\end{subfigure}
+\begin{subfigure}[t]{.43\linewidth}
+\centering\includegraphics[width=.92\linewidth]{figures/04b_temporal.pdf}
+\caption{Revocation with uncertain outcomes}\label{fig:temporal}
+\end{subfigure}
+\caption{Authorization depends on shared limits and execution outcomes. (a) Separate per-agent allowances can permit two purchases despite a one-item task limit; a shared reservation prevents this excess. (b) Revocation blocks a retry but leaves the original request's outcome unresolved. In (b), time runs downward; v1 denotes the grant version, and $e$ identifies the same operation across attempts.}
+\label{fig:state}
+\end{figure}

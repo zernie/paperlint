@@ -1,0 +1,59 @@
+% arXiv version of the CVPR 2024 paper.
+% Compile with: pdflatex -> bibtex -> pdflatex -> pdflatex
+
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+% T1 font encoding for pdflatex (supports accented characters in the bibliography).
+\usepackage[T1]{fontenc}
+
+% Camera-ready layout with page numbers for arXiv.
+\usepackage[pagenumbers]{cvpr}
+
+% Import additional packages in the preamble file, before hyperref
+\input{preamble}
+
+\definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
+\usepackage[breaklinks,colorlinks,citecolor=cvprblue]{hyperref}
+
+\hypersetup{
+  pdftitle={Multimodal Training with Knowledge Traction for Video Anomaly Detection},
+  pdfauthor={Xiao Tan},
+  pdfsubject={Weakly supervised video anomaly detection},
+  pdfkeywords={weakly supervised video anomaly detection, multimodal learning, large language model, dictionary learning, cross-modal attention}
+}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{pifont}
+\usepackage{tabularx}
+
+\title{Multimodal Training with Knowledge Traction for Video Anomaly Detection}
+
+\author{Xiao Tan\\
+Xidian University, Xi'an, China\\
+{\tt\small 21171213976@stu.xidian.edu.cn}}
+
+\begin{document}
+\maketitle
+\input{sec/0_abstract}
+\input{sec/1_intro}
+\input{sec/2_relate}
+\input{sec/3_our}
+\input{sec/4_exp}
+\input{sec/5_conc}
+{
+    \small
+    \bibliographystyle{ieeenat_fullname}
+    \bibliography{main}
+}
+
+% Appendix: merged supplementary material
+\input{sec/X_suppl}
+
+\end{document}

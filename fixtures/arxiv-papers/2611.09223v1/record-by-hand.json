@@ -1,0 +1,252 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "0_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "1_intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "2_related.tex",
+      "role": "body"
+    },
+    {
+      "path": "3_motivation.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/Table_ka_val.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/Table_ka_dist.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/Figure1.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/Figure2.tex",
+      "role": "body"
+    },
+    {
+      "path": "4_klear.tex",
+      "role": "body"
+    },
+    {
+      "path": "5_construction.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/Table_stats.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/Table_yield.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/Table_matched.tex",
+      "role": "body"
+    },
+    {
+      "path": "6_utility.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/Figure3.tex",
+      "role": "body"
+    },
+    {
+      "path": "Figures/Figure4.tex",
+      "role": "body"
+    },
+    {
+      "path": "7_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "8_appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/source_stats.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/ka_taxonomy.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/k_examples.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/a_examples.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/ka_reliability.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/failure_taxonomy.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/failure_by_a.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/rubrics.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/construction_config.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/yield_by_type.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/human_validation.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/criteria.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/anchor.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/seed_difficulty.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/final_stats.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/eval_models.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/usage.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/by_benchmark.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/by_family.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/knowledge_gain.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/seed_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/failure_contrast.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/matched_test.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/example_contrast.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/example_selfrev.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/example_humanrev.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/example_failure.tex",
+      "role": "body"
+    },
+    {
+      "path": "Tables/appendix/human_rubric.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "dbfbcd254153c656a6565cb3f418a7657204c1220dedfd91d670a97fabe3802e",
+    "acl.sty": "19dfeddc2c0e448f3926a0bef048a9db3f3611b46265b760caabd7ada4f361de",
+    "0_abstract.tex": "1b2e0070272418a0be7f4b997085f7f19514ad2e714a4c85dbc72e7e54eaf18f",
+    "1_intro.tex": "23e58ac740e057b995f2c64a6a46e2065d9d1f90164aa5fe6891863b53f59abc",
+    "2_related.tex": "dd57fd271624ad9aa2400a335bc20fb2eba64beffb1d674e0bf7e78a431df638",
+    "3_motivation.tex": "f5539956a64ce321fa58db8d407c92ca11621aa894e9bda1eaa253fd681a0c51",
+    "Tables/Table_ka_val.tex": "ea98f3c4ce71e5d41376dd0fd336e555481593ce867f1f0c546bb979cdbab8e1",
+    "Tables/Table_ka_dist.tex": "1d1038f4a8430b9d420362608580b06aa37dee9bde705a811d229889ddad12e8",
+    "Figures/Figure1.tex": "a9edd35f98dec34f9b54a9c60db4ca3688e70458e34e4388841216cb0144fe29",
+    "Figures/Figure2.tex": "af7450aa9da808c00853679b63939a45f3e3ae4802b4585c4e482c8f3c0dc94c",
+    "4_klear.tex": "6e8e6bb32e956ecc4bbe9ad956bae0dafa59c043e7afd26e8c3a3817e3e1ac8a",
+    "5_construction.tex": "b9501922ef1a8bfe2b97f8789eaac2cb0b6de0684619a91655977c360e22390c",
+    "Tables/Table_stats.tex": "a918ff80cdebfb06a66d7196964f0f3923260f5e4fc659ea5789cdc9ab0f97e2",
+    "Tables/Table_yield.tex": "7daae7cfefd88147c61ac6495c3ac2fd0c7880ce72e5fc0b43c9e12d6c47d434",
+    "Tables/Table_matched.tex": "485845dd8f69f89ad35f6185f30fda0f813d692d75396256d98594b30e3599c2",
+    "6_utility.tex": "bc282f6ada0e9af16c0b8359d6af1fb7d187039fb452f4dd3fa0ad7c6a66dc83",
+    "Figures/Figure3.tex": "64400c16d36895be62301dae92d8d501bc1d35355e269a83ebd2344e5ce54a67",
+    "Figures/Figure4.tex": "007de25f612a1a1c7eb3a8eec5cc7705005286f3091c48bce03e45d2b05d9d2e",
+    "7_conclusion.tex": "c443f062a6ec196c29e78782bbe4d62dc24eaf1a49373e75e5518e7e2396fd2b",
+    "8_appendix.tex": "4c766527f6649a01be9c6ae9c3f132651512007fa9b9e62f3643b647b06092df",
+    "Tables/appendix/source_stats.tex": "dcb745aacf60dbdb08a3f3ccf7085dca8dad82587f255a8002384ec79d711370",
+    "Tables/appendix/ka_taxonomy.tex": "897231883e226578ea9d12256c59912e085393b4a063cb332e6232089d6ca0f8",
+    "Tables/appendix/k_examples.tex": "5d8fdf774fbc134a0c5319cc3e9f7eea0c26c2b680d837b3e82c6e8d49f1180a",
+    "Tables/appendix/a_examples.tex": "51c15c122921ca27afaaad8d780e9983617cb3a4e69f3c7f10c3e7da8bfd65f0",
+    "Tables/appendix/ka_reliability.tex": "8d70c1640b57cbe96acf05b66599514ea95b7128a812d3a0593d10c1965591b4",
+    "Tables/appendix/failure_taxonomy.tex": "3827d5cd60bbf6ed5d88208caa13f29db7c55cb9386a57962b79885abfa7d8e8",
+    "Tables/appendix/failure_by_a.tex": "7c8f38356845c0732bcd4ccf6ae24e9a254dac5298b77cc01fe52291b4d5d30d",
+    "Tables/appendix/rubrics.tex": "18aa4fdd288fca3a838ed06e063db08ae23c8ea657733c0d11ceaad5ea733816",
+    "Tables/appendix/construction_config.tex": "6d79dd8b567899d89a8a7493e8718d2dfdaaeb1dca2e96678269cb19bee93902",
+    "Tables/appendix/yield_by_type.tex": "0fb6473c150219a7f08dc82d0ea0973a1031eedddb7dd93a36a3b2b19d35c779",
+    "Tables/appendix/human_validation.tex": "84e8bd3493eecdf1ef5c14fd9e4d03538fcc46fee235f6247dc096f8ffa996ef",
+    "Tables/appendix/criteria.tex": "fe8e63cb924d38c489d4f078f88491a1eebb6036697a16accc981f86a4e6e693",
+    "Tables/appendix/anchor.tex": "5835eb7def1e571ed0f1c92daa856d275d491ed127b4108bbaa872a459ae48b2",
+    "Tables/appendix/seed_difficulty.tex": "190981a0929028fd49f9adb881af07e361b3d04d15a53a86b4c2384edf360ce7",
+    "Tables/appendix/final_stats.tex": "c6d38a4b5e705726707ee55728c78a76f6aaa5060b0f3bcfb058170ffdfa6c56",
+    "Tables/appendix/eval_models.tex": "acb9552eb6a296db85429e13cbb12339fbfe2190beb748bbe1394dcf866e52a2",
+    "Tables/appendix/usage.tex": "a322eeaafcf6816cd81e37a0aa9d89d8c0863619f6951669c2882ec9ea6b2cfa",
+    "Tables/appendix/by_benchmark.tex": "0e090d5c1e2c64c37e441732668aabcbe1f8f9791bab31a3a869ede4fa0580ff",
+    "Tables/appendix/by_family.tex": "9c8b822c6f605b12858bee708ce2e435240892bcbcc02386a77c0230af140996",
+    "Tables/appendix/knowledge_gain.tex": "4df252249bec53e5eb9d62ca15fbc54d52f336386efde2d52d565cef493dd834",
+    "Tables/appendix/seed_results.tex": "a666b561d4406dcb08629101d95ff14bf6badb57d563a83061125fdad6042754",
+    "Tables/appendix/failure_contrast.tex": "4de97f93a2dad76b0beccd74389528b02b35c60bdd0dc8708265c2dc7736d8a9",
+    "Tables/appendix/matched_test.tex": "585001a020ec26f22dc11696595a93514e621ea8d38345fb6853b365b06dd2d3",
+    "Tables/appendix/example_contrast.tex": "27a3f2abe689d929202c5fccd445c54b1a8758e380f25a29475d00b3104e969a",
+    "Tables/appendix/example_selfrev.tex": "17dfd8871080d51df7f23f138dc2270ac12c329b2e00d49b336429fac1f5ba7a",
+    "Tables/appendix/example_humanrev.tex": "1fc979d595c9be5beabb8ac5bc05c5b772beb0015f42d59fc1e3b95a59ea7739",
+    "Tables/appendix/example_failure.tex": "390593ba139aa420446179bc9a25c6d63ea605399b42d5b0c34ce36a03d09575",
+    "Tables/appendix/human_rubric.tex": "2b966f0e30d5bf63002a42bf38b8efc3faeab585c04392d6afcb981c61a08b41"
+  }
+}

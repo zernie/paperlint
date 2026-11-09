@@ -1,0 +1,326 @@
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{fig/framework.pdf}
+    \caption{
+    \textbf{Overview of our framework.}
+    The LLM policy generates candidate CAD programs from a physics-conditioned prompt containing geometric requirements, design-domain constraints, loads, and physical limits.
+    A deterministic CAD-CAE verifier sequentially evaluates each program for {CAD executability}, {geometric validity}, and {FEM-based physical feasibility and objectives}.
+    These verification results define a {Hierarchical Balanced Advantage}, which combines between-level progress with within-level peer ranking over objective scores.
+    The resulting advantage $A_i$ provides structured reinforcement signals for updating the CAD-generation policy.
+    }
+    \label{fig:overview}
+    \vspace{-1em}
+\end{figure}
+
+Our goal is to train a LLM to generate CAD programs that satisfy both geometric specifications and physical constraints. As illustrated in Fig.~\ref{fig:overview}, our framework takes a physics-aware prompt as input, generates candidate CadQuery programs with an LLM policy, evaluates them through a deterministic CAD--CAE verification pipeline, and converts the verification outcomes into structured reinforcement signals for policy optimization. The resulting training framework integrates CAD executability, geometric compliance, and physics-based feasibility into a unified optimization process.
+
+% \subsection{Problem Formulation} 
+% \label{sec:problem_formulation}
+
+% Let \(q\in\mathcal{Q}\) denote a physics-aware design prompt, where \(\mathcal{Q}\) is the space of design specifications. Each prompt jointly describes geometric requirements, the admissible design domain, material properties, loading and boundary conditions, engineering constraints, and a design objective. An LLM policy \(\pi_{\theta}\), parameterized by \(\theta\in\mathbb{R}^{d}\), defines a conditional distribution over the space of CadQuery programs \(\mathcal{O}\). We sample a group of candidate programs as \(o_i\sim\pi_{\theta}(\cdot\mid q)\), where \(o_i\in\mathcal{O}\) and \(i=1,\ldots,G\).
+
+% Our setting specifies selected geometric parameters through admissible ranges rather than fixed values, defining a constrained design space rather than a unique target geometry. A single prompt may therefore admit multiple geometrically distinct solutions. 
+% A program \(o\in\mathcal O\) is feasible if it executes successfully to produce a valid CAD solid, its geometry satisfies the specified requirements, and its FEM evaluation succeeds with all physical constraints satisfied. We denote the set of feasible programs for prompt \(q\) by \(\mathcal F(q)\subseteq\mathcal O\).
+% Feasibility alone does not select a unique design: different dimensional choices may satisfy the same requirements while producing different structural masses. We therefore use an engineering objective \(J(o;q)\) to express the preference among feasible programs, with smaller values preferred. For the tasks considered here, \(J(o;q)=m(o;q)\), where \(m(o;q)\) is the mass of the generated solid under the specified material properties. The resulting constrained design problem is
+% \begin{align}
+%      o^{*}\in\underset{o\in\mathcal F(q)}{\arg\min}\;J(o;q).
+%     \label{eq:problem}
+% \end{align}
+% The prescribed mass upper bound contributes to feasibility, whereas the objective favors further mass reduction among feasible designs. The training feedback introduced below additionally considers capped stress and displacement margins when comparing feasible candidates.
+
+
+% During training, optimization is performed over the sampled candidate set
+% \(\mathcal{O}_{\theta}(q)\). The CAD--CAE verifier determines which candidates
+% belong to the feasible subset \(\mathcal{F}_{\theta}(q)\) and provides
+% hierarchical feedback for infeasible candidates according to their verification
+% status. Accordingly, we optimize \(\pi_{\theta}\) to increase the likelihood
+% of feasible designs while improving the engineering objective \(J(o;q)\)
+% among feasible candidates.
+\subsection{Problem Formulation} 
+\label{sec:problem_formulation}
+
+Let \(q\in\mathcal{Q}\) denote a physics-aware design prompt describing geometric requirements, the admissible design domain, material properties, loading and boundary conditions, engineering constraints, and a design objective. An LLM policy \(\pi_{\theta}\), parameterized by \(\theta\in\mathbb{R}^{d}\), defines a conditional distribution over CadQuery programs \(\mathcal{O}\). During training, we sample a group of candidates
+\(o_i\sim\pi_{\theta}(\cdot\mid q)\), \(i=1,\ldots,G\).
+
+Our setting specifies selected geometric parameters through admissible ranges rather than fixed values, defining a constrained design space rather than a unique target geometry. A program \(o\in\mathcal{O}\) is feasible if it executes successfully to produce a valid CAD solid, satisfies the specified geometric requirements, and passes FEM evaluation with all physical constraints satisfied. We denote the feasible set by \(\mathcal{F}(q)\subseteq\mathcal{O}\). Among feasible programs, we optimize an engineering objective \(J(o;q)\), with smaller values preferred. For the tasks considered here, \(J(o;q)=m(o;q)\), where \(m(o;q)\) is the mass of the generated solid. The resulting constrained design problem is
+\begin{align}
+    o^{*}\in\underset{o\in\mathcal F(q)}{\arg\min}\;J(o;q).
+    \label{eq:problem}
+\end{align}
+During training, optimization is performed over the sampled candidate set
+\(\mathcal{O}_{\theta}(q)\). The CAD--CAE verifier identifies the feasible subset
+\(\mathcal{F}_{\theta}(q)\) and provides hierarchical feedback for candidates
+according to their verification status. The policy is optimized to increase the
+probability of feasible designs while improving \(J(o;q)\) among feasible candidates.
+
+% Our goal is to train a language model to generate CAD programs that satisfy both geometric specifications and engineering requirements. As illustrated in Fig.~\ref{fig:overview}, our framework takes a physics-conditioned prompt as input, generates candidate CadQuery programs with an LLM policy, evaluates them through a deterministic CAD--CAE verification pipeline, and converts the verification outcomes into structured reinforcement signals for policy optimization. The resulting training framework integrates CAD executability, geometric compliance, and physics-based feasibility into a unified optimization process.
+
+% \subsection{Problem Formulation}
+% \label{sec:problem_formulation}
+
+% Let \(q\in\mathcal{Q}\) denote a physics-aware design prompt, where
+% \(\mathcal{Q}\) is the space of design specifications.
+% Each prompt jointly describes the target geometry, admissible design
+% domain, material properties, loading and boundary conditions,
+% engineering constraints, and design objective.
+% An LLM policy
+% \(\pi_{\theta}\), parameterized by
+% \(\theta\in\mathbb{R}^{d}\), defines a conditional distribution over
+% the space of CadQuery programs \(\mathcal{O}\).
+% We sample a group of candidate programs as
+% \(o_i \sim \pi_{\theta}(\cdot\mid q)\),
+% where \(o_i\in\mathcal{O}\) and \(i=1,\ldots,G\).
+
+% Unlike conventional Text-to-CAD generation, which typically aims to reproduce a largely predetermined geometry from explicit dimensional specifications, our setting relaxes selected geometric parameters from fixed values to admissible ranges, thereby defining a constrained design space. The model is required to both instantiate a valid CAD geometry within this space and identify a configuration that satisfies the prescribed physics-based constraints under the given engineering conditions. Specifically, a candidate program \(o_i\) is considered
+% feasible only if it can be successfully executed into a valid CAD
+% solid, the resulting geometry satisfies the specified geometric
+% requirements, and its physical response under FEM
+% satisfies the prescribed engineering limits. 
+% These requirements are
+% ordered by construction: geometric verification is meaningful only
+% for an executable CAD model, while physical verification is meaningful
+% only for a geometrically valid design.
+
+% Given a prompt \(q\), the policy \(\pi_{\theta}\) generates a group of
+% \(G\) candidate programs,
+% \(
+% \mathcal{O}_{\theta}(q)=\{o_i\}_{i=1}^{G}
+% \).
+% Let \(\mathcal{F}(q)\subseteq\mathcal{O}\) denote the set of all
+% CadQuery programs that satisfy the CAD, geometric, and physical
+% requirements specified by \(q\).
+% The feasible candidates produced by the current policy are therefore
+% given by
+% \(
+% \mathcal{F}_{\theta}(q)
+% =
+% \mathcal{O}_{\theta}(q)\cap\mathcal{F}(q)
+% \).
+% For each feasible program \(o\in\mathcal{F}(q)\), let
+% \(J(o;q)\in\mathbb{R}\) denote the corresponding engineering objective,
+% such as structural mass. The underlying engineering-constrained Text-to-CAD problem is formulated as
+% \begin{equation}
+%     o^{*}
+%     \in
+%     \underset{o\in\mathcal{F}(q)}{\arg\min}
+%     \; J(o;q).
+%     \label{eq:problem}
+% \end{equation}
+% During training, optimization is performed over the sampled candidate set
+% \(\mathcal{O}_{\theta}(q)\). The CAD--CAE verifier determines which candidates
+% belong to the feasible subset \(\mathcal{F}_{\theta}(q)\) and provides
+% hierarchical feedback for infeasible candidates according to their verification
+% status. Accordingly, we optimize \(\pi_{\theta}\) to shift probability mass
+% toward feasible designs while improving the engineering objective \(J(o;q)\)
+% within \(\mathcal{F}_{\theta}(q)\). 
+
+
+
+\subsection{Deterministic CAD--CAE Verifier}
+\label{sec:verifier}
+
+For any group of programs \(o_i\) sampled from \(\pi_{\theta}(\cdot \mid q)\), we evaluate each program using the same deterministic CAD--CAE pipeline. The verifier proceeds through three stages.
+
+\paragraph{CAD execution.}
+The generated program is checked for syntax and safety, executed, and tested for valid output construction. It must produce a valid CAD solid that can be exported in STEP format and reimported by the downstream geometry kernel. Failure at this stage is recorded as a CAD-construction failure.
+
+\paragraph{Geometry check.}
+For successfully constructed solids, we compare the global bounding-box extents with the prompt's dimensional ranges and check whether the required geometric constructions are present. This checks compliance with the design requirements, separately from the solid-validity check above. Candidates satisfying these requirements proceed to CAE verification.
+
+\paragraph{CAE verification.}
+The solid is meshed and analyzed using FEM under the prescribed material properties, loads, and boundary conditions. For candidate \(o_i\), we record the volume-weighted 99th-percentile element von Mises stress \(\sigma_i\), maximum nodal displacement \(\delta_i\), and mass \(m_i=m(o_i;q)\). Let \(\bar\sigma\), \(\bar\delta\), and \(\bar m\) denote their respective upper bounds in the prompt. Physical verification succeeds when the CAE procedure completes and \(\sigma_i\leq\bar\sigma\), \(\delta_i\leq\bar\delta\), and \(m_i\leq\bar m\).
+
+To summarize these outcomes, let \(L_i\in\{0,1,2,3\}\) denote the verification level of candidate \(o_i\):
+
+\begin{equation}
+L_i=
+\begin{cases}
+0, & \text{CAD construction fails},\\
+1, & \text{CAD succeeds but geometric requirements fail},\\
+2, & \text{geometry passes but CAE or a physical constraint fails},\\
+3, & \text{all geometric and physical requirements pass}.
+\end{cases}
+\label{eq:level}
+\end{equation}
+
+Thus, the three checks yield four possible outcomes: failure at any one of the checks, or success at all three. A larger \(L_i\) indicates further progress through the verification procedure; \(L_i=3\) identifies a jointly feasible candidate. %The individual measurements provide finer distinctions within each level.
+
+\subsection{Hierarchical Balanced Advantage} \label{sec:hba} 
+The verification levels distinguish coarse progress toward feasibility but do not distinguish candidates with the same status. For example, two physically infeasible candidates may violate their constraints by very different amounts. Conversely, directly aggregating all objective scores can allow improvements in individual criteria to compensate for unmet requirements. We therefore combine a between-level advantage with a within-level comparison, retaining both the verification ordering and feedback on partial progress.
+
+\paragraph{Between levels.} For \(G\) rollouts generated from the same prompt, we define the level advantage as 
+\begin{equation} 
+A_i^{\mathrm{level}} = L_i - \frac{1}{G} \sum_{j=1}^{G} L_j. 
+\label{eq:level_advantage} 
+\end{equation} 
+This term compares each candidate's level with the group mean. Candidates above the mean receive positive level advantages. When all candidates occupy the same level, this term is zero, and the within-level component provides the remaining distinctions.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\textwidth]{fig/reward_new.pdf}
+    % \caption{
+    % \textbf{Rewards for within-level PeerRank.}
+    % Each level evaluates a different aspect, from CAD executability (\(L_0\)) and geometric compliance (\(L_1\)) to physical feasibility (\(L_2\)) and feasible-design quality (\(L_3\)). The blocks show the objective definitions and their relative weights within each level. Each objective is independently peer-ranked among rollouts in the same level, and the resulting centered ranks are combined using these weights to form the within-level advantage \(\widetilde{A}_i\).
+    % }
+    \caption{
+\textbf{Reward definitions for within-level PeerRank.}
+Each block specifies how an evaluated outcome is mapped to an objective reward
+within its corresponding level.
+Solid regions denote fixed rewards once a condition is satisfied, while shaded
+gradients indicate rewards that vary continuously with closeness to the target
+or the achieved margin; faded regions correspond to outcomes receiving zero or
+lower reward.
+The resulting objective rewards are independently peer-ranked and combined
+using the indicated within-level weights.
+}
+    \label{fig:reward}
+    \vspace{-1em}
+\end{figure}
+
+\paragraph{Within a level.}
+Candidates are compared only with others from the same prompt and the same verification level. We first map the verification outcomes to level-specific objective scores, then rank candidates separately for each objective. Fig.~\ref{fig:reward} summarizes the score definitions and weights.
+\textbf{(1).} For candidates with \(L_i=0\), CAD-progress feedback reflects output completeness, code-only formatting, syntax validity, safe calls, result construction, and STEP export. This distinguishes partial construction progress even when a valid CAD solid has not been obtained.
+\textbf{(2).}  For \(L_i=1\), we assign equal weights to bounding-box closeness and geometric-semantic recall. These scores measure proximity to the dimensional ranges and coverage of the required geometric constructions, respectively.
+\textbf{(3).}  For \(L_i=2\), we compare closeness to the stress, displacement, and mass limits, again with equal weights. For an available measurement \(v\) with upper bound \(\bar v\), its score is \(1\) when \(v\leq\bar v\), and \(\bar v/v\) otherwise. An unavailable measurement receives a score of zero. These scores distinguish different degrees of constraint violation without rewarding further improvement of a quantity that already satisfies its limit.
+\textbf{(4).}  For \(L_i=3\), all constraints are satisfied. We compare mass efficiency \(1-m_i/\bar m\), stress margin, and displacement margin with equal weights. The two margin scores are capped at a \(10\%\) margin, beyond which additional margin receives no further reward. Feasible-design feedback therefore combines the mass objective with capped margin objectives rather than ranking feasible candidates by mass alone.
+
+
+For a given prompt and a level \(\ell\in\{0,1,2,3\}\), let \(\mathcal I_\ell=\{j\in\{1,\ldots,G\}:L_j=\ell\}\) be the set of candidate indices at that level. Let \(K_\ell\) be its number of objectives. For candidate \(i\in\mathcal I_\ell\), denote its score for objective \(k\in\{1,\ldots,K_\ell\}\) by \(s_{ik}\), and its tie-aware centered rank among \(\mathcal I_\ell\) by \(r_{ik}\in[-1,1]\), with higher ranks indicating better scores. Scores within \(10^{-3}\) are treated as ties. With nonnegative objective weights \(w_{\ell k}\) satisfying \(\sum_{k=1}^{K_\ell}w_{\ell k}=1\), the within-level advantage is
+
+\begin{equation}
+\widetilde A_i=
+\begin{cases}
+\displaystyle\sum_{k=1}^{K_{L_i}}w_{L_i k}\,r_{ik},
+& |\mathcal I_{L_i}|>1,\\[2mm]
+0, & |\mathcal I_{L_i}|=1.
+\end{cases}
+\label{eq:peer_rank}
+\end{equation}
+
+We refer to this objective-wise ranking and averaging operation as PeerRank. It compares ranks rather than a weighted sum of the original objective scores, and gives \(|\widetilde A_i|\leq1\).
+
+% REVIEW RANK: The source specifies the range and tie tolerance but not the
+% exact centered-rank transform or tolerance-based tie-grouping algorithm.
+% The equation above makes the stated weighted average explicit; it does not
+% complete the missing ranking definition. Insert the implementation-matched
+% definition here or in an appendix. Do not assume midranks or pairwise ranks.
+
+\paragraph{Combined advantage.}
+
+The nonnegative weights \(\lambda_L\) and \(\lambda_w\) control the between-level and within-level terms, respectively. We combine them as
+\begin{equation}
+A_i=\lambda_L A_i^{\mathrm{level}}+\lambda_w\widetilde A_i.
+\label{eq:hba}
+\end{equation}
+
+For candidates \(i\) and \(j\) from the same prompt group with \(L_i>L_j\), the common level baseline cancels, giving
+\[
+A_i-A_j
+=\lambda_L(L_i-L_j)+\lambda_w(\widetilde A_i-\widetilde A_j)
+\geq\lambda_L-2\lambda_w.
+\]
+Choosing \(\lambda_L>2\lambda_w\) therefore ensures that the higher-level candidate receives a larger advantage regardless of its within-level rank. This is an ordering guarantee for the training signal within each prompt group. Both components are computed together, not introduced in successive training stages.
+
+\paragraph{Policy optimization.}
+\label{sec:policy_optimization}
+
+We use the hierarchical advantages in GRPO~\citep{shao2024deepseekmath}. The policy loss uses DAPO-style token-level aggregation: generated-token losses are averaged across the batch rather than first averaged separately within each completion. Let \(\mathbf A\) collect the advantages for the sampled completions, each computed within its own prompt group, and let \(\mathcal L_{\mathrm{DAPO}}(\theta;\mathbf A)\) denote the GRPO policy term with this aggregation. With a reference policy \(\pi_{\mathrm{ref}}\) and KL regularization weight \(\beta\geq0\), the training objective is
+
+\begin{equation}
+\mathcal L
+=\mathcal L_{\mathrm{DAPO}}(\theta;\mathbf A)
++\beta D_{\mathrm{KL}}(\pi_\theta\,\|\,\pi_{\mathrm{ref}}),
+\label{eq:grpo}
+\end{equation}
+
+where \(D_{\mathrm{KL}}\) denotes the Kullback--Leibler divergence. The CAD kernel and FEM solver supply verification outcomes, not gradients through geometry construction or simulation. At inference time, the trained policy directly generates a CadQuery program without an iterative simulation-guided refinement loop.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \paragraph{Within a level.}
+% Candidates sharing the same verification level are compared only with their same-level peers. Each level uses a different set of objectives, all normalized to \([0,1]\).
+
+% For \(L_0\), we use a CAD progress score that combines EOS termination, code-only formatting, syntax validity, safety, result-variable construction, and successful STEP export. This provides a graded signal even when a valid CAD solid has not yet been produced.
+
+% For \(L_1\), candidates are compared using bounding-box closeness and geometric-semantic recall with equal weights. The former measures how closely the realized dimensions satisfy the prescribed range, while the latter measures whether all geometric capabilities required by the prompt are present.
+
+% For \(L_2\), we compare physical constraint closeness for stress, displacement, and mass, again with equal weights. For each quantity \(v\) with limit \(\bar{v}\), the score is \(1\) if \(v \leq \bar{v}\), \(\bar{v}/v\) otherwise, and \(0\) when the corresponding CAE result is unavailable. Therefore, a failed FEM evaluation receives zero stress and displacement scores, while the mass score can still be recovered from the CAD geometry.
+
+% For \(L3\), the design is already feasible, and the objectives shift from satisfying constraints to improving the feasible solution. We use mass efficiency \(1-m/\bar{m}\), together with stress and displacement margins. The latter two are capped at a \(10\%\) safety margin, so additional margin beyond this point provides no further benefit. As a result, mass reduction becomes the primary optimization objective once feasibility has been achieved.
+
+% Within each level, every objective is independently converted into a tie-aware centered rank in \([-1,1]\), with values within \(10^{-3}\) treated as ties. The ranked objectives are then averaged using the corresponding level weights to obtain
+% \begin{equation}
+%     \widetilde{A}_i
+%     =
+%     \operatorname{PeerRank}(o_i \mid L_i).
+%     \label{eq:peer_rank}
+% \end{equation}
+% If no same-level peer exists, we set \(\widetilde{A}_i=0\). Since ranking is performed separately for each objective, heterogeneous quantities such as geometry, stress, displacement, and mass do not need to be placed on a common numerical scale.
+
+% \paragraph{Combined advantage.}
+% The final advantage used for policy optimization is
+% \begin{equation}
+%     A_i
+%     =
+%     \lambda_L
+%     \left(
+%         L_i-\frac{1}{G}\sum_{j=1}^{G}L_j
+%     \right)
+%     +
+%     \lambda_w \widetilde{A}_i,
+%     \label{eq:hba}
+% \end{equation}
+% where \(\lambda_L=1\) and \(\lambda_w=0.25\). Because \(|\widetilde{A}_i|\leq 1\) and \(\lambda_L>2\lambda_w\), a candidate at a higher verification level always receives a larger advantage than a candidate at a lower level. The within-level term therefore refines the ordering without overriding the CAD--geometry--physics hierarchy.
+
+% For monitoring, we additionally report a scalar reward defined as the verification level plus the weighted objectives of that level, resulting in four non-overlapping reward intervals \(L0:[0,1]\), \(L1:[1,2]\), \(L2:[2,3]\), and \(L3:[3,4]\). This scalar is used only for logging and does not directly determine the policy gradient.
+
+
+% \subsection{Policy Optimization}
+% \label{sec:policy_optimization}
+
+% The hierarchical advantage \(A_i\) is used to optimize the CAD-generation policy with the DAPO objective,
+% \begin{equation}
+%     \mathcal{L}
+%     =
+%     \mathcal{L}_{\mathrm{DAPO}}(\theta; A_i)
+%     +
+%     \beta
+%     D_{\mathrm{KL}}
+%     \left(
+%         \pi_{\theta}
+%         \,\Vert\,
+%         \pi_{\mathrm{ref}}
+%     \right),
+%     \label{eq:policy_update}
+% \end{equation}
+% where \(\pi_{\mathrm{ref}}\) denotes the reference policy and \(\beta\) controls the KL regularization strength.
+
+% The CAD kernel and FEM solver are used only as deterministic external verifiers and therefore need not be differentiable. They convert each complete program rollout into a verification level and level-specific objectives, while the hierarchical advantage determines the actual policy update. This allows the model to improve according to the ordered structure of the task: first producing valid CAD, then satisfying geometric requirements, then achieving physical feasibility, and finally improving engineering performance within the feasible region.
+
+
+
+
+
+
+
+
+
+
+
+

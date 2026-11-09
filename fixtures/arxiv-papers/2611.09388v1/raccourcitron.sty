@@ -1,0 +1,197 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tron_commands}[2021/01/22, made in Tron]
+
+%%%%%%%%%%%%%%%%%%%% ABBREVIATIONS %%%%%%%%%%%%%%%%%%%%
+
+\newcommand*{\xra}[2][]{\xrightarrow[#2]{#1}}
+% \newcommand{\xra}[1]{\, \tikz[baseline] \draw (0pt,3.5pt) -- (7pt,3.5pt); {\raisebox{1.5pt}{\ensuremath{\scriptstyle #1}}} \tikz[baseline] \draw [->] (0pt,3.5pt) -- (7pt,3.5pt); \, }
+
+\let\tempCaption=\caption
+\renewcommand{\caption}[1]{\itshape \tempCaption{#1}}
+
+\newcommand{\obar}[1]{\overline{#1}}
+\newcommand{\ubar}[1]{\underline{#1}}
+
+\newcommand{\set}[1]{\left\{#1\right\}}
+% \newcommand{\nset}[1]{[\![#1]\!]}
+\newcommand{\nset}[2]{\set{#1,\dots,#2}}
+\newcommand{\pa}[1]{\left(#1\right)}
+\newcommand{\ang}[1]{\left<#1\right>}
+\newcommand{\bra}[1]{\left[#1\right]}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\normop}[1]{{\left\vert\kern-0.25ex\left\vert\kern-0.25ex\left\vert #1
+			\right\vert\kern-0.25ex\right\vert\kern-0.25ex\right\vert}}
+
+\newcommand{\mat}[1]{\begin{matrix}#1\end{matrix}}
+\newcommand{\pmat}[1]{\pa{\mat{#1}}}
+\newcommand{\bmat}[1]{\bra{\mat{#1}}}
+\newcommand{\sismat}[1]{\left\{\mat{#1}\right.}
+\newcommand{\cas}[1]{\begin{cases}#1\end{cases}}
+\newcommand{\sm}[1]{\begin{smallmatrix}#1\end{smallmatrix}}
+\newcommand{\psm}[1]{\pa{\sm{#1}}}
+\newcommand{\bsm}[1]{\bra{\sm{#1}}}
+\newcommand{\tci}[2]{\set{\,#1 \mid{} #2\,}}
+\newcommand{\tcia}[2]{\ang{\,#1 \mid{} #2\,}}
+\newcommand{\pfrac}[2]{\pa{\frac{#1}{#2}}}
+\newcommand{\bfrac}[2]{\bra{\frac{#1}{#2}}}
+\newcommand{\der}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\pder}[2]{\pfrac{\partial #1}{\partial #2}}
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+\newcommand{\Hess}[1]{\mathds{H}\pa{#1}}
+
+\newcommand{\ET}{\wedge} % Commande pour les arbres de dérivations.
+\newcommand{\OU}{\vee}
+\newcommand{\IMP}{\rightarrow}
+\newcommand{\SSI}{\leftrightarrow}
+\newcommand{\PT}{\forall}
+% \newcommand{\INDEP}{\rotatebox[origin=c]{90}{$\models$}}
+
+\newcommand{\ie}{\textit{i.e.}~}
+\newcommand{\eg}{\textit{e.g.}~}
+\newcommand{\iid}{\textit{i.i.d}~}
+
+\newcommand{\indep}{\perp \!\!\! \perp}
+
+\newcommand{\restr}[2]{{
+\left.\kern-\nulldelimiterspace
+#1
+\vphantom{\big|}
+\right|_{#2}
+}}
+
+\newcommand{\fun}[5]{  % dessine la fonction #1 : #2 -> #3
+	\begin{array}{ccccc} %							#4 -> #5
+		#1 & : & #2 & \longrightarrow     & #3 \\
+		   &   & #4 & \longmapsto & #5 \\
+	\end{array}}
+
+\newcommand*\circled[1]{\tikz[baseline= (char.base)]{  %fait un cerlce autour de #1
+		\node[shape=circle,draw,inner sep=1pt] (char) {#1};}}
+
+\newcommand{\card}{\#}
+
+%TODO: dx
+
+%%%%%%%%%%%%%%%%%%%% OPERATORS %%%%%%%%%%%%%%%%%%%%
+\DeclareMathOperator{\de}{d}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\Div}{Div}
+\DeclareMathOperator{\GL}{GL}
+\DeclareMathOperator{\SL}{SL}
+\DeclareMathOperator{\SO}{SO}
+\DeclareMathOperator{\Ad}{Ad}
+\DeclareMathOperator{\ad}{ad}
+\DeclareMathOperator{\id}{id}
+\DeclareMathOperator{\Image}{Im}
+\DeclareMathOperator{\Ker}{Ker}
+\DeclareMathOperator{\Mod}{Mod}
+\DeclareMathOperator{\Proj}{Proj}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\Tors}{Tors}
+\DeclareMathOperator{\vp}{v.p.}
+\DeclareMathOperator{\Vol}{Vol}
+
+% ML
+\DeclareMathOperator{\SoftMax}{SoftMax}
+\DeclareMathOperator{\Softmax}{SoftMax}
+\DeclareMathOperator{\Conv}{Conv}
+\DeclareMathOperator{\Maxpool}{Maxpool}
+\DeclareMathOperator{\Avgpool}{Avgpool}
+\DeclareMathOperator{\Dropout}{Dropout}
+\DeclareMathOperator{\Attention}{Attention}
+
+\DeclareMathOperator{\ReLU}{ReLU}
+\DeclareMathOperator{\LeakyReLU}{LeakyReLU}
+\DeclareMathOperator{\GeLU}{GeLU}
+\DeclareMathOperator{\Sigmoid}{Sigmoid}
+
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Vect}{Vect}
+\DeclareMathOperator{\Span}{Span}
+\DeclareMathOperator{\Prog}{Prog}
+\DeclareMathOperator{\prox}{prox}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\Supp}{Supp}
+\DeclareMathOperator{\grad}{grad}
+
+\DeclareMathOperator{\Rs}{sec}
+\newcommand{\Rm}{\mathit{Rm}}
+\newcommand{\Rc}{\mathit{Rc}}
+
+
+%%%%%%%%%%%%%%%%%%%% LETTERS %%%%%%%%%%%%%%%%%%%%
+
+% ---- define all \c[A-Z] ----
+\def\foo#1{%
+\expandafter\newcommand\csname c#1\endcsname{\mathcal{#1}}}
+
+\count@=0
+\loop
+\advance\count@ 1
+\edef\y{\@Alph\count@}%
+\expandafter\foo\y
+\ifnum\count@<26
+\repeat
+% ----------------------------
+
+% ---- define all \b[A-Z] ----
+\def\foo#1{%
+\expandafter\newcommand\csname b#1\endcsname{\mathbb{#1}}}
+
+\count@=0
+\loop
+\advance\count@ 1
+\edef\y{\@Alph\count@}%
+\expandafter\foo\y
+\ifnum\count@<26
+\repeat
+% ----------------------------
+
+% ---- define all \f[A-Z] ----
+\def\foo#1{%
+\expandafter\newcommand\csname f#1\endcsname{\mathfrak{#1}}}
+
+\count@=0
+\loop
+\advance\count@ 1
+\edef\y{\@Alph\count@}%
+\expandafter\foo\y
+\ifnum\count@<26
+\repeat
+% ----------------------------
+
+% \def\A{\mathcal{A}}
+% \def\B{\mathcal{B}}
+\def\C{\mathbb{C}}
+\def\D{\mathcal{D}}
+\def\E{\mathbb{E}}
+\def\F{\mathcal{F}}
+\def\G{\mathcal{G}}
+% \def\L{\mathcal{L}}
+\def\M{\mathcal{M}}
+\def\frakM{\mathfrak{M}}
+\def\frakm{\mathfrak{m}}
+\def\No{\mathcal{N}}
+\def\N{\mathbb{N}}
+\def\O{\mathbb{O}}
+\def\P{\mathbb{P}}
+\def\Q{\mathbb{Q}}
+\def\R{\mathbb{R}}
+\def\T{\mathcal{T}}
+\def\U{\mathcal{U}}
+\def\W{\mathcal{W}}
+\def\X{\mathcal{X}}
+\def\Y{\mathcal{Y}}
+\def\Z{\mathbb{Z}}
+
+\def\1{\mathds{1}}
+\def\hx{\hat{x}}
+\newcommand{\II}{\mathrm{I\!I}}

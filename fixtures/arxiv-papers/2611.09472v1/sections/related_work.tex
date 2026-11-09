@@ -1,0 +1,17 @@
+
+\section{Related Work}
+\label{sec:related}
+
+
+\paragraph{Self-evolution through policy learning.}
+STaR and ReST$^{\mathrm{EM}}$ improve model parameters by generating, filtering, and learning from the model's own solutions \citep{zelikman2022star,singh2024restem}. Other methods train the behaviors that support iterative improvement: RISE learns multi-turn revision after unsuccessful attempts, while SCoRe learns self-correction through online reinforcement learning \citep{rise2024,score2024}. SEAL generates self-edits whose supervised updates improve downstream performance \citep{seal2025}. Agent0 extends policy learning through the co-evolution of a task-generating curriculum agent and a tool-using executor \citep{agentzero2025}. These methods provide mechanisms for improving an agent's capabilities through parameter updates.
+
+
+
+\paragraph{Self-evolution through external memory.}
+External experience also supports adaptation without updating the acting model's weights. Reflexion stores verbal feedback, Voyager accumulates executable skills, and Agent-Pro refines an explicit behavioral policy through reflection and search \citep{shinn2023reflexion,wang2023voyager,agentpro2024}. Memento uses case-based memory, while MAGE organizes skills, successful traces, and teacher corrections in a co-evolving graph \citep{memento2025,yang2026mage}. Recent work also adapts how memory is managed: MemRL learns retrieval utilities from environmental feedback; MemSkill learns a memory-skill selector and revises memory routines; and EvolveMem adjusts retrieval configurations through failure diagnosis and regression checks \citep{memrl2026,memskill2026,evolvemem2026}. Memento-Skills develops reusable skills and stateful prompts through a read--write learning loop \citep{mementoskills2026}. These approaches illustrate how agents can improve by changing the experience available to them and how it is used.
+
+\input{tables/method_comparison}
+
+\paragraph{Joint evolution of weights and memory.}
+Several methods combine external experience with policy learning. EvolveR couples distilled principles with reinforcement learning, and SkillRL jointly develops a hierarchical skill library and the agent policy \citep{evolver2025,skillrl2026}. AgentEvolver reuses an experience pool during policy learning, while EDGE combines gain-gated distillation with utility-based experience pruning \citep{agentevolver2025,xie2026edge}. This combination also relates to complementary learning systems, which distinguish rapid experience storage from gradual integration into distributed representations \citep{mcclelland1995cls}. Within this setting, \method\ focuses on two decisions: when stored experience should enter training, and when its external records can be removed. Demonstration-aware admission allows learning beyond current student mastery; a separate verification gate requires training participation and compares the updated model without episodic retrieval against the base model with retrieval before authorizing removal.

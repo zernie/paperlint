@@ -1,0 +1,35 @@
+\begin{table}[t]
+\centering
+\small
+\caption{\textbf{Stage-wise yield.}
+Indented rates are relative to the preceding unindented count; the overall automated-stage pass rate is relative to all generated candidates.}
+\label{tab:yield}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Stage} & \textbf{Count} & \textbf{Rate} \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{Automated stage}} \\
+\cmidrule{1-3}
+Candidates generated                    & 1,964 & --     \\
+\quad All eleven criteria \textsc{pass} & 627   & 31.9\% \\
+\quad Proxy answers incorrectly         & 760   & 38.7\% \\
+\quad Both (pass before revision)       & 294   & 15.0\% \\
+\cmidrule{1-3}
+Candidates revised                      & 1,662 & --     \\
+\quad Pass after self-revision          & 329   & 19.8\% \\
+\cmidrule{1-3}
+Pass the automated stage                & 623   & 31.7\% \\
+\midrule[\heavyrulewidth]
+\multicolumn{3}{@{}l}{\textit{Human validation}} \\
+\cmidrule{1-3}
+Candidates validated                    & 301   & --     \\
+\quad Pass directly                     & 252   & 83.7\% \\
+\cmidrule{1-3}
+Candidates revised                      & 49    & --     \\
+\quad Pass after human-guided revision  & 35    & 71.4\% \\
+\cmidrule{1-3}
+Final questions                         & 287   & --     \\
+\bottomrule
+\end{tabular}
+\vspace{-0.1in}
+\end{table}

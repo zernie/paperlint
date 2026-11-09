@@ -1,0 +1,148 @@
+\section{Methodology}
+\subsection{Framework Overview}
+\paragraph{Motivation.}
+We propose a robust semi-supervised learning framework for the DocRE task, which leverages the abundant unlabelled data for model training. Our approach is grounded in the following three key observations in the DocRE task: (1) obtaining large-scale, high-quality labelled data is prohibitively expensive; (2) the potential of unlabelled data to enhance performance remains under-explored; and (3) existing pseudo-labelling methods often fail to assess label quality or rely on iterative processes that can amplify noise, ultimately degrading model performance.
+
+\paragraph{}
+To address these challenges, we introduce \model, a novel framework featuring dual teacher-student networks trained in parallel. As shown in Figure~\ref{fig:overall-framework}, during the Self-supervised step, teacher networks generate pseudo-labels for unlabelled instances, while student networks make predictions on the same data (step \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/1.pdf}}). Pseudo-labels with high confidence are selected (step \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/2.pdf}}) and used to update the corresponding student networks (steps \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/3.pdf}}, \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/4.pdf}}). The improved associated student networks then inform updates to the teacher networks (step \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/5.pdf}}). To reduce confirmation bias, we periodically apply the proposed unsupervised synergistic cross-supervision mechanism to further refine the opposite student models (step \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/6.pdf}}).
+
+\subsection{Teacher-Student Architectures}
+\label{sec:baseline-models}
+% We describe the architecture of the two teacher-student networks used in our framework \model. We first presents the student models and subsequently details the construction of the corresponding teacher networks.
+
+\subsubsection{Student Networks.}
+\label{subsec:student-nets}
+To promote complementary learning signals during cross-supervision, we adopt KD-DocRE \citep{tan2022document} and UGDRE \citep{sun2023uncertainty} as our student networks. These lightweight models differ in both entity pair representation and training objectives. KD-DocRE employs Axial Attention \citep{ho2019axial} and a composite loss function that integrates Adaptive Thresholding Loss (ATL) \citep{zhou2021document} with Focal Loss \citep{lin2017focal} to better handle long-tail relations. In contrast, UGDRE enhances entity representations through token-level graph construction and follows the original ATL objective. Full architectural details are provided in Appendix \ref{appendix:baseline-structures}.
+
+\subsubsection{Teacher Networks.}
+Each teacher network in \model\ mirrors the architecture of its associated student. Their parameters are updated using EMA, which smooths the weights over time to yield more stable pseudo-labels. Initialisation details are discussed in Section \ref{subsec:train-procedure}.
+
+\subsection{Self-supervised Step}
+\label{subsec:self-training}
+This section details the Self-supervised process. Pseudo-label generation and refinement (steps \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/1.pdf}} and \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/2.pdf}}) are described in Sections~\ref{sec:pseudo-label-gen} and \ref{sec:pseudo-label-refine}, while the teacher update mechanism (step \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/5.pdf}}) is presented in Section~\ref{sec:teacher-net-update}.
+
+\paragraph{Motivation.} The Self-supervised step in \model\ aims to reduce the prolonged training time of prior methods by generating high-quality pseudo-labels in a single pass via teacher-student networks, avoiding iterative denoising. 
+
+\subsubsection{Pseudo-label Generation}
+\label{sec:pseudo-label-gen}
+In the Self-supervised step, each teacher network generates pseudo-labels for unlabelled data to supervise its associated student. To ensure label reliability, we adopt Monte Carlo (MC) dropout \citep{gal2016dropout}. Specifically, we perform several stochastic forward passes to compute prediction logits for each relation $r_i \in \mathcal{R}$ and the threshold class $TH$ \citep{zhou2021document}, representing the {\tt NA} relation, for a given entity pair $(e_h, e_t)$. The final prediction score $\bar{sc}_{h,t}^{r_i}$ is obtained by averaging over those forward passes:
+\begin{equation}
+    \label{pred-logits}
+    \bar{sc}_{h,t}^{r_i} = \frac{1}{N} \sum_{j=1}^N sc_{h,t}^{r_{ij}}
+\end{equation}
+where $sc_{h,t}^{r_{ij}}$ is the logit score for relation $r_i$ in the $j^{th}$ pass, $N$ is the number of stochastic forward passes. The same averaging is applied to the $TH$ class.
+
+Pseudo-labels are then assigned according to the following rule:
+$$
+\text{Pseudo-label} =
+\begin{cases}
+    r_i & \text{if } \bar{sc}_{h,t}^{r_i} > \bar{sc}_{h,t}^{TH} \\
+    \texttt{NA} & \text{otherwise}
+\end{cases}
+$$
+where $\bar{sc}_{h,t}^{TH}$ denotes the averaged score for the $TH$ class.
+
+% This procedure filters out low-confidence predictions and yields more trustworthy supervision signals.
+
+\subsubsection{Pseudo-labels Refinement}
+\label{sec:pseudo-label-refine}
+% Neural networks often suffer from poor calibration \citep{guo2017calibration, rizve2021in}, with predicted probabilities reflecting the biases of the teacher model rather than actual confidence. This can lead to overconfident but incorrect pseudo-labels \citep{si2024improving}.
+
+% To address this, we propose an unsupervised refinement strategy that prioritises more reliable pseudo-labels by leveraging uncertainty, measured as the variance of prediction logits across multiple forward passes.
+Neural networks often exhibit poor calibration, producing overconfident yet incorrect pseudo-labels \citep{guo2017calibration, rizve2021in, si2024improving}. To address this, we propose an unsupervised refinement strategy that prioritises reliable pseudo-labels using uncertainty,
+
+\paragraph{Uncertainty Estimation.} The uncertainty $u^{r_i}_{h,t}$ for each pseudo-relation $r_i$ of an entity pair $(e_h, e_t)$ is quantified as the variance of its logits across multiple forward passes, defined as:
+
+\begin{equation}
+\label{uncertainty-score}
+u^{r_i}_{h,t} = \sqrt{\frac{\sum_{j=1}^N(sc_{h,t}^{r_{ij}} - \bar{sc}_{h,t}^{r_i})^2}{N}}
+\end{equation}
+
+Here, $\bar{sc}_{h,t}^{r_i}$ is the mean prediction logit across $N$ stochastic forward passes. We compute uncertainty for all entity pairs, including both positive and negative ones. If a positive pair $(e_h', e_t')$ has multiple pseudo-relations, its overall uncertainty is averaged across these relations:
+\begin{equation}
+u_{h',t'} = \frac{1}{|\mathcal{R}^{ps}_{h', t'}|} \sum_{i=1}^{|\mathcal{R}^{ps}_{h', t'}|} u^{r_i}_{h',t'}
+\end{equation}
+where $\mathcal{R}^{ps}_{h', t'} \subset \mathcal{R}$ denotes the set of pseudo-relations. We rank all positive pairs by increasing uncertainty and select the top $p\%$ as reliable training samples; likewise, we select the top $n\%$ negative pairs. To address the class imbalance issue -- where 97\% of entity pairs are negative -- we set $p = 30$ and $n = 10$.
+
+The selected pseudo-labels are then used to update the student networks with standard training process.
+
+\subsubsection{Teacher Network Update}
+\label{sec:teacher-net-update}
+Once the student networks are trained, we update the teacher models using EMA of student parameters, as follows:
+\begin{equation}
+    \label{eq:ema-teacher-update}
+    \theta_{t}^{(j)} \leftarrow \alpha \cdot \theta_t^{(j-1)} + (1-\alpha) \cdot \theta_s^{(j)}
+\end{equation}
+
+Here, $\theta_{t}^{(j)}$ and $\theta_s^{(j)}$ denote the teacher and student parameters at iteration $j$, and $\alpha$ is the smoothing factor. This EMA update can also be reformulated as:
+
+\begin{equation}
+\label{ema-backprop}
+\theta_{t}^{(j)} = \theta_{t}^{(j-1)} - \gamma(1-\alpha)\sum_{t=0}^{j-1}\alpha^{j-1-t}\pdv{\mathcal{L}}{{\theta_s^{(t)}}}
+\end{equation}
+\noindent
+where $\gamma$ is the learning rate. As $\alpha \approx 1$ (e.g., 0.995), updates incorporate small, weighted student gradients, forming a conservative, ensemble-like strategy that reduces bias and improves pseudo-label reliability \citep{zhang2021improving}. Derivation of the Eq. (\ref{ema-backprop}) is detailed in the Appendix \ref{sec:eq-5-derivation}.
+
+\subsection{Unsupervised Synergistic Cross-supervision Step}
+\paragraph{Motivation.}
+In the Self-supervised step, teacher-generated pseudo-labels help students improve. However, using the same architecture for both models may perpetuate confirmation bias, leading to sub-optimal performance. To address this, we introduce an Unsupervised Synergistic Cross-supervision training strategy (step \raisebox{-0.2\baselineskip}{\includegraphics[height=1em]{figs/6.pdf}}).
+
+% Intuitively, a network must be exposed to learning signals that it struggles to recognise on its own in order to reduce confirmation bias and enhance overall performance. Building on this idea, we propose training two distinct DocRE models with different architectures that simultaneously teach each other. Specifically, leveraging two complementary directions in representation learning—graph-based and transformer-based—and two distinct objective functions that address class imbalance (between positive and negative pairs, and between positive entity pairs), we select the two models described in Section \ref{sec:baseline-models}.
+To reduce confirmation bias, a model should learn from signals it cannot easily infer on its own. Motivated by this, we co-train two DocRE models with different architectures that teach each other, leveraging complementary graph-based and transformer-based representations and distinct objectives for class imbalance, as described in $\S$ \ref{sec:baseline-models}.
+
+
+\subsubsection{Procedure}
+During training, each teacher reuses samples with the lowest uncertainty, as defined in Section \ref{sec:pseudo-label-refine}. From these, disagreeing pseudo-labels are exchanged, such that teacher 2 supervises student 1 and teacher 1 supervises student 2.
+
+Formally, let $(t_1, s_1)$ and $(t_2, s_2)$ denote the teacher-student pairs. We extract subsets $\hat{D}_{t_1}$ and $\hat{D}_{t_2}$ containing the pseudo-labelled samples from each teacher with the lowest uncertainty. From these, we identify the sets of disagreed samples $\tilde{D}_{t_1}$ and $\tilde{D}_{t_2}$, where:
+\begin{equation*}
+    \begin{split}
+        \tilde{D}_{t_2} &= \hat{D}_{t_2} \setminus \hat{D}_{t_1}, \\
+        \tilde{D}_{t_1} &= \hat{D}_{t_1} \setminus \hat{D}_{t_2}
+    \end{split}
+\end{equation*}
+
+\subsubsection{Objective.} The associated soft pseudo-labels $\tilde{l}_{t_1}, \tilde{l}_{t_2}$ of $\tilde{D}_{t_1}, \tilde{D}_{t_2}$ are used to supervise the opposite students. We adopt soft labels (probability distributions over $\mathcal{R} \cup \texttt{NA}$) to preserve uncertainty and ensure stable training. The cross-supervision loss $\mathcal{L}_{css}$ is defined as:
+
+\begin{equation}
+\label{eq:cross-stage-loss}
+\mathcal{L}_{css} = \text{MeanSquaredError}\left(\tilde{l}_{s_i}, \tilde{l}_{t_j}\right)
+\end{equation}
+\noindent
+where $i, j \in \{1,2\}$ and $i \neq j$ and $\tilde{l}_s, \tilde{l}_t$ denote the predictive distributions from the student and teacher, respectively.
+
+\subsection{Unified Training Procedure}
+\label{subsec:train-procedure}
+We propose a unified training procedure to improve the framework’s efficiency, consisting of two phases: (1) pre-training and (2) fine-tuning.
+
+\subsubsection{Pre-training Phase}
+\label{sec:pre-training-stage}
+During the pre-training phase, we initialise the student networks $s_1$ and $s_2$ using distantly supervised DocRE dataset with standard training process to improve generalisation. After pre-training, we copy their parameters to the respective teacher networks to facilitate a strong initialisation for both teacher and student networks, as follows:
+\begin{equation}
+    \label{assign-params}
+    \begin{aligned}
+        \theta_{t_1} &\leftarrow \theta_{s_1} \\
+        \theta_{t_2} &\leftarrow \theta_{s_2}
+    \end{aligned}
+\end{equation}
+
+\subsubsection{Fine-tuning Phase}
+\label{sec:fine-tuning-stage}
+
+In the fine-tuning phase, the teacher-student pairs alternate between the Self-supervised step and the Unsupervised Synergistic Cross-supervision step. To ensure robust initialisation for these steps, we first perform a warm-up round using human-annotated data for $n$ epochs.
+
+After warming up, the Self-supervised step begins with refined pseudo-labels, and the Unsupervised Synergistic Cross-supervision step is conducted periodically every $m$ steps to avoid mutual overfitting due to residual label noise. The overall loss $\mathcal{L}_{ft}$ for the this step for each student network is:
+
+\begin{equation}
+\label{eq:finetune-loss}
+\mathcal{L}_{ft} = \mathcal{L}_{st} + \lambda_{ul} \cdot \mathcal{L}_{css}
+\end{equation}
+\noindent
+where $\mathcal{L}_{st}$ is the loss value of the Self-supervised Step ($\S$\ref{subsec:self-training}) and the hyper-parameter $\lambda_{ul}$ controls the contribution of $\mathcal{L}_{css}$.
+
+To further combat confirmation bias, we also include supervised loss on human-annotated data $\mathcal{L}_{sp}$ for each student network. The final training objective $\mathcal{L}_{fn}$ becomes:
+\begin{equation}
+    \label{eq:total-loss}
+    \mathcal{L}_{fn} = \mathcal{L}_{sp} + \lambda_2 \cdot \mathcal{L}_{ft}
+\end{equation}
+where $\lambda_2$ controls the contribution of $\mathcal{L}_{ft}$.

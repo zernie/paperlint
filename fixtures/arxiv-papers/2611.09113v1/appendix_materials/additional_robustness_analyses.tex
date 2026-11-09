@@ -1,0 +1,135 @@
+This appendix reports additional analyses that assess the robustness and
+interpretation of the main capability--drift association, rather than to
+establish causal effects.
+All analyses use the frozen Normal-framework records described in the project
+repository.  Missing rollouts are retained when available, and paired analyses
+use only the common evaluable samples for the relevant model pair.
+
+\subsection{Paired Within-Sample Comparisons}
+\label{app:additional-paired}
+
+To avoid treating model-level averages as independent observations, we compare
+models within the same samples.  For each model and sample, we compute the mean
+drift indicator over the available rollouts and test the paired differences with
+the two-sided Wilcoxon signed-rank test.  The confidence intervals are percentile
+bootstrap intervals over samples (10{,}000 resamples); the four reported
+comparisons use Holm correction for the Wilcoxon $p$-values.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l r r r r r}
+\toprule
+Comparison & $\Delta$DR & $r_{\rm rb}$ & $p_{\rm Holm}$ & 95\% CI & $N$ \\
+\midrule
+Qwen3.6-35B $-$ Qwen3.5-4B & $+0.154$ & $+0.623$ & $2.44\times10^{-20}$ & $[+.124,+.184]$ & 629 \\
+Mistral-24B $-$ Ministral-8B & $-0.074$ & $-0.307$ & $2.72\times10^{-6}$ & $[-.103,-.043]$ & 641 \\
+Qwen3.6-35B $-$ Claude Sonnet 4.6 & $+0.036$ & $+0.169$ & $0.0167$ & $[+.007,+.066]$ & 632 \\
+Llama-4 Maverick $-$ Llama-3.1-8B & $-0.094$ & $-0.730$ & $1.65\times10^{-15}$ & $[-.116,-.073]$ & 638 \\
+\bottomrule
+\end{tabular}
+}%
+\caption{Paired comparisons of per-sample mean drift. $\Delta$DR is model A
+minus model B; $r_{\rm rb}$ is the rank-biserial effect size. The analysis
+supports heterogeneous within-family directions, but does not identify the
+causal source of those differences.}
+\label{tab:additional-paired}
+\end{table}
+
+The confidence intervals exclude zero for all four pre-specified comparisons,
+including both the increasing Qwen contrast and the decreasing Mistral contrast.
+This supports the narrower claim that parameter count alone is insufficient to
+predict authorization drift; it does not by itself establish that alignment
+strategy is the causal explanation.
+
+\subsection{Correlation and Covariate Sensitivity}
+\label{app:additional-correlation}
+
+Across the 13 paper models, the model-level TSR--DR association is positive
+(Pearson $r=0.858$, $p<0.001$; Spearman $\rho=0.929$, $p<0.001$).  Leave-one-
+model-out Pearson correlations range from $0.799$ to $0.894$.  These are
+descriptive model-level statistics and should not be interpreted as independent
+replicates or as causal evidence.
+
+As a sensitivity analysis, we fit trajectory-level binomial GLMs with
+sample-clustered standard errors.  The coefficient of task success remains
+positive after adding family and domain indicators (OR $=1.023$, $p=0.823$),
+and is larger but imprecisely estimated when tool-call count is added (OR
+$=1.221$, $p=0.057$).  Adding annotated trigger count gives OR $=1.025$
+($p=0.805$), while the fuller model with model, domain, tool-count, and
+trigger-count terms gives OR $=1.156$ ($p=0.178$).  The wide uncertainty in
+these adjusted specifications, and the possibility that tool-call count is a
+mediator rather than a confounder, make them sensitivity analyses rather than
+adjusted causal estimates.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l r r l}
+\toprule
+Specification & OR & $p$ & 95\% CI \\
+\midrule
+Family + domain & 1.023 & .823 & $[.841,1.243]$ \\
+Family + domain + tools & 1.221 & .057 & $[.994,1.499]$ \\
+Family + domain + triggers & 1.025 & .805 & $[.841,1.251]$ \\
+Model + domain + tools + triggers & 1.156 & .178 & $[.936,1.428]$ \\
+\bottomrule
+\end{tabular}
+}%
+\caption{Trajectory-level sensitivity models for the success--drift association.
+All models use sample-clustered standard errors.}
+\label{tab:additional-glm}
+\end{table}
+
+\subsection{Exploratory Behavioral Annotation of First Drift}
+\label{app:additional-behavior}
+
+To probe whether first drift actions are behaviorally related to task progress,
+we sampled 600 drifting trajectories, 200 each from Claude Sonnet 4.6,
+Qwen3.5-397B-A17B, and Qwen3.6-27B.  Three independent LLM judges assessed
+task advancement and competing error evidence from the observable trajectory,
+without being shown the source-agent identity or the pre-existing drift label.
+Consensus was formed by a two-of-three vote; all-different cases were treated
+as ambiguous.  The resulting annotation is exploratory and is not human gold
+annotation, evidence of hidden intent, or a causal test.
+
+At the behavioral level, 85.4\% of first violations were classified as
+instrumental without competing error evidence and a further 12.0\% as
+instrumental with error evidence.  Thus 97.4\% were judged task-instrumental
+under this operational rubric.  However, raw task-relation agreement was
+92.4\%, while Fleiss' $\kappa$ was only 0.045 (Gwet's AC1 $=0.921$), reflecting
+the highly imbalanced label distribution.  The complementary failure-reason
+annotation had Fleiss' $\kappa=0.085$ and should therefore be read as a
+behavioral sensitivity analysis rather than a validated decomposition of model
+intent.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l r r r r}
+\toprule
+Behavioral pattern & Claude & Qwen-397B & Qwen-27B & Equal-weight \\
+\midrule
+Instrumental, no competing error & 74.9 & 91.4 & 89.8 & 85.4 \\
+Instrumental, error evidence & 22.0 & 6.6 & 7.3 & 12.0 \\
+Non-instrumental failure & 0.8 & 0.4 & 0.0 & 0.4 \\
+Anomalous behavior & 0.6 & 1.1 & 0.0 & 0.6 \\
+Ambiguous / unresolved & 1.6 & 0.4 & 2.9 & 1.7 \\
+\bottomrule
+\end{tabular}
+}%
+\caption{Exploratory three-judge annotation of first violating calls. Entries
+are percentages; the source-model columns use sample-clustered bootstrap 95\%
+confidence intervals in the machine-readable supplement.}
+\label{tab:additional-behavior}
+\end{table}
+
+The study does not replace human validation, and no human--judge agreement is
+reported for it; the human quality audit of the benchmark samples themselves is
+reported separately in Appendix~\ref{app:human-eval}.

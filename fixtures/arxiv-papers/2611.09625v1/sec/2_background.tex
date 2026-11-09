@@ -1,0 +1,42 @@
+\section{Background}
+
+We evaluate the impact of TT-MBRL within the Dreamer family of world model architectures. The Dreamer algorithm was originally introduced in~\citet{hafner2019dream} and later refined in subsequent works~\citep{hafner2020mastering, hafner2023mastering} to master diverse environments with fixed hyperparameters. It has since become a prominent baseline in MBRL, demonstrating strong performance across a wide range of tasks from high-dimensional visual observations. The agent consists of three main components: The world model that learns to simulate the environment to generate imaginary trajectories, the critic network that estimates state values, and the actor network that learns to select optimal actions.
+
+\subsection{World Model Learning}
+
+Dreamer learns a world model of the environment in latent space using a sequential autoencoder architecture~\citep{hinton2006reducing, kingma2014auto, chung2015recurrent}. Specifically, the world model encodes observations $o_{t}$ into compact stochastic representations $z_{t}$ learned via a reconstruction objective, while a Recurrent State-Space Model (RSSM)~\citep{hafner2019learning} predicts future states $z_{t+1}$ given actions $a_{t}$. In addition, the world model includes multi-layer perceptron (MLP) heads for predicting rewards $r_{t}$ and episode continuation $c_{t}$ signals from model states $s_{t}=\{h_{t}, z_{t}\}$. The trainable subcomponents of the world model are the following:
+\begin{equation}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llll}
+    \multirow{3}{*}{RSSM $\begin{dcases*} \\ \\ \end{dcases*}$} & Sequential Network: &  & $h_{t} = f_{\phi}(h_{t-1}, z_{t-1}, a_{t-1})$    \\
+    & Encoder Network: & & $z_{t} \sim q_{\phi}(z_{t}\ |\ h_{t}, o_{t})$   \\
+    & Dynamics Predictor: & & $\hat{z}_{t} \sim p_{\phi}(\hat{z}_{t}\ |\ h_{t})$  \\
+    & Reward Predictor: & & $\hat{r}_{t} \sim p_{\phi}(\hat{r}_{t}\ |\ s_{t})$ \\
+    & Continue Predictor: & & $\hat{c}_{t} \sim p_{\phi}(\hat{c}_{t}\ |\ s_{t})$ \\
+    & Decoder Network: & & $\hat{o}_{t} \sim p_{\phi}(\hat{o}_{t}\ |\ s_{t})$\\
+\end{tabular}
+\end{equation}
+While the original Dreamer algorithm uses a Gated Recurrent Unit (GRU)~\citep{cho2014learning} for the sequential network, other variants have been proposed using Transformer-based world models with self-attention~\citep{vaswani2017attention} and Structured State Space Sequence models (S4)~\citep{gu2022efficiently}. These variants allow computing deterministic states $h_{1:T}$ in parallel using a non-recurrent encoder network $z_{t} \sim q_{\phi}(z_{t}\ |\ o_{t})$ and a parallelizable sequential network $h_{1:T}, x_{1:T}=f_{\phi}(z_{0:T-1}, a_{0:T-1}, x_{0})$, where $x_{t}$ are SSM hidden states.
+In this paper, we experiment with three recently proposed world model designs based on the Dreamer algorithm: DreamerV3~\citep{hafner2023mastering}, which uses an RNN-based world model; TWISTER~\citep{burchi2025learning}, which uses a Transformer-based world model with self-attention; and R2I~\citep{samsami2024mastering}, which introduced the Structured State-Space Model (S3M), a modification of S4 to handle temporal dependencies.
+
+The world model is trained on trajectories sampled from a replay buffer. Trajectories are collected during the exploration phase, where the current policy interacts with the environment. Given an input batch containing $B$ sequences of $T$ image observations $o_{1:T}$, actions $a_{1:T}$ , rewards $r_{1:T}$, and episode continuation flags $c_{1:T}$, the world model parameters ($\phi$) are optimized to minimize the following loss function:
+\begin{equation}
+L(\phi) = \frac{1}{BT}\sum_{b=1}^{B}\sum_{t=1}^{T}\Bigr[\beta_{\text{pred}}L_{\text{pred}}(\phi) + \beta_{\text{dyn}}L_{\text{dyn}}(\phi) + \beta_{\text{rep}}L_{\text{rep}}(\phi)\Bigl]
+\end{equation}
+The prediction loss $L_{\text{pred}}$ learns hidden representations with a reconstruction loss and predicts environment quantities such as rewards and continuation flags:
+\begin{equation}
+L_{\text{pred}}(\phi) = \underbracket[0.1ex]{-\log p_{\phi}(o_{t}\ |\ s_{t})}_{\text{reconstruction loss}} \underbracket[0.1ex]{-\log p_{\phi}(r_{t}\ |\ s_{t})}_{\text{reward predictor loss}}\ \underbracket[0.1ex]{-\log p_{\phi}(c_{t}\ |\ s_{t})}_{\text{continue predictor loss}}
+\end{equation}
+The dynamics loss $L_{\text{dyn}}$ trains the dynamics predictor to predict the next state representation by minimizing the KL divergence between the predictor $p_{\phi}(\hat{z}_{t}\ |\ h_{t})$ and the next stochastic representation $q_{\phi}(z_{t}\ |\ h_{t}, o_{t})$. The representation loss trains the representations to become more predictable if the dynamics predictor cannot predict their distribution. Both loss terms use the stop gradient operator $sg(\cdot)$ to prevent the gradients of targets from being backpropagated and are scaled by the corresponding loss weights $\beta_{\text{dyn}}$ and $\beta_{\text{rep}}$, respectively:
+\begin{equation}
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{rll}
+$L_{\text{dyn}}(\phi)=$ & $\max\bigl(1, \text{KL}\bigl[\ sg( q_{\phi}(z_{t}\ |\ h_{t}, o_{t}))\ ||\hspace{3.6ex}p_{\phi}(\hat{z}_{t}\ |\ h_{t})\hspace{0.87ex}\bigr]\bigr)$ \\
+$L_{\text{rep}}(\phi)=$ & $\max\bigl(1, \text{KL}\bigl[\hspace{3.6ex}q_{\phi}(z_{t}\ |\ h_{t}, o_{t})\hspace{1.42ex} ||\  sg(  p_{\phi}(\hat{z}_{t}\ |\ h_{t}) )\bigr]\bigr)$
+\end{tabular}
+\end{equation}
+
+\subsection{Actor-Critic Learning}
+
+The agent’s policy and value functions are learned by imagining trajectories using the world model. Learning takes place entirely in latent space, which allows the agent to process large batch sizes and increase generalization. To do so, the model states of the sampled sequence are flattened along batch and time dimensions to generate $B_{img} = B \times T$ sample trajectories. The world model imagines $H = 15$ steps into the future using the sequential network and dynamics predictor, selecting actions by sampling from the actor network. Analogously to world model predictor networks, actor and critic networks are designed as simple MLPs with parameter vectors ($\theta$) and ($\psi$), respectively. We describe the actor-critic learning process of the agent in more detail in Appendix~\ref{appendix:actor_critic}.

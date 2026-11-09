@@ -1,0 +1,5 @@
+\section{Simulation Corpus}
+\label{sec:simulation-corpus}
+The \emph{simulation corpus} comprises eight perception trials and eight production trials: one for each selected word in each processing direction, giving sixteen trials in total. All trials use the complete 613-entry lexical inventory, the procedure in Section~\ref{sec:tasks}, and the fixed model configuration in Table~\ref{tab:parameters}. Each recorded result is associated with its input word, processing direction, model settings, and random seeds, and identifies the retrieved entry, target score, and margin over the next-ranked candidate. Appendix~\ref{app:implementation} identifies the numerical reports and recordings.
+
+These trials constitute the \emph{baseline}, meaning the behavior of the intact network with all neurons available. The implementation also supports simulations of impaired networks through \emph{ablation}, which silences selected neurons in buffers or associative memories (see Section~\ref{sec:limitations}).

@@ -1,0 +1,19 @@
+\begin{figure}[t]
+  \centering
+  \captionsetup[subfloat]{farskip=2pt}
+  \includegraphics[width=\columnwidth]{assets/serving-pareto-h100-legend.pdf}
+  \par
+  \subfloat[H100, 99\% prefix-cache hit.\label{fig:serving-pareto-h100-99}]{%
+    \includegraphics{assets/serving-pareto-h100-99.pdf}}
+  \hfill
+  \subfloat[H100, 95\% prefix-cache hit.\label{fig:serving-pareto-h100-95}]{%
+    \includegraphics{assets/serving-pareto-h100-95.pdf}}
+  \par\vspace{3pt}
+  \subfloat[B200, 99\% prefix-cache hit.\label{fig:serving-pareto-b200-99}]{%
+    \includegraphics{assets/serving-pareto-b200-99.pdf}}
+  \hfill
+  \subfloat[B200, 95\% prefix-cache hit.\label{fig:serving-pareto-b200-95}]{%
+    \includegraphics{assets/serving-pareto-b200-95.pdf}}
+  \caption{Per-user and aggregate Qwen3-8B serving throughput on a single GPU with 100K input and 1K output tokens.}
+  \label{fig:serving-pareto}
+\end{figure}

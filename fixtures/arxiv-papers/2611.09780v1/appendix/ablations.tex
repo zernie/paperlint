@@ -1,0 +1,65 @@
+\section{Additional Experiments}
+\subsection{Confounds in $\hat{\beta}$}
+\label{app:confounds}
+
+\begin{table*}
+\caption{We account for confounds when computing $\hat{\beta}$, and find that $\hat{\beta}$ remains positive throughout.}
+\label{tab:beta_confounds}
+\begin{tabular}{llcrr}
+\toprule
+& & $\hat\beta$ (s.e.) & Events & $N$ \\
+\midrule
+\emph{Baseline} & all events & +0.480$^{***}$ (0.117) & 106 & 848 \\
+\addlinespace
+\emph{Comparator choice} & best rival & +0.480$^{***}$ (0.117) & 106 & 848 \\
+& second-best rival & +0.485$^{***}$ (0.120) & 106 & 848 \\
+& top-3 average & +0.521$^{***}$ (0.117) & 106 & 848 \\
+\addlinespace
+\emph{Release year} & 2025 & +0.455$^{***}$ (0.114) & 60 & 480 \\
+& 2026 & +0.849$^{***}$ (0.096) & 41 & 328 \\
+\addlinespace
+\emph{Sample composition} & events A & +0.500$^{***}$ (0.155) & 53 & 424 \\
+& events B & +0.331$^{***}$ (0.105) & 53 & 424 \\
+\addlinespace
+\emph{Event-level heterogeneity} & release-event fixed effects & +0.949$^{***}$ (0.115) & 106 & 848 \\
+\midrule
+\emph{Regression to the mean} & measured spurious slope & +0.099 (0.038) & 20 splits & 116,257 \\
+& correction-implied slope & +0.139 & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+We next account for other confounds potentially skewing $\hat{\beta}$. 
+In Table~\ref{tab:beta_confounds}, we account for confounds including the selection of comparator (e.g., best rival, second-best rival, and top-3 average) and release year (2025 vs. 2026, with 2024 having only $5$ events).
+For both of these, we find that $\hat{\beta}>0.45$, showing a similar catch-up effect. 
+We additionally test whether the result is driven by a subset of release events by splitting events into two alternating subsamples and computing \(\hat{\beta}\) separately on each. 
+We find that \(\hat{\beta}>0.33\) in both halves of the split.
+To account for event-specific factors shared across categories, such as differences in the overall magnitude of improvement across releases, we include a release-event fixed effect \(\delta_e\).  
+The resulting estimate remains positive and increases to \(\hat\beta=0.949\). 
+
+We finally consider mechanical regression to the mean, since noise in the outgoing model's rating enters both the measured gap and subsequent improvement. 
+Because the historical leaderboard provides only rating snapshots, we cannot re-estimate \(\hat{\beta}\) using independent ratings for each release event; instead, we use raw Arena battles to estimate the magnitude of this mechanical effect. 
+We retrieve 116,257 battles, randomly split them in half, and fit Bradley--Terry ratings separately on each half to obtain two independent estimates, \(\hat{\theta}^{A}\) and \(\hat{\theta}^{B}\), of each model's rating.
+We regress \(\hat{\theta}^{B}-\hat{\theta}^{A}\) on the gap computed from half \(A\) alone. 
+Because the two estimates measure the same underlying model performance, any systematic positive relationship should arise from sampling variation in \(\hat\theta^A\), since the two estimates are constructed from independent random halves of the same set of battles.
+These battles cover only April--July 2025 and three of our eight categories (plus the overall category), so we use this exercise to estimate the magnitude of the bias rather than to re-estimate \(\hat{\beta}\). 
+Averaged over 20 random splits, the spurious slope is \(0.099\), and the errors-in-variables correction predicts $0.139$. 
+As a result, measurement error appears too small to mechanically generate the observed catch-up relationship.
+
+\subsection{Decomposing Capability Gaps}
+\label{app:strong_competitors}
+
+A larger capability gap can arise either because a developer's outgoing model performs poorly in a capability or because a rival performs well.
+To distinguish between these factors, we regress incoming capability on outgoing capability and the rival frontier
+separately:
+\[
+\theta^{\mathrm{new}}_{ikt} = \alpha_{ik}+\lambda_t +\rho\,\theta^{\mathrm{old}}_{ikt} +\delta\,\theta^{\mathrm{rival}}_{ikt} +\epsilon_{ikt},
+\]
+where $\alpha_{ik}$ are developer-category fixed effects and $\lambda_t$ are quarter fixed effects. 
+Unlike our main specification, we use quarter rather than category-quarter fixed effects so that variation in the rival frontier remains identified.
+
+We estimate $\hat\rho=0.363$ and $\hat\delta=-0.078$ (event-clustered SE $=0.116$ for $\hat\delta$). 
+Conditional on the outgoing model's capability, we do not find evidence that a stronger rival frontier predicts stronger incoming capability.
+Combined with our finding that $\hat{\beta}>0$, our takeaway is that developers improve more in capabilities where they lag, with a larger gap being consistent more strongly with a weaker developer rather than a stronger rival frontier. 
+Proposition~\ref{prop:PrimitiveCatchup} provides one mechanism capable of generating the observed catch-up pattern, as diminishing marginal returns makes it plausible for catch-up to occur, although our observational analysis cannot identify the underlying mechanism.
+Taking a step back, shared evaluation provides similar incentives to developers, while diminishing returns potentially allows weaker models to catch-up. 

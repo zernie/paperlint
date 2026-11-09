@@ -1,0 +1,65 @@
+% Exact base prompts from source/llm.py.
+% Editorial headings and variable-block labels are outside the quoted messages.
+\begingroup
+\small
+\setlength{\fboxsep}{4pt}
+\setlength{\fboxrule}{0.35pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\noindent\textbf{Shared system message.} Chỉ thực hiện legal article retrieval và chỉ xuất JSON hợp lệ.
+
+\smallskip
+\noindent\fcolorbox{black!35}{softblue}{%
+\begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+\small\raggedright
+\textbf{HyDE user message}\par\smallskip
+\noindent Viết một đoạn quy phạm pháp luật giả định 60--120 từ cho mỗi câu hỏi để mở rộng truy vấn. Nêu chủ thể, hành vi, điều kiện và từ ngữ pháp lý có thể xuất hiện; không trả lời, không kết luận và không bịa số Điều/số hiệu.\par
+\noindent Chỉ xuất JSON: \texttt{\{"items":[\{"id":"...","text":"..."\}]\}}. Giữ đủ ID và thứ tự.\par
+\smallskip
+\noindent\texttt{\{rendered\}}\par
+\end{minipage}}
+\par
+
+\medskip
+\noindent\fcolorbox{black!35}{softgreen}{%
+\begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+\small\raggedright
+\textbf{Listwise user message}\par\smallskip
+\noindent Bạn là bộ chọn Điều luật cho tác vụ truy hồi văn bản pháp luật Việt Nam.\par
+\smallskip
+\noindent Nhiệm vụ duy nhất: đánh giá Điều nào trong danh sách ứng viên chứa căn cứ pháp lý trực tiếp và cần thiết cho câu hỏi. Không trả lời câu hỏi, không suy luận đáp án cuối cùng và không viết giải thích. Hãy phân tích nội bộ lĩnh vực pháp luật, chủ thể, hành vi, điều kiện/ngoại lệ và loại quy phạm mà câu hỏi cần trước khi chấm. Đặc biệt phân biệt các Điều có câu chữ giống nhau nhưng thuộc lĩnh vực hoặc thủ tục khác. Không chọn Điều chỉ vì cùng luật, có từ khóa giống nhau, hoặc chỉ dẫn sang Điều khác. Nếu nhiều Điều thực sự bổ sung điều kiện/ngoại lệ cho nhau thì chọn đủ, nhưng tập chọn phải tối thiểu.\par
+\smallskip
+\noindent Chấm MỖI ứng viên theo rubric:\par
+\noindent - 0.90--1.00: chứa trực tiếp quy phạm quyết định câu hỏi;\par
+\noindent - 0.70--0.89: căn cứ bổ sung cần thiết, không thể bỏ;\par
+\noindent - 0.30--0.69: liên quan nhưng không đủ/không cần thiết;\par
+\noindent - 0.00--0.29: chỉ giống từ khóa hoặc không liên quan.\par
+\noindent Sau đó chọn tập chỉ số tối thiểu nhưng đầy đủ. Chỉ xuất đúng một JSON object theo schema:\par
+\noindent\texttt{\{"scores":[\{"index":0,"score":0.0\}],"selected":[0]\}}\par
+\smallskip
+\noindent CÂU HỎI:\par
+\noindent\texttt{\{query\}}\par
+\smallskip
+\noindent ỨNG VIÊN:\par
+\noindent\texttt{\{blocks\}}\par
+\end{minipage}}
+\par\smallskip
+\noindent Input blocks are separated by blank lines. HyDE batches up to eight questions. Listwise selection uses ten candidates with \texttt{budget=3000} characters:
+\par\smallskip
+\noindent\begin{minipage}[t]{.48\linewidth}
+\textbf{\texttt{\{rendered\}}: question block}\par\smallskip
+\ttfamily
+[ID \{query.key\}]\\
+\{query.text.replace('\_', ' ')\}
+\end{minipage}\hfill
+\begin{minipage}[t]{.48\linewidth}
+\textbf{\texttt{\{blocks\}}: candidate block}\par\smallskip
+\ttfamily
+[ỨNG VIÊN \{index\}]\\
+ID văn bản: \{article.law\_id\}\\
+ID Điều: \{article.article\_id\}\\
+Nội dung:\\
+\{article.text[:budget]\}
+\end{minipage}
+\par
+\endgroup

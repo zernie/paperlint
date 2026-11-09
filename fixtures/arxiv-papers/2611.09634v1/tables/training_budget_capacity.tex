@@ -1,0 +1,20 @@
+\begin{wraptable}{R}{0.5\textwidth}
+\centering\small
+\vspace{-20pt}
+\caption{Training and storage for Qwen3.5-9B. Params counts stored adapter parameters.}
+\label{tab:budget}
+\begingroup
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Method & Runs & Compl. & Params & Prefs.\\
+\midrule
+LambdaMix & 1 & 32k & 13.2M & any\\
+Prompt cond. & 1 & 32k & 6.6M & any\\
+Merging & 2 & 64k & 13.2M & any\\
+HoE & 3 & 96k & 19.9M & any\\
+Specialists & 5 & 160k & 33.1M & 5\\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{wraptable}

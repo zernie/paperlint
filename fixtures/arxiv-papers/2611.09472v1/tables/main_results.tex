@@ -1,0 +1,69 @@
+% Requires booktabs, xcolor; existing \method, \bestresult, \secondresult.
+% All numeric cells are single-line c columns; no scaling or stacked errors.
+\begin{table}[!htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{1pt}
+\renewcommand{\arraystretch}{1.15}
+\caption{\textbf{Benchmark performance (\%).} Green and yellow indicate the highest and second-highest reported means under the source-specific settings in Appendix~\ref{app:published}. SR: success rate; EM: exact match; Acc.: numeric-answer accuracy.  }
+\label{tab:main}
+
+\noindent\makebox[\linewidth][l]{\textbf{(a) Achievement-based exploration}}\par\smallskip
+\begin{tabular*}{\linewidth}{@{}l@{\extracolsep{\fill}}ccc@{}}
+\toprule
+Task / Metric & BALROG & MAGE & \textbf{\method} \\
+\midrule
+Crafter / Progress / Peak Prog. & $25.5\pm3.2$ & \secondresult{$33.5\pm2.3$} & \bestresult{$\mathbf{34.2\pm1.4}$} \\
+\bottomrule
+\end{tabular*}
+\par\medskip
+\noindent\begin{minipage}[t]{0.355\linewidth}
+\vspace{0pt}
+\textbf{(b) Interaction (SR)}\par\smallskip
+\begin{tabular*}{\linewidth}{@{}l@{\extracolsep{\fill}}cc@{}}
+\toprule
+Method & ALFWorld & WebShop \\
+\midrule
+ReAct & $57.0\pm3.0$ & $40.0\pm2.4$ \\
+Reflexion & $42.7\pm4.0$ & $28.8\pm3.0$ \\
+Mem0 & $33.6\pm3.5$ & $2.00\pm0.60$ \\
+MemRL & $21.4\pm3.0$ & $9.20\pm1.40$ \\
+EvolveR & $73.8\pm2.5$ & $17.6\pm2.0$ \\
+GRPO & $77.6\pm2.2$ & $66.1\pm2.0$ \\
+SkillRL & \secondresult{$89.9\pm1.8$} & $72.7\pm1.8$ \\
+EDGE & $85.9\pm2.0$ & $82.6\pm3.8$ \\
+MAGE & $87.3\pm1.8$ & \bestresult{$\mathbf{84.0\pm1.8}$} \\
+\method & \bestresult{$\mathbf{90.3\pm1.5}$} & \secondresult{$83.4\pm2.4$} \\
+\bottomrule
+\end{tabular*}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.62\linewidth}
+\vspace{0pt}
+\textbf{(c) Question answering}\par\smallskip
+\begin{tabular*}{\linewidth}{@{}l@{\extracolsep{\fill}}cccc@{}}
+\toprule
+& \multicolumn{2}{c}{HotpotQA} & \multicolumn{2}{c}{WebQuestions} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Method & EM & F1 & EM & F1 \\
+\midrule
+CoT & $27.0\pm0.8$ & $39.8\pm0.9$ & $28.8\pm1.0$ & $37.8\pm1.1$ \\
+ReAct & $27.6\pm1.2$ & $41.3\pm1.3$ & $27.4\pm1.3$ & $36.3\pm1.4$ \\
+EvolveR & $40.3\pm1.0$ & $54.6\pm1.1$ & $36.0\pm1.2$ & $49.8\pm1.3$ \\
+SuRe & $38.8\pm0.9$ & $53.5\pm1.0$ & $34.4\pm1.1$ & $48.5\pm1.2$ \\
+RPG & $37.9\pm1.1$ & $49.2\pm1.2$ & $34.2\pm1.2$ & $47.3\pm1.3$ \\
+EmbQA & \secondresult{$42.0\pm0.8$} & \secondresult{$55.8\pm0.9$} & \secondresult{$38.2\pm1.0$} & \secondresult{$52.1\pm1.1$} \\
+RoleRAG & $37.4\pm1.0$ & $49.2\pm1.1$ & $32.7\pm1.2$ & $44.1\pm1.3$ \\
+\method & \bestresult{$\mathbf{54.6\pm0.9}$} & \bestresult{$\mathbf{71.5\pm1.0}$} & \bestresult{$\mathbf{40.4\pm1.0}$} & \bestresult{$\mathbf{53.7\pm1.1}$} \\
+\bottomrule
+\end{tabular*}
+\end{minipage}
+\par\medskip
+\noindent\makebox[\linewidth][l]{\textbf{(d) Financial reasoning (Acc.)}}\par\smallskip
+\begin{tabular*}{\linewidth}{@{}l@{\extracolsep{\fill}}ccccc@{}}
+\toprule
+Task & CoT & MAGE & FinQANet & APOLLO & \textbf{\method} \\
+\midrule
+FinQA & $57.5\pm2.1$ & $67.5\pm1.7$ & $62.2\pm1.5$ & \bestresult{$\mathbf{70.9\pm1.2}$} & \secondresult{$69.3\pm1.7$} \\
+\bottomrule
+\end{tabular*}
+\end{table}

@@ -10,7 +10,8 @@ Two jobs, one choice: how much of the paper CI judges.
 `paperlint lint` exits non-zero on any error; warnings only print, unless you pass
 `--max-warnings <n>`. It also prints, on stderr, `linted <N> file(s) in <S> s` and, when the run
 took over 10 s, the three slowest rules with their milliseconds (`slowest rules: <rule> <ms> ms · …`):
-the line a slow job log needs to name its culprit.
+the line a slow job log needs to name its culprit. When `.claude/settings.json` wires some paperlint
+hooks and not others, it prints one more stderr line naming the missing ones; the exit code does not change.
 
 ## Build, then lint
 
@@ -58,5 +59,11 @@ steps:
 ```
 
 With no `paths` it lints the `papersDir` of your `paperlint.json`; pass `paths:` only to lint less.
+
+`check-hooks: "true"` adds a last step, `paperlint doctor`, and fails the job when the hooks in
+`.claude/settings.json` are partly wired or one is wired twice: the way a CI run catches an upgrade that added
+a hook the project has not wired. It is off by default, because a project that never ran `init` (or ran it with
+`--no-hooks`) has no hooks to check; `doctor` also fails the step on its other findings (see
+[`install.md`](install.md#troubleshooting)).
 
 This is the workflow `paperlint init` offers to write ([`install.md`](install.md)).

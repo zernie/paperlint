@@ -1,0 +1,71 @@
+\section{Background}
+\label{sec:background}
+This section provides an overview of the key concepts used throughout this paper. We begin with a description of how large language models work in Section~\ref{subsec:background:llms}. Next, Section~\ref{subsec:background:safety_alignment} discusses safety alignment and how it aims to mitigate jailbreak attacks against LLMs. Finally, Section~\ref{subsec:background:jailbreaks} discusses how jailbreak attacks threaten the security and safety of LLMs.
+
+
+\subsection{Large Language Models}
+\label{subsec:background:llms}
+Large language models (LLMs) are autoregressive models trained to predict the next token given an input sequence of tokens~\cite{brown2020fewshotlearners}. More specifically, given a sequence of $n$ tokens, denoted by $x_{1:n}$ (i.e., a sequence of $x_1, x_2,...,x_n$), the model predicts the probability of the next token $x_{n+1}$, i.e., $P(x_{n+1}|x_{1:n})$, over each token $v_i$ in its vocabulary $V$, which contains all tokens recognized by the LLM.
+
+To generate long sequences of text, LLM inference is performed autoregressively, generating one token at a time. At each inference step, the newly generated token is appended to the sequence of previously processed tokens and used as input for the next step.
+
+LLMs are composed of multiple layers of transformer blocks~\cite{attention}, where each block has two main components: a multi-layer perceptron (MLP) block and a multi-head self-attention (MHSA) block, each consisting of multiple parameterized layers. The MLP component performs nonlinear transformations of token representations, while the MHSA component enables the model to attend to information distributed across different parts of the input sequence.
+
+The MLP block typically consists of three linear layers and can be formulated as follows:
+
+\begin{equation*}
+    \text{MLP}(x) = W_\text{down} \left(\sigma_1\left(xW_\text{gate}\right) \odot \sigma_2\left(xW_\text{up}\right) \right)
+\end{equation*}
+
+where $\sigma_1$ and $\sigma_2$ are nonlinear activation functions, $x$ is the input to the MLP block, and $\odot$ denotes element-wise multiplication. More specifically, the MLP block consists of gate, up, and down projection layers. The gate and up projection layers jointly control and transform the information flow while projecting the hidden representation into a higher-dimensional space, after which the down projection layer projects it back to the model's hidden dimension before it is passed to subsequent layers. Multiple works have found that safety-critical neurons primarily reside in the gate and up projection layers of the MLP block~\cite{twinbreak, wu2026neurostrike}.
+
+\subsection{Safety Alignment}
+\label{subsec:background:safety_alignment}
+LLMs are trained on large corpora of text originating from many different sources, including web data. These training sets contain data that can cause the model to learn toxic, offensive, and otherwise undesirable content, and LLMs have been shown to reproduce such content~\cite{gehman2020realtoxicityprompts}, including generating vulnerable code~\cite{pearce2022copilot} or harmful content such as instructions on how to build a bomb or scripts for racist speeches~\cite{twinbreak, wu2026neurostrike}.
+
+
+To mitigate undesirable content generation by LLMs, these models usually undergo a process known as safety alignment during post-training~\cite{tulu3, ouyang2022rlhf, rafailov2023dpo}. The goal of safety alignment is to align model generations with human preferences and safety objectives~\cite{ouyang2022rlhf}, thereby preventing models from generating harmful content such as discriminatory speech or instructions on how to harm others.
+
+
+One of the main tools for safety alignment is reinforcement learning from human feedback (RLHF)~\cite{ouyang2022rlhf}, through which the model is taught what kinds of responses are more desirable according to human judgments and safety values. A common approach is to use pairs of responses for each prompt in the training dataset, with one response judged to be preferable based on qualities such as helpfulness, honesty, and harmlessness~\cite{ouyang2022rlhf}. These preferences are then used to train a reward model, which provides a reward signal for optimizing the LLM toward preferred responses.
+
+
+RLHF is resource-intensive and usually relies on a separate reward model during training to provide the feedback signal used to optimize the model~\cite{ouyang2022rlhf}. Direct Preference Optimization (DPO)~\cite{rafailov2023dpo} was proposed by Rafailov et al. as a simpler and more computationally efficient approach to alignment that directly optimizes the language model on preference data, without relying on an explicit reward model or reinforcement learning. DPO uses a dataset of preference samples $(x, y_c, y_r)$, where $x$ denotes the user request, $y_c$ represents the preferred (chosen) model response, and $y_r$ denotes the dispreferred (rejected) response. For safety alignment, $y_r$ can be a response that contains harmful or prohibited content, while $y_c$ can be a response that appropriately refuses to generate such content. The DPO loss is then defined as:
+
+
+$$
+\begin{aligned}
+\mathcal{L}_\text{DPO} = -\mathbb{E}_{(x,y_c,y_r)\sim\mathcal{D}}
+\Bigg[
+\log \sigma \Bigg(
+&\beta \log
+\frac{\pi_\theta(y_c \mid x)}
+     {\pi_{\mathrm{ref}}(y_c \mid x)}
+\\
+&-
+\beta \log
+\frac{\pi_\theta(y_r \mid x)}
+     {\pi_{\mathrm{ref}}(y_r \mid x)}
+\Bigg)
+\Bigg]
+\end{aligned}
+$$
+
+where $\pi_\theta$ is the trainable model, $\pi_\mathrm{ref}$ is a reference model, and $\beta$ controls the strength of the preference signal between chosen and rejected responses.
+
+\subsection{Jailbreak Attacks}
+\label{subsec:background:jailbreaks}
+
+Even after undergoing safety alignment, large language models have been shown to remain susceptible to jailbreak attacks that can elicit harmful generations~\cite{wei2023jailbroken,andriushchenko2025simpleadaptive,ding2023renellm,liu2024autodan,twinbreak,arditi2024refusal,wu2026neurostrike}. The goal of jailbreak attacks against LLMs is to bypass the safety-aligned behavior of the target model and induce it to generate content that it would otherwise refuse to produce.
+
+
+Jailbreak attacks can be either black-box or white-box. In black-box settings, attackers are assumed to have only black-box access to the target LLM~\cite{chao2025pair}, meaning that they do not have access to the model weights or internal states and can only prompt the model and observe its outputs, either in the form of output probabilities and log-probabilities~\cite{andriushchenko2025simpleadaptive} or as decoded text strings~\cite{ding2023renellm, chao2025pair}. The attacker's methodology in such settings is therefore to modify a malicious prompt $x$ by crafting an adversarial prompt $x^\prime$ such that $x^\prime$ causes the model to generate an undesirable response. More formally, suppose $f_\theta:\mathcal{X} \to \mathcal{Y}$ denotes the target LLM with weights $\theta$, $\mathcal{X}$ denotes the space of input prompts, and $\mathcal{Y}$ denotes the space of responses, with $\mathcal{Y}_{\text{unsafe}} \subset \mathcal{Y}$ denoting the set of unsafe responses that the model is expected to refuse to generate. Assuming $x$ is a harmful prompt, such as "How to rob a bank?", for which the model generates a refusal response $y \in \mathcal{Y}, y \notin \mathcal{Y}_{\text{unsafe}}$, the attacker transforms $x$ into $x^\prime$ such that the model instead outputs $y^\prime \in \mathcal{Y}_{\text{unsafe}}$:
+
+\begin{equation*}
+f_\theta(x^\prime)=y^\prime
+\quad
+\text{s.t. } \quad y^\prime \in \mathcal{Y}_{\text{unsafe}}
+\land f_\theta(x) = y \notin \mathcal{Y}_\text{unsafe}
+\end{equation*}
+
+White-box attacks, on the other hand, assume that the attacker has access to the model weights and internal states. Attackers in this setting can therefore leverage gradient information~\cite{zou2023GCG} and model-internal intervention techniques such as neuron pruning~\cite{wu2026neurostrike, twinbreak}, or activation-level interventions~\cite{arditi2024refusal}.

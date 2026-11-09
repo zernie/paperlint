@@ -1,0 +1,23 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We introduced \method, a framework that separates
+training admission from verified memory release.
+Demonstration-aware admission enables learning beyond
+current student mastery, while verification determines
+which external records can leave retrieval.
+Experiments across two backbones support the framework's
+effectiveness, with ablations demonstrating the benefits
+of parameter learning, demonstration-aware admission,
+and selective adapter activation.
+A controlled held-out comparison on HotpotQA shows that
+verified release retains performance close to keeping
+all records and outperforms immediate and budget-matched
+random release, supporting verification as a basis for
+reducing retrieval dependence.
+Serving evaluations further show reduced input-token
+usage and model calls on ALFWorld and lower latency on
+WebQuestions relative to Base+ETG.
+These findings support combining parameter learning
+with selective memory release to improve task performance
+and reduce retrieval and serving costs.

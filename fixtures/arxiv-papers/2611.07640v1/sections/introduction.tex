@@ -1,0 +1,85 @@
+\section{Introduction}
+\label{sec:intro}
+
+LLM-based agents are increasingly deployed in enterprise workflows where they
+read third-party content (emails, repository files, dispute evidence,
+invoices) and call tools with real-world side effects \citep{yao2023react}.
+Indirect prompt injection (IPI), ranked the top vulnerability for LLM
+applications by OWASP \citep{owasp2025llmtop10}, occurs when adversarial content in
+data the agent retrieves causes it to act contrary to the user's intent
+\citep{greshake2023ipi}.
+
+Existing IPI benchmarks have expanded from single-generation applications to
+stateful and dynamic tool-using agents \citep{yi2024bipia, zhan2024injecagent, debenedetti2024agentdojo, li2026agentdyn}. Across these settings, however,
+evaluated attacks remain predominantly attacker-authored instructions that
+redirect the agent to an attacker-chosen task. Defenses
+evaluated on these benchmarks therefore face primarily
+instruction-bearing, redirecting attacks.
+
+Instruction-like wording cannot itself define the security boundary. Useful
+external content may contain instructions that an agent must follow,
+especially when execution depends on information discovered at runtime
+\citep{li2026agentdyn}. \citet{siu2026agentsecurity} frame instruction injection as
+following a command from a source unauthorized to issue it. We argue that this
+authority boundary should extend beyond commands: an
+unauthorized source can steer a decision by asserting a false state, rule,
+consequence, capability, or interpretation. External content constitutes IPI
+when it attempts to influence a decision that its source is not
+authorized to determine.
+A false claim about a subject that the source is
+authorized to determine is instead misinformation and ordinarily requires
+independent evidence to detect. Neither linguistic form nor relevance to the
+task establishes authority by itself. Because the boundary is set by the
+decision, an attack also need not bring a task of its own: an environment
+participant, such as a vendor or buyer, can tamper with the task in progress by
+setting a wrong amount, recipient, or message in a call the task already
+requires.
+
+This distinction matters for defenses. Methods that mark external text or
+train the model to separate instructions from data may still accept a
+task-relevant claim as evidence \citep{hines2024spotlighting, wallace2024instruction, chen2024struq, chen2025secalign}, and injection
+detectors may lose the instruction-like or off-task signals they rely on
+\citep{li2025piguard, shi2025promptarmor}. Plan and policy defenses constrain calls
+whose tools and arguments follow from the request, but a tampered call uses a
+tool the task needs, and its consequential values are resolved at runtime from
+retrieved content \citep{li2025drift, shi2025progent}, so it can pass
+these checks. Evaluating only instruction-bearing, redirecting attacks can
+therefore overstate robustness.
+
+To measure this gap, we use environment-aware case construction. Each case
+places attacker-controlled content that is relevant to the benign task in a
+source the agent must process, identifies a decision that source is not
+authorized to determine, and provides an agent-visible basis for resolving the
+conflict. Holding the benign task, attacker role, targeted decision, and
+harmful outcome fixed within each case, single-primitive attacks vary the
+belief in the agent's decision process that the planted content directly
+targets. This \emph{influence-primitive decomposition} provides a systematic
+construction method for attacks beyond direct objective manipulation
+(\S\ref{sec:framework}). We apply it to 90 validated cases across productivity,
+DevOps, and marketplace environments, each with a compound attack and
+single-primitive attacks for up to six primitives. Every case targets \emph{task
+tampering}: the attack generally corrupts an action the task requires by
+changing a structured field such as an amount or access level, or free-form
+content such as an email body or resolution note.
+
+\paragraph{Contributions.}
+
+\begin{itemize}
+\item
+  \textbf{C1: An authority-based IPI boundary, operationalized.} We extend IPI's
+  authority boundary from commands to any influence on a decision, and specify per
+  case the attacker-controlled source, the decision outside its authority, and an agent-visible resolution basis.
+\item
+  \textbf{C2: A controlled task-tampering benchmark.} We co-design the benign task,
+  attacker role, controlled source, and targeted decision of each case, and use
+  influence primitives to vary how the planted content justifies the same
+  harmful outcome.
+\item
+  \textbf{C3: A mechanism-level defense analysis.} We trace where an attack is
+  stopped: before its content reaches the agent, by the agent itself, or at the
+  tool call. This shows gaps in existing defenses at both ends: detectors miss
+  non-instruction primitives more often, and action-level policies block few
+  task-tampering calls.
+\end{itemize}
+
+

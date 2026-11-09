@@ -1,0 +1,19 @@
+\begin{table}[t]
+    \centering
+    \small
+    \caption{\textbf{Validation of knowledge (K) and application (A) labels.} LLM--human agreement on 60 questions, averaged across two human annotators: exact match (EM; \%) and linearly weighted Cohen's $\kappa$, which penalizes disagreements in proportion to the distance between levels. \textit{w/o silver} and \textit{w/ silver} denote the LLM annotation without and with silver reasoning.}
+    \label{tab:ka_val}
+
+    \begin{tabular}{l|cc|cc}
+        \toprule[1.5pt]
+        & \multicolumn{2}{c|}{\textbf{K}} & \multicolumn{2}{c}{\textbf{A}} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5}
+        & EM & $\kappa$ & EM & $\kappa$ \\
+        \midrule[1pt]
+        w/o silver & 68.3 & 0.67 & 45.0 & 0.47 \\
+        \rowcolor[HTML]{D9D9D9}
+        w/ silver & 56.7 & 0.56 & 69.2 & 0.69 \\
+        \bottomrule[1.5pt]
+    \end{tabular}
+    \vspace{-0.1in}
+\end{table}

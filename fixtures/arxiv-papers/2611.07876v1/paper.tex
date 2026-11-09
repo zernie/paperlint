@@ -1,0 +1,141 @@
+\documentclass[10pt,conference]{IEEEtran}
+
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{balance}
+\newtcolorbox{rqanswer}[1]{colback=gray!7, colframe=gray!55, boxrule=0.4pt,
+  arc=1pt, left=4pt, right=4pt, top=3pt, bottom=3pt, before skip=6pt,
+  after skip=6pt, fontupper=\small, before upper={\textbf{Answer to #1.}~}}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\orange}[1]{\textcolor{orange}{#1}}
+
+
+%\raggedbottom
+
+\begin{document}
+
+%\title{Predicting Code Correctness under Distribution Shift: A Study of Internal and Causal LLM Signals}
+
+\title{Which Signals of Code Correctness Survive Distribution Shift? Hidden-State and Causal Predictors of Program and Verdict Correctness}
+
+% Can the Judge Be Trusted? Execution-Free Correctness Prediction for LLM-Generated Code under Distribution Shift
+% Where Execution-Free Correctness Predictors Break: Benchmark and Language Shift in LLM Code Generation
+% Causal Subspaces vs. Probes: Predicting the Correctness of LLM-Generated Code under Distribution Shift
+% Which Signals Tell When an LLM's Code Judgment Fails? Comparing Correctness Predictors under Language and Benchmark Shift
+% Causal Subspaces Transfer Across Languages, Not Across Tasks: Comparing Correctness Predictors for LLM-Generated Code
+% Predicting Code Correctness under Distribution Shift: A Study of Internal and Causal Signals
+% Out-of-Distribution Prediction of Code Correctness and LLM Verdict Reliability
+% When Can We Trust an LLM's Code Judgments? Execution-Free Prediction under Distribution Shift
+% When Can We Trust an LLM's Verdict on Its Own Code? Execution-Free Prediction under Benchmark and Language Shift
+% Which Signals of Code Correctness Survive Distribution Shift? Confidence, Probes, and Causal Subspaces for LLM-Generated Code
+
+%\thanks{Identify applicable funding agency here. If none, delete this.}
+
+
+\author{\IEEEauthorblockN{%Anonymous Author(s) %
+Viola Campos, Thomas Klassert, and Adrian Ulges
+}
+\IEEEauthorblockA{\textit{RheinMain University of Applied Sciences}\\
+Wiesbaden, Germany \\
+\{viola.campos, adrian.ulges\}@hs-rm.de} thomas.klassert@student.hs-rm.de
+ % \and
+ % \IEEEauthorblockN{Thomas Klassert}
+ % \IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+ % \textit{RheinMain University of Applied Sciences}\\
+ % Wiesbaden, Germany \\
+ % email address or ORCID}
+ % \and
+ % \IEEEauthorblockN{Adrian Ulges}
+ % \IEEEauthorblockA{\textit{dept. DCSM} \\
+ % \textit{RheinMain University of Applied Sciences}\\
+ % Wiesbaden, Germany \\
+ % email address or ORCID}
+}
+
+
+\maketitle
+
+\begin{abstract}
+% Matched to the introduction (2026-10-29); previous version below as comment.
+Large language models increasingly judge code, %including their own, 
+yet without external feedback such judgments are unreliable, and verifying them by
+executing tests or by extended reasoning is costly. %Execution-free correctness predictors offer a cheap signal from the model itself, from its output probabilities, the agreement among sampled solutions, or its hidden states, that can decide when a judgment needs costlier verification. 
+Instead, execution-free correctness predictors use signals from the model's output probabilities, sampled solutions, or hidden states to identify judgments that warrant further verification.
+However, 
+these predictors 
+%trained on hidden states 
+may degrade under distribution
+shifts 
+%an issue that remains underexplored for code, 
+when generalizing across projects and languages. 
+
+We compare six execution-free predictors from four families on Qwen3-Coder-30B and gpt-oss-20b under benchmark shift between LiveCodeBench and BigCodeBench and language shift across Python, C++ and Java.
+We evaluate two targets: whether the model's own verdict on a program can be trusted, and whether the program itself is correct.
+Besides established approaches, we adapt two novel causal localization methods to code, which have been shown to be more robust out-of-distribution on natural language tasks. 
+
+%For verdict correctness on Qwen3-Coder, causal localization probes improve robustness by 0.11 in distribution and by 0.09 under language shift, significantly outperforming the best non-causal predictor by 0.04 AUROC on average.
+For verdict correctness, causal localization improves robustness to language shift. For Qwen3-Coder a probe on the causally localized subspace stays 0.09 AUROC ahead of output confidence under language shift (0.11 in distribution), significantly outperforming the best non-causal predictor by 0.04 AUROC on average.
+%For verdict correctness, causal localization probes improves robustness to language shift. For Qwen3-Coder a probe on the localized subspace retains a 0.09 AUROC advantage over output confidence, compared with 0.11 in distribution, while a full-hidden-state probe retains only 0.03. The localized-subspace probe also significantly outperforms the best non-causal predictor by 0.04 AUROC on average. 
+This advantage, however, does not generalize consistently to gpt-oss or to benchmark shift. For program correctness, predictors transfer more successfully between benchmarks, largely by identifying problems on which the model tends to fail. However, their ability to rank candidates within the same problem is limited. % Agreement across sampled solutions offers no consistent advantage over a single-pass signal.
+
+\end{abstract}
+
+\begin{IEEEkeywords}
+code correctness prediction, uncertainty estimation, LLM-as-a-judge, distribution shift, causal interpretability
+\end{IEEEkeywords}
+
+
+\input{sections/introduction}
+
+\input{sections/related_work}
+
+\input{sections/problem_setting}
+
+\input{sections/methods.tex}
+
+\input{sections/setup.tex}
+
+\input{sections/experiments.tex}
+
+\input{sections/discussion}
+
+\input{sections/threats}
+
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+We compared execution-free predictors of code correctness from four families
+under benchmark and language shift, for two targets: whether a program is
+correct and whether the model's verdict on it can be trusted. Causal
+localization, adapted from natural-language question answering, gives the
+most robust predictor of the model's verdict under language shift on one of
+two models, and its gain lies in the learned subspace, so a simple probe on it
+suffices. 
+Beyond that, how well a predictor generalizes depends on the target
+and the type of shift: no verdict predictor transfers reliably between
+benchmarks, while program correctness transfers better. Much of what the predictors
+recognize is the problem rather than the candidate, which makes them better suited to deciding which problems to verify than to choosing among candidates. 
+Future work should test whether these signals can gate test execution and stronger judges in agentic settings, and whether a few labels from the target setting suffice to adapt them. %, as they do for probes in other domains~\cite{McKenzie2025HighStakes}.
+
+
+
+%\newpage
+
+\bibliographystyle{plain}
+\bibliography{ood_correctness}
+\end{document}

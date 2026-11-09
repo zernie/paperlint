@@ -1,0 +1,29 @@
+\begin{table*}[t]
+\centering
+\caption{What the scorer knows about the planner's own proposals. Held-out: label accuracy on held-out pairs and per-step correlation with the true reward on the labelled data. On the proposals, along the cloned policy's episodes (150--200 states): correlation $\rho_q$ between learned and true plan returns over the 256 proposals; the price of the proposal noise $J(U)-\mathbb{E}_qJ$; the selection gain $\Delta$ of standard MPPI at $\lambda=0.01$, on average and at the worst state; and the average gain of the worst-case-optimal rule of \cref{thm:chi2} on the five-scorer mean given the true error spread, whose gain at the worst state is $0.00$ in every row. Gains in units of the proposals' spread $\sigma_q(J)$. Mean $\pm$ standard error over 5 scorer seeds. $\kappa^\star$: median ratio of the true error spread to the ensemble's disagreement.}
+\label{tab:probe}
+\small
+\begin{tabular}{lcccccccc}
+\toprule
+& \multicolumn{2}{c}{Held-out} & \multicolumn{6}{c}{On the planner's proposals} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-9}
+& & & & & \multicolumn{2}{c}{Standard MPPI, $\lambda=0.01$} & \multicolumn{2}{c}{\Cref{thm:chi2}} \\
+\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+& acc. & corr. & $\rho_q$ & noise & mean $\Delta$ & worst $\Delta$ & mean $\Delta$ & $\kappa^\star$ \\
+\midrule
+Cheetah & 0.75 & 0.17 & $\phantom{-}0.08$\,{\scriptsize$\pm$0.01} & 1.59 & $\phantom{-}0.18$\,{\scriptsize$\pm$0.07} & $-3.03$\,{\scriptsize$\pm$0.41} & $\phantom{-}0.06$ & 1.4 \\
+Hopper & 0.77 & 0.08 & $\phantom{-}0.66$\,{\scriptsize$\pm$0.04} & 0.67 & $\phantom{-}0.22$\,{\scriptsize$\pm$0.19} & $-2.47$\,{\scriptsize$\pm$0.33} & $\phantom{-}0.53$ & 1.2 \\
+Drawer 200 & 0.84 & 0.79 & $-0.00$\,{\scriptsize$\pm$0.03} & 0.91 & $-0.64$\,{\scriptsize$\pm$0.18} & $-7.03$\,{\scriptsize$\pm$0.36} & $\phantom{-}0.05$ & 1.8 \\
+Drawer 300 & 0.84 & 0.85 & $-0.01$\,{\scriptsize$\pm$0.02} & 0.91 & $-0.21$\,{\scriptsize$\pm$0.06} & $-5.92$\,{\scriptsize$\pm$0.57} & $\phantom{-}0.07$ & 1.9 \\
+Drawer 500 & 0.88 & 0.88 & $\phantom{-}0.07$\,{\scriptsize$\pm$0.06} & 0.91 & $\phantom{-}0.16$\,{\scriptsize$\pm$0.12} & $-5.06$\,{\scriptsize$\pm$0.51} & $\phantom{-}0.12$ & 1.4 \\
+Drawer 1k & 0.85 & 0.83 & $\phantom{-}0.06$\,{\scriptsize$\pm$0.02} & 0.91 & $\phantom{-}0.12$\,{\scriptsize$\pm$0.08} & $-5.06$\,{\scriptsize$\pm$0.50} & $\phantom{-}0.11$ & 1.9 \\
+Drawer 2k & 0.85 & 0.81 & $\phantom{-}0.17$\,{\scriptsize$\pm$0.01} & 0.91 & $\phantom{-}0.43$\,{\scriptsize$\pm$0.07} & $-4.12$\,{\scriptsize$\pm$0.40} & $\phantom{-}0.23$ & 2.0 \\
+Drawer human & 0.97 & 0.91 & $-0.17$\,{\scriptsize$\pm$0.02} & 0.91 & $-0.16$\,{\scriptsize$\pm$0.11} & $-6.64$\,{\scriptsize$\pm$0.90} & $\phantom{-}0.05$ & 2.8 \\
+Drawer 500, half on planner & 0.84 & 0.92 & $\phantom{-}0.13$\,{\scriptsize$\pm$0.04} & 0.98 & $\phantom{-}0.29$\,{\scriptsize$\pm$0.08} & $-5.66$\,{\scriptsize$\pm$0.45} & $\phantom{-}0.26$ & 1.1 \\
+Plate 500 & 0.84 & 0.93 & $\phantom{-}0.42$\,{\scriptsize$\pm$0.03} & 2.16 & $\phantom{-}0.85$\,{\scriptsize$\pm$0.03} & $-4.87$\,{\scriptsize$\pm$1.21} & $\phantom{-}0.42$ & 2.0 \\
+Plate 2k & 0.86 & 0.93 & $\phantom{-}0.36$\,{\scriptsize$\pm$0.02} & 2.16 & $\phantom{-}0.98$\,{\scriptsize$\pm$0.10} & $-3.65$\,{\scriptsize$\pm$1.18} & $\phantom{-}0.39$ & 2.0 \\
+Window 500 & 0.86 & 0.85 & $\phantom{-}0.36$\,{\scriptsize$\pm$0.02} & 0.33 & $\phantom{-}0.98$\,{\scriptsize$\pm$0.21} & $-8.46$\,{\scriptsize$\pm$2.61} & $\phantom{-}0.39$ & 1.0 \\
+Window 2k & 0.85 & 0.91 & $\phantom{-}0.23$\,{\scriptsize$\pm$0.02} & 0.33 & $\phantom{-}0.72$\,{\scriptsize$\pm$0.12} & $-5.68$\,{\scriptsize$\pm$1.07} & $\phantom{-}0.22$ & 2.0 \\
+\bottomrule
+\end{tabular}
+\end{table*}

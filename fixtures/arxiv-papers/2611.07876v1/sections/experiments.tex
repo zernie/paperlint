@@ -1,0 +1,326 @@
+\section{Experiments}
+
+\subsection{RQ1: How well can execution-free methods tell whether the model's own verdict can be trusted? }
+\label{sec:rq-verdict}
+
+\input{generated/tab_verdict_summary}
+\input{generated/tab_language_detail_verdict}
+
+% Numbers (2026-10-27): generated/tab_verdict_summary.tex,
+% tab_language_detail_verdict.tex, paired_shift.csv (fold=mean, train=all: mean
+% over the six language pairs, three partitions; "±" is 1.96 se_total). Per-pair
+% statements are descriptive (fold 0/1/2 rows of paired_shift.csv, value probe
+% − noncausal): ahead in all three partitions on pyctl→java, cpp→pyctl,
+% cpp→java, java→pyctl; behind in all three on java→cpp. Within-problem AUROC
+% from layer_selection{,_f1,_f2}.csv (mean over languages, then partitions);
+% figure count from the score layer (artifact/manifest.csv): value-probe
+% checkpoints above the probe's best layer on the shifted rows, Qwen3-Coder
+% L35--L39 in each fold.
+
+%The verdict target asks whether the model's judgment of a candidate can be
+%trusted (Section~\ref{sec:problem}): the decision an agentic pipeline faces
+%when it can either accept the verdict or run the tests. A high AUROC means that
+%a method ranks candidates with a correct verdict above those with a wrong one.
+Both LLMs are mediocre judges, with balanced accuracies of their verdicts of 57--74\% (Table~\ref{tab:datasets}) against the tests. RQ1 asks how well our methods identify the candidates on which the model's verdict is correct.
+Table~\ref{tab:verdict-summary} summarizes the results, showing the mean per method over partitions.
+Table~\ref{tab:language-detail-verdict} breaks down the language shift by training and evaluation language.
+
+\paragraph{In distribution, hidden states outperform confidence}
+On LCB and the language sets, the methods that read hidden states reach 0.69--0.83, while confidence is weak for
+Qwen3-Coder (0.64--0.67) and close to chance for gpt-oss (0.54--0.57). %, as reported for natural-language tasks~\cite{Kadavath2022LanguageM, OrgadTGRSKB25}. 
+On the language sets, the probe and the two causal methods are
+level for Qwen3-Coder (0.758--0.761); for gpt-oss, counterfactual simulation is best (0.808). BCB is harder, no trained method exceeds 0.639 for Qwen3-Coder or 0.601 for gpt-oss.
+
+\paragraph{Under language shift, the causal subspace is the most robust predictor for Qwen3-Coder}
+%Probes on hidden states can degrade under distribution shift~\cite{OrgadTGRSKB25, Kramar2026Probes}. 
+For Qwen3-Coder, the probe drops from 0.76 in distribution to 0.67 when the language changes%(mean over the six pairs)
+, while both causal methods fall only from 0.76 to 0.73, against 0.64 for confidence. Averaged over the six language pairs, the value probe is ahead of
+the best non-causal method of each pair by $0.042 \pm 0.021$ (95\% interval of the paired test, Section~\ref{sec:setup-protocol}) and ahead in each of the three partitions ($+0.035$, $+0.053$, $+0.038$). Counterfactual simulation
+reaches the same mean but varies more between partitions ($\pm 0.043$). 
+%Per pair, the value probe is ahead in all three partitions on four of the six pairs and behind in all three on Java$\to$C++, C++ being the hardest target language. 
+The lead does not depend on the probe's layer choice: in 13 of the 18 pair--partition combinations, most value-probe checkpoints lie above the probe at its best layer on the shifted rows, as illustrated for Qwen3-Coder, trained on C++ in Figure~\ref{fig:verdict-profile}. 
+%These results suggest that the learned subspace provides a more robust signal of verdict correctness than the full hidden state for Qwen3-Coder. 
+For gpt-oss, all trained methods lose 0.07--0.12 AUROC under language shift, and neither causal method is significantly ahead of the best non-causal one. %Counterfactual simulation is ahead in five of the six pairs, but its lead varies between partitions from $-0.06$ to $+0.11$. 
+The robustness reported for natural language tasks~\cite{Huang2025Internal} thus carries over to code for one of the two models; Section~\ref{sec:rq-subspace} examines what carries the gain.
+
+% Figure: scripts/paper/fig_layer_profile.py --target verdict --cells qwen3:cpp
+%   --wide --first-block 30 --out paper/generated/fig_verdict_profile_qwen3_cpp.pdf
+% (fold 0, score layer; one row since 2026-10-28, probe below block 30 at
+% 0.49--0.64 not drawn).
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{generated/fig_verdict_profile_qwen3_cpp}
+\caption{AUROC per layer on the verdict target, Qwen3-Coder trained on C++
+(fold 0), in distribution (left) and under language shift. Rings mark the
+layer chosen in distribution; the dashed line is confidence. Under shift to
+Python, every causal checkpoint lies above the probe's best layer; on Java,
+most do.}
+\label{fig:verdict-profile}
+\end{figure}
+
+% Figure: scripts/paper/make_result_tables.py --only fw (layer_selection{,_f1,_f2}.csv,
+% columns pooled and within; 2026-10-27).
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{generated/fig_within}
+\caption{Within-problem (hollow) against pooled AUROC (filled), in distribution
+(faint) and under language shift: means over training languages and partitions.
+Within-problem AUROC uses the problems with mixed outcomes only
+(Section~\ref{sec:setup-protocol}); the length of a line is how much of the
+pooled AUROC comes from ranking problems.}
+\label{fig:within}
+\end{figure}
+
+\paragraph{The advantage lies in identifying unreliable problems, not candidates}
+Pooled AUROC combines the ability to identify problems on which the judge is unreliable with the ability to distinguish correct from incorrect verdicts within a problem (Section~\ref{sec:setup-protocol}). The second is limited. Under language shift, within-problem AUROC is 0.616--0.618 for all trained methods of Qwen3-Coder. 
+For gpt-oss the probe reaches 0.652, counterfactual simulation 0.635 and the value probe 0.576 (Figure~\ref{fig:within}).
+The causal methods' pooled advantage thus comes mainly from identifying problems on which the judge is unreliable, rather than individual candidates it misjudges. 
+
+\paragraph{A change of benchmark affects every method more than a change of
+language}
+Transfer between LCB %, whose problems are algorithmic, 
+and BCB %, whose tasks rely on libraries, 
+is asymmetric (Table~\ref{tab:verdict-summary}). From LCB to BCB, all trained methods of Qwen3-Coder fall
+to 0.453--0.485, below confidence (0.552). In the reverse direction, the probe stays near chance (0.516), while the causal methods reach 0.680 and 0.695, close to confidence (0.669).
+For gpt-oss, every method stays at 0.48--0.61 in both directions. %With one partition, these differences between methods are descriptive. 
+%\orange{Section~\ref{sec:rq-subspace} relates the failure to the model's verdicts on BCB. }
+
+\begin{rqanswer}{RQ1}
+In distribution, hidden states predict whether the model's verdict is right far
+better than its confidence. Under language shift, a probe on the causally
+localized subspace is the most robust predictor for Qwen3-Coder (+0.04 AUROC over
+the best non-causal method, in all three partitions), mainly by identifying problems
+on which the judge is unreliable; for gpt-oss, no method is significantly ahead. 
+Verdict prediction does not transfer reliably between benchmarks.
+\end{rqanswer}
+
+
+\subsection{RQ2: Which part of the causal methods carries their signal?}
+\label{sec:rq-subspace}
+
+On Qwen3-Coder's verdict target, the causal methods are the most robust predictors under language shift (RQ1). 
+We now investigate which aspects of the method contribute to this performance: whether prediction requires the intervention itself, whether the learned directions matter beyond their dimensionality, and whether interchange intervention accuracy (see Section~\ref{sec:methods-causal}) indicates when the subspace is useful.
+
+
+% Figure: scripts/paper/fig_subspace_layers.py (fold 0, results/*_randomlayers
+% and the block-fixed learned value probes; 2026-10-22). Space permitting; it
+% could replace Table~\ref{tab:subspace-control}.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{generated/fig_subspace_layers}
+\caption{Value probe on the learned DAS subspace against value probes on
+three random 6-dimensional subspaces at the same layer, verdict target,
+mean over shifted languages (the band is the range over
+the random subspaces). Shaded: layers where DAS has
+converged (IIA $\geq$ 0.9). On Qwen3-Coder the learned subspace is above
+random at every layer; on gpt-oss it is above random before convergence and
+near chance once DAS has converged.}
+\label{fig:subspace-layers}
+\end{figure}
+
+\paragraph{Reading the subspace is sufficient}
+Counterfactual simulation intervenes through the subspace and reads the answer
+token, at the cost of $B$ additional forward passes per candidate; the value
+probe reads the subspace directly in the judging pass. On Qwen3-Coder the two are equally robust under language shift (mean difference over the six pairs $-0.000 \pm 0.033$ on the verdict target, $+0.004 \pm 0.007$ on the program target), and both are ahead of confidence, which reads the same
+answer token without the subspace ($+0.085 \pm 0.033$ and $+0.05 \pm 0.03$).
+%Preliminary experiments showed that the choice of the $B=16$ bases barely matters: drawing them from different problems changed the pooled AUROC of one checkpoint by at most 0.01. 
+The intervention thus brings no significant improvement over reading the
+subspace, and the value probe costs no more at prediction time than a probe.
+
+\paragraph{The learned direction matters, not the low dimension}
+A six-dimensional readout might transfer better simply because it is small. We
+therefore train the value probe on three random subspaces of the same
+dimension at the same layer. At the layer chosen in distribution, the
+learned subspace reaches 0.70--0.75 under shift for Qwen3-Coder, random
+subspaces 0.48--0.61, no better than the probe on the full hidden state (0.668,
+Table~\ref{tab:verdict-summary}). The same holds at every trained layer (Figure~\ref{fig:subspace-layers}). 
+%\orange{Die Figure (insb. untere Zeile) wirft mehr Fragen auf... Auf Qwen3-Coder fokussierene evtl.?}
+
+% % Undecided (2026-10-27): why the subspace helps on the verdict target;
+% % hypotheses and checks in PAPER_PLAN_FORGE.md, open decision 14.
+% \paragraph{\orange{The causal score reads how firmly a verdict is held}}
+% \orange{The verdict score of counterfactual simulation is the probability that
+% the bases output the candidate's verdict once its subspace is patched in. A
+% base the patch does not move keeps its own answer, so the score carries an
+% offset between \texttt{Yes} and \texttt{No} verdicts that depends on the bases,
+% not on the candidate. Within one verdict the offset is constant, and there
+% right verdicts score higher than wrong ones in every setting: under language
+% shift, the AUROC among accepted and among rejected candidates is 0.65 and 0.77
+% for Qwen3-Coder and 0.64 and 0.68 for gpt-oss (means over pairs and
+% partitions). The causal methods thus read how firmly a candidate's state holds
+% the model's decision. The offset explains the failure under benchmark shift:
+% from LCB to BCB, Qwen3-Coder's \texttt{Yes} verdicts score 0.77 higher than its
+% \texttt{No} verdicts, and 84\% of its wrong verdicts there are \texttt{Yes}, so
+% the pooled AUROC falls to 0.43, although right verdicts still score higher within
+% each verdict (0.57 and 0.61).}
+
+\paragraph{Interchange accuracy does not guarantee predictive utility}
+DAS learns the subspace so that swapping it between two inputs swaps the
+model's verdict. IIA measures how often this succeeds. A high IIA thus shows
+that the subspace controls the decision, not that it tells whether the decision
+is right. On gpt-oss the two diverge (Figure~\ref{fig:subspace-layers}): at L11
+and L13, where DAS succeeds only partly (IIA 0.54--0.64), the learned subspace
+transfers better than random ones (0.56--0.68 against 0.52--0.55 under shift),
+and L13 is the layer chosen in distribution. However, at L17--L21, where DAS almost
+always succeeds (IIA 0.91--0.95), it falls to 0.52--0.58, no better than
+random. %\orange{One reading is that the decision is fully formed at these layers, so the subspace holds a clean \texttt{Yes} or \texttt{No} that says little about whether it is right.} 
+On Qwen3-Coder the converged layers (L39--L43, IIA 0.95) remain informative. IIA thus cannot tell the two cases apart, and layers are chosen by held-out prediction instead (Section~\ref{sec:setup-training}).
+
+\begin{rqanswer}{RQ2}
+Where the causal methods help, the learned subspace carries the gain: the value
+probe, which reads it in the judging pass, is as robust as counterfactual
+simulation, and random subspaces of the same size transfer only as well as the
+full hidden state. %\orange{Within each verdict, right verdicts are held more firmly in the subspace than wrong ones; across verdicts, counterfactual simulation adds an offset set by its bases, which explains its failure from LCB to BCB.} 
+IIA does not indicate when the subspace is useful: on gpt-oss, the
+converged subspaces are no better than random ones.
+\end{rqanswer}
+ 
+
+\subsection{RQ3: How well do the methods predict whether the program is correct?}
+\label{sec:rq-program}
+
+
+The program target asks whether a candidate passes its tests, regardless of
+the model's verdict. The two targets
+agree only where the judge is right. %Across all candidates, they are unrelated: the model judges passing and failing programs equally accurately. %(Adrian: die zwei Sätze mag ich nicht. Sicher dass korrekt?)}
+We therefore ask whether the results on the verdict target carry over. Table~\ref{tab:program-summary} summarizes the results. In distribution, all methods predict
+program correctness well above chance, AUROC ranges from 0.70--0.88 on LCB and the language
+sets, with the hidden-state probe performing best on the language sets for both models. BCB is more challenging for every method.
+
+\input{generated/tab_program_summary}
+
+
+\paragraph{Under language shift, the causal methods lose their advantage}
+The full-state probe loses 0.088 AUROC for Qwen3-Coder and 0.166 for gpt-oss, while confidence changes little ($-0.003$ and $-0.004$). For Qwen3-Coder, LAT and both causal methods nevertheless remain significantly ahead of confidence by 0.044--0.054 AUROC on average; the probe's lead of 0.035 is no longer significant. For gpt-oss, no trained method significantly outperforms confidence. Importantly, neither causal method outperforms the best non-causal method: for Qwen3-Coder, the value probe and counterfactual simulation trail it by 0.010 and 0.014 AUROC, respectively, neither significantly. For gpt-oss, the value probe is significantly behind ($-0.068$), while counterfactual simulation is statistically level ($-0.025$). Thus, the robustness of causal localization observed for verdict correctness (RQ1) does not carry over to program correctness.
+
+
+% In distribution, the trained methods are 0.05--0.16 ahead of confidence on the
+% language sets. Under language shift the probe loses most ($-0.088$ for
+% Qwen3-Coder, $-0.166$ for gpt-oss), while confidence barely changes ($-0.003$,
+% $-0.004$). For Qwen3-Coder, LAT and the two causal methods remain
+% significantly ahead of confidence, by 0.044--0.054 on average over the pairs;
+% the probe's lead ($+0.035 \pm 0.035$) is no longer significant. For gpt-oss,
+% no trained method is ahead ($-0.037$ to $+0.019$, none significant). Where no labeled data exists for the new language, confidence is thus about 0.05 behind the best
+% trained method for Qwen3-Coder and as good as any for gpt-oss.
+
+% \paragraph{The causal methods have no advantage on program correctness}
+% On average over the pairs, neither causal method is ahead of the best
+% non-causal method under language shift: for Qwen3-Coder, the differences are
+% $-0.010 \pm 0.019$ (value probe) and $-0.014 \pm 0.017$ (counterfactual
+% simulation), neither significant; for gpt-oss, the value probe is
+% significantly behind ($-0.076 \pm 0.035$) and counterfactual simulation is
+% level ($-0.025 \pm 0.034$). Their robustness on the verdict target (RQ1) does
+% not carry over to program correctness.
+
+\paragraph{Program correctness transfers between benchmarks}
+In contrast to verdict correctness, predictors for program correctness transfer between LCB and BCB in both directions. When trained on LCB and evaluated on BCB, methods reach 0.580--0.656 for Qwen3-Coder, and 0.575--0.648 for gpt-oss, comparable to
+the respective in-distribution results on BCB (0.590--0.688 and 0.608--0.652).
+ Transfer in the reverse direction is similarly strong, reaching 0.70--0.82 for Qwen3-Coder and 0.68--0.72 for gpt-oss.
+% Figure removed for space (2026-10-23): the selection cost is given in the
+% text. scripts/paper/fig_layer_profile.py --target program --cells qwen3:cpp
+% gptoss:cpp
+% \begin{figure}[t]
+% \centering
+% \includegraphics[width=\columnwidth]{generated/fig_program_profile_qwen3_cpp_gptoss_cpp}
+% \caption{AUROC per layer on the program target, in distribution (top) and under
+% language shift (fold 0), trained on C++: Qwen3-Coder (left), gpt-oss
+% (right). Rings mark the layer chosen in distribution; the dashed line is
+% confidence at its chosen temperature. The layer that is best for the probe in
+% distribution is not the one that transfers. LAT is omitted: its per-layer sign
+% fit flips in many layers.}
+% \label{fig:layers}
+% \end{figure}
+\paragraph{Pooled AUROC overstates candidate-level discrimination}
+As for verdict correctness, pooled AUROC reflects both the ability to identify problems the model tends to solve and the ability to distinguish candidates within a problem.
+Choosing a candidate needs only the second, and here every method is weak (Figure~\ref{fig:within}, bottom): under language shift, within-problem AUROC lies at 0.58--0.64 for all methods and both models, against a pooled AUROC of 0.67--0.81. For Qwen3-Coder confidence performs best within problem (0.629). 
+The trained methods reach higher within-problem AUROCs of 0.69--0.78 only for gpt-oss in distribution, but lose this advantage under shift. Consequently, the predictors are more useful for identifying problems that warrant verification than for choosing among candidates of the same problem.
+Section~\ref{sec:rq-problem} predicts at problem level directly.
+
+% Numbers below: generated/tab_genprobe.tex from generated/genprobe_compare.csv
+% (scripts/analysis/genprobe_compare.py, fold 0, 2026-10-22).
+\paragraph{Reading the generation is as good as asking}
+All methods so far read the model in a separate judging pass. The same information might already be present when the model generates the candidate. %\orange{Verstehe ich nicht. Ist das nicht per Definition identisch?}. 
+We therefore train the same probe on the hidden states of the model's own
+generation (without the judgment prompt), replayed token by token, and compare it with the judging-pass probe on identical candidates, Table~\ref{tab:genprobe} reports the results. We compare different token positions here: at the last token of the candidate's code, it is
+at least as good as the judging pass in distribution (0.895 against 0.886 for
+Qwen3-Coder, 0.864 against 0.851 for gpt-oss); under language shift, it is
+close for Qwen3-Coder (0.795 against 0.779) and behind for gpt-oss (0.673
+against 0.704). A correctness score can thus be read while the code is
+written. Read at the last prompt token, before any code exists, the probe
+has seen only the problem, yet for Qwen3-Coder it matches the judging pass in
+distribution (0.891). Much of what the methods predict is thus the problem,
+not the candidate.
+
+\input{generated/tab_genprobe}
+
+\begin{rqanswer}{RQ3}
+All methods predict program correctness well above chance, largely by recognizing the problems the model fails on, %Within one problem, every method is weak 
+and this transfers better between benchmarks than the verdict. Under
+language shift, the trained methods lose most of their lead over confidence:
+about 0.05 remains for Qwen3-Coder, nothing for gpt-oss, and the causal
+methods' robustness on the verdict target does not carry over. A probe on the model's own generation is as good as one on a separate judging pass in distribution.
+\end{rqanswer}
+
+
+\subsection{RQ4: Does agreement across samples improve problem-level prediction?} % tell better than a single pass which problems the model will solve?}
+\label{sec:rq-problem}
+% Numbers from generated/tab_problem_level.tex and generated/problem_level_ci.csv
+% (scripts/analysis/problem_level_ci.py, 2026-10-16). "Significant": 95% paired
+% problem bootstrap (2000 draws, same rows and averaging as the table) excludes
+% zero. Dropped 2026-10-28: the before-sampling paragraph (problem-only probe
+% now in RQ3), the end-of-reasoning probe, per-pair counts, the Harrell's C
+% note, the sentence on prior consistency studies (covered in related work).
+
+This question moves from the candidate to the problem level. Much of the
+candidate-level signal reflects which problems the model solves
+(Section~\ref{sec:rq-program}). When several candidates are sampled for a
+problem, their agreement provides a further signal.
+EigenScore~\cite{Chen24Eigenscore} reads this agreement from the hidden states
+of the generations (Section~\ref{sec:methods-consistency}). Like confidence, it
+needs no training, so it cannot lose under shift. We compare at equal sampling
+cost: each single-pass method is averaged over the candidates EigenScore uses,
+and every method predicts whether at least half of a problem's candidates pass
+(Table~\ref{tab:problem-level}).
+
+% - A possibility to prevent the problems under distribution shift, is to use an unsupervised method, that needs no training. Also other advantages, no labeled training data needed\dots
+% One such method is eigenscore, which uses cnsistency across the hidden states of n different samples (n=5 in our experiments) to compute a score for 'how likely that this problem will be solved by the model'. As a consistency-based method, eigenscore scores at problem level in contrast to our other candidate level methods. To compare it to our methods nonetheless, we mean-pool our candidate scores to problem scores and label them by majority vote -> a problem is solved if more than $50\%$ of its candidates pass (reasonable since most (X-Y\% depending on the benchmark) of our problems contain passing or failing candidates only).
+
+% Remember that we exclude empty generations (where no program could be extracted from the models reasoning) as trivial from our experiments, so we filter out all problems with less than n=5 non-empty samples, resulting in a slightly reduced test set for this experiment.
+
+\input{generated/tab_problem_level}
+
+% Numbers: generated/tab_genprobe.tex (candidate-level pooled AUROC, fold 0).
+% A problem-level row for the last-prompt-token probe in
+% Table~\ref{tab:problem-level} would make this directly comparable with
+% EigenScore (make_result_tables.py t5); not done (2026-10-28).
+The cheapest prediction needs no sample at all: for Qwen3-Coder, a probe that
+has seen only the problem %\orange{verstehe ich nicht} 
+already ranks candidates as well as the judging pass
+(Section~\ref{sec:rq-program}). Sampling several candidates pays off for
+prediction only if their agreement adds to what a single pass provides.
+
+\paragraph{Agreement provides no consistent advantage}
+For Qwen3-Coder, EigenScore is at chance on LCB (0.504) and on the language
+sets (0.528), where every single-candidate method, confidence included, is
+significantly ahead (0.77--0.91). On BCB it is comparable to them (0.658 against
+0.671--0.682). For gpt-oss the benchmarks swap roles: EigenScore is at chance
+on BCB (0.518 against 0.622--0.712) and closer on LCB (0.660 against
+0.698--0.808). Under shift, the single-pass methods lose ground. 
+From LCB to BCB, Qwen3-Coder's trained methods fall slightly below EigenScore (0.618--0.652 against 0.658) while confidence stays above it (0.670); under language shift, the
+gap remains large for Qwen3-Coder (0.775--0.838 against 0.528) and narrows for
+gpt-oss (0.615--0.676 against 0.586).
+
+
+\begin{rqanswer}{RQ4}
+Agreement across samples gives no consistent advantage over a single pass.
+EigenScore is level with the single-pass methods in some cells and near
+chance in others, and confidence, which needs no labels either, is never
+significantly below it. That EigenScore cannot lose under shift does not help where it starts near chance.
+\end{rqanswer}
+
+% Notes from earlier drafts:
+% RQ2: How well can they tell whether the model's own verdict on its code can
+% be trusted, and how much of that survives shift?
+% How does an unsupervised consistency-based method compare to these methods?
+% Numbers are reported in mean±std. For each task, the highest AUROC value is
+% in bold. Values that are within a standard deviation are underlined.

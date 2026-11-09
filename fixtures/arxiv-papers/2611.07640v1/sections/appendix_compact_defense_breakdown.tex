@@ -1,0 +1,106 @@
+\section{Defense Results by Model and Target}
+\label{app:defense-breakdown}
+
+\suppressfloats[t]Tables \ref{tab:defense-breakdown} and \ref{tab:defense-breakdown-runtime}
+expand Table \ref{tab:defense-overview} and Appendix Table
+\ref{tab:th-overview} to each model, with ASR for each functional target and
+for the compound attack. The per-model statements in \S\ref{sec:results}
+refer to these tables.
+
+\begin{table}[htbp]
+\centering
+\caption{ASR and TSR (\%) by defense, model, and primitive. Primitive columns use retained single-primitive attacks, Comp.\ the compound attack, and All pools both. Benign TSR is measured without an injection, attacked TSR under attack. No defense and prompt defenses.}
+\label{tab:defense-breakdown}
+\begingroup
+\tablefont
+\renewcommand{\arraystretch}{1.0}
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{%
+\begin{tabular}{@{}llrrrrrrrrrr@{}}
+\toprule
+ & & \multicolumn{8}{c}{\textbf{ASR}} & \multicolumn{2}{c}{\textbf{TSR}} \\
+\cmidrule(lr){3-10}\cmidrule(lr){11-12}
+\textbf{Defense} & \textbf{Model} & $b(U)$ & $b(\pi)$ & $b(T)$ & $b(A)$ & $b(O)$ & $b(s)$ & Comp. & All & Benign & Attacked \\
+\midrule
+None & DeepSeek V3.1 & 24.4 & 31.4 & 16.1 & 21.4 & 14.6 & 24.7 & 32.2 & 23.2 & 94.4 & 79.5 \\
+ & Kimi K2.5 & 13.4 & 19.4 & 13.7 & 23.3 & 12.7 & 19.4 & 26.7 & 17.4 & 87.8 & 81.6 \\
+ & Sonnet 4 & 17.6 & 28.7 & 17.6 & 23.9 & 15.1 & 20.2 & 21.1 & 20.6 & 97.8 & 81.7 \\
+ & Sonnet 4.5 & 7.6 & 12.4 & 9.8 & 12.6 & 10.4 & 13.8 & 12.2 & 11.1 & 98.9 & 89.6 \\
+ & GLM-5 & 12.2 & 14.3 & 11.2 & 13.8 & 9.0 & 15.0 & 16.7 & 12.9 & 97.8 & 86.1 \\
+\midrule
+Spotlight & DeepSeek V3.1 & 22.5 & 31.4 & 16.1 & 22.0 & 12.7 & 21.9 & 30.0 & 22.1 & 97.8 & 82.2 \\
+ & Kimi K2.5 & 14.1 & 21.3 & 12.7 & 18.9 & 13.7 & 21.1 & 24.4 & 17.5 & 98.9 & 81.8 \\
+ & Sonnet 4 & 13.7 & 21.3 & 15.1 & 22.6 & 14.2 & 23.1 & 23.3 & 18.6 & 98.9 & 83.3 \\
+ & Sonnet 4.5 & 5.3 & 8.1 & 7.8 & 12.6 & 5.2 & 11.3 & 6.7 & 8.1 & 100.0 & 93.2 \\
+ & GLM-5 & 8.0 & 12.8 & 8.3 & 11.3 & 11.8 & 17.0 & 14.4 & 11.8 & 97.8 & 88.5 \\
+\midrule
+Sandwich & DeepSeek V3.1 & 13.4 & 22.1 & 13.7 & 15.1 & 10.8 & 21.1 & 21.1 & 16.6 & 96.7 & 83.7 \\
+ & Kimi K2.5 & 4.2 & 8.5 & 7.8 & 15.1 & 8.0 & 16.6 & 17.8 & 10.3 & 97.8 & 88.0 \\
+ & Sonnet 4 & 6.1 & 11.2 & 6.3 & 13.8 & 7.5 & 17.4 & 14.4 & 10.6 & 98.9 & 90.5 \\
+ & Sonnet 4.5 & 2.7 & 3.5 & 3.9 & 6.9 & 3.8 & 7.7 & 5.6 & 4.7 & 100.0 & 95.3 \\
+ & GLM-5 & 5.3 & 9.3 & 7.8 & 12.6 & 7.1 & 16.2 & 13.3 & 9.8 & 98.9 & 89.6 \\
+\midrule
+TH-generic & DeepSeek V3.1 & 19.1 & 30.6 & 16.6 & 17.6 & 15.6 & 17.4 & 32.2 & 20.7 & 97.8 & 83.0 \\
+ & Kimi K2.5 & 8.8 & 12.8 & 11.2 & 18.9 & 9.0 & 16.2 & 18.9 & 12.9 & 100.0 & 85.4 \\
+ & Sonnet 4 & 11.8 & 14.7 & 9.3 & 16.4 & 12.7 & 17.8 & 18.9 & 14.1 & 100.0 & 87.5 \\
+ & Sonnet 4.5 & 3.4 & 5.0 & 5.4 & 4.4 & 4.2 & 7.7 & 8.9 & 5.3 & 100.0 & 95.6 \\
+ & GLM-5 & 7.3 & 13.2 & 7.8 & 10.7 & 9.4 & 16.2 & 14.4 & 11.1 & 100.0 & 89.3 \\
+\midrule
+TH-env & DeepSeek V3.1 & 14.9 & 24.4 & 11.7 & 18.9 & 10.8 & 17.8 & 24.4 & 17.1 & 98.9 & 85.5 \\
+ & Kimi K2.5 & 5.3 & 6.6 & 6.8 & 12.6 & 5.2 & 11.7 & 7.8 & 7.8 & 100.0 & 90.8 \\
+ & Sonnet 4 & 8.4 & 10.1 & 6.8 & 9.4 & 3.8 & 14.2 & 16.7 & 9.4 & 98.9 & 92.4 \\
+ & Sonnet 4.5 & 2.3 & 3.1 & 3.4 & 2.5 & 0.9 & 4.0 & 3.3 & 2.8 & 98.9 & 97.4 \\
+ & GLM-5 & 5.0 & 10.1 & 5.4 & 8.2 & 6.6 & 10.1 & 5.6 & 7.5 & 100.0 & 91.8 \\
+\bottomrule
+\end{tabular}
+}
+\endgroup
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{ASR and TSR (\%) by defense, model, and primitive. Primitive columns use retained single-primitive attacks, Comp.\ the compound attack, and All pools both. Benign TSR is measured without an injection, attacked TSR under attack. Runtime and other defenses.}
+\label{tab:defense-breakdown-runtime}
+\begingroup
+\tablefont
+\renewcommand{\arraystretch}{1.0}
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{%
+\begin{tabular}{@{}llrrrrrrrrrr@{}}
+\toprule
+ & & \multicolumn{8}{c}{\textbf{ASR}} & \multicolumn{2}{c}{\textbf{TSR}} \\
+\cmidrule(lr){3-10}\cmidrule(lr){11-12}
+\textbf{Defense} & \textbf{Model} & $b(U)$ & $b(\pi)$ & $b(T)$ & $b(A)$ & $b(O)$ & $b(s)$ & Comp. & All & Benign & Attacked \\
+\midrule
+DRIFT-iso & DeepSeek V3.1 & 3.4 & 7.0 & 2.4 & 5.0 & 10.8 & 13.0 & 18.9 & 7.8 & 95.6 & 91.0 \\
+ & Kimi K2.5 & 2.7 & 7.4 & 3.4 & 5.0 & 9.9 & 12.1 & 16.7 & 7.5 & 97.8 & 92.3 \\
+ & Sonnet 4 & 3.1 & 6.6 & 3.4 & 3.1 & 10.8 & 13.0 & 17.8 & 7.5 & 98.9 & 93.4 \\
+ & Sonnet 4.5 & 1.1 & 5.0 & 4.4 & 3.8 & 9.0 & 7.7 & 6.7 & 5.2 & 98.9 & 95.9 \\
+ & GLM-5 & 1.5 & 1.2 & 0.0 & 2.5 & 7.1 & 14.6 & 10.0 & 5.0 & 98.9 & 93.8 \\
+\midrule
+DRIFT-full & DeepSeek V3.1 & 2.3 & 5.0 & 3.4 & 2.5 & 10.8 & 13.4 & 18.9 & 7.2 & 88.9 & 84.2 \\
+ & Kimi K2.5 & 1.9 & 4.7 & 3.4 & 2.5 & 13.7 & 7.7 & 12.2 & 6.1 & 94.4 & 80.7 \\
+ & Sonnet 4 & 5.3 & 8.5 & 4.4 & 5.7 & 14.6 & 12.6 & 14.4 & 9.0 & 85.6 & 82.2 \\
+ & Sonnet 4.5 & 1.1 & 6.6 & 5.9 & 6.3 & 8.5 & 7.7 & 7.8 & 6.0 & 90.0 & 85.7 \\
+ & GLM-5 & 1.9 & 3.5 & 2.4 & 3.8 & 9.4 & 15.4 & 13.3 & 6.6 & 85.6 & 84.3 \\
+\midrule
+Progent & DeepSeek V3.1 & 23.7 & 30.2 & 20.0 & 22.6 & 23.6 & 24.7 & 30.0 & 24.8 & 63.3 & 51.6 \\
+ & Kimi K2.5 & 9.2 & 17.4 & 12.2 & 19.5 & 10.8 & 17.0 & 17.8 & 14.4 & 72.2 & 64.5 \\
+ & Sonnet 4 & 12.2 & 19.8 & 10.7 & 20.8 & 10.4 & 18.6 & 18.9 & 15.6 & 77.8 & 66.3 \\
+ & Sonnet 4.5 & 7.6 & 9.3 & 6.8 & 9.4 & 10.4 & 14.6 & 11.1 & 9.8 & 86.7 & 77.4 \\
+ & GLM-5 & 9.2 & 16.3 & 10.2 & 12.6 & 10.8 & 15.4 & 14.4 & 12.6 & 74.4 & 65.0 \\
+\midrule
+CaMeL & DeepSeek V3.1 & 1.5 & 1.6 & 1.0 & 4.4 & 1.4 & 2.0 & 0.0 & 1.7 & 6.7 & 9.8 \\
+ & Kimi K2.5 & 1.5 & 1.6 & 2.0 & 0.0 & 0.0 & 1.6 & 1.1 & 1.2 & 12.2 & 8.0 \\
+ & Sonnet 4 & 0.8 & 1.6 & 1.0 & 0.6 & 1.9 & 0.4 & 3.3 & 1.2 & 12.2 & 15.8 \\
+ & Sonnet 4.5 & 1.5 & 0.4 & 1.0 & 1.3 & 1.9 & 1.6 & 0.0 & 1.2 & 21.1 & 19.8 \\
+ & GLM-5 & 1.1 & 1.9 & 0.5 & 1.3 & 0.0 & 0.8 & 1.1 & 1.0 & 14.4 & 16.3 \\
+\midrule
+ARGUS & DeepSeek V3.1 & 11.8 & 18.6 & 9.8 & 14.5 & 12.7 & 15.8 & 22.2 & 14.5 & 86.7 & 72.6 \\
+ & Kimi K2.5 & 5.3 & 12.0 & 7.3 & 8.2 & 9.9 & 13.8 & 11.1 & 9.6 & 81.1 & 74.9 \\
+ & Sonnet 4 & 9.5 & 10.9 & 8.3 & 13.2 & 7.1 & 12.1 & 7.8 & 10.0 & 68.9 & 61.0 \\
+ & Sonnet 4.5 & 4.6 & 6.2 & 7.3 & 5.0 & 3.3 & 7.3 & 6.7 & 5.7 & 66.7 & 62.9 \\
+ & GLM-5 & 9.5 & 7.8 & 9.8 & 10.1 & 5.2 & 12.6 & 8.9 & 9.1 & 91.1 & 77.5 \\
+\bottomrule
+\end{tabular}
+}
+\endgroup
+\end{table}

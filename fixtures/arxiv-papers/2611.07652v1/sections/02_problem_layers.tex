@@ -1,0 +1,92 @@
+%% ============================================================================
+%%  02_problem_layers.tex — Deconstructing the Capability Crisis Across Layers & Constituencies
+%% ============================================================================
+
+\section{Deconstructing the Capability Crisis Across Systemic Layers and Constituencies}
+\label{sec:problem_layers}
+
+The failure of prompt-driven capabilities is not an isolated developer inconvenience; it is an architectural breakdown that propagates across the entire computing stack. To rigorously motivate the design of Skillware, we first analyze the failure modes across four technical layers, examine three insidious non-outage operational crises, and then demonstrate how Skillware resolves these challenges for four vital computing constituencies: software developers, autonomous systems, enterprise operators, and sovereign defense entities.
+
+\subsection{The Four Technical Failure Layers of Prompted Agents}
+\label{subsec:technical_layers}
+
+\subsubsection{The Enterprise and Regulatory Layer: The Illusion of Compliance}
+In regulated industries---including banking, defense logistics, healthcare, and telecommunications---\allowbreak autonomous operations are bound by statutory compliance regimes such as SOX, HIPAA, GDPR, and OFAC sanctions enforcement. 
+
+When an agent's capability is enforced solely through natural-language system instructions (e.g., \emph{``You are a compliance officer. Check if this Ethereum address is on the OFAC sanctions list before approving transaction''}), the system lacks any defensible guarantee of execution. An auto-regressive model may hallucinate that an address is benign, misparse hexadecimal character casing, or fail to access real-time sanctions lists due to network timeouts. Furthermore, irreversible side-effects (such as submitting an on-chain transaction or dispatching an email to 10,000 corporate customers) are executed through direct, unverified model outputs.
+
+Enterprise sovereignty demands:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Inviolable Confirmation Gates:} Destructive mutations must require explicit, typed boolean gates (\texttt{confirmed: true}) and preview dry-runs (\texttt{dry\_run: true}) enforced at the code level, completely independent of the model's textual disposition.
+  \item \textbf{Deterministic Data Provenance:} Critical reference datasets (such as sanctions lists or regulatory taxonomies) must ship bundled beside the execution logic as static, offline assets, eliminating runtime scraping and dynamic tampering.
+\end{itemize}
+
+\subsubsection{The Developer Layer: Schema Fragmentation and Prompt Rot}
+For software engineers, maintaining prompt-based tool definitions is an operational nightmare known as \emph{prompt rot}. 
+
+First, foundation model providers lack standardization. Google Gemini requires uppercase Protobuf type declarations (\texttt{STRING}, \texttt{INTEGER}, \texttt{OBJECT}); Anthropic Claude requires its own tool envelope with a JSON Schema \texttt{input\_schema}; OpenAI requires its Chat Completions function signatures~\cite{anthropic2024mcp}. When an engineering team updates an API or switches from Claude to Gemini, hundreds of lines of fragile prompt shims must be rewritten and re-evaluated.
+
+Second, prompt-driven tools violate standard software engineering lifecycle guarantees. There is no concept of a unit test for an instruction string. In contrast, standard software undergoes deterministic continuous integration: unit tests, regression suites, type validation, and dependency pinning. Prompt-based agents deploy completely unverified code directly into execution paths.
+
+Finally, package management in agent stacks is broken. Equipping an agent with complex capabilities (e.g., cryptographic hashing, EVM RPC handling, or PDF parsing) often pollutes the global application environment, triggering severe dependency conflicts.
+
+\subsubsection{The Macroeconomic Layer: The Token Burn of Disposable Logic}
+From an economic perspective, the current industry approach is profoundly unsustainable. When an agent is prompted to solve a task through dynamic code generation or instruction following:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Frontier Token Rates for Static Logic:} Operators pay upwards of \$3.00 to \$15.00 per million output tokens for an LLM to re-synthesize common Python logic that has been solved for decades (e.g., regex sanitization, IMAP parsing, or JSON transformations).
+  \item \textbf{Quadratic Attention Tax:} Stuffing multiple tool schemas and voluminous OpenAPI manifests into the context window consumes thousands of prompt tokens per turn. Over a 50-turn conversational session, an agent can easily consume \$20.00 in input tokens simply re-reading the identical tool documentation on every message.
+\end{itemize}
+
+Pre-compiled capabilities eliminate this overhead entirely. The model emits a compact JSON function call (e.g., 20 tokens), the host executes the deterministic Python code locally with zero token cost, and the structured response is returned for semantic synthesis.
+
+\subsubsection{The Cyber-Physical Layer: Determinism in Real Space}
+The final frontier of autonomy lies outside data centers: in autonomous quadcopters navigating contested airspace, industrial robotic arms assembling microelectronics, and neural prosthetic interfaces restoring motor function to paralyzed patients~\cite{brohan2022rt1, willett2023speech}.
+
+In cyber-physical systems, failure is not a low-confidence text response; it is physical collision, equipment destruction, or physiological trauma. Such systems cannot tolerate 2.5-second cloud round-trip latencies, stochastic API argument hallucination, or network dependency. Physical agency requires \textbf{instantaneous, deterministic, and sandboxed execution} that can run entirely offline on low-power edge compute (such as an NVIDIA Jetson or ARM Cortex SoC).
+
+\subsection{The Chronic Crises of Rented Intelligence: Infrastructure Cascades and Hidden Penalties}
+\label{subsec:quieter_crises}
+
+While catastrophic infrastructure outages make headlines and populate vendor status pages, four chronic operational penalties undermine production autonomy behind closed doors:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{The Rented Loop and Infrastructure Cascades:} Historically, software development was architecturally decentralized: Git repositories lived locally on disk, and remote servers were merely optional publishing targets. Today, that relationship has inverted into a \emph{rented loop}: editor completions, pull request reviews, continuous integration, and runtime capabilities depend on centralized model endpoints sharing a common failure domain. 
+  
+  When an upstream cloud infrastructure degrades---\allowbreak exemplified by the August 2026 cascading incident where sidecar proxy exhaustion, auth collapse, and client-side retry storms paralyzed repositories, CI pipelines, and Copilot on the identical incident clock---\allowbreak the entire cognitive workflow halts. Competing chat interfaces and cloud APIs frequently share identical geographical corridors and cooling zones. When the pipe darkens, an enterprise does not merely experience latency; it loses the digital hands it hired. Real operational autonomy requires that capability execution reside on local silicon, independent of external network availability.
+  \item \textbf{Subscribed Cognition vs. Amortized Silicon:} Operators do not control the cost of automated thinking; they subscribe to it. Token pricing shifts at the whim of foundation model providers seeking margin expansion or sunsetting promotional tiers. A model executing on local silicon incurs predictable electricity consumption; a cloud-rented model sends an altered monthly invoice because a line changed in a vendor spreadsheet.
+  \item \textbf{Geopolitical and Corporate Blockades:} Frontier model access is increasingly politicized and weaponized through geographic blacklists and corporate parentage audits. Developers and enterprises in disfavored jurisdictions can be severed from mission-critical tools overnight without an announcement or a dependency lockfile bump---exemplified by silent platform lockouts affecting millions of global developers under the guise of infrastructure rollouts. When capability is bound to a remote cloud identity, sovereignty is an illusion.
+  \item \textbf{Unpinned Drift and Closed-Weight Amnesia:} In production software, dependencies are pinned to immutable commit hashes. In cloud AI, foundation model endpoints are continuously rerouted, compressed, and safety-tuned behind static API aliases without public version control. Developers across the industry repeatedly document sudden degradation: models become taciturn, omit procedural steps, violate negative constraints, or hallucinate task completion. Because proprietary cloud weights cannot be diffed, operators cannot inspect, reproduce, or rollback behavioral regressions.
+\end{enumerate}
+
+\subsection{Why Skillware is Better for the Four Core Constituencies}
+\label{subsec:four_constituencies}
+
+Having examined the structural layers of failure and the chronic crises of rented cognition, we synthesize how Skillware transforms operational stability across the four core computing constituencies:
+
+\subsubsection{Software Developers: Eliminating Prompt Rot and Restoring Offline Verification}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Elimination of ``Prompt Rot'':} In prompt-based architectures, minor adjustments to a system prompt frequently break tool invocation schemas across unrelated domains. Skillware encapsulates each capability behind a typed JSON Schema in \texttt{manifest.yaml}. The tool signature is decoupled from prompt phrasing and validated programmatically at compile- and run-time.
+  \item \textbf{Offline Testability} (\texttt{test\_skill.py}): Standard agent frameworks cannot be unit-tested without calling third-party LLM APIs, incurring latency, monetary costs, and stochastic results. Every Skillware bundle ships with a comprehensive offline test suite (\texttt{test\_skill.py}) that verifies that \texttt{execute()} honors \texttt{manifest.yaml} independently of any model invocation.
+  \item \textbf{Isolated Package Management:} Complex capabilities require distinct external libraries (e.g., \texttt{web3} for blockchain validation, \texttt{requests} for REST calls, \texttt{fsspec} for cloud storage). Installing a monolithic agent framework frequently results in dependency hell. Skillware enforces granular dependency declarations per skill, mapped automatically to pip extras (e.g., \texttt{pip install "skillware[defi\_evm\_tx\_handler]"}). Missing packages are detected pre-flight, guiding the developer with precise installation hints.
+\end{itemize}
+
+\subsubsection{Autonomous Logical Systems: Bounded State and Safe Asynchronous Execution}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Pre-Flight Parameter Invariants:} In a prompt-driven loop, a model hallucinating an invalid argument type (e.g., passing a string where an integer timestamp is required) passes directly into underlying system APIs, causing unhandled runtime crashes. Skillware's \texttt{BaseSkill.\allowbreak validate\_params()} intercepts inputs at the interface boundary, catching schema violations and raising structured, machine-readable \texttt{Skillware\allowbreak Param\allowbreak Validation\allowbreak Error} exceptions that allow the agent to self-correct without crashing.
+  \item \textbf{Deterministic Chaining vs. Multi-Agent Banter:} When orchestrating multi-step workflows, popular frameworks (e.g., CrewAI, AutoGen) spawn multiple conversing LLM agents~\cite{wu2023autogen, mourato2023crewai}. This approach suffers from semantic drift, high latency, and compounding errors. Skillware provides a deterministic directed acyclic graph (DAG) chaining engine (\texttt{skillware.chains}) with explicit state bindings (\texttt{host.}, \texttt{next.}, \texttt{prev.}) and conditional evaluation gates (\texttt{when:}), executing complex pipelines with zero conversational overhead.
+  \item \textbf{Asynchronous Non-Blocking Execution:} Real-world systems run high-concurrency event loops. Skillware natively implements \texttt{aexecute()}, automatically offloading synchronous blocking calls to worker threads while preserving native non-blocking coroutine support for I/O-intensive tools.
+\end{itemize}
+
+\subsubsection{Enterprise Operators: Deterministic Logic, Confirmation Gates, and Secret Isolation}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Zero Unreviewed Code Execution:} Under Skillware, an agent never writes code on the fly to interact with sensitive databases. All operational logic resides in pre-compiled, peer-reviewed, static Python files. The model's authority is constrained strictly to selecting the appropriate capability and parameterizing it.
+  \item \textbf{Inviolable Confirmation and Dry-Run Gates:} For irreversible mutations (e.g., executing high-value bank transfers or dispatching executive communications), Skillware skills implement mandatory boolean validation gates (\texttt{confirmed: true}) and preview modes (\texttt{dry\_run: true}). If the model omits confirmation, the capability refuses execution at the code level, regardless of how persuasively the agent was prompted.
+  \item \textbf{Zero-Leak Secret Management:} Storing credentials in process-global environment variables (\texttt{os.environ}) exposes keys to accidental leakage via exception tracebacks or unauthorized memory inspection. Skillware's \texttt{SecretProvider} protocol (\texttt{EnvSecretProvider}, \texttt{MappingSecretProvider}, \texttt{CallableSecretProvider}) injects credentials directly into the skill instance via \texttt{BaseSkill.credential()}, allowing hosts to bridge enterprise KMS or HashiCorp Vault backends with zero global state pollution.
+\end{itemize}
+
+\subsubsection{Sovereign Infrastructure: Air-Gapped Autonomy, Supply-Chain Provenance, and Forensic Auditability}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Air-Gapped Sovereignty:} Contemporary cloud agent APIs require streaming operational telemetry, military communications, and critical infrastructure telemetry to foreign-controlled data centers. Skillware skills, when paired with locally hosted Small Language Models (SLMs), execute 100\% offline on sovereign hardware with zero external network connectivity.
+  \item \textbf{Issuer Attribution and Supply-Chain Visibility:} In high-assurance defense applications, third-party software must be attributable. Every Skillware manifest declares its \texttt{issuer} (name, GitHub handle, organization), and the loader resolves skills through an explicit tier order (\texttt{project} $\succ$ \texttt{external} $\succ$ \texttt{bundled}) with automated shadow-conflict detection, so that any skill overriding a maintainer-reviewed bundled skill is surfaced to the operator rather than silently substituted.
+  \item \textbf{Non-Repudiable Auditing:} Through its synergy with AURA Harness (Section~\ref{sec:tripartite_ecosystem}), Skillware operations emit SHA-256 hash-chained JSONL audit receipts, providing tamper-evident forensic logs that record what actions an autonomous system took, when, and under what policy constraints.
+\end{itemize}

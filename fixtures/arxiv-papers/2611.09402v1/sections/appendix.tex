@@ -1,0 +1,20 @@
+\section{Notation and Implementation Correspondence}
+\label{app:implementation}
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lp{10.3cm}}\toprule
+Symbol & Meaning\\\midrule
+$D,N$ & Vector dimensions and number of lexical candidates\\
+$\mathbf v_i^{(L)}$ & Unit-length vocabulary vector for entry $i$ at level $L$\\
+$S^{(L)}_{ij}$ & Static within-level dot product of two vocabulary vectors\\
+$U,V$ & Input and associated output vocabulary matrices\\
+$q_i,z_i$ & Input match and decoded selection output for entry $i$\\
+$\hat{\mathbf x}^{(L)}$ & Decoded time-dependent state vector\\
+$A_i^{(L)}$ & Projection of the decoded state onto a vocabulary vector\\\bottomrule
+\end{tabular}
+\end{table}
+The dataset's \texttt{entries} array defines lexical correspondences through the fields \texttt{word}, \texttt{concept}, \texttt{lemma}, and \texttt{phonology}, together with an index into the original dataset developed by Katharina Stille. The implementation key \texttt{phonology} denotes the phonological level. The \path{concept_network} and \path{phonology_network} objects map node identifiers to lists of relation--target pairs. The \path{phonology_repairs} records document modifications needed to construct the active inventory. Source checksums identify the original input files used by Katharina Stille.
+
+The implementation of Eq.~\eqref{eq:recursive} is in \texttt{lexicon\_vectors.py}. Directed networks are defined in \texttt{perception.py} and \texttt{production.py}; the full-candidate evaluation is implemented in \path{benchmark_full_lexicon.py}. This evaluation script runs the eight selected words in each direction and writes \path{baseline_benchmark.json}, the numerical report underlying Table~\ref{tab:baseline}. The report records the model settings and, for each of the sixteen trials, the input, retrieved entry, target score, margin, and highest-ranked candidates. It is an output of the model evaluation.
+
+The saved files \path{perception-Kanne.json} and \path{production-Kanne.json} provide the activity traces used in Figure~\ref{fig:traces}. In the public repository, the numerical report is stored at \path{docs/baseline_benchmark.json}, and the recordings are stored under \path{website/deploy/perception-production-model/runs-613-20261104/}. The local analysis uses copies under \path{results/lexicon613/}; the ancillary provenance manifest records the correspondence. Rounded, downsampled traces are used for displaying the time courses, while the retrieval table uses the scores retained in the numerical evaluation report. The separate figure-generation script constructs the static similarity matrices from the lexical data and vector seed and reads these saved outputs to prepare the figures and table. The accompanying provenance manifest identifies the source and result files by their checksums.

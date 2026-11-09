@@ -203,4 +203,4 @@ it so the LaTeX rules see LaTeX rather than a placeholder.
 It keeps the stage machinery honest and it cannot tell you anything about false positives. So the
 run then adds one accepted paper from `fixtures/accepted-papers/` (`secure-acsac24`) and holds the
 installed binary to that paper's recorded `baseline.json` — the same recording
-`fixtures/accepted-papers/accepted-papers.test.ts` holds the repository's own `run` to.
+`fixtures/real-papers.test.ts` holds the repository's own `run` to.

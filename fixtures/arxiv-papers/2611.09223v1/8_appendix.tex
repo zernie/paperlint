@@ -1,0 +1,706 @@
+\newpage
+
+%%%%%%%%%%%%%%%%%%%% A. Source Benchmarks %%%%%%%%%%%%%%%%%%%%
+\section{Source Benchmarks}
+\label{app:source_benchmarks}
+
+We use three existing Korean benchmarks, CLIcK, KMMLU-Pro, and KMMLU-Redux, to examine the knowledge and application requirements of existing evaluation questions.
+This section describes the source benchmarks, data preparation, dataset statistics, and usage conditions.
+
+\subsection{Benchmark Descriptions}
+
+\paragraph{CLIcK.}
+CLIcK~\citep{kim2024click} evaluates Korean cultural and linguistic knowledge using 1,995 multiple-choice questions collected from official examinations and educational materials.
+It comprises 11 subcategories under two broad categories: Korean culture and Korean language.
+These cover topics ranging from history, society, and law to grammar, textual knowledge, and language use.
+
+\paragraph{KMMLU-Pro.}
+KMMLU-Pro~\citep{hong-etal-2025-kmmlu} consists of 2,822 questions from Korean national professional licensure examinations.
+It covers 14 professional qualifications across specialized domains, including law, taxation, accounting, and medicine.
+The benchmark evaluates domain-specific knowledge required for professional qualifications.
+
+\paragraph{KMMLU-Redux.}
+KMMLU-Redux~\citep{hong-etal-2025-kmmlu} is a refined version of KMMLU, comprising 2,587 questions from Korean national technical qualification examinations.
+It addresses issues identified in the original benchmark, including ambiguous questions, incorrect answers, and answer leakage.
+The resulting benchmark covers technical and industrial knowledge across a range of specialized domains.
+
+\subsection{Data Preparation}
+
+We use all publicly released questions from the three benchmarks without subsampling, as distributed on the Hugging Face Hub (\texttt{EunsuKim/CLIcK}, \texttt{LGAI-EXAONE/KMMLU-Pro}, and \texttt{LGAI-EXAONE/KMMLU-Redux}; accessed on June 9, 2026).
+We organize all questions into a common format containing the question, answer options, and gold answer, while retaining the source benchmark information for dataset-specific analyses.
+For CLIcK, we prepend the accompanying passage to the question when available.
+For KMMLU-Pro and KMMLU-Redux, we convert numeric answer indices into option letters.
+
+Of the 7,404 source questions, 7,340 (99.1\%) are retained for our knowledge and application analysis.
+The remaining 64 questions (62 from CLIcK and one each from KMMLU-Pro and KMMLU-Redux) are excluded due to errors encountered during the annotation process, rather than content-based filtering.
+
+For contrast construction, we select 243 source questions as seeds for generating knowledge-matched contrasts, 165 of which yield the questions in the final benchmark.
+The seed selection procedure and subsequent construction stages are described in Appendix~\ref{app:construction_details}.
+
+\subsection{Dataset Statistics}
+\input{Tables/appendix/source_stats}
+Table~\ref{tab:source_stats} summarizes the original and retained question counts for each benchmark.
+The resulting dataset spans diverse cultural, linguistic, professional, and technical knowledge domains.
+
+\subsection{Data Sources, Licenses, and Usage Terms}
+We use the publicly available versions of CLIcK, KMMLU-Pro, and KMMLU-Redux and cite their original publications.
+KMMLU-Pro and KMMLU-Redux are distributed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 (CC BY-NC-ND 4.0) license, while the publicly available CLIcK documentation does not specify an explicit dataset license.
+
+Since \name{} constructs questions derived from existing benchmark items, we contacted the creators of the source benchmarks to clarify their usage and redistribution conditions.
+The authors of CLIcK permitted non-commercial use of both the original questions and modified versions.
+LG AI Research permitted the modification and redistribution of KMMLU-Pro and KMMLU-Redux within the scope of its rights over the benchmarks as compilations and databases.
+This permission does not extend to the individual examination items, whose rights remain with their original holders.
+
+Accordingly, we release \name{} for non-commercial research and evaluation purposes.
+The release scope and intended use of the constructed benchmark are further discussed in Appendix~\ref{app:benchmark_documentation}.
+
+
+
+%%%%%%%%%%%%%%%%%%%% B. Knowledge and Application Annotation %%%%%%%%%%%%%%%%%%%%
+\section{Knowledge and Application Annotation}
+\label{app:ka_annotation}
+
+We annotate the 7,340 retained questions from the three source benchmarks along two dimensions: the knowledge required to answer a question (K) and the application demand imposed by the question (A).
+These dimensions are assessed separately to characterize whether a question primarily requires factual recall or the application of knowledge to given conditions.
+This section describes the annotation taxonomy, silver reasoning generation, annotation procedure, and reliability assessment.
+
+\subsection{Knowledge and Application Taxonomy}
+
+We define four levels for each dimension, as summarized in Table~\ref{tab:ka_taxonomy}.
+
+\input{Tables/appendix/ka_taxonomy}
+
+\paragraph{Knowledge demand (K).}
+Knowledge demand captures the level of prior knowledge required to answer a question.
+The levels range from K0, where no external knowledge is required, to K3, where specialized professional, institutional, or procedural knowledge is necessary.
+Intermediate levels distinguish everyday common sense and general language knowledge (K1) from school-level factual or conceptual knowledge (K2).
+The assigned level reflects the knowledge required for a valid solution rather than the model's familiarity with the subject.
+
+\paragraph{Application demand (A).}
+Application demand captures how the required knowledge must be connected to the specific case in the question.
+A0 questions can be answered through direct recall, since the retrieved fact or rule is itself the answer.
+In A1 questions, the correspondence between the applicable knowledge and the case is stated explicitly.
+In A2 questions, a single piece of knowledge applies, but one must judge whether the details of the case satisfy its condition.
+A3 questions involve two or more competing pieces of knowledge or rules, and one must decide which of them governs the case.
+Checking individual answer options one by one is not treated as evidence of A3, since it reflects the multiple-choice format rather than competition between candidate rules.
+These levels describe the structure of the required application rather than empirical question difficulty.
+
+Knowledge and application demand are treated as independent dimensions.
+Tables~\ref{tab:k_examples} and~\ref{tab:a_examples} illustrate each level with a question from CLIcK, shown in Korean with our English translation.
+A full example in which the same knowledge is held fixed across application levels is given in Appendix~\ref{app:qualitative}.
+
+\input{Tables/appendix/k_examples}
+\input{Tables/appendix/a_examples}
+
+A question requiring specialized knowledge may involve only direct recall, while a question based on familiar knowledge may require more complex application.
+This separation allows us to examine their distributions and associated model failures without treating knowledge specialization as a proxy for application demand.
+
+\subsection{Silver Reasoning Generation}
+\label{app:silver}
+
+Determining the knowledge and application requirements of a question can be difficult from the question and gold answer alone, particularly when intermediate reasoning steps are implicit.
+To provide additional reference information, we generate \textit{silver reasoning} for each question using GPT-5.4 with the temperature set to 0.
+
+The generation model receives the question, answer options, and gold answer, and is instructed to produce a rationale explaining how the answer can be derived.
+Providing the gold answer guides the generation toward the intended solution, rather than requiring the model to independently predict the correct option.
+
+We refer to these rationales as \textit{silver} rather than gold reasoning because they are automatically generated and may not represent the only valid solution.
+They serve as supplementary reference material for identifying the knowledge and application requirements of a question, rather than as independently verified ground-truth reasoning.
+The full generation prompt is provided in Appendix~\ref{app:prompts}.
+
+\paragraph{Answer recoverability.}
+To check that silver reasoning contains sufficient information to derive the gold answer, we sample 150 questions (50 per benchmark), stratified by the number of the three Korean LLMs (Appendix~\ref{app:source_failure}) that answer the question correctly.
+We remove explicit statements of the final answer from each rationale (218 statements in total) and ask GPT-5.4 to answer given only the question, the options, and the remaining reasoning.
+The gold answer is recovered for all 150 questions (95\% Wilson interval: 97.5--100\%), compared with 118 (78.7\%) when the same model receives only the question and options.
+
+\subsection{Annotation Procedure}
+
+We use an LLM-based annotation procedure to assign K and A labels to the source questions, using GPT-5.4 with the temperature set to 0.
+For each question, the annotator receives the question text, answer options, gold answer, and generated silver reasoning.
+It then assigns one knowledge level (K0--K3) and one application level (A0--A3) according to the predefined taxonomy.
+The annotator also assigns each question a content domain from a fixed list of ten domains, which we use to hold the domain fixed during construction (Appendix~\ref{app:construction_details}) and to describe the coverage of the benchmark (Appendix~\ref{app:benchmark_documentation}).
+
+The annotator is instructed to judge the knowledge level first and then to judge the application level independently, based on how much work the silver reasoning needs to connect the knowledge to the case.
+K and A are thus assessed as distinct dimensions, rather than inferred from the apparent difficulty of the question.
+Silver reasoning is provided as supporting evidence to make implicit requirements more explicit.
+
+The annotation procedure is applied consistently across CLIcK, KMMLU-Pro, and KMMLU-Redux.
+Questions for which valid annotations could not be obtained are excluded, resulting in the 7,340 retained questions described in Appendix~\ref{app:source_benchmarks}.
+The complete annotation instructions and prompt are provided in Appendix~\ref{app:prompts}.
+
+\subsection{Annotation Reliability}
+
+To assess the reliability of the K/A annotations, we conduct a human evaluation on 60 questions sampled evenly across the four application levels assigned by the LLM annotator (15 per level; 26 from CLIcK, 29 from KMMLU-Pro, and 5 from KMMLU-Redux).
+Two human annotators independently assign K and A labels using the question, answer options, and gold answer, without access to the LLM-assigned labels or generated silver reasoning.
+Both annotators are native Korean speakers with graduate-level training in NLP.
+One is an author of this paper, while the other is not otherwise involved in the study.
+Neither annotator received compensation for this evaluation.
+
+We compare the human annotations with LLM-generated labels under two conditions: with and without silver reasoning.
+The condition without silver reasoning uses the same annotation prompt with the silver reasoning removed.
+Since both dimensions are ordinal, we report linearly weighted Cohen's $\kappa$, along with exact agreement.
+LLM--human agreement is computed separately against each annotator and averaged over the two.
+Table~\ref{tab:ka_reliability} presents the results.
+
+\input{Tables/appendix/ka_reliability}
+
+For application demand, LLM--human agreement reaches $\kappa=0.69$ with silver reasoning, compared with $\kappa=0.47$ without it.
+The former also exceeds the human--human agreement of $\kappa=0.60$, suggesting that silver reasoning provides useful supplementary information for identifying application requirements that may be implicit in the question alone.
+
+For knowledge demand, however, silver reasoning does not improve agreement.
+LLM--human agreement is $\kappa=0.56$ with silver reasoning and $\kappa=0.67$ without it, compared with human--human agreement of $\kappa=0.63$.
+In particular, the frequency of K2 assignments differs substantially: the LLM with silver reasoning assigns K2 to 21 questions, whereas the two human annotators assign it to 14 and 5 questions, respectively.
+These differences suggest that knowledge-level annotation is more sensitive to annotator calibration, particularly at intermediate levels, and that the benefits of silver reasoning do not extend uniformly across both dimensions.
+
+
+%%%%%%%%%%%%%%%%%%%% C. Failure Analysis on Source Benchmarks %%%%%%%%%%%%%%%%%%%%
+\section{Failure Analysis on Source Benchmarks}
+\label{app:source_failure}
+
+We analyze incorrect responses to the three source benchmarks to investigate how model failures vary with application demand.
+This section describes the failure taxonomy, classification procedure, and observed failure patterns.
+
+\subsection{Failure Taxonomy}
+
+We categorize incorrect responses into knowledge failures, application failures, and other errors.
+Knowledge failures arise when the model lacks or incorrectly recalls information required to answer the question.
+Application failures occur when the required knowledge is available but the model fails to apply it correctly to the given conditions.
+Other errors include invalid outputs and defective questions for which a reliable attribution cannot be established.
+
+The fine-grained taxonomy consists of 13 failure types (T0--T12), listed in Table~\ref{tab:failure_taxonomy}.
+T0--T2 cover invalid outputs and defective questions, T3--T6 cover knowledge failures, and T7--T12 cover application failures.
+These types support a more detailed characterization of model errors while allowing aggregation into the three broader groups.
+
+\input{Tables/appendix/failure_taxonomy}
+
+\subsection{Failure Classification Procedure}
+
+We first collect incorrect closed-book responses from three Korean LLMs: K-EXAONE, A.X K1, and Solar Open.
+Across the 7,340 retained questions, this yields 5,808 incorrect responses (1,859 from K-EXAONE, 1,681 from A.X K1, and 2,268 from Solar Open).
+
+We use an LLM-based classifier, GPT-5.4 with the temperature set to 0, to assign failure types according to the predefined taxonomy.
+For each question, the classifier receives the question, answer options, gold answer, and silver reasoning, together with the extracted answer and reasoning trace of each model that answered incorrectly.
+It assigns one or more failure types to each incorrect response, ordered from the most to the least influential.
+Most responses receive a single type (4,941 of 5,808), and we use the first type as the primary failure type in all analyses.
+
+We additionally examine model behavior when the required knowledge is supplied, as supporting evidence for the failure attribution.
+On a subset of 702 questions with knowledge or application failures, we provide K-EXAONE and Solar Open with gold knowledge and re-evaluate them.
+Responses whose primary failure is incorrect recall (T3) are corrected in 91.0\% and 84.7\% of cases, respectively, compared with 75.9\% and 78.9\% for responses that misjudge the scope or condition of a correctly stated rule (T10).
+Errors attributed to knowledge are thus recovered more often than errors attributed to application, although most of the latter are also corrected.
+We use these observations as diagnostic evidence rather than definitive explanations of individual model errors.
+
+\subsection{Failure Patterns Across Application Levels}
+
+Table~\ref{tab:failure_by_a} reports the composition of failure types at each application level.
+Recall-only questions (A0) account for the largest portion of existing benchmark questions (4,482 of 7,340; 61.1\%), and incorrect responses at this level predominantly reflect knowledge failures (69.8\%).
+
+\input{Tables/appendix/failure_by_a}
+
+As application demand increases, application failures account for a larger share of incorrect responses, rising from 21.1\% at A0 to 36.6\% at A1, 41.9\% at A2, and 44.0\% at A3.
+At the same time, knowledge failures remain about as frequent as application failures at A2 and A3.
+This suggests that questions requiring more complex application expose limitations that are less apparent in recall-oriented evaluation, while still depending on whether the model holds the required knowledge.
+
+Comparisons across existing questions therefore cannot isolate the effect of application demand, since their underlying knowledge requirements also differ.
+This motivates the knowledge-matched contrasts constructed by \name{}, which enable more controlled comparisons while preserving the required knowledge.
+
+
+%%%%%%%%%%%%%%%%%%%% D. KLEAR Construction Details %%%%%%%%%%%%%%%%%%%%
+\section{\name{} Construction Details}
+\label{app:construction_details}
+
+This section describes each stage of the construction pipeline: seed selection and anchor knowledge extraction, contrast generation, LLM-based auditing, proxy-model difficulty screening, and revision.
+Stage-wise yields and human validation are reported in Appendix~\ref{app:construction_quality}.
+
+\subsection{Anchor Knowledge Extraction}
+
+\paragraph{Seed selection.}
+Seeds are source questions labeled A1 or A2 in Appendix~\ref{app:ka_annotation}.
+An A1 seed can be transformed into A2 and A3 contrasts, and an A2 seed into an A3 contrast, so that a contrast always has a higher application level than its seed.
+We select questions that at least two of the three Korean LLMs answer incorrectly, which holds for 237 of the 243 seeds; the remaining six are A1 questions chosen in a pilot study for their suitability for transformation.
+The 243 seeds comprise 78 A1 and 165 A2 questions (88 from CLIcK, 84 from KMMLU-Pro, and 71 from KMMLU-Redux).
+
+\paragraph{Anchor bundle.}
+For each seed, GPT-5.5 extracts an \textit{anchor bundle} from the question, answer options, gold answer, and silver reasoning.
+The bundle is a closed set of the knowledge on which the question rests and consists of three parts: (i) \textit{knowledge units}, each a self-contained statement of a rule, criterion, definition, or fact; (ii) \textit{relations} that describe how the units interact, such as which condition decides between two units or which unit is the principle and which the exception; and (iii) a \textit{scope note} stating what the bundle excludes.
+The knowledge units cover the knowledge behind the distractors as well as the gold answer, since competing knowledge is what makes an A3 contrast possible.
+A bundle contains 4 to 17 knowledge units (median 8) and 4 to 9 relations (median 6).
+
+\paragraph{Transformability.}
+The same model also judges whether the bundle can support each target level.
+A seed supports A2 if its stated correspondence can be hidden so that the condition of the applicable knowledge must be inferred from the case, and supports A3 if two or more knowledge units could each plausibly govern the same case.
+We generate contrasts only for supported targets, which yields 295 seed--target pairs: 78 from A1 to A2, 52 from A1 to A3, and 165 from A2 to A3.
+
+\subsection{Application-Controlled Contrast Generation}
+
+For each seed--target pair, GPT-5.5 generates candidate questions given the seed question with its options, gold answer, and silver reasoning, the knowledge level and domain of the seed, the anchor bundle, and the target-application level.
+The prompt includes few-shot demonstrations of the target level.
+
+The generator is instructed to keep the anchor bundle, knowledge level, and domain fixed and to change only the application demand.
+An A2 candidate must involve exactly one applicable piece of knowledge whose condition is not stated but must be inferred from the case.
+An A3 candidate must present a single case for which two or more pieces of knowledge in the bundle compete, with case facts of comparable weight supporting each.
+In both cases, the candidate must ask for the same kind of answer as the seed, must not state or paraphrase the anchor knowledge, and must not require knowledge outside the bundle.
+
+Each candidate has four or five options.
+Every distractor must correspond to one identifiable error, either applying a competing piece of knowledge or misjudging the condition of the correct one, and no option may be eliminable on grounds that bypass the intended application.
+Along with the question, the generator outputs its reasoning, an account of the knowledge-to-case mappings involved, and an account of the error behind each distractor.
+
+We first generate three candidates per pair.
+A pair that does not obtain two passing candidates after auditing, screening, and revision receives six additional candidates.
+This results in 1,964 candidates in total.
+
+\subsection{LLM-Based Auditing}
+\input{Tables/appendix/rubrics}
+Each candidate is audited by GPT-5.5 against the eleven criteria of the LLM rubric (L1--L11; Table~\ref{tab:rubrics}).
+The auditor receives the seed question, the anchor bundle, the target-application level, and the candidate with its proposed gold answer.
+It does not receive the reasoning or accounts written by the generator, and is instructed to solve the candidate independently before judging it.
+
+For each criterion, the auditor returns \textsc{pass}, \textsc{fail}, or \textsc{uncertain} together with a rationale.
+A candidate satisfies the rubric only if all eleven criteria are \textsc{pass}; \textsc{uncertain} is treated as a failure.
+For shortcut resistance (L8), the auditor additionally reports, for each distractor, the least demanding basis on which it can be eliminated.
+
+\subsection{Proxy-Model Difficulty Screening}
+
+A candidate can satisfy the rubric and still be answerable without the intended application.
+We therefore screen candidates with a proxy model, GPT-5-nano, which is considerably weaker than the models used for generation and auditing.
+The proxy receives only the question and options, without the anchor bundle, the seed, or any audit result, so that the screening is independent of the audit.
+A candidate passes the automated stage only if it satisfies all eleven criteria and the proxy answers it incorrectly.
+
+\subsection{Iterative Revision}
+
+\paragraph{Self-revision.}
+Candidates that do not pass the automated stage are revised once by GPT-5.5.
+The reviser receives the candidate, the rationale of every criterion that is not \textsc{pass}, and, when applicable, the fact that the proxy answered the candidate correctly.
+It is instructed to resolve the listed defects without regressing other criteria, to introduce no knowledge outside the anchor bundle, and to keep the knowledge level, domain, and target-application level fixed.
+When a candidate has no listed defect but is answered correctly by the proxy, the reviser is instructed to locate and close the shortcut rather than alter the question otherwise.
+A revised candidate is treated as a new question: it is audited and screened again under the same conditions.
+
+\paragraph{Human-guided revision.}
+Candidates that pass the automated stage are forwarded to human validation, with at most two candidates per pair.
+Candidates that fail human validation are revised by GPT-5.5 using the rationales written by the annotators and are then validated again (Appendix~\ref{app:construction_quality}).
+
+\paragraph{Final questions.}
+The final 287 questions cover 195 seed--target pairs and 165 seeds, with one question for 103 pairs and two for 92.
+Of these, 182 have four options and 105 have five.
+We permute the option order of 192 questions to balance the position of the gold answer (A: 68, B: 68, C: 66, D: 65, E: 20).
+
+\subsection{Construction Configurations}
+
+Table~\ref{tab:construction_config} lists the model used at each stage.
+All stages use the default sampling settings of the API and structured outputs.
+
+\input{Tables/appendix/construction_config}
+
+%%%%%%%%%%%%%%%%%%%% E. Construction Quality and Validation %%%%%%%%%%%%%%%%%%%%
+\section{Construction Quality and Validation}
+\label{app:construction_quality}
+
+This section reports the yield of each construction stage, the human validation protocol and its results, and additional analyses of the anchor bundle and seed difficulty.
+
+\subsection{Stage-Wise Construction Statistics}
+
+Table~\ref{tab:yield_by_type} breaks down the yield of the automated stage by transformation type.
+Before revision, the share of candidates that satisfy all eleven criteria is similar across types (30.7--36.5\%), whereas the share that the proxy answers incorrectly differs: 25.8\% for A1$\rightarrow$A2, 36.2\% for A1$\rightarrow$A3, and 45.8\% for A2$\rightarrow$A3.
+A2 contrasts are thus screened out more often for being answerable by the proxy than for failing the rubric.
+Self-revision recovers 17.2--21.6\% of the revised candidates in each type.
+
+\input{Tables/appendix/yield_by_type}
+
+Yield also differs across source benchmarks.
+The share of candidates that pass the automated stage is 24.2\% for seeds from CLIcK (188 of 777), 43.0\% for KMMLU-Pro (259 of 602), and 30.1\% for KMMLU-Redux (176 of 585).
+
+\subsection{Human Validation Protocol}
+
+\paragraph{Candidates.}
+Human validation covers 301 of the 623 candidates that pass the automated stage.
+In the first batch, up to two passing candidates per pair are validated, which gives 231 candidates.
+In the second batch, because of time constraints, one candidate is validated for 70 of the 111 pairs that have a passing candidate.
+
+\paragraph{Procedure.}
+Annotators judge each candidate against the five criteria of the human rubric (H1--H5; Table~\ref{tab:rubrics}) in two stages.
+In the first stage, they see only the question, options, and gold answer, and judge Korean readability (H1), natural construction (H2), and surface leakage (H3).
+They are instructed not to verify the answer with domain knowledge at this stage.
+After these judgments are recorded, the anchor bundle is revealed, and annotators judge knowledge sufficiency (H4) and target-level structure (H5).
+
+Each criterion is rated on a three-level scale, and a criterion is satisfied only at the highest level.
+Any lower rating must be accompanied by a written rationale, which is later used for revision.
+A candidate passes human validation when it satisfies all five criteria.
+When a candidate is judged by two annotators, it fails if either annotator rates any criterion below the highest level.
+
+\paragraph{Annotators.}
+All annotators are native Korean speakers who work as professional data annotators and follow written guidelines calibrated on a pilot set, as described in Sec.~\ref{sec:construction_setup}.
+None of them is an author of this paper, and they received no additional compensation for this evaluation.
+
+\paragraph{Revision.}
+Candidates that do not pass are revised by GPT-5.5 as described in Appendix~\ref{app:construction_details}, using the rationales written by the annotators, and the revised candidates are validated again under the same rubric.
+
+\subsection{Detailed Validation Results}
+
+Table~\ref{tab:human_validation} summarizes the outcome of human validation for each batch.
+Of the 301 candidates, 252 (83.7\%) pass directly.
+The remaining 49 are revised, and 35 of them (71.4\%) pass after revision, while 14 are discarded.
+This yields the final 287 questions.
+
+\input{Tables/appendix/human_validation}
+
+Table~\ref{tab:criteria} reports failures by criterion for both rubrics.
+Under the human rubric, failures are spread across criteria rather than concentrated in one: 7.0\% of the candidates fail Korean readability (H1), 5.0\% surface leakage (H3), 4.3\% target-level structure (H5), 3.3\% natural construction (H2), and 2.0\% knowledge sufficiency (H4).
+
+\input{Tables/appendix/criteria}
+
+\subsection{Additional Construction Ablations}
+
+\paragraph{Effect of the anchor bundle.}
+To examine the role of the anchor bundle, we regenerate candidates for 36 seed--target pairs without it, producing three candidates per pair (108 in total), and compare them with the 108 candidates generated with the bundle for the same pairs.
+In the condition without the bundle, the generator is still instructed to keep the knowledge of the seed fixed, but must identify that knowledge from the seed question and its silver reasoning.
+All other parts of the prompt, including the level definitions, option rules, and demonstrations, are unchanged, so the two conditions differ only in whether the bundle is given.
+Both sets are audited and screened under the same conditions as in the main pipeline, and we compare them before revision (Table~\ref{tab:anchor}).
+
+\input{Tables/appendix/anchor}
+
+Without the bundle, 20.4\% of the candidates require knowledge outside the anchor bundle (L4), compared with 1.9\% with the bundle (Fisher's exact test, $p < 0.001$).
+No other criterion differs significantly, and the share of candidates answered correctly by the proxy is nearly identical (51.9\% vs.\ 50.0\%).
+
+\paragraph{Effect of seed difficulty.}
+\label{app:easy}
+Most seeds in the main pipeline are questions that at least two of the three Korean LLMs answer incorrectly.
+To examine how this choice affects yield, we additionally process 20 A1 seeds that are easier for these models, 14 answered incorrectly by one model and 6 by none, with the same pipeline.
+Candidates from these seeds are used only for this analysis and are not included in \name{}.
+Table~\ref{tab:seed_difficulty} groups all A1 seeds by the number of models that answer the seed incorrectly.
+
+\input{Tables/appendix/seed_difficulty}
+
+Candidates from easier seeds satisfy the LLM rubric more often before revision: 58.1\% for seeds that no model answers incorrectly, compared with 28.0\% for seeds that all three answer incorrectly.
+However, they are much less likely to be answered incorrectly by the proxy (12.8\% vs.\ 39.8\%).
+As a result, the share of candidates that pass the automated stage is lower for easier seeds, 18.8\% and 21.5\% for seeds with zero and one incorrect model, compared with 29.9\% and 28.9\% for seeds with two and three.
+Seeds that are easy for current models thus tend to yield well-formed contrasts that remain easy, which supports selecting seeds on which models fail.
+
+%%%%%%%%%%%%%%%%%%%% F. Constructed Benchmark Documentation %%%%%%%%%%%%%%%%%%%%
+\section{Constructed Benchmark Documentation}
+\label{app:benchmark_documentation}
+
+This section documents the final benchmark: its statistics, coverage and intended use, privacy and content considerations, and release conditions.
+
+\subsection{Final Benchmark Statistics}
+
+\name{} consists of 287 multiple-choice questions in Korean, 78 at A2 and 209 at A3, derived from 165 seeds.
+Table~\ref{tab:final_stats} reports their composition by application level.
+Most questions require school-level (K2; 41.5\%) or specialized (K3; 47.0\%) knowledge, following the knowledge levels of their seeds.
+A3 questions are longer than A2 questions, with a mean of 349 characters against 198, since they must present case facts that support two or more competing pieces of knowledge.
+
+\input{Tables/appendix/final_stats}
+
+Each seed has at most two questions per target level.
+Thirty seeds have both an A2 and an A3 contrast, which allows the two levels to be compared on the same underlying knowledge.
+
+\subsection{Dataset Coverage and Intended Use}
+
+\paragraph{Coverage.}
+We describe coverage with the content domain assigned to each source question during annotation (Appendix~\ref{app:ka_annotation}).
+The questions cover language and culture (105), medicine and health (31), economy and finance (30), law and administration (27), history and society (19), science and technology (18), education (4), labor and employment (2), and other specialized domains (51).
+The 130 questions derived from CLIcK come mostly from its language category (105), covering grammar (50), textual (28), and functional (27) knowledge, with 25 from the culture category.
+Coverage follows from which seeds support a transformation and survive validation, and is therefore not balanced across domains or source benchmarks.
+
+\paragraph{Intended use.}
+\name{} is intended for diagnostic evaluation of Korean LLMs: comparing performance across application levels while the required knowledge is held fixed, and separating failures of knowledge from failures of application.
+It is designed for evaluation only and should not be used as training data.
+It is not intended to certify professional competence in the domains it covers, although many of its seeds originate from licensure examinations.
+
+\paragraph{Limitations.}
+The benchmark is small and unbalanced across levels, and only 30 seeds support a direct comparison between A2 and A3.
+Seeds are selected among questions that Korean LLMs answer incorrectly, so the questions are not a representative sample of the source benchmarks.
+All questions are generated and revised by a single model family and audited automatically before human validation, and the anchor bundles are generated automatically as well.
+Finally, the questions follow a multiple-choice format, which constrains how application demand can be expressed.
+
+\subsection{Privacy and Content Review}
+
+The seeds come from public examinations and educational materials, and the generated questions present cases written for the question.
+We screened all 287 questions and their options for e-mail addresses, telephone numbers, resident registration numbers, card numbers, and URLs, and found none.
+Every question in the final benchmark was also read in full by at least one human annotator during validation.
+No privacy or offensive-content concerns were raised during validation.
+
+\subsection{Data Release and Licensing}
+
+We release the 287 generated questions for non-commercial research and evaluation purposes, under the permissions described in Appendix~\ref{app:source_benchmarks}.
+Each question is released with its options, gold answer, target-application level, and the source benchmark and item ID of its seed.
+The source questions are not redistributed and must be obtained from their original distributions under their own terms.
+Of the 287 questions, 130 are derived from 66 CLIcK seeds, 90 from 53 KMMLU-Pro seeds, and 67 from 46 KMMLU-Redux seeds.
+\name{} is distributed solely by the authors of this work and is not a joint release with the creators of the source benchmarks.
+Following the source benchmarks, the data should not be included in training corpora.
+
+
+%%%%%%%%%%%%%%%%%%%% G. Experimental Setup %%%%%%%%%%%%%%%%%%%%
+\section{Experimental Setup}
+\label{app:experimental_setup}
+
+This section describes the evaluated models, inference configurations, evaluation conditions and metrics, and the computational resources used.
+
+\subsection{Evaluated Models}
+
+We evaluate eight models, listed in Table~\ref{tab:eval_models}: three Korean LLMs (K-EXAONE, A.X K1, and Solar Open), a multilingual model (Aya Expanse 32B), two open-weight models (GLM-4.7 and Qwen3.5), and two proprietary models (Claude Sonnet 5.5 and GPT-6.1 Sol).
+The three Korean LLMs are evaluated on both the 287 questions of \name{} and their 165 seeds.
+The other five models are evaluated on the 287 questions of \name{}.
+
+\input{Tables/appendix/eval_models}
+
+\subsection{Inference Configurations}
+
+\paragraph{Serving and decoding.}
+The three Korean LLMs are served locally with vLLM, with reasoning enabled and the sampling settings in Table~\ref{tab:eval_models}.
+The remaining models are accessed through APIs.
+GLM-4.7 and Qwen3.5 are accessed through OpenRouter, with each model pinned to the endpoint of its developer so that all calls are served by the same deployment.
+Reasoning is set to high effort for every model that supports it; Aya Expanse 32B has no reasoning mode.
+API models use their default sampling settings, except Aya Expanse 32B, for which the temperature is set to 0.3.
+
+\paragraph{Prompt.}
+Each question is sent once as a single user message without a system message.
+The message consists of an instruction, the question, and the options, each labeled with a letter.
+We use the instruction of the source benchmark from which the seed originates, which asks the model to reason step by step and to give its final answer after the marker ``정답:'' (``Answer:'').
+The prompt and all other settings are identical across evaluation conditions, apart from the added context described below.
+
+\paragraph{Answer extraction.}
+We take the letter in the last occurrence of the answer marker in the final response.
+If the final response contains no marker, we apply the same rule to the reasoning output, and otherwise treat the response as having no answer.
+Responses with no answer, including those truncated at the output limit, are scored as incorrect.
+
+\subsection{Evaluation Conditions and Metrics}
+
+\paragraph{Conditions.}
+We evaluate each question under three conditions.
+The \textit{Closed} (closed-book) condition provides only the question and options.
+The \textit{+K} condition additionally provides the knowledge required by the question, as three knowledge statements.
+The \textit{+K+A} condition provides the same three statements together with statements on how the knowledge applies (between 2 and 9, with a median of 5).
+The added context is inserted between the question and the options under a neutral header (``참고 자료'', ``Reference material''), and the model is not told which condition it is in.
+
+The context is generated by GPT-5.4 from the anchor bundle of each seed, not from individual questions.
+A seed and all contrasts derived from it therefore receive exactly the same context, so that only the application level differs between them.
+The median context length is 276 characters for \textit{+K} and 769 characters for \textit{+K+A}.
+
+\paragraph{Metrics.}
+We report accuracy, the share of questions answered correctly.
+For the comparison between A2 and A3 on the same knowledge, we use the 30 seeds that have both an A2 and an A3 contrast and average accuracy over seeds.
+Failure types on \name{} are assigned with the classifier of Appendix~\ref{app:source_failure}.
+
+\paragraph{Unanswered responses.}
+On the 861 calls for \name{} (287 questions under three conditions), K-EXAONE, A.X K1, and GLM-4.7 reach the output limit in 26, 30, and 7 calls, respectively, and no other model does. Responses without an extracted answer number 25 for K-EXAONE, 25 for A.X K1, 7 for Solar Open, 6 for GLM-4.7, two for Claude Sonnet 5.5, one for Qwen3.5, and none for GPT-6.1 Sol.
+Aya Expanse 32B yields 134 such responses (15.6\%), which should be taken into account when interpreting its accuracy.
+
+\subsection{Computational Resources and Costs}
+
+The three Korean LLMs are served with tensor parallelism over four (K-EXAONE), eight (A.X K1), and two (Solar Open) GPUs.
+
+Table~\ref{tab:usage} reports the token usage of the API calls for construction and evaluation.
+Construction with GPT-5.5 uses 34.4M input tokens and 65.0M output tokens across generation, auditing, and revision, and the proxy model uses a further 22.5M output tokens.
+Evaluation is much cheaper: each API model processes the 861 calls with between 0.3M and 3.7M output tokens.
+The costs reported by OpenRouter are \$7.75 for GLM-4.7 and \$8.85 for Qwen3.5.
+
+\input{Tables/appendix/usage}
+
+%%%%%%%%%%%%%%%%%%%% H. Extended Diagnostic Results %%%%%%%%%%%%%%%%%%%%
+\section{Extended Diagnostic Results}
+\label{app:extended_results}
+
+This section extends the results on \name{} by source benchmark and model family, examines the effect of providing knowledge in more detail, analyzes failure types on the constructed contrasts, and reports statistical tests and robustness checks.
+
+\subsection{Results by Source Benchmark}
+
+Table~\ref{tab:by_benchmark} reports accuracy under the three conditions, grouped by the source benchmark of the seed.
+In the \textit{Closed} condition, the three Korean LLMs are least accurate on questions derived from KMMLU-Pro (23.3--40.0\%), which require specialized professional knowledge.
+Providing knowledge raises accuracy on all three groups, and the gain is largest for questions derived from KMMLU-Pro and KMMLU-Redux.
+With both knowledge and application statements, the Korean LLMs reach 88.1--95.5\% on questions derived from KMMLU-Redux but only 74.6--86.9\% on those derived from CLIcK.
+The questions derived from CLIcK, which mostly concern language, thus remain the hardest once the required knowledge and its application are supplied.
+
+\input{Tables/appendix/by_benchmark}
+
+\subsection{Results by Model Family}
+
+Table~\ref{tab:by_family} averages accuracy within four groups of models.
+The ordering of the groups is the same at both levels and under all conditions: proprietary models are the most accurate, followed by open-weight models, Korean LLMs, and the multilingual model.
+In every group, accuracy at A3 is lower than at A2, and the difference widens when knowledge is provided, from 12.1 to 19.1 points for Korean LLMs and from 4.6 to 7.5 points for proprietary models.
+Supplying knowledge removes much of the difficulty at A2, whereas a larger part remains at A3.
+We note that the questions are generated and audited with models of the same developer as GPT-6.1 Sol, which may favor that model.
+
+\input{Tables/appendix/by_family}
+
+\subsection{Effects of Knowledge Provision}
+
+\paragraph{From knowledge to application statements.}
+Since \textit{+K} and \textit{+K+A} are applied to the same questions, we compare them with paired tests (Table~\ref{tab:knowledge_gain}).
+At A3, adding application statements corrects more responses than it breaks for every model, and the net gain is significant for seven of the eight models.
+At A2, few errors remain once knowledge is provided, between 0 and 13 for all models other than Aya Expanse 32B, and the gain is not significant for any model.
+The errors that persist after knowledge is supplied are therefore concentrated at A3, and a substantial part of them is resolved by stating how the knowledge applies.
+
+\input{Tables/appendix/knowledge_gain}
+
+\paragraph{Results on seeds.}
+Table~\ref{tab:seed_results} reports the accuracy of the three Korean LLMs on the 165 seeds under the same conditions.
+The pattern mirrors that on the contrasts: with knowledge provided, accuracy is 81.0--84.5\% on A1 seeds and 60.7--73.8\% on A2 seeds.
+Adding application statements yields a significant gain on A2 seeds for all three models ($p = 0.021$, $0.049$, and $0.004$), and on A1 seeds only for Solar Open ($p = 0.039$).
+Accuracies on seeds and on contrasts are not directly comparable, because seeds are selected among questions that these models answer incorrectly and are not subject to the validation applied to the contrasts.
+
+\input{Tables/appendix/seed_results}
+
+\subsection{Failure Analysis on Constructed Contrasts}
+
+We classify the incorrect \textit{Closed} responses of the three Korean LLMs on \name{} with the classifier of Appendix~\ref{app:source_failure}.
+The setup is identical except for the reference solution: in place of silver reasoning, the classifier receives the reasoning written by the generator for the question.
+It is not given the anchor bundle or the target-application level.
+In total, 237 of the 287 questions have at least one incorrect response, giving 514 responses.
+
+Table~\ref{tab:failure_contrast} reports the composition of primary failure types.
+Application failures account for 67.2\% of the incorrect responses at A2 and 73.4\% at A3, and the pattern holds for each model (65.2--70.6\% at A2 and 71.8--74.6\% at A3).
+For comparison, application failures account for 41.9\% and 44.0\% of the incorrect responses on source questions at A2 and A3 (Table~\ref{tab:failure_by_a}).
+The dominant type is misjudging the scope or condition of a correctly stated rule (T10), with 70 of 119 responses at A2 and 218 of 395 at A3, followed by misapplying a structural rule (T9), with 9 and 50 responses.
+
+\input{Tables/appendix/failure_contrast}
+
+\subsection{Statistical Analysis and Robustness}
+
+\paragraph{Tests.}
+For paired comparisons between conditions, we use the exact McNemar test.
+For the comparison between A2 and A3 on matched seeds, we compute accuracy per seed at each level and apply a two-sided sign test over the 30 seeds.
+We do not correct for multiple comparisons, and the $p$-values should be read accordingly.
+
+\paragraph{Matched comparison of A2 and A3.}
+Table~\ref{tab:matched_test} reports the matched comparison in the \textit{Closed} condition.
+For all eight models, more seeds favor A2 than A3, but the difference is significant only for A.X K1 ($p = 0.019$).
+With 30 seeds, of which many are tied for a given model, the test has limited power, and we treat the consistent direction across models as suggestive rather than conclusive.
+We rely on matched seeds for this comparison because, across all questions, the two levels are built from different seeds and their difference is confounded with seed difficulty.
+
+\input{Tables/appendix/matched_test}
+
+\paragraph{Unanswered responses.}
+Responses without an extracted answer are scored as incorrect, which could distort comparisons if they were unevenly distributed.
+Across the 861 calls, such responses number 25 for K-EXAONE, 25 for A.X K1, 7 for Solar Open, 6 for GLM-4.7, 2 for Claude Sonnet 5.5, 1 for Qwen3.5, and none for GPT-6.1 Sol, compared with 134 for Aya Expanse 32B.
+When these responses are excluded, the accuracy of Aya Expanse 32B rises by 4 to 11 points depending on the level and condition, while that of the other models changes by at most 3.4 points.
+The difference between A2 and A3 in the \textit{Closed} condition changes by at most 1.7 points for any model.
+The gain from application statements at A3 remains significant for six models when restricted to questions answered under both conditions, with Claude Sonnet 5.5 at $p = 0.064$ and GPT-6.1 Sol unchanged at $p = 0.109$.
+
+
+%%%%%%%%%%%%%%%%%%%% I. Qualitative Analysis %%%%%%%%%%%%%%%%%%%%
+\section{Qualitative Analysis}
+\label{app:qualitative}
+
+This section presents examples of a knowledge-matched contrast, of candidates that were rejected and revised, and of a model failure.
+Korean text is shown with our English translation.
+
+\subsection{Examples of Knowledge-Matched Contrasts}
+
+Table~\ref{tab:example_contrast} shows an A2 and an A3 contrast built from the same seed, a question from KMMLU-Redux on methods for recovering accelerants from fire debris.
+The seed is an A1 question: it names the procedure, suspending charcoal in the headspace of a container that holds residue, and asks which method this is.
+The correspondence between the knowledge and the case is thus stated outright.
+
+The A2 contrast describes the same procedure without naming the adsorbent, referring only to ``small black carbonaceous granules'' in a metal mesh.
+A single piece of knowledge still applies, but whether the case meets its condition, that the components are captured on the surface of an adsorbent, must now be inferred.
+The A3 contrast keeps the answer and the options but adds case facts that support the other methods in the bundle: a hot water bath and droplets inside the lid point to steam distillation, placing the carbon in a vial of solvent points to solvent extraction, and the space above the debris points to the headspace method.
+Deciding which method governs the case is now the task.
+All three questions rest on the same anchor bundle, and only the application demand differs.
+
+\input{Tables/appendix/example_contrast}
+
+\subsection{Examples of Rejected and Revised Questions}
+
+\paragraph{Self-revision after automated auditing.}
+Table~\ref{tab:example_selfrev} shows an A2 candidate that fails shortcut resistance (L8).
+The question asks for which underground facility the largest excavation support ratio should be chosen, and the intended inference is that a facility in temporary use permits a larger ratio.
+In the first version, the gold option is the only long and detailed one, while the others are bare names of facilities, so the auditor judges that the gold answer can be isolated from its form alone.
+The revision rewrites all four options in the same form, each describing how the facility is planned to be used, so that the options must be compared on the intended criterion.
+
+\input{Tables/appendix/example_selfrev}
+
+\paragraph{Human-guided revision.}
+Table~\ref{tab:example_humanrev} shows an A2 candidate that satisfies all eleven LLM criteria but fails surface leakage (H3) in human validation.
+The question concerns which authority manages a road sign in a county that now belongs to a metropolitan city.
+The stem states that the notation with the former province is an outdated one that remains on some notices, and the annotator points out that the two options naming that province can therefore be eliminated by reading alone, without any knowledge of the law.
+The revision removes the sentence about the former notation and replaces the two options with authorities of the metropolitan city, so that no option is excluded by the stem itself.
+
+\input{Tables/appendix/example_humanrev}
+\input{Tables/appendix/example_failure}
+\subsection{Representative Model Failures}
+
+Table~\ref{tab:example_failure} shows the responses of A.X K1 to the A3 contrast of Table~\ref{tab:example_contrast}.
+In the \textit{Closed} condition, the model recalls what each method is and recognizes both the adsorption onto activated carbon and the later transfer to a solvent, but concludes that the procedure as a whole is the headspace method because the vapor is collected in the space above the sample.
+The classifier assigns this response to T10: the relevant rules are stated correctly, but their scope is misjudged.
+
+Providing knowledge does not resolve the failure.
+Under \textit{+K}, the model is given the definitions of all four methods and changes its answer to solvent extraction, another incorrect method that the case also supports.
+Only under \textit{+K+A}, where the context states that the method is determined by the recovery principle rather than the location, and that capture on an adsorbent before transfer to a solvent counts as adsorption, does the model answer correctly.
+The same pattern appears in aggregate: at A3, errors that persist after knowledge is provided are largely resolved once its application is stated (Appendix~\ref{app:extended_results}).
+
+
+%%%%%%%%%%%%%%%%%%%% J. Prompts and Annotation Instructions (short version) %%%%%%%%%%%%%%%%%%%%
+
+\section{Prompts and Annotation Instructions}
+\label{app:prompts}
+
+This section lists the prompts that define the annotation taxonomy, the construction of contrasts, and the evaluation, together with the instructions given to human annotators.
+The remaining prompts, for failure classification, revision, and the generation of the context used in the \textit{+K} and \textit{+K+A} conditions, are provided in the supplementary material.
+Prompts are reproduced as used, except that a few typographic symbols (dashes and arrows) are replaced by ASCII equivalents.
+Unless noted otherwise, each prompt is given as the system message, and the user message is a JSON object with the inputs described in the corresponding appendix.
+
+\subsection{Annotation Prompts}
+
+\subsubsection{Prompt for Silver Reasoning Generation}
+
+The user message contains the question, options, and gold answer (Appendix~\ref{app:ka_annotation}).
+
+\promptfile{prompts/01_silver_reasoning.txt}
+
+\subsubsection{Prompt for Knowledge and Application Annotation}
+
+The user message contains the question, options, gold answer, and silver reasoning.
+We show the part of the prompt that defines the K and A levels.
+The remainder defines the content domain and auxiliary labels that are not used in this paper.
+
+\promptfile{prompts/02a_ka_annotation_core.txt}
+
+\subsection{Construction Prompts}
+
+\subsubsection{Prompt for Anchor Knowledge Extraction}
+
+We show the prompt for A1 seeds.
+The prompt for A2 seeds differs only in its description of the seed and omits the judgment on whether an A2 contrast is supported.
+
+\promptfile{prompts/04_anchor_extraction.txt}
+
+\subsubsection{Prompt for Application-Controlled Contrast Generation}
+
+The system message consists of the following contract, followed by the fixed attributes of the seed (knowledge level, domain, and target level) and by demonstrations of the target level, which we omit here.
+We show the contract for A1 seeds.
+
+\promptfile{prompts/05_generation_contract.txt}
+
+\subsubsection{Criteria for LLM-Based Auditing}
+
+The eleven criteria of the LLM rubric are passed to the auditor with the following wording, together with the seed question, the anchor bundle, the target level, and the candidate.
+
+\promptfile{prompts/06b_auditing_rubric.txt}
+
+\subsection{Evaluation Prompts}
+
+Each question is sent as a single user message without a system message.
+The instruction follows the source benchmark of the seed, and \texttt{\{letters\}} lists the option letters of the question.
+
+\promptfile{prompts/08_model_evaluation.txt}
+
+In the \textit{+K} and \textit{+K+A} conditions, the context is inserted between the question and the options under the header ``참고 자료'' (``Reference material'').
+
+\promptfile{prompts/09_knowledge_provision.txt}
+
+\subsection{Human Annotation Instructions}
+
+Table~\ref{tab:human_rubric} gives the question and the three rating levels shown to annotators for each criterion of the human rubric.
+In the first stage, the annotation interface shows only the question, options, and gold answer, with the instruction ``전문지식으로 정답을 검증하지 말고 보이는 문항만 평가합니다'' (``Do not verify the answer with expert knowledge; evaluate only the question as shown'').
+After the ratings for H1--H3 are fixed, the interface reveals the anchor bundle with the instruction ``왼쪽의 anchor를 읽고 두 기준을 평가합니다'' (``Read the anchor on the left and evaluate the two criteria'').
+A written note is required for every rating below the highest level.
+
+\input{Tables/appendix/human_rubric}
+
+
+%%%%%%%%%%%%%%%%%%%% K. Usage of AI Assistants %%%%%%%%%%%%%%%%%%%%
+\section{Usage of AI Assistants}
+\label{app:ai_assistants}
+
+During the preparation of this work, we utilized AI assistants to refine sentence structure, correct grammatical errors, and improve readability.
+We also used them to prepare initial drafts of parts of the appendix, to write scripts for computing the reported statistics, and to translate the Korean examples into English.
+The research questions, methodology, and experimental design were developed by the researchers, who reviewed and verified all AI-assisted text, code, and results.
+The use of AI assistance did not influence the originality or scientific contributions of the paper.

@@ -1,0 +1,32 @@
+\section{Related Work}
+\paragraph{Leaderboards}
+Our work studies how preference-based leaderboards coordinate firms’ incentives and, in turn, shape diversity.
+Leaderboards crowdsource language-model preferences and provide granular information about preference~\citep{chatbot_arena,copilot_arena}.
+Designing such leaderboards raises at least two challenges: aggregating heterogeneous preferences into a representative ranking~\citep{informative_leaderboards} and making that ranking robust to strategic manipulation. 
+The first challenge is closely related to estimating top-$k$ rankings from limited pairwise-comparison data~\citep{spectral_mle,condorcet_pairwise}, and can be viewed as a social choice problem~\citep{pluralistic_leaderboards,evaluation_social_choice}.
+For the second challenge, prior work has shown that leaderboards can be manipulated through vote rigging~\citep{vote_rigging}, strategic candidacy~\citep{leaderboard_illusion,strategic_candidacy}, and targeted manipulation~\citep{dropping_preferences}.
+% TODO: Check the last sentences
+Closest to our theoretical setting is \citet{leaderboard_incentives}, which studies how benchmark design induces strategic post-training and asks whether the resulting equilibrium ranks models according to their latent quality. 
+We instead ask how heterogeneity in developers' production technologies interacts with a fixed common evaluation. 
+We model costly investment through heterogeneous production functions, which allows us to characterize when production-side comparative advantage sustains specialization, and to study the dynamics of catch-up and frontier crowding.
+
+\paragraph{Contest Theory}
+Contest theory studies how strategic agents expend costly effort to improve their probability of success~\citep{borel_contest_theory,advertising_contest,contest_success_function}. 
+Our model is closely related to multi-battle contests~\citep{tullock_contest,multi_battle_contests}, in which agents allocate costly resources across multiple competitive dimensions. 
+A key difference is that we separate investment from competitive performance: developer-specific production functions \(F_i\) map multidimensional investment into capability profiles, which are then compared through the contest. 
+This allows us to study how heterogeneity in production technologies interacts with a common evaluation signal to determine whether equilibrium outputs become similar or specialized, rather than focusing primarily on effort allocation or contest/prize design.
+
+\paragraph{Strategic Machine Learning}
+In many real-world settings, agents respond strategically to machine learning algorithms, as deploying prediction algorithms might either impact agent responses for future predictions themselves~\citep{strategic_classification,strategic_investment,performative_prediction,strategic_ranking}.
+These strategic responses can also impose social costs, for example by inducing agents to expend additional effort simply to maintain favorable classifications~\citep{social_cost_strategic_classification}.
+Our setting reverses the usual direction of strategic response: rather than individuals adapting to a deployed model, model developers adapt their investments to an evaluation mechanism.
+
+\paragraph{Competition and Monoculture}
+Finally, our work connects to a growing literature on algorithmic monoculture and the effects of competition on diversity.
+Algorithmic monoculture describes settings in which multiple decision makers rely on similar algorithms, rankings, or predictions, causing their decisions to become correlated~\citep{correlated_errors,subjectivity_monoculture,monoculture_outcome}.
+Prior work has shown that competition can act as an anti-coordination force, encouraging developers to differentiate~\citep{competition_diversity}.
+We identify a countervailing force; when competitors are evaluated against a common benchmark, evaluation can coordinate investment toward the same capabilities.
+Related work similarly shows that competition among increasingly capable models need not increase diversity and can, in some settings, reduce welfare~\citep{bayes_risk_welfare}.
+Closest to our diversity question is \citet{aggregation_diversity}, which studies how aggregation and evaluation objectives affect producer incentives and consumer utility, showing that standard win rate can encourage homogenization while alternative weighted win-rate objectives can encourage specialization. 
+We instead model the underlying investment process explicitly: developers allocate costly resources across capabilities through heterogeneous production functions. 
+This allows us to characterize how common evaluation interacts with production-side comparative advantage to generate monoculture or specialization, and to study the dynamics of catch-up and frontier crowding.

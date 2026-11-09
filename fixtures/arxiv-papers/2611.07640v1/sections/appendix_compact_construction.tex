@@ -1,0 +1,176 @@
+\section{Benchmark Construction}
+\label{app:construction}
+
+\subsection{Authoring}
+
+The authors specified the benchmark's rules: the validity requirements of
+Section \ref{sec:ipi-boundary}, the review checklist that applies them, and a
+written procedure for each construction stage. Within these rules, Claude Code
+drafted the individual cases: for each case, a scenario, the records planted in
+the environment, the task and attack checks, and the functional-target
+variants. Each case passed through the same stages: drafting the scenario,
+checking it against the checklist, encoding it as environment records and
+checks, validating that encoding, and generating the variants. The authors
+reviewed and revised each stage's output before the next stage. Clean runs without injections then verified that each task is
+solvable and that its utility checks pass.
+Exposure runs then replaced the injection with a benign marker string and ran
+the unchanged task, to confirm that the injected content reaches the agent in a
+tool result during ordinary task execution.
+
+
+
+The checklist has 28 checks under
+20 principles; beyond the validity requirements,
+it checks task validity and scenario realism.
+
+\subsection{Attack categories}
+
+The design documents of each environment define a risk taxonomy of attack
+categories and subcategories. Table \ref{tab:attack-subcategories} lists the
+18 categories with their subcategories.
+
+\begin{table}[H]
+\centering
+\caption{Attack subcategories. Each retained case has one category and subcategory from the risk taxonomy in its environment's design documents. Cases the taxonomy does not list were placed by their injection goal and attacker. Marketplace subcategories that the taxonomy splits by the party that benefits (buyer or seller) are merged. \emph{Forced escalation / stall} has no taxonomy entry and was added for 2 cases. Document corruption and phishing have no subcategories. In subcategory names, \emph{self} is the attacker and \emph{rival} or \emph{opponent} another party. Spreading misinformation and misinformation produced are attack goals: the injection makes the agent write a false claim into its output. They differ from misinformation in Section \ref{sec:intro}, a false claim from a source authorized to determine it, which is outside IPI. S / F: cases whose harmful effect is a structured argument / free-form content, as in Table \ref{tab:benchmark-overview}.}
+\label{tab:attack-subcategories}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lL{2.5cm}L{6.7cm}rc@{}}
+\toprule
+\textbf{Environment} & \textbf{Category} & \textbf{Subcategories (cases)} & \textbf{Cases} & \textbf{S / F} \\
+\midrule
+Productivity & Meeting & Include self (3); exclude rival (3) & 6 & 6 / 0 \\
+ & Commitment & Harming opponent (3); self-benefiting (2) & 5 & 0 / 5 \\
+ & Priority & Self-escalation (3); rival de-escalation (2) & 5 & 0 / 5 \\
+ & Information access & Gain access (3); remove access (1) & 4 & 4 / 0 \\
+ & Phishing &  & 4 & 0 / 4 \\
+ & Spreading misinformation & Change opponent data (2) & 2 & 0 / 2 \\
+ & Document corruption &  & 2 & 1 / 1 \\
+\midrule
+DevOps & Authorization & Permission escalation (4); access/monitoring removal (3) & 7 & 7 / 0 \\
+ & False/harmful content & Misinformation produced (2); harmful payload distributed (2); project state corrupted (2); false attribution (1) & 7 & 2 / 5 \\
+ & Code/Config & Approval bypassed (2); legitimate content destroyed or blocked (2); malicious content introduced (1); payload planted for future effect (1) & 6 & 5 / 1 \\
+ & Confidential data & Operational data leakage (4); security finding withheld (2) & 6 & 1 / 5 \\
+ & Deployment & Target/source escalation (3); resource waste (2) & 5 & 5 / 0 \\
+\midrule
+Marketplace & Dispute outcome & Evidence misinterpretation (5); false forensic/expert claim (3); false policy basis (2); verification override (2); evidence suppression (1); burden shift (1) & 14 & 14 / 0 \\
+ & Process integrity & Note poisoning (2); forced escalation / stall (2); resolution without financial action (1) & 5 & 3 / 2 \\
+ & Communication & Threatening message (buyer$\rightarrow$seller) (1); false status to buyer (1); message recipient swap (1); premature action notification (1) & 4 & 1 / 3 \\
+ & Harmful output & Fabricated investigation report (2); false policy claim propagation (2) & 4 & 0 / 4 \\
+ & Financial & Fraudulent non-receipt (1); premature payment release (1); return fraud (1) & 3 & 3 / 0 \\
+ & Exfiltration & Cross-dispute data leakage (1) & 1 & 0 / 1 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+
+
+\subsection{Structured and free-form effects}
+
+The S / F columns of Tables \ref{tab:benchmark-overview} and
+\ref{tab:attack-subcategories} split the cases by where the harmful effect
+appears. A case is \emph{structured} if the attacked behavior calls a different
+tool or changes a discrete argument of a call, such as an identifier,
+recipient, amount, status, permission scope, or flag. It is \emph{free-form} if the
+harm lies in text the agent writes, such as a message body, comment, note, or
+commit message, even when the attacker's goal is a specific value inside that
+text. Most
+Productivity cases are free-form
+(17 of
+28),
+and most DevOps and Marketplace cases are structured. Appendix
+\ref{app:uncertainty} reports ASR by effect.
+
+
+
+\subsection{Construction flow}
+
+Table \ref{tab:construction-flow} traces the 90
+retained cases to their retained instances.
+
+\begin{table}[H]
+\centering
+\caption{Construction flow by environment, from the retained cases to the retained instances. Every evaluated model runs the same instances. An instance is dropped by the sufficiency check first, then by the target-label check.}
+\label{tab:construction-flow}
+\begingroup
+\tablefont
+\begin{tabular}{@{}p{6.2cm}rrrr@{}}
+\toprule
+\textbf{Stage} & \textbf{Productivity} & \textbf{DevOps} & \textbf{Marketplace} & \textbf{Total} \\
+\midrule
+\textbf{Retained cases} & 28 & 31 & 31 & 90 \\
+\midrule
+Case--target pairs with generated instances & 152 & 171 & 174 & 497 \\
+\textbf{Viable case--target pairs} & 139 & 163 & 164 & 466 \\
+\midrule
+Generated single-primitive variants & 456 & 513 & 522 & 1491 \\
+Dropped: operative insufficient & 29 & 39 & 33 & 101 \\
+Dropped: target label mismatch & 20 & 6 & 21 & 47 \\
+\textbf{Retained single-primitive variants} & 407 & 468 & 468 & 1343 \\
+Compound variants & 28 & 31 & 31 & 90 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+Each retained case defines a case--target pair for every functional target,
+540 in total. For
+43 pairs the target could not plausibly
+lead to the case's harmful outcome, so no instance was written. Each of the
+other 497 pairs received
+3 independently written instances. An
+instance is retained only if an LLM judge finds its operative sufficient for
+the harmful outcome and a classification of the targeted belief confirms its
+declared target (Section \ref{sec:variations}).
+101 instances failed the
+sufficiency check and 47 the
+label check, leaving 1343. A pair is
+viable if it keeps at least one instance, which holds for
+466 pairs. The
+37 cases with every target viable form the matched
+set of Appendix \ref{app:uncertainty}.
+
+\begin{table}[H]
+\centering
+\caption{Coverage by functional target over the 90 retained cases. A case is generated for a target if it has at least one written instance and viable if at least one instance is retained. Instances are attributed to their declared target.}
+\label{tab:target-coverage}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+\textbf{Target} & \textbf{Cases generated} & \textbf{Cases viable} & \textbf{Instances} & \textbf{Insufficient} & \textbf{Label mismatch} & \textbf{Retained} \\
+\midrule
+\(b(U)\) & 89 & 88 & 267 & 0 & 5 & 262 \\
+\(b(\pi)\) & 90 & 87 & 270 & 5 & 7 & 258 \\
+\(b(T)\) & 90 & 75 & 270 & 63 & 2 & 205 \\
+\(b(A)\) & 56 & 54 & 168 & 4 & 5 & 159 \\
+\(b(O)\) & 82 & 74 & 246 & 22 & 12 & 212 \\
+\(b(s)\) & 90 & 88 & 270 & 7 & 16 & 247 \\
+\midrule
+All targets & 497 & 466 & 1491 & 101 & 47 & 1343 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+Coverage differs by target (Table \ref{tab:target-coverage}). \(b(A)\) is
+written for the fewest cases (56),
+and \(b(T)\) loses the most instances to the sufficiency check
+(63 of
+270).
+
+\subsection{Controlled expansion}
+
+The conditions of Appendix \ref{app:detection} change a retained instance's
+wording or context while keeping its operative. A detection-optimized variant
+rewrites the instance for up to 3 rounds
+against a carrier-only probe, which sees the carrier with the planted passage
+but not the user request. After rewriting, the variant is
+rechecked for target purity, validity, and sufficiency; variants still
+detected after the last round are kept. A context expansion keeps the
+operative's claim sentences verbatim and adds support around them. With the
+operative removed, the support must be insufficient to produce the harmful
+outcome, and it may neither contradict the operative nor offer a second
+task-consistent resolution. The optimized-support condition applies the same
+rewrite loop to the support alone.

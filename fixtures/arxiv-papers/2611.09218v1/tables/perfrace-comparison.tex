@@ -1,0 +1,55 @@
+\begin{table}[H]
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.25}
+  \caption{Comparison with related benchmarks. Microbenchmarks measure targeted
+  operations (for example, selected API calls), whereas end-to-end workloads
+  measure complete project-use workflows.}
+  \label{tab:perfrace-benchmark-comparison}
+  \begin{tabularx}{\textwidth}{@{}l
+    >{\hsize=0.9\hsize\linewidth=\hsize\raggedright\arraybackslash\hspace{0pt}}X
+    >{\hsize=1.3\hsize\linewidth=\hsize\raggedright\arraybackslash\hspace{0pt}}X
+    >{\hsize=0.8\hsize\linewidth=\hsize\raggedright\arraybackslash\hspace{0pt}}X@{}}
+    \toprule
+    Benchmark & Task type & Task construction & Evaluation \\
+    \midrule
+    \perfrace{} &
+    Repository optimization on end-to-end workloads &
+    Live GitHub discovery followed by agent--human Pair Verification &
+    Iterative correctness and performance feedback from an external Judge \\
+    AutoLab~\mbox{\citep{xu2026autolab}} &
+    Diverse metric-driven optimization tasks &
+    Expert-curated optimization tasks &
+    Local evaluation during the task; held-out final evaluation \\
+    EdgeBench~\mbox{\citep{zhu2026edgebench}} &
+    Cross-domain iterative problem-solving tasks &
+    Expert-curated day-scale tasks &
+    Local inner loop; repeated submission-gated Judge feedback \\
+    FrontierSWE~\mbox{\citep{chu2026frontierswe}} &
+    Ultra-long-horizon software engineering and research tasks &
+    Real-world problems curated with academic and industry experts &
+    Final graded submission after up to 20 hours \\
+    Terminal-Bench~\mbox{\citep{merrill2026terminalbench}} &
+    General terminal tasks &
+    Crowdsourced tasks with multi-stage human review &
+    Final-only test-based evaluation \\
+    GSO~\mbox{\citep{shetty2025gso}} &
+    Microbenchmark-based repository optimization &
+    Repository commit histories and generated performance tests &
+    Final-only microbenchmark-based evaluation \\
+    SWE-Perf~\mbox{\citep{he2025sweperf}} &
+    Microbenchmark-based repository optimization &
+    Historical performance PRs and selected repository tests &
+    Final-only microbenchmark-based evaluation \\
+    SWE-fficiency~\mbox{\citep{ma2025swefficiency}} &
+    Microbenchmark-based repository optimization &
+    Performance PRs and manually reconstructed workloads &
+    Final-only microbenchmark-based evaluation \\
+    FormulaCode~\mbox{\citep{sehgal2026formulacode}} &
+    Microbenchmark-based repository optimization &
+    Continuously ingested performance PRs and ASV workloads &
+    Final-only microbenchmark-based evaluation \\
+    \bottomrule
+  \end{tabularx}
+\end{table}

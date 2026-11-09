@@ -1,0 +1,26 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{\textbf{Effect of adding application statements.}
+\textit{Errors} is the number of incorrect responses under \textit{+K}; \textit{Fixed} and \textit{Broken} are the numbers of responses that become correct and incorrect under \textit{+K+A}; $p$ is from the exact McNemar test.}
+\label{tab:knowledge_gain}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrrrr@{}}
+\toprule
+ & \multicolumn{4}{c}{\textbf{A2} ($n=78$)} & \multicolumn{4}{c}{\textbf{A3} ($n=209$)} \\
+\cmidrule{2-5} \cmidrule{6-9}
+\textbf{Model} & \textbf{Errors} & \textbf{Fixed} & \textbf{Broken} & $p$ & \textbf{Errors} & \textbf{Fixed} & \textbf{Broken} & $p$ \\
+\midrule
+K-EXAONE          & 6  & 6  & 2 & .289  & 51  & 33 & 9  & $<$.001 \\
+A.X K1            & 12 & 8  & 3 & .227  & 74  & 47 & 15 & $<$.001 \\
+Solar Open        & 13 & 9  & 4 & .267  & 78  & 43 & 13 & $<$.001 \\
+\midrule
+Aya Expanse 32B   & 41 & 16 & 7 & .093  & 132 & 57 & 28 & .002 \\
+\midrule
+GLM-4.7           & 7  & 6  & 2 & .289  & 39  & 18 & 5  & .011 \\
+Qwen3.5           & 4  & 3  & 1 & .625  & 40  & 19 & 5  & .007 \\
+\midrule
+Claude Sonnet 5.5 & 1  & 0  & 0 & 1.000 & 22  & 15 & 5  & .041 \\
+GPT-6.1 Sol       & 0  & 0  & 0 & --    & 12  & 8  & 2  & .109 \\
+\bottomrule
+\end{tabular*}
+\end{table*}

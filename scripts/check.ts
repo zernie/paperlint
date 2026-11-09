@@ -180,6 +180,14 @@ export const GATES: readonly Gate[] = [
     vitest: true,
   },
   {
+    // Every real paper (the accepted ones and the arXiv preprints) in one run of the CLI, against its
+    // baseline. Its own vitest project, outside `unit`, so the macOS shards and coverage do not repeat
+    // it; no npm script, one more step of e2e-node (fixtures/arxiv-papers/README.md).
+    name: "real papers — every rule over every real paper in one run, against its baseline",
+    job: "e2e-node",
+    run: ["vitest", "run", "--project", "real-papers"],
+  },
+  {
     name: "TeX e2e — real TeX Live: paperlint toolchain, a real pdflatex build of every fixture, the real banal",
     job: "build-e2e",
     script: "test:e2e:tex",

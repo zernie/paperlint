@@ -1,0 +1,34 @@
+% Appendix Table: Framework comparison for the 4 models shown in Fig.~\ref{fig:framework-collapse}.
+\begin{center}
+\centering
+\small
+\captionof{table}{Numerical backing for Figure~\ref{fig:framework-collapse}. Raising framework complexity (\textsc{Normal}$\to$\textsc{ReAct}$\to$\textsc{Planner--Executor}) lowers DR for most models but CCSR collapses in parallel, indicating that the apparent safety gain is largely capability loss rather than a genuine guardrail.}
+\label{tab:framework}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.9}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l l r r r}
+\toprule
+\textbf{Framework} & \textbf{Model} & \textbf{TSR} & \textbf{DR} & \textbf{CCSR} \\
+\midrule
+\multirow{4}{*}{\textsc{Normal}}
+& Qwen3.6-35B-A3B    & 0.925 & 0.605 & 0.936 \\
+& Qwen3.5-397B-A17B  & 0.919 & 0.434 & 0.929 \\
+& MiniMax-M2.7       & 0.707 & 0.389 & 0.697 \\
+& Llama-3.1-8B-Inst. & 0.388 & 0.124 & 0.386 \\
+\midrule
+\multirow{4}{*}{\textsc{ReAct}}
+& Qwen3.6-35B-A3B    & 0.728 & 0.304 & 0.657 \\
+& Qwen3.5-397B-A17B  & 0.740 & 0.332 & 0.657 \\
+& MiniMax-M2.7       & 0.607 & 0.361 & 0.573 \\
+& Llama-3.1-8B-Inst. & 0.313 & 0.067 & 0.314 \\
+\midrule
+\multirow{4}{*}{\shortstack[l]{\textsc{Planner--}\\\textsc{Executor}}}
+& Qwen3.6-35B-A3B    & 0.244 & 0.077 & 0.232 \\
+& Qwen3.5-397B-A17B  & 0.436 & 0.256 & 0.416 \\
+& MiniMax-M2.7       & 0.180 & 0.066 & 0.188 \\
+& Llama-3.1-8B-Inst. & 0.292 & 0.208 & 0.243 \\
+\bottomrule
+\end{tabular}
+}
+\end{center}

@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "svjour3.cls",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "a90adf2197d8c79c920ae8b96696acfa85604632ef995c8c76b73c3ffd6f8da8",
+    "svjour3.cls": "e9840b9fdd767d9ecf92e2c79319084b4764810ed27c792872ac8be8ceae0a07"
+  }
+}

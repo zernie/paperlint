@@ -1,0 +1,29 @@
+\begin{table*}[htbp]
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.9}
+    \small
+    \caption{Comparison of attack robustness, over-refusal, and utility performance under different defense methods.}
+    \label{tab:defense_comparison}
+    
+    \begin{tabular}{l l cccc c ccccc}
+        \toprule
+        & \multirow{2}{*}{\textbf{Defense Method}} & \multicolumn{4}{c}{\textbf{Attack Success Rate $\downarrow$}}  & \textbf{Over-Refusal} $\downarrow$ & \multicolumn{5}{c}{\textbf{Utility}$\uparrow$}   \\
+        \cmidrule(lr){3-6} \cmidrule(lr){7-7} \cmidrule(lr){8-12}  
+        & & TB~\cite{twinbreak} & NS~\cite{wu2026neurostrike} & SB~\cite{xie2025sorrybench} & Ref-Dir~\cite{arditi2024refusal} & XSTest & Arc & TQA & WG & MMLU & HS  \\
+        \midrule
+        Gemma-2- & No Defense         & 0.71 & 0.50 & 41.58 & 0.80 &   2.00   & 42.06 & 55.15 & 65.43 & 29.12 & 60.25 \\
+         %& Baseline                                         & 0.33 & 0.00 & 0.00 & 0.00 &  0.00    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00\\
+         2B-IT & W-DOOR~\cite{zhao2025door}                       & 0.62 & 0.19 & 35.36 & 0.55 &  9.00    & 44.37 & 52.71 & 65.98 & 36.44 & 64.94 \\
+         & ABS-Align (Ours)                                 & 0.23 & 0.05 & 13.24 & 0.08 &  4.00    & 42.06 & 64.29 & 63.93 & 27.34 & 57.99  \\
+        \midrule
+        & No Defense                                        & 0.81 & 0.84 & 48.34 & 0.75 &  5.00    & 50.34 & 52.79 & 64.33 & 57.76 & 64.92  \\
+        %& Baseline                                          & 0.00 & 0.00 & 0.00 & 0.00 &  0.00    & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+        Llama-3- &  Deep Refusal~\cite{deeprefusal}        & 0.25 & 0.06 & 21.81 & 0.07 &   48.00    & 52.47 & 51.33 & 69.38 & 63.12 & 72.59  \\
+        8B-Instruct & Circuit Breaker~\cite{zou2024circuit}  & 0.16 & 0.79 & 16.06 & 0.24 &  4.00    & 50.43 & 52.87 & 64.80 & 58.95 & 63.48  \\
+        & ABS-Align (Ours)                                  & 0.11 & 0.03 & 17.79 & 0.05 &  1.00   & 46.50 & 67.02 & 67.16 & 57.48 & 67.27  \\
+        \bottomrule
+        
+    \end{tabular}
+    
+\end{table*}

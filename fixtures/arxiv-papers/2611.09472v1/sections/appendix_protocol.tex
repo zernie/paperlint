@@ -1,0 +1,173 @@
+\section{Evaluation and Verification Protocol}
+\label{app:protocol}
+
+\paragraph{Data partitions and leakage control.}
+We distinguish experience used for acquisition and training,
+development data used for controller verification, and
+held-out data used for final evaluation. The intended unit
+of separation is the originating episode: segments from the
+same episode should remain in one partition even when they
+are associated with different skills. For QA, normalized
+questions are deduplicated across partitions before answers
+are attached. Question--answer matching provides an additional
+check rather than replacing question-level separation.
+The final evaluation pool is excluded from gate tuning,
+checkpoint selection, and prompt development.
+
+\paragraph{Sequential probe construction.}
+In ALFWorld, the consolidator groups identical
+observation--action--prompt trajectories across skill labels,
+preserves the reserved groups across rounds, and excludes
+trajectories already present in replay. Other sequential
+environments reserve a deterministic tail of successful
+memory records per skill after sorting by node identifier.
+Reserved records are excluded from the current consolidation
+batch. Observation--action probes include up to 16 recent
+history entries and are subject to a probe-step cap.
+
+\paragraph{Verification conditions.}
+The candidate arm uses the adapted model without episodic
+retrieval; the reference arm uses the base model with ETG.
+Both arms use the same task interface and scoring procedure.
+The implemented reference arm retrieves from the pre-release
+store. Removing a record from the training batch does not
+necessarily remove it from this retrieval store, so this
+condition is distinct from source-excluded retrieval.
+
+For sequential tasks, probes measure agreement with recorded
+actions using the same environment prompt builder and action
+parser. Agreement is a local behavioral diagnostic: it can
+depend on the action classes represented in the probe and
+does not capture all valid alternative actions or subsequent
+environment states.
+
+For the QA release analysis in
+Figure~\ref{fig:verification-release}, each question is counted
+as successful when answer F1 is at least 0.5. The skill-level
+score is the fraction of successful development questions.
+Release requires this fraction to exceed 50\%, together with
+the relative-performance and training-evidence checks.
+These answer-level scores are distinct from next-action
+agreement.
+
+
+\paragraph{Statistical unit.}
+Paired comparisons match methods by environment world or
+task instance. Bootstrap draws resample the same instances
+for all compared methods and recompute the reported metric.
+For Crafter, each sampled world retains its complete
+achievement vector; progress or geometric score is then
+computed from the resulting achievement rates.
+
+Paired differences are summarized with percentile 95\%
+bootstrap intervals. For evaluations with multiple evolution
+seeds, seed-level variation is distinguished from
+instance-level uncertainty, with hierarchical resampling
+where applicable. Single-checkpoint analyses quantify
+variation over evaluation instances rather than variation
+across independently trained models. The fraction of
+bootstrap draws favoring a method is descriptive and is
+not reported as a hypothesis-test $p$-value.
+
+\paragraph{Interaction and compute accounting.}
+We distinguish student acquisition, teacher acquisition,
+verification, consolidation, and final evaluation costs.
+Serving measurements include all model calls and tokens
+used by each method, including reflection and repeated
+generation. Last-attempt success and best-of-attempt success
+are different outcomes and are identified separately when
+reported. Matched-data controls reuse the same acquired
+experience; this does not imply equal end-to-end acquisition
+or training cost.
+
+\paragraph{Decision and memory accounting.}
+Release decisions are associated with the evaluated
+checkpoint and the supporting training and probe evidence.
+The relevant quantities include student mastery, available
+teacher demonstrations, realized training examples, probe
+size, candidate and reference scores, and the configured
+relative threshold and absolute floor.
+
+Memory accounting distinguishes records available for
+retrieval, records moved to a non-retrievable archive, and
+separately retained training data. Counts before and after
+release are reported for the affected stores. Archival
+release reduces retrieval availability without necessarily
+reducing total storage.
+
+\paragraph{LLM-only control.}
+For QA, LLM-only denotes one greedy zero-shot chain-of-thought
+generation from the unadapted student using the question and
+the benchmark-supplied context, without episodic retrieval,
+additional search, or an adapter. Interactive controls with
+handcrafted strategy hints or action substitutions are
+identified separately rather than labeled LLM-only.
+
+\subsection{Controlled evaluation of memory release}
+\label{app:release-controls}
+
+\paragraph{Shared experimental conditions.}
+We use the fixed Qwen3-8B SFT checkpoint and the initial
+store of 600 HotpotQA experience records analyzed in
+Figure~\ref{fig:verification-release}.
+All conditions share the checkpoint, skill assignments,
+prompt construction, retrieval settings, and decoding
+configuration. No additional parameter updates are
+performed during this comparison.
+Development probes determine release decisions before
+held-out evaluation; test results are not used to revise
+these decisions or their thresholds.
+
+\paragraph{Release-policy controls.}
+We compare the following policies:
+\begin{itemize}
+    \item \textbf{Retain all.}
+    All experience records remain retrievable, and all
+    skills use the fixed adapted model with ETG.
+
+    \item \textbf{Immediate release.}
+    Skills that contributed valid training examples
+    release their eligible records after training,
+    without post-training behavioral verification.
+
+    \item \textbf{Verified release.}
+    Eligible records are released only for skills that
+    satisfy the training-evidence checks, relative
+    verification threshold, and absolute performance
+    floor.
+
+    \item \textbf{Random release.}
+    Release selections are sampled without using probe
+    scores and matched to the verified policy's
+    retrievable record count.
+    We repeat the random selection to measure variation
+    due to the choice of released memories.
+\end{itemize}
+
+For every policy, skills selected for release use the
+same adapted model without episodic retrieval.
+Other skills use that model with the remaining ETG.
+Adapter activation is fixed rather than independently
+recomputed for each policy.
+Record eligibility, shared-record handling, and any
+configured residual retention are applied consistently
+across conditions.
+Released records are moved to a non-retrievable archive;
+the comparison therefore measures retrieval reduction
+rather than total-storage reduction.
+
+\paragraph{Held-out performance and uncertainty.}
+We evaluate every condition on the same held-out questions
+and report aggregate answer EM and token F1.
+For each release policy, we compute the paired F1 difference
+relative to retaining all records.
+Paired bootstrap draws resample test questions using the
+same indices for both conditions and recompute the score
+difference, yielding percentile 95\% confidence intervals.
+
+For random release, we report performance averaged over
+the sampled release selections and account for both
+selection-level and question-level variation through
+hierarchical bootstrap resampling.
+These intervals quantify uncertainty for the fixed
+checkpoint, rather than variation across training seeds.

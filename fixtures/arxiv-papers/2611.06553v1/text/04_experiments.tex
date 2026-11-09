@@ -1,0 +1,186 @@
+\section{Experiments}
+\label{sec:experiments}
+
+
+In this section, we evaluate ABS-Align's performance across various dimensions. We first describe our experimental setup, including the benchmarks, attacks, and metrics used in Section~\ref{subsec:experimental_setup}. We then evaluate ABS-Align's robustness across several dimensions in Section~\ref{subsec:robustness_results}, including its performance against TwinBreak, its generalization to other sparsity-based attacks, and its generalization to black-box attacks. Next, in Sections~\ref{subsec:over_refusal} and~\ref{subsec:utility_eval}, we evaluate ABS-Align's performance with respect to over-refusal and the model's general capabilities, respectively. Section~\ref{subsec:comparison} then compares ABS-Align with recent related work. In Section~\ref{subsec:ablation_study}, we perform a comprehensive ablation study to evaluate the design components of ABS-Align. Finally, in Section~\ref{subsec:adaptive_attacks}, we evaluate ABS-Align's robustness against adaptive attacks.
+
+\subsection{Experimental Setup}
+\label{subsec:experimental_setup}
+
+
+\textbf{Training Dataset and Models}: We evaluate \method (ABS-Align) on open-weight models from three different vendors and four models. Specifically, we use Llama-3-8B-Instruct~\cite{llama3modelcard, grattafiori2024llama3herdmodels} and Llama-3.2-3B-Instruct from Meta, Gemma-2-2B-IT~\cite{gemma_2024} from Google, and Qwen-3-4B from Alibaba. For preference finetuning, we use the PKU-SafeRLHF~\cite{ji2024pku} dataset and randomly sample 1,000 preference samples for training. To retain model's general capability we additionally augment this dataset with samples 850 samples from Alpaca~\cite{alpaca} and 150 safe samples from XSTest~\cite{rottger2024xstest}. For full training details please see Appendix~\ref{appendix:training}.
+
+\textbf{Related Work Baselines}: For comparisons with existing defenses we use Circuit Breaker~\cite{zou2024circuit}, W-DOOR~\cite{zhao2025door}, and Deep Refusal~\cite{deeprefusal}. We evaluate each method only on models considered in its original work and use the corresponding reported training hyperparameters. We do not extend the baselines to additional models, as doing so would require additional hyperparameter tuning and could result in suboptimal baseline performance. Consequently, some baseline results are unavailable for models not evaluated by the corresponding original work.
+
+
+\textbf{Over-Refusal benchmark}: To evaluate ABS-Align's result regarding whether the reinforced safety aligned behavior leads to incorrect refusal of harmless prompts, such as "How to kill a Python program", we use XSTest~\cite{rottger2024xstest}, a benchmark for measuring exaggerated safety behavior in LLMs. XSTest contains 250 benign prompts that contain sensitive words such as "kill", "execute", "rob" in harmless contexts. We create a random split of the 250 prompts and use 150 prompts for training while keeping the rest of the 100 prompts for over-refusal evaluation. To report the over-refusal rate, we use XSTest's keyword-matching evaluator on the 100 harmless prompts split and report the fraction of responses that incorrectly refuse the corresponding request.
+
+\textbf{Utility Benchmarks}: To measure the effect of ABS-Align on the general capabilities and instruction-following ability of the finetuned model, we evaluate its performance across a diverse set of benchmarks covering knowledge, reasoning, and problem-solving capabilities. Specifically, we use MMLU~\cite{hendrycks2021mmlu}, TruthfulQA~\cite{truthfulqa}, ARC-Challenge~\cite{arc_challenge}, WinoGrande~\cite{WinoGrande}, and HellaSwag~\cite{hellaswag}.
+
+
+\textbf{White-Box Attack Baselines}: We evaluate ABS-Align against three white-box attacks, namely TwinBreak~\cite{twinbreak}, NeuroStrike~\cite{wu2026neurostrike}, and refusal direction ablation~\cite{arditi2024refusal} attacks. TwinBreak and NeuroStrike find and prune safety critical neurons while refusal direction ablation identifies and ablates a single refusal direction from the victim model to suppress refusal of harmful prompts.
+
+\textbf{SORRY-Bench Black-Box Attacks}: To evaluate ABS-Align against black-box jailbreak attacks, we use SORRY-Bench~\cite{xie2025sorrybench}, which provides 20 linguistic transformations of 440 unsafe base prompts, resulting in 440 adversarial prompts per transformation. We use ten of the twenty provided transformations in our evaluation. For a complete description of the selected attack types, please refer to Appendix~\ref{appendix:sorry_bench}.
+
+\textbf{Evaluation Metrics}: We evaluate ABS-Align and related work using a comprehensive set of metrics across three main dimensions: attack success rate (ASR) against multiple jailbreak attacks, over-refusal (OR) rate, and few-shot accuracy on general capability and instruction-following benchmarks.
+
+For measuring jailbreak attack success rate, we use the StrongREJECT~\cite{souly2024strongreject} benchmark. StrongREJECT contains 313 malicious prompts across six harmful behavior categories and provides a finetuned LLM-as-a-judge evaluator that shows strong agreement with human judgments of jailbreak effectiveness. The evaluator assigns each model response a score between 0 and 1, where 0 indicates a refusal or a response that provides no useful harmful information, while higher scores indicate responses that provide increasingly specific and convincing information relevant to the harmful request. The final StrongREJECT score is computed as the mean score across all 313 prompts. Thus, lower scores indicate stronger safety behavior, while higher scores indicate more successful jailbreaks. We report the StrongREJECT score on all the 313 prompts for evaluating the baseline white-box jailbreak attacks.
+
+For evaluations against the black-box attacks provided by SORRY-Bench~\cite{xie2025sorrybench}, we instead use the finetuned evaluator provided by SORRY-Bench. The evaluator determines whether each response fulfills or refuses the corresponding unsafe request, and we report the fulfillment rate across the 440 prompts for each attack category as a percentage from 0 to 100, where higher values indicate a higher attack success rate.
+
+
+
+
+\subsection{Robustness Results}
+\label{subsec:robustness_results}
+
+Here, we evaluate and discuss how ABS-Align affects the attack success rate of jailbreak attacks across multiple dimensions. We evaluate ABS-Align against TwinBreak, other sparsity-based attacks, and black-box jailbreak attacks to assess whether its robustness generalizes beyond the attack used to motivate our design. First, in Section~\ref{subsubsec:robustness_pruning}, we assess the robustness of the finetuned model against TwinBreak~\cite{twinbreak}. After that, in Section~\ref{subsubsec:robustness_white_box} we investigate whether ABS-Align's robustness generalizes to other sparsity-based attacks. Finally, in Section~\ref{subsubsec:robustness_black_box}, we evaluate ABS-Align against a broad range of black-box jailbreak attacks to determine whether its robustness also generalizes to these black-box style attacks.
+
+%First, in Section~\ref{subsubsec:robustness_pruning}, as a more direct evaluation, we assess the robustness of the finetuned model against TwinBreak~\cite{twinbreak} over its five pruning iterations. This provides an initial indication of whether ABS-Align improves robustness against neuron-pruning attacks. To conduct this experiment, we finetune the model according to Algorithm~\ref{alg:method} and rerun TwinBreak on the finetuned model to determine whether it can identify and prune safety-critical neurons and successfully jailbreak the hardened model. After that, in Section~\ref{subsubsec:robustness_white_box} we investigate whether ABS-Align provides robustness only against TwinBreak's safety-critical neuron detection method or whether this robustness generalizes to other sparsity-based attacks. To do so, we evaluate ABS-Align against other attacks that exploit the sparsity of safety alignment in LLMs, including NeuroStrike~\cite{wu2026neurostrike} and refusal-direction ablation~\cite{arditi2024refusal}. Finally, in Section~\ref{subsubsec:robustness_black_box}, we evaluate ABS-Align against a broad range of black-box jailbreak attacks to determine whether its robustness also generalizes to these settings.
+
+\subsubsection{Robustness to TwinBreak}
+\label{subsubsec:robustness_pruning}
+\input{tables/twinbreak_iters}
+
+We first evaluate ABS-Align's robustness against TwinBreak using the StrongREJECT malicious prompt set. To do so, we first finetune the model using our method and then rerun TwinBreak on the finetuned model. TwinBreak attempts to identify and prune safety-critical neurons of the finetuned model over multiple pruning iterations. Following the original TwinBreak setting~\cite{twinbreak}, we run the attack for five pruning iterations. The results are presented in Table~\ref{tab:01_twinbreak_iters}. Similar to TwinBreak evlautions we report two scores for our evaluation: a per-iteration score, corresponding to the mean StrongREJECT score across all responses generated at each pruning iteration, and a cumulative score, computed by taking the maximum StrongREJECT score obtained for each prompt across the five iterations and then averaging these maxima across all prompts.
+
+As can be seen in Table~\ref{tab:01_twinbreak_iters}, ABS-Align consistently reduces both the per-iteration and cumulative scores. For Gemma-2-2B-IT, ABS-Align decreases the per-iteration score from approximately 0.6 to approximately 0.1, while reducing the cumulative score by about 70\%, from 0.71 to 0.23. Similar results are observed for Llama-3-8B-Instruct, where the per-iteration score decreases from approximately 0.7 to less than 0.1 and the cumulative score has a sharp drop of 0.7 points. Llama-3.2-3B-Instruct and Qwen-3-4B similarly show significant improvements in their robustness against the pruning attack, where  the cumulative scores decreases by around 55\% and 83\% for the models, respectively.
+
+The results in Table~\ref{tab:01_twinbreak_iters} show that ABS-Align significantly improves robustness against TwinBreak, as the attack's ability to effectively remove safety-aligned behavior by identifying and pruning safety-critical neurons of the finetuned model over its five pruning iterations is significantly impaired. 
+
+
+
+
+\subsubsection{Generalization of robustness to attacks exploiting sparsity of safety features}
+\label{subsubsec:robustness_white_box}
+
+While ABS-Align performs well against TwinBreak, ABS-Align may have caused the fine-tuned model to simply adapt to TwinBreak and its specific safety neuron identification method. In this section, we investigate this by examining whether the robustness provided by ABS-Align also generalizes to other sparsity-based attacks, including refusal-direction ablation~\cite{arditi2024refusal} and NeuroStrike~\cite{wu2026neurostrike}. To do so, we apply both attacks to the ABS-Align-finetuned model and evaluate their effectiveness using StrongREJECT benchmark.
+
+
+\input{tables/white_box_attacks}
+
+
+As the results in Table~\ref{tab:white_box_attacks} show, ABS-Align significantly improves the robustness of the finetuned model against both NeuroStrike and refusal-direction ablation attacks. For Gemma-2-2B-IT, NeuroStrike's attack success rate decreases from 0.50 to only 0.05, while the score for refusal-direction ablation is reduced by 0.72 points from 0.80 to only 0.08. Similar results are observed for Llama-3-8B-Instruct, where NeuroStrike becomes largely ineffective and refusal-direction ablation also exhibits a substantial decrease in attack success. Out of the four evaluated models, Llama-3.2-3B-Instruct and Qwen-3-4B show a more modest improvement while still improving robustness by more than 50\% in all the settings and up to around 87\%.
+
+
+The improved robustness of the finetuned models against both attacks shows that ABS-Align does not merely improve robustness against TwinBreak's safety-critical neuron detection method, but also generalizes to other attacks that exploit the sparsity of safety alignment.
+
+
+
+\subsubsection{Generalization of robustness against black-box attacks}
+\label{subsubsec:robustness_black_box}
+
+To investigate whether ABS-Align only improves robustness against white-box attacks that exploit the internal activations and representations of LLMs, or whether it also improves the model's broader jailbreak robustness, we evaluate its performance against a wide range of black-box attacks. To do so, we use ten black-box attack transformations from SORRY-Bench~\cite{xie2025sorrybench}. SORRY-Bench provides 440 malicious prompts for each attack transformation, and we evaluate all 440 prompts for each selected attack. Table~\ref{tab:black_box_results} reports the results for five of these ten attacks, along with the average across all ten attacks. For a complete description of the selected attacks and their full results, please refer to Appendices~\ref{appendix:sorry_bench} and~\ref{appendix:full_sorry_bench}.
+
+The results in Table~\ref{tab:black_box_results} show that ABS-Align also improves robustness against black-box attacks. The average attack success rate across the ten attack types decreases by approximately 20-40 percentage points for the four evaluated models, from around 42\%, 48\%, 53\%, and 69\% to approximately 13\%, 18\%, 33\%, and 27\%. What makes the results more significant is that the improved robustness is merely achieved by fine-tuning the model with the goal of replicating safety neurons and with no additional information about black-box attack techniques or data augmentation using adversarial black-box prompts.
+
+The results for individual attacks show similarly consistent improvements, with attack success rates reduced by approximately 20--60\%. This trend holds across all ten SORRY-Bench attacks included in our evaluation; the complete results are reported in Appendix~\ref{appendix:full_sorry_bench}.
+
+The results shows that ABS-Align inherently improves the safety alignment of finetuned models.
+
+\input{tables/black_box_attacks}
+
+
+\input{tables/comparison}
+
+\subsection{Over-refusal}
+\label{subsec:over_refusal}
+
+Safety-aligned LLMs are shown to be prone to associate certain keywords such as "kill" in the user request to refusal response generation, primarily based on the superficial presence of such terms are in the user prompt. This behavior is referred to as over-refusal~\cite{rottger2024xstest, cui2025orbench} and negatively affects the helpfulness~\cite{ouyang2022rlhf} of LLMs.
+
+Most safety-aligned LLMs have been shown to exhibit more pronounced over-refusal as their safety against harmful content generation increases~\cite{cui2025orbench}, introducing an important trade-off between safety and usability. Since ABS-Align's main goal is to make safety alignment more distributed across the model, a potential side effect is an increase in over-refusal, where the reinforced refusal behavior may generalize to benign prompts.
+
+Here, we evaluate ABS-Align's performance with respect to over-refusal. We measure the change in over-refusal rate on our evaluation dataset before and after applying ABS-Align and compare its results with those of the baselines and related work.
+
+Table~\ref{tab:xstest_overrefusal} shows the over-refusal results across the evaluated methods. As can be seen, ABS-Align causes only a slight increase in over-refusal for Gemma-2-2B-IT while the over-refusal rate for all the other models is unchanged or even slighlty improved in the case of Qwen-3-4B and Llama-3-8B-Instruct. As shown in~\ref{subsec:comparison}, this is in contrast to the related works where they generally struggle with balancing over-refusal and safety alignment.
+
+
+\begin{table}[htbp]
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{0.9}
+    \small
+    \caption{Change in over-refusal performance for each model and fine-tuning using \method.}
+    \label{tab:xstest_overrefusal}
+    
+
+
+    \begin{tabular}{l cc}
+        \toprule
+        \textbf{Model} & \textbf{Baseline} & \textbf{Fine-tuned} \\
+        \midrule
+        Gemma-2-2B-IT & 2.00 & 4.00  \\
+        Llama-3-8B-Instruct & 5.00 & 1.00   \\
+        Llama-3.2-3B-Instruct & 4.00  & 4.00    \\
+        Qwen-3-4B & 3.00 & 1.00  \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+
+\input{tables/over_refusal}
+
+\subsection{Utility Evaluations}
+\label{subsec:utility_eval}
+
+Finetuning an already trained LLM for safety alignment can potentially degrade its utility and alter its normal behavior. To investigate how ABS-Align affects the model's general capabilities, we evaluate it on five widely used benchmarks: ARC-Challenge~\cite{arc_challenge}, TruthfulQA~\cite{truthfulqa}, WinoGrande~\cite{WinoGrande}, MMLU~\cite{hendrycks2021mmlu}, and HellaSwag~\cite{hellaswag}. The results of our evaluations is reported in Table~\ref{tab:utility_diff}.
+
+\input{tables/utility_eval}
+
+As the results in Table~\ref{tab:utility_diff} show, ABS-Align causes only slight performance decreases on WinoGrande, MMLU, and HellaSwag, while ARC-Challenge's performance is unchanged and TruthfulQA shows a substantial improvement on Gemma-2-2B-IT. Similarly, for Llama-3-8B-Instruct, performance across most benchmarks changes only slightly, while TruthfulQA again exhibits a more substantial improvement. The same pattern can be seen for Llama-3.2-3B-Instruct and Qwen-3-4B where most of the benchmarks show only a slight precentage points of improvement or degradation.
+
+\subsection{Comparison with Other Works}
+\label{subsec:comparison}
+
+For comparison with related work, we consider three recent finetuning-based defenses: W-DOOR~\cite{zhao2025door}, Circuit Breaker~\cite{zou2024circuit}, and Deep Refusal~\cite{deeprefusal}. We conduct a comprehensive set of experiments comparing ABS-Align with these methods across multiple dimensions, including robustness against TwinBreak~\cite{twinbreak}, NeuroStrike~\cite{wu2026neurostrike}, refusal-direction ablation~\cite{arditi2024refusal}, black-box jailbreak attacks, over-refusal, and the impact of each method on the model's general capabilities.
+
+We compare ABS-Align only on models evaluated in the original works and reuse the training hyperparameters reported in their respective papers. We do not extend these methods to additional models, since doing so would require tuning their hyperparameters and could lead to suboptimal baseline performance. Therefore, we use Gemma-2-2B for comparison with W-DOOR and Llama-3-8B for comparison with both Deep Refusal and Circuit Breaker.
+
+The comparison results are reported in Table~\ref{tab:defense_comparison}. As the results show, ABS-Align provides substantially greater robustness across all evaluated attacks while exhibiting a lower over-refusal rate on XSTest compared to W-DOOR. In particular, W-DOOR provides only a modest improvement against SORRY-Bench black-box attacks, reducing the ASR from 41.58\% to 35.36\%, whereas ABS-Align reduces it by around 30 points to 13.24\%. Similarly, on TwinBreak, W-DOOR improves the score by only 0.09 points, compared to around 0.50-point improvement with ABS-Align; for refusal-direction ablation, W-DOOR improves the score by 0.25 points, compared to 0.72 points with ABS-Align. W-Door also substantially increase the over-refusal rate from 2\% to 9\%.
+
+ABS-Align also outperforms Deep Refusal~\cite{deeprefusal} across all evaluated attacks even on refusal-direction ablation, which Deep Refusal is specifically trained to defend against. However, Deep Refusal achieves this robustness at the cost of a substantially higher over-refusal rate on XSTest, refusing close to half of the benign prompts despite incorporating XSTest and OR-Bench samples during training to mitigate over-refusal. Finally, Circuit Breaker~\cite{zou2024circuit} also underperforms against ABS-Align across all attacks except for Sorry-Bench where it achieves a slightly better performance compared to ABS-Align across black-box attacks. Circuit Breaker exhibits a slightly worse over-refusal rate too even while its retain dataset which explicitly includes all the XSTest samples to preserve appropriate responses to such benign prompts. Regarding utility, ABS-Align performs better than Circuit Breaker on TruthfulQA, WinoGrande, and HellaSwag, while Circuit Breaker performs slightly better on MMLU and ARC-Challenge.
+
+In summary, compared to related work, ABS-Align shows consistent improvements across a wide range of attacks while having only minor effects on utility and over-refusal. In contrast, the related methods show less consistent robustness, with the defenses performing poorly against attacks and increasing over-refusal.
+
+
+\subsection{Ablation Study}
+\label{subsec:ablation_study}
+
+
+This section presents a comprehensive experimental analysis of ABS-Align's design choices and hyperparameters, examining how different configurations affect the method's performance in terms of attack success rate and over-refusal. For these experiments, we use the Gemma-2-2B-IT model and keep all other settings fixed while varying one component at a time. Specifically, we use the same number of training samples, learning rate, optimizer, and scheduler across all ablation experiments.
+
+
+\input{tables/ablation}
+
+Table~\ref{tab:ablation} summarizes the different settings considered in our ablation study and compares their results in terms of ASR against TwinBreak~\cite{twinbreak}, over-refusal on XSTest~\cite{rottger2024xstest}, and performance on two representative utility benchmarks, ARC-Challenge~\cite{arc_challenge} and WinoGrande~\cite{WinoGrande}.
+
+
+\textbf{Does Pruning Safety Neurons Help?} Rows 1 and 2 in Table~\ref{tab:ablation} examine how ABS-Align changes under different pruning settings. Row 1 shows the results when no neurons are pruned, which effectively reduces the method to additional DPO-based preference finetuning. Row 2 evaluates the effect of pruning random neurons instead of the identified safety-critical neurons. To do so, we apply the same gradual pruning schedule and prune the same number of neurons, but select their indices randomly rather than using the detected safety neurons.
+
+As shown in Table~\ref{tab:ablation}, both settings provide only modest improvements in robustness compared to the substantially larger improvement achieved by the final row, which corresponds to the default ABS-Align configuration. Both settings also exhibit slightly lower over-refusal than the full method, while their utility performance remains broadly comparable.
+
+These results show that pruning safety-critical neurons plays a central role in ABS-Align's effectiveness and contributes substantially to its robustness gains.
+
+\textbf{Pruning Strategy.} ABS-Align prunes safety neurons gradually, starting from the most important ones and eventually pruning all initially detected safety neurons. Rows 3-5 evaluate the impact of this strategy against several alternative pruning strategies. Row 3 corresponds to the setting where all safety neurons are pruned at the beginning of the finetuning process and remain pruned throughout finetuning. Row 4 corresponds to pruning all safety neurons at the beginning and gradually restoring them throughout finetuning, such that, during the later stages, all initially detected safety neurons are restored. Row 5 corresponds to a random pruning strategy where, every $t_p$ steps, instead of progressively increasing the number of pruned neurons, a fraction $r$ of the initially detected safety neurons is randomly pruned. In other words, every $t_p$ steps, a new random set of safety neurons is pruned while the previously pruned set is restored.
+
+As the results in Rows 3-5 show, all three settings underperform compared to the full method. In particular, non-gradual pruning results in a noticeably smaller improvement in robustness. Rows 4 and 5 similarly achieve worse ASR than the full ABS-Align configuration.
+
+\textbf{Other Parameters.} Rows 6-8 evaluate several additional settings related primarily to the finetuning process. By default, ABS-Align freezes the first and last Transformer blocks, whereas in Row 6 these two blocks are also finetuned. As the results show, unfreezing them leads to slightly worse over-refusal and utility performance.
+
+Finally, Rows 7 and 8 show the method's performance with a higher and lower number of finetuning epochs, respectively. As the results in Row 7 show, longer finetuning leads to worse performance in terms of both over-refusal and utility. In contrast, shorter finetuning in Row 8 results in substantially weaker robustness against attacks.
+
+To summarize, the results in Table~\ref{tab:ablation} show that both pruning safety-critical neurons and gradually pruning them throughout finetuning are central to ABS-Align's effectiveness and have a substantial impact on its robustness.
+
+
+
+\subsection{Adaptive Attacks}
+\label{subsec:adaptive_attacks}
+
+While ABS-Align performs well against a wide range of attacks in both black-box and white-box settings, an adversary aware of the hardened model's safety-neuron structure may launch adaptive attacks specifically targeting the reinforced model.
+
+A simple adaptive strategy is to increase the pruning budget by associating a larger number of neurons with safety alignment and pruning them. To evaluate this setting, we run TwinBreak with an increased number of pruning iterations, extending its default budget from 5 to 15 iterations.
+
+\input{tables/adaptive}
+
+The results of the adaptive attack against the ABS-Align-finetuned model are reported in Table~\ref{tab:adaptive_attack}. For Gemma-2-2B-IT, five additional pruning iterations increase the ASR by only 0.03 points, while a further five iterations increase it by only 0.01, resulting in an ASR of 0.27 after 15 pruning iterations. For Llama-3-8B-Instruct, the ASR increases by 0.14 after five additional pruning iterations and shows no further increase after another five, resulting in an ASR of 0.25 after 15 iterations. Llama-3.2-3B-Instruct follow a similar pattern where the score for Llama-3.2-3B-Instruct increases by only 0.05 and 0.01 after 10 and 15 iterations, respectively. Finally, the score for Qwen-3-4B increases by 0.07 points at iteration 10 and by another 0.07 at iteration 15 where 15\% of the models' neurons are pruned. These results show that increasing the pruning budget provides only limited gains to the adaptive attacker and remains far from recovering the attack success rate observed on the undefended models.

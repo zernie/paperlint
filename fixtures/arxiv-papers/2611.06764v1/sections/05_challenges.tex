@@ -1,0 +1,53 @@
+\section{Open Challenges and Future Directions}\label{sec:challenges}
+The preceding analysis reframes how authorization should be understood and maintained in agent workflows. Translating these insights into practical systems presents challenges in system design, user interaction, and validation. This section outlines these challenges and potential research directions, summarized in Table~\ref{tab:agenda}.
+
+\begin{table}[!htbp]
+\caption{Open challenges and potential research directions for agent access control.}
+\label{tab:agenda}
+\begingroup
+\fontsize{9}{11}\selectfont
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\linewidth}{@{}P{.21\linewidth}YY@{}}
+\toprule
+Research Area & Open Challenge & Potential Direction \\
+\midrule
+Planning and approval & Find feasible plans with limited access and user effort & Authorize exploration first; reuse approvals within explicit limits \\
+\addlinespace[4pt]
+Context handling & Preserve source roles and approval limits through summaries and delegation & Link generated claims to supporting evidence and source roles \\
+\addlinespace[4pt]
+Tool effects & Track indirect effects and\newline changes in tool behavior & Combine program analysis, execution records, and comparisons across versions \\
+\addlinespace[4pt]
+Recovery and revocation & Coordinate pending actions across services with different capabilities & Base recovery on cancellation, duplicate prevention, and outcome reporting \\
+\addlinespace[4pt]
+Benchmark construction & Check authorization across alternative plans and changing grants & Check actions against predefined grants under controlled workflow changes \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table}
+
+\subsection{Planning with Limited Authority and User Intervention}
+One challenge in agent planning is \emph{allowing enough exploration to identify feasible plans without granting unnecessary access}. The agent may need to inspect resources before it can determine which permissions different plans require. Yet gathering enough information to choose a plan may require less access than executing it. This suggests staged authorization: explicitly authorize limited exploration, use what the agent learns to seek an adequate plan within the current grant, and present any proposed expansion as a separate approval request.
+
+A second challenge is \emph{reducing repeated approval requests while preserving authorization boundaries}. Several tool calls may implement a single user-approved decision, so a new call need not require a new approval if it remains within that decision's scope. This motivates reusing approvals while their conditions remain valid and grouping related operations into a clearly scoped request. User involvement can then focus on proposed permission expansions and ambiguities that affect whether an action is authorized. Approval interfaces should explain what additional access a request would permit and whether less intrusive alternatives exist. These approaches should reduce approval frequency and user effort while preserving task quality and authorization boundaries.
+
+\subsection{Preserving Source Roles across Context Transformations}
+When agents summarize information or pass it to other agents, a key challenge is \emph{preserving source roles and approval limits}. A summary may combine factual observations with an approval, obscuring which source supports each statement and what was actually approved. The original evidence can remain available even when its wording changes. This suggests linking generated claims to that evidence and recording which decisions each source may influence.
+
+These links could support checks of both factual meaning and authorization scope. For each claim used to justify an action, the system could check whether the original statement supports it and whether the source is authorized to supply that evidence or approve the action. For example, an approval to send a report to one recipient should retain that limit when summarized. The research difficulty is maintaining these links when claims from several sources are combined or rewritten. These approaches should preserve useful contextual information while keeping subsequent decisions consistent with source roles and original approval limits.
+
+\subsection{Maintaining Effect Contracts across Tools and Services}
+For tool access control, a key challenge is \emph{describing effects that are not visible in the tool's interface}. A call may access additional resources, send data to another service, or schedule an action that occurs later. These effects are difficult to capture when the service's implementation cannot be inspected. Different sources offer complementary information: program analysis can identify possible operations, execution records show what occurred, and developer descriptions can explain behavior inside external services. This suggests combining these sources to build effect contracts that describe resource accesses, data transfers, and external actions, while identifying which effects remain uncertain.
+
+Keeping these descriptions useful requires \emph{updating them as tool behavior changes without extensive manual review}. A tool can introduce a new recipient or external action without changing its interface, motivating comparisons of effect descriptions across versions. One direction is to update contracts using changes in code, developer descriptions, and execution records, then flag newly described effects for review. Such reviews should determine whether existing grants cover the changed behavior or additional approval is needed.
+
+\subsection{Recovery and Revocation across Service Boundaries}
+When an agent relies on external services, a key challenge is \emph{determining what recovery and revocation can guarantee across different service capabilities}. Some services can cancel submitted requests, prevent duplicate execution, or report whether a request completed; others provide only part of this support. Each capability addresses a different need: cancellation may prevent a pending action, duplicate detection can make an authorized retry safe from repeated effects, and status reporting can resolve an unknown outcome. These differences suggest deriving recovery rules from the capabilities each service provides. Research could establish which guarantees are achievable for different combinations of capabilities and how they hold when several services and delegated agents participate.
+
+An unresolved request also creates the challenge of \emph{coordinating shared limits while its outcome remains unknown}. After a timeout, a purchase may already have completed. Releasing its reserved allowance could permit an extra purchase, while holding it indefinitely could block useful work. Because one agent's unresolved request affects what others may do, recovery needs records shared across the workflow. A potential direction is to link pending requests, their grants, and reserved allowances, then update these records as services report completion or cancellation. Where an effect has already occurred, a compensating action such as a refund may support recovery, but cannot replace preventing an unauthorized purchase.
+
+\subsection{Building Benchmarks for Agent Access Control}
+Building a benchmark for agent access control involves \emph{defining correct authorization without prescribing one execution plan}. Different plans can complete the same task, and permission to perform an action can change during execution. AgentDojo's stateful tasks and separate utility and attack-outcome measurements provide a starting point~\cite{agentdojo}. Task-level restrictions can describe permitted accesses and effects across different plans. This suggests pairing each task with explicit grants and independently specified rules for checking recorded effects. These rules would account for grant changes and whether a request is new, pending, or completed, allowing different authorized plans to satisfy the task.
+
+A further challenge is \emph{covering unused permissions and failures absent from successful runs}. A normal run can leave excessive access unused and avoid the timeouts or concurrent requests that expose coordination failures. This motivates controlled workflow environments that record resource accesses, data transfers, and external actions while allowing changes in information sources, delegation, and service responses. Attempts outside the grant would distinguish blocked requests from executed violations. Alternative plans, together with explicit rules for comparing their permission requirements, would help identify avoidable access or disclosure. Including user approval interactions would also reveal how authorization choices affect interruption frequency and user effort. Such environments could support comparable studies of protection and overhead under the same task requirements, initial grants, and grant-change scenarios.
+

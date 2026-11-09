@@ -1,0 +1,22 @@
+\section{Experimental Design and Evaluation}
+\subsection{Variables}
+The framework distinguishes controlled variables, measured variables, and target variables. Controlled variables define the mechanical and acquisition conditions: preload level, bolt specimen, surface condition, camera type, camera pose, illumination, exposure, and acquisition distance. In the preliminary study, joint geometry is fixed. Measured variables include reference images, loaded images, segmentation masks, displacement fields, DIC strain fields, strain-gauge signals, optical 3D displacement maps, and image-quality indicators. Target variables include preload force $F_p$, prediction uncertainty $\sigma_{\hat{F}}$, and an observability score indicating whether the image pair contains sufficient deformation.
+
+\subsection{Proposed Test Matrix}
+A practical preliminary study should use a staged test matrix. The mechanical stage applies preload levels such as 0, 30, 60, and \SI{90}{\kilo\newton}, matching the preliminary measurements, and can later be refined with intermediate levels. Each load step is repeated over several loading cycles to quantify repeatability and hysteresis. The optical stage records reference-loaded pairs under fixed camera and lighting conditions. The robustness stage then introduces controlled perturbations: small camera rotations, different illumination angles, surface texture variations, and repeated specimen mounting. Each measurement is linked to a specimen identifier so that image data, preload, strain-gauge data, optical 3D data, and metadata can be traced consistently.
+
+\subsection{Validation Levels}
+The validation strategy addresses four questions, \textit{Mechanical validation} asks whether finite-element results, strain gauges, and optical 3D measurements show the same qualitative deformation pattern and a monotonic relation to preload, thereby validating the physical premise; \textit{Optical validation} asks whether DIC or optical-flow features extracted from images correlate with measured preload under controlled acquisition, thereby validating the image measurement chain; \textit{Model validation} asks whether the predictive model estimates preload on unseen specimens or loading cycles, with specimen-wise splitting required to avoid memorizing bolt-specific scratches, stamped markings, or surface artifacts; and \textit{Robustness validation} asks whether predictions remain stable under changes in pose, illumination, camera, and surface condition, where poor image pairs should not only increase error but also increase uncertainty or lower the observability score.
+
+%\begin{figure*}[t]
+ %   \centering
+    %\includegraphics[width=0.8\textwidth, trim=0.6cm 8.3cm 0.6cm 3.3cm, clip, keepaspectratio]{Main/figures/fig6_validation.png}
+    %\caption{Proposed validation strategy. The framework is evaluated progressively from controlled laboratory validation to pose, lighting, camera, and surface-condition variation.}
+    %\label{fig:validation}
+%\end{figure*}
+
+\subsection{Metrics and Ablation Studies}
+
+Accuracy should be reported using mean absolute error (MAE), root mean squared error (RMSE), relative preload error, and coefficient of determination $R^2$. However, these metrics alone are insufficient. The study should also report monotonicity consistency, DIC correlation quality, image registration residual, and uncertainty calibration. For uncertainty, predicted intervals should be checked against empirical coverage.
+
+Ablation studies are essential for scientific credibility. At minimum, the following configurations should be compared: (i) scalar DIC descriptors only; (ii) DIC descriptors plus image-quality metrics; (iii) image-pair Siamese model only; (iv) image-pair model plus DIC map; and (v) image-pair model plus DIC map and metadata. A strong result would show that physics-based descriptors provide a reliable baseline and that learning-based models improve robustness or reduce error without violating physically expected trends.

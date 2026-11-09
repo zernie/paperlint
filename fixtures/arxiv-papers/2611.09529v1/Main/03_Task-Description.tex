@@ -1,0 +1,87 @@
+%\section{Task Description}
+\section{Problem Formulation}
+The problem addressed in this work is to determine whether the preload force of an assembled bolt can be estimated from the small deformation observed on the visible front face of the bolt head after loading. The proposed solution, therefore, does not treat the task as ordinary bolt-image classification. Instead, it compares two images of the same bolt head: a reference image before loading, or at a known baseline state, and a subsequent image after preload application or at a later monitoring state. The objective is to extract the local deformation signature between these two states and relate it to the corresponding preload force.
+
+Accordingly, the input is formulated as an image pair,
+\begin{equation}
+    \mathcal{I}=\left(I_0,I_L\right)
+    \label{eq:image-pair input}
+\end{equation}
+where $I_0$ denotes the reference image and $I_L$ denotes the loaded or monitored image. The desired output is
+\begin{equation}
+    \left(\hat{F}_p,\sigma_{\hat{F}}\right)=f_\theta\left(I_0,I_L,\mathbf{x}_m\right)
+    \label{eq:mapping}
+\end{equation}
+where $\hat{F}_p$ is the estimated preload force, $\sigma_{\hat{F}}$ is the associated prediction uncertainty, and $\mathbf{x}_m$ contains known metadata such as bolt type, surface preparation, imaging configuration, and acquisition settings. In the preliminary study, the joint geometry is kept fixed. If multiple bolt or washer geometries are investigated in future work, these parameters are supplied as known metadata rather than inferred from the bolt-head image.
+
+The optical signal used for estimation is the local motion of surface texture, speckle patterns, or identifiable image features on the front face of the bolt head. After rigid registration of the reference and loaded images, the remaining local motion is interpreted as a deformation-related displacement field,
+\begin{equation}
+    \mathbf{u}(x,y)=\left[u(x,y),v(x,y)\right]^T
+    \label{eq:displacment}
+\end{equation}
+which can be estimated using digital image correlation, optical flow, or learned correspondence. Strain-like quantities are then obtained from displacement gradients, for example
+\begin{equation}
+    \varepsilon_{xx}=\frac{\partial u}{\partial x},\qquad
+    \varepsilon_{yy}=\frac{\partial v}{\partial y},\qquad
+    \gamma_{xy}=\frac{\partial u}{\partial y}+\frac{\partial v}{\partial x}
+    \label{eq:strain from displacement gradients}
+\end{equation}
+
+Because the bolt-head front face has an approximately circular measurement region inside the hexagonal head boundary, the deformation descriptors are also expressed relative to the head center. Relevant descriptors include radial displacement $u_r$, radial strain $\varepsilon_r$, annular strain contrast, center-to-edge deformation contrast, and deformation symmetry. These descriptors form a compact preload-sensitive signature,
+\begin{equation}
+    S = \Phi\left(\mathbf{u},\nabla \mathbf{u},M,Q\right)
+    \label{eq:signature}
+\end{equation}
+where $M$ is the segmented bolt-head mask and $Q$ contains image-quality, registration-quality, and correlation-quality indicators. The final estimation task is therefore to learn a mapping from this deformation signature, together with known metadata, to preload force and uncertainty.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{Problem Formulation}
+
+%The aim is to estimate the preload force $F_p$ from optical measurements of the bolt-head front face. The input is not a single bolt image but a registered image pair,
+%\begin{equation}
+ %   \mathcal{I}=\left(I_0,I_L\right),
+%\end{equation}
+%where $I_0$ denotes the reference image and $I_L$ denotes the image recorded after preload application or at a later monitoring state. The desired output is
+%\begin{equation}
+ %   \left(\hat{F}_p,\sigma_{\hat{F}}\right)=f_\theta\left(I_0,I_L,\mathbf{x}_m\right),
+  %  \label{eq:mapping}
+%\end{equation}
+%where $\hat{F}_p$ is the estimated preload, $\sigma_{\hat{F}}$ is the associated uncertainty, and $\mathbf{x}_m$ contains known metadata such as bolt type, surface preparation, and acquisition settings. In the preliminary study, the joint geometry is kept fixed. If multiple geometries are later investigated, geometry is supplied as metadata; it is not inferred from the bolt-head image.
+
+%The measured optical signal is local motion of surface texture or speckle patterns on the bolt-head face. After registration, a displacement field
+%\begin{equation}
+%    \mathbf{u}(x,y)=\left[u(x,y),v(x,y)\right]^T
+%\end{equation}
+%can be estimated from the reference-loaded pair using DIC, optical flow, or learned correspondence. Strain-like quantities are then obtained from displacement gradients, for example
+%\begin{equation}
+%    \varepsilon_{xx}=\frac{\partial u}{\partial x},\qquad
+%    \varepsilon_{yy}=\frac{\partial v}{\partial y},\qquad
+%    \gamma_{xy}=\frac{\partial u}{\partial y}+\frac{\partial v}{\partial x}.
+%\end{equation}
+%For a bolt-head face, it is useful to express descriptors relative to the head center in polar coordinates, yielding radial displacement $u_r$, radial strain $\varepsilon_r$, annular strain contrast, and symmetry measures. These quantities define a compact preload-sensitive signature $S$,
+%\begin{equation}
+%    S = \Phi\left(\mathbf{u},\nabla \mathbf{u},M,Q\right),
+%    \label{eq:signature}
+%\end{equation}
+%where $M$ is the bolt-head mask and $Q$ contains image-quality and correlation-quality indicators.
+%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{Research Gap and Question}
+%The research gap lies between accurate but hardware-dependent preload measurement and scalable but mechanically indirect visual inspection. Sensor-based methods can measure preload-related quantities, but require additional components or instrumentation. Vision-based bolt inspection can scale to many fasteners, but most methods detect looseness states, rotation, markings, or damage rather than preload. DIC-based methods provide a stronger physical foundation, but still require controlled acquisition, surface texture, and careful calibration.
+
+%The research question is therefore: \textbf{How can we systematically extract the small preload-induced deformation of the bolt-head front face with sufficient repeatability to support rough preload estimation under controlled conditions?}
+
+\subsection{Contribution}
+This paper introduces an image-based preload estimation framework named PreForceVision. The novelty lies in treating preload estimation as a mechanically constrained inverse problem, where deformation of the optically accessible bolt-head surface is linked to the internal preload state.
+
+The first contribution is a deformation-to-force formulation based on the preload-induced deformation of the bolt head's front face. The second contribution is a multimodal validation strategy combining finite-element analysis, strain-gauge measurements, optical 3D measurements, and DIC- or optical-flow-based deformation extraction. The third contribution is an uncertainty-aware regression framework that maps physically interpretable deformation descriptors to rough preload estimates under controlled acquisition conditions. The aim is a structured feasibility route toward scalable preload assessment in applications where sensorizing every bolted joint is impractical.
+%This paper makes three main contributions. First, it formulates bolt preload estimation as an inverse deformation-to-force problem, in which the optically accessible deformation of the bolt head is used to infer the internal preload state. Second, it proposes a multimodal validation methodology that links finite-element analysis, strain-gauge measurements, optical 3D measurements, and DIC- or optical-flow-based deformation extraction. Third, it defines a physics-guided regression framework with uncertainty estimation to map preload-sensitive deformation descriptors to rough preload estimates under controlled conditions. In summary, the proposed PreForceVision Framework is a methodology for evaluating mechanical observability, optical measurability, model accuracy, and robustness before image-based preload estimation can be generalized.
+
+%%%%%%%%%%%%%%%%55
+%This paper introduces an image-based preload estimation framework named "PreForceVision". The novelty lies in formulating preload estimation as a deformation-to-force mapping, constrained by bolted-joint mechanics and validated against independent physical measurements. The proposed PreForceVision framework comprises:
+%\begin{enumerate}
+ %   \item A mechanics-based formulation of bolt preload estimation from bolt-head front-face deformation.
+  %  \item Finite-element analysis, strain-gauge measurement, and optical 3D comparison, indicating a measurable central depression under preload.
+   % \item A feature-extraction strategy that converts reference-loaded image pairs into physically interpretable displacement, strain, and symmetry descriptors.
+    %\item A physics-guided regression architecture that combines image-pair features, DIC or optical-flow maps, quality metrics, and known metadata.
+    %\item Evaluation strategy that separates mechanical observability, optical measurability, model accuracy, and robustness.
+%\end{enumerate}

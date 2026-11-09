@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "engram_preprint.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "iclr2027_conference.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "natbib.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "macros.tex",
+      "role": "body"
+    },
+    {
+      "path": "authors.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/method_comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/problem_formulation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/method.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/main_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/ablations.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/release_controls.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/latency_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/statements.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_setup.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_extra_llama31.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/appendix_llama31.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_baseline.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_protocol.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_reproducibility.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/qwen_hyper.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/llama_hyper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/limitation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_prompts.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix_cases.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "524213cdf71977ca2eb60b34f1a29621c5a452601df52470e3acb97945d2901f",
+    "engram_preprint.sty": "fef793b21d6a6a0407bc51bc065f534efba101698b502d15f62f85864c030bdf",
+    "fancyhdr.sty": "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
+    "iclr2027_conference.sty": "797deef41724e93761426ac0cbcca46279a91cc650dd1f0ce76a4f08d2098ea6",
+    "natbib.sty": "88bc70c0e48461934cab5b2accef06b74a8b3ac45ad03ccd3f2a6b7e0d6d530d",
+    "macros.tex": "318ad54fe056314653b9b9e00f5c3cdd17e2d9ea6da584af9681853590261fc6",
+    "authors.tex": "e4457e5d606111b272a1b4e566529ec1b7e1388a670682dbabb5d2d864035bbd",
+    "sections/abstract.tex": "0020724c7a7df8fb68ac458c3d61a2bb6424a0632e95133eb714e53d2898cf04",
+    "sections/introduction.tex": "7daeb815e30944793b43408c41764e020fb8efbd090d90285f9488cc59322e54",
+    "sections/related_work.tex": "eec693ef3aab16559c33b5932e858f4f05255c0b53ca176ca45523ecf83f071c",
+    "tables/method_comparison.tex": "b90fe6577355267f5d54e34551937ed653b630a94a83e8c54f7f20089de0119e",
+    "sections/problem_formulation.tex": "0c9e7e219490c8835405c19470277eb1889a572c7d165e96866c10c50d268ec6",
+    "sections/method.tex": "1c05da446863b3c9130fad5cac8ecc2cf5509557b40bdc86598c0b51263e14a3",
+    "sections/experiments.tex": "90c520d617261d1e47a372cf15aaa6494dcac4997fc549dc436cfb8d33d4b435",
+    "tables/main_results.tex": "92234f582b67ce78af14ea8d1f6cf772dc2c20713a62467f7735aeb882d2048d",
+    "tables/ablations.tex": "af994c218f484f2a35622e3ea61168110803b2b692fb6d3122b68b1cea32f67e",
+    "tables/release_controls.tex": "2a83b04ce2396c8f3624dcf2a2f9d0bf856bf884326851dfa43ca388f280946d",
+    "tables/latency_results.tex": "d371345141190c90a73278afe8ad2bbd3696b622bb5495cf7cd99267f97c08d9",
+    "sections/conclusion.tex": "649ede3b49220910d7621985fbd42808ad5409c026647e0cddc8ed2192299a6c",
+    "sections/statements.tex": "19f85d0590132f659434985ad323d7e67e2c46e3e85a95ecd2a91c96d78b497c",
+    "sections/appendix_method.tex": "edfe72b2ecb9aa10941b39cf144594ade16dee715e7cdffcfa7bed5772e84377",
+    "sections/appendix_setup.tex": "37df2d8ee43f0671be9539e4adc5f98a3e6bbb2990bf6173770953135e111ded",
+    "sections/appendix_extra_llama31.tex": "71e071a3cd659d00e0463a2a50ec93e98e62310b2f37856d51d73a54d8426ef6",
+    "tables/appendix_llama31.tex": "ba231c4276f6481515ebe92ded154b69c59539a0b6fd145c6b5f43869e209197",
+    "sections/appendix_baseline.tex": "2a4bd870caa8f4dc6f0df19085f77f6fea07d96cf0d4ec02b424dfcbcd30ae51",
+    "sections/appendix_protocol.tex": "13946b505054987a2ad9232cb517553c1ce7e2d007df19743636322ecf65c659",
+    "sections/appendix_reproducibility.tex": "34f5c3c65e0e4670a4ce86d2892ac910628d5568ce6a0e6d35cd124b04f5db79",
+    "tables/qwen_hyper.tex": "3ed563b49ae14b365e5dec86d9f6285378687c979f5871d45280e64e861ed59e",
+    "tables/llama_hyper.tex": "2fc712f68b7540fb2aed88444b00e502ad23e0f7a9585f88bfac66a568bbcd7c",
+    "sections/limitation.tex": "a104ee083da4b22e147a7a083809a34385365a34bd641fab403ee0f84a2fe9c6",
+    "sections/appendix_prompts.tex": "da25af38e2023271e692a55f459c6d01c694b63c2ae023c563655e90c83772c1",
+    "sections/appendix_cases.tex": "6b409662fb34f84b32f07106a0ad08c6378fa2d43b198f9d498080cc5c007a71"
+  }
+}

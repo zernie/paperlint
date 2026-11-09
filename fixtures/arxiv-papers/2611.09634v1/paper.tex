@@ -1,0 +1,383 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2027_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{array,tabularx}
+
+\title{Steerable Multi-Objective Group-Relative Preference Optimization with Jointly Trained Low-Rank Adapters}
+
+
+
+\author{Constantinos Karouzos  and  Nikolaos Aletras
+\\[1em]
+School of Computer Science \\
+University of Sheffield, UK \\
+\texttt{\{kkarouzos1, n.aletras\}@sheffield.ac.uk}
+}
+
+
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+Language model deployment often requires different trade-offs between competing objectives as user preferences change, yet standard post-training methods typically produce a single policy for a fixed objective weighting. We introduce LambdaMix, a new parameter efficient method for learning a preference conditioned family of policies with group-relative online reinforcement learning. LambdaMix jointly trains one low-rank adapter per objective over a frozen base model. One preference vector selects the adapter mixture that generates responses and weights the separately normalized rewards used to update the adapters. A single training run supports changing preferences at inference without further optimization. We experiment with four models on helpfulness and harmlessness and on solving math problems while following instructions. We also evaluate the two largest models on rewriting comments to preserve wording while reducing clues about personal attributes. On the first two tasks, LambdaMix achieves higher hypervolume than all evaluated conditioned and policy merging baselines across all four models. LambdaMix uses fewer training completions and stores fewer adapter parameters than a set of GRPO specialist policies. With architecture and initialization fixed, varying adapter mixtures and objective weights together gives wider score ranges and higher coverage than varying either alone.\footnote{Code available at \url{https://github.com/ckarouzos/lambdamix}.}
+\end{abstract}
+
+\section{Introduction}
+
+Aligning large language models (LLMs) in post-training~\citep{ouyang2022training,rafailov2023direct, shao2024deepseekmath} often involves potentially competing objectives, e.g., helpfulness and harmlessness, or correctness and instruction compliance. User preferences for these objectives vary across application scenarios and may change after deployment~\citep{dai2024saferlhf,chakraborty2024maxmin}. Steerable alignment lets users adjust these priorities within one model~\citep{wang-etal-2024-conditional}. A useful policy family should offer competitive trade-offs and respond to changes in the requested preference.
+
+Existing approaches provide this flexibility in different ways. Preference Vector combines separately trained parameter updates~\citep{prefvector2026}, while hierarchical mixture of experts~\citep[HoE]{li2026hoe} routes among adapters. Both support selection after training, but require multiple training runs. Conditional language policy~\citep[CLP]{wang-etal-2024-conditional} learns policies through prompt or parameter conditioning and optimizes the corresponding weighted rewards. Panacea introduces preferences into low-rank directions and trains on the associated alignment objectives~\citep{zhong2024panacea}. For a shared policy, preferences can influence both the responses generated during training and the updates computed from them. We study how preference-conditioned adapter mixtures learn under group-relative policy optimization~\citep[GRPO]{shao2024deepseekmath}, examining the effects of varying both the policy generating responses and the objective used to update it.
+
+We introduce \textbf{LambdaMix}, a new online reinforcement learning (RL) method built on top of GRPO. LambdaMix jointly trains low rank adaptation modules~\citep[LoRA]{hu2022lora} under changing preferences. One preference vector selects the adapter mixture that generates responses and weights the normalized rewards used to update the adapters. The adapters therefore learn from responses generated under different adapter mixtures. Mixture conditioning determines the policy collecting responses, while objective weighting determines which sampled responses the update favors. Inspired by the preference conditioning of Pareto low-rank adapters (PaLoRA) for supervised multi-task learning proposed by \citet{dimitriadis2025palora}, we adapt this to online RL for LLM multi-objective alignment. We score each response on every training objective and standardize the rewards separately before combining them~\citep{liu2026gdpo}. At inference, changing the preference selects a different adapter mixture without further optimization (Figure~\ref{fig:method}).
+
+We evaluate \textbf{LambdaMix} on three tasks with two objectives each, using four base LLMs for the first two tasks and the two largest for the third. The first tests whether LLMs provide helpful answers while avoiding harmful content, using prompts from PKU-SafeRLHF~\citep{ji-etal-2025-pku} and learned reward models~\citep{dai2024saferlhf}. For the second, we combine GSM8K math problems~\citep{cobbe2021gsm8k} with instructions on response format, length or word use to test correctness and instruction compliance. For the third, we further test whether LLM rewrites preserve a comment's wording while reducing clues about personal attributes using a synthetic dataset for personal attribute inference~\citep[SynthPAI]{yukhymenko2024synthetic}. On the first two tasks, LambdaMix achieves higher hypervolume than all evaluated conditioned and policy merging baselines. Across all three tasks, changing its preference weight produces a larger difference between the highest and lowest mean score on each objective than with any of the four conditioned baselines, giving users more scope to adjust the balance. Ablations on Qwen3.5-9B with architecture and initialization held fixed show that varying adapter mixtures and objective weights together yields higher hypervolume and wider score ranges than fixing either component. Our contributions: 
+
+\begin{itemize}
+\item \textbf{LambdaMix}, a new method for learning preference-conditioned adapter mixtures with group-relative online RL, that uses one preference vector to coordinate adapter mixing and reward weighting in one training run, supporting policy selection at inference time.
+\item An evaluation of trade-off quality and preference control against conditioning, merging, routing and specialist baselines on three tasks, with up to four models.
+\item Controlled ablations showing that jointly varying adapter mixtures and objective weights improves hypervolume and adjustment range, together with an analysis of the task-dependent effects of reward normalization.
+\end{itemize}
+
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig1_method_overview.pdf}
+  \caption{LambdaMix uses the same preference for adapter mixing and objective weighting during training (a), then changes the preference mixture at inference (b).}
+  \label{fig:method}
+  \vspace{-10pt}
+\end{figure*}
+
+
+\section{Related Work}
+\label{sec:related}
+
+\textbf{Specifying preferences and learning policies conditioned on preferences.} SteerLM conditions supervised training on response attributes~\citep{dong2023steerlm}. Rewards-in-Context~\citep[RiC]{yang2024ric} expresses desired rewards in the prompt, while controllable preference optimization~\citep[CPO]{guo2024cpo} learns to follow requested attribute scores. Unlike these methods specifying scores or attributes, LambdaMix takes relative objective priorities. Directional preference alignment (DPA) also uses preference directions explicitly, to select training responses through rejection sampling~\citep{wang-etal-2024-arithmetic}. Self-guided alignment (SGA) infers preferences from prompts~\citep{wang2026sga}, and UserAlign elicits comparisons to select a response from a candidate pool~\citep{padurean2025useralign}. Unlike these preference acquisition methods, we assume preferences are given and study their use during training. Conditional language policy (CLP) learns policies conditioned through prompts or learned parameter combinations~\citep{wang-etal-2024-conditional}. Pareto alignment via preference adaptation~\citep[Panacea]{zhong2024panacea} inserts preferences into low-rank directions, while MOC~\citep{moc2026} explicitly constrains the correspondence between preferences and rewards. CLP and Panacea use preferences both to condition policies and to weight their training objectives. LambdaMix applies PaLoRA's per-objective adapter mixtures~\citep{dimitriadis2025palora} to online group-relative RL.
+
+\textbf{Policy merging, expert routing, and combining predictions during generation.} Model soups~\citep{wortsman2022modelsoups}, rewarded soups~\citep{rame2024rewarded} and personalized soups~\citep{jang2023personalized} apply policy merging to alignment, while Bone Soups trains policies on reward mixtures before merging~\citep{bonesoups2025}. Task arithmetic combines parameter updates~\citep{ilharco2023task}. Trim, elect sign and merge (TIES) resolves conflicting update signs~\citep{yadav2023ties}, while drop and rescale (DARE) sparsifies updates before merging~\citep{yu2024dare}. Preference Vector constructs updates from opposing preferences~\citep{prefvector2026}, and Pareto Merging learns a compact structure that generates merged models from preferences~\citep{chen2025paretomerging}. HoE routes among existing adapter experts~\citep{li2026hoe}. These approaches reuse separately learned capabilities and allow their combination after training, while LambdaMix learns its adapters jointly under different mixtures. Multi-objective decoding (MOD) combines predictions from specialist policies~\citep{shi2024mod}. PRISM also combines policy predictions, but jointly learns positive branches for individual rewards and a shared negative branch~\citep{liang2026prism}. Reward guided generation with autoregressive reward model (GenARM) guides a frozen policy using separate reward models~\citep{xu2025genarm}. A preference-aware autoregressive reward model (PARM) provides this guidance through one model conditioned on preferences~\citep{lin2025parm}. LambdaMix combines adapter parameters and requires no reward evaluation during generation.
+
+\textbf{Optimizing multiple rewards.} A standard approach to multi-objective RLHF trains a separate policy for each weighted combination of rewards. Multi-objective DPO (MODPO) learns from response comparisons~\citep{zhou2024modpo}. Reward-free alignment for conflicting objectives (RACO) also uses comparisons and corrects conflicting gradients~\citep{chen2026raco}. Both require response comparisons, while LambdaMix scores newly generated responses. Gradient-adaptive policy optimization (GAPO) rescales objective gradients~\citep{li2025gapo}. Multi-marginal preference optimization (MMPO) combines gradient projection and constraints with reward preprocessing~\citep{mao2026mmpo}. Auto-weighted group relative preference optimization (AW-GRPO) adjusts reward weights using learning progress~\citep{ichihara2025awgrpo}. Dynamic Reward Weighting (DynamicRW) optimizes weights during training~\citep{lu2025dynamicweighting}, and Pareto ranking policy optimization (ParetoPO) combines dynamic scalarization with trajectory ranking~\citep{paretopo2026}. Group reward-decoupled normalization policy optimization (GDPO) standardizes each reward within response groups before weighting and normalizes the combined advantages over a batch~\citep{liu2026gdpo}.
+
+
+\section{Method}  
+
+\textbf{Problem Setting.} Let $x$ be a prompt, $y$ a response, and $R_t(x,y)$ one of $T$ potentially competing reward functions to maximize. We learn a policy $\pi_\theta(y\mid x,\lambda)$ conditioned on a preference vector $\lambda$ in the probability simplex $\Delta^{T-1}=\{\lambda\in\mathbb R_{\geq0}^{T}:\sum_t\lambda_t=1\}$. Each entry $\lambda_t$ specifies the weight assigned to objective $t$, while $\lambda$ expresses relative priorities between objectives. Our goal is to learn one policy $\pi_\theta(y\mid x,\lambda)$ such that changing $\lambda$ at inference time yields different operating points that balance the objectives. Here $\theta$ contains the trainable adapters.
+
+\textbf{Preference conditioned adapter mixing.}
+We augment a frozen base LLM with one low-rank adapter per objective, following the preference conditioned parameterization of PaLoRA~\citep{dimitriadis2025palora}. Let $d_{\mathrm{in}}$ and $d_{\mathrm{out}}$ denote a linear layer's input and output dimensions, and $W_0\in\mathbb{R}^{d_{\mathrm{out}}\times d_{\mathrm{in}}}$ its frozen weight matrix. The adapter rank $r$ sets the inner dimension of the matrices $A_t\in\mathbb{R}^{r\times d_{\mathrm{in}}}$ and $B_t\in\mathbb{R}^{d_{\mathrm{out}}\times r}$ for objective $t$.  Their product $B_tA_t$ has rank at most $r$. With scaling constant $\alpha$, the layer weights are
+\begin{equation}
+W(\lambda)=W_0+\frac{\alpha}{r}\sum_{t=1}^{T}\lambda_t B_tA_t.
+\label{eq:palora}
+\end{equation}
+We set $B_t=0$~\citep{hu2022lora} and draw each entry of $A_t$ uniformly from $[-r^{-1/2},r^{-1/2}]$.  The initial policy therefore equals the base LLM for every preference. We optimize only the adapter factors and score each response on all objectives. The combined advantage supplies gradients to adapters with nonzero mixture weights, so each adapter can learn from all objectives.
+
+\textbf{Preference weighted group-relative optimization.}
+For a prompt $x$ and preference vector $\lambda$, we sample a group of $G\geq2$ responses $y_i$ from the mixed policy and compute $R_{t,i}=R_t(x,y_i)$ for every objective. Following GDPO, we standardize each reward across the group before combining the scores with weights $\lambda$. This reduces the influence of raw reward scales. Using the same preference for the mixture and the update trains each sampled policy for its requested preference. We then standardize the weighted sums $U_{\lambda,i}$ over the gathered generation batch $\mathcal B$ to obtain the advantages.
+\begin{align}
+  \widetilde R_{t,i}=\frac{R_{t,i}-\mu_t(x,\lambda)}
+  {\sigma_t(x,\lambda)+\epsilon},
+  \quad U_{\lambda,i}&=\sum_{t=1}^{T}\lambda_t\widetilde R_{t,i},
+  \label{eq:advantage-on}\\
+  \widehat A_{\lambda,i}
+  &=\frac{U_{\lambda,i}-\mu_{\mathcal B}}{\sigma_{\mathcal B}+\epsilon}.  \label{eq:batch-advantage}
+\end{align}
+We compute the mean $\mu_t$ and sample standard deviation $\sigma_t$ from the $G$ rewards for objective $t$. The batch statistics $\mu_{\mathcal B}$ and $\sigma_{\mathcal B}$ are the mean and sample standard deviation of $U_{\lambda,i}$ over $\mathcal B$. Because the scale of each reward depends on the sampled group, the update need not optimize a fixed weighted sum of raw rewards.
+
+We use $\widehat A_{\lambda,i}$ in the clipped GRPO objective. We add a Kullback--Leibler (KL) penalty for divergence from the frozen starting policy. We average the loss over completion tokens. The current policy and the rollout policy use the same $\lambda$ when computing probability ratios. We keep the advantages fixed during the update. For two objectives, we follow PaLoRA's schedule~\citep{dimitriadis2025palora}, starting at $\lambda=(0.5,0.5)$ and increasing the range of preferences during training. This introduces stronger priorities for individual objectives as training progresses.
+
+
+\textbf{Steering at inference time.}
+At inference, a desired preference vector $\lambda$ sets the adapter mixture in Equation~\ref{eq:palora}. We generate from $\pi_\theta(\cdot\mid x,\lambda)$ without computing rewards or updating parameters. We vary $\lambda$ to evaluate the operating points offered by this single trained model.
+
+
+\section{Experimental Setup}
+
+\subsection{Base Models}
+
+We use Qwen3-4B \citep{qwen3technicalreport}, Qwen3.5-9B~\citep{qwen3.5}, Qwen3.6-27B \citep{qwen3.6-27b}, and Olmo 3 7B \citep{Olmo2025Olmo3} as base models for preference tuning. 
+
+\subsection{Baselines}
+We focus on multi-objective alignment with GRPO and adapt the online RL baselines to group-relative training where applicable.
+
+\textbf{Conditioned policies.}
+We compare CLP's prompt-conditioned variant~\citep{wang-etal-2024-conditional}, and implementations of Panacea~\citep{zhong2024panacea}, MOC~\citep{moc2026} and PRISM~\citep{liang2026prism} in our group-relative training setup.
+
+\textbf{Fixed policies.}
+We include Base models without adapters, DynamicRW~\citep{lu2025dynamicweighting}, adapted ParetoPO~\citep{paretopo2026}, and five specialists each for GRPO~\citep{shao2024deepseekmath} and GDPO~\citep{liu2026gdpo}, trained at first-objective weights $w\in\{0,0.25,0.5,0.75,1\}$. Each checkpoint has no preference input at inference, so changing a specialist's preference requires selecting another model.
+
+\textbf{Expert routing.}
+A HoE~\citep{li2026hoe} adaptation, that routes among two adapters and their resulting merged model.
+
+
+\textbf{Policy merging baselines.} We merge endpoint adapters using linear interpolation~\citep{rame2024rewarded}, TIES~\citep{yadav2023ties}, DARE, DARE+TIES~\citep{yu2024dare} and task arithmetic~\citep{ilharco2023task}. On PKU-SafeRLHF, we also compare against Preference Vector~\citep{prefvector2026}, which combines differences between positive and negative DPO updates~\citep{rafailov2023direct}.
+
+
+\subsection{Multi-objective Preference Data}
+
+We evaluate LambdaMix and baselines across three settings that require competing objectives.
+
+\textbf{Helpfulness and harmlessness.} We train LLMs to answer PKU-SafeRLHF prompts~\citep{ji-etal-2025-pku} in a helpful way while avoiding harmful content. Refusals may improve safety at the expense of helpfulness.
+
+\textbf{Correctness and instruction compliance.} We augment GSM8K~\citep{cobbe2021gsm8k} math problems with two constraints on format, length or word use. The first objective measures mathematical correctness against the reference answer, while the second verifies whether the response satisfies the requested constraints. LLMs must solve each problem while following these instructions.
+
+\textbf{Rewrite retention and attribute support rejection.} Models rewrite synthetic comments from SynthPAI~\citep{yukhymenko2024synthetic} while preserving wording and reducing clues about attributes such as age or occupation. Training uses the same ROUGE-1 retention score and Qwen3-8B support evaluator as evaluation. Keeping the original wording may retain these clues.
+
+
+
+\subsection{Evaluation}
+
+For each task and base LLM, all methods share test prompts and scorers. We average scores from one response per test prompt. Following \citet{zhong2024panacea}, we evaluate conditional policies at $\lambda=(w,1-w)$, with $w=0,0.1,\ldots,1$. For helpfulness, we use Beaver-7B unified reward, and for harmlessness we negate the unified cost~\citep{dai2024saferlhf}, on the official test prompts, disjoint from training by exact text. On the test GSM8K problems, XML accuracy requires a correct numerical answer extracted from a complete \texttt{<answer>} block. Instruction compliance is the fraction of the two assigned constraints satisfied by the response. Rewriting uses the stemmed ROUGE-1 F-measure~\citep{lin2004rouge} for wording overlap. For attribute support rejection we score responses with judgments using Qwen3-8B~\citep{qwen3technicalreport}, given candidate attribute values. Test comments are disjoint from training, but authors may overlap.
+
+Hypervolume (HV) measures the area dominated by score pairs relative to a shared reference point~\citep{zitzler1999multiobjective}. A point is non-dominated if no other point from the same method improves one score without lowering the other. We count distinct non-dominated points (ND). Span is the difference between the highest and lowest mean score for an objective across evaluated preferences. Finally, we use Reversals to count decreases in an objective's mean score between adjacent preferences that increase its weight. %We, also report alignment averages as calibrated preference weighted scores~\citep{zhong2024panacea,moc2026}. 
+
+
+\section{Results}
+\label{sec:results}
+\subsection{Helpfulness and harmlessness}
+\label{sec:pku-results}
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/pku_fronts.pdf}
+  \caption{Helpfulness (Beaver reward) and harmlessness (negative cost) on PKU-SafeRLHF. Higher scores are better. Lines connect evaluated preferences.}
+  \label{fig:pku-fronts}
+  \vspace{-15pt}
+\end{figure}
+
+
+Figure~\ref{fig:pku-fronts} presents the helpfulness and harmlessness scores on PKU-SafeRLHF. The axes show mean helpfulness reward and negative cost. Higher values indicate greater assessed helpfulness and lower predicted harmfulness. Lines connect evaluated preference settings for LambdaMix and the compared methods. Unconnected markers represent fixed policies, independently trained specialists and evaluated policy merges. Among the policy merging baselines, we show task arithmetic for readability. All numerical results are in Appendix~\ref{app:compositions}. We examine how changing the preference weight affects these scores and how the resulting trade-offs compare with those of the baselines.
+
+\textbf{LambdaMix scores better on the larger Qwen models.} On Qwen3.5-9B and Qwen3.6-27B, every evaluated baseline setting is dominated by at least one LambdaMix setting. On Qwen3.5-9B, at $\lambda=(0.4,0.6)$ LambdaMix reaches helpfulness $5.501$ and harmlessness $8.622$. The highest helpfulness any baseline reaches is $5.439$, by HoE. The highest harmlessness is $8.488$, by prompt conditioning. At $\lambda=(0.5,0.5)$, LambdaMix reaches $5.586$ and $8.487$, against $5.380$ and $8.164$ for prompt conditioning. These settings improve helpfulness and harmlessness together.
+
+\textbf{A wider range of balances, with alternatives that remain available.} The preference weight changes LambdaMix's scores more than it changes those of any conditioned baseline. On Qwen3.5-9B, LambdaMix spans $1.931$ in helpfulness and $1.982$ in harmlessness, against $0.300$ and $0.379$ for prompt conditioning, the most responsive conditioned baseline. On Qwen3-4B it spans $0.787$ and $0.319$, against $0.577$ and $0.296$ for MOC. Within its own sweep, LambdaMix leaves ten of eleven settings non-dominated on both Qwen3.5-9B and Qwen3.6-27B, while prompt conditioning leaves five and four, respectively. The wider range therefore includes several choices that favor different objectives. LambdaMix changes the adapter weights directly, whereas a preference prompt requires the model to learn how textual priorities should change its response.
+
+\textbf{Preference weight changes move scores in the requested direction.} Increasing an objective's weight generally raises its mean score with LambdaMix. On Qwen3.5-9B, we observe one helpfulness reversal and no harmlessness reversals. Prompt conditioning records three helpfulness and two harmlessness reversals, the fewest among the conditioned baselines on this model. Fewer reversals make it easier to anticipate how adjusting the weight changes the balance between the two scores.
+
+\textbf{A larger covered area on every Qwen model.} LambdaMix has the highest HV on all three Qwen models. HV reaches $0.8735$ on Qwen3.5-9B, against $0.7760$ for prompt conditioning, the strongest baseline by HV. HoE has higher HV on Olmo 3 7B. HV measures the area the evaluated settings dominate, so LambdaMix offers a better set of policies to choose from.
+
+\textbf{Using fewer training runs and adapters.} LambdaMix provides preference control with fewer training runs and adapters than either specialist set. Each GRPO or GDPO specialist set uses five runs and five adapters, and HoE trains an expert at each objective and then a router over them, using three training stages. At $\lambda=(0.5,0.5)$, LambdaMix improves both scores over all ten specialists. On Qwen3.5-9B, it scores $5.586$ and $8.487$, against $5.040$ and $7.747$ for the GDPO specialist, the stronger specialist set. The same two adapters support different preferences, while this setting improves both scores over the evaluated specialists.
+
+\textbf{Improving coverage with GDPO style normalization.} LambdaMix has higher HV with GDPO style normalization on all four LLMs. On Qwen3.5-9B, HV reaches $0.8735$ with per-objective standardization and $0.8481$ without it. Both versions retain batch normalization. Standardizing each reward before weighting puts the objectives on comparable scales, reducing the influence of raw reward variation on the update.
+
+\subsection{Correctness and instruction compliance}
+\label{sec:exact-results}
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig1_flagship_fronts.pdf}
+  \caption{XML accuracy and instruction compliance on GSM8K with response constraints. Higher scores are better. Lines connect evaluated preferences.}
+  \label{fig:exact}
+  \vspace{-15pt}
+\end{figure}
+
+Figure~\ref{fig:exact} presents XML accuracy and instruction compliance on GSM8K with response constraints. For readability, we show only linear interpolation on Olmo 3 7B and Qwen3.5-9B, DARE on Qwen3-4B and DARE+TIES on Qwen3.6-27B. Full results are in Appendix~\ref{app:compositions}.
+
+\textbf{Extending the gains to verifiable rewards.} LambdaMix exceeds the strongest baseline by HV on each Qwen model. On Qwen3.5-9B, HV reaches $0.8099$ against $0.6947$ for GRPO. On Qwen3.6-27B, it reaches $0.8895$ against $0.8299$ for GDPO. Olmo 3 7B remains the exception, with LambdaMix at $0.5291$ and HoE at $0.5581$. LambdaMix also has higher HV, wider spans and more non-dominated points than all four conditioned baselines. The gains therefore extend to objectives checked directly from the response, alongside the learned reward scores used on PKU-SafeRLHF.
+
+\textbf{Improving coverage without the widest range.} A wider accuracy range does not necessarily produce better trade-offs. HoE has the widest accuracy span on Qwen3.6-27B at $0.767$, compared with $0.483$ for LambdaMix. Yet LambdaMix reaches HV $0.8895$ against HoE's $0.8233$. HoE's additional range extends toward lower accuracy. LambdaMix instead retains more accuracy at high compliance, making the quality of the available settings more important than their spread.
+
+\textbf{Ordering the trade-offs by preference weight.} LambdaMix produces fully ordered sweeps on Olmo 3 7B and Qwen3.6-27B. All eleven settings are non-dominated within each sweep, with no reversals on either objective. On Qwen3.6-27B, increasing the accuracy weight raises XML accuracy from $0.470$ to $0.953$ while compliance falls from $0.978$ to $0.745$. Each setting offers a distinct compromise, and the weight moves mean scores consistently toward the preferred objective.
+
+\textbf{Reversing the normalization gain on two models.} GDPO style normalization improves coverage on only two models. HV is higher with normalization on Olmo 3 7B ($0.5291$ versus $0.5136$) and Qwen3.5-9B ($0.8099$ versus $0.7587$). It is lower on Qwen3-4B ($0.6558$ versus $0.7372$) and Qwen3.6-27B ($0.8895$ versus $0.8978$). Both rewards already lie between $0$ and $1$, but their within group variances can differ. Standardization gives greater relative weight to deviations on objectives with small, nonzero within group variation. This may help when raw reward scales differ, but can also shift the balance between already bounded rewards, offering an explanation for the lower HV.
+
+
+
+\subsection{Rewrite retention and attribute support rejection}
+\label{sec:synthpai-results}
+
+We extend the comparison to a third task on Qwen3.5-9B and Qwen3.6-27B, the two largest models in our study. Figure~\ref{fig:synthpai} presents wording retention and attribute support rejection on SynthPAI. Higher ROUGE-1 indicates greater retention of the original wording. Higher rejection means that the evaluator less often finds support for the supplied attribute values in the rewrite. We show linear interpolation, as a policy merging baseline. Full results are in Appendix~\ref{app:compositions}.
+
+\textbf{Improving coverage without GDPO style normalization.} LambdaMix without GDPO style normalization achieves the highest HV on both models. On Qwen3.5-9B, it reaches $0.4378$ against $0.4293$ for HoE, the strongest baseline. On Qwen3.6-27B, it reaches $0.4552$ against $0.4407$ for GRPO specialists. These results show better overall coverage, although HoE and linear interpolation remain competitive at some balances on Qwen3.5-9B.
+
+
+
+\textbf{Improving retention and rejection together.} On both models, every evaluated setting from the four conditioned baselines is dominated by at least one setting of LambdaMix without normalization. Improvements in both scores also occur against specialists. On Qwen3.6-27B, one LambdaMix setting without normalization reaches retention $0.9446$ and rejection $0.4595$. The GRPO specialist with the highest rejection reaches $0.9279$ and $0.4505$, respectively. This setting preserves more wording while the evaluator rejects attribute support more often.
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/synthpai_fronts.pdf}
+  \caption{Rewrite retention and attribute rejection.} 
+  \label{fig:synthpai}
+  \vspace{-15pt}
+\end{wrapfigure}
+
+
+\textbf{Offering a wider choice of trade-offs.} Without normalization, LambdaMix spans wider retention and rejection ranges than all four conditioned baselines on both models. On Qwen3.5-9B, the spans are $0.0552$ and $0.1171$ against $0.0040$ and $0.0180$ for MOC, which has the widest ranges among the conditioned baselines. Six of the eleven LambdaMix settings are non-dominated within its sweep. Prompt conditioning and Panacea provide two. The wider range includes several choices for balancing wording retention and attribute support rejection.
+
+\textbf{Trading coverage for more consistent control.} GDPO style normalization lowers HV to $0.3858$ on Qwen3.5-9B and $0.4464$ on Qwen3.6-27B. It removes three rejection reversals on Qwen3.6-27B and increases the number of non-dominated settings to seven on Qwen3.5-9B. The normalized Qwen3.6-27B model also reaches a plateau at high retention. Five preferences give the same score pair, while all eleven pairs are distinct without normalization. Near the retention ceiling, different mixtures may select the same greedy rewrites, leaving the aggregate scores unchanged despite changes in the preference. Across the three tasks, normalization improves HV on all four PKU-SafeRLHF models and two GSM8K models, but neither rewriting model.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Analysis}
+
+\subsection{Adapter mixing and objective weighting}
+
+\input{tables/lambdamix_q9_mechanism}
+
+Table~\ref{tab:q9-mechanism} shows component ablations on the three tasks with Qwen3.5-9B. We keep architecture, initialization, training data, optimization, and training budgets fixed. \textit{Mixture-only} varies the adapter mixture but fixes objective weights at $(0.5,0.5)$. \textit{Weight-only} varies objective weights but generates responses and updates adapters using the fixed mixture $(0.5,0.5)$. On PKU-SafeRLHF, we also include \textit{Both fixed}, which keeps both at this value. Every variant is evaluated at the same eleven mixtures, including those trained with a fixed mixture. Fixing either component leaves little adjustment range. On PKU-SafeRLHF, LambdaMix spans $1.931$ in helpfulness and $1.982$ in harmlessness against $0.1382$ and $0.1745$ for Weight-only, the control with the widest spans. Both fixed has higher HV than either single component control despite its narrow spans. LambdaMix reaches $0.8735$ against $0.8203$ for Both fixed. The controls obtain reasonable coverage but respond weakly to preferences. Varying both components provides greater adjustment alongside higher coverage. LambdaMix has higher HV and wider spans than every control on all three tasks. Mixture-only trains different mixtures toward one balance, which may encourage similar behavior across preferences. Weight-only concentrates training at one mixture despite changing objective weights. LambdaMix trains each sampled mixture toward its corresponding objective weights. Its adapters therefore receive feedback on the responses they produce together, which may help explain the stronger trade-offs relative to combining independently trained adapters.
+
+\subsection{Qualitative example}
+
+\input{tables/example}
+
+Table~\ref{tab:steer-example} shows responses from the Qwen3.5-9B LambdaMix model to a prompt about marketing manipulation techniques. At $\lambda=(0,1)$, it declines and redirects to ethical marketing. At $\lambda=(0.5,0.5)$, it explains scarcity and warns against fake countdown timers. At $\lambda=(1,0)$, it describes price anchoring while retaining an ethical caveat. Changing the preference alters how the same adapters address the request. Helpfulness increases across these settings from $4.7$ to $5.7$, and then to $8.0$, but harmlessness falls from $10.6$ to $5.8$ before rising to $7.8$.
+
+\subsection{Training budget}
+
+\input{tables/training_budget_capacity}
+
+Table~\ref{tab:budget} counts the training and storage each method needs to offer a range of preferences. LambdaMix needs one run and $32{,}000$ completions to support changing preferences. This matches the completion budget of prompt conditioning, which LambdaMix outperforms for both helpfulness--harmlessness and correctness--compliance tasks. Endpoint merging needs two specialist runs, and HoE adds a router in a third training stage. Each GRPO or GDPO specialist set needs five runs and $160{,}000$ completions to offer five fixed preferences. LambdaMix stores two adapters, but serves as many preferences as a user requests. On Qwen3.5-9B, this adds $13.2$M parameters to the base model, against $33.1$M for a specialist set. Prompt conditioning stores $6.6$M parameters. The comparison counts completions and stored parameters rather than elapsed training time. For a fixed preference, the mixed adapters of LambdaMix can be merged into the base weights before generation. 
+
+
+
+\section{Conclusion}
+We introduced LambdaMix, a method for learning preference conditioned adapter mixtures with group-relative online RL. One preference vector selects the adapter mixture and weights the normalized rewards used during training. A single training run supports changing preferences at inference without further optimization. On helpfulness–harmlessness and correctness–instruction compliance, LambdaMix achieves higher hypervolume than the evaluated conditioned and policy-merging baselines across four models. Across tasks, it also provides greater scope to adjust the balance between objectives than conditioned policies. Our ablations show that varying both adapter mixtures and objective weights improves trade-off quality and preference control compared with fixing either component. GDPO-style reward normalization improves helpfulness–harmlessness coverage on all four models, but has task- and model-dependent effects elsewhere. Future work will extend LambdaMix beyond two objectives and examine whether the mixing and weighting preferences need to match. These results support jointly trained adapter mixtures as a way to learn competitive trade-offs and useful preference control within one model.
+
+
+\clearpage
+\subsection*{AI use statement}
+
+In this work we used generative AI tools to implement methods in code. We have not used generative AI tools for the rest of the required disclosure tasks. Additionally, we used generative AI tools to create or edit software code, and edit the research paper to improve readability. We have reviewed all AI-assisted work. Code generated by AI agents was verified by the authors and tested for correctness. We take responsibility for the final content of this work, including text, claims or artifacts produced with the aid of generative AI.
+
+\subsection*{Ethics statement}
+
+In this work we study how language models respond to different priorities among competing objectives. This flexibility also allows users to reduce the weight assigned to harmlessness, which may produce more harmful responses. Before deployment, the available preference settings should be tested for harmful outputs and restricted where needed. Our experiments use public datasets. The rewriting task uses synthetic comments and measures whether an evaluator finds support for supplied personal attributes in the rewritten text. These scores do not establish protection against attribute inference. Learned evaluators may also reproduce biases from their training data. We recommend safety and privacy evaluations before applying these models to real users or personal data.
+
+\section*{Acknowledgments}
+
+CK is supported by the Centre for Doctoral Training in Speech and Language Technologies (SLT) and their Applications, funded by UK Research and Innovation under grant EP/S023062/1. NA is partly supported by the EPSRC [grant number EP/Y009800/1]. We acknowledge (1) IT Services at the University of Sheffield for the provision of high-performance computing services; (2) the EuroHPC Joint Undertaking for awarding this project access to the EuroHPC supercomputer LEONARDO, hosted by CINECA (Italy) and the LEONARDO consortium through a EuroHPC Development Access call; (3) the EuroHPC Joint Undertaking for awarding this project access to the EuroHPC supercomputer LUMI, hosted by CSC (Finland) and the LUMI consortium through a EuroHPC Development Access call; and (4) the use of resources provided by the Isambard-AI National AI Research Resource (AIRR). Isambard-AI is operated by the University of Bristol and is funded by the UK Government's Department for Business, Innovation, Science and Trade (DBIST) via UK Research and Innovation; and the Science and Technology Facilities Council [ST/AIRR/I-A-I/1023].
+
+
+\bibliography{iclr2027_conference}
+\bibliographystyle{iclr2027_conference}
+
+\clearpage
+\appendix
+\section{Implementation Details}
+\label{app:repro}
+
+\subsection{Training and Optimization}
+\label{app:detail-training-setup}
+
+All experiments use LoRA and a shared optimization setup. Table~\ref{tab:impl-defaults} gives default hyperparameters. We use AdamW with $(\beta_1,\beta_2)=(0.9,0.999)$, $\epsilon_{\rm Adam}=10^{-8}$, zero weight decay and gradient clipping at 1. We apply LoRA to \texttt{q\_proj} and \texttt{v\_proj}, and to \texttt{in\_proj\_qkv}, \texttt{in\_proj\_z} and \texttt{out\_proj} in \mbox{Qwen3.5-9B} and \mbox{Qwen3.6-27B}.
+
+
+For LambdaMix, one preference vector applies to all responses contributing to an optimizer update. We generate 8 responses per prompt and accumulate gradients from 64 responses before updating the adapters. Each rollout contributes to one update. Per-objective normalization uses the 8 responses to the same prompt.
+
+We use PaLoRA's annealing rule~\citep{dimitriadis2025palora} with 4 fixed preference vectors. These are $(1,0)$, $(0,1)$, $(0.5,0.5)$ and one draw from $\operatorname{Dirichlet}(1,1)$ with seed 0. We cycle through these vectors within each pass through the training data and advance the starting vector by one position on the next pass. If $a_s$ is the vector selected at update $s$, the training preference is
+\begin{equation}
+\lambda_{s,t}=\frac{(a_{s,t}+10^{-8})^{s/(0.3S)}}{\sum_{u=1}^{2}(a_{s,u}+10^{-8})^{s/(0.3S)}},
+\qquad s=0,\ldots,S-1,
+\end{equation}
+where $S=500$. Training starts at $\lambda=(0.5,0.5)$ and progressively includes preferences closer to the endpoints.
+
+
+
+\input{tables/training_defaults}
+
+\subsection{Baseline configurations}
+\label{app:baseline-configurations}
+
+We freeze the base model throughout. Unless stated otherwise, each policy uses one $r=8$ adapter. This includes each GRPO and GDPO specialist. LambdaMix uses two $r=8$ adapters. 
+
+Prompt conditioned CLP and Panacea implementations use GDPO advantages. Panacea has eight shared and two preference directions with orthogonality coefficient $0.1$. Its factors start from $\mathcal{N}(0,0.02^2)$ with zero shared singular values and preference scale. MOC uses group-relative advantages in place of critic estimates and a reward control discrepancy threshold of $0.05$. PRISM shares one adapter across three learned prefixes of length eight. It uses group normalized branch rewards with sigmoid advantage shaping and negative branch weight $0.1$. DynamicRW uses gradient based weights with regularization $10^{-5}$ and applies updated weights at the next optimizer step. ParetoPO starts with group centered advantages before switching to Pareto ranking advantages.
+
+HoE uses top 2 routing over 2 frozen GDPO adapters and their DARE and PCB midpoint. PCB denotes parameter competition balancing. We train the routers with group relative advantages. The merging baselines use the GDPO adapters at $w=0$ and $w=1$. Task arithmetic evaluates all 25 pairs $(c_1,c_2)\in\{0,0.25,0.5,0.75,1\}^{2}$, with the two coefficients varying independently. The other four endpoint merging methods use the eleven preference settings. TIES retains a fraction $0.2$ of entries and DARE drops a fraction $0.9$. Preference Vector uses four DPO adapters to obtain positive and negative directions for the two objectives.
+
+
+\subsection{Datasets}
+\label{app:datasets}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Dataset sizes for online training and evaluation. Counts are prompts for PKU-SafeRLHF, problems for GSM8K and comments for SynthPAI.}
+\label{tab:dataset-details}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+Task & Dataset Name & Training Set & Test Set \\
+\midrule
+Helpfulness and harmlessness & PKU-SafeRLHF & $38{,}641$ & $1{,}354$ \\
+Correctness and instruction compliance & GSM8K & $7{,}473$ & $300$ \\
+Rewrite retention and attribute support rejection & SynthPAI & $728$ & $111$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{tables/exact_constraints}
+
+Table~\ref{tab:dataset-details} gives the datasets details. 
+
+\textbf{PKU-SafeRLHF.} Online training uses unique prompts from the official training split. We remove test prompts that exactly match any training prompt.
+
+\textbf{GSM8K.} We use the official training split and a subset of the official test split. Constraint assignment is fixed across methods and training runs. For each problem, we sample two distinct constraints from Table~\ref{tab:exact-constraint-pool} and append their instructions to the question. Each problem keeps the same constraints across methods and training runs.
+
+\textbf{SynthPAI.} We take eligible comments in release order and assign them to consecutive training and test splits. 
+
+\subsection{Generation and Evaluation}
+\label{app:detail-evaluation}
+
+We evaluate the final checkpoint at update 500 for each online training run. We generate one response per prompt and preference setting using greedy decoding. We use non-thinking mode for the Qwen models. We limit responses to $1{,}024$ generated tokens on PKU-SafeRLHF and GSM8K and $512$ on SynthPAI.
+
+\textbf{PKU-SafeRLHF.} Both Beaver models score the prompt and response. Helpfulness uses the reward model's output and harmlessness negates the cost model's output.
+
+\textbf{GSM8K.} XML accuracy checks the answer inside the last complete \texttt{<answer>} block against the reference. Compliance averages the two constraint checks over the full response. The JSON check accepts any parseable JSON value.
+
+\textbf{SynthPAI.} We extract the text inside \texttt{<anonymized>} tags. Retention uses stemmed ROUGE-1 F-measure against the original comment. The Qwen3-8B evaluator receives the rewrite, target attribute and candidate values. Rejection scores one for a parsed \texttt{NO} verdict and zero otherwise. 
+
+\textbf{Front metrics.} HV uses reference point $(0,0)$ on all tasks. We apply the affine transformation $g(s)=(s+9)/18$ to both PKU-SafeRLHF scores and use $g(s)=s$ on GSM8K and SynthPAI. HV includes only area above the reference point. Spans and reversals use raw mean scores. A reversal requires a decrease greater than $10^{-6}$ between adjacent settings as the corresponding objective's weight increases. ND counts distinct non-dominated score pairs within each method. Alignment averages $\lambda^\top g(\mathbf{J}(\lambda))$ over evaluated preferences, where $\mathbf{J}(\lambda)$ contains the mean objective scores and $g$ is applied to each objective.
+
+\subsection{Software}
+\label{app:software}
+
+We use PyTorch~\citep{paszke2019pytorch}, Transformers~\citep{wolf2019huggingface}, TRL~\citep{vonwerra2022trl} and PEFT~\citep{peft} for training, Accelerate~\citep{accelerate} for distributed execution, Datasets~\citep{lhoest-etal-2021-datasets} for data loading, and vLLM~\citep{kwon2023efficient} for generation. For evaluation, we use Safe-RLHF~\citep{dai2024saferlhf} and Google Research's ROUGE implementation~\citep{lin2004rouge}.
+
+
+\section{Licences}
+\label{app:licenses}
+
+We use publicly available models and datasets under the licences listed here. 
+Qwen models use Apache 2.0.\footnote{\url{https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507}}\footnote{\url{https://huggingface.co/Qwen/Qwen3.5-9B}}\footnote{\url{https://huggingface.co/Qwen/Qwen3.6-27B}}\footnote{\url{https://huggingface.co/Qwen/Qwen3-8B}} Olmo 3 7B also uses Apache 2.0, with Ai2 responsible-use guidance.\footnote{\url{https://huggingface.co/allenai/Olmo-3-1025-7B}} The Beaver reward and cost models are restricted to non-commercial use.\footnote{\url{https://huggingface.co/PKU-Alignment/beaver-7b-unified-reward}}\footnote{\url{https://huggingface.co/PKU-Alignment/beaver-7b-unified-cost}}
+GSM8K uses the MIT licence.\footnote{\url{https://huggingface.co/datasets/openai/gsm8k}} PKU-SafeRLHF uses CC BY-NC 4.0.\footnote{\url{https://huggingface.co/datasets/PKU-Alignment/PKU-SafeRLHF}} SynthPAI uses CC BY-NC-SA 4.0.\footnote{\url{https://huggingface.co/datasets/RobinSta/SynthPAI}}
+
+\section{Prompts}
+\label{app:prompts}
+
+Tables~\ref{lst:prompt-pku},\ref{lst:prompt-exact}, and \ref{lst:prompt-synthpai} show the prompts for each task and the additional instructions used by the prompt conditioned baseline. Table~\ref{lst:support-evaluator} gives the prompt used by the SynthPAI evaluator.
+
+\input{tables/policy_prompts}
+\input{tables/evaluator_prompts}
+
+
+\section{Full Numerical Results}
+\label{app:confidence-intervals}
+\label{app:compositions}
+
+
+Tables~\ref{tab:full-pku-o7}--\ref{tab:full-pku-q27} report the PKU-SafeRLHF comparisons. Tables~\ref{tab:full-gsm8k-o7}--\ref{tab:full-gsm8k-q27} report the GSM8K comparisons. Tables~\ref{tab:full-synthpai-q9} and~\ref{tab:full-synthpai-q27} report the SynthPAI comparisons.
+
+\input{tables/full_pku_results}
+\input{tables/full_gsm8k_results}
+\input{tables/full_synthpai_results}
+
+
+
+\end{document}

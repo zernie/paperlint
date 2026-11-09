@@ -1,0 +1,16 @@
+\begin{table}[ht]
+    \caption{Ablation study on TT-MBRL train/test sampling ratio.}
+    \centering
+    \setlength{\tabcolsep}{4.5pt}
+    \hfill \break
+    \begin{tabular}{lcccccc}
+    \toprule
+    \textbf{Method} & \textbf{w/o TT-MBRL} & \textbf{100/0 (train-only)} & \textbf{75/25} & \textbf{50/50} & \textbf{25/75} & \textbf{0/100 (test-only)} \\
+    \midrule
+    DreamerV3 & $\hphantom{0}46.2$ & $\hphantom{0}47.0$ & $160.9$ & $\mathbf{185.0}$ & $179.4$ & $117.6$ \\
+    TWISTER & $\hphantom{0}72.0$ & $\hphantom{0}69.2$ & $\mathbf{244.5}$ & $240.1$ & $235.2$ & $167.6$ \\
+    R2I & $171.6$ & $171.7$ & $242.5$ & $244.3$ & $\mathbf{249.7}$ & $218.8$ \\
+    \bottomrule
+    \end{tabular}
+    \label{table:study_train_test_ratio}
+\end{table}

@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "abs.tex",
+      "role": "body"
+    },
+    {
+      "path": "content.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/initial_vs_calibrated.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "algo/framework.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/costmatrix.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/ita_ecbs_comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/result_main.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/details.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/convergence.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/scalability.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/alpha.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/sigma_parallel.tex",
+      "role": "body"
+    },
+    {
+      "path": "ack.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/shared_ita_ecbs.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/random_scenario.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/sigma_annealing.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/final_cost.tex",
+      "role": "body"
+    },
+    {
+      "path": "fig/loss_vs_time.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/eq-dist.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/hotspot.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "da64353c546d29e1c434e76752b2ab3d84ab1468ec7b324bab7c99d94cead317",
+    "abs.tex": "3cfa03ce769c52ed34153cc34611dc0fdb666dd80b879380a7ad24264711238c",
+    "content.tex": "4de641fe3f7d232d5fecc0fc3a24a2ebb384d9820af3508ff6979caba98685d4",
+    "fig/initial_vs_calibrated.tex": "ce6cd71e6a28a959ee7e794d34b1474cca05dfa1684482bc3805bd53ba842e11",
+    "fig/overview.tex": "846bfb59248687be5b349401ec688c453099344e2958735125bf73f9e6678924",
+    "algo/framework.tex": "dc169980e5f7fd4ffa26d1440fb4b0f1a0743cb6154a3707e6ba46e640fe3391",
+    "fig/costmatrix.tex": "54feca7f6f2860594632f637a74e19918ca3c6b997e99056d69f906e5bbd60b4",
+    "fig/ita_ecbs_comparison.tex": "fe643e77bf0482915d67f3a256025581e9e3653555ca4ec389e2349c8cf83d0b",
+    "fig/result_main.tex": "e05a9a37a476b3f857cdb76d29b16aba748aa493e67482058f3867d54afe95d7",
+    "table/details.tex": "43f5951f5affd87906cb33753d10bf0e1db822206a0b2bee2afcc5708322b606",
+    "fig/convergence.tex": "abb134c84233b33d67469e2b5951528935b823815bb1e86b759c8e93dc578a54",
+    "fig/scalability.tex": "73228f1db5c45789d41893b88f99670cef855886ad3253bc9fb9dd861321e4a3",
+    "fig/alpha.tex": "d1db287ce9657dcf77aef804e218f41a8e30b2a7fd9bc1a79ef72dc31e849c20",
+    "fig/sigma_parallel.tex": "73786509cb5bb1a6ef85a62c72d70a046930b99c3ffb54319b146002f7f9f6bf",
+    "ack.tex": "a6c8beb4663e39b2f05d4fef0f0590161c1ab8844e8474d50cc5200667f06433",
+    "appendix.tex": "8049031b6a585fc423cd708fd7928e6bcf2cde483dade76dd2fd18b10d278700",
+    "fig/shared_ita_ecbs.tex": "d15de9379ae005a709822a3ae590b9fd4bd579e64a61479af7572c05d8249581",
+    "fig/random_scenario.tex": "714250b2db5f11c255b077459840c515606caa162591749aa031bb9088b6030d",
+    "fig/sigma_annealing.tex": "c0489bae00e690d4bf9a3131d19d41fe0ad1bcf1f35c855d23b406f895c9ad18",
+    "fig/final_cost.tex": "e1b6ecaae83d39040fdd3557eb6c4200a051361c9621f41c2f8df539c0b75ed6",
+    "fig/loss_vs_time.tex": "37983b030d44e2ccd48c28c7823afd4636bf2d2879404e374cfb7ad6441fec7e",
+    "table/eq-dist.tex": "1f0331128b1f6a0780a1d37c1b5e2c1b89d3d477094ceca38423e4d3404ac0df",
+    "table/hotspot.tex": "98add92fbc159fb6efac5d218c4b31f5249856513158c725289a0f58f3a2e23b"
+  }
+}

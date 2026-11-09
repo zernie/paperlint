@@ -1,0 +1,83 @@
+\section{\perfrace{}}
+\label{sec:perfrace}
+
+\perfrace{} benchmarks real-world software performance optimization with three design principles: (1) \emph{Live}: projects are continually sourced from public GitHub repositories; (2) \emph{Open-ended}: tasks use project workloads without reference optimizations or known target patches; and (3) \emph{Long horizon}: agents iteratively optimize code and choose when to submit for feedback within a fixed budget.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Task Formulation}
+\label{sec:perfrace-formulation}
+
+Each \perfrace{} task provides the agent with an editable project workspace,
+a fixed workload that the agent can run locally, and access to an external Judge.
+For official evaluation, the Judge uses a separate copy of this workload
+and additional held-out correctness cases.
+
+During the evaluation loop, the agent iteratively modifies the project and submits changes to the Judge for feedback. Let \(t_i\) denote the evaluation start time of submission \(i\) and \(s_i\) its score, with \(s_i=0\) for incorrect submissions. Scores are attributed retrospectively to evaluation start times; verification time also counts toward the task budget. We include the unmodified project as a baseline submission with \(t_0=0\) and \(s_0=1\). We define the best-so-far correct speedup as \(S(t)=\max_{i:t_i\leq t}s_i\), which the agent aims to maximize within a fixed task budget \(B\).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/perfrace-overview.pdf}
+  \caption{Overview of \perfrace{}.
+  (a) Construction discovers projects from GitHub coding-agent activity, applies
+  a two-stage Filter comprising a deterministic precheck and source-based
+  assessment, and uses Agent--Human Pair Verification to produce a \perfrace{}
+  task.
+  (b) Task format separates the agent workspace from hidden evaluation files.
+  (c) The evaluation loop repeatedly submits workspace snapshots to the
+  Judge and tracks best-so-far correct speedup.}
+  \label{fig:perfrace-overview}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Construction}
+\label{sec:perfrace-construction}
+
+We construct \perfrace{} by identifying real projects with optimization potential
+and building reliable tasks around realistic workloads (Figure~\ref{fig:perfrace-overview}(a)).
+Each \perfrace{} task adopts the Harbor Task Format~\citep{merrill2026terminalbench}, as illustrated in Figure~\ref{fig:perfrace-overview}(b).
+
+\textbf{Discovery.} To identify less-explored optimization opportunities beyond mature, heavily maintained repositories, we search GitHub coding-agent activity for candidate projects. Specifically, we identified 103,475 candidate projects from public GitHub pull requests and branch pushes made by known coding agents between May and August 2026 (Appendix~\ref{app:perfrace-curation-statistics}).
+
+\textbf{Filter.} We filter candidate projects in two stages. First, deterministic prechecks verify repository and source-revision accessibility, license redistributability, and repository size and popularity, retaining 7,257 candidates. We then use GPT-5.6-Luna to assess each candidate's setup process, evaluable workload, runtime feasibility, and optimization potential from its source code. Of these candidates, 239 pass this assessment and proceed to Pair Verification (Appendix~\ref{app:perfrace-curation-statistics}).
+
+\textbf{Pair Verification.}
+We use agent--human Pair Verification to construct runnable tasks and assess their quality against three criteria (Appendix~\ref{app:perfrace-pair-verification}):
+\begin{itemize}
+  \item \textbf{Realism.} The workload and metric represent meaningful project use.
+  \item \textbf{Reliability.} Repeated equivalent runs support the same correctness and
+  performance conclusions.
+  \item \textbf{Integrity.} The score reflects genuine task completion rather than an
+  invalid or shortcut solution.
+\end{itemize}
+
+Specifically, we first let the agent derive workload inputs and scale from real project use and propose correctness checks, measurement boundaries, and performance metrics for human review.
+Second, the agent configures warmup and runs repeated tests to detect flakiness and distinguish genuine speedups from noise; the reviewer uses these results to approve or revise the measurement protocol.
+Finally, the agent conducts red-team tests against reward hacking using invalid, incomplete, hard-coded, and work-skipping solutions; the reviewer requests verifier fixes as needed before approving the task for packaging and release.
+Eventually, we curated 100 tasks, each requiring an average of 9.1 hours of
+curation, 12 agent--human interactions, and \$11.35 in agent cost; detailed
+statistics are provided in Appendix~\ref{app:perfrace-curation-statistics}.
+
+\subsection{Benchmark Composition}
+\label{sec:perfrace-composition}
+
+The resulting benchmark contains 100 tasks across seven domains (Figure~\ref{fig:perfrace-composition}): \emph{developer tools} (30 tasks) compiles, builds and validates software; \emph{data systems} (25 tasks) ingests, indexes and queries data; \emph{scientific computing} (15 tasks) runs simulations and numerical solvers; \emph{media processing} (9 tasks) renders graphics and audio; \emph{geometry} (8 tasks) processes maps and 3D models; \emph{machine learning} (7 tasks) trains models and runs inference; and \emph{security} (6 tasks) encrypts data and analyzes attack logs.
+Each task pairs a real project with a fixed workload; for example, one task optimizes CCC while it compiles SQLite. Appendix~\ref{app:perfrace-characterization} provides a detailed characterization of the tasks.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/perfrace-composition.pdf}
+  \caption{Composition of \perfrace{}: seven workload domains (inner ring), 100 tasks (outer ring), and representative project--workload pairs (right).}
+  \label{fig:perfrace-composition}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Evaluation}
+\label{sec:perfrace-evaluation}
+
+In the evaluation loop, the agent chooses when to submit snapshots for correctness and performance feedback from the Judge (Figure~\ref{fig:perfrace-overview}(c)). The score \(s_i\) is the speedup over the unmodified project for correct submissions and zero otherwise. Runs without a correctness-preserving improvement receive a score of \(1\times\). During the final five minutes, the agent is prompted to end optimization and leave the project in a coherent state for the Judge's final evaluation.
+
+Prior studies show that agents can inflate scores by tampering with evaluation code or accessing reference outputs~\citep{wang2026benchjack,metr2025rewardhacking}. We therefore use \emph{shadow verification}, evaluating project snapshots in separate containers while keeping verifier code and held-out test data out of the agent's workspace.
+Time spent in shadow verification counts toward \(B\).
+Appendix~\ref{app:perfrace-evaluation} provides further details on shadow verification.

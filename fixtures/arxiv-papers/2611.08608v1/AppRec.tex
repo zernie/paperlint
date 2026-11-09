@@ -1,0 +1,410 @@
+
+\section{System Architecture and Algorithms}
+\vspace{-2mm}
+
+\noindent This appendix provides a deep dive into the system’s architectural components and mathematical logic.
+
+
+
+\subsection{Biclustering Algorithms}
+
+\label{app:biclustering}
+
+
+ \noindent Section~\ref{subsec:OverView} discusses AutoYara and its use of Biclustering, in this appendix we expand its definition. Biclustering is the process in which rows and columns are clustered simultaneously in a matrix. A single bicluster consists of a subset of rows that correlate with a subset of columns or vice versa. In the context of YARA rule generation, we have a list of files $S$ and n-gram candidates (signatures) $F$ within a discrete binary matrix $A_{S \times F}$, where $A_{i,j} = 0$ indicates that sample $i$ does not have n-gram $j$ and $A_{i,j} = 1$ indicates that it does. Biclustering this matrix produces clusters that tell us which n-grams are strongly associated with which types of files. This allows us to process the bicluster and construct it into a conditional query for matching: \textit{if a new sample X has at least 3 of the signatures F1, F3, F10, F58, then it belongs in this bicluster and therefore this malware family.}
+
+ AutoYara performs Biclustering via the SpectralCoClustering algorithm~\cite{dhillon2001_spectralcoclustering}. By computing the normalized graph Laplacian and eigenvectors of the similarity matrix (in our case, matrix $A_{S \times F}$), it can map both features and samples into a shared latent space using the eigenvectors computed as the points in space (denoted by the matrix $Z$). This reduces the dimensionality of a dataset, preserves its distance similarity, and treats both samples and features as data points before running a clustering algorithm on it, allowing simultaneous clustering of features and samples. While it has costs in memory and computation time due to the need for the graph Laplacian and eigenvectors, it can be done in parallel. SpectralCoClustering will transform matrix $A_{S \times F}$ into matrix $Z_{S + F, l}$ where $l = log_2(k)$ and $k$ is the number of expected clusters. This transformation uses the subset of eigenvectors corresponding to indices $2$ through $l+1$ of the graph Laplacian's eigen decomposition. $log_2(k)$ is chosen as the dimension for $Z$ since each additional $k$ cluster can map to a quadrant of space within. Essentially, each new dimension in $l$ doubles the number of possible cluster assignments. After transformation, any traditional clustering algorithm can be adapted to $Z$.
+
+
+
+
+\subsection{Augmented K-Means}
+\label{app:aug}
+
+
+%  \noindent As discussed in the Calibration Problem (Section~\ref{subsec:algChal}), the AKMS algorithm requires a robust initialization and an error-ceiling hyperparameter $\alpha$. The following algorithms detail the core logic and the coordinate-wise estimation subroutine used to achieve a $(1 + O(\alpha))$-approximate clustering. Algorithm~\ref{alg:learning-kmeans}  AugmentedKMeans algorithm~\cite{ergun2022_learningaugmentedkmeansclustering}. 
+
+
+% \begin{algorithm}[H]
+% \caption{Learning-augmented k-means clustering}
+% \label{alg:learning-kmeans}
+% \begin{algorithmic}[1]
+% \Require A point set $X$ with labels given by a predictor $\Pi$ with label error rate $\lambda$
+% \Ensure $(1 + O(\alpha))$-approximate $k$-means clustering of $X$
+% \For{$i = 1$ to $k$}
+%     \State Let $Y_i$ be the set of points with label $i$
+%     \State Run \textsc{CRDEST} for each of the $d$ coordinates of $Y_i$
+%     \State Let $C_i'$ be the coordinate-wise outputs of \textsc{CRDEST}
+% \EndFor
+% \State \Return $C_1', \ldots, C_k'$
+% \end{algorithmic}
+% \end{algorithm}
+
+%   \noindent Algorithm~\ref{alg:crdest} depicts a subroutine of Algorithm~\ref{alg:learning-kmeans} used to estimate one specific coordinate of a $k$ centroid.
+
+% \begin{algorithm}[H]
+% \caption{Coordinate-wise estimation (CRDEST)}
+% \label{alg:crdest}
+% \begin{algorithmic}[1]
+% \Require Points $x_1, \ldots, x_{2m} \in \mathbb{R}$, corruption level $\lambda \leq \alpha$
+% \For{each trial}
+%     \State Randomly partition the points into two groups $X_1, X_2$ of size $m$
+%     \State Let $I = [a, b]$ be the shortest interval containing $m(1 - 5\alpha)$ points of $X_1$
+%     \State $Z \gets X_2 \cap I$
+%     \State $z \gets \tfrac{1}{|Z|}\sum_{x \in Z} x$
+%     \State \Return $z$
+% \EndFor
+% \end{algorithmic}
+% \end{algorithm}
+
+  \noindent Estimating the hyperparameter $\alpha$, which is the upper bound on the predictor label error rate is a complex task. To address this limitation, we use CRDEST to estimate $\alpha$ efficiently. This design rests on four key properties. First, while $\alpha$ is a required hyperparameter bound for the label error rate that is difficult to derive analytically, CRDEST enables its empirical estimation. Second, the algorithm's primary contribution lies in robust initialization and centroid estimation. Third, $k$ estimation and point assignments continue to rely on K-Means as the underlying support engine. Finally, because Algorithm~\ref{alg:crdest} operates in $O(n \log n)$ time due to sorting, its high speed allows for the small-scale brute-force search described in Section~\ref{sec:eval}.
+
+
+\vspace{-0.3cm}
+
+
+\subsection{Framework Representation }
+\label{app:framework}
+
+\vspace{-0.4cm}
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=0.95\linewidth]{Figures/FrameWorks/PythonInterface.pdf}
+    \vspace{-3.0mm}
+    \caption{The AutoPYara interface and integration pipeline.}
+    \label{fig:pyara interface}
+\end{figure}
+
+ \noindent This appendix provides a technical breakdown of the design discussed in Section~\ref{sec:Background}. Figure~\ref{fig:pyara interface} illustrates the specific Python interface logic, detailing how external modules interact with the core engine.
+
+\section{Empirical Evaluation and  Characterization}
+
+
+In Section~\ref{sec:eval}, we demonstrate how different configurations can yield significantly varied results. This necessitates a critical evaluation of these tools at their extremes across different labeling strategies and Bloom filter configurations. In this appendix, we decompose the evaluation results into their core components to visualize how each framework performs against varying constraints.
+
+
+\subsection{AutoPYara V/S AutoYara In Practice}
+\label{app:yararule}
+
+\noindent In Section~\ref{subsec:QualitativeEval}, we describe how rule complexity plays a vital role in both the interpretability and the practical utility of automatically generated YARA rules. In this appendix, we compare the structural differences between signatures generated by our proposed framework and the baseline AutoYara system. Rules~\ref{lst:autopyara_rule} and~\ref{lst:autoyara_rule} rules generated for the same malware cluster (Cluster 4).
+
+\begin{lstlisting}[language=Python,label={lst:autopyara_rule}, caption={\textbf{AutoPYara Rule}}]
+rule Cluster4
+{   // Input TP Rate:
+    // 609/613
+    strings:
+    // Benign FP est: -0.0 Malicious FP est: -0.0 Entropy: 3.5, 612 files
+    $x0 = { 00 00 C7 45 C4 AC 4E 48 00 E8 95 F8 FF FF 8B 4D } 
+    // Benign FP est: -0.0 Malicious FP est: -0.0 Entropy: 4.0, 612 files
+    $x1 = { 51 E8 D4 69 FB FF 83 C4 04 5F 5B 33 C0 5E 8B E5 } 
+    // Benign FP est: -0.0 Malicious FP est: -0.0 Entropy: 3.75, 612 files
+    $x2 = { 15 E4 26 48 00 5F 8B C6 5E 5D C2 2C 00 55 8B EC } 
+    // Benign FP est: -0.0 Malicious FP est: -0.0 Entropy: 4.0, 613 files
+    $x3 = { 6A 01 8B FA E8 E9 0F FE FF 83 C4 08 85 C0 74 24 } 
+    // Benign FP est: -0.0 Malicious FP est: -0.0 Entropy: 2.5, 612 files
+    $x4 = { 18 40 00 A7 18 40 00 1A 18 40 00 62 18 40 00 D9 } 
+    condition:
+    5 of ($x0,$x1,$x2,$x3,$x4)}\end{lstlisting}
+\vspace{-2mm}
+\begin{lstlisting}[language=Python, label={lst:autoyara_rule},caption={\textbf{AutoYara Rule}}]
+rule Cluster4 
+{   // TP Rate: 515/613
+    strings:
+    $x0 = { 53 E8 .. E8 D3 FC 01 } // Entropy: 6.22, Files: 612
+    $x1 = { 83 C8 .. 10 53 56 57 } // Entropy: 6.19, Files: 611
+    $x2 = { 6A 11 .. 5C EB 10 83 } // Entropy: 6.03, Files: 612
+        .
+        .   
+        .
+    $x14 = { FF 75 .. C4 CC CC }  // Entropy: 6.31, Files: 608
+    $x15 = { 00 6C .. 00 20 00 }  // Entropy: 3.22, Files: 266
+    $x16 = { 40 89 .. 83 79 08 }  // Entropy: 6.15, Files: 612
+    condition:
+    16 of ($x0,$x1,$x2,$x3,$x4,$x5,$x6, $x7,$x8,$x9,$x10,$x11,$x12,$x13, $x14,$x15,$x16)}\end{lstlisting}
+
+
+
+
+
+
+
+\subsection{False Positive Rates In Practice}
+\label{app:fpa}
+
+ \noindent False positive rates are an important metric crucial to the operational capabilities of an automatic YARA rule generator. In practice, YARA rules need to maintain an FP rate as close to zero as possible to make the generated rules practical to deploy, as discussed in Section~\ref{sec:eval}. Here we characterize the operational precision of AutoPYara by evaluating FPRs across diverse clustering strategies.
+
+
+
+\begin{table}[ht]
+\centering
+\caption{FPR Results (\%): Extra and Intra Class}
+\label{tab:FPR-Single-Col}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.95}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Method} & \textbf{Ember BF} & \textbf{Retrained BF} \\
+\midrule
+\multicolumn{3}{l}{\textbf{Part A: Extra-Class FPR (Benign Samples)}} \\
+\textit{SSdeep} & & \\
+\hspace{1em}Auto(P)Yara & $0.9 \pm 0.8$ & $1.1 \pm 0.8$ \\
+\hspace{1em}Best/Worst K & -- & $\approx 0.21$ \\
+\textit{J-SDhash} & & \\
+\hspace{1em}Auto(P)Yara & $1.1 \pm 0.8$ & $1.0 \pm 0.9$ \\
+\hspace{1em}Best/Worst K & -- & $\approx 0.22$ \\
+\textit{VirusTotal} & & \\
+\hspace{1em}AutoYara & $48.7 \pm 33.3$ & $20.4 \pm 12.8$ \\
+\hspace{1em}AutoPYara & $44.4 \pm 19.4$ & $54.3 \pm 22.1$ \\
+\hspace{1em}Best/Worst K & $9.9 \pm 4.2$ & $12.5 \pm 5.0$ \\
+\midrule
+\multicolumn{3}{l}{\textbf{Part B: Intra-Class FPR (Cross-Cluster)}} \\
+\textit{All Methods} & & \\
+\hspace{1em}AutoYara (SSDeep) & $0.15 \pm 0.33$ & $0.00$ \\
+\hspace{1em}All Other Configs & $0.00$ & $0.00$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsubsection{Extra-Class Detection}
+\vspace{-.3cm}
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{Figures/RuleMetrics/RTBF_All_Metrics.pdf}
+        \vspace{-.5cm}
+    \caption{Qualitative Analysis. Comparison of structural rule metrics, (a) hex string length and boolean logic complexity:(b) AND, (c) OR counts}
+    \label{fig:QualitativeAnalysis}
+\end{figure*}
+
+
+\noindent Table \ref{tab:FPR-Single-Col} presents extra-class FPR (\%) across SSDeep, J‑SDhash, and VirusTotal for AutoYara and AutoPYara, evaluated against three baselines: SSDeep similarity matches, J‑SDhash similarity matches, and VirusTotal family-labeling signals. Lower values indicate fewer benign files matched by rules or baseline heuristics, which is desirable for operational deployments. Our experimental results show that byte-based clustering yields a substantially lower (often near-zero) extra class FPR due to its homogeneous nature, compared with heterogeneous, AV family label–based clustering. This is critical for proactive deployment of such systems.
+
+
+% \vspace{-.4cm}
+\subsubsection{Intra-Class Detection}
+
+ Table \ref{tab:FPR-Single-Col} reports intra-class FPR (\%), which is uniformly zero in nearly all cases, indicating minimal spurious cross-cluster matches and strong cluster isolation. The only non-zero entry is a negligible \(0.15 \pm 0.33\) for AutoYara under SSDeep with the Ember BF, consistent with measurement noise. These results confirm tight cluster boundaries and a low risk of rule bleed-over in deployment.
+
+
+
+\subsection{Note on {k} search}
+\label{app:note}
+
+\noindent In Section~\ref{subsec:AutoPYaraKEval}, we characterize the performance of AutoPYara and demonstrate how it outperforms the original framework. However, as we speculate that AutoPYara may occasionally underestimate the optimal value of $k$, we utilize a brute-force search across a range of $k$ values to identify the local minima that yield the highest-performing YARA rules. In this appendix, we provide additional information regarding the resulting search space and its impact on rule efficacy.  In practice, we test the ±10 neighborhood—i.e., $k-10$ through  $k+10$— because empirical observations show that the optimal $k$ consistently lies near AutoYara’s estimate, making an exhaustive search unnecessary. Although we could brute-force all possibilities to find the optimal $k$, we observed that the best value consistently lies near AutoYara’s estimate.
+
+
+
+
+\subsection{Empirical Evaluation of Rule Complexity}
+\label{app:rme}
+
+ \noindent To supplement the high-level qualitative findings in Section~\ref{subsec:QualitativeEval}, we here provide a granular breakdown of our rule complexity metrics.
+
+\noindent \textbf{1)} \textit{Number of Strings} ($N$): The \textbf{number of strings} reflects the breadth of features used and is independent of the logical operators in the condition block.\newline
+\noindent \textbf{2)} \textit{Hex Length} ($H$):  
+AutoPYara generates byte n-grams from kilobyte-sized chunks of binaries and encodes them as hexadecimal strings. Given $N$ hex strings $s_1, s_2,..s_N$, we define Hex Length ($H$) as average string length.\newline
+\noindent \textbf{3)} \textit{Conditions Count} ($C$): Counts logical operators (AND, OR) in the rule's condition section. Higher $C$ indicates complex rules capturing greater malware variability and heterogeneous sub-clusters, where different variants require different string combinations. Complex conditions ($C > 5$) are harder to interpret and maintain, but may be necessary for diverse malware families. Rules with simpler conditions are easier to maintain, while complex families require higher operator counts.
+Given two rules with similar TP and FP rates, compactness is preferable. We measure compactness using two separate metrics: the number of strings ($N$) and their average length ($H$). Fewer and shorter strings simplify rule interpretation and validation. The conditions count ($C$) is independent and lower, especially when a single logical statement captures many strings. Malware with a simple structure yields concise rules with low $C$ and $N$, while complex malware families require more strings and potentially more conditions for robust detection, increasing the validation burden.  Table~\ref{tab:ToolAlgoStats} provides detailed metrics for all generated rules across the configurations tested across thresholds (Th50–Th90). SSDeep and J-SDhash configurations produce shorter, sparser rules (OR typically near 1; AND roughly 2–5), while VT-driven configurations yield the longest hex strings and highest AND counts, reflecting more complex conjunctions. 
+
+
+
+
+
+
+
+
+
+
+\begin{table}
+\centering
+
+\caption{Rule Characteristics: Ember vs. Retrained Bloom Filters}
+\label{tab:ToolAlgoStats}
+\footnotesize
+\setlength{\tabcolsep}{1.8pt}
+\renewcommand{\arraystretch}{0.85}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccccccccc}
+\toprule
+ & \multicolumn{6}{c}{\textbf{Ember Bloom Filters}} & \multicolumn{6}{c}{\textbf{Retained Bloom Filters}} \\
+\cmidrule(lr){2-7} \cmidrule(lr){8-13}
+\textbf{Method} & 
+\makecell{\textbf{Avg}\\\textbf{HexLen}} & 
+\makecell{\textbf{Avg}\\\textbf{OR}} & 
+\makecell{\textbf{Avg}\\\textbf{AND}} & 
+\makecell{\textbf{Med}\\\textbf{HexLen}} & 
+\makecell{\textbf{Med}\\\textbf{OR}} & 
+\makecell{\textbf{Med}\\\textbf{AND}} &
+\makecell{\textbf{Avg}\\\textbf{HexLen}} & 
+\makecell{\textbf{Avg}\\\textbf{OR}} & 
+\makecell{\textbf{Avg}\\\textbf{AND}} & 
+\makecell{\textbf{Med}\\\textbf{HexLen}} & 
+\makecell{\textbf{Med}\\\textbf{OR}} & 
+\makecell{\textbf{Med}\\\textbf{AND}} \\
+\midrule
+
+\multicolumn{13}{l}{\textbf{AutoYara}} \\
+SSdeep-Th50 & 471.9 & 1.1 & 3.8 & 32 & 1 & 3 & 362.9 & 1.1 & 2.6 & 8 & 1 & 1 \\
+SSdeep-Th60 & 446.1 & 1.1 & 3.8 & 24 & 1 & 3 & 315.5 & 1.0 & 2.4 & 8 & 1 & 1 \\
+SSdeep-Th70 & 391.1 & 1.1 & 3.2 & 24 & 1 & 3 & 277.4 & 1.0 & 2.2 & 8 & 1 & 1 \\
+SSdeep-Th80 & 306.7 & 1.1 & 3.3 & 24 & 1 & 3 & 239.0 & 1.0 & 2.0 & 8 & 1 & 1 \\
+SSdeep-Th90 & 296.6 & 1.1 & 3.3 & 24 & 1 & 3 & 180.4 & 1.0 & 1.7 & 8 & 1 & 1 \\
+J-SDhash-Th50 & 341.9 & 1.1 & 3.1 & 8 & 1 & 0 & 403.5 & 1.0 & 2.7 & 8 & 1 & 1 \\
+J-SDhash-Th60 & 394.8 & 1.1 & 2.8 & 8 & 1 & 0 & 377.0 & 1.1 & 2.4 & 8 & 1 & 1 \\
+J-SDhash-Th70 & 410.0 & 1.1 & 3.0 & 8 & 1 & 0 & 337.7 & 1.1 & 2.4 & 8 & 1 & 1 \\
+J-SDhash-Th80 & 449.5 & 1.1 & 3.2 & 8 & 1 & 0 & 310.6 & 1.0 & 2.2 & 8 & 1 & 1 \\
+J-SDhash-Th90 & 362.3 & 1.1 & 2.4 & 8 & 1 & 1 & 249.4 & 1.0 & 1.9 & 8 & 1 & 1 \\
+VT & 966.1 & 1.3 & 26.7 & 128 & 1 & 5 & 1041.7 & 1.3 & 37.5 & 160 & 1 & 5 \\
+\midrule
+
+\multicolumn{13}{l}{\textbf{AutoPYara}} \\
+SSdeep-Th50 & 318.3 & 1.1 & 4.2 & 24 & 1 & 3 & 259.1 & 1.1 & 2.8 & 8 & 1 & 1 \\
+SSdeep-Th60 & 296.8 & 1.1 & 3.9 & 24 & 1 & 3 & 243.5 & 1.1 & 2.6 & 8 & 1 & 1 \\
+SSdeep-Th70 & 258.5 & 1.1 & 3.1 & 16.0 & 1 & 2 & 201.7 & 1.0 & 2.2 & 8 & 1 & 1 \\
+SSdeep-Th80 & 222.0 & 1.1 & 3.1 & 24 & 1 & 3 & 179.9 & 1.0 & 1.9 & 8 & 1 & 1 \\
+SSdeep-Th90 & 244.9 & 1.1 & 3.0 & 24 & 1 & 3 & 138.1 & 1.0 & 1.7 & 8 & 1 & 1 \\
+J-SDhash-Th50 & 235.3 & 1.1 & 3.2 & 8 & 1 & 1 & 325.1 & 1.1 & 2.9 & 8 & 1 & 1 \\
+J-SDhash-Th60 & 208.3 & 1.1 & 2.7 & 8 & 1 & 1 & 287.0 & 1.1 & 2.6 & 8 & 1 & 1 \\
+J-SDhash-Th70 & 193.0 & 1.1 & 2.7 & 8 & 1 & 1 & 246.9 & 1.1 & 2.3 & 8 & 1 & 1 \\
+J-SDhash-Th80 & 174.8 & 1.1 & 2.8 & 8 & 1 & 1 & 225.6 & 1.0 & 2.2 & 8 & 1 & 1 \\
+J-SDhash-Th90 & 138.5 & 1.1 & 2.3 & 8 & 1 & 1 & 181.9 & 1.0 & 1.9 & 8 & 1 & 1 \\
+VT & 671.5 & 2.7 & 34.7 & 80 & 1 & 5 & 678.3 & 3.2 & 36.7 & 96 & 1 & 5 \\
+\midrule
+
+\multicolumn{13}{l}{\textbf{AutoPyara BEST K}} \\
+SSdeep-Th50 & 417.2 & 1.3 & 4.8 & 24 & 1 & 3 & 302.3 & 1.1 & 3.1 & 8 & 1 & 1 \\
+SSdeep-Th60 & 325.9 & 1.2 & 4.1 & 24 & 1 & 3 & 275.5 & 1.1 & 2.6 & 8 & 1 & 1 \\
+SSdeep-Th70 & 316.3 & 1.2 & 3.1 & 16 & 1 & 2 & 237.3 & 1.1 & 2.3 & 8 & 1 & 1 \\
+SSdeep-Th80 & 248.7 & 1.2 & 3.0 & 24 & 1 & 3 & 201.2 & 1.1 & 2.1 & 8 & 1 & 1 \\
+SSdeep-Th90 & 223.2 & 1.2 & 2.9 & 24 & 1 & 3 & 154.5 & 1.1 & 1.7 & 8 & 1 & 1 \\
+J-SDhash-Th50 & 321.4 & 1.2 & 3.5 & 8 & 1 & 1 & 366.8 & 1.1 & 3.1 & 8 & 1 & 1 \\
+J-SDhash-Th60 & 278.2 & 1.2 & 3.0 & 8 & 1 & 1 & 314.9 & 1.1 & 2.8 & 8 & 1 & 1 \\
+J-SDhash-Th70 & 244.8 & 1.1 & 2.8 & 8 & 1 & 1 & 279.2 & 1.1 & 2.5 & 8 & 1 & 1 \\
+J-SDhash-Th80 & 208.8 & 1.1 & 2.7 & 8 & 1 & 1 & 256.2 & 1.1 & 2.3 & 8 & 1 & 1 \\
+J-SDhash-Th90 & 180.3 & 1.1 & 2.5 & 8 & 1 & 1 & 208.8 & 1.1 & 1.9 & 8 & 1 & 1 \\
+VT & 727.2 & 2.7 & 31.8 & 88 & 1 & 4 & 721.6 & 3.2 & 35.7 & 96 & 1 & 5 \\
+\midrule
+
+\multicolumn{13}{l}{\textbf{AutoPyara Worst K}} \\
+SSdeep-Th50   & 587.8 & 1.1 & 4.3 & 24 & 1 & 3 & 382.3 & 1.1 & 2.5 & 8 & 1 & 1 \\
+SSdeep-Th60   & 584.0 & 1.1 & 4.1 & 24 & 1 & 3 & 342.8 & 1.0 & 2.3 & 8 & 1 & 1 \\
+SSdeep-Th70   & 459.1 & 1.1 & 3.1 & 16 & 1 & 2 & 300.4 & 1.0 & 2.1 & 8 & 1 & 1 \\
+SSdeep-Th80   & 508.6 & 1.1 & 3.3 & 24 & 1 & 3 & 252.4 & 1.0 & 1.9 & 8 & 1 & 1 \\
+SSdeep-Th90   & 477.9 & 1.1 & 3.3 & 24 & 1 & 3 & 187.1 & 1.0 & 1.7 & 8 & 1 & 1 \\
+J-SDhash-Th50 & 386.5 & 1.1 & 3.1 & 8  & 1 & 1 & 432.1 & 1.1 & 2.6 & 8 & 1 & 1 \\
+J-SDhash-Th60 & 357.9 & 1.1 & 2.7 & 8  & 1 & 1 & 388.3 & 1.0 & 2.4 & 8 & 1 & 1 \\
+J-SDhash-Th70 & 328.4 & 1.1 & 2.7 & 8  & 1 & 1 & 344.1 & 1.0 & 2.4 & 8 & 1 & 1 \\
+J-SDhash-Th80 & 295.8 & 1.1 & 3.1 & 8  & 1 & 1 & 301.2 & 1.0 & 2.2 & 8 & 1 & 1 \\
+J-SDhash-Th90 & 261.6 & 1.1 & 2.3 & 8  & 1 & 1 & 265.6 & 1.0 & 1.9 & 8 & 1 & 1 \\
+VT            & 1068.2 & 1.3 & 33.6 & 128 & 1 & 5 & 1157.2 & 1.3 & 39.6 & 144 & 1 & 5 \\
+
+% \midrule
+
+% \multicolumn{13}{l}{\textbf{VT-Heuristics - Retrained Bloom Filters}} \\
+% \multicolumn{13}{l}{\hspace{1em}MODE} \\
+% SSdeep-Th50 & - & - & - & - & - & - & 929.1 & 2.0 & 16.7 & 128 & 1 & 4 \\
+% SSdeep-Th60 & - & - & - & - & - & - & 889.7 & 1.7 & 14.8 & 101 & 1 & 4 \\
+% SSdeep-Th70 & - & - & - & - & - & - & 663.7 & 1.5 & 7.5 & 64 & 1 & 3 \\
+% SSdeep-Th80 & - & - & - & - & - & - & 481.7 & 1.3 & 4.8 & 32 & 1 & 3 \\
+% SSdeep-Th90 & - & - & - & - & - & - & 504.0 & 1.3 & 4.3 & 24 & 1 & 2 \\
+% J-SDhash-Th50 & - & - & - & - & - & - & 770.5 & 1.3 & 5.7 & 64 & 1 & 3 \\
+% J-SDhash-Th60 & - & - & - & - & - & - & 629.6 & 1.2 & 4.7 & 48 & 1 & 3 \\
+% J-SDhash-Th70 & - & - & - & - & - & - & 570.2 & 1.2 & 4.8 & 32 & 1 & 3 \\
+% J-SDhash-Th80 & - & - & - & - & - & - & 625.7 & 1.2 & 5.8 & 32 & 1 & 2 \\
+% J-SDhash-Th90 & - & - & - & - & - & - & 591.8 & 1.1 & 3.4 & 16 & 1 & 2 \\
+
+% \multicolumn{13}{l}{\hspace{1em}MAX} \\
+% SSdeep-Th50 & - & - & - & - & - & - & 341.6 & 1.1 & 3.7 & 8 & 1 & 2 \\
+% SSdeep-Th60 & - & - & - & - & - & - & 301.2 & 1.1 & 4.1 & 8 & 1 & 1 \\
+% SSdeep-Th70 & - & - & - & - & - & - & 256.0 & 1.1 & 2.8 & 8 & 1 & 1 \\
+% SSdeep-Th80 & - & - & - & - & - & - & 190.5 & 1.0 & 2.3 & 8 & 1 & 1 \\
+% SSdeep-Th90 & - & - & - & - & - & - & 190.2 & 1.0 & 2.2 & 8 & 1 & 1 \\
+% J-SDhash-Th50 & - & - & - & - & - & - & 358.2 & 1.1 & 3.5 & 8 & 1 & 2 \\
+% J-SDhash-Th60 & - & - & - & - & - & - & 323.0 & 1.1 & 2.8 & 8 & 1 & 1 \\
+% J-SDhash-Th70 & - & - & - & - & - & - & 324.7 & 1.1 & 2.8 & 8 & 1 & 1 \\
+% J-SDhash-Th80 & - & - & - & - & - & - & 306.5 & 1.1 & 2.9 & 8 & 1 & 1 \\
+% J-SDhash-Th90 & - & - & - & - & - & - & 244.2 & 1.0 & 2.6 & 8 & 1 & 1 \\
+
+% \multicolumn{13}{l}{\hspace{1em}RANDOM} \\
+% SSdeep-Th50 & - & - & - & - & - & - & 515.0 & 1.3 & 7.2 & 8 & 1 & 2 \\
+% SSdeep-Th60 & - & - & - & - & - & - & 453.4 & 1.2 & 4.8 & 8 & 1 & 1 \\
+% SSdeep-Th70 & - & - & - & - & - & - & 389.5 & 1.2 & 3.9 & 8 & 1 & 1 \\
+% SSdeep-Th80 & - & - & - & - & - & - & 306.4 & 1.2 & 2.8 & 8 & 1 & 1 \\
+% SSdeep-Th90 & - & - & - & - & - & - & 290.4 & 1.1 & 2.5 & 8 & 1 & 1 \\
+% J-SDhash-Th50 & - & - & - & - & - & - & 750.7 & 1.5 & 6.0 & 96 & 1 & 3 \\
+% J-SDhash-Th60 & - & - & - & - & - & - & 720.2 & 1.3 & 5.3 & 48 & 1 & 3 \\
+% J-SDhash-Th70 & - & - & - & - & - & - & 641.6 & 1.4 & 4.8 & 64 & 1 & 3 \\
+% J-SDhash-Th80 & - & - & - & - & - & - & 776.6 & 1.4 & 5.5 & 40 & 1 & 3 \\
+% J-SDhash-Th90 & - & - & - & - & - & - & 514.9 & 1.2 & 3.8 & 24 & 1 & 2 \\
+
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+
+
+
+\subsection{Evaluation of YARA Rules on  Large Cluster}
+\label{app:bp}
+
+\noindent In Section~\ref{sec:benchmarkfinal}, we provide a comprehensive characterization of both the AutoYara and AutoPYara frameworks, demonstrating how performance observations can vary significantly if not correctly contextualized. We explore the operational extremes of these tools, including their theoretical performance limits, and offer guidance on achieving optimal results in real-world deployments. However, the initial results encompassed the entire dataset, which includes a high volume of small clusters that may skew the overall performance metrics.
+
+In this appendix, we isolate and demonstrate the impact of larger clusters on tool efficacy. Figure~\ref{fig:AutoPYaraBigPictureTOP} illustrates the performance delta between the two frameworks across top-performing configurations. Our findings show that AutoPYara maintains a consistently higher detection rate compared to the baseline AutoYara, even when small clusters are excluded from the analysis. This distinction is critical, as small clusters often introduce noise into evaluation metrics and tend to display inflated performance trends due to a lack of structural variability.
+
+
+
+\begin{figure}[H]
+\vspace{-3mm}
+
+    \centering
+    {%
+        \includegraphics[width=0.98\linewidth]{Figures/BigPicture_AnnotatedTOP.pdf}
+    }\vspace{-4mm}
+    \caption{AutoYara v/s AutoPYara using large clusters}
+    \label{fig:AutoPYaraBigPictureTOP}
+
+\end{figure}
+
+
+
+\section{Recommendations}
+\label{app:rec}
+
+\noindent Throughout the evaluation in Section~\ref{sec:eval}, we demonstrated how different technical specifications and strategies can result in varied performance, emphasizing that these results should not be taken at face value. To transition our scientific investigation into practical application, we have compiled our findings into the following best-practice guidelines:
+
+
+
+
+\noindent \textbf{1)} \textbf{\textit{Retrain Bloom Filters}} [C2]
+\newline
+Retrain with up-to-date malware and goodware samples. Outdated filters miss new byte patterns, reduce rule quality, and increase false positives.
+
+\noindent \textbf{2)} \textbf{\textit{Compare Average not Single Shot Rules}} [C3,C6]
+\newline
+Clustering results can change with random seeds. Run small ensembles with different seeds for robustness. Track stability with cumulative metrics rather than single-run averages. Generating a single rule might mislead the user given the non-deterministic nature of the framework.
+
+\noindent \textbf{3)} \textbf{\textit{Accuracy is Important But Ensure Low FP Rate}} [C4]
+\newline
+It is important that generated rules are validated against both malicious and critically goodware samples (FP rates matter). Characterized into two categories (Goodware FP rate and Cross Cluster FP rate), Goodware FP is more critical as it impacts usability at endpoint devices.
+
+\noindent \textbf{4)}  \textbf{\textit{Favor Byte-Based Similarity Clustering Over AntiVirus Family Clustering}} [C1,C4]
+\newline
+Given the heterogeneous nature of the task, favor similarity-based clustering over family-based clustering, as intrinsic correlations in the data are better captured and result in higher quality rules. 
+
+\noindent \textbf{5)} \textbf{\textit{Calibrate Threshold for Coverage not Precision}} [C5]
+\newline
+Thresholds impact the formation of the clusters. Higher thresholds create tighter clusters and more specific rules; lower thresholds broaden coverage, but the performance gain is not due to the changes in threshold rather just an illusion due to the fewer number (higher the threshold fewer the samples per cluster) of samples. 
+
+\noindent \textbf{6)}  \textbf{\textit{Calibrate Rule Generation with Centroid Selection to Improve Precision}} [F1]
+\newline
+We demonstrate how Centroid selection can be adapted into the AutoYara framework, and show that it results in up to 13 \% absolute gain in performance. We also highlight how the gain of centroid selection is greater in larger, more realistic clusters.  
+
+\noindent \textbf{7)} \textbf{\textit{Calibrate $k$ Values When Possible}} [F2]
+\newline
+We demonstrate that the values of $k$ (in other words, the number of clusters) have a profound impact on the performance of the framework. The absolute difference in performance between the best and worst $k$ can be up to 35\% in large clusters, highlighting its importance.
+
+\noindent \textbf{8)}  \textbf{\textit{Use AntiVirus Family to Build an Oracle for $k$}}  [F3] \newline
+Build an oracle to suggest $k$ from historical results. Use family labels as a coarse filter to narrow the $k$ range, and use similarity hashes for centroids in actual clustering. Keep the oracle updated as new data arrives.
+

@@ -1,0 +1,87 @@
+
+
+\begin{tikzpicture}
+\begin{axis}[
+    width=15cm,
+    height=7cm,
+    axis lines=center,
+    xlabel={$\lambda$},
+    xlabel style={right, font=\large},
+    ylabel={},
+    ytick=\empty,
+    xtick=\empty,
+    xmin=-4.8, xmax=4.8,
+    ymin=-0.22, ymax=0.90,
+    clip=false,
+    axis line style={-stealth, thick, black},
+    every axis x label/.style={at={(ticklabel* cs:1.02)}, anchor=west},
+    every axis y label/.style={at={(ticklabel* cs:1.02)}, anchor=south},
+]
+
+% Parameters: A=0.65, sigma=1.1
+% outer means: +/-3.5 (blue, e=1), inner means: +/-1.8 (red, e=0)
+% -C = -1.058, +C = +1.058
+
+% SHADING: gray!80 (q_1) — under e=1 (outer) curves within |x| < C
+
+
+% SHADING: gray — under each e=1 (inner) curve where |x| < C
+% Using explicit \draw[fill] polygons with precomputed coordinates
+\draw[fill=gray!50, draw=none] (axis cs:-1.058,0.51774) -- (axis cs:-1.0227,0.5064) -- (axis cs:-0.9875,0.4948) -- (axis cs:-0.9522,0.48297) -- (axis cs:-0.9169,0.47094) -- (axis cs:-0.8817,0.45874) -- (axis cs:-0.8464,0.4464) -- (axis cs:-0.8111,0.43394) -- (axis cs:-0.7759,0.42139) -- (axis cs:-0.7406,0.40879) -- (axis cs:-0.7053,0.39616) -- (axis cs:-0.6701,0.38352) -- (axis cs:-0.6348,0.3709) -- (axis cs:-0.5995,0.35833) -- (axis cs:-0.5643,0.34584) -- (axis cs:-0.529,0.33343) -- (axis cs:-0.4937,0.32114) -- (axis cs:-0.4585,0.30898) -- (axis cs:-0.4232,0.29698) -- (axis cs:-0.3879,0.28516) -- (axis cs:-0.3527,0.27352) -- (axis cs:-0.3174,0.26208) -- (axis cs:-0.2821,0.25087) -- (axis cs:-0.2469,0.23989) -- (axis cs:-0.2116,0.22916) -- (axis cs:-0.1763,0.21868) -- (axis cs:-0.1411,0.20846) -- (axis cs:-0.1058,0.19852) -- (axis cs:-0.0705,0.18886) -- (axis cs:-0.0353,0.17948) -- (axis cs:0.0,0.1704) -- (axis cs:0.0353,0.1616) -- (axis cs:0.0705,0.15311) -- (axis cs:0.1058,0.14491) -- (axis cs:0.1411,0.13701) -- (axis cs:0.1763,0.12941) -- (axis cs:0.2116,0.1221) -- (axis cs:0.2469,0.11509) -- (axis cs:0.2821,0.10837) -- (axis cs:0.3174,0.10193) -- (axis cs:0.3527,0.09579) -- (axis cs:0.3879,0.08991) -- (axis cs:0.4232,0.08432) -- (axis cs:0.4585,0.07898) -- (axis cs:0.4937,0.07392) -- (axis cs:0.529,0.0691) -- (axis cs:0.5643,0.06453) -- (axis cs:0.5995,0.0602) -- (axis cs:0.6348,0.05611) -- (axis cs:0.6701,0.05224) -- (axis cs:0.7053,0.04858) -- (axis cs:0.7406,0.04514) -- (axis cs:0.7759,0.0419) -- (axis cs:0.8111,0.03885) -- (axis cs:0.8464,0.03598) -- (axis cs:0.8817,0.03329) -- (axis cs:0.9169,0.03077) -- (axis cs:0.9522,0.02842) -- (axis cs:0.9875,0.02621) -- (axis cs:1.0227,0.02415) -- (axis cs:1.058,0.02224) -- (axis cs:1.058,0) -- (axis cs:-1.058,0) -- cycle;
+\draw[fill=gray!50, draw=none] (axis cs:-1.058,0.02224) -- (axis cs:-1.0227,0.02415) -- (axis cs:-0.9875,0.02621) -- (axis cs:-0.9522,0.02842) -- (axis cs:-0.9169,0.03077) -- (axis cs:-0.8817,0.03329) -- (axis cs:-0.8464,0.03598) -- (axis cs:-0.8111,0.03885) -- (axis cs:-0.7759,0.0419) -- (axis cs:-0.7406,0.04514) -- (axis cs:-0.7053,0.04858) -- (axis cs:-0.6701,0.05224) -- (axis cs:-0.6348,0.05611) -- (axis cs:-0.5995,0.0602) -- (axis cs:-0.5643,0.06453) -- (axis cs:-0.529,0.0691) -- (axis cs:-0.4937,0.07392) -- (axis cs:-0.4585,0.07898) -- (axis cs:-0.4232,0.08432) -- (axis cs:-0.3879,0.08991) -- (axis cs:-0.3527,0.09579) -- (axis cs:-0.3174,0.10193) -- (axis cs:-0.2821,0.10837) -- (axis cs:-0.2469,0.11509) -- (axis cs:-0.2116,0.1221) -- (axis cs:-0.1763,0.12941) -- (axis cs:-0.1411,0.13701) -- (axis cs:-0.1058,0.14491) -- (axis cs:-0.0705,0.15311) -- (axis cs:-0.0353,0.1616) -- (axis cs:0.0,0.1704) -- (axis cs:0.0353,0.17948) -- (axis cs:0.0705,0.18886) -- (axis cs:0.1058,0.19852) -- (axis cs:0.1411,0.20846) -- (axis cs:0.1763,0.21868) -- (axis cs:0.2116,0.22916) -- (axis cs:0.2469,0.23989) -- (axis cs:0.2821,0.25087) -- (axis cs:0.3174,0.26208) -- (axis cs:0.3527,0.27352) -- (axis cs:0.3879,0.28516) -- (axis cs:0.4232,0.29698) -- (axis cs:0.4585,0.30898) -- (axis cs:0.4937,0.32114) -- (axis cs:0.529,0.33343) -- (axis cs:0.5643,0.34584) -- (axis cs:0.5995,0.35833) -- (axis cs:0.6348,0.3709) -- (axis cs:0.6701,0.38352) -- (axis cs:0.7053,0.39616) -- (axis cs:0.7406,0.40879) -- (axis cs:0.7759,0.42139) -- (axis cs:0.8111,0.43394) -- (axis cs:0.8464,0.4464) -- (axis cs:0.8817,0.45874) -- (axis cs:0.9169,0.47094) -- (axis cs:0.9522,0.48297) -- (axis cs:0.9875,0.4948) -- (axis cs:1.0227,0.5064) -- (axis cs:1.058,0.51774) -- (axis cs:1.058,0) -- (axis cs:-1.058,0) -- cycle;
+\draw[fill=gray!100, draw=none] (axis cs:-1.058,0.0553) -- (axis cs:-1.0315,0.05241) -- (axis cs:-1.0051,0.04964) -- (axis cs:-0.9787,0.04699) -- (axis cs:-0.9522,0.04446) -- (axis cs:-0.9258,0.04204) -- (axis cs:-0.8993,0.03973) -- (axis cs:-0.8729,0.03752) -- (axis cs:-0.8464,0.03542) -- (axis cs:-0.82,0.03341) -- (axis cs:-0.7935,0.0315) -- (axis cs:-0.7671,0.02968) -- (axis cs:-0.7406,0.02795) -- (axis cs:-0.7142,0.02631) -- (axis cs:-0.6877,0.02475) -- (axis cs:-0.6613,0.02327) -- (axis cs:-0.6348,0.02186) -- (axis cs:-0.6084,0.02053) -- (axis cs:-0.5819,0.01926) -- (axis cs:-0.5554,0.01807) -- (axis cs:-0.529,0.01694) -- (axis cs:-0.5026,0.01587) -- (axis cs:-0.4761,0.01486) -- (axis cs:-0.4497,0.0139) -- (axis cs:-0.4232,0.013) -- (axis cs:-0.3967,0.01215) -- (axis cs:-0.3703,0.01135) -- (axis cs:-0.3438,0.0106) -- (axis cs:-0.3174,0.00989) -- (axis cs:-0.291,0.00922) -- (axis cs:-0.2645,0.00859) -- (axis cs:-0.238,0.00801) -- (axis cs:-0.2116,0.00745) -- (axis cs:-0.1852,0.00693) -- (axis cs:-0.1587,0.00645) -- (axis cs:-0.1322,0.00599) -- (axis cs:-0.1058,0.00556) -- (axis cs:-0.0794,0.00517) -- (axis cs:-0.0529,0.00479) -- (axis cs:-0.0265,0.00444) -- (axis cs:0.0,0.00412) -- (axis cs:0.0264,0.00381) -- (axis cs:0.0529,0.00353) -- (axis cs:0.0794,0.00326) -- (axis cs:0.1058,0.00302) -- (axis cs:0.1322,0.00279) -- (axis cs:0.1587,0.00257) -- (axis cs:0.1851,0.00238) -- (axis cs:0.2116,0.00219) -- (axis cs:0.2381,0.00202) -- (axis cs:0.2645,0.00186) -- (axis cs:0.291,0.00171) -- (axis cs:0.3174,0.00158) -- (axis cs:0.3438,0.00145) -- (axis cs:0.3703,0.00133) -- (axis cs:0.3968,0.00122) -- (axis cs:0.4232,0.00112) -- (axis cs:0.4497,0.00103) -- (axis cs:0.4761,0.00095) -- (axis cs:0.5026,0.00087) -- (axis cs:0.529,0.00079) -- (axis cs:0.5554,0.00073) -- (axis cs:0.5819,0.00066) -- (axis cs:0.6083,0.00061) -- (axis cs:0.6348,0.00056) -- (axis cs:0.6613,0.00051) -- (axis cs:0.6877,0.00046) -- (axis cs:0.7142,0.00042) -- (axis cs:0.7406,0.00039) -- (axis cs:0.7671,0.00035) -- (axis cs:0.7935,0.00032) -- (axis cs:0.82,0.00029) -- (axis cs:0.8464,0.00026) -- (axis cs:0.8729,0.00024) -- (axis cs:0.8993,0.00022) -- (axis cs:0.9258,0.0002) -- (axis cs:0.9522,0.00018) -- (axis cs:0.9787,0.00016) -- (axis cs:1.0051,0.00015) -- (axis cs:1.0315,0.00013) -- (axis cs:1.058,0.00012) -- (axis cs:1.058,0) -- (axis cs:-1.058,0) -- cycle;
+\draw[fill=gray!100, draw=none] (axis cs:-1.058,0.00012) -- (axis cs:-1.0315,0.00013) -- (axis cs:-1.0051,0.00015) -- (axis cs:-0.9787,0.00016) -- (axis cs:-0.9522,0.00018) -- (axis cs:-0.9258,0.0002) -- (axis cs:-0.8993,0.00022) -- (axis cs:-0.8729,0.00024) -- (axis cs:-0.8464,0.00026) -- (axis cs:-0.82,0.00029) -- (axis cs:-0.7935,0.00032) -- (axis cs:-0.7671,0.00035) -- (axis cs:-0.7406,0.00039) -- (axis cs:-0.7142,0.00042) -- (axis cs:-0.6877,0.00046) -- (axis cs:-0.6613,0.00051) -- (axis cs:-0.6348,0.00056) -- (axis cs:-0.6084,0.00061) -- (axis cs:-0.5819,0.00066) -- (axis cs:-0.5554,0.00073) -- (axis cs:-0.529,0.00079) -- (axis cs:-0.5026,0.00087) -- (axis cs:-0.4761,0.00095) -- (axis cs:-0.4497,0.00103) -- (axis cs:-0.4232,0.00112) -- (axis cs:-0.3967,0.00122) -- (axis cs:-0.3703,0.00133) -- (axis cs:-0.3438,0.00145) -- (axis cs:-0.3174,0.00158) -- (axis cs:-0.291,0.00171) -- (axis cs:-0.2645,0.00186) -- (axis cs:-0.238,0.00202) -- (axis cs:-0.2116,0.00219) -- (axis cs:-0.1852,0.00238) -- (axis cs:-0.1587,0.00257) -- (axis cs:-0.1322,0.00279) -- (axis cs:-0.1058,0.00302) -- (axis cs:-0.0794,0.00326) -- (axis cs:-0.0529,0.00353) -- (axis cs:-0.0265,0.00381) -- (axis cs:0.0,0.00412) -- (axis cs:0.0264,0.00444) -- (axis cs:0.0529,0.00479) -- (axis cs:0.0794,0.00517) -- (axis cs:0.1058,0.00556) -- (axis cs:0.1322,0.00599) -- (axis cs:0.1587,0.00645) -- (axis cs:0.1851,0.00693) -- (axis cs:0.2116,0.00745) -- (axis cs:0.2381,0.00801) -- (axis cs:0.2645,0.00859) -- (axis cs:0.291,0.00922) -- (axis cs:0.3174,0.00989) -- (axis cs:0.3438,0.0106) -- (axis cs:0.3703,0.01135) -- (axis cs:0.3968,0.01215) -- (axis cs:0.4232,0.013) -- (axis cs:0.4497,0.0139) -- (axis cs:0.4761,0.01486) -- (axis cs:0.5026,0.01587) -- (axis cs:0.529,0.01694) -- (axis cs:0.5554,0.01807) -- (axis cs:0.5819,0.01926) -- (axis cs:0.6083,0.02053) -- (axis cs:0.6348,0.02186) -- (axis cs:0.6613,0.02327) -- (axis cs:0.6877,0.02475) -- (axis cs:0.7142,0.02631) -- (axis cs:0.7406,0.02795) -- (axis cs:0.7671,0.02968) -- (axis cs:0.7935,0.0315) -- (axis cs:0.82,0.03341) -- (axis cs:0.8464,0.03542) -- (axis cs:0.8729,0.03752) -- (axis cs:0.8993,0.03973) -- (axis cs:0.9258,0.04204) -- (axis cs:0.9522,0.04446) -- (axis cs:0.9787,0.04699) -- (axis cs:1.0051,0.04964) -- (axis cs:1.0315,0.05241) -- (axis cs:1.058,0.0553) -- (axis cs:1.058,0) -- (axis cs:-1.058,0) -- cycle;
+% GAUSSIAN CURVES (drawn on top of shading)
+\addplot[blue, thick, smooth, domain=-4.8:4.8, samples=300]
+    {0.65 * exp(-(x+3.5)^2 / (2*1.1^2))};
+\addplot[blue, thick, smooth, domain=-4.8:4.8, samples=300]
+    {0.65 * exp(-(x-3.5)^2 / (2*1.1^2))};
+\addplot[red, thick, smooth, domain=-4.8:4.8, samples=300]
+    {0.65 * exp(-(x+1.8)^2 / (2*1.1^2))};
+\addplot[red, thick, smooth, domain=-4.8:4.8, samples=300]
+    {0.65 * exp(-(x-1.8)^2 / (2*1.1^2))};
+
+% DOTTED LINES from x-axis to peak of each Gaussian (peak height = 0.65)
+\draw[black, dotted, thick] (axis cs:-3.5, 0) -- (axis cs:-3.5, 0.65);
+\draw[black, dotted, thick] (axis cs:-1.8, 0) -- (axis cs:-1.8, 0.65);
+\draw[black, dotted, thick] (axis cs: 1.8, 0) -- (axis cs: 1.8, 0.65);
+\draw[black, dotted, thick] (axis cs: 3.5, 0) -- (axis cs: 3.5, 0.65);
+
+% BLACK OVERLAY ON X-AXIS
+\draw[black, very thick] (axis cs:-4.8, 0) -- (axis cs:4.8, 0);
+
+% VERTICAL LINES at -C, 0, +C
+\draw[black, thick] (axis cs:-1.058, 0) -- (axis cs:-1.058, 0.80);
+\draw[black, thick] (axis cs: 0,     0) -- (axis cs: 0,     0.80);
+\draw[black, thick] (axis cs: 1.058, 0) -- (axis cs: 1.058, 0.80);
+
+% X-AXIS MEAN LABELS
+\node[below, font=\footnotesize] at (axis cs:-3.5, -0.06)
+    {$-|w_{\mathrm{inv}} + w_{\mathrm{sp}}|$};
+\node[below, font=\footnotesize] at (axis cs:-1.8, -0.06)
+    {$-|w_{\mathrm{inv}} - w_{\mathrm{sp}}|$};
+\node[below, font=\footnotesize] at (axis cs: 1.8, -0.06)
+    {$|w_{\mathrm{inv}} - w_{\mathrm{sp}}|$};
+\node[below, font=\footnotesize] at (axis cs: 3.5, -0.06)
+    {$|w_{\mathrm{inv}} + w_{\mathrm{sp}}|$};
+
+% -C and +C labels
+\node[above, font=\small] at (axis cs:-1.058, 0.80) {$-c$};
+\node[above, font=\small] at (axis cs: 1.058, 0.80) {$+c$};
+
+% Gamma region labels
+\node[font=\small] at (axis cs:-4.3, 0.84) {$y = -1$};
+\node[font=\small] at (axis cs: 2.5, 0.84) {$y = 1$};
+
+% LEGEND
+\draw[blue, thick] (axis cs:3.1, 0.82) -- (axis cs:3.5, 0.82);
+\node[right, font=\small] at (axis cs:3.55, 0.82) {$e=1$};
+\draw[red, thick] (axis cs:3.1, 0.72) -- (axis cs:3.5, 0.72);
+\node[right, font=\small] at (axis cs:3.55, 0.72) {$e=0$};
+\draw[fill=gray!50, draw=none] (axis cs:3.1, 0.56) rectangle (axis cs:3.5, 0.64);
+\node[right, font=\small] at (axis cs:3.55, 0.60) {$q_0$};
+\draw[fill=gray!80, draw=none] (axis cs:3.1, 0.45) rectangle (axis cs:3.5, 0.53);
+\node[right, font=\small] at (axis cs:3.55, 0.49) {$q_1$};
+
+\end{axis}
+\end{tikzpicture}

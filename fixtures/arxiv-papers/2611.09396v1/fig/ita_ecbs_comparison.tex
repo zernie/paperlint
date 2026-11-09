@@ -1,0 +1,28 @@
+\begin{figure}[t!]
+    \centering
+    \begin{minipage}[c]{0.50\columnwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[inner sep=0] (img)
+                {\includegraphics[width=\linewidth]{fig/raw/ita_ecbs_comparison/ita_ecbs_ratio_eqdist_pow2.pdf}};
+            \node[anchor=south, font=\small, yshift=1pt]
+                at ([xshift=0.10\linewidth]img.north) {\scenEqdist};
+        \end{tikzpicture}
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.50\columnwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[inner sep=0] (img)
+                {\includegraphics[width=\linewidth]{fig/raw/ita_ecbs_comparison/ita_ecbs_ratio_hotspot_pow2.pdf}};
+            \node[anchor=south, font=\small, yshift=1pt]
+                at ([xshift=0.10\linewidth]img.north) {\scenHotspot};
+        \end{tikzpicture}
+    \end{minipage}
+    {\centering\small agents}
+    {\includegraphics[width=\linewidth]{fig/raw/ita_ecbs_comparison/ita_ecbs_legend.pdf}}
+    \caption{
+    Comparison with solvers on \emph{random-32-32-10} in \scenEqdist (left) and \scenHotspot (right), evaluated over 10 instances.
+    Instances that ITA-ECBS fails to solve within the time limit are plotted in the gray band labeled ``fail.''
+    }
+    \label{fig:ita-ecbs-comparison}
+\end{figure}

@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "body.tex",
+      "role": "body"
+    },
+    {
+      "path": "ethics.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "a58d61e67543d3853cb6f11b46a45f7a0f6b88799c6d1a65c8035c57e48d76e3",
+    "abstract.tex": "054b6b7bb9b5dad5fcc311ed8ce62b384b7b26529272e2ef24bb126e88ff10d1",
+    "body.tex": "7a8ae63f7e77147174d1545059da22e067c176ccb9f45557006ec94401e59047",
+    "ethics.tex": "cebefeb1b0c6daba5464843f8c074fcbbd6b46b1f492acb043c5843d812713cd",
+    "appendix.tex": "80d5fe1b8057a58c4f16f5fa1f27ec888c5074532d522ec0db6b7e59e4afeff1"
+  }
+}

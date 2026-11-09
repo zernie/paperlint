@@ -1,0 +1,212 @@
+\section{Experimental Design for AI Agent Evaluation}
+\label{sec:methods}
+
+We formalize the randomized intervention design and the three causal estimands introduced above: the {\em blip with randomized continuation}, the {\em blip with no-treatment continuation}, and the {\em policy gain}.
+
+We first introduce the agent--environment model in Section~\ref{sec:notation} and describe the randomized intervention design in Section~\ref{sec:design}.
+We then define the three estimands in Section~\ref{sec:estimands} and discuss their identification and estimation in Section~\ref{sec:estimation}, distinguishing the assumptions required for causal identification from the additional modeling assumptions used by our estimators.
+
+\subsection{Agent--Environment Model}
+\label{sec:notation}
+
+% \paragraph{Agent trajectories and outcomes.}
+Consider an AI agent interacting with an environment to complete a task.
+Each trajectory begins with a task input $X$ (e.g., a prompt) and consists of a sequence of agent actions and environment observations until termination.
+Let $Y\in\mathbb{R}$ denote the terminal outcome, e.g., task success in $\tau$-bench Retail, a similarity score in ToolSandbox, or a safety violation in ImpossibleBench.
+
+%\vsdelete{, {\color{brown}where we assign adversarial or neutral feedback and measure safety rule violations.}}
+% An increase in $Y$ represents improved performance in the assistance experiments but a higher violation probability in the steering experiment.
+
+We index the eligible intervention points within a trajectory by $t=1,\ldots,T$, where $T$ is the total number of intervention points reached before termination. 
+The eligibility criteria are specified in advance, but $T$ is random and may depend on previous interventions.
+For example, reviewing a proposed tool call may change the agent's subsequent actions, including the number of tool calls it makes before termination.
+% At each intervention point $t$, we record the agent's proposed action and context before assigning intervention or control.
+% For example, an intervention may involve reviewing a proposed tool call before execution, as in $\tau$-bench Retail and ToolSandbox, or providing adversarial feedback after an unsuccessful coding submission, as in ImpossibleBench.
+Let $L_t$ denote the information observed at intervention point $t$, including the agent's proposed action, the current environment context, and all the observations since the previous intervention point.
+
+Let $A_t\in\{0,1\}$ denote the assignment, with $A_t=1$ for intervention and $A_t=0$ for control.
+For example, an intervention may involve reviewing a proposed tool call before execution, as in $\tau$-bench Retail and ToolSandbox, or providing adversarial feedback after an unsuccessful coding submission, as in ImpossibleBench. In the latter case the intervention's goal is not to help reduce violations, but rather to measure at which point in the execution an adversarial prompt injection attack is most harmful; which can be valuable in understanding the most vulnerable points of the agentic execution.
+The pre-assignment observed history at time $t$ is then
+\begin{equation}
+    H_t=(X,L_1,A_1,\ldots,A_{t-1},L_t).
+    \label{eq:history}
+\end{equation}
+We note that $t$ indexes intervention points rather than agent actions, though the two may coincide.
+
+\paragraph{Agent dynamics.}
+An intervention can change the agent's subsequent actions and the environment it encounters, thereby affecting both the terminal outcome and future intervention opportunities.
+We allow these agent--environment dynamics to depend on the entire interaction history, without assuming Markovianity or stationarity.
+We treat the agent as a black box: our framework only requires recorded interaction histories, intervention assignments, and terminal outcomes, without access to the agent's internal state or model parameters.
+% Throughout, an intervention policy determines how we assign interventions, rather than how the agent selects its actions.
+% When comparing intervention policies, we hold the initial task distribution and agent--environment dynamics fixed, varying only the intervention assignments.
+
+\subsection{Randomized Intervention Design}
+\label{sec:design}
+
+We consider an experimental design that randomly assigns interventions at eligible points within agent trajectories.
+At each intervention point, we specify an intervention and a control condition.
+For example, a proposed tool call may be reviewed or executed directly, while an unsuccessful coding submission may receive adversarial or neutral feedback.
+After each assignment, the agent continues interacting with the environment.
+
+We collect agent trajectories under a randomized intervention policy $g$.
+At each eligible intervention point $t$, intervention is assigned conditional on the observed history $H_t$:
+\begin{equation}
+    A_t\mid H_t=h
+    \sim \operatorname{Bernoulli}(e(h)),
+    \qquad
+    e(h):=g(1\mid h),
+    \label{eq:randomization}
+\end{equation}
+where $e(h)\in(0,1)$ is the specified probability of intervention.
+In our experiments, we use uniform Bernoulli randomization, setting $e(h)=1/2$ at every eligible intervention point.
+
+Unlike trajectory-level randomization, our design repeatedly randomizes interventions within each trajectory.
+Earlier interventions may affect the agent's subsequent behavior and future intervention opportunities, but each new assignment remains randomized conditional on the observed history.
+This design allows us to estimate causal effects across different agent actions and states, as well as evaluate history-dependent intervention policies, using the same collection of trajectories without requiring counterfactual replay. Figure~\ref{fig:design} illustrates our design in $\tau$-bench Retail.
+
+
+\subsection{Causal Estimands}
+\label{sec:estimands}
+
+
+% We consider three causal estimands to evaluate the effects of interventions during agent execution.
+% The first two measure the causal effects of individual interventions under different continuation policies, while the third evaluates the effect of an intervention policy over an entire trajectory.
+% Consider an eligible intervention point $t$ with observed history $H_t=h$.
+% Let $\pi$ denote an intervention policy, possibly randomized, that assigns interventions based on observed histories.
+% For blip effects, $\pi$ governs interventions after time $t$; for policy gain, it specifies the target intervention policy throughout the entire trajectory. 
+
+
+We consider three causal estimands to evaluate the effects of interventions during agent execution (see Figure~\ref{fig:estimand-contrasts}).
+As a running example, consider a customer-support agent that manages customer orders through tool calls.
+At each proposed tool call, we may review the call before execution or execute it directly.
+In this example, we study the causal effects of reviewing proposed order-cancellation calls.
+
+Recall that $g$ denotes the randomized intervention policy used to generate the experimental data.
+In contrast, we use $\pi$ to denote a policy of interest that assigns interventions based on observed histories.
+For blip effects, $\pi$ governs interventions after the current decision, whereas for policy gain, it governs interventions throughout the trajectory.
+
+
+Let $Y_t(a;\pi)$ be the potential terminal outcome if we assign $A_t=a$ at the current point and follow $\pi$ thereafter, keeping the pre-assignment history $h$ fixed.
+Following the terminology of structural nested mean models (SNMMs) \citep{vansteelandt2014snmm}, we define the conditional {\em blip effect} as
+\begin{equation}
+    b(h;\pi)
+    :=
+    \E\!\left[
+        Y_t(1;\pi)-Y_t(0;\pi)
+        \mid H_t=h
+    \right].
+    \label{eq:conditional-blip}
+\end{equation}
+This effect measures how intervening at the current decision changes the expected terminal outcome, accounting for its downstream effects on subsequent agent actions, environment states, and future intervention opportunities.
+
+To evaluate intervention effects across different agent actions and states, let $G$ denote a group of intervention points defined by their pre-assignment histories.
+For example, $G$ may correspond to a class of tool calls, a specific API, or an agent state characterized by repeated failures.
+In our customer-support example, $G$ could represent all intervention points at which the agent proposes an order-cancellation call.
+These groups may overlap or form a hierarchy, allowing us to evaluate interventions at different levels of granularity.
+We define the group-averaged intervention effect under continuation policy $\pi$ as
+\begin{equation}
+    \tau(G;\pi)
+    :=
+    \frac{
+        \E_g\!\left[
+            \sum_{t:H_t\in G} b(H_t;\pi)
+        \right]
+    }{
+        \E_g\!\left[
+            \sum_{t:H_t\in G}1
+        \right]
+    }, %\vsedit{=\E_{g, t\sim U\{1,\ldots, T\}}[Y_t(1;\pi)-Y_t(0;\pi)\mid H_t\in G]},
+    \label{eq:blip}
+\end{equation}
+% \footnote{}
+where $\E_g$ denotes expectation over trajectories generated under the randomized collection policy $g$, and the denominator is assumed positive.
+Thus, the averaging distribution is determined by $g$, even when the continuation policy $\pi$ differs from $g$.
+
+We now define the three estimands of interest.
+\paragraph{Blip with randomized continuation.}
+We first consider the effect of an intervention when future assignments continue to follow the randomized collection policy.
+Setting $\pi=g$, the estimand $\tau(G;g)$ measures this effect over intervention points in $G$. In our example, this measures the average effect of reviewing a proposed order-cancellation call on terminal task success, with subsequent reviews remaining randomized.
+This group-averaged blip is closely related to distal causal excursion effects in micro-randomized trials \citep{boruvka2018moderation,qian2025distal}.
+
+\paragraph{Blip with no-treatment continuation.}
+We next consider the effect of intervening at the current decision with no subsequent interventions.
+Let $\pi_0(h)\equiv 0$ denote the never-intervene policy.
+We write $\tau(G;0):=\tau(G;\pi_0)$ as shorthand for the group-averaged blip with no-treatment continuation.
+In our example, this measures the average effect of reviewing a proposed order-cancellation call when all subsequent tool calls are executed without review.
+Both blip estimands average over intervention points reached under the collection policy $g$, but differ in how future interventions are assigned.
+
+\paragraph{Policy gain.}
+Beyond the effect of intervening at a single decision, we also consider the effect of applying an intervention policy throughout a trajectory.
+Let $Y(\pi)$ denote the potential outcome when $\pi$ is followed {\em throughout a trajectory}.
+We define the value of a policy as $V(\pi):=\E[Y(\pi)]$.
+
+For a reporting group $G$ (e.g., a class of tool calls), consider a selective policy $\pi_G$ that intervenes whenever the observed history belongs to $G$, and use $\pi_0$ as the reference policy that never intervenes.
+We define the {\em policy gain} as
+\begin{equation}
+    \pi_G(h)=\ind\{h\in G\},
+    \qquad
+    \pi_0(h)=0,
+    \qquad
+    \Delta(G):=V(\pi_G)-V(\pi_0).
+    \label{eq:policy-target}
+\end{equation}
+This estimand measures the difference in expected terminal outcomes between following the selective intervention policy and never intervening.
+In our example, this compares a policy that reviews every proposed order-cancellation call with a policy that never reviews any tool calls throughout the trajectory.
+
+The policy gain compares expected terminal outcomes under different intervention policies, as in {\em off-policy evaluation} (see, e.g., \citep{jiang2016dr,thomas2016dataefficient}).
+Since interventions can affect subsequent agent behavior and future intervention opportunities, different policies may generate different trajectories.
+Thus, the policy gain cannot generally be obtained by simply aggregating individual blip effects.
+Figure~\ref{fig:estimand-contrasts} illustrates the differences among the three estimands.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{estimand_contrasts.pdf}
+\caption{
+Three causal estimands for interventions during agent execution.
+Panels (a)--(c) show the blip with randomized continuation, the
+blip with no-treatment continuation, and the policy gain over never
+intervening, respectively.
+}
+\label{fig:estimand-contrasts}
+\end{figure}
+
+\subsection{Identification and Estimation}
+\label{sec:estimation}
+
+We now discuss the assumptions required to identify the three causal estimands from randomized trajectories, and then introduce our methods for estimation and inference.
+
+\paragraph{Causal identification.}
+We rely on four standard assumptions.
+First, {\em consistency} requires that the observed trajectory agrees with the potential trajectory under the realized intervention assignments.
+Second, {\em sequential exchangeability} requires that each intervention assignment is independent of future potential trajectories and outcomes, conditional on the observed pre-assignment history $H_t$.
+This condition holds by our randomized design.
+Third, {\em positivity} requires $g(a\mid h)>0$ for every assignment $a$ needed to evaluate a target intervention policy or continuation at the relevant histories.
+Finally, we assume {\em no interference} across trajectories.
+
+For the blip with randomized continuation, define
+$$
+    m_g(h,a)
+    :=
+    \E_g[Y\mid H_t=h,A_t=a]
+$$
+as the expected outcome conditional on history $h$ and assignment $a$, with subsequent interventions following the collection policy $g$.
+Under the identification assumptions, the blip effect defined in \eqref{eq:conditional-blip} can be written as
+\begin{equation}
+    b(h;g)=m_g(h,1)-m_g(h,0).
+    \label{eq:identification}
+\end{equation}
+Thus, this blip effect is identified directly from the randomized data, without modeling the agent--environment dynamics.
+
+Similarly, the blip with no-treatment continuation and the policy gain are also identified under these assumptions, provided positivity holds along the target-policy continuations.
+However, estimating these effects is more challenging because interventions can alter future trajectories, and few observed trajectories may follow a given target policy over a long horizon.
+
+\paragraph{Estimation and inference.}
+For the blip with randomized continuation $\tau(G;g)$, we use a cross-fitted augmented inverse probability weighting (AIPW) estimator with known assignment probabilities and fitted outcome predictions. Given that we know the assignment probabilities under the randomized design, this estimator is unbiased and asymptotically normal, allowing for valid inference even with flexible machine learning models for the outcome predictions, without relying that these models are well specified or converge to the true conditional expectations.
+Moreover, we also fit structural nested mean models (SNMMs) to obtain model-based estimates for comparison.
+
+For the blip with no-treatment continuation $\tau(G;0)$ and policy gain $\Delta(G)$, we use continuation-specific SNMMs with g-estimation \citep{robins1994correcting,vansteelandt2014snmm,lewis2020double}.
+These estimators require additional assumptions on the specification of the blip-effect models, beyond those needed for AIPW estimation.
+% These assumptions are specific to our estimation methods and are not required for causal identification.
+
+For all three estimands, we report pointwise 95\% Student's $t$-based confidence intervals, treating completed trajectories as independent observations while accounting for within-trajectory dependence.
+We provide detailed estimators and inference procedures in Appendix~\ref {app:estimating-equations}.

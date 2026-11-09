@@ -1,0 +1,14 @@
+\section{Related Work}
+
+\paragraph{Korean LLM benchmarks.}
+Korean LLM evaluation has expanded from cultural and linguistic knowledge \citep{kim2024click} to expert knowledge drawn from national exams \citep{son2025kmmlu, hong-etal-2025-kmmlu}, with results reported by subject or category.
+Recent Korean benchmarks have also sought to diagnose where model failures arise, through stepwise error analysis of multi-step questions \citep{son2025multi} and question-level precedents that separate legal knowledge from reasoning \citep{oh2026korean}.
+Similar efforts in other domains partition existing questions into knowledge- and reasoning-focused subsets \citep{thapa2025disentangling} or decompose complex questions into sub-questions at different depths of knowledge \citep{ko2024hierarchical}.
+In these approaches, however, questions with different reasoning or application demands generally also require different knowledge. 
+We instead analyze existing Korean benchmarks under a shared knowledge--application framework and construct contrasts in which the required knowledge is fixed.
+
+\paragraph{Controlled and LLM-based benchmark construction.}
+Controlled evaluation changes one factor while keeping the rest of a question intact, through minimal edits \citep{gardner2020evaluating}, counterfactual conditions \citep{wu2024reasoning}, or templated variants \citep{mirzadeh2025gsm}.
+LLM-based pipelines scale construction by generating questions from declared desiderata \citep{li2025autobencher} or taxonomies \citep{davidson2026reasoning}.
+Closest to our setting, some methods extend existing benchmarks from seed questions, across cognitive levels \citep{cao2024structeval} or reasoning complexity \citep{zhang2024darg}, but their validation focuses mainly on answer correctness.
+In contrast, \name{} holds the required knowledge constant and manipulates application demand, and verifies knowledge preservation and target-application validity through LLM-based and human validation. 

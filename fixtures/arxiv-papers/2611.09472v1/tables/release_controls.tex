@@ -1,0 +1,61 @@
+% Requires: booktabs
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+
+\caption{\textbf{Held-out performance under alternative
+memory-release policies.}
+All conditions use the same HotpotQA checkpoint,
+initial ETG store, and test questions.
+EM and F1 are percentages.
+$\Delta$F1 is the paired difference from retaining all
+records with a 95\% confidence
+interval.}
+\label{tab:release-controls}
+
+\begin{tabular*}{\linewidth}{
+@{}l@{\extracolsep{\fill}}ccccc@{}}
+\toprule
+& \multicolumn{3}{c}{Held-out performance}
+& \multicolumn{2}{c}{ETG records}\\
+\cmidrule(lr){2-4}
+\cmidrule(lr){5-6}
+Release policy
+& EM
+& F1
+& $\Delta$F1 [95\% CI]
+& Retrievable
+& Archived\\
+\midrule
+Retain all
+& 54.4
+& 71.1
+& Reference
+& 600
+& 0\\
+
+Immediate release
+& 50.9
+& 66.8
+& $-4.3\;[-4.6,\,-4.0]$
+& 13
+& 587\\
+
+Random release
+& 51.6
+& 67.6
+& $-3.5\;[-3.9,\,-3.1]$
+& 269
+& 331\\
+
+Verified release
+& 54.0
+& 70.9
+& $-0.2\;[-0.6,\,0.2]$
+& 269
+& 331\\
+\bottomrule
+\end{tabular*}
+\end{table}

@@ -1,0 +1,195 @@
+\clearpage
+\appendix
+
+% ==================================================
+% 0. Formal Definitions (moved out of §3 to save space)
+% ==================================================
+\section{Formal Definitions}
+\label{app:formal-defs}
+
+\paragraph{Boundary violation kinds.} Each drift action in ADB carries a normative label drawn from four categories. Two are grounded in GDPR Art.~5~\citep{GDPR2016}:
+\begin{itemize}
+  \item \textit{Purpose limitation}: data or tools used for a purpose incompatible with the original task (cf. Art.~5(1)(b), which requires that personal data be collected for specified, explicit, and legitimate purposes and not further processed in an incompatible manner).
+  \item \textit{Data minimization}: accessing data clearly beyond what the task requires (cf. Art.~5(1)(c), which requires that data be adequate, relevant, and limited to what is necessary).
+  \item \textit{Explicit prohibition}: the instruction explicitly forbids the action yet the agent executes it.
+  \item \textit{Implicit red line}: a high-risk, state-mutating, or externalizing action that a reasonable professional would confirm before executing, absent any explicit prohibition.
+\end{itemize}
+
+\paragraph{Rule-based task completion (TC).} As a deterministic complement to the LLM-judged $\mathrm{TSR}$, we also report rule-based task completion: a trajectory is TC-complete iff every \texttt{required\_tool\_call} appears at least once (order-agnostic). TC is used as a sanity-check denominator; the main text reports the LLM-judged $\mathrm{TSR}$ throughout.
+
+% ==================================================
+% 1. Core Models, Frameworks, and Data Construction
+% ==================================================
+\section{Core Models, Frameworks, and Data Construction Algorithm}
+\label{app:core-suite}
+
+\subsection{Core Models and Frameworks}
+\label{app:core-models-and-frameworks}
+\input{appendix_materials/core/core_models_and_frameworks}
+
+\subsection{Core Data Construction Algorithm}
+\label{app:core-data-algorithm}
+\input{appendix_materials/core/core_data_algorithm}
+
+% ==================================================
+% 4. Dataset Statistics
+% ==================================================
+\section{Dataset and Pipeline Statistics}
+\label{app:dataset-stats}
+\input{appendix_materials/data_info/gen}
+\input{appendix_materials/data_info/human_eval}
+
+\section{Legal Grounding}
+\label{app:legal}
+
+\subsection{Provision Registry and Taxonomy}
+\label{app:legal-registry}
+
+The registry covers eleven legal instruments in four jurisdictions (Table~\ref{tab:legal_instruments}). For each instrument, an LLM reads the full text and extracts every provision that could directly adjudicate a concrete drift behaviour, splitting numbered sub-paragraphs whenever each can be applied on its own and excluding definitional, institutional, procedural, scope, and pure-penalty clauses (prompt in Figure~\ref{fig:legal-extraction-prompt}). Each provision is stored verbatim with its applicable drift types, yielding 150 provisions; excluding the 19 AI Act provisions and one non-binding AGENT provision leaves 130 in the provision-linked analysis. Provisions are grouped into a two-level taxonomy of functional obligations that cuts across jurisdictions (e.g., \emph{Data Minimisation} groups GDPR Art.~5(1)(c), NDSR Art.~22(1), and PDPO DPP1(1)(c)), so that matching can first select a category and then a provision. Table~\ref{tab:taxonomy_coverage} reports the categories that remain populated after the exclusions described in \S\ref{sec:dataset-construction}.
+
+\input{tables/legal_instruments}
+\input{tables/legal_taxonomy_coverage}
+
+\subsection{Two-Step Matching}
+\label{app:legal-matching}
+
+Matching uses Qwen3-235B-A22B-Instruct at temperature $0$ through an OpenAI-compatible endpoint. Each drift point is described by the task instruction, the violating tool call and arguments, its drift type and violation kind, and, when available, the trigger, action, and rationale of the corresponding drift point in the Stage-1 playbook, located by tool name and arguments rather than by position. \emph{Step~1} (one call per sample; Figure~\ref{fig:legal-s1-prompt}) assigns each drift point one to three L2 categories. \emph{Step~2} (one call per drift point; Figure~\ref{fig:legal-s2-prompt}) presents the full text of every provision in the selected categories and asks the model to keep only directly relevant provisions, ranked by relevance, with a written justification. Outputs are validated programmatically: categories must exist in the taxonomy, and every returned provision must belong to the candidate set and the registry, with at most five distinct provisions per drift point; invalid outputs are retried. All 648 samples and 3{,}911 drift points completed. The prompts were written in Chinese; Figures~\ref{fig:legal-extraction-prompt}--\ref{fig:legal-s2-prompt} show faithful English translations.
+
+\subsection{Full Results}
+\label{app:legal-results}
+
+Figure~\ref{fig:legal-full} extends Figure~\ref{fig:legal-top10} to all 58 cited provisions, and Figure~\ref{fig:legal-l2} aggregates the same runs by taxonomy category. Figure~\ref{fig:legal-points} and Table~\ref{tab:statute_coverage} describe the benchmark side: how many drift points each provision is attached to, independent of any model.
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=0.78\textwidth]{figs/legal_model_statute_full.pdf}
+\caption{Provision-level drift rate $\mathrm{DR}_\ell$ (\% of runs) for all 58 provisions cited by legally grounded drift points (rows, ordered by mean rate across models) and all 13 models (columns).}
+\label{fig:legal-full}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figs/legal_model_l2.pdf}
+\caption{Run-level drift rate (\% of runs) by taxonomy L2 category: a run counts for a category if it triggers at least one drift point whose remaining provisions belong to that category.}
+\label{fig:legal-l2}
+\end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/legal_points_by_statute.pdf}
+\caption{The 20 provisions attached to the most drift points in ADB, coloured by jurisdiction. A drift point may cite several provisions.}
+\label{fig:legal-points}
+\end{figure}
+
+\input{tables/legal_statute_coverage}
+
+
+
+% ==================================================
+% 5. SUPPLEMENTARY ANALYSIS（补充分析）
+% ==================================================
+\section{Supplementary Analysis}
+\label{app:supplementary}
+
+\subsection{Additional Robustness Analyses}
+\label{app:additional-robustness}
+\input{appendix_materials/additional_robustness_analyses}
+
+% 说明成功和漂移是解耦的
+\subsection{Decoupling Task Success and Authorization Drift}
+\label{app:decoupled-tsr-dr}
+\input{appendix_materials/cases/Decoupling_success_and_drift}
+
+% 完整例子分析
+\subsection{Extended Complete Example: Meetlark Scheduling Task}
+\label{app:case-study}
+\input{appendix_materials/cases/case_study}
+
+% 说明线索并非强制对抗性
+\subsection{Non-Adversarial Trigger vs.\ Prompt Injection}
+\label{app:trigger-vs-injection}
+\input{appendix_materials/cases/trigger_vs_injection}
+
+% Framework numerical backing for Figure 4 in the main text
+\subsection{Framework Comparison: Numerical Results}
+\label{app:framework-table}
+Detailed framework performance across the four evaluated models is presented in Table~\ref{tab:framework}.
+\input{tables/framework}
+
+% Heatmap visualisation of the per-dimension drift decomposition that appears as columns in Table~\ref{tab:main_results}.
+\subsection{Drift Type Decomposition: Heatmap View}
+\label{app:drift-types-heatmap}
+
+The heatmap of drift type distribution is presented in Figure~\ref{fig:drift_types}.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figs/drift_types_heatmap.pdf}
+\caption{Per-model decomposition of drift into the four authorization dimensions (\% of evaluated samples in which the corresponding drift type occurs; a sample may exhibit multiple types). This is the same data reported numerically in the \emph{Drift Type Decomposition} columns of Table~\ref{tab:main_results}, included as a heatmap for visual reference. Data drift dominates across families, with Scope drift second; Time and Tool drift trail.}
+\label{fig:drift_types}
+\end{figure*}
+
+% ==================================================
+% 2. Prompts
+% ==================================================
+\section{Prompts}
+\subsection{Generation Pipeline Prompts}
+\label{app:generation-pipeline}
+
+\subsubsection{Stage 1 Prompt}
+\label{app:stage1-prompt}
+Figure~\ref{fig:stage1-prompt} shows the prompt used during Stage-I playbook generation.
+\input{appendix_materials/prompts/stage1_prompt}
+
+\subsubsection{Stage 2 Prompt}
+\label{app:stage2-prompt}
+Figure~\ref{fig:stage2-prompt} shows the prompt used for Stage~2 environment and annotation generation.
+\input{appendix_materials/prompts/stage2_prompt}
+
+\subsubsection{Critic Agent Prompt}
+\label{app:critic-prompt}
+Figure~\ref{fig:critic-prompt} shows the prompt used for the critic agent during judgment.
+\input{appendix_materials/prompts/critic_prompt}
+
+\subsection{Task-success Judge Prompt}
+\label{app:success_prompt}
+Figure~\ref{fig:prompt-system} shows the system prompt prepended to every task-completion judgment. The user message concatenates the task instruction, the per-sample completion criteria, and a linearized trajectory.
+\input{appendix_materials/prompts/task_success_prompt}
+
+\subsection{Legal Grounding Prompts}
+\label{app:legal-prompts}
+
+\input{appendix_materials/prompts/legal_extraction_prompt}
+\input{appendix_materials/prompts/legal_matching_s1_prompt}
+\input{appendix_materials/prompts/legal_matching_s2_prompt}
+
+
+
+% ==================================================
+% 3. Sample Generated Files
+% ==================================================
+\section{Sample Generated Files}
+\label{app:sample-files}
+
+\subsection{Tool Schema Example}
+\label{app:tool-schema}
+Figure~\ref{lst:tool-schema} shows two representative tool schema entries for the \textsc{MeetlarkEnv} sample: one compliant-path tool and one drift-inducing tool.
+\input{appendix_materials/sample_files/tool_schema_example}
+
+\subsection{BaseEnv Example}
+\label{app:baseenv}
+Figure~\ref{lst:baseenv} shows the environment state initialisation and the trigger-bearing return value of \texttt{get\_poll\_results}.
+\input{appendix_materials/sample_files/env_example}
+
+\subsection{Annotation JSON Example}
+\label{app:annotation-json}
+Figure~\ref{lst:annotation} shows the full annotation file, including the compliant path and all drift point entries with dual-level labels.
+\input{appendix_materials/sample_files/annotation_example}
+
+% ==================================================
+% AI assistance disclosure
+% ==================================================
+\section{Use of AI Assistants}
+\label{app:ai-assistance}
+
+Generative AI assistants were used during manuscript preparation to support initial drafting, language polishing, and the identification of grammatical and stylistic errors. All resulting text was reviewed and edited by the authors, who take full responsibility for the content of the final manuscript.

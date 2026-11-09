@@ -1,0 +1,31 @@
+\section{DRAFT-Bench}
+\label{sec:data}
+\subsection{Archive scope and counting units}
+The evaluation archive reconciles 232 design-related case lineages with 40 RFQ scenarios, yielding 272 lineages and 301 protocol units. Its 333 observation records retain 32 historical associations between the Brief Bank v0.2 core and v0.3; those associations add no new executions (Table~\ref{tab:scope}). Counts are not multiplied by the number of candidate systems. Routing, preference prediction, planning, and artifact execution measure different endpoints and cannot be combined into a common quality score. The 43-condition Brief Bank remains the primary design execution analysis.
+
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{3pt}
+\caption{Archive accounting. Lineages deduplicate IDs and versions; neither lineages nor protocol units establish independent statistical samples.}
+\label{tab:scope}
+\begin{tabularx}{\linewidth}{@{}Yrrr@{}}
+\toprule Scope & Lineages & Units & Records\\\midrule
+Design-related archive & 232 & 261 & 293\\
+RFQ, two cohorts & 40 & 40 & 40\\\midrule
+Combined & 272 & 301 & 333\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Task structure and capability coverage}
+A design condition specifies a brief, available source/reference assets, context, ordered feedback, constraints, and expected deliverables. The agent produces versioned artifacts and a response after each turn. The brief may contain obligations that become active only after a client choice; approved properties can remain fixed through later edits. This structure motivates checking the assignment across versions rather than judging only its last preview.
+
+Figure~\ref{fig:lifecycle} groups these tasks by lifecycle stage. Requirement discovery uses RFQ fields, targeted questions, and fixed customer replies. Creative exploration includes alternative directions, reference understanding, direction selection, and comparison. Constrained edits and iterative revisions combine requested changes with protected content and version dependencies. Production handoff concerns complete sets, required formats, file structure, and declared handoff state. Table~\ref{tab:capability-map} maps this coverage to the conclusions supported by the current results.
+
+\subsection{Primary design track}
+Brief Bank data v0.3 contains 35 briefs under 43 conditions: 24 core briefs/32 conditions and eleven external briefs/conditions. Eight families cover identity, campaigns, packaging, e-commerce, format adaptation, feedback revision, reference-based work, and production handoff (Appendix~\ref{app:auxiliary}). Four core briefs each have zero-shot, reference-grounded, and personalized contexts. These conditions are not independent client projects. External tasks have newly authored assets and contracts inspired by public task patterns; they form a curated sample rather than an untouched population test.
+
+Scripted feedback is delivered in order. It can refer to earlier choices or versions whether or not the candidate has established them. The version-dependency case in Section~\ref{sec:revision} shows why the feasibility of a feedback instruction must itself be inspected. We do not reinterpret a missing prerequisite as an agent failure without adjudication.
+
+\subsection{Requirement-discovery track}
+The original twenty synthetic English RFQ scenarios derive from communication patterns in five supplied examples and cover bulk images, tourist videos, cultural merchandise, content workflows, and apparel retouching. An additional twenty scenarios extend four supplied real-world scenario families: hotel-listing retouching, scene-enhancement pairs, educational animation, and a ski-opening poster. They retain authored variants and synthetic assumptions; the executed dialogues are simulations rather than real customer conversations. Each scenario has seven fields, four critical, and at most eight customer replies. Fixed answers expose information only when a corresponding question is asked; attachment mentions are placeholders.
+
+The RFQ track measures requirement elicitation, not downstream design success. It is unpaired with the design track and cannot establish that additional coverage improves delivery. The two RFQ cohorts differ in auxiliary models, execution dates, and attempt histories; their combined view is a descriptive reconciliation, not a uniform new forty-case experiment. Auxiliary routing, preference, planning, and 21q results remain in Appendix~\ref{app:auxiliary}; overlapping observations are not added to the primary sample.

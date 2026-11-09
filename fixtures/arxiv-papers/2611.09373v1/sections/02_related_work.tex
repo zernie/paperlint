@@ -1,0 +1,64 @@
+\section{Related work}
+\label{sec:related}
+
+\paragraph{Public ADMET benchmarks and data regimes.}
+TDC brought established ADMET endpoints into a widely used collection with fixed scaffold splits
+\citep{huang2021tdc}. A later audit of leading submissions found reproducibility, leakage, and
+test-set reuse problems \citep{koleiev2026enduser}. Since TDC was introduced, newer resources have
+extended ADMET evaluation through stronger curation, blinded or prospective tests, and multitask
+structure. PharmaBench adds curation and experimental-condition extraction
+\citep{niu2024pharmabench}, while the ASAP--Polaris--OpenADMET challenge used blinded, temporally
+split measurements from an active lead-optimization programme
+\citep{macdermottopeskin2025blind}. The Biogen and ExpansionRx releases provide industry assay
+collections \citep{fang2023prospective,openadmet2026expansionrx}. These and public assay data also
+support multitask studies: \citet{adrian2025multitask} fine-tune models on Biogen and public assay
+data, while \citet{xue2026probabilistic} evaluate probabilistic pretraining on Biogen, ExpansionRx,
+and ChEMBL-MT.
+
+\paragraph{Simple molecular representations as baselines.}
+Recent molecular benchmarks increasingly include graph neural networks and pretrained molecular
+representations \citep{li2024muben,praski2025benchmarking}. Their gains over simpler representations
+are not uniform. ADMET predictability can vary more by assay than by algorithm or data volume
+\citep{aleksic2022predictability}, and MapLight obtained strong TDC results by combining fingerprints
+and physicochemical descriptors with boosted trees \citep{notwell2023maplight}. In a separate study
+across 25 classification datasets, most frozen pretrained molecular embeddings offered little or no
+improvement over an extended-connectivity fingerprint baseline \citep{praski2025benchmarking}. A carefully tuned
+fingerprint model is therefore an important reference for small molecular datasets.
+
+\paragraph{What molecular UQ evaluations measure.}
+The relevant UQ evaluation depends on how the prediction will be used. Ranking-based evaluation is
+appropriate when the aim is to prioritize predictions or reject the least reliable ones. Decisions based on a
+numerical probability or interval instead require uncertainty on a meaningful scale. UNIQUE makes
+this distinction explicit by separating ranking-based, calibration-based, and proper-score
+evaluations \citep{lanini2024unique}. Proper scores reward calibration together with sharpness;
+Brier score and interval score are
+examples for probabilities and intervals \citep{gneiting2007strictly}. Post-hoc transformations can
+also change the ordering of models, making the choice of calibration procedure part of the
+comparison design \citep{ranjan2024posthoc}. MUBen broadened molecular UQ comparisons across
+representations and both classification and regression datasets \citep{li2024muben}. Other work has
+tested whether error-ranking performance persists under chemical and temporal shifts
+\citep{parrondopizarro2026shifts}. Results vary across tasks and measures
+\citep{hirschfeld2020uncertainty}, while ensembles have provided strong results in several molecular
+UQ benchmarks \citep{scalia2020evaluating,li2024muben}.
+
+\paragraph{Chemical splits and method comparison.}
+Random splits tend to preserve close chemical analogues across training and test sets. Scaffold or
+similarity-based splits reduce structural overlap, while temporal splits can approximate prospective
+use when reliable dates are available \citep{yang2019analyzing,sheridan2013timesplit}. Split,
+optimization, and other stochastic choices all contribute to benchmark variation
+\citep{bouthillier2021accounting,ash2025practically}. \citet{ash2025practically} recommend shared
+resamples and paired comparisons, generally using five-by-five repeated cross-validation (CV) for
+500--100,000 molecules and five-by-two CV below 500. They allow a single split for very large
+datasets when repeated CV is computationally impractical. Their lower-cost
+hyperparameter protocol uses one training--validation split inside each repeated-CV training set
+rather than full inner CV.
+
+The statistical procedure should follow the comparison being made. Across datasets, the Friedman
+test asks whether method ranks differ overall \citep{demsar2006statistical}. Nemenyi
+critical-difference diagrams provide a conventional all-pairs summary, while Holm-adjusted pairwise
+tests can give more power and adjusted $p$-values for the chosen comparison family
+\citep{garcia2008extension}. Within one dataset, Tukey's honestly significant difference procedure
+is useful when every pair of method means is of interest \citep{ash2025practically}. Hsu's
+multiple-comparisons-with-the-best (MCB) procedure focuses instead on which methods can be ruled out
+as best \citep{hsu1984constrained}. Cross-dataset ranks address consistency across tasks; comparisons
+on the original score scale address what can be distinguished on one task.

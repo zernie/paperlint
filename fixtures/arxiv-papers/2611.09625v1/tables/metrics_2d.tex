@@ -1,0 +1,20 @@
+\begin{table}[ht]
+    \caption{Evaluation of the impact of TT-MBRL on world model predictions on Memory Maze 2D 15\texttimes 15. We aggregate all metrics over 100 unseen trajectories of 64 frames from distinct episodes.}
+    \centering
+    \hfill \break
+    \begin{tabular}{l@{\hspace{0.5cm}}c@{\hspace{1.0cm}}c@{\hspace{1.0cm}}c@{\hspace{1.0cm}}c@{\hspace{1.0cm}}c}
+    \toprule
+    \textbf{Method} & \textbf{KL div $\downarrow$} & \textbf{FVD $\downarrow$} & \textbf{PSNR $\uparrow$} & \textbf{SSIM $\uparrow$} & \textbf{LPIPS $\downarrow$} \\
+    \midrule
+    DreamerV3 (TBTT) & $114.6$ & $104.5$ & $10.3$ & $0.552$ & $0.283$ \\
+    ~~+ TT-MBRL (Ours) & $\mathbf{\hphantom{0}66.0}$ & $\mathbf{\hphantom{0}55.2}$ & $\mathbf{16.3}$ & $\mathbf{0.642}$ & $\mathbf{0.241}$ \\
+    \midrule
+    TWISTER & $\hphantom{0}28.7$ & $\hphantom{0}89.1$ & $13.1$ & $0.578$ & $0.292$ \\
+    ~~+ TT-MBRL (Ours) & $\mathbf{\hphantom{0}13.2}$ & $\mathbf{\hphantom{0}57.1}$ & $\mathbf{15.7}$ & $\mathbf{0.641}$ & $\mathbf{0.262}$ \\
+    \midrule
+    R2I & $\hphantom{0}52.0$ & $115.4$ & $10.1$ & $0.541$ & $0.304$ \\
+    ~~+ TT-MBRL (Ours) & $\mathbf{\hphantom{0}13.8}$ & $\mathbf{\hphantom{0}45.7}$ & $\mathbf{15.8}$ & $\mathbf{0.675}$ & $\mathbf{0.246}$ \\
+    \bottomrule
+    \end{tabular}
+    \label{table:metrics_2d}
+\end{table}

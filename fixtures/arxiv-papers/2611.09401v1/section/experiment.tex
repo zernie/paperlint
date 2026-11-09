@@ -1,0 +1,370 @@
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\textwidth]{fig/result_new.pdf}
+\caption{
+\textbf{Qualitative comparison across training stages and model families.}
+Surface color indicates stress relative to the prescribed limit, while the bars
+summarize displacement, stress, and mass constraint satisfaction.
+Across model families, SFT improves CAD generation but can still violate geometric
+or physical constraints, whereas GRPO more consistently achieves joint feasibility.
+}
+    \label{fig:qualitative_comparison}
+    \vspace{-1em}
+\end{figure}
+
+
+\subsection{Dataset Generation}
+\label{sec:dataset}
+
+We construct a physics-aware Text-to-CAD dataset from the
+Text-to-CadQuery corpus~\citep{xie2025text}, which contains approximately
+\(110\text{k}\) CadQuery programs with geometric and semantic descriptions.
+Each program serves as a reference design and is processed by a CAD--CAE
+pipeline. We first derive boundary and loading conditions from the geometry,
+then perform FEM to obtain the maximum displacement \(\delta_{\max}\),
+\(99\)-th percentile von Mises stress \(\sigma_{\mathrm{P99}}\), and mass \(m\).
+
+Each successfully analyzed reference is converted into an inverse-design task
+rather than used as a direct reconstruction target. We remove exact dimensions
+and other numerical specifications that could reveal the reference geometry,
+while retaining high-level geometric semantics needed to define the intended
+structure. The reference measurements are then used to derive displacement,
+stress, and mass limits with a small feasibility margin, ensuring that the
+reference remains a feasible solution without exposing its exact simulation
+results. The resulting prompt specifies the geometry semantics, coarse design
+bounds, boundary and loading conditions, and physical requirements, and asks
+the model to generate a feasible design while minimizing mass. Detailed
+construction and sanitization rules are provided in the Appendix.
+
+After CAD--CAE annotation, \(77{,}067\) designs successfully pass the complete
+pipeline. We divide them into disjoint SFT and GRPO subsets. The SFT subset contains \(11{,}024\) samples paired with sanitized
+reference CadQuery programs, whereas the GRPO subset contains \(66{,}043\)
+tasks without target programs and is optimized solely through CAD--CAE
+verification.
+% We construct a physics-aware Text-to-CAD dataset from the existing Text-to-CadQuery corpus~\citep{xie2025text}, which contains approximately \(110\text{k}\) CadQuery programs with geometric and semantic descriptions. Each program is treated as a reference design and analyzed using a deterministic CAD--CAE pipeline to obtain its maximum displacement \(\delta_{\max}\), \(99\)-th percentile von Mises stress \(\sigma_{\mathrm{P99}}\), and mass \(m\).
+
+% Each valid reference is converted into an inverse-design task without exposing its exact geometry or simulation results. We redact exact numerical specifications while preserving high-level geometry semantics, and derive displacement, stress, and mass constraints from the corresponding reference measurements with a small feasibility margin. The resulting task provides the model with geometry semantics, coarse design bounds, physical conditions, and performance requirements, and asks it to generate a design satisfying the constraints while minimizing mass. Further details of the task construction and sanitization procedure are provided in the Appendix.
+
+% After CAD--CAE annotation, \(77{,}067\) designs successfully pass the complete pipeline. We divide them into disjoint SFT and GRPO subsets using the same prompt format. The SFT subset contains \(11{,}024\) samples with sanitized reference CadQuery programs as supervision, while the GRPO subset contains \(66{,}043\) samples without target programs and is optimized solely through CAD--CAE verification.
+
+
+\begin{table*}[t]
+    \centering
+    \small
+    \caption{
+    \textbf{Quantitative comparison on the full evaluation set of 3,373 tasks.}
+    All results are reported as success rates (\%).
+    Bold values indicate the best result among different settings of the same model.
+    }
+    \label{tab:model_comparison}
+    \setlength{\tabcolsep}{5.0pt}
+    \renewcommand{\arraystretch}{1.12}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{llccccccc}
+        \toprule
+        \multirow{2}{*}{Model}
+        & \multirow{2}{*}{Setting}
+        & \multirow{2}{*}{Valid CAD$\uparrow$}
+        & \multirow{2}{*}{BBox$\uparrow$}
+        & \multirow{2}{*}{CAE$\uparrow$}
+        & \multicolumn{3}{c}{Physical Constraints$\uparrow$}
+        & \multirow{2}{*}{Joint$\uparrow$} \\
+        \cmidrule(lr){6-8}
+        & & & & 
+        & Disp.
+        & Stress
+        & Physics
+        & \\
+        \midrule
+
+        Claude Opus 5
+        & Direct
+        & 73.82 & 42.31 & 70.71
+        & 46.52 & 49.87 & 8.42 & 7.29 \\
+
+        GPT-5.6 Sol
+        & Direct
+        & 62.41 & 35.61 & 56.69
+        & 46.58 & 35.75 & 16.87 & 15.51 \\
+
+        DeepSeek-V4-Flash-Ascend
+        & Direct
+        & 63.33 & 50.52 & 60.45
+        & 39.79 & 38.36 & 10.85 & 9.28 \\
+
+        \midrule
+
+        \multirow{3}{*}{Qwen3-4B}
+        & Zero-shot
+        & 18.56 & 11.41 & 17.55
+        & 12.24 & 13.93 & 1.22 & 0.74 \\
+        & SFT
+        & 94.25 & 77.73 & 91.49
+        & 63.09 & 63.27 & 39.19 & 36.64 \\
+        & GRPO
+        & \textbf{99.14} & \textbf{91.25} & \textbf{96.92}
+        & \textbf{84.44} & \textbf{81.83}
+        & \textbf{57.40} & \textbf{55.71} \\
+
+        \midrule
+
+        \multirow{3}{*}{Ministral-3-3B}
+        & Zero-shot
+        & 1.27 & 0.62 & 1.07
+        & 0.68 & 0.65 & 0.24 & 0.12 \\
+        & SFT
+        & 95.55 & 78.33 & 92.68
+        & 64.63 & 66.50 & 40.50 & 37.36 \\
+        & GRPO
+        & \textbf{98.99} & \textbf{94.22} & \textbf{97.45}
+        & \textbf{84.32} & \textbf{81.20}
+        & \textbf{59.29} & \textbf{58.05} \\
+
+        \midrule
+
+        \multirow{3}{*}{SmolLM3-3B}
+        & Zero-shot
+        & 6.91 & 2.91 & 6.55
+        & 5.37 & 5.90 & 0.65 & 0.18 \\
+        & SFT
+        & 93.92 & 74.98 & 90.31
+        & 58.85 & 60.72 & 31.28 & 28.73 \\
+        & GRPO
+        & \textbf{98.99} & \textbf{91.31} & \textbf{96.80}
+        & \textbf{77.47} & \textbf{76.28}
+        & \textbf{45.75} & \textbf{44.56} \\
+
+        \midrule
+
+        \multirow{3}{*}{StarCoder2-3B}
+        & Zero-shot
+        & 10.94 & 3.91 & 10.29
+        & 8.81 & 8.98 & 1.04 & 0.56 \\
+        & SFT
+        & 93.74 & 74.50 & 90.16
+        & 56.95 & 58.43 & 28.94 & 26.33 \\
+        & GRPO
+        & \textbf{98.96} & \textbf{92.05} & \textbf{97.15}
+        & \textbf{76.67} & \textbf{74.12}
+        & \textbf{43.14} & \textbf{41.65} \\
+
+        \midrule
+
+        \multirow{3}{*}{Qwen2.5-3B}
+        & Zero-shot
+        & 1.45
+        & 0.47
+        & 1.36
+        & 1.01
+        & 0.95
+        & 0.21
+        & 0.00 \\
+        & SFT
+        & 90.07 & 65.16 & 86.45
+        & 55.68 & 57.75 & 25.32 & 21.76 \\
+        & GRPO
+        & \textbf{98.55} & \textbf{88.50} & \textbf{96.32}
+        & \textbf{74.47} & \textbf{70.53}
+        & \textbf{40.94} & \textbf{39.49} \\
+
+        \bottomrule
+    \end{tabular}
+    }
+    \vspace{-1em}
+\end{table*}
+
+
+\subsection{Implementation Details}
+\label{sec:implementation}
+
+From the \(66{,}043\) samples allocated to RL, we reserve \(3{,}373\) samples as a held-out evaluation set and use the remaining \(62{,}670\) prompts for GRPO training. The held-out samples are excluded from all policy updates and are used consistently for evaluating the SFT and GRPO checkpoints. All training and CAD--CAE evaluation experiments are conducted on a NVIDIA H800 GPU.
+
+For GRPO, we use a training batch size of \(4\) prompts. For each prompt, the policy generates \(4\) independent completions, resulting in \(16\) rollout samples per batch. The four completions corresponding to the same prompt form a GRPO group and are evaluated independently by the deterministic CAD--CAE verifier described in Sec.~\ref{sec:verifier}. Their verification outcomes are then converted into the hierarchical advantages introduced above. We use a learning rate of \(5\times10^{-7}\) for policy optimization, with a sampling temperature of \(0.9\) and top-\(p\) of \(0.95\). For the hierarchical advantage, we instantiate ~\eqref{eq:hba} with
+$
+    \lambda_L = 1.0,\,
+    \lambda_w = 0.25
+$
+and $\beta=0.01$ in~\eqref{eq:grpo}.
+
+
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=\textwidth]{fig/result_new.pdf}
+% \caption{
+% \textbf{Qualitative comparison across training stages and model families.}
+% Surface color indicates stress relative to the prescribed limit, while the bars
+% summarize displacement, stress, and mass constraint satisfaction.
+% Across model families, SFT improves CAD generation but can still violate geometric
+% or physical constraints, whereas GRPO more consistently achieves joint feasibility.
+% }
+%     \label{fig:qualitative_comparison}
+% \end{figure}
+
+
+
+\subsection{Evaluation Metrics}
+\label{sec:metrics}
+
+We evaluate generated designs using seven metrics. \textbf{Valid CAD} measures whether the generated program successfully produces a valid CAD solid. \textbf{BBox} measures whether all three bounding-box dimensions satisfy the specified design bounds. \textbf{CAE} denotes successful finite-element analysis with valid physical measurements. \textbf{Displacement} (Disp.) and \textbf{Stress} report the pass rates for the prescribed maximum-displacement and stress constraints, respectively. \textbf{Physics} measures simultaneous satisfaction of the displacement, stress, and mass constraints. Finally, \textbf{Joint} measures whether both the geometric requirements and all physical constraints are satisfied.
+
+
+\subsection{Comparison with the State of the Art}
+\label{sec:sota}
+
+We compare PhyCAD with three strong proprietary models under direct prompting,
+including Claude Opus 5, GPT-5.6 Sol, and DeepSeek-V4-Flash-Ascend.
+We further evaluate five open-source models under SFT and GRPO, with zero-shot
+results reported where applicable, to examine the effectiveness of our training
+pipeline across different model families.
+
+Table~\ref{tab:model_comparison} and Fig.~\ref{fig:qualitative_comparison}
+show a consistent progression across training stages.
+SFT substantially improves CAD validity and CAE success, while GRPO further
+improves geometric and physical constraint satisfaction across all evaluated
+models. In particular, Joint success increases from
+\(21.76\%\)--\(37.36\%\) after SFT to \(39.49\%\)--\(58.05\%\) after GRPO,
+with corresponding gains in displacement and stress satisfaction.
+The trained models also achieve substantially higher success on the complete
+set of design requirements than proprietary models under direct prompting.
+These results indicate that CAD--CAE verification provides effective supervision
+beyond program validity and guides generation toward designs that better satisfy geometric and physical constraints.
+
+
+
+\subsection{Ablation on hierarchical learning.}
+Table~\ref{tab:training_stage_comparison} evaluates the effect of the hierarchical objective and staged optimization. Starting from the same SFT model, non-hierarchical GRPO improves CAD validity to $98.40\%$ but reduces joint feasibility from $21.76\%$ to $18.80\%$. In contrast, direct hierarchical GRPO achieves $98.55\%$ valid CAD and $39.49\%$ joint feasibility, nearly doubling the feasible designs relative to SFT. This indicates the gain comes from explicitly organizing feedback by feasibility level rather than from GRPO alone.
+
+The staged results further show that optimizing geometric or physical objectives independently is insufficient: Geometry and Physics reach only $22.86\%$ and $27.63\%$ joint feasibility, respectively, improving over SFT by only $1.10$ and $5.87$ percentage points. Joint feasibility rises to $42.01\%$ only when the explicit Hierarchical objective is introduced. This is particularly important for physical feasibility, where satisfying the prescribed stress and displacement thresholds requires the model to prioritize constraint satisfaction before objective refinement. Although staged optimization yields a further $2.52$-point gain over direct hierarchical GRPO, it requires additional RL stages and substantially higher training cost.
+
+% \subsection{Ablation on hierarchical learning.}
+% Table~\ref{tab:training_stage_comparison} evaluates the effect of the hierarchical training objective and its staged optimization. Starting from the same SFT model, non-hierarchical GRPO substantially improves CAD validity to $98.40\%$, but does not improve constraint satisfaction, with joint feasibility decreasing from $21.76\%$ to $18.80\%$. In contrast, direct hierarchical GRPO jointly organizes geometric and physical feedback within a single reinforcement-learning objective, achieving $98.55\%$ valid CAD and $39.49\%$ joint feasibility. This comparison shows that the improvement primarily comes from the hierarchical formulation rather than from GRPO alone.
+% The staged results further show that simply decomposing geometric and physical objectives into separate training stages is not sufficient to obtain the benefit of hierarchical learning. The Geometry and Physics objectives alone reach only $22.86\%$ and $27.63\%$ joint feasibility, respectively, substantially below the $39.49\%$ achieved by direct hierarchical GRPO. Joint feasibility increases to $42.01\%$ only after the explicit Hierarchical objective is introduced. Thus, sequentially optimizing individual constraint groups alone does not reproduce the benefit of the hierarchical formulation, which explicitly organizes geometric and physical feedback. While the staged strategy provides a further improvement over direct hierarchical GRPO, it requires additional RL stages and therefore incurs substantially higher training cost.
+
+
+
+
+
+
+
+
+
+
+\begin{table}[t]
+\centering
+\caption{
+\textbf{Ablation of hierarchical reinforcement learning.} Comparison of direct hierarchical GRPO, non-hierarchical GRPO, and staged training objectives.
+}
+\label{tab:training_stage_comparison}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{llcccccc}
+\toprule
+\textbf{Training Strategy}
+& \textbf{Stage}
+& \textbf{Valid CAD} $\uparrow$
+& \textbf{BBox} $\uparrow$
+& \textbf{CAE} $\uparrow$
+& \textbf{Physics} $\uparrow$
+& \textbf{Joint} $\uparrow$
+& \textbf{Code Tokens} $\downarrow$ \\
+\midrule
+
+\multirow{2}{*}{Baseline}
+& Zero-shot
+& 1.45 & 0.47 & 1.36 & 0.21 & 0.00 & 1002.41 \\
+
+& SFT
+& 90.07 & 65.16 & 86.45 & 25.32 & 21.76 & 201.06 \\
+
+\midrule
+
+Direct
+& Non-hierarchical GRPO
+& 98.40 & 60.90 & 83.60 & 23.40 & 18.80 & 199.78 \\
+
+\midrule
+
+Direct
+& Hierarchical GRPO
+& 98.55 & 88.50 & 96.32 & 40.94 & 39.49 & 195.46 \\
+
+\midrule
+
+\multirow{3}{*}{Training Objective}
+& $\rightarrow$ Geometry GRPO
+& 95.29 & 72.37 & 91.55 & 25.88 & 22.86 & 191.60 \\
+
+& $\rightarrow$ Physics GRPO
+& 94.72 & 75.27 & 91.40 & 30.33 & 27.63 & 188.03 \\
+
+& $\rightarrow$ Hierarchical GRPO
+& \textbf{99.23}
+& \textbf{92.05}
+& \textbf{97.45}
+& \textbf{43.34}
+& \textbf{42.01}
+& \textbf{184.85} \\
+
+\bottomrule
+\end{tabular}
+}
+\vspace{-0.8em}
+\end{table}
+
+
+% \begin{table}[t]
+% \centering
+% \caption{
+% \textbf{Comparison of direct and staged hierarchical reinforcement learning.}
+% We compare direct hierarchical GRPO after SFT with a staged training strategy
+% that progressively introduces geometry, physics, and hierarchical objectives.}
+% \label{tab:training_stage_comparison}
+% \resizebox{\linewidth}{!}{
+% \begin{tabular}{llcccccc}
+% \toprule
+% \textbf{Training Strategy}
+% & \textbf{Stage}
+% & \textbf{Valid CAD} $\uparrow$
+% & \textbf{BBox} $\uparrow$
+% & \textbf{CAE} $\uparrow$
+% & \textbf{Physics} $\uparrow$
+% & \textbf{Joint} $\uparrow$
+% & \textbf{Code Tokens} $\downarrow$ \\
+% \midrule
+
+% \multirow{2}{*}{Baseline}
+% & Zero-shot
+% & 1.45 & 0.47 & 1.36 & 0.21 & 0.00 & 1002.41 \\
+
+% & SFT
+% & 90.07 & 65.16 & 86.45 & 25.32 & 21.76 & 201.06 \\
+
+% \midrule
+
+% Direct
+% & SFT $\rightarrow$ Hierarchical GRPO
+% & 98.55 & 88.50 & 96.32 & 40.94 & 39.49 & 195.46 \\
+
+% \midrule
+
+% \multirow{3}{*}{Staged}
+% & $\rightarrow$ Geometry
+% & 95.29 & 72.37 & 91.55 & 25.88 & 22.86 & 191.60 \\
+
+% & $\rightarrow$ Physics
+% & 94.72 & 75.27 & 91.40 & 30.33 & 27.63 & 188.03 \\
+
+% & $\rightarrow$ Hierarchical GRPO
+% & \textbf{99.23}
+% & \textbf{92.05}
+% & \textbf{97.45}
+% & \textbf{43.34}
+% & \textbf{42.01}
+% & \textbf{184.85} \\
+
+% \bottomrule
+% \end{tabular}
+% }
+% \vspace{-0.2em}
+% \end{table}
+
+

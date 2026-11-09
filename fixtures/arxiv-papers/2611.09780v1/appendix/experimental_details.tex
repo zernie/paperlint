@@ -1,0 +1,83 @@
+\section{Experimental Details}
+\label{app:experimental_details}
+
+\subsection{Name Matching Details}
+\label{app:matching_details}
+
+For our usage analysis, we match model names between OpenRouter and LM Arena, which use different naming conventions for provider prefixes, routing variants, release dates, and model versions. 
+We first canonicalize names by removing provider and routing information and matching models based on their alphabetic and numeric components.
+We then allow matches that differ only in date stamps, and manually verify remaining models with material token volume. 
+We deliberately avoid general fuzzy matching, since incorrect matches would attribute token volume to the wrong capability profile. 
+Overall, we match 213 of 408 OpenRouter models, covering 71.3\% of pooled token volume and an average of 76.7\% of monthly token volume.
+Models without a defensible LMArena counterpart, including pre-release codenames and models not separately evaluated by LMArena, are left unmatched. 
+We treat unmatched token volume as falling outside any threshold of the top-rated model, making our estimates of usage near the frontier conservative.
+
+\subsection{Noise Correction}
+\label{app:noise_correction}
+The leaderboard reports an Elo rating \(\hat\theta_{ikt}=\theta_{ikt}+\varepsilon_{ikt}\), together with an estimated sampling variance \(v_{ikt}=\operatorname{Var}(\varepsilon_{ikt})\).
+Because the outgoing model's rating enters both sides of our regression, sampling noise mechanically induces a positive relationship between the measured gap and subsequent improvement. 
+In particular,
+\[
+\Delta\hat\theta_{ik} = \hat\theta^{\mathrm{new}}_{ik} - \hat\theta^{\mathrm{old}}_{ik}, \qquad \hat g_{ik} = \hat\theta^{\mathrm{riv}}_{ik} - \hat\theta^{\mathrm{old}}_{ik},
+\]
+so \(\varepsilon^{\mathrm{old}}_{ik}\) enters both variables with a negative sign. 
+Assuming mean-zero rating errors that are independent across models and releases conditional on the true ratings,
+\[
+\operatorname{Cov} \left( \Delta\hat\theta_{ik},\hat g_{ik} \right) = v^{\mathrm{old}}_{ik}, \qquad \operatorname{Var} \left( \hat g_{ik}-g_{ik} \right) = v^{\mathrm{old}}_{ik}+v^{\mathrm{riv}}_{ik}.
+\]
+Sampling noise can bias toward a positive catch-up effect. 
+
+We remove this bias using an errors-in-variables correction.
+Let \(Z\) denote the design matrix for the developer-category and category-quarter
+fixed effects, and let
+\[
+M = I-Z(Z^\top Z)^{-1}Z^\top
+\]
+denote the corresponding residual-maker. Thus, multiplying by \(M\) removes
+the variation explained by these fixed effects.
+
+After computing residuals, the regression coefficient is the covariance between
+the measured competitive gap and subsequent improvement, divided by the
+variance of the measured gap. 
+Rating noise contributes to both quantities.
+We therefore subtract its expected contribution before computing the
+coefficient:
+\[
+\hat\beta_c
+=
+\frac{
+\hat g^\top M\Delta\hat\theta
+-
+d_{\mathrm{fac}}\,n\bar v^{\mathrm{old}}
+}{
+\hat g^\top M\hat g
+-
+d_{\mathrm{fac}}\,n\left(\bar v^{\mathrm{old}}+\bar v^{\mathrm{riv}}\right)
+},
+\]
+where \(\bar v^{\mathrm{old}}\) and \(\bar v^{\mathrm{riv}}\) are the panel-average reported sampling variances for the outgoing model and its rival, respectively, and \(d_{\mathrm{fac}}\) accounts for the degrees of freedom consumed by the within transformation.
+The correction has little effect on our estimate:
+the baseline estimate is \(\hat\beta=0.487\), compared with
+\(\hat\beta_c=0.480\).
+This limited change reflects that variation in the measured competitive gaps
+is substantially larger than the reported sampling noise.
+
+\subsection{Statistical Comparisons for RQ1}
+\label{app:statistical_rq1}
+In Figure~\ref{fig:residual_cosine_kde} (left), we compare this distribution to a permutation null that independently permutes developers within each category, preserving each category's marginal distribution of residuals while destroying any developer-specific pattern of relative strength. 
+We find little difference between the observed and null distributions: the null has a mean cosine similarity of \(-0.051\), compared with \(-0.048\) in the observed data. 
+While this difference is statistically significant (\(p<0.001\), paired \(t\)-test), it is negligible in magnitude.
+
+In Figure~\ref{fig:residual_cosine_kde} (right) we average the similarities between pairs of developers across snapshots. 
+Four groupings are particularly visible in the similarity matrix, which we summarize here (each contains additional developers beyond those highlighted): models from IBM and Microsoft are stronger in math, and relatively weaker in multi-turn interactions and creative writing; 
+models from NVIDIA and Amazon are stronger in English and coding, and weaker in creative writing; 
+models from Google and Meta are stronger in creative writing and multi-turn interactions, and weaker in coding and math;
+and models from OpenAI and Anthropic are stronger in instruction following, longer queries, and weaker in English.
+
+\subsection{Statistical Comparisons for RQ2}
+\label{app:statistical_rq2}
+We define a flagship changeover as any change in the identity of a developer's model with the highest overall rating.
+We correct all estimates for measurement error using Arena's reported rating variances, removing the mechanical covariance between the competitive gap and subsequent improvement induced by their shared baseline rating (details in Appendix~\ref{app:noise_correction}).
+We restrict this analysis to developers with at least four qualifying flagship changeovers, each with mature ratings (at least 56 days post-release) for the incoming model. 
+This leaves 12 developers in our analysis.
+Here, $g_{i,k,t}$ is computed as the difference between a model and the best competitor in that category among the 12 developers, at the time that the new model was released (the last snapshot before changing over).

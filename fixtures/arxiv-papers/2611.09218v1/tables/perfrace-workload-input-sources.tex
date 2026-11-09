@@ -1,0 +1,28 @@
+\begin{table}[H]
+  \centering
+  \small
+  \setlength{\tabcolsep}{6pt}
+  \renewcommand{\arraystretch}{1.15}
+  \caption{Sources of workload inputs across the 100 accepted tasks.}
+  \label{tab:perfrace-workload-input-sources}
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.32\textwidth}
+                                      >{\raggedright\arraybackslash}X
+                                      r@{}}
+    \toprule
+    Input source & Examples & Tasks \\
+    \midrule
+    Released source code, model, or asset
+      & Linux source tree, OpenMoji assets, released ML models & 26 \\
+    Public scientific or government dataset
+      & TREC-COVID, NYC taxi records, LC-MS data & 21 \\
+    Real downstream application
+      & React Native Paper, Headlamp, Mattermost Mobile & 21 \\
+    Production trace or archive
+      & Hadoop logs, GTFS delay feeds, GitHub events & 16 \\
+    Real user export
+      & MIDI collection, BIM project, printer assembly CAD & 6 \\
+    Other independently grounded input
+      & Wikidata variants, Dow index, OSM roads & 10 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}

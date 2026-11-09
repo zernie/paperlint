@@ -1,0 +1,321 @@
+\section{Uncertainty and Case Composition}
+\label{app:uncertainty}
+
+\subsection{Case-bootstrap intervals}
+
+Each model--defense configuration runs once per instance, so we estimate
+uncertainty by resampling cases rather than runs. A bootstrap draw samples the
+90 retained cases with replacement and keeps every
+instance of each drawn case together. For each draw and table entry, we recompute the
+rate separately for each model and then take the unweighted mean across models,
+as in Table \ref{tab:defense-overview}. Intervals are the 2.5th and 97.5th
+percentiles of 10000 draws. All metrics, targets, and defenses
+share the same draws, so a difference between two cells is a paired estimate.
+Table \ref{tab:headline-ci} gives the intervals of the headline metrics and
+of each defense's ASR difference from no defense;
+Table \ref{tab:target-ci} gives the intervals of ASR by functional target and
+of each target's difference from \(b(U)\).
+
+\begin{table}[H]
+\centering
+\caption{Headline defense results with 95\% case-bootstrap confidence intervals (\%). Rates are unweighted means over the 5 evaluated models; k/n pools the models. Attacked rows are all retained single-primitive instances plus the compound attack; benign rows are the no-injection runs. Point estimates are those of Table \ref{tab:defense-overview}. \emph{ASR vs. None} is the paired difference from no defense with its interval. Intervals resample the 90 retained cases (10,000 draws).}
+\label{tab:headline-ci}
+\begingroup
+\tablefont
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lrcrrrcrrcr@{}}
+\toprule
+\textbf{Defense} & \textbf{ASR} & \textbf{95\% CI} & \textbf{k/n} & \textbf{ASR vs. None (pp)} & \textbf{Benign TSR} & \textbf{95\% CI} & \textbf{k/n} & \textbf{Attacked TSR} & \textbf{95\% CI} & \textbf{k/n} \\
+\midrule
+None & 17.0 & [13.3, 21.1] & 1221/7165 & reference & 95.3 & [93.3, 97.1] & 429/450 & 83.7 & [79.8, 87.3] & 5997/7165 \\
+\midrule
+Spotlight & 15.6 & [12.0, 19.4] & 1118/7165 & -1.4 [-2.3, -0.6] & 98.7 & [97.3, 99.8] & 444/450 & 85.8 & [82.2, 89.1] & 6148/7165 \\
+Sandwich & 10.4 & [7.2, 13.9] & 745/7165 & -6.6 [-8.3, -5.1] & 98.5 & [97.1, 99.6] & 443/450 & 89.4 & [86.2, 92.3] & 6407/7165 \\
+\midrule
+DRIFT-iso & 6.6 & [4.8, 8.5] & 473/7165 & -10.4 [-13.3, -7.8] & 98.0 & [96.7, 99.1] & 441/450 & 93.3 & [91.4, 95.0] & 6684/7165 \\
+\midrule
+DRIFT-full & 7.0 & [4.9, 9.4] & 500/7165 & -10.1 [-13.2, -7.0] & 88.9 & [85.3, 92.2] & 400/450 & 83.4 & [80.3, 86.3] & 5976/7165 \\
+Progent & 15.4 & [11.5, 19.6] & 1106/7165 & -1.6 [-4.0, +0.6] & 74.9 & [68.0, 81.1] & 337/450 & 65.0 & [58.6, 71.0] & 4655/7165 \\
+\midrule
+CaMeL & 1.3 & [0.5, 2.1] & 90/7165 & -15.8 [-19.6, -12.2] & 13.3 & [8.7, 18.4] & 60/450 & 13.9 & [9.6, 18.8] & 999/7165 \\
+\midrule
+ARGUS & 9.8 & [6.8, 13.0] & 702/7165 & -7.2 [-9.8, -4.8] & 78.9 & [73.1, 84.4] & 355/450 & 69.8 & [64.2, 75.1] & 5000/7165 \\
+\bottomrule
+\end{tabular}
+}
+\endgroup
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{ASR by functional target with 95\% case-bootstrap intervals (\%), model mean over the 5 evaluated models, all retained instances; point estimates as in Table \ref{tab:defense-overview}. The last column is the paired difference from \(b(U)\) in percentage points, with its interval from the same case draws.}
+\label{tab:target-ci}
+\begingroup
+\tablefont
+\begin{tabular}{@{}llrcrr@{}}
+\toprule
+\textbf{Defense} & \textbf{Target} & \textbf{ASR} & \textbf{95\% CI} & \textbf{k/n} & \textbf{Difference from \(b(U)\)} \\
+\midrule
+None & \(b(U)\) & 15.0 & [10.6, 19.8] & 197/1310 & reference \\
+ & \(b(\pi)\) & 21.2 & [15.9, 26.9] & 274/1290 & +6.2 [+2.0, +10.4] \\
+ & \(b(T)\) & 13.7 & [8.5, 19.4] & 140/1025 & -1.4 [-6.1, +3.5] \\
+ & \(b(A)\) & 19.0 & [12.2, 26.2] & 151/795 & +4.0 [-2.7, +10.6] \\
+ & \(b(O)\) & 12.4 & [8.1, 17.2] & 131/1060 & -2.7 [-8.6, +2.9] \\
+ & \(b(s)\) & 18.6 & [12.8, 25.1] & 230/1235 & +3.6 [-3.4, +10.9] \\
+ & Compound & 21.8 & [16.0, 28.0] & 98/450 & -- \\
+\midrule
+DRIFT-iso & \(b(U)\) & 2.4 & [1.2, 3.7] & 31/1310 & reference \\
+ & \(b(\pi)\) & 5.4 & [3.0, 8.3] & 70/1290 & +3.1 [+1.0, +5.4] \\
+ & \(b(T)\) & 2.7 & [1.0, 4.9] & 28/1025 & +0.4 [-1.6, +2.4] \\
+ & \(b(A)\) & 3.9 & [2.0, 6.2] & 31/795 & +1.5 [-0.4, +3.4] \\
+ & \(b(O)\) & 9.5 & [5.9, 13.5] & 101/1060 & +7.2 [+3.4, +11.2] \\
+ & \(b(s)\) & 12.1 & [8.1, 16.6] & 149/1235 & +9.7 [+5.9, +14.0] \\
+ & Compound & 14.0 & [9.3, 19.3] & 63/450 & -- \\
+\midrule
+DRIFT-full & \(b(U)\) & 2.5 & [1.2, 4.2] & 33/1310 & reference \\
+ & \(b(\pi)\) & 5.7 & [2.9, 9.0] & 73/1290 & +3.1 [+1.0, +5.7] \\
+ & \(b(T)\) & 3.9 & [2.0, 6.3] & 40/1025 & +1.4 [-0.0, +2.9] \\
+ & \(b(A)\) & 4.2 & [2.0, 6.9] & 33/795 & +1.6 [+0.0, +3.3] \\
+ & \(b(O)\) & 11.4 & [7.8, 15.5] & 121/1060 & +8.9 [+5.5, +12.6] \\
+ & \(b(s)\) & 11.4 & [7.3, 15.9] & 140/1235 & +8.8 [+5.2, +13.0] \\
+ & Compound & 13.3 & [8.7, 18.4] & 60/450 & -- \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+\subsection{Results by environment}
+
+Tables \ref{tab:env-defense} and \ref{tab:env-targets} split
+Table \ref{tab:defense-overview} by environment: robustness and utility per
+defense, and ASR per defense and functional target.
+
+\begin{table}[H]
+\centering
+\caption{Defense robustness and utility (\%) by environment: the ASR and TSR columns of Table \ref{tab:defense-overview} restricted to each environment's cases (case counts in the header). Rates are unweighted means over the 5 evaluated models. ASR pools retained single-primitive and compound attacks; Benign and Attacked are the TSR without an injection and under attack.}
+\label{tab:env-defense}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lrrrrrrrrr@{}}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Productivity (28)}} & \multicolumn{3}{c}{\textbf{DevOps (31)}} & \multicolumn{3}{c}{\textbf{Marketplace (31)}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+\textbf{Defense} & \textbf{ASR} & \textbf{Benign} & \textbf{Attacked} & \textbf{ASR} & \textbf{Benign} & \textbf{Attacked} & \textbf{ASR} & \textbf{Benign} & \textbf{Attacked} \\
+\midrule
+None & 14.8 & 92.1 & 84.1 & 23.4 & 97.4 & 80.1 & 12.7 & 96.1 & 86.9 \\
+\midrule
+Spotlight & 12.8 & 97.1 & 85.9 & 21.8 & 100.0 & 83.0 & 11.9 & 98.7 & 88.5 \\
+Sandwich & 6.4 & 96.4 & 90.4 & 16.4 & 99.4 & 86.3 & 7.9 & 99.4 & 91.7 \\
+\midrule
+DRIFT-iso & 4.2 & 98.6 & 94.4 & 8.9 & 96.1 & 92.2 & 6.4 & 99.4 & 93.4 \\
+\midrule
+DRIFT-full & 4.6 & 87.1 & 80.5 & 10.5 & 94.2 & 87.0 & 5.6 & 85.2 & 82.4 \\
+Progent & 6.4 & 43.6 & 42.9 & 25.1 & 89.7 & 69.8 & 13.6 & 88.4 & 79.4 \\
+\midrule
+CaMeL & 0.6 & 10.7 & 12.4 & 2.2 & 23.2 & 24.2 & 0.9 & 5.8 & 5.1 \\
+\midrule
+ARGUS & 4.4 & 57.9 & 52.2 & 13.6 & 86.5 & 74.6 & 10.7 & 90.3 & 80.3 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{ASR (\%) by environment, defense and functional target: the attack-type columns of Table \ref{tab:defense-overview} restricted to each environment's cases, mean over the 5 evaluated models. Each target column averages that target's retained single-primitive instances; Comp. is the compound attack.}
+\label{tab:env-targets}
+\begingroup
+\tablefont
+\begin{tabular}{@{}llrrrrrrr@{}}
+\toprule
+\textbf{Environment} & \textbf{Defense} & \textbf{\(b(U)\)} & \textbf{\(b(\pi)\)} & \textbf{\(b(T)\)} & \textbf{\(b(A)\)} & \textbf{\(b(O)\)} & \textbf{\(b(s)\)} & \textbf{Comp.} \\
+\midrule
+Productivity & None & 19.2 & 15.7 & 19.7 & 10.7 & 10.2 & 10.7 & 17.9 \\
+ & Spotlight & 16.7 & 12.1 & 17.6 & 9.3 & 9.5 & 9.5 & 15.7 \\
+ & Sandwich & 6.1 & 4.5 & 11.4 & 4.9 & 2.9 & 8.0 & 7.9 \\
+ & DRIFT-iso & 1.8 & 4.0 & 4.5 & 1.5 & 5.1 & 5.6 & 9.3 \\
+ & DRIFT-full & 2.0 & 3.3 & 4.1 & 2.4 & 6.3 & 6.8 & 8.6 \\
+ & Progent & 10.1 & 6.4 & 6.6 & 4.4 & 5.4 & 5.9 & 2.9 \\
+ & CaMeL & 0.3 & 0.2 & 0.3 & 1.5 & 1.0 & 0.5 & 0.7 \\
+ & ARGUS & 7.3 & 4.0 & 5.5 & 2.4 & 2.5 & 3.4 & 5.0 \\
+\midrule
+DevOps & None & 18.3 & 31.5 & 16.2 & 24.6 & 19.2 & 27.1 & 27.1 \\
+ & Spotlight & 16.3 & 28.9 & 12.1 & 24.2 & 17.7 & 27.4 & 27.1 \\
+ & Sandwich & 9.2 & 19.6 & 9.7 & 18.9 & 13.0 & 24.6 & 23.9 \\
+ & DRIFT-iso & 3.9 & 6.5 & 3.2 & 6.0 & 15.2 & 14.0 & 20.0 \\
+ & DRIFT-full & 4.1 & 9.8 & 5.9 & 7.0 & 17.5 & 14.7 & 20.6 \\
+ & Progent & 17.2 & 31.1 & 18.2 & 27.7 & 24.5 & 29.9 & 29.0 \\
+ & CaMeL & 2.6 & 3.0 & 1.8 & 2.8 & 0.8 & 2.8 & 0.6 \\
+ & ARGUS & 10.1 & 18.0 & 8.5 & 12.3 & 11.5 & 18.6 & 15.5 \\
+\midrule
+Marketplace & None & 8.0 & 15.4 & 7.1 & 19.3 & 7.9 & 17.4 & 20.0 \\
+ & Spotlight & 5.6 & 14.9 & 7.8 & 16.7 & 7.4 & 19.2 & 16.1 \\
+ & Sandwich & 3.6 & 7.8 & 3.8 & 12.1 & 6.2 & 14.1 & 11.0 \\
+ & DRIFT-iso & 1.3 & 5.6 & 1.0 & 3.6 & 7.9 & 16.7 & 12.3 \\
+ & DRIFT-full & 1.3 & 3.4 & 2.0 & 2.6 & 10.0 & 12.3 & 10.3 \\
+ & Progent & 9.3 & 17.1 & 10.6 & 15.4 & 9.2 & 17.7 & 21.9 \\
+ & CaMeL & 0.9 & 0.7 & 1.0 & 0.3 & 1.3 & 0.5 & 1.9 \\
+ & ARGUS & 6.9 & 10.5 & 10.6 & 13.4 & 8.2 & 14.6 & 12.9 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+\subsection{Case composition}
+
+The tables below use the no-defense runs with all retained instances unless
+stated otherwise, averaged over the 5 evaluated models
+as in Table \ref{tab:defense-overview}.
+
+\textbf{Matched cases.} Not every case supports every target
+(Table \ref{tab:target-coverage}), so each pooled target column averages over
+a different set of cases. Table \ref{tab:matched-targets} restricts ASR by
+target to the 37 cases with all targets viable.
+
+\begin{table}[H]
+\centering
+\caption{No-defense ASR (\%) on the 37 cases in which all six functional targets have a retained instance: mean over the 5 evaluated models, all retained instances of each target plus the compound attack (Comp.).}
+\label{tab:matched-targets}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lrrrrrrrrr@{}}
+\toprule
+\textbf{Environment} & \textbf{Cases} & \textbf{\(b(U)\)} & \textbf{\(b(\pi)\)} & \textbf{\(b(T)\)} & \textbf{\(b(A)\)} & \textbf{\(b(O)\)} & \textbf{\(b(s)\)} & \textbf{Comp.} & \textbf{All} \\
+\midrule
+Productivity & 9 & 8.1 & 7.4 & 11.3 & 8.5 & 9.6 & 17.0 & 20.0 & 10.8 \\
+DevOps & 14 & 15.2 & 22.4 & 15.8 & 21.0 & 17.9 & 23.1 & 21.4 & 19.4 \\
+Marketplace & 14 & 4.3 & 12.5 & 7.4 & 20.0 & 9.0 & 23.9 & 21.4 & 13.1 \\
+\midrule
+All & 37 & 9.4 & 15.0 & 11.3 & 17.6 & 12.5 & 21.8 & 21.1 & 14.9 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+\textbf{Effect.} Each case is labeled by where its harmful effect appears: a
+structured argument or free-form content (Appendix \ref{app:construction}).
+Table \ref{tab:style-defense} gives ASR by effect style under each defense,
+and Table \ref{tab:style-targets} gives no-defense ASR by effect style and
+functional target, each with the case-bootstrap interval of the difference.
+
+\begin{table}[H]
+\centering
+\caption{ASR (\%) by where the harmful effect appears: a structured argument (52 cases) or free-form content (38 cases). Rates are unweighted means over the 5 evaluated models on the attacked runs of Table \ref{tab:defense-overview}. The difference is structured minus free-form, with its case-bootstrap interval (10,000 draws, the draws of Table \ref{tab:headline-ci}).}
+\label{tab:style-defense}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lrcrcr@{}}
+\toprule
+\textbf{Defense} & \textbf{Structured ASR} & \textbf{95\% CI} & \textbf{Free-form ASR} & \textbf{95\% CI} & \textbf{Difference (pp)} \\
+\midrule
+None & 15.5 & [10.9, 20.7] & 19.2 & [13.1, 26.0] & -3.6 [-11.9, +4.3] \\
+\midrule
+Spotlight & 14.1 & [9.8, 18.9] & 17.7 & [12.0, 24.1] & -3.6 [-11.4, +3.8] \\
+Sandwich & 9.9 & [6.1, 14.4] & 11.1 & [6.0, 17.3] & -1.2 [-8.7, +5.6] \\
+\midrule
+DRIFT-iso & 6.6 & [4.3, 9.1] & 6.7 & [4.0, 9.7] & -0.1 [-3.9, +3.5] \\
+\midrule
+DRIFT-full & 6.8 & [4.0, 10.3] & 7.2 & [4.4, 10.4] & -0.4 [-4.7, +4.0] \\
+Progent & 16.5 & [11.3, 22.1] & 14.0 & [8.2, 20.6] & +2.5 [-5.9, +10.7] \\
+\midrule
+CaMeL & 0.8 & [0.2, 1.6] & 1.9 & [0.5, 3.7] & -1.1 [-3.0, +0.5] \\
+\midrule
+ARGUS & 11.6 & [7.3, 16.3] & 7.3 & [3.9, 11.4] & +4.3 [-1.7, +10.2] \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{No-defense ASR (\%) by functional target and by where the harmful effect appears, model mean over the 5 evaluated models, all retained instances. The difference is structured minus free-form with its case-bootstrap interval. A case counts under a target if it has a retained instance of it.}
+\label{tab:style-targets}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lrrrc@{}}
+\toprule
+\textbf{Target} & \textbf{Structured ASR} & \textbf{Free-form ASR} & \textbf{Difference (pp)} & \textbf{Cases (S / F)} \\
+\midrule
+\(b(U)\) & 9.4 & 22.9 & -13.5 [-23.6, -4.0] & 51 / 37 \\
+\(b(\pi)\) & 14.7 & 29.9 & -15.2 [-26.9, -4.2] & 50 / 37 \\
+\(b(T)\) & 9.7 & 18.3 & -8.6 [-20.5, +2.3] & 43 / 32 \\
+\(b(A)\) & 19.2 & 18.5 & +0.6 [-17.3, +16.5] & 40 / 14 \\
+\(b(O)\) & 14.4 & 9.9 & +4.5 [-4.5, +13.4] & 42 / 32 \\
+\(b(s)\) & 23.3 & 12.7 & +10.7 [-1.0, +22.2] & 50 / 38 \\
+\midrule
+Compound & 21.9 & 21.6 & +0.3 [-12.0, +12.6] & 52 / 38 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+\subsection{Case-level coverage}
+
+Table \ref{tab:defense-overview} averages over runs. Tables
+\ref{tab:case-coverage} and \ref{tab:same-budget} count cases instead: a
+case is broken for a model if at least one of that model's attacked runs
+succeeds. Table \ref{tab:case-coverage} counts the cases broken by \(b(U)\)
+instances, by instances of the other targets, and by the other targets only.
+The two sides have different budgets, since a case has more instances of the
+other targets than of \(b(U)\). Table \ref{tab:same-budget} gives both sides the
+same number of attacks per case.
+
+\begin{table}[H]
+\centering
+\caption{Cases broken, of 90: cases with at least one successful attack from a \(b(U)\) instance, from an instance of any other functional target, from either, and from another target but no \(b(U)\) instance. The first four columns are the mean over the 5 evaluated models of each model's count; the last four count a case if it is broken for any model. All retained single-primitive instances; the compound attack is excluded. The budgets differ: a case has at most 3 \(b(U)\) instances and up to 15 of the other targets together (Table \ref{tab:same-budget} equalizes them). The 2 cases without a retained \(b(U)\) instance count as other only when broken.}
+\label{tab:case-coverage}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+ & \multicolumn{4}{c}{\textbf{Model mean}} & \multicolumn{4}{c}{\textbf{Any model}} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+\textbf{Defense} & \textbf{\(b(U)\)} & \textbf{Other} & \textbf{Either} & \textbf{Other only} & \textbf{\(b(U)\)} & \textbf{Other} & \textbf{Either} & \textbf{Other only} \\
+\midrule
+None & 22.4 & 48.6 & 51.4 & 29.0 & 48 & 72 & 77 & 29 \\
+\midrule
+Spotlight & 19.6 & 46.6 & 48.8 & 29.2 & 40 & 72 & 74 & 34 \\
+Sandwich & 10.4 & 32.2 & 33.6 & 23.2 & 27 & 59 & 62 & 35 \\
+\midrule
+DRIFT-iso & 4.8 & 30.2 & 31.6 & 26.8 & 14 & 52 & 55 & 41 \\
+\midrule
+DRIFT-full & 4.8 & 32.6 & 33.6 & 28.8 & 17 & 57 & 60 & 43 \\
+Progent & 17.8 & 41.4 & 43.4 & 25.6 & 43 & 73 & 74 & 31 \\
+\midrule
+CaMeL & 3.0 & 5.6 & 6.2 & 3.2 & 8 & 16 & 16 & 8 \\
+\midrule
+ARGUS & 12.4 & 32.2 & 33.8 & 21.4 & 28 & 56 & 59 & 31 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Cases broken at equal budget (\% of the 87 cases with 3 retained \(b(U)\) instances), model mean over the 5 evaluated models. With a budget of \(k\) attacks per case, the \(b(U)\) column draws \(k\) of the case's \(b(U)\) instances and \emph{Other} \(k\) of its instances of the other targets, at random without replacement; \emph{Distinct} draws \(k\) different other targets and one instance of each. Values are the exact expected share of cases with at least one success. The last column is the paired difference at \(k = 3\) with its 95\% case-bootstrap interval (10,000 draws).}
+\label{tab:same-budget}
+\begingroup
+\tablefont
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{\textbf{\(k = 1\)}} & \multicolumn{3}{c}{\textbf{\(k = 3\)}} &  \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-6}
+\textbf{Defense} & \textbf{\(b(U)\)} & \textbf{Other} & \textbf{\(b(U)\)} & \textbf{Other} & \textbf{Distinct} & \textbf{Other \(-\) \(b(U)\) (pp)} \\
+\midrule
+None & 14.8 & 17.3 & 24.8 & 33.3 & 34.6 & +8.4 [+2.2, +15.0] \\
+\midrule
+Spotlight & 12.6 & 16.3 & 21.8 & 31.4 & 32.9 & +9.5 [+3.3, +15.7] \\
+Sandwich & 6.3 & 11.3 & 11.7 & 21.7 & 22.8 & +10.0 [+5.2, +15.1] \\
+\midrule
+DRIFT-iso & 2.4 & 7.2 & 5.5 & 16.7 & 18.2 & +11.2 [+7.1, +15.3] \\
+\midrule
+DRIFT-full & 2.5 & 7.6 & 5.5 & 17.3 & 18.4 & +11.8 [+7.8, +16.0] \\
+Progent & 12.4 & 16.6 & 20.5 & 29.9 & 30.8 & +9.4 [+4.2, +14.7] \\
+\midrule
+CaMeL & 1.3 & 1.2 & 3.4 & 2.9 & 2.9 & -0.5 [-2.0, +0.7] \\
+\midrule
+ARGUS & 8.0 & 10.4 & 13.6 & 20.3 & 20.8 & +6.7 [+1.9, +11.6] \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
