@@ -1,0 +1,1082 @@
+[
+  {
+    "arxiv_id": "2611.06553v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "c65da4052c4707dba2084b68b0ab2a981b3989013c401aaa98cd33381b2b9c6e",
+    "main_tex": "./main.tex",
+    "class": "IEEEtran",
+    "category": "cs.AI",
+    "size_bytes": 147661,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.06563v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "3b99971b52e00125ae9bc7200dd79519b869bb152b5f4f5db36f820859d07175",
+    "main_tex": "./main_arxiv.tex",
+    "class": "IEEEcsmag",
+    "category": "cs.SE",
+    "size_bytes": 260430,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.06764v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "bc2a152cd2f507640525e6167fa2dcfbe98101f3ea8593823abf8e095c5213c2",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.SE",
+    "size_bytes": 83171,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07159v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "5ad969684c9fc6d0dbee6c94d0ae6867ce0bb12f0dde2becdd8657d609db29f4",
+    "main_tex": "./pic-beyond-possession.tex",
+    "class": "article",
+    "category": "cs.CR",
+    "size_bytes": 158215,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07164v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "1c386662d443fedafcd66412bcbf873cce372a592e34095920c5715ca407ee74",
+    "main_tex": "./full-provenance-coss-causal.tex",
+    "class": "article",
+    "category": "cs.CR",
+    "size_bytes": 105598,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07166v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d1c2182ec1ae73f3e1761c382538b1607e3181c1f827536caae815d76ae38c62",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.SE",
+    "size_bytes": 99251,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.07297v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d7e899bde09da2221b051943beb3ff5f283d6146c87197fec51bf4926f69f167",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.CY",
+    "size_bytes": 282004,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07307v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "a61429aa4a39d0bd27669fa2528c66b614b509dd8c6cf48faa365a17b88aeadd",
+    "main_tex": "./iclr2027_conference.tex",
+    "class": "article+iclr",
+    "category": "cs.SE",
+    "size_bytes": 249420,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07370v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "c05ed7fb347d04d4213985bf88b71e43ff0d343a24c435586a9a95c51e85ed75",
+    "main_tex": "./arxiv.tex",
+    "class": "llncs",
+    "category": "cs.CR",
+    "size_bytes": 66026,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07403v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "92c9d03f389b38c6b7e15096fd092580c24f0da235e0c312bdae0948e6c095b8",
+    "main_tex": "./root.tex",
+    "class": "ieeeconf",
+    "category": "cs.RO",
+    "size_bytes": 254109,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07576v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "4009442b063ad66ae9e23969022c3e5b11e61c47294c402053c9bec61b71b603",
+    "main_tex": "./main.tex",
+    "class": "IEEEtran",
+    "category": "cs.CY",
+    "size_bytes": 132771,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07640v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "6993c55d071cfd8ec2b375caf31cc6962a3479b6807a691c5826f5490981f744",
+    "main_tex": "./main.tex",
+    "class": "article+iclr",
+    "category": "cs.CR",
+    "size_bytes": 216647,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07652v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "bcf52e530791fbb8b3f58a02ebf56c14bc06c42939b731a4b60b15963235c20a",
+    "main_tex": "./manuscript.tex",
+    "class": "article",
+    "category": "cs.AI",
+    "size_bytes": 195608,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07876v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "a109ee3162b06fdd2384617fb9a8edbd7b521023b23f6aed4fc7a64704456bd8",
+    "main_tex": "./main.tex",
+    "class": "IEEEtran",
+    "category": "cs.SE",
+    "size_bytes": 166995,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.07945v1",
+    "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+    "source_sha256": "6813d86bc80bd5a5d2b2f03a35521d0e0498180283a2d0b7ab50a257edca8f13",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.CY",
+    "size_bytes": 119196,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.07951v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "ce599b5f4e243c70f8526f47bd945101b4eb34e7f998077dc9c19860a6a7519b",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.SE",
+    "size_bytes": 132596,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08144v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "a91a2ae7981da0a15465bfd545deecb6a8861b5be8b163b46d21f1c459ef0779",
+    "main_tex": "./main.tex",
+    "class": "IEEEtran",
+    "category": "cs.RO",
+    "size_bytes": 47555,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08325v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "5c45fe1e563556093e8ed5b7bc1b43f1d2f61a811fdc20f948b62e6d97e7281c",
+    "main_tex": "./main_arxiv.tex",
+    "class": "acmart",
+    "category": "cs.CR",
+    "size_bytes": 159728,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08383v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "951ae2b0048f5fae41ab1d52cf8a8b68997729efdf616b9f0be412e3e5e465e3",
+    "main_tex": "./main.tex",
+    "class": "elsarticle",
+    "category": "cs.CR",
+    "size_bytes": 89041,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.08442v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "9e728c1b1126d6c75b6b7e60bfd5142886d87a4dd9b27fde8378923dfb757d0b",
+    "main_tex": "./manuscriot.tex",
+    "class": "article",
+    "category": "cs.SE",
+    "size_bytes": 148851,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08608v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "680ae3fe5d5695dee07aaa036a837a9125656e85a3688e0d97126b48685b9cf2",
+    "main_tex": "./bare_conf_compsoc.tex",
+    "class": "IEEEtran",
+    "category": "cs.CR",
+    "size_bytes": 180052,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08639v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "2f04305865a4e640cbd467e524a330826b1b7a68ad060c61d2a79f2994f922e3",
+    "main_tex": "./blackboxnlp2026.tex",
+    "class": "article+acl",
+    "category": "cs.CL",
+    "size_bytes": 121064,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.08666v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "7469c1e6e2ea84d9db8725c8d56d36c700502dd9db867562b8930c04247a4399",
+    "main_tex": "./neurips_2026.tex",
+    "class": "article+neurips",
+    "category": "cs.AI",
+    "size_bytes": 76359,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08669v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d76018cdda337b8b524d73a386a326473322dd87fe582ad32af4e8b6ae236afc",
+    "main_tex": "./paper.tex",
+    "class": "article",
+    "category": "cs.AI",
+    "size_bytes": 173733,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08706v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "3f881ed45f7b4e990e48f5758958c1ef5a790e3fb178347d68131d7500fbe653",
+    "main_tex": "./main.tex",
+    "class": "article+acl",
+    "category": "cs.LG",
+    "size_bytes": 83628,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08714v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "3502f7f66c5f64990619b3f63e5f6db3d6d380446393feaf7cb69d4edc40a708",
+    "main_tex": "./main.tex",
+    "class": "article+acl",
+    "category": "cs.LG",
+    "size_bytes": 118697,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08737v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "f8b29ea0d4e641dcdcc171cb36ebb5ba627068a3142cdf5a695844bd3a62400c",
+    "main_tex": "./AHR26.tex",
+    "class": "article+neurips",
+    "category": "cs.LG",
+    "size_bytes": 213004,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08774v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "35ebff97ad1183f7d6c42f5035c73eea4087b1fabd3dfebcaf514837b73fbca7",
+    "main_tex": "./conference_101719.tex",
+    "class": "IEEEtran",
+    "category": "cs.CR",
+    "size_bytes": 60382,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.08811v1",
+    "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+    "source_sha256": "c087e6d5bc3facdfed342698d05ae9af5e3bc9a1c3ba6ba4367b86e335b5a8f3",
+    "main_tex": "./arxiv.tex",
+    "class": "IEEEtran",
+    "category": "cs.AI",
+    "size_bytes": 46367,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08892v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "26a3596aae40a904e8344f507dafac454479c8b54b85c157c6f775f438de6be9",
+    "main_tex": "./tmlr_paper.tex",
+    "class": "article",
+    "category": "cs.CL",
+    "size_bytes": 236326,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08924v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "4b119187ed278c95605b44ca82dbae7418c2ad3dd113517bdc86d434eb9f6aa9",
+    "main_tex": "./iclr2027_conference.tex",
+    "class": "article+iclr",
+    "category": "cs.LG",
+    "size_bytes": 189385,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.08933v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "b98d7c16892469fdfa6758526cae129d8c174c76ddc5aa803793fbbc6e8dec0b",
+    "main_tex": "./main.tex",
+    "class": "article+neurips",
+    "category": "cs.SE",
+    "size_bytes": 109128,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08971v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "b62eee549fdea7d49058830a55507ba38d3b781807af13306196289a56b5ea1d",
+    "main_tex": "./neurips_2026.tex",
+    "class": "article+neurips",
+    "category": "cs.MA",
+    "size_bytes": 114047,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.08995v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "9e288a762ab4adf6caeb54174eb992176655276e17484d9bfaea2e3033bb22e6",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.CY",
+    "size_bytes": 109589,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09027v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "0e4e109c1d7653218570498b2fe3a98ad68a0282a58a8794504efda8a3e9f0c3",
+    "main_tex": "./main.tex",
+    "class": "jmlr",
+    "category": "cs.CL",
+    "size_bytes": 98851,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09075v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "6938904d78a1f7ae812431d1dc691215cba294d22744b37a9de5576de8b71427",
+    "main_tex": "./main.tex",
+    "class": "IEEEtran",
+    "category": "cs.LG",
+    "size_bytes": 38602,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09113v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d42a8369da366717f34deae37510be714e2d146b62918d7720ec63208f4c7200",
+    "main_tex": "./main.tex",
+    "class": "article+acl",
+    "category": "cs.CR",
+    "size_bytes": 234997,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09147v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "fb3c95c13197702d43e88abd08dbc26b82030a515ab022a456b885bdfaa3d46e",
+    "main_tex": "./main.tex",
+    "class": "article+neurips",
+    "category": "cs.AI",
+    "size_bytes": 118948,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09177v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "a19c6ae36830c6abb84fdc7780b75bfc375da4a153075927d7f1228c3c756db2",
+    "main_tex": "./samplepaper.tex",
+    "class": "llncs",
+    "category": "cs.AI",
+    "size_bytes": 156851,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09196v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d6d9e720d7a59bde293cf6713d1d38cdd08292b0fd7e811f83b5c7feaafa6af7",
+    "main_tex": "./paper-1.tex",
+    "class": "article",
+    "category": "cs.CL",
+    "size_bytes": 147378,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09200v1",
+    "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+    "source_sha256": "fe34c7ca13ab6f8ce469e409d5742992106893656e0108e8568b0fd655bc31b9",
+    "main_tex": "./main.tex",
+    "class": "llncs",
+    "category": "cs.IR",
+    "size_bytes": 159548,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09203v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "1e3d7e9daaccb08fdb1c22ad07ff158b8237d6da81a5187ccdf63ed55d64960e",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.LG",
+    "size_bytes": 72825,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09204v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "7e0af3c3e20d02a61134689382ed2d60484de81154243d20544c78e4fdec0627",
+    "main_tex": "./paper-2.tex",
+    "class": "article+icml",
+    "category": "cs.CL",
+    "size_bytes": 143358,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.09218v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "67bee641de141790bb0dbc8f7bae5248ac9744c45f5bf3fb93b248e6f1aa6da1",
+    "main_tex": "./main.tex",
+    "class": "article+iclr",
+    "category": "cs.SE",
+    "size_bytes": 232509,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09223v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "78cae1bfc3f357dae044c34fc60e39998fb0886e71bad14cf96f47740ab4d6c4",
+    "main_tex": "./main.tex",
+    "class": "article+acl",
+    "category": "cs.CL",
+    "size_bytes": 227098,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09239v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "767633ff1f349e13a57e2ae8db55dec920ac14cacf6c8e6be04852049abb3ba0",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.CL",
+    "size_bytes": 113212,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09260v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "c0d4fffd2eaf4783c48d4ea333cafa5579f1de3d2da58f8da227aeabfe15c0e4",
+    "main_tex": "./main.tex",
+    "class": "llncs",
+    "category": "cs.SE",
+    "size_bytes": 109515,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.09277v1",
+    "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+    "source_sha256": "183bee491fade3c9342a97a4d3abe38f5ffa55569f2887ff646851219a944663",
+    "main_tex": "./main.tex",
+    "class": "elsarticle",
+    "category": "cs.CR",
+    "size_bytes": 187492,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09307v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "a7db6ed6d03f48f26f914e1cf4ac72cad560b9c08f600085ccaa544d59364953",
+    "main_tex": "./wake5.tex",
+    "class": "article",
+    "category": "cs.SE",
+    "size_bytes": 108262,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09313v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d00a765e475eed7c0d1fcae3bba3a864338acd622cff98eb70c1dfbd1b01b15d",
+    "main_tex": "./main.tex",
+    "class": "IEEEtran",
+    "category": "cs.CL",
+    "size_bytes": 81812,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09342v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "46590a06de25dc8e52d3fea23bd24d759d61938ad21b9d3325871c63518dfe19",
+    "main_tex": "./main.tex",
+    "class": "article+acl",
+    "category": "cs.CL",
+    "size_bytes": 171285,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09373v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "f496beb9b96d6493adc469732fba65cba3cb6605984ff41685df532946e3dc26",
+    "main_tex": "./main.tex",
+    "class": "article+neurips",
+    "category": "cs.LG",
+    "size_bytes": 83055,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.09385v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "1b9d3cc145f5bcb5023e77634d95873c3e67b5374cddac887ca33a18b9fdc77e",
+    "main_tex": "./paper.tex",
+    "class": "fairmeta",
+    "category": "cs.AI",
+    "size_bytes": 121103,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09388v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "83080375e6047d7ada2759a297c390415e7c29b7577a8119272c64cc450aa6f4",
+    "main_tex": "./main-v2.tex",
+    "class": "article",
+    "category": "cs.LG",
+    "size_bytes": 259535,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09396v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "ccd6c7f0f4c8290c57496b5a9b09f7c9166b50b77af7cf445cce028be44969b9",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.AI",
+    "size_bytes": 156683,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09401v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "0ff44c318ff14ddc1b088c4f0e2591c4f82aca99e93b291e9dcef029414bf632",
+    "main_tex": "./main.tex",
+    "class": "article+iclr",
+    "category": "cs.AI",
+    "size_bytes": 214387,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09402v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "0ca84819a9a4efe06ab240f9c88be360a80825b3383f72828c28db66882d9204",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.CL",
+    "size_bytes": 91907,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09417v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "6d8b9aae5417077424e43069015b3f720e68ae4b38e07c9e3b7c181a4ce3d261",
+    "main_tex": "./main.tex",
+    "class": "article+neurips",
+    "category": "cs.LG",
+    "size_bytes": 73770,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09448v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "6f5e854b5c720c4c3d474460cde52dccfb3fb4ef799b62e6ea361792c7fccfbf",
+    "main_tex": "./AnonymousSubmission2027.tex",
+    "class": "article+aaai",
+    "category": "cs.LG",
+    "size_bytes": 146432,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09454v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "8daeab4e5d1455655c69b2ac97ec9e4bc5b56d7bb8ab6e3ecb0211c43b57fb68",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.LG",
+    "size_bytes": 106157,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09457v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "38ba7a162fa8b862e10e77370ce30d6ee429c870f98df608ca88d598174af78b",
+    "main_tex": "./main.tex",
+    "class": "article+acl",
+    "category": "cs.AI",
+    "size_bytes": 163234,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09472v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d665c876e70806fbb9eed2ea85e74c0fecd1c69dd9ac076852fd1157ea0e2511",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.AI",
+    "size_bytes": 215068,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09496v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "c54523c3eb9bfd6299515311967cc7c3aebc06966ece6938abd936909b1a99bb",
+    "main_tex": "./Template.tex",
+    "class": "article",
+    "category": "cs.LG",
+    "size_bytes": 42368,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09505v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "e83e3b95594e66951246f219abeb774e48ed1a03c7054c4144f9944fd9019c79",
+    "main_tex": "./acl_latex.tex",
+    "class": "article+acl",
+    "category": "cs.CV",
+    "size_bytes": 156144,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09511v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "334d16edfdd52cbc5feb1a3213303a03daa7c00b98e53d32b14ad7f883d06dee",
+    "main_tex": "./main.tex",
+    "class": "article+aaai",
+    "category": "cs.CV",
+    "size_bytes": 122243,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09514v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "40a8ef067e8c1ab15e227f741bdfe0b540a945aa8b1c107d47bdfbad54dd01b0",
+    "main_tex": "./imece26_pinns_framework_paper_revised_v8.tex",
+    "class": "asmeconf",
+    "category": "cs.AI",
+    "size_bytes": 239150,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09516v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "bab5c555b1102c322034dfd041cb65e73a4410df3cade4d34f4181c7999a7720",
+    "main_tex": "./main.tex",
+    "class": "llncs",
+    "category": "cs.CL",
+    "size_bytes": 75202,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09520v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "15f2de86c26a15f22fec97f11fb3d79b770522297a1c78882f4f876abaa7956b",
+    "main_tex": "./main_tmlr.tex",
+    "class": "article",
+    "category": "cs.LG",
+    "size_bytes": 218274,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09522v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "656c19776a62cd5498389b4a85496c134a0a7ceec3729e9738221b332ab2fb86",
+    "main_tex": "./atik.tex",
+    "class": "acmart",
+    "category": "cs.AI",
+    "size_bytes": 275397,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09529v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "e6492e6910192d7c29408082f176891c00a2f0236944da9eb326b2d74ba17d2f",
+    "main_tex": "./asmeconf-template.tex",
+    "class": "asmeconf",
+    "category": "cs.AI",
+    "size_bytes": 227980,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09534v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "6650e0a2b03f1de72cba02ba6da667e9204b1b09501ae5548fadb0646e70fae9",
+    "main_tex": "./sn-article.tex",
+    "class": "sn-jnl",
+    "category": "cond-mat.mtrl-sci",
+    "size_bytes": 213623,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09536v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "1c767410d51ec9c68e55bb126eb9ca97602351767704d9f32b7c3439f1e822cb",
+    "main_tex": "./main.tex",
+    "class": "article+cvpr",
+    "category": "cs.CV",
+    "size_bytes": 127179,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09554v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "386f37b5172449b5102b656fc130183562fec34829e62701c62e7b6deadfc529",
+    "main_tex": "./acl_latex.tex",
+    "class": "article+acl",
+    "category": "cs.CL",
+    "size_bytes": 135101,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09567v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "4d25a3f6e0b8417ff196fc704b685f4a8e96c5f45dad25874fb48cb9ce2b0c38",
+    "main_tex": "./main.tex",
+    "class": "article+neurips",
+    "category": "physics.flu-dyn",
+    "size_bytes": 193588,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09569v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "ef5b97669216b972a045fcba9fd17c9c030a9ea4c20e843818c21c5c3a41d5ec",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.CR",
+    "size_bytes": 190083,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09573v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "84490f6bde347bb270657f645b727446e3f3d3294bc5d3fc6025fca88a93967f",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "physics.ao-ph",
+    "size_bytes": 134062,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09596v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "e5775d069c8918e28a4f00d77662ddea0f6c0892d76736182a51bd3ccedd5396",
+    "main_tex": "./adam_coordinate_calibration.tex",
+    "class": "article",
+    "category": "cs.LG",
+    "size_bytes": 98945,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09612v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "97ac3d818b29c21341da7cf8cdc0fadb5759b665f54ed28f53811d2a6703ceb3",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "stat.ML",
+    "size_bytes": 150838,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09615v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "f66cc9f51a95e313189d97dd76cb33637b4c337cc5e264085f44b9a2653017ea",
+    "main_tex": "./arXiv.tex",
+    "class": "article",
+    "category": "cs.GT",
+    "size_bytes": 140603,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09625v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d50dfc3e9372fb2a606b9ec9ecba1467cd4f2472e78cb951f2d55430f9cbf6fb",
+    "main_tex": "./iclr2027_conference.tex",
+    "class": "article+iclr",
+    "category": "cs.LG",
+    "size_bytes": 224887,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09634v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "633fb612c3218319cf80ab1e3a840421a67436e8a476bcc1f1f87439919f48ca",
+    "main_tex": "./iclr2027_conference.tex",
+    "class": "article+iclr",
+    "category": "cs.CL",
+    "size_bytes": 247431,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09670v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "e2cb9d568eb518f4e2e18a816dc687fdef953d5de7041c1616407048eeb7b277",
+    "main_tex": "./main.tex",
+    "class": "article+icml",
+    "category": "cs.RO",
+    "size_bytes": 208746,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09709v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "ff5556cfc7ea3ee9f6c7cc66a37ce4c447e9859be9738863dab91676f06bfd7b",
+    "main_tex": "./ridgefill.tex",
+    "class": "article",
+    "category": "cs.LG",
+    "size_bytes": 185464,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09715v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "87abda6a828fa7c2b4dd4c0387c3d58e9bd3c241bfcc697284712faee3c1793e",
+    "main_tex": "./neurips_2026.tex",
+    "class": "article+neurips",
+    "category": "cs.AI",
+    "size_bytes": 137733,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09722v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "2606c3e1a183db911985e051689a0125234d0e706642b59f22aac8ecadfad5a3",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.AI",
+    "size_bytes": 152013,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09723v1",
+    "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+    "source_sha256": "1c2cd6eb885618e43f26ef03364532c3843d18aea611b65b319ea5fa4860fa05",
+    "main_tex": "./main_2_.tex",
+    "class": "article",
+    "category": "cs.LG",
+    "size_bytes": 208378,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09734v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "de08579fef9236c1499e1e99299e5c05de4df253f5ddfd13dacba80ea2e01b3d",
+    "main_tex": "./zhanggroup.tex",
+    "class": "article",
+    "category": "cs.CR",
+    "size_bytes": 108688,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09759v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "a778bd12e1ec621d859c655d3f54817dfd47ae39bdfb3fcc96870bf74b71abfc",
+    "main_tex": "./main_arxiv.tex",
+    "class": "article+neurips",
+    "category": "cs.LG",
+    "size_bytes": 107905,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09767v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "4e116ef0ee3ebbcb59359642534f586174888d26905992ce9f970cb44d08c46d",
+    "main_tex": "./sysid2027_arxiv.tex",
+    "class": "ifacconf",
+    "category": "cs.LG",
+    "size_bytes": 248914,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09780v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "ca3d20b71c6964eb6f23e0d5b9b001e38d7914943553a69b16c77ac58a30c48d",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.GT",
+    "size_bytes": 150133,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09785v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "467b9fa7a74fefaded4f661a3a84e5b1540afa1460278c297be13e11f05d2b11",
+    "main_tex": "./acl_latex.tex",
+    "class": "article+acl",
+    "category": "cs.CL",
+    "size_bytes": 222304,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09791v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d4518a8978fde2439de9c524d424b1e74876af5228ddc4cc5d552f8523989354",
+    "main_tex": "./elsarticle-template-num.tex",
+    "class": "elsarticle",
+    "category": "cs.AI",
+    "size_bytes": 110988,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09792v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "e1e4a889e0911d7f8f4b287bb5ea7341b07092ae220f6c889cf2fa417badd245",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.AI",
+    "size_bytes": 141719,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09798v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "ff6940ee1b718c6e4eabe55659d8ca61748b9fafd328b92cee3dd3c8c14b8261",
+    "main_tex": "./main.tex",
+    "class": "arxiv",
+    "category": "cs.AI",
+    "size_bytes": 165946,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09799v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "2f70092414c42f2b30e4db9ca622a9004ea238118637f881460824964c0c052a",
+    "main_tex": "./draft.tex",
+    "class": "article",
+    "category": "math.ST",
+    "size_bytes": 164035,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09808v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "d133b48609b7d7c86f4976401687eadf93e2d0aae07855a3b99cef009a3bb555",
+    "main_tex": "./main.tex",
+    "class": "svjour3",
+    "category": "cs.SE",
+    "size_bytes": 201619,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09815v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "f79cdd7ca41235756a903523d761f7d475d8a12e3af3a54bdbab3ed472f5c377",
+    "main_tex": "./final.tex",
+    "class": "article+neurips",
+    "category": "cs.LG",
+    "size_bytes": 66917,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09817v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "7881e993c8a620aca17f3d9f69ccf3eb3edb6a99b87800f7a240fa60cfa77e8d",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "hep-lat",
+    "size_bytes": 186853,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09818v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "19ae7b3d95c97343d5ecf163aedce2cb64bef083176429c78de92114b862929d",
+    "main_tex": "./main.tex",
+    "class": "article+neurips",
+    "category": "cs.AI",
+    "size_bytes": 110237,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09828v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "509b9d47810e9e9987b57c198c096a02e7c1eaf02ede07ea4075d3ddbdc90b99",
+    "main_tex": "./neurips_2026.tex",
+    "class": "article+neurips",
+    "category": "cs.LG",
+    "size_bytes": 215214,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09843v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "dd386cda010c9c7c5b3a4eb499098778c211bd64f23e41b917aa2d01b7ba2d9c",
+    "main_tex": "./main_new.tex",
+    "class": "article+neurips",
+    "category": "cs.LG",
+    "size_bytes": 155113,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09846v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "33ddb0e1018c8e7265ef3b1ed9e922fbd43c53d814c4b6b4beb205c82e5c18fc",
+    "main_tex": "./main.tex",
+    "class": "acmart",
+    "category": "cs.AI",
+    "size_bytes": 82410,
+    "folder": "arxiv-papers"
+  },
+  {
+    "arxiv_id": "2611.09847v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "cfd31a568b7a69cbacac854a9807462b646012c32d9327379b23ed5082fcf89e",
+    "main_tex": "./main.tex",
+    "class": "article+neurips",
+    "category": "cs.LG",
+    "size_bytes": 74373,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09848v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "f2d45b6979c9f4004cddc3148ddf0fbf63c56d35743b280441e5e4baff3aeac5",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.IT",
+    "size_bytes": 32007,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09866v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "60cb99eb540faedfcf03e47568c1d2030a7d21859a350bf5589f43f336af393e",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.CV",
+    "size_bytes": 67154,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09868v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "5291e6a552fefb73b8948e2f9a05fb5a50e62e2201eac9ba2b110008117f2596",
+    "main_tex": "./main_camera_ready.tex",
+    "class": "article+neurips",
+    "category": "cs.CL",
+    "size_bytes": 145247,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09869v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "5ca11e9981c3de8358edce165fbbb5aaf53c7d490d65942859506f225bef45a3",
+    "main_tex": "./main.tex",
+    "class": "svjour3",
+    "category": "cs.SE",
+    "size_bytes": 227952,
+    "folder": "arxiv-papers-extra"
+  },
+  {
+    "arxiv_id": "2611.09879v1",
+    "license": "http://creativecommons.org/licenses/by/4.0/",
+    "source_sha256": "4d2e290a4839b5706660cd8ac5392f28866f6dea4ab8fb705d58cce76e6c6c6a",
+    "main_tex": "./main.tex",
+    "class": "article",
+    "category": "cs.CR",
+    "size_bytes": 204121,
+    "folder": "arxiv-papers-extra"
+  }
+]
