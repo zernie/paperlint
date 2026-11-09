@@ -11,7 +11,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { ESLint } from "eslint";
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -303,7 +309,7 @@ describe("paper/figure-ref-style", () => {
 describe("paper/figure-ref-style on a paper of several files", () => {
   /** A paper of `n` files, each with one reference, linted file by file as `paperlint lint` does. */
   const lintPaperOf = async (n, edit = () => undefined) => {
-    const dir = mkdtempSync(join(tmpdir(), "paperlint-figref-"));
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-figref-")));
     mkdirSync(join(dir, "sections"));
     const files = Array.from({ length: n }, (_, i) =>
       join(dir, i === 0 ? "paper.tex" : `sections/s${String(i)}.tex`),

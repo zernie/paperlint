@@ -485,12 +485,14 @@ const figureFormsIn = (raw: string): readonly (string | undefined)[] => {
   const key = createHash("sha256").update(raw).digest("hex");
   const known = formsByContent.get(key);
   if (known !== undefined) return known;
+  // eslint-disable-next-line functional/immutable-data -- a counter the test reads: parses done
   figureFormParses.count += 1;
   const forms = markupMatchesIn(
     raw,
     texToMdast(raw).root.children,
     FIG_REF,
   ).map(([, form]) => form);
+  // eslint-disable-next-line functional/immutable-data -- the memo: a text is parsed once per process
   formsByContent.set(key, forms);
   return forms;
 };

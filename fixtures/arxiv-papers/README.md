@@ -25,7 +25,7 @@ CLI run per paper). The owner decided otherwise: «if they help find problems, a
 later». What made that affordable: one CLI run over all papers is about 1.7 s a paper and one run per
 paper about 3 s, startup being a large part of the second (measured by another agent, 4 vCPU,
 origin/main: 138 s median for 80 preprints in one run). So the test is one run, in its own project, in
-an existing CI job. Measured here, all 114 papers: **TIMING_PLACEHOLDER**.
+an existing CI job. Measured here, all 114 papers: one local run, 436 s for 114 papers on a 4-core container shared with other jobs; the CI time of the `e2e-node` step is in the PR.
 
 ## Why these papers
 
