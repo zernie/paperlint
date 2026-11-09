@@ -51,8 +51,8 @@ describe("sameNumbers", () => {
     ]);
   });
 
-  it("a \\cref with several keys is a list; the run-in named first is the one explained", () => {
-    const hits = found(`${HEAD}See \\cref{sec:rq2,sec:check}.`);
+  it("\\cref commands are a list across commands; the run-in named first is the one explained", () => {
+    const hits = found(`${HEAD}See \\cref{sec:rq2}, \\cref{sec:check}.`);
     expect(hits.map(([, f]) => f.data)).toEqual([
       {
         first: "\\cref{sec:rq2}",
@@ -78,6 +78,77 @@ describe("sameNumbers", () => {
         },
       ],
     ]);
+  });
+});
+
+describe("sameNumbers: what a later or other command changes", () => {
+  it("a \\setcounter{secnumdepth} later in the body does not reach the headings before it", () => {
+    // Guards: the depth in force at each heading is the last change before it, in document order.
+    // A and B are both numbered when they are written (article: depth 3); the later change to 2
+    // only affects what follows.
+    expect(
+      found(
+        [
+          "\\subsection{A}\\label{a}",
+          "\\subsubsection{B}\\label{b}",
+          "",
+          "See \\ref{a}, \\ref{b}.",
+          "\\setcounter{secnumdepth}{2}",
+        ].join("\n"),
+      ),
+    ).toEqual([]);
+  });
+
+  it("a \\setcounter{secnumdepth} before a heading does reach it, and the change back reaches what follows", () => {
+    const body = (before: string, after: string): string =>
+      [
+        before,
+        "\\subsection{A}\\label{a}",
+        "\\subsubsection{B}\\label{b}",
+        "",
+        "See \\ref{a}, \\ref{b}.",
+        after,
+        "\\subsubsection{C}\\label{c}",
+        "",
+        "See \\ref{b}, \\ref{c}.",
+      ].join("\n");
+    // Guards: depth 2 first makes B a run-in under A (a finding); restored to 3 before C, C prints
+    // its own number (none). Then depth 3 first and 2 before C: only the second list is reported.
+    expect([
+      found(
+        body("\\setcounter{secnumdepth}{2}", "\\setcounter{secnumdepth}{3}"),
+      ).map(([line]) => line),
+      found(body("", "\\setcounter{secnumdepth}{2}")).map(([line]) => line),
+    ]).toEqual([[7], [11]]);
+  });
+
+  it("\\chapter and \\part step counters of their own: a label after the next chapter is its own", () => {
+    const src = `\\documentclass{report}\n\\begin{document}\n\\chapter{First}\n\\section{Old}\\label{old}\n\\chapter{Second}\\label{new}\n\nSee \\ref{old}, \\ref{new}.\n\\end{document}\n`;
+    const part = `\\documentclass{book}\n\\begin{document}\n\\chapter{First}\\label{old}\n\\part{Two}\\label{new}\n\nSee \\ref{old}, \\ref{new}.\n\\end{document}\n`;
+    const starred = `\\documentclass{report}\n\\begin{document}\n\\chapter{First}\\label{old}\n\\chapter*{Two}\\label{new}\n\nSee \\ref{old}, \\ref{new}.\n\\end{document}\n`;
+    const hits = (s: string) =>
+      sameNumbers(latexReader.refLists(s), latexReader.labels(s));
+    // Guards: a numbered chapter or part is a step, so its label is not the earlier section's; a
+    // starred chapter steps nothing, its label does print the chapter's number (reported).
+    expect([
+      hits(src),
+      hits(part),
+      hits(starred).map((f) => f.messageId),
+    ]).toEqual([[], [], ["runIn"]]);
+  });
+
+  it("two keys of one \\cref command are compressed by cleveref, separate commands are not", () => {
+    // Guards: cleveref prints an equal number once inside one command (cleveref.sty 990-996), so
+    // `\\cref{a,b}` is quiet; `\\cref{a}, \\cref{b}` and `\\cref{a,b}, \\ref{c}` keep their findings.
+    const two =
+      "\\subsection{A}\\label{a}\\label{b}\n\\subsection{C}\\label{c}\n\n";
+    expect([
+      found(`${two}See \\cref{a,b}.`).length,
+      found(`${two}See \\Cref{a,b}.`).length,
+      found(`${two}See \\cref{a}, \\cref{b}.`).length,
+      found(`${two}See \\cref{a,b} and \\ref{c}.`).length,
+      found(`${two}See \\cref{c,a} and \\ref{b}.`).length,
+    ]).toEqual([0, 0, 1, 0, 1]);
   });
 });
 

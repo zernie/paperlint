@@ -24,9 +24,14 @@ that stepped last before it in its paragraph. A label right after a numbered hea
 heading's number. A label after a run-in — a bold, italic, small-caps or underlined phrase ending in
 `.` or `:` that opens a paragraph (`\textbf{RQ2.}`), a starred heading, or a heading deeper than the
 class numbers — takes the number of the step before it. How deep headings are numbered is the
-source's last `\setcounter{secnumdepth}{…}`, else the class's own default (`article`, `acmart` and
+`\setcounter{secnumdepth}{…}` in force at the heading (the preamble's, else the class's own default, then each change in the body, in document order), else the class's own default (`article`, `acmart` and
 the rest: 3; `IEEEtran`: 4, or 3 with `technote` or `compsoc` with `conference`; `llncs`: 2;
-`acmart` in its `acmcp` format: none), as each class file sets it.
+`acmart` in its `acmcp` format: none), as each class file sets it. A numbered `\part` or `\chapter`
+(`book`, `report`) steps a counter of its own, like a section; a starred one steps none.
+
+Two keys of one `\cref{a,b}` or `\Cref{a,b}` are never reported against each other: cleveref prints an
+equal number once inside a command (`cleveref.sty` lines 990–996 of
+`fixtures/accepted-papers/rr-dataset-quality-acsac24`). `\cref{a}, \cref{b}` as separate commands are.
 
 A finding in an included file is reported at its `\input` in `paper.tex`, with the file, line and
 column at the front of the message.
@@ -45,7 +50,8 @@ labels" fires; a reader caught it, not a check.
 
 ```latex
 Sections~\ref{sec:check}, \ref{sec:rq2}.     % fails: rq2 is a run-in's label, it prints Check's number
-\cref{sec:check,sec:rq2}                     % fails: the same, one command
+\cref{sec:check}, \cref{sec:rq2}            % fails: the same, two commands
+\cref{sec:check,sec:rq2}                     % passes: cleveref prints an equal number once inside one command
 \ref{sec:third} and \ref{sec:starred}        % fails: \subsection*{…}\label{sec:starred} steps no counter
 \ref{sec:rq2}, \ref{sec:rq2}                 % passes: one label twice is not two labels
 See \ref{sec:rq2}. Then \ref{sec:check}.     % passes: two sentences
@@ -87,8 +93,8 @@ The rule against the `.aux` of a real `pdflatex` run, where `\newlabel{key}{{<nu
 exactly when the `.aux` shows two different keys printing one number.
 
 - A fake IEEEtran paper (`test/fixtures/ref-list-same-number/paper.tex`, one compile,
-  `test/e2e/tex/ref-list-same-number.e2e.ts`, runs in CI): four lists with the bug (a run-in, a
-  `\cref` with two keys, a starred heading, a heading deeper than `secnumdepth`) and the control
+  `test/e2e/tex/ref-list-same-number.e2e.ts`, runs in CI): four lists with the bug (a run-in,
+  two separate `\cref` commands, a starred heading, a heading deeper than `secnumdepth`) and the control
   lists; findings equal the `.aux`'s duplicates exactly.
 - The six accepted papers in `fixtures/accepted-papers/` (one-off, not in CI):
 

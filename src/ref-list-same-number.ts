@@ -55,6 +55,19 @@ const knownByKey = (
 const identity = (k: Known): number | null =>
   k.step.at.kind === "at" ? k.step.at.span.start : null;
 
+/**
+ * Whether two references are keys of one `\cref{a,b}` or `\Cref{a,b}`: they share the command's
+ * span. cleveref prints an equal number once inside one command — its range compressor, on two
+ * consecutive keys whose labels are the same, drops the second and counts one
+ * (`\ifx\@labela\@labelb … \let\@endref\relax … \count@consecutive=1`, cleveref.sty lines
+ * 990-996 of fixtures/accepted-papers/rr-dataset-quality-acsac24) — so that is no repeated number.
+ * Separate commands (`\cref{a}, \cref{b}`) each print their own.
+ */
+const sameCommand = (a: Reference, b: Reference): boolean =>
+  (a.macro === "cref" || a.macro === "Cref") &&
+  a.macro === b.macro &&
+  a.span.start === b.span.start;
+
 /** A reference as it is written: `\ref{sec:check}`. */
 const written = (r: Reference): string => `\\${r.macro}{${r.key}}`;
 
@@ -103,12 +116,14 @@ export const sameNumbers = (
       const before = list.slice(0, i);
       if (mine === undefined || id === null) return [];
       if (before.some((b) => b.key === r.key)) return [];
-      const [hit] = before.flatMap((b) => {
-        const theirs = known.get(b.key);
-        return theirs !== undefined && identity(theirs) === id
-          ? [{ earlier: b, theirs }]
-          : [];
-      });
+      const [hit] = before
+        .filter((b) => !sameCommand(b, r))
+        .flatMap((b) => {
+          const theirs = known.get(b.key);
+          return theirs !== undefined && identity(theirs) === id
+            ? [{ earlier: b, theirs }]
+            : [];
+        });
       return hit === undefined
         ? []
         : [finding(r, hit.earlier, [mine.label, hit.theirs.label], mine.step)];

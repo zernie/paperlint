@@ -26,8 +26,9 @@ Text of the subsection.
 % The bug: the run-in's label prints the number of Check, cited next to Check itself.
 Sections~\ref{sec:check}, \ref{sec:rq2} and~\ref{sec:other} are the checks.
 
-% A \cref with several keys is a list too.
-See \cref{sec:check,sec:rq2}.
+% Separate \cref commands are a list too. (One \cref with several keys is not: real cleveref prints an
+% equal number once, which this stand-in does not do, so no such command is here.)
+See \cref{sec:check}, \cref{sec:rq2}.
 
 % The same run-in cited alone, and two sections cited in different sentences: no list.
 See \ref{sec:rq2}. Then see \ref{sec:check}.

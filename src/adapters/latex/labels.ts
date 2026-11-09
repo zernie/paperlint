@@ -16,7 +16,6 @@
  */
 import type {
   DocumentClass,
-  HeadingLevel,
   LabelAnchor,
   PlacedLabel,
   Stepped,
@@ -39,8 +38,15 @@ import {
 import type { ParsedTex } from "./parse.ts";
 import { isRunInHeading, keepsOpening } from "./prose.ts";
 
-/** Each heading's depth, as `\@startsection` compares it with `secnumdepth`. */
-const DEPTHS: ReadonlyMap<string, readonly [HeadingLevel, number]> = new Map([
+/**
+ * Each heading's depth, as `\@startsection` compares it with `secnumdepth`. `\part` and `\chapter`
+ * are the levels above `\section` (book and report: part -1, chapter 0): a numbered one steps a
+ * counter of its own, so a label after it no longer takes the previous section's number. In a class
+ * without `\chapter` the command is undefined and the source does not build.
+ */
+const DEPTHS: ReadonlyMap<string, readonly [string, number]> = new Map([
+  ["part", ["part", -1]],
+  ["chapter", ["chapter", 0]],
   ["section", ["section", 1]],
   ["subsection", ["subsection", 2]],
   ["subsubsection", ["subsubsection", 3]],
@@ -85,19 +91,24 @@ function depthSet(m: Macro): DepthSet {
   return { kind: "set", depth: Number.isInteger(n) ? n : null };
 }
 
+/** The `\setcounter{secnumdepth}` changes a node holds, in source order. */
+const depthChanges = (n: Node): readonly (number | null)[] =>
+  visited(n, (v, parent) => isUnrendered(v, parent) || isDefinition(v))
+    .filter(isNode)
+    .flatMap((m) =>
+      m.type === "macro" && m.content === "setcounter" ? [depthSet(m)] : [],
+    )
+    .flatMap((d) => (d.kind === "set" ? [d.depth] : []));
+
 /**
- * How deep the source's headings are numbered: its last `\setcounter{secnumdepth}`, else its class's
- * default; null when it cannot be read (a value that is no plain number, no class line, or several
- * behind a switch).
+ * How deep the headings are numbered where the body starts: the preamble's last
+ * `\setcounter{secnumdepth}`, else its class's default; null when it cannot be read (a value that is
+ * no plain number, no class line, or several behind a switch). The body changes it from there, in
+ * document order (`step`).
  */
 function secnumdepth(t: ParsedTex, nodes: readonly Node[]): number | null {
-  const set = nodes
-    .flatMap((n) =>
-      n.type === "macro" && n.content === "setcounter" ? [depthSet(n)] : [],
-    )
-    .filter((d) => d.kind === "set")
-    .at(-1);
-  if (set !== undefined) return set.depth;
+  const set = nodes.flatMap(depthChanges);
+  if (set.length > 0) return set[set.length - 1] ?? null;
   const line = documentClassOf(t);
   return line.kind === "class" ? classDepth(line) : null;
 }
@@ -111,6 +122,7 @@ interface Scan {
   readonly opening: boolean;
   readonly anchor: LabelAnchor;
   readonly stepped: Stepped | null;
+  readonly numberedTo: number | null;
   readonly labels: readonly PlacedLabel[];
 }
 
@@ -158,11 +170,10 @@ const shown = (n: Node): string =>
 function headingStep(
   s: Scan,
   m: Macro,
-  [level, depth]: readonly [HeadingLevel, number],
-  numberedTo: number | null,
+  [level, depth]: readonly [string, number],
 ): Scan {
   const numbered =
-    !isStarred(m) && (numberedTo === null || depth <= numberedTo);
+    !isStarred(m) && (s.numberedTo === null || depth <= s.numberedTo);
   return numbered
     ? {
         ...s,
@@ -174,11 +185,11 @@ function headingStep(
 }
 
 /** A macro's step: a label is placed, a heading anchors, a command that steps a counter numbers. */
-function macroStep(s: Scan, m: Macro, numberedTo: number | null): Scan | null {
+function macroStep(s: Scan, m: Macro): Scan | null {
   if (m.content === "label")
     return { ...s, labels: [...s.labels, ...placed(m, s, s.anchor)] };
   const heading = DEPTHS.get(m.content);
-  if (heading !== undefined) return headingStep(s, m, heading, numberedTo);
+  if (heading !== undefined) return headingStep(s, m, heading);
   return STEPS_COUNTER.has(m.content)
     ? {
         ...s,
@@ -189,15 +200,20 @@ function macroStep(s: Scan, m: Macro, numberedTo: number | null): Scan | null {
     : null;
 }
 
+/** The walk with the depth changes a node holds applied: the last one wins from here on. */
+const withDepth = (s: Scan, n: Node): Scan =>
+  depthChanges(n).reduce<Scan>((w, d) => ({ ...w, numberedTo: d }), s);
+
 /** The walk's step over one top-level node. */
-function step(t: ParsedTex, numberedTo: number | null, s: Scan, n: Node): Scan {
+function step(t: ParsedTex, before: Scan, n: Node): Scan {
+  const s = withDepth(before, n);
   if (n.type === "parbreak") return { ...s, opening: true, anchor: NONE };
   if (s.opening && isRunInHeading(t, n)) {
     const anchor: LabelAnchor = { kind: "run-in", title: shown(n) };
     const inside = labelsInside(n).flatMap((m) => placed(m, s, anchor));
     return { ...s, opening: false, anchor, labels: [...s.labels, ...inside] };
   }
-  const own = n.type === "macro" ? macroStep(s, n, numberedTo) : null;
+  const own = n.type === "macro" ? macroStep(s, n) : null;
   if (own !== null) return own;
   if (keepsOpening(n)) return s;
   if (n.type === "environment" || n.type === "mathenv")
@@ -219,18 +235,17 @@ export function labelsOf(t: ParsedTex): readonly PlacedLabel[] {
     doc !== undefined && doc.type === "environment"
       ? doc.content
       : t.root.content;
-  const preamble = visited(
-    t.root,
-    (v, parent) => isUnrendered(v, parent) || isDefinition(v),
-  ).filter(isNode);
-  const numberedTo = secnumdepth(t, preamble);
+  // What the preamble sets; a fragment has none, its changes come in the body's order.
+  const preamble =
+    doc === undefined ? [] : t.root.content.filter((n) => n !== doc);
   const start: Scan = {
     opening: true,
     anchor: NONE,
     stepped: null,
+    numberedTo: secnumdepth(t, preamble),
     labels: [],
   };
   return body
     .filter((n) => !isDefinition(n))
-    .reduce((s, n) => step(t, numberedTo, s, n), start).labels;
+    .reduce((s, n) => step(t, s, n), start).labels;
 }

@@ -4,7 +4,7 @@
  * real `pdflatex` run, whose `\newlabel{key}{{<number>}…}` is exactly what `\ref{key}` prints.
  *
  * ONE fake paper (`test/fixtures/ref-list-same-number/paper.tex`), built once: the bug (a run-in's
- * label cited next to its enclosing section), a clean list, a `\cref` with several keys, a starred
+ * label cited next to its enclosing section), a clean list, two separate `\cref` commands, a starred
  * heading, a label deeper than `secnumdepth`, and lists the rule must leave alone. The findings of
  * `paperlint lint` must be exactly the lines of the lists in which the `.aux` shows two different
  * keys printing one number — no more, no less. A fake, because it can hold every case; real papers
@@ -134,7 +134,7 @@ describe.skipIf(skip)("tex/ref-list-same-number against the .aux", () => {
       .flatMap((f) => f.messages)
       .filter((m) => m.ruleId === RULE)
       .map((m) => m.line ?? 0);
-    // Guards: the bug, the \cref list, the starred heading and the deeper-than-secnumdepth label
+    // Guards: the bug, the separate \cref commands, the starred heading and the deeper-than-secnumdepth label
     // are four lists; the clean list and the lone run-in are none. Without this the equality
     // below would hold for a paper with no bug in it.
     expect(expected).toHaveLength(4);
