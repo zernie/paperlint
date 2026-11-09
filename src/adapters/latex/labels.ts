@@ -197,24 +197,34 @@ const UNKNOWN: Stepped = {
   what: "a counter changed by a command the rule does not model",
 };
 
-/** One heading's step: a numbered one anchors and encloses what follows, any other is a run-in. */
-function headingStep(
-  s: Scan,
-  m: Macro,
-  [level, depth]: readonly [string, number],
-): Scan {
-  if (!isStarred(m) && s.numberedTo === "unknown")
+/** The walk after a heading: numbered (its step), a run-in, or numbered at a depth that is unknown (an unknown step). */
+function headingState(s: Scan, m: Macro, level: string, depth: number): Scan {
+  const run: Scan = {
+    ...s,
+    opening: true,
+    anchor: { kind: "run-in", title: shown(m) },
+  };
+  if (isStarred(m)) return run;
+  const to = s.numberedTo;
+  if (to === "unknown")
     return { ...s, opening: true, anchor: NUMBERED, stepped: UNKNOWN };
-  const numbered =
-    !isStarred(m) && (s.numberedTo === null || depth <= s.numberedTo);
-  const next: Scan = numbered
+  return to === null || depth <= to
     ? {
         ...s,
         opening: true,
         anchor: NUMBERED,
         stepped: steppedBy(m, `\\${level} «${shown(m)}»`),
       }
-    : { ...s, opening: true, anchor: { kind: "run-in", title: shown(m) } };
+    : run;
+}
+
+/** One heading's step: a numbered one anchors and encloses what follows, any other is a run-in. */
+function headingStep(
+  s: Scan,
+  m: Macro,
+  [level, depth]: readonly [string, number],
+): Scan {
+  const next = headingState(s, m, level, depth);
   // A label in the title (`\section{A\label{a}}`) takes the step the heading itself makes.
   const inside = labelsInside(m).flatMap((l) => placed(l, next, next.anchor));
   return { ...next, labels: [...s.labels, ...inside] };
