@@ -1398,16 +1398,28 @@ export function submissionSend(
  */
 export function runHook(
   name: string | undefined,
-  io: HookOptions = {},
+  {
+    err = console.error,
+    stdin = defaultStdin,
+    out = defaultOut,
+    ...rest
+  }: HookOptions = {},
 ): number | Promise<number> {
-  const notice =
-    name !== undefined && NOTICE_HOOKS.includes(name)
-      ? pendingNotice(io)
-      : null;
+  const io = { ...rest, err, stdin, out };
+  if (name === undefined || !NOTICE_HOOKS.includes(name))
+    return runHookPlain(name, io);
+  const notice = pendingNotice(io);
   return notice === null
     ? runHookPlain(name, io)
-    : runHookWithNotice(name ?? "", notice, io);
+    : runHookWithNotice(name, notice, io);
 }
+
+/** `HookOptions` with the three streams resolved. */
+type ResolvedHookOptions = HookOptions &
+  Required<Pick<HookOptions, "err" | "stdin" | "out">>;
+
+/** The first line of a message, for the one stderr line a failure here gets. */
+const firstLine = (message: string): string => message.split("\n", 1).join("");
 
 /** What `runHook` takes; every effect is injectable, so a test stages none of them. */
 interface HookOptions {
@@ -1435,6 +1447,9 @@ interface HookOptions {
 }
 
 const defaultStdin = (): string => readFileSync(0, "utf8");
+const defaultOut = (text: string): void => {
+  process.stdout.write(text);
+};
 
 /** The real spawner, narrowed to what `runHook` asks of it. */
 export const spawnHook: NonNullable<HookOptions["run"]> = (file, args, o) => {
@@ -1476,7 +1491,7 @@ interface Pending {
  * The notice this hook owes the project, or null. Never throws and never speaks twice for one
  * version: whatever goes wrong here is one stderr line and the hook runs as if nothing were due.
  */
-function pendingNotice(io: HookOptions): Pending | null {
+function pendingNotice(io: ResolvedHookOptions): Pending | null {
   try {
     const root = hookRoot(io);
     const { missing, byHand } = unwiredHooks(root);
@@ -1485,8 +1500,8 @@ function pendingNotice(io: HookOptions): Pending | null {
       ? null
       : { text: noticeText(version, missing, byHand), root, version };
   } catch (e) {
-    (io.err ?? console.error)(
-      `paperlint: the unwired-hooks check did not run: ${messageOf(e).split("\n")[0] ?? ""}`,
+    io.err(
+      `paperlint: the unwired-hooks check did not run: ${firstLine(messageOf(e))}`,
     );
     return null;
   }
@@ -1526,12 +1541,11 @@ const after = (
 function runHookWithNotice(
   name: string,
   notice: Pending,
-  io: HookOptions,
+  io: ResolvedHookOptions,
 ): number | Promise<number> {
-  const read = io.stdin ?? defaultStdin;
   const text = ((): string | null => {
     try {
-      return read();
+      return io.stdin();
     } catch {
       return null;
     }
@@ -1540,7 +1554,6 @@ function runHookWithNotice(
   const fed = { ...io, stdin: () => text, feed: text };
   if (!touchesAPaper(text)) return runHookPlain(name, fed);
   const printed = collector();
-  const out = io.out ?? ((t: string): void => void process.stdout.write(t));
   return after(
     runHookPlain(name, {
       ...fed,
@@ -1551,20 +1564,20 @@ function runHookWithNotice(
       const said = printed.text();
       const merged = code === 0 ? mergeNotice(said, notice.text) : null;
       // Remembered BEFORE it is said: a state that cannot be written must not make the notice repeat on every edit.
-      out(merged !== null && remember(notice, io) ? merged : said);
+      io.out(merged !== null && remember(notice, io) ? merged : said);
       return code;
     },
   );
 }
 
 /** Records that the notice was given; false, with one stderr line, when it cannot be. */
-function remember(notice: Pending, io: HookOptions): boolean {
+function remember(notice: Pending, io: ResolvedHookOptions): boolean {
   try {
     recordTold(nodeFiles, notice.root, notice.version);
     return true;
   } catch (e) {
-    (io.err ?? console.error)(
-      `paperlint: the unwired-hooks notice was not recorded: ${messageOf(e).split("\n")[0] ?? ""}`,
+    io.err(
+      `paperlint: the unwired-hooks notice was not recorded: ${firstLine(messageOf(e))}`,
     );
     return false;
   }
@@ -1587,9 +1600,7 @@ function runHookPlain(
     resolve = (spec: string): string =>
       createRequire(import.meta.url).resolve(spec),
     stdin = defaultStdin,
-    out = (text: string): void => {
-      process.stdout.write(text);
-    },
+    out = defaultOut,
     feed,
     capture = false,
   }: HookOptions & {
